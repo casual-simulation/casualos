@@ -142,7 +142,7 @@ export type WebsocketMessage =
     | UnwatchBranchDevicesMessage
     | ConnectedToBranchMessage
     | DisconnectedFromBranchMessage
-    | BranchInfoMessage
+    // | BranchInfoMessage
     // | ListBranchesMessage
     // | BranchesStatusMessage
     // | ListConnectionsMessage
@@ -663,83 +663,83 @@ type ZodDisconnectedFromBranchMessageAssertion = HasType<
     DisconnectedFromBranchMessage
 >;
 
-export type BranchInfoMessage =
-    | BranchExistsInfoMessage
-    | BranchDoesNotExistInfoMessage;
+// export type BranchInfoMessage =
+//     | BranchExistsInfoMessage
+//     | BranchDoesNotExistInfoMessage;
 
-export interface BranchExistsInfoMessage {
-    type: 'repo/branch_info/exists';
-    /**
-     * The name of the record that the branch is for.
-     * Null if the branch should be public and non-permanent.
-     */
-    recordName: string | null;
+// export interface BranchExistsInfoMessage {
+//     type: 'repo/branch_info/exists';
+//     /**
+//      * The name of the record that the branch is for.
+//      * Null if the branch should be public and non-permanent.
+//      */
+//     recordName: string | null;
 
-    /**
-     * The name of the inst.
-     */
-    inst: string;
+//     /**
+//      * The name of the inst.
+//      */
+//     inst: string;
 
-    /**
-     * The name of the branch.
-     */
-    branch: string;
+//     /**
+//      * The name of the branch.
+//      */
+//     branch: string;
 
-    /**
-     * Whether the branch exists.
-     */
-    exists: true;
-}
-export const branchExistsInfoMessageSchema = z.object({
-    type: z.literal('repo/branch_info/exists'),
-    exists: z.literal(true),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-});
-type ZodBranchExistsInfoMessage = z.infer<typeof branchExistsInfoMessageSchema>;
-type ZodBranchExistsInfoMessageAssertion = HasType<
-    ZodBranchExistsInfoMessage,
-    BranchExistsInfoMessage
->;
+//     /**
+//      * Whether the branch exists.
+//      */
+//     exists: true;
+// }
+// export const branchExistsInfoMessageSchema = z.object({
+//     type: z.literal('repo/branch_info/exists'),
+//     exists: z.literal(true),
+//     recordName: z.string().nonempty().nullable(),
+//     inst: z.string(),
+//     branch: z.string(),
+// });
+// type ZodBranchExistsInfoMessage = z.infer<typeof branchExistsInfoMessageSchema>;
+// type ZodBranchExistsInfoMessageAssertion = HasType<
+//     ZodBranchExistsInfoMessage,
+//     BranchExistsInfoMessage
+// >;
 
-export interface BranchDoesNotExistInfoMessage {
-    type: 'repo/branch_info/not_exists';
-    /**
-     * The name of the record that the branch is for.
-     * Null if the branch should be public and non-permanent.
-     */
-    recordName: string | null;
+// export interface BranchDoesNotExistInfoMessage {
+//     type: 'repo/branch_info/not_exists';
+//     /**
+//      * The name of the record that the branch is for.
+//      * Null if the branch should be public and non-permanent.
+//      */
+//     recordName: string | null;
 
-    /**
-     * The name of the inst.
-     */
-    inst: string;
+//     /**
+//      * The name of the inst.
+//      */
+//     inst: string;
 
-    /**
-     * The name of the branch.
-     */
-    branch: string;
+//     /**
+//      * The name of the branch.
+//      */
+//     branch: string;
 
-    /**
-     * Whether the branch exists.
-     */
-    exists: false;
-}
-export const branchDoesNotExistInfoMessageSchema = z.object({
-    type: z.literal('repo/branch_info/not_exists'),
-    exists: z.literal(false),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-});
-type ZodBranchDoesNotExistInfoMessage = z.infer<
-    typeof branchDoesNotExistInfoMessageSchema
->;
-type ZodBranchDoesNotExistInfoMessageAssertion = HasType<
-    ZodBranchDoesNotExistInfoMessage,
-    BranchDoesNotExistInfoMessage
->;
+//     /**
+//      * Whether the branch exists.
+//      */
+//     exists: false;
+// }
+// export const branchDoesNotExistInfoMessageSchema = z.object({
+//     type: z.literal('repo/branch_info/not_exists'),
+//     exists: z.literal(false),
+//     recordName: z.string().nonempty().nullable(),
+//     inst: z.string(),
+//     branch: z.string(),
+// });
+// type ZodBranchDoesNotExistInfoMessage = z.infer<
+//     typeof branchDoesNotExistInfoMessageSchema
+// >;
+// type ZodBranchDoesNotExistInfoMessageAssertion = HasType<
+//     ZodBranchDoesNotExistInfoMessage,
+//     BranchDoesNotExistInfoMessage
+// >;
 
 // export interface ListBranchesMessage {
 //     type: 'repo/branches';
@@ -813,14 +813,14 @@ export interface ConnectionCountMessage {
     /**
      * The number of connections.
      */
-    count: number;
+    count?: number;
 }
 export const connectionCountMessageSchema = z.object({
     type: z.literal('repo/connection_count'),
     recordName: z.string().nonempty().nullable(),
     inst: z.string(),
     branch: z.string(),
-    count: z.number(),
+    count: z.number().optional(),
 });
 type ZodConnectionCountMessage = z.infer<typeof connectionCountMessageSchema>;
 type ZodConnectionCountMessageAssertion = HasType<
@@ -927,8 +927,8 @@ export const websocketMessageSchema = z.discriminatedUnion('type', [
     unwatchBranchDevicesMessageSchema,
     connectedToBranchMessageSchema,
     disconnectedFromBranchMessageSchema,
-    branchExistsInfoMessageSchema,
-    branchDoesNotExistInfoMessageSchema,
+    // branchExistsInfoMessageSchema,
+    // branchDoesNotExistInfoMessageSchema,
     // listBranchesMessageSchema,
     // branchesStatusMessageSchema,
     // listConnectionsMessageSchema,

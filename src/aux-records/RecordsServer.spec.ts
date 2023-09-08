@@ -1581,6 +1581,7 @@ describe('RecordsServer', () => {
                 userId,
                 sessionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                connectionKey: expect.any(String),
             });
 
             const parsed = parseSessionKey(data.sessionKey);
@@ -1764,6 +1765,7 @@ describe('RecordsServer', () => {
                     userId,
                     sessionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
+                    connectionKey: expect.any(String),
                 },
                 headers: accountCorsHeaders,
             });
@@ -11375,6 +11377,52 @@ describe('RecordsServer', () => {
                     ).toEqual([]);
                 });
             });
+
+            describe('repo/connection_count', () => {
+                it('should return the connection count for the given branch', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await websocketController.login('connection2', 99, {
+                        type: 'login',
+                        clientConnectionId: 'clientConnectionId2',
+                    });
+
+                    await websocketController.watchBranch('connection2', {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/connection_count',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/connection_count',
+                            recordName,
+                            inst,
+                            branch,
+                            count: 1,
+                        },
+                    ]);
+                });
+            });
         });
     });
 
@@ -11606,6 +11654,8 @@ describe('RecordsServer', () => {
                     success: false,
                     errorCode: 'rate_limit_exceeded',
                     errorMessage: 'Rate limit exceeded.',
+                    retryAfterSeconds: 1,
+                    totalHits: 101,
                 }),
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,

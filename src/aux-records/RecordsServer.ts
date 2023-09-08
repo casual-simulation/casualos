@@ -992,6 +992,13 @@ export class RecordsServer {
                 data.inst,
                 data.branch
             );
+        } else if (data.type === 'repo/connection_count') {
+            await this._websocketController.deviceCount(
+                request.connectionId,
+                data.recordName,
+                data.inst,
+                data.branch
+            );
         }
     }
 
