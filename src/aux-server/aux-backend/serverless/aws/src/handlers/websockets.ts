@@ -15,8 +15,10 @@ import {
     WATCH_BRANCH_DEVICES,
 } from '@casual-simulation/causal-trees';
 import {
+    MESSAGES_BUCKET_NAME,
     downloadObject,
     getMessageUploadUrl,
+    getS3Client,
     parseMessage,
     setSpan,
     uploadMessage,
@@ -324,14 +326,14 @@ async function processUpload(
     event: APIGatewayProxyEvent,
     message: AwsUploadRequest
 ) {
-    const uploadUrl = await getMessageUploadUrl();
+    const [server, cleanup, rateLimiter, s3] = getCausalRepoServer(event);
+    const uploadUrl = await getMessageUploadUrl(s3, MESSAGES_BUCKET_NAME);
 
     const response: AwsUploadResponse = [
         AwsMessageTypes.UploadResponse,
         message[1],
         uploadUrl,
     ];
-    const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
 
     try {
         const rateLimitResult = await rateLimit(rateLimiter, event);
@@ -361,7 +363,8 @@ async function processDownload(
     event: APIGatewayProxyEvent,
     message: AwsDownloadRequest
 ) {
-    const data = await downloadObject(message[1]);
+    const s3 = getS3Client();
+    const data = await downloadObject(s3, MESSAGES_BUCKET_NAME, message[1]);
     const packet = parseMessage<Packet>(data);
     await processPacket(event, packet);
 }
@@ -476,8 +479,11 @@ function createCausalRepoServer(event: APIGatewayProxyEvent) {
         redis.causalRepoNamespace,
         redisClient
     );
+    const s3 = getS3Client();
     const messenger = new ApiGatewayMessenger(
         callbackUrl(event),
+        MESSAGES_BUCKET_NAME,
+        s3,
         connectionStore
     );
     const updatesStore = new RedisUpdatesStore(
@@ -496,8 +502,10 @@ function createCausalRepoServer(event: APIGatewayProxyEvent) {
         server,
         () => {
             cleanup();
+            s3.destroy();
         },
         rateLimiter,
+        s3,
     ] as const;
 
     console.log('[handler] Server created!');

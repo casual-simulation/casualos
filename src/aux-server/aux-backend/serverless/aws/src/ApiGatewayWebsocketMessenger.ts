@@ -1,66 +1,116 @@
 import { ApiGatewayManagementApi } from '@aws-sdk/client-apigatewaymanagementapi';
 import {
-    Packet,
-    ApiaryConnectionStore,
-    ApiaryMessenger,
-    Message,
-} from '@casual-simulation/casual-apiary';
-import {
     AwsDownloadRequest,
     AwsMessageData,
     AwsMessageTypes,
 } from './AwsMessages';
-import { uploadMessage } from './WebsocketUtils';
+import {
+    downloadObject,
+    getMessageUploadUrl,
+    uploadMessage,
+} from './WebsocketUtils';
 import { S3 } from '@aws-sdk/client-s3';
+import {
+    PresignFileUploadResult,
+    UploadHttpHeaders,
+    WebsocketConnectionStore,
+    WebsocketDownloadRequestEvent,
+    WebsocketEvent,
+    WebsocketEventTypes,
+    WebsocketMessage,
+    WebsocketMessageEvent,
+    WebsocketMessenger,
+    signRequest,
+} from '@casual-simulation/aux-records';
+import axios, { Method } from 'axios';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+import { AwsCredentialIdentityProvider } from '@aws-sdk/types';
+import { v4 as uuid } from 'uuid';
 
 export const MAX_MESSAGE_SIZE = 32_000;
 
 /**
  * Defines a class that implements the ApiaryMessenger interface for AWS API Gateway.
  */
-export class ApiGatewayMessenger implements ApiaryMessenger {
+export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
     private _api: ApiGatewayManagementApi;
     private _s3: S3;
-    private _connections: ApiaryConnectionStore;
+    private _connections: WebsocketConnectionStore;
     private _bucket: string;
 
     constructor(
         endpoint: string,
         bucket: string,
         s3: S3,
-        connectionStore: ApiaryConnectionStore
+        connectionStore: WebsocketConnectionStore
     ) {
         this._api = new ApiGatewayManagementApi({
             apiVersion: '2018-11-29',
             endpoint: endpoint,
         });
-        this._bucket = bucket;
         this._s3 = s3;
         this._connections = connectionStore;
+        this._bucket = bucket;
+    }
+
+    async presignMessageUpload(): Promise<PresignFileUploadResult> {
+        try {
+            const uploadUrl = await getMessageUploadUrl(
+                this._bucket,
+                uuid(),
+                this._s3
+            );
+            return {
+                success: true,
+                uploadUrl,
+                uploadHeaders: {},
+                uploadMethod: 'PUT',
+            };
+        } catch (err) {
+            console.error(
+                '[ApiGatewayMessenger] Failed to presign message upload.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async downloadMessage(
+        url: string,
+        method: string,
+        headers: UploadHttpHeaders
+    ): Promise<string> {
+        return await downloadObject(this._bucket, url, this._s3);
     }
 
     async sendMessage(
         connectionIds: string[],
-        data: Message,
+        data: WebsocketMessage,
         excludeConnection?: string
     ): Promise<void> {
-        console.log(`[ApiGatewayMessenger] [${data.name}] Send Message`);
-        const packet: Packet = {
-            type: 'message',
-            channel: data.name,
-            data: data.data,
-        };
-        const jsonData = JSON.stringify(packet);
+        console.log(`[ApiGatewayMessenger] [${data.type}] Send Message`);
+
         try {
-            await this._sendData(connectionIds, jsonData, excludeConnection);
+            await this._sendMessage(connectionIds, data, excludeConnection);
         } catch (err) {
             console.error('[ApiGatewayMessenger] Failed to send message.', err);
         }
     }
 
-    async sendPacket(connectionId: string, packet: Packet) {
-        const jsonData = JSON.stringify(packet);
-        await this._sendData([connectionId], jsonData);
+    async sendEvent(
+        connectionId: string,
+        event: WebsocketEvent
+    ): Promise<void> {
+        console.log(`[ApiGatewayMessenger] Send Event Type: ${event[0]}`);
+
+        await this._api.postToConnection({
+            ConnectionId: connectionId,
+            Data: JSON.stringify(event),
+        });
     }
 
     async sendRaw(connectionId: string, data: string) {
@@ -70,30 +120,30 @@ export class ApiGatewayMessenger implements ApiaryMessenger {
         });
     }
 
-    private async _sendData(
+    private async _sendMessage(
         connectionIds: string[],
-        data: string,
+        message: WebsocketMessage,
         excludeConnection?: string
     ) {
+        const data = JSON.stringify(message);
+
         // TODO: Calculate the real message size instead of just assuming that
         // each character is 1 byte
         if (data.length > MAX_MESSAGE_SIZE) {
             const url = await uploadMessage(this._s3, this._bucket, data);
 
             // Request download
-            const downloadRequest: AwsDownloadRequest = [
-                AwsMessageTypes.DownloadRequest,
+            const event: WebsocketDownloadRequestEvent = [
+                WebsocketEventTypes.DownloadRequest,
+                -1,
                 url,
+                'GET',
+                {},
             ];
-            const downloadRequestJson = JSON.stringify(downloadRequest);
-
             const promises = connectionIds.map(async (id) => {
                 if (id !== excludeConnection) {
                     try {
-                        await this._api.postToConnection({
-                            ConnectionId: id,
-                            Data: downloadRequestJson,
-                        });
+                        await this.sendEvent(id, event);
                     } catch (err) {
                         if (err.code === 'GoneException') {
                             // The connection no longer exists. We should remove it.
@@ -109,16 +159,15 @@ export class ApiGatewayMessenger implements ApiaryMessenger {
             });
             await Promise.all(promises);
         } else {
-            const message: AwsMessageData = [AwsMessageTypes.Message, data];
-            const messageJson = JSON.stringify(message);
-
+            const event: WebsocketMessageEvent = [
+                WebsocketEventTypes.Message,
+                0,
+                message,
+            ];
             const promises = connectionIds.map(async (id) => {
                 if (id !== excludeConnection) {
                     try {
-                        await this._api.postToConnection({
-                            ConnectionId: id,
-                            Data: messageJson,
-                        });
+                        await this.sendEvent(id, event);
                     } catch (err) {
                         if (err.code === 'GoneException') {
                             // The connection no longer exists. We should remove it.
