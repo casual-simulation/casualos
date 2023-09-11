@@ -1,230 +1,526 @@
 {
-    "hash": "actions/image-classification",
-    "pageTitle": "Image Classification Actions",
-    "pageDescription": "Actions for classifying images using AI.",
-    "pageSidebarLabel": "Image Classification",
+    "hash": "types/records/studios",
+    "pageTitle": "Studio Types",
+    "pageDescription": "Types that are used for actions that manage studios.",
+    "pageSidebarLabel": "Studios",
     "contents": [
         {
-            "id": 662,
-            "order": 0,
-            "name": "os.openImageClassifier",
+            "id": 3211,
+            "order": 9999,
+            "name": "ListStudiosFailure",
             "reflection": {
-                "id": 662,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
+                "id": 3211,
+                "name": "ListStudiosFailure",
+                "kind": 256,
+                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.",
-                    "text": "Sends the [`@onImageClassifierOpened`](tags:@onImageClassifierOpened) shout once opened and the [`@onImageClassified`](tags:@onImageClassified) shout every time an image has been classified.\n",
+                    "shortText": "Defines an interface that represents a failed \"list studios\" result.",
                     "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Open the image classifier.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL'\n});\n"
-                        },
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Open the image classifier with a specific camera.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL',\n    cameraType: 'front'\n});\n"
-                        },
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/image-classification"
+                            "text": "types/records/studios"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ListStudiosFailure\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3213,
+                        "name": "errorCode",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The error code.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1449,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "literal",
+                                    "value": "server_error"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "not_authorized"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 3214,
+                        "name": "errorMessage",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The error message.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1454,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 3212,
+                        "name": "success",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1444,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": false
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            3213,
+                            3214,
+                            3212
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-records/RecordsController.ts",
+                        "line": 1443,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an interface that represents a failed \"list studios\" result.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/records/studios"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ListStudiosFailure\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 3207,
+            "order": 9999,
+            "name": "ListStudiosResult",
+            "reflection": {
+                "id": 3207,
+                "name": "ListStudiosResult",
+                "kind": 4194304,
+                "kindString": "Type alias",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines the list of possible results for the [`os.listUserStudios(endpoint)`](ref:os.listUserStudios) function.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/records/studios"
                         },
                         {
                             "tag": "doctitle",
                             "paramName": "",
-                            "text": "Image Classification Actions"
+                            "text": "Studio Types"
                         },
                         {
                             "tag": "docsidebar",
                             "paramName": "",
-                            "text": "Image Classification"
+                            "text": "Studios"
                         },
                         {
                             "tag": "docdescription",
                             "paramName": "",
-                            "text": "Actions for classifying images using AI."
+                            "text": "Types that are used for actions that manage studios."
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.openImageClassifier"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-image-classifier"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "0\n"
+                            "text": "ListStudiosResult\n"
                         }
                     ]
                 },
-                "parameters": [
+                "sources": [
                     {
-                        "id": 663,
-                        "name": "options",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the options that should be used for the image classifier.\n",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "reference",
-                            "id": 2637,
-                            "name": "ImageClassifierOptions"
-                        }
+                        "fileName": "src/aux-records/RecordsController.ts",
+                        "line": 1420,
+                        "character": 12
                     }
                 ],
                 "type": {
-                    "type": "reference",
-                    "typeArguments": [
+                    "type": "union",
+                    "types": [
                         {
-                            "type": "intrinsic",
-                            "name": "void"
+                            "type": "reference",
+                            "id": 3208,
+                            "name": "ListStudiosSuccess"
+                        },
+                        {
+                            "type": "reference",
+                            "id": 3211,
+                            "name": "ListStudiosFailure"
                         }
-                    ],
-                    "qualifiedName": "Promise",
-                    "package": "typescript",
-                    "name": "Promise"
+                    ]
                 }
             },
             "comment": {
-                "shortText": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.",
-                "text": "Sends the {@tag @onImageClassifierOpened} shout once opened and the {@tag @onImageClassified} shout every time an image has been classified.\n",
+                "shortText": "Defines the list of possible results for the {@link os.listUserStudios} function.",
+                "text": "",
                 "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Open the image classifier.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL'\n});\n"
-                    },
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Open the image classifier with a specific camera.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL',\n    cameraType: 'front'\n});\n"
-                    },
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/image-classification"
+                        "text": "types/records/studios"
                     },
                     {
                         "tagName": "doctitle",
                         "paramName": "",
-                        "text": "Image Classification Actions"
+                        "text": "Studio Types"
                     },
                     {
                         "tagName": "docsidebar",
                         "paramName": "",
-                        "text": "Image Classification"
+                        "text": "Studios"
                     },
                     {
                         "tagName": "docdescription",
                         "paramName": "",
-                        "text": "Actions for classifying images using AI."
+                        "text": "Types that are used for actions that manage studios."
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.openImageClassifier"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-image-classifier"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "0\n"
+                        "text": "ListStudiosResult\n"
                     }
                 ]
             },
-            "group": "10-image-classifier"
+            "group": null
         },
         {
-            "id": 666,
+            "id": 3208,
             "order": 9999,
-            "name": "os.closeImageClassifier",
+            "name": "ListStudiosSuccess",
             "reflection": {
-                "id": 666,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
+                "id": 3208,
+                "name": "ListStudiosSuccess",
+                "kind": 256,
+                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Closes the image classifier.\nReturns a promise that resolves once the image classifier has been closed.",
-                    "text": "Also sends the [`@onImageClassifierClosed`](tags:@onImageClassifierClosed) shout once closed.\n",
+                    "shortText": "Defines an interface that represents a successful \"list studios\" result.",
                     "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Close the image classifier.\nawait os.closeImageClassifier();\n"
-                        },
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/image-classification"
+                            "text": "types/records/studios"
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.closeImageClassifier"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-image-classifier\n"
+                            "text": "ListStudiosSuccess\n"
                         }
                     ]
                 },
-                "type": {
-                    "type": "reference",
-                    "typeArguments": [
-                        {
-                            "type": "intrinsic",
-                            "name": "void"
+                "children": [
+                    {
+                        "id": 3210,
+                        "name": "studios",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The list of studios that the user is a member of.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1434,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reference",
+                                "id": 3215,
+                                "name": "ListedStudio"
+                            }
                         }
-                    ],
-                    "qualifiedName": "Promise",
-                    "package": "typescript",
-                    "name": "Promise"
-                }
+                    },
+                    {
+                        "id": 3209,
+                        "name": "success",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1429,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": true
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            3210,
+                            3209
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-records/RecordsController.ts",
+                        "line": 1428,
+                        "character": 17
+                    }
+                ]
             },
             "comment": {
-                "shortText": "Closes the image classifier.\nReturns a promise that resolves once the image classifier has been closed.",
-                "text": "Also sends the {@tag @onImageClassifierClosed} shout once closed.\n",
+                "shortText": "Defines an interface that represents a successful \"list studios\" result.",
+                "text": "",
                 "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Close the image classifier.\nawait os.closeImageClassifier();\n"
-                    },
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/image-classification"
+                        "text": "types/records/studios"
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.closeImageClassifier"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-image-classifier\n"
+                        "text": "ListStudiosSuccess\n"
                     }
                 ]
             },
-            "group": "10-image-classifier"
+            "group": null
+        },
+        {
+            "id": 3215,
+            "order": 9999,
+            "name": "ListedStudio",
+            "reflection": {
+                "id": 3215,
+                "name": "ListedStudio",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an interface that represents a studio that has been listed.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/records/studios"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ListedStudio\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3217,
+                        "name": "displayName",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The name of the studio.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1472,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 3219,
+                        "name": "isPrimaryContact",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the user is the primary contact for this studio.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1482,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 3218,
+                        "name": "role",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The role that the user has in the studio.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1477,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "name": "StudioAssignmentRole"
+                        }
+                    },
+                    {
+                        "id": 3216,
+                        "name": "studioId",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The ID of the studio.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1467,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 3220,
+                        "name": "subscriptionTier",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The tier of the studio's subscription.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/RecordsController.ts",
+                                "line": 1487,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            3217,
+                            3219,
+                            3218,
+                            3216,
+                            3220
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-records/RecordsController.ts",
+                        "line": 1463,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an interface that represents a studio that has been listed.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/records/studios"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ListedStudio\n"
+                    }
+                ]
+            },
+            "group": null
         }
     ],
     "references": {

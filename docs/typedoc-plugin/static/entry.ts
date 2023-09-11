@@ -247,6 +247,8 @@ export {
     ListStudiosSuccess,
     ListStudiosFailure,
 
+    ListedStudio,
+
 } from '../../../src/aux-records';
 
 export {
