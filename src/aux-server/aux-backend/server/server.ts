@@ -86,8 +86,8 @@ import {
     GenericHttpRequest,
     getStatusCode,
 } from '@casual-simulation/aux-records';
-
-const connect = pify(MongoClient.connect);
+import { Server as WebsocketServer } from 'ws';
+import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 
 const imageMimeTypes = [
     'image/png',
@@ -107,12 +107,8 @@ export class Server {
     private _backendApp: express.Express;
     private _frontendHttp: Http.Server;
     private _backendHttp: Http.Server;
+    private _wsServer: WebsocketServer;
     private _config: Config;
-    private _mongoClient: MongoClient;
-    private _redisClient: RedisClient | null;
-
-    private _hgetall: any;
-    private _cacheExpireSeconds: number | null;
 
     constructor(config: Config) {
         this._config = config;
@@ -137,26 +133,11 @@ export class Server {
             this._frontendHttp = new Http.Server(this._frontendApp);
             this._backendHttp = new Http.Server(this._backendApp);
         }
+        this._wsServer = new WebsocketServer({ noServer: true });
         this._config = config;
-        this._redisClient = this._config.collaboration.redis
-            ? createRedisClient({
-                  ...this._config.collaboration.redis.options,
-                  return_buffers: true,
-              })
-            : null;
-        this._hgetall = this._redisClient
-            ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
-            : null;
-
-        const redisConfig = this._config.collaboration.redis;
-        this._cacheExpireSeconds = redisConfig
-            ? redisConfig.defaultExpireSeconds
-            : null;
     }
 
     async configure() {
-        await this._configureBackend();
-
         if (
             this._config.collaboration.proxy &&
             this._config.collaboration.proxy.trust
@@ -166,6 +147,8 @@ export class Server {
                 this._config.collaboration.proxy.trust
             );
         }
+
+        await this._configureBackend();
 
         // TODO: Enable CSP when we know where it works and does not work
         // this._frontendApplyCSP();
@@ -203,13 +186,6 @@ export class Server {
         ];
         this._frontendApp.use(DRIVES_URL, driveMiddleware);
 
-        this._frontendApp.use(
-            '/proxy',
-            asyncMiddleware(async (req, res) => {
-                await this._handleProxy(req, res);
-            })
-        );
-
         this._frontendApp.get('/api/*', (req, res) => {
             res.sendStatus(404);
         });
@@ -237,127 +213,6 @@ export class Server {
                 )
             );
         });
-    }
-
-    private async _handleProxy(req: Request, res: Response) {
-        const url = req.query.url as string;
-        try {
-            if (this._hgetall) {
-                const cached = await this._hgetall(url);
-                if (cached) {
-                    console.log('[Server] Returning cached request:', url);
-                    const contentType = cached.contentType.toString();
-                    const status = parseInt(cached.status.toString());
-                    const data: Buffer = cached.data;
-                    const optimized: Buffer = cached.optimizedData;
-                    const optimizedContentType = cached.optimizedContentType;
-
-                    let [retContentType, retData] = this._getDataForBrowser(
-                        req,
-                        contentType,
-                        data,
-                        optimizedContentType
-                            ? optimizedContentType.toString()
-                            : null,
-                        optimized
-                    );
-                    res.status(status);
-                    res.contentType(retContentType);
-                    res.send(retData);
-                    return;
-                }
-            }
-
-            console.log('[Server] Proxying request:', url);
-            const resp = await axios.get(url, {
-                responseType: 'arraybuffer',
-            });
-            const status = resp.status;
-            let contentType = resp.headers['content-type'];
-            let data: Buffer = resp.data;
-            let cacheControl = parseCacheControlHeader(
-                resp.headers['cache-control'] || ''
-            );
-
-            let optimizedData: Buffer | null = null;
-            let optimizedContentType: string | null = null;
-            if (
-                this._redisClient &&
-                this._shouldCache(contentType, cacheControl)
-            ) {
-                if (this._shouldOptimize(contentType)) {
-                    console.log('[Server] Optimizing image...');
-                    const beforeSize = data.length;
-                    const beforeContentType = contentType;
-                    [optimizedContentType, optimizedData] =
-                        await this._optimizeImage(contentType, data);
-                    const afterSize = optimizedData.length;
-
-                    const sizeDifference = beforeSize - afterSize;
-                    const percentageDifference = 1 - afterSize / beforeSize;
-
-                    console.log('[Server] Optimization results:');
-                    console.log(`    ${beforeContentType}:`, beforeSize);
-                    console.log(`    ${optimizedContentType}:`, afterSize);
-                    console.log('    Size Diff:', sizeDifference);
-                    console.log('       % Diff:', percentageDifference * 100);
-                } else {
-                    console.log('[Server] Skipping Optimization.');
-                }
-
-                let expire = this._cacheExpireSeconds;
-                if (cacheControl['s-maxage']) {
-                    expire = cacheControl['s-maxage'];
-                } else if (cacheControl['max-age']) {
-                    expire = cacheControl['max-age'];
-                }
-                console.log(
-                    `[Server] Caching ${contentType} for ${expire} seconds.`
-                );
-                this._redisClient.hmset(
-                    url,
-                    pickBy(
-                        {
-                            contentType: contentType,
-                            status: status,
-                            data: <any>data,
-                            optimizedData: <any>optimizedData,
-                            optimizedContentType: optimizedContentType,
-                        },
-                        (val) => !!val
-                    )
-                );
-
-                this._redisClient.EXPIRE(url, expire as number);
-                cacheControl = {
-                    public: true,
-                    'max-age': expire as number,
-                };
-            }
-
-            let cacheControlHeader = formatCacheControlHeader(cacheControl);
-            if (cacheControlHeader && cacheControlHeader.length > 0) {
-                res.setHeader('Cache-Control', cacheControlHeader);
-            }
-
-            let [retContentType, retData] = this._getDataForBrowser(
-                req,
-                contentType,
-                data,
-                optimizedContentType,
-                optimizedData
-            );
-            res.contentType(retContentType);
-            res.status(resp.status);
-            res.send(retData);
-        } catch (ex) {
-            console.log(`[Server] Proxying to ${url} failed.`);
-            if (ex.response) {
-                res.sendStatus(ex.response.status);
-            } else {
-                res.sendStatus(500);
-            }
-        }
     }
 
     private async _configureBackend() {
@@ -423,11 +278,25 @@ export class Server {
             }
         }
 
+        if (options.redis && options.redis.websocketConnectionNamespace) {
+            builder.useRedisWebsocketConnectionStore();
+        }
+
+        if (options.ws) {
+            builder.useWSWebsocketMessenger();
+        }
+
+        if (options.redis && options.redis.tempInstRecordsStoreNamespace) {
+            builder.usePrismaAndRedisInstRecords();
+        }
+
         if (options.ai) {
             builder.useAI();
         }
 
-        const { server, filesController, mongoDatabase } =
+        builder.useWSWebsocketMessenger();
+
+        const { server, filesController, mongoDatabase, websocketMessenger } =
             await builder.buildAsync();
         const filesCollection =
             mongoDatabase.collection<any>('recordsFilesData');
@@ -625,6 +494,41 @@ export class Server {
             res.sendStatus(404);
         });
 
+        if (websocketMessenger instanceof WSWebsocketMessenger) {
+            this._wsServer.on('connection', (socket, req) => {
+                const id = websocketMessenger.registerConnection(socket);
+                const ip = req.socket.remoteAddress;
+
+                socket.on('close', async () => {
+                    await server.handleWebsocketRequest({
+                        type: 'disconnect',
+                        connectionId: id,
+                        ipAddress: ip,
+                        body: null,
+                    });
+                    websocketMessenger.removeConnection(id);
+                });
+
+                socket.on('message', (message, isBinary) => {
+                    server.handleWebsocketRequest({
+                        type: 'message',
+                        connectionId: id,
+                        ipAddress: ip,
+                        body: isBinary
+                            ? new Uint8Array(message as any)
+                            : message.toString('utf-8'),
+                    });
+                });
+
+                server.handleWebsocketRequest({
+                    type: 'connect',
+                    connectionId: id,
+                    ipAddress: ip,
+                    body: null,
+                });
+            });
+        }
+
         function handleRecordsCorsHeaders(req: Request, res: Response) {
             if (allowedRecordsOrigins.has(req.headers.origin as string)) {
                 res.setHeader(
@@ -663,11 +567,24 @@ export class Server {
         );
 
         if (this._config.backend.config) {
-            this._backendHttp.listen(this._config.backend.httpPort, () =>
-                console.log(
-                    `[Server] Backend listening on port ${this._config.backend.httpPort}!`
-                )
+            const server = this._backendHttp.listen(
+                this._config.backend.httpPort,
+                () =>
+                    console.log(
+                        `[Server] Backend listening on port ${this._config.backend.httpPort}!`
+                    )
             );
+
+            server.on('upgrade', (request, socket, head) => {
+                this._wsServer.handleUpgrade(
+                    request,
+                    socket as any,
+                    head,
+                    (ws) => {
+                        this._wsServer.emit('connection', ws, request);
+                    }
+                );
+            });
         }
     }
 

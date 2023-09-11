@@ -363,6 +363,7 @@ model InstBranch {
     inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name])
 
     name String
+    temporary Boolean
 
     updates BranchUpdate[]
 

@@ -154,12 +154,6 @@ Use the following environment variables to configure infrastructure-related opti
 -   `DEBUG`: Whether to enable debug mode. Setting this to `true` will enable some more debug logs, particularly for Deno.
 -   `STAGE_TYPE`: The type of stage store that should be used for atoms that have not yet been committed. Possible options are `mongodb` and `redis`. `mongodb` uses MongoDB to store atoms while `redis` uses Redis. Note that `redis` is not persistent which makes data loss more likely. Defaults to `redis`.
 
-#### Build Configuration
-
-The AUX build can be configured using the following environment variables:
-
--   `PROXY_CORS_REQUESTS` - Whether to proxy HTTP GET requests that would trigger CORS through the proxy hosted by the server. Possible options are `true` and `false`. (Defaults to `false`)
-
 ## Security Note
 
 In the default configuration, CasualOS allows running arbitrary user scripts inside the web server process. Potential capabilities include filesystem access, executing commands, making arbitrary web requests, and reading environment variables.
