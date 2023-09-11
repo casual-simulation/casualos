@@ -1,6 +1,6 @@
 import {
     Store,
-    IncrementResponse,
+    ClientRateLimitInfo,
     Options as RateLimitConfiguration,
 } from 'express-rate-limit';
 
@@ -111,12 +111,12 @@ class RedisStore implements Store, RateLimiter {
      *
      * @param key {string} - The identifier for a client
      *
-     * @returns {IncrementResponse} - The number of hits and reset time for that client
+     * @returns {ClientRateLimitInfo} - The number of hits and reset time for that client
      */
     async increment(
         key: string,
         amount: number = 1
-    ): Promise<IncrementResponse> {
+    ): Promise<ClientRateLimitInfo> {
         const results = await this._runScript(this.prefixKey(key), amount);
 
         if (!Array.isArray(results)) {
