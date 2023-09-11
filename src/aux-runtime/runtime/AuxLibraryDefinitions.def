@@ -3788,6 +3788,11 @@ export interface ListedStudio {
      * Whether the user is the primary contact for this studio.
      */
     isPrimaryContact: boolean;
+
+    /**
+     * The tier of the studio's subscription.
+     */
+    subscriptionTier: string;
 }
 
 

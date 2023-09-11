@@ -2,6 +2,7 @@ import {
     SubscriptionConfiguration,
     allowAllFeatures,
     getSubscriptionFeatures,
+    getSubscriptionTier,
 } from './SubscriptionConfiguration';
 
 describe('getSubscriptionFeatures()', () => {
@@ -319,5 +320,171 @@ describe('getSubscriptionFeatures()', () => {
 describe('allowAllFeatures()', () => {
     it('should match the snapshot', () => {
         expect(allowAllFeatures()).toMatchSnapshot();
+    });
+});
+
+describe('getSubscriptionTier()', () => {
+    let config: SubscriptionConfiguration = {
+        cancelUrl: 'url',
+        returnUrl: 'url',
+        successUrl: 'url',
+        subscriptions: [
+            {
+                id: 'sub0',
+                tier: 'tier2',
+                eligibleProducts: [],
+                featureList: [],
+                product: '',
+            },
+            {
+                id: 'subId',
+                tier: 'beta',
+                eligibleProducts: [],
+                featureList: [],
+                product: '',
+            },
+        ],
+        tiers: {},
+        defaultFeatures: {
+            studio: {
+                data: {
+                    allowed: true,
+                },
+                events: {
+                    allowed: true,
+                },
+                files: {
+                    allowed: true,
+                },
+                records: {
+                    allowed: true,
+                },
+                ai: {
+                    chat: {
+                        allowed: false,
+                    },
+                    images: {
+                        allowed: false,
+                    },
+                    skyboxes: {
+                        allowed: false,
+                    },
+                },
+            },
+            user: {
+                data: {
+                    allowed: true,
+                },
+                events: {
+                    allowed: true,
+                },
+                files: {
+                    allowed: true,
+                },
+                records: {
+                    allowed: true,
+                },
+                ai: {
+                    chat: {
+                        allowed: false,
+                    },
+                    images: {
+                        allowed: false,
+                    },
+                    skyboxes: {
+                        allowed: false,
+                    },
+                },
+            },
+        },
+        webhookSecret: 'secret',
+    };
+
+    beforeEach(() => {
+        config = {
+            cancelUrl: 'url',
+            returnUrl: 'url',
+            successUrl: 'url',
+            subscriptions: [
+                {
+                    id: 'sub0',
+                    tier: 'tier2',
+                    eligibleProducts: [],
+                    featureList: [],
+                    product: '',
+                },
+                {
+                    id: 'subId',
+                    tier: 'beta',
+                    eligibleProducts: [],
+                    featureList: [],
+                    product: '',
+                },
+            ],
+            tiers: {},
+            defaultFeatures: {
+                studio: {
+                    data: {
+                        allowed: true,
+                    },
+                    events: {
+                        allowed: true,
+                    },
+                    files: {
+                        allowed: true,
+                    },
+                    records: {
+                        allowed: true,
+                    },
+                    ai: {
+                        chat: {
+                            allowed: false,
+                        },
+                        images: {
+                            allowed: false,
+                        },
+                        skyboxes: {
+                            allowed: false,
+                        },
+                    },
+                },
+                user: {
+                    data: {
+                        allowed: true,
+                    },
+                    events: {
+                        allowed: true,
+                    },
+                    files: {
+                        allowed: true,
+                    },
+                    records: {
+                        allowed: true,
+                    },
+                    ai: {
+                        chat: {
+                            allowed: false,
+                        },
+                        images: {
+                            allowed: false,
+                        },
+                        skyboxes: {
+                            allowed: false,
+                        },
+                    },
+                },
+            },
+            webhookSecret: 'secret',
+        };
+    });
+
+    it('should return the tier for the given subscription ID', () => {
+        expect(getSubscriptionTier(config, 'active', 'sub0')).toBe('tier2');
+        expect(getSubscriptionTier(config, 'active', 'subId')).toBe('beta');
+        expect(getSubscriptionTier(config, 'active', 'missing')).toBe(null);
+
+        expect(getSubscriptionTier(config, 'ended', 'sub0')).toBe(null);
+        expect(getSubscriptionTier(config, 'ended', 'subId')).toBe(null);
+        expect(getSubscriptionTier(config, 'ended', 'missing')).toBe(null);
     });
 });

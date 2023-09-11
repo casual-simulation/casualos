@@ -1,6 +1,5 @@
 import {
     ListedRecord,
-    ListedStudio,
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
     RecordsStore,
@@ -27,7 +26,10 @@ import { AuthStore } from './AuthStore';
 import { v4 as uuid } from 'uuid';
 import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
-import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import {
+    getSubscriptionFeatures,
+    getSubscriptionTier,
+} from './SubscriptionConfiguration';
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
@@ -895,15 +897,22 @@ export class RecordsController {
     async listStudios(userId: string): Promise<ListStudiosResult> {
         try {
             const studios = await this._store.listStudiosForUser(userId);
-
+            const config = await this._config.getSubscriptionConfiguration();
             return {
                 success: true,
-                studios: studios.map((s) => ({
-                    studioId: s.studioId,
-                    displayName: s.displayName,
-                    role: s.role,
-                    isPrimaryContact: s.isPrimaryContact,
-                })),
+                studios: studios.map((s) => {
+                    return {
+                        studioId: s.studioId,
+                        displayName: s.displayName,
+                        role: s.role,
+                        isPrimaryContact: s.isPrimaryContact,
+                        subscriptionTier: getSubscriptionTier(
+                            config,
+                            s.subscriptionStatus,
+                            s.subscriptionId
+                        ),
+                    };
+                }),
             };
         } catch (err) {
             console.error(
@@ -1443,6 +1452,39 @@ export interface ListStudiosFailure {
      * The error message.
      */
     errorMessage: string;
+}
+
+/**
+ * Defines an interface that represents a studio that has been listed.
+ *
+ * @dochash types/records/studios
+ * @docname ListedStudio
+ */
+export interface ListedStudio {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The name of the studio.
+     */
+    displayName: string;
+
+    /**
+     * The role that the user has in the studio.
+     */
+    role: StudioAssignmentRole;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
+
+    /**
+     * The tier of the studio's subscription.
+     */
+    subscriptionTier: string;
 }
 
 export type ListStudioMembersResult =

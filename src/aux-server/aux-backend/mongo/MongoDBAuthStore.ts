@@ -11,7 +11,7 @@ import {
     ListStudioAssignmentFilters,
     ListedStudioAssignment,
     ListedRecord,
-    ListedStudio,
+    StoreListedStudio,
 } from '@casual-simulation/aux-records';
 import {
     AddressType,
@@ -886,7 +886,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         };
     }
 
-    async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
+    async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
         const studios = await this._studios
             .find({
                 assignments: {

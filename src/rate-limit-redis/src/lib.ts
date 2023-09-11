@@ -1,5 +1,4 @@
 import { Options as RateLimitConfiguration } from 'express-rate-limit';
-
 import { Options, RedisReply, SendCommandFn } from './types';
 
 import { RateLimiter, RateLimiterIncrementResult } from './RateLimiter';

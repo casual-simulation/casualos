@@ -12,17 +12,19 @@ import {
 } from './AwsMessages';
 import { uploadMessage } from './WebsocketUtils';
 import { S3 } from '@aws-sdk/client-s3';
+import { Subscription, SubscriptionLike } from 'rxjs';
 
 export const MAX_MESSAGE_SIZE = 32_000;
 
 /**
  * Defines a class that implements the ApiaryMessenger interface for AWS API Gateway.
  */
-export class ApiGatewayMessenger implements ApiaryMessenger {
+export class ApiGatewayMessenger implements ApiaryMessenger, SubscriptionLike {
     private _api: ApiGatewayManagementApi;
     private _s3: S3;
     private _connections: ApiaryConnectionStore;
     private _bucket: string;
+    private _sub: Subscription;
 
     constructor(
         endpoint: string,
@@ -37,6 +39,19 @@ export class ApiGatewayMessenger implements ApiaryMessenger {
         this._bucket = bucket;
         this._s3 = s3;
         this._connections = connectionStore;
+        this._sub = new Subscription();
+
+        this._sub.add(() => {
+            this._api.destroy();
+        });
+    }
+
+    unsubscribe(): void {
+        this._sub.unsubscribe();
+    }
+
+    get closed(): boolean {
+        return this._sub.closed;
     }
 
     async sendMessage(

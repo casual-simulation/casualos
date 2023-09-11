@@ -1,8 +1,16 @@
 # CasualOS Changelog
 
-## V3.2.6
+## V3.2.7
 
 #### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved `os.listUserStudios()` to include the subscription tier of each studio.
+
+## V3.2.6
+
+#### Date: 9/1/2023
 
 ### :rocket: Improvements
 

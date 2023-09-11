@@ -28,7 +28,6 @@ import {
     AvailableRolePermissions,
 } from './PolicyPermissions';
 import {
-    ListedStudio,
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
     StudioAssignmentRole,

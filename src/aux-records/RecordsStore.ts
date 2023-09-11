@@ -105,7 +105,7 @@ export interface RecordsStore {
      * Gets the list of studios that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
-    listStudiosForUser(userId: string): Promise<ListedStudio[]>;
+    listStudiosForUser(userId: string): Promise<StoreListedStudio[]>;
 
     /**
      * Adds the given studio assignment to the store.
@@ -374,11 +374,8 @@ export interface ListedStudioAssignmentUser {
 
 /**
  * Defines an interface that represents a studio that a user has access to.
- *
- * @dochash types/records/studios
- * @docname ListedStudio
  */
-export interface ListedStudio {
+export interface StoreListedStudio {
     /**
      * The ID of the studio.
      */
@@ -398,6 +395,16 @@ export interface ListedStudio {
      * Whether the user is the primary contact for this studio.
      */
     isPrimaryContact: boolean;
+
+    /**
+     * The ID of the studio's subscription.
+     */
+    subscriptionId: string;
+
+    /**
+     * The current subscription status for this studio.
+     */
+    subscriptionStatus: string;
 }
 
 export interface ListStudioAssignmentFilters {
