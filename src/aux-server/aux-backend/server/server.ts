@@ -99,301 +99,6 @@ const imageMimeTypes = [
     'image/webp',
 ];
 
-export class ClientServer {
-    private _app: express.Express;
-    private _redisClient: RedisClient | null;
-    private _hgetall: any;
-    private _player: ClientConfig;
-    private _config: Config;
-    private _cacheExpireSeconds: number | null;
-
-    get app() {
-        return this._app;
-    }
-
-    constructor(
-        config: Config,
-        player: ClientConfig,
-        redisClient: RedisClient | null,
-        redisConfig: RedisConfig | null
-    ) {
-        this._app = express();
-        this._config = config;
-        this._player = player;
-        this._redisClient = redisClient;
-        this._hgetall = this._redisClient
-            ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
-            : null;
-        this._cacheExpireSeconds = redisConfig
-            ? redisConfig.defaultExpireSeconds
-            : null;
-    }
-
-    configure() {
-        this._app.use(express.static(this._config.collaboration.dist));
-
-        const driveMiddleware = [
-            express.static(this._config.collaboration.drives),
-            ...[...new Array(5)].map((_, i) =>
-                express.static(
-                    path.join(this._config.collaboration.drives, i.toString())
-                )
-            ),
-        ];
-        this._app.use(DRIVES_URL, driveMiddleware);
-
-        this._app.use(
-            '/proxy',
-            asyncMiddleware(async (req, res) => {
-                const url = req.query.url as string;
-                try {
-                    if (this._hgetall) {
-                        const cached = await this._hgetall(url);
-                        if (cached) {
-                            console.log(
-                                '[Server] Returning cached request:',
-                                url
-                            );
-                            const contentType = cached.contentType.toString();
-                            const status = parseInt(cached.status.toString());
-                            const data: Buffer = cached.data;
-                            const optimized: Buffer = cached.optimizedData;
-                            const optimizedContentType =
-                                cached.optimizedContentType;
-
-                            let [retContentType, retData] =
-                                this._getDataForBrowser(
-                                    req,
-                                    contentType,
-                                    data,
-                                    optimizedContentType
-                                        ? optimizedContentType.toString()
-                                        : null,
-                                    optimized
-                                );
-                            res.status(status);
-                            res.contentType(retContentType);
-                            res.send(retData);
-                            return;
-                        }
-                    }
-
-                    console.log('[Server] Proxying request:', url);
-                    const resp = await axios.get(url, {
-                        responseType: 'arraybuffer',
-                    });
-                    const status = resp.status;
-                    let contentType = resp.headers['content-type'];
-                    let data: Buffer = resp.data;
-                    let cacheControl = parseCacheControlHeader(
-                        resp.headers['cache-control'] || ''
-                    );
-
-                    let optimizedData: Buffer | null = null;
-                    let optimizedContentType: string | null = null;
-                    if (
-                        this._redisClient &&
-                        this._shouldCache(contentType, cacheControl)
-                    ) {
-                        if (this._shouldOptimize(contentType)) {
-                            console.log('[Server] Optimizing image...');
-                            const beforeSize = data.length;
-                            const beforeContentType = contentType;
-                            [optimizedContentType, optimizedData] =
-                                await this._optimizeImage(contentType, data);
-                            const afterSize = optimizedData.length;
-
-                            const sizeDifference = beforeSize - afterSize;
-                            const percentageDifference =
-                                1 - afterSize / beforeSize;
-
-                            console.log('[Server] Optimization results:');
-                            console.log(
-                                `    ${beforeContentType}:`,
-                                beforeSize
-                            );
-                            console.log(
-                                `    ${optimizedContentType}:`,
-                                afterSize
-                            );
-                            console.log('    Size Diff:', sizeDifference);
-                            console.log(
-                                '       % Diff:',
-                                percentageDifference * 100
-                            );
-                        } else {
-                            console.log('[Server] Skipping Optimization.');
-                        }
-
-                        let expire = this._cacheExpireSeconds;
-                        if (cacheControl['s-maxage']) {
-                            expire = cacheControl['s-maxage'];
-                        } else if (cacheControl['max-age']) {
-                            expire = cacheControl['max-age'];
-                        }
-                        console.log(
-                            `[Server] Caching ${contentType} for ${expire} seconds.`
-                        );
-                        this._redisClient.hmset(
-                            url,
-                            pickBy(
-                                {
-                                    contentType: contentType,
-                                    status: status,
-                                    data: <any>data,
-                                    optimizedData: <any>optimizedData,
-                                    optimizedContentType: optimizedContentType,
-                                },
-                                (val) => !!val
-                            )
-                        );
-
-                        this._redisClient.EXPIRE(url, expire as number);
-                        cacheControl = {
-                            public: true,
-                            'max-age': expire as number,
-                        };
-                    }
-
-                    let cacheControlHeader =
-                        formatCacheControlHeader(cacheControl);
-                    if (cacheControlHeader && cacheControlHeader.length > 0) {
-                        res.setHeader('Cache-Control', cacheControlHeader);
-                    }
-
-                    let [retContentType, retData] = this._getDataForBrowser(
-                        req,
-                        contentType,
-                        data,
-                        optimizedContentType,
-                        optimizedData
-                    );
-                    res.contentType(retContentType);
-                    res.status(resp.status);
-                    res.send(retData);
-                } catch (ex) {
-                    console.log(`[Server] Proxying to ${url} failed.`);
-                    if (ex.response) {
-                        res.sendStatus(ex.response.status);
-                    } else {
-                        res.sendStatus(500);
-                    }
-                }
-            })
-        );
-
-        // Removed the direct aux view for now
-        /*
-        this._app.use(
-            '/[\\*]/:channel[.]aux',
-            asyncMiddleware(async (req, res) => {
-                const channel = `aux-${req.params.channel || 'default'}`;
-                console.log('[Server] Getting .aux file for channel:', channel);
-                const stored = await this._store.get(channel);
-                if (stored) {
-                    res.contentType('application/json');
-                    res.send(stored);
-                } else {
-                    res.sendStatus(404);
-                }
-            })
-        );
-
-        
-        this._app.use(
-            '/:dimension/:channel?[.]aux',
-            asyncMiddleware(async (req, res) => {
-                const channel = `aux-${req.params.channel || 'default'}`;
-                console.log('[Server] Getting .aux file for channel:', channel);
-                const stored = await this._store.get(channel);
-                if (stored) {
-                    res.contentType('application/json');
-                    res.send(stored);
-                } else {
-                    res.sendStatus(404);
-                }
-            })
-        );
-        */
-
-        this._app.get('/api/*', (req, res) => {
-            res.sendStatus(404);
-        });
-
-        this._app.get('/terms', (req, res) => {
-            res.sendFile(
-                path.join(
-                    this._config.collaboration.dist,
-                    'terms-of-service.txt'
-                )
-            );
-        });
-
-        this._app.get('/privacy-policy', (req, res) => {
-            res.sendFile(
-                path.join(this._config.collaboration.dist, 'privacy-policy.txt')
-            );
-        });
-
-        this._app.get('*', (req, res) => {
-            res.sendFile(
-                path.join(this._config.collaboration.dist, this._player.index)
-            );
-        });
-    }
-
-    /**
-     * Optimizes the given image.
-     * @param contentType The MIME type of the image.
-     * @param data The data for the image.
-     */
-    private async _optimizeImage(
-        contentType: string,
-        data: Buffer
-    ): Promise<[string, Buffer]> {
-        const optimized = data;
-        return [contentType, optimized];
-    }
-
-    private _getDataForBrowser(
-        req: Request,
-        originalContentType: string,
-        originalData: Buffer,
-        optimizedContentType: string | null,
-        optimizedData: Buffer | null
-    ): [string, Buffer] {
-        const ua = useragent.is(req.header('user-agent'));
-        if (ua.safari || ua.mobile_safari) {
-            console.log(
-                "[Server] Returning original data because safari doesn't support WebP"
-            );
-            return [originalContentType, originalData];
-        } else {
-            return [
-                optimizedContentType || originalContentType,
-                optimizedData || originalData,
-            ];
-        }
-    }
-
-    private _shouldOptimize(contentType: string) {
-        if (contentType === 'image/webp') {
-            return false;
-        }
-        return imageMimeTypes.indexOf(contentType) >= 0;
-    }
-
-    private _shouldCache(
-        contentType: string,
-        cacheControl: CacheControlHeaderValues
-    ) {
-        const isImage = imageMimeTypes.indexOf(contentType) >= 0;
-        return (
-            isImage && !cacheControl['no-cache'] && !cacheControl['no-store']
-        );
-    }
-}
-
 /**
  * Defines a class that represents a fully featured SO4 server.
  */
@@ -403,14 +108,11 @@ export class Server {
     private _frontendHttp: Http.Server;
     private _backendHttp: Http.Server;
     private _config: Config;
-    private _client: ClientServer;
     private _mongoClient: MongoClient;
     private _redisClient: RedisClient | null;
-    private _directory: DirectoryService;
-    private _directoryStore: DirectoryStore;
-    private _directoryClient: DirectoryClient;
-    private _webhooksClient: CausalRepoClient;
-    private _botServer: BotHttpServer;
+
+    private _hgetall: any;
+    private _cacheExpireSeconds: number | null;
 
     constructor(config: Config) {
         this._config = config;
@@ -442,6 +144,14 @@ export class Server {
                   return_buffers: true,
               })
             : null;
+        this._hgetall = this._redisClient
+            ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
+            : null;
+
+        const redisConfig = this._config.collaboration.redis;
+        this._cacheExpireSeconds = redisConfig
+            ? redisConfig.defaultExpireSeconds
+            : null;
     }
 
     async configure() {
@@ -458,40 +168,10 @@ export class Server {
         }
 
         // TODO: Enable CSP when we know where it works and does not work
-        // this._applyCSP();
-
+        // this._frontendApplyCSP();
         this._frontendApp.use(cors());
-
         this._frontendApp.use(compression());
-
-        this._mongoClient = await connect(
-            this._config.collaboration.mongodb.url,
-            {
-                useNewUrlParser:
-                    this._config.collaboration.mongodb.useNewUrlParser,
-                useUnifiedTopology:
-                    !!this._config.collaboration.mongodb.useUnifiedTopology,
-            } as MongoClientOptions
-        );
-
-        if (this._config.collaboration.sandbox === 'deno') {
-            console.log('[Server] Using Deno Sandboxing');
-        } else {
-            console.log('[Server] Skipping Sandboxing');
-        }
-
-        await this._configureCausalRepoServices();
         this._frontendApp.use(bodyParser.json());
-
-        this._client = new ClientServer(
-            this._config,
-            this._config.collaboration.player,
-            this._redisClient,
-            this._config.collaboration.redis
-        );
-        this._client.configure();
-
-        this._configureBotHttpServer();
 
         this._frontendApp.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
@@ -511,70 +191,173 @@ export class Server {
             })
         );
 
-        this._frontendApp.get('/api/manifest', (req, res) => {
+        this._frontendApp.use(express.static(this._config.collaboration.dist));
+
+        const driveMiddleware = [
+            express.static(this._config.collaboration.drives),
+            ...[...new Array(5)].map((_, i) =>
+                express.static(
+                    path.join(this._config.collaboration.drives, i.toString())
+                )
+            ),
+        ];
+        this._frontendApp.use(DRIVES_URL, driveMiddleware);
+
+        this._frontendApp.use(
+            '/proxy',
+            asyncMiddleware(async (req, res) => {
+                await this._handleProxy(req, res);
+            })
+        );
+
+        this._frontendApp.get('/api/*', (req, res) => {
+            res.sendStatus(404);
+        });
+
+        this._frontendApp.get('/terms', (req, res) => {
             res.sendFile(
-                path.join(this._config.collaboration.dist, player.manifest)
+                path.join(
+                    this._config.collaboration.dist,
+                    'terms-of-service.txt'
+                )
             );
         });
 
-        this._frontendApp.post(
-            '/api/users',
-            asyncMiddleware(async (req, res) => {
-                const json = req.body;
+        this._frontendApp.get('/privacy-policy', (req, res) => {
+            res.sendFile(
+                path.join(this._config.collaboration.dist, 'privacy-policy.txt')
+            );
+        });
 
-                let username;
+        this._frontendApp.get('*', (req, res) => {
+            res.sendFile(
+                path.join(
+                    this._config.collaboration.dist,
+                    this._config.collaboration.player.index
+                )
+            );
+        });
+    }
 
-                if (json.email.indexOf('@') >= 0) {
-                    username = json.email.split('@')[0];
+    private async _handleProxy(req: Request, res: Response) {
+        const url = req.query.url as string;
+        try {
+            if (this._hgetall) {
+                const cached = await this._hgetall(url);
+                if (cached) {
+                    console.log('[Server] Returning cached request:', url);
+                    const contentType = cached.contentType.toString();
+                    const status = parseInt(cached.status.toString());
+                    const data: Buffer = cached.data;
+                    const optimized: Buffer = cached.optimizedData;
+                    const optimizedContentType = cached.optimizedContentType;
+
+                    let [retContentType, retData] = this._getDataForBrowser(
+                        req,
+                        contentType,
+                        data,
+                        optimizedContentType
+                            ? optimizedContentType.toString()
+                            : null,
+                        optimized
+                    );
+                    res.status(status);
+                    res.contentType(retContentType);
+                    res.send(retData);
+                    return;
+                }
+            }
+
+            console.log('[Server] Proxying request:', url);
+            const resp = await axios.get(url, {
+                responseType: 'arraybuffer',
+            });
+            const status = resp.status;
+            let contentType = resp.headers['content-type'];
+            let data: Buffer = resp.data;
+            let cacheControl = parseCacheControlHeader(
+                resp.headers['cache-control'] || ''
+            );
+
+            let optimizedData: Buffer | null = null;
+            let optimizedContentType: string | null = null;
+            if (
+                this._redisClient &&
+                this._shouldCache(contentType, cacheControl)
+            ) {
+                if (this._shouldOptimize(contentType)) {
+                    console.log('[Server] Optimizing image...');
+                    const beforeSize = data.length;
+                    const beforeContentType = contentType;
+                    [optimizedContentType, optimizedData] =
+                        await this._optimizeImage(contentType, data);
+                    const afterSize = optimizedData.length;
+
+                    const sizeDifference = beforeSize - afterSize;
+                    const percentageDifference = 1 - afterSize / beforeSize;
+
+                    console.log('[Server] Optimization results:');
+                    console.log(`    ${beforeContentType}:`, beforeSize);
+                    console.log(`    ${optimizedContentType}:`, afterSize);
+                    console.log('    Size Diff:', sizeDifference);
+                    console.log('       % Diff:', percentageDifference * 100);
                 } else {
-                    username = json.email;
+                    console.log('[Server] Skipping Optimization.');
                 }
 
-                // TODO: Do something like actual user login
-                res.send({
-                    id: uuid(),
-                    email: json.email,
-                    username: username,
-                    name: username,
-                });
-            })
-        );
+                let expire = this._cacheExpireSeconds;
+                if (cacheControl['s-maxage']) {
+                    expire = cacheControl['s-maxage'];
+                } else if (cacheControl['max-age']) {
+                    expire = cacheControl['max-age'];
+                }
+                console.log(
+                    `[Server] Caching ${contentType} for ${expire} seconds.`
+                );
+                this._redisClient.hmset(
+                    url,
+                    pickBy(
+                        {
+                            contentType: contentType,
+                            status: status,
+                            data: <any>data,
+                            optimizedData: <any>optimizedData,
+                            optimizedContentType: optimizedContentType,
+                        },
+                        (val) => !!val
+                    )
+                );
 
-        this._directoryStore = new MongoDBDirectoryStore(
-            this._mongoClient,
-            this._config.collaboration.directory.dbName
-        );
-        await this._directoryStore.init();
+                this._redisClient.EXPIRE(url, expire as number);
+                cacheControl = {
+                    public: true,
+                    'max-age': expire as number,
+                };
+            }
 
-        await this._serveDirectory();
-        await this._startDirectoryClient();
+            let cacheControlHeader = formatCacheControlHeader(cacheControl);
+            if (cacheControlHeader && cacheControlHeader.length > 0) {
+                res.setHeader('Cache-Control', cacheControlHeader);
+            }
 
-        this._frontendApp.all(
-            '/webhook/*',
-            asyncMiddleware(async (req, res) => {
-                await this._handleWebhook(req, res);
-            })
-        );
-        this._frontendApp.all(
-            '/webhook',
-            asyncMiddleware(async (req, res) => {
-                await this._handleWebhook(req, res);
-            })
-        );
-        this._frontendApp.get(
-            '/',
-            dataPortalMiddleware(
-                asyncMiddleware(async (req, res) => {
-                    await this._handleDataPortal(req, res);
-                })
-            )
-        );
-
-        if (this._botServer) {
-            this._frontendApp.use(this._botServer.app);
+            let [retContentType, retData] = this._getDataForBrowser(
+                req,
+                contentType,
+                data,
+                optimizedContentType,
+                optimizedData
+            );
+            res.contentType(retContentType);
+            res.status(resp.status);
+            res.send(retData);
+        } catch (ex) {
+            console.log(`[Server] Proxying to ${url} failed.`);
+            if (ex.response) {
+                res.sendStatus(ex.response.status);
+            } else {
+                res.sendStatus(500);
+            }
         }
-
-        this._frontendApp.use(this._client.app);
     }
 
     private async _configureBackend() {
@@ -872,294 +655,6 @@ export class Server {
         }
     }
 
-    private _configureBotHttpServer() {
-        if (!this._config.collaboration.bots) {
-            return;
-        }
-        const db = this._mongoClient.db(this._config.collaboration.bots.dbName);
-        const botStore = new MongoDBBotStore(
-            this._config.collaboration.bots,
-            db
-        );
-        this._botServer = new BotHttpServer(botStore);
-        this._botServer.configure();
-    }
-
-    private async _handleDataPortal(req: Request, res: Response) {
-        const id = (req.query.inst ?? req.query.server) as string;
-        if (!id) {
-            res.sendStatus(400);
-            return;
-        }
-
-        const portal = req.query[DATA_PORTAL] as string;
-        if (!portal) {
-            res.sendStatus(400);
-            return;
-        }
-
-        const exists = await this._webhooksClient
-            .branchInfo(id)
-            .pipe(
-                first(),
-                map((info) => info.exists)
-            )
-            .toPromise();
-
-        if (!exists) {
-            res.sendStatus(404);
-            return;
-        }
-
-        const user = getWebhooksUser();
-        const simulation =
-            this._config.collaboration.sandbox === 'deno'
-                ? new DenoSimulationImpl(
-                      user,
-                      id,
-                      new DenoVM(user, {
-                          config: {
-                              version: null,
-                              versionHash: null,
-                              debug: this._config.collaboration.debug,
-                          },
-                          partitions: DenoSimulationImpl.createPartitions(
-                              id,
-                              user,
-                              'http://localhost:3000'
-                          ),
-                      })
-                  )
-                : nodeSimulationForBranch(user, this._webhooksClient, id);
-        try {
-            await simulation.init();
-
-            // Wait for full sync
-            await simulation.connection.syncStateChanged
-                .pipe(first((synced) => synced))
-                .toPromise();
-
-            const bot = simulation.helper.botsState[portal];
-            if (!!bot) {
-                res.send(createBot(bot.id, bot.tags));
-                return;
-            }
-
-            const bots = sortBy(
-                simulation.index.findBotsWithTag(portal),
-                (b) => b.id
-            );
-            const values = bots.map((b) => {
-                if (isFormula(b.tags[portal])) {
-                    return calculateBotValue(null, b, portal);
-                } else {
-                    return b.tags[portal];
-                }
-            });
-            const portalContentType = mime.getType(portal);
-            const contentType = (req.query[`${DATA_PORTAL}ContentType`] ||
-                portalContentType ||
-                'application/json') as string;
-
-            if (hasValue(contentType)) {
-                res.set('Content-Type', contentType);
-            }
-
-            if (hasValue(portalContentType)) {
-                res.send(values[0] || '');
-            } else {
-                res.send(values);
-            }
-        } finally {
-            simulation.unsubscribe();
-        }
-    }
-
-    private async _handleWebhook(req: Request, res: Response) {
-        const id = (req.query.inst ?? req.query.server) as string;
-        if (!id) {
-            res.sendStatus(400);
-            return;
-        }
-
-        let handled = await this._handleV2Webhook(req, res, id);
-        if (handled) {
-            return;
-        }
-
-        res.sendStatus(404);
-    }
-
-    private async _handleV2Webhook(
-        req: Request,
-        res: Response,
-        id: string
-    ): Promise<boolean> {
-        const exists = await this._webhooksClient
-            .branchInfo(id)
-            .pipe(
-                first(),
-                map((info) => info.exists)
-            )
-            .toPromise();
-
-        if (!exists) {
-            return false;
-        }
-
-        const user = getWebhooksUser();
-        const simulation = nodeSimulationForBranch(
-            user,
-            this._webhooksClient,
-            id
-        );
-        try {
-            await simulation.init();
-            return await this._sendWebhook(req, res, simulation);
-        } finally {
-            simulation.unsubscribe();
-        }
-    }
-
-    private async _sendWebhook(
-        req: Request,
-        res: Response,
-        simulation: Simulation
-    ) {
-        const fullUrl = requestUrl(req, req.protocol);
-        const result = await simulation.helper.shout(
-            ON_WEBHOOK_ACTION_NAME,
-            null,
-            {
-                method: req.method,
-                url: fullUrl,
-                data: req.body,
-                headers: req.headers,
-            }
-        );
-
-        if (result.results.length > 0) {
-            let firstValue = result.results.find((r) => hasValue(r));
-            if (firstValue) {
-                if (typeof firstValue === 'object') {
-                    if (typeof firstValue.headers === 'object') {
-                        res.set(firstValue.headers);
-                    }
-
-                    if (typeof firstValue.status === 'number') {
-                        res.status(firstValue.status);
-                    }
-
-                    res.send(firstValue.data);
-                } else {
-                    res.send(firstValue);
-                }
-            } else {
-                res.sendStatus(204);
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private async _serveDirectory() {
-        if (!this._config.collaboration.directory.server) {
-            console.log(
-                '[Server] Disabling Directory Server because no config is available for it.'
-            );
-            return;
-        }
-
-        console.log('[Server] Starting Directory Server.');
-
-        this._directory = new DirectoryService(
-            this._directoryStore,
-            this._config.collaboration.directory.server
-        );
-        this._frontendApp.get(
-            '/directory/api',
-            asyncMiddleware(async (req, res) => {
-                const ip = req.ip;
-                const result = await this._directory.findEntries(ip);
-                if (result.type === 'query_results') {
-                    return res.send(
-                        result.entries.map((e) => ({
-                            publicName: e.publicName,
-                            url: url.format({
-                                protocol: req.protocol,
-                                hostname: `${e.subhost}.${req.hostname}`,
-                            }),
-                        }))
-                    );
-                } else if (result.type === 'not_authorized') {
-                    return res.sendStatus(403);
-                } else {
-                    return res.sendStatus(500);
-                }
-            })
-        );
-        this._frontendApp.put(
-            '/directory/api',
-            asyncMiddleware(async (req, res) => {
-                const ip = req.ip;
-                const result = await this._directory.update({
-                    key: req.body.key,
-                    password: req.body.password,
-                    publicName: req.body.publicName,
-                    privateIpAddress: req.body.privateIpAddress,
-                    publicIpAddress: ip,
-                });
-                if (result.type === 'entry_updated') {
-                    return res.send({
-                        token: result.token,
-                    });
-                } else if (result.type === 'not_authorized') {
-                    return res.sendStatus(403);
-                } else if (result.type === 'bad_request') {
-                    res.status(400);
-                    res.send({
-                        errors: result.errors,
-                    });
-                } else {
-                    return res.sendStatus(500);
-                }
-            })
-        );
-    }
-
-    private async _startDirectoryClient() {
-        if (!this._config.collaboration.directory.client) {
-            console.log(
-                '[Server] Disabling Directory Client because no config is available for it.'
-            );
-            return;
-        }
-
-        console.log(
-            `[Server] Configuring Directory Client for ${this._config.collaboration.directory.client.upstream}`
-        );
-
-        const tunnelClient = this._config.collaboration.directory.client.tunnel
-            ? new WebSocketClient(
-                  this._config.collaboration.directory.client.tunnel
-              )
-            : null;
-
-        if (!tunnelClient) {
-            console.log(
-                '[Server] Disabling tunneling because there is no config available for it.'
-            );
-        }
-
-        this._directoryClient = new DirectoryClient(
-            this._directoryStore,
-            tunnelClient,
-            this._config.collaboration.directory.client,
-            this._config.collaboration.httpPort
-        );
-    }
-
     start() {
         this._frontendHttp.listen(this._config.collaboration.httpPort, () =>
             console.log(
@@ -1174,275 +669,56 @@ export class Server {
                 )
             );
         }
-
-        if (this._directoryClient) {
-            console.log(`[Server] Starting Directory Client`);
-            this._directoryClient.init();
-        }
     }
 
-    private async _configureCausalRepoServices() {
-        const [store, stageStore, updatesStore] = await this._setupRepoStore();
-        const websocketServer = new WebSocketConnectionServer(
-            this._frontendHttp,
-            this._config.collaboration.socket
-        );
-        const serverUser = getServerUser();
-        const serverDevice = deviceInfoFromUser(serverUser);
-
-        if (this._config.collaboration.executeLoadedInstances) {
-            const { connections, manager, webhooksClient } =
-                this._createRepoManager(serverDevice, serverUser);
-            const fixedServer = new FixedConnectionServer(connections);
-            const multiServer = new MultiConnectionServer([
-                websocketServer,
-                fixedServer,
-            ]);
-
-            const repoServer = new CausalRepoServer(
-                multiServer,
-                store,
-                stageStore,
-                updatesStore
-            );
-            repoServer.defaultDeviceSelector = {
-                username: serverDevice.claims[USERNAME_CLAIM],
-                deviceId: serverDevice.claims[DEVICE_ID_CLAIM],
-                sessionId: serverDevice.claims[SESSION_ID_CLAIM],
-            };
-
-            this._webhooksClient = webhooksClient;
-
-            repoServer.init();
-
-            // Wait for async operations from the repoServer to finish
-            // before starting the repo manager
-            setImmediate(() => {
-                manager.init();
-            });
-        } else {
-            const webhooks = this._createWebhooksClient();
-            const fixedServer = new FixedConnectionServer([
-                webhooks.connection,
-            ]);
-            const multiServer = new MultiConnectionServer([
-                websocketServer,
-                fixedServer,
-            ]);
-
-            const repoServer = new CausalRepoServer(
-                multiServer,
-                store,
-                stageStore,
-                updatesStore
-            );
-            repoServer.defaultDeviceSelector = {
-                username: serverDevice.claims[USERNAME_CLAIM],
-                deviceId: serverDevice.claims[DEVICE_ID_CLAIM],
-                sessionId: serverDevice.claims[SESSION_ID_CLAIM],
-            };
-
-            this._webhooksClient = webhooks.client;
-
-            repoServer.init();
-        }
+    /**
+     * Optimizes the given image.
+     * @param contentType The MIME type of the image.
+     * @param data The data for the image.
+     */
+    private async _optimizeImage(
+        contentType: string,
+        data: Buffer
+    ): Promise<[string, Buffer]> {
+        const optimized = data;
+        return [contentType, optimized];
     }
 
-    private _createRepoManager(serverDevice: DeviceInfo, serverUser: AuxUser) {
-        const bridge = new ConnectionBridge(serverDevice);
-        const client = new CausalRepoClient(bridge.clientConnection);
-        const setupChannel = this._createSetupChannelModule();
-        const webhooks = this._createWebhooksClient();
-        const gpioModules = this._config.collaboration.gpio
-            ? [new GpioModule2(), new SerialModule()]
-            : [];
-        const manager = new AuxCausalRepoManager(
-            serverUser,
-            client,
-            [
-                new AdminModule2(),
-                new FilesModule2(this._config.collaboration.drives),
-                new WebhooksModule2(),
-                ...gpioModules,
-                setupChannel.module,
-            ],
-            this._config.collaboration.sandbox === 'deno'
-                ? (user, client, branch) =>
-                      new DenoSimulationImpl(
-                          user,
-                          branch,
-                          new DenoVM(user, {
-                              config: {
-                                  version: null,
-                                  versionHash: null,
-                                  debug: this._config.collaboration.debug,
-                              },
-                              partitions: DenoSimulationImpl.createPartitions(
-                                  branch,
-                                  user,
-                                  'http://localhost:3000'
-                              ),
-                          })
-                      )
-                : (user, client, branch) =>
-                      nodeSimulationForBranch(user, client, branch),
-            SERVER_USER_IDS
-        );
-        return {
-            connections: [
-                bridge.serverConnection,
-                setupChannel.connection,
-                webhooks.connection,
-            ],
-            manager,
-            webhooksClient: webhooks.client,
-        };
-    }
-
-    private _createSetupChannelModule() {
-        const setupChannelUser = getSetupChannelUser();
-        const setupChannelDevice = deviceInfoFromUser(setupChannelUser);
-        const bridge = new ConnectionBridge(setupChannelDevice);
-        const client = new CausalRepoClient(bridge.clientConnection);
-        const module = new SetupChannelModule2(setupChannelUser, client);
-        return {
-            connection: bridge.serverConnection,
-            module,
-        };
-    }
-
-    private _createWebhooksClient() {
-        const webhooksUser = getWebhooksUser();
-        const webhooksDevice = deviceInfoFromUser(webhooksUser);
-        const bridge = new ConnectionBridge(webhooksDevice);
-        const client = new CausalRepoClient(bridge.clientConnection);
-        return {
-            connection: bridge.serverConnection,
-            client,
-        };
-    }
-
-    private async _setupRepoStore(): Promise<
-        [CausalRepoStore, CausalRepoStageStore, UpdatesStore]
-    > {
-        const db = this._mongoClient.db(
-            this._config.collaboration.repos.mongodb.dbName
-        );
-        const objectsCollection = db.collection('objects');
-        const headsCollection = db.collection('heads');
-        const indexesCollection = db.collection('indexes');
-        const reflogCollection = db.collection('reflog');
-        const sitelogCollection = db.collection('sitelog');
-        const branchSettingsCollection = db.collection('branchSettings');
-        const mongoStore = new MongoDBRepoStore(
-            objectsCollection,
-            headsCollection,
-            indexesCollection,
-            reflogCollection,
-            sitelogCollection,
-            branchSettingsCollection
-        );
-        await mongoStore.init();
-
-        let store: CausalRepoStore = mongoStore;
-        let stageStore: CausalRepoStageStore | null = null;
-        if (
-            this._config.collaboration.repos.mongodb &&
-            this._config.collaboration.repos.mongodb.stage === true
-        ) {
+    private _getDataForBrowser(
+        req: Request,
+        originalContentType: string,
+        originalData: Buffer,
+        optimizedContentType: string | null,
+        optimizedData: Buffer | null
+    ): [string, Buffer] {
+        const ua = useragent.is(req.header('user-agent'));
+        if (ua.safari || ua.mobile_safari) {
             console.log(
-                '[Server] Using MongoDB Stage support for Causal Repos.'
+                "[Server] Returning original data because safari doesn't support WebP"
             );
-            const stageCollection = db.collection('stage');
-            const mongoStage = (stageStore = new MongoDBStageStore(
-                stageCollection
-            ));
-            await mongoStage.init();
-        }
-        if (!stageStore) {
-            if (this._redisClient) {
-                console.log(
-                    '[Server] Using Redis Stage support for Causal Repos.'
-                );
-                stageStore = new RedisStageStore(this._redisClient);
-            } else {
-                console.log(
-                    '[Server] Using Memory Stage support for Causal Repos.'
-                );
-                stageStore = new MemoryStageStore();
-            }
-        }
-
-        let updatesStore: UpdatesStore;
-        if (this._config.collaboration.repos.redis) {
-            let store = (updatesStore = new RedisUpdatesStore(
-                this._config.collaboration.repos.redis.namespace,
-                createRedisClient({
-                    ...this._config.collaboration.redis?.options,
-                })
-            ));
-            store.maxBranchSizeInBytes =
-                this._config.collaboration.repos.redis.maxBranchSizeInBytes;
-        } else if (this._config.collaboration.repos.mongodb) {
-            const updates = db.collection('updates');
-            let store = (updatesStore = new MongoDBUpdatesStore(updates));
-            await store.init();
+            return [originalContentType, originalData];
         } else {
-            throw new Error('No updates store configured!');
+            return [
+                optimizedContentType || originalContentType,
+                optimizedData || originalData,
+            ];
         }
-
-        return [store, stageStore, updatesStore];
     }
-}
 
-const SERVER_USER_IDS = [
-    'server',
-    'server-checkout',
-    'server-setup-channel',
-    'server-webhooks',
-];
-
-function getServerUser(): AuxUser {
-    return {
-        id: 'server',
-        name: 'Server',
-        username: 'Server',
-        token: 'server-tokenbc',
-    };
-}
-
-function getSetupChannelUser(): AuxUser {
-    return {
-        id: 'server-setup-channel',
-        name: 'Server',
-        username: 'Server',
-        token: 'server-setup-channel-token',
-    };
-}
-
-function getWebhooksUser(): AuxUser {
-    return {
-        id: 'server-webhooks',
-        name: 'Server',
-        username: 'Server',
-        token: 'server-webhooks-token',
-    };
-}
-
-/**
- * Middleware that calls the given function if the request is for the data portal
- * and skips it if the request is not.
- * @param func
- */
-function dataPortalMiddleware(func: express.Handler) {
-    return function (req: Request, res: Response, next: NextFunction) {
-        if (
-            hasValue(req.query.inst ?? req.query.server) &&
-            hasValue(req.query[DATA_PORTAL])
-        ) {
-            return func(req, res, next);
-        } else {
-            return next();
+    private _shouldOptimize(contentType: string) {
+        if (contentType === 'image/webp') {
+            return false;
         }
-    };
+        return imageMimeTypes.indexOf(contentType) >= 0;
+    }
+
+    private _shouldCache(
+        contentType: string,
+        cacheControl: CacheControlHeaderValues
+    ) {
+        const isImage = imageMimeTypes.indexOf(contentType) >= 0;
+        return (
+            isImage && !cacheControl['no-cache'] && !cacheControl['no-store']
+        );
+    }
 }
