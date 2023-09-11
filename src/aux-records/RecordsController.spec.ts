@@ -2070,12 +2070,60 @@ describe('RecordsController', () => {
                         displayName: 'studio 2',
                         isPrimaryContact: true,
                         role: 'admin',
+                        subscriptionTier: null,
                     },
                     {
                         studioId: 'studioId3',
                         displayName: 'studio 3',
                         isPrimaryContact: true,
                         role: 'member',
+                        subscriptionTier: null,
+                    },
+                ],
+            });
+        });
+
+        it('should include the subscription tier', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.updateStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.listStudios('userId');
+
+            expect(result).toEqual({
+                success: true,
+                studios: [
+                    {
+                        studioId: 'studioId2',
+                        displayName: 'studio 2',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        subscriptionTier: null,
+                    },
+                    {
+                        studioId: 'studioId3',
+                        displayName: 'studio 3',
+                        isPrimaryContact: true,
+                        role: 'member',
+                        subscriptionTier: 'tier1',
                     },
                 ],
             });

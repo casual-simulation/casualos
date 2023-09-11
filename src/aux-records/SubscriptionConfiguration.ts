@@ -477,4 +477,21 @@ export function getSubscriptionFeatures(
     return config.defaultFeatures?.[type] ?? allowAllFeatures();
 }
 
+export function getSubscriptionTier(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subId: string
+): string | null {
+    if (!config) {
+        return null;
+    }
+
+    if (!isActiveSubscription(subscriptionStatus)) {
+        return null;
+    }
+
+    const sub = config.subscriptions.find((s) => s.id === subId);
+    return sub?.tier ?? null;
+}
+
 type HasType<T, Q extends T> = Q;
