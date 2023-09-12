@@ -340,7 +340,7 @@ model InstRecord {
     @@id([recordName, name])
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
 
     name String
 
@@ -357,10 +357,10 @@ model InstBranch {
     @@id([recordName, instName, name])
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
 
     instName String
-    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name])
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade)
 
     name String
     temporary Boolean
@@ -375,13 +375,13 @@ model BranchUpdate {
     id String @id @db.Uuid()
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
 
     instName String
-    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name])
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade)
 
     branchName String
-    branch InstBranch @relation(fields: [recordName, instName, branchName], references: [recordName, instName, name])
+    branch InstBranch @relation(fields: [recordName, instName, branchName], references: [recordName, instName, name], onDelete: Cascade)
 
     sizeInBytes Int
     updateData String
