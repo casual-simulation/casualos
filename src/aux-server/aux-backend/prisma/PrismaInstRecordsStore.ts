@@ -10,6 +10,7 @@ import {
     StoredUpdates,
 } from '@casual-simulation/aux-records';
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines an inst records store that uses Prisma to store records.
@@ -127,51 +128,129 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         });
     }
 
-    getCurrentUpdates(
+    async getCurrentUpdates(
         recordName: string,
         inst: string,
         branch: string
     ): Promise<CurrentUpdates> {
-        throw new Error('Method not implemented.');
+        const updates = await this._prisma.branchUpdate.findMany({
+            where: {
+                recordName: recordName,
+                instName: inst,
+                branchName: branch,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+            take: 1,
+        });
+
+        return {
+            updates: updates.map((u) => u.updateData),
+            timestamps: updates.map((u) => u.createdAt.getTime()),
+            instSizeInBytes: await this.getInstSize(recordName, inst),
+        };
     }
 
-    getInstSize(recordName: string, inst: string): Promise<number> {
-        throw new Error('Method not implemented.');
+    async getInstSize(recordName: string, inst: string): Promise<number> {
+        const branches = await this._prisma.instBranch.findMany({
+            where: {
+                recordName: recordName,
+                instName: inst,
+            },
+            select: {
+                updates: {
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                    take: 1,
+                    select: {
+                        sizeInBytes: true,
+                    },
+                },
+            },
+        });
+
+        let size: number = 0;
+        for (let b of branches) {
+            for (let u of b.updates) {
+                size += u.sizeInBytes;
+            }
+        }
+
+        return size;
     }
 
-    getAllUpdates(
+    async getAllUpdates(
         recordName: string,
         inst: string,
         branch: string
     ): Promise<StoredUpdates> {
-        throw new Error('Method not implemented.');
+        const updates = await this._prisma.branchUpdate.findMany({
+            where: {
+                recordName: recordName,
+                instName: inst,
+                branchName: branch,
+            },
+            orderBy: {
+                createdAt: 'asc',
+            },
+        });
+
+        return {
+            updates: updates.map((u) => u.updateData),
+            timestamps: updates.map((u) => u.createdAt.getTime()),
+        };
     }
 
-    addUpdates(
+    async addUpdates(
         recordName: string,
         inst: string,
         branch: string,
         updates: string[],
         sizeInBytes: number
     ): Promise<AddUpdatesResult> {
-        throw new Error('Method not implemented.');
+        throw new Error(
+            'addUpdates() is not implemented for PrismaInstRecordsStore. Use replaceCurrentUpdates() instead.'
+        );
     }
 
-    deleteBranch(
+    async deleteBranch(
         recordName: string,
         inst: string,
         branch: string
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._prisma.instBranch.delete({
+            where: {
+                recordName_instName_name: {
+                    recordName: recordName,
+                    instName: inst,
+                    name: branch,
+                },
+            },
+        });
     }
 
-    replaceCurrentUpdates(
+    async replaceCurrentUpdates(
         recordName: string,
         inst: string,
         branch: string,
         updateToAdd: string,
         sizeInBytes: number
     ): Promise<ReplaceUpdatesResult> {
-        throw new Error('Method not implemented.');
+        await this._prisma.branchUpdate.create({
+            data: {
+                id: uuid(),
+                recordName: recordName,
+                instName: inst,
+                branchName: branch,
+                updateData: updateToAdd,
+                sizeInBytes,
+            },
+        });
+
+        return {
+            success: true,
+        };
     }
 }
