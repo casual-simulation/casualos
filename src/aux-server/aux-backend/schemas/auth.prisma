@@ -388,6 +388,8 @@ model BranchUpdate {
 
     createdAt DateTime @default(now())
     updated DateTime @updatedAt
+
+    @@index([recordName, instName, branchName, id])
 }
 
 model Configuration {
