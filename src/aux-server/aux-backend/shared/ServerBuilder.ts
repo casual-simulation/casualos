@@ -107,6 +107,7 @@ import { RedisWebsocketConnectionStore } from 'aux-backend/redis/RedisWebsocketC
 import { ApiGatewayWebsocketMessenger } from 'aux-backend/serverless/aws/src/ApiGatewayWebsocketMessenger';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
+import { PrismaInstRecordsStore } from 'aux-backend/prisma/PrismaInstRecordsStore';
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
@@ -461,12 +462,6 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Redis options must be provided.');
         }
 
-        if (!this._prismaClient) {
-            throw new Error(
-                'Prisma must be configured before using Redis Inst Records.'
-            );
-        }
-
         if (!this._websocketConnectionStore) {
             throw new Error(
                 'A websocket connection store must be configured before using Inst Records.'
@@ -503,7 +498,7 @@ export class ServerBuilder implements SubscriptionLike {
                 options.redis.publicInstRecordsStoreNamespace,
                 redis
             ),
-            new MemoryInstRecordsStore()
+            new PrismaInstRecordsStore(prisma)
         );
 
         this._websocketController = new WebsocketController(

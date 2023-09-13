@@ -286,15 +286,18 @@ export class Server {
             builder.useWSWebsocketMessenger();
         }
 
-        if (options.redis && options.redis.tempInstRecordsStoreNamespace) {
+        if (
+            options.redis &&
+            options.redis.tempInstRecordsStoreNamespace &&
+            options.redis.publicInstRecordsStoreNamespace &&
+            options.prisma
+        ) {
             builder.usePrismaAndRedisInstRecords();
         }
 
         if (options.ai) {
             builder.useAI();
         }
-
-        builder.useWSWebsocketMessenger();
 
         const { server, filesController, mongoDatabase, websocketMessenger } =
             await builder.buildAsync();
@@ -498,8 +501,10 @@ export class Server {
             this._wsServer.on('connection', (socket, req) => {
                 const id = websocketMessenger.registerConnection(socket);
                 const ip = req.socket.remoteAddress;
+                console.log('[Server] Got connection:', id, ip);
 
                 socket.on('close', async () => {
+                    console.log('[Server] Connection closed:', id, ip);
                     await server.handleWebsocketRequest({
                         type: 'disconnect',
                         connectionId: id,
@@ -509,8 +514,8 @@ export class Server {
                     websocketMessenger.removeConnection(id);
                 });
 
-                socket.on('message', (message, isBinary) => {
-                    server.handleWebsocketRequest({
+                socket.on('message', async (message, isBinary) => {
+                    await server.handleWebsocketRequest({
                         type: 'message',
                         connectionId: id,
                         ipAddress: ip,
@@ -527,6 +532,8 @@ export class Server {
                     body: null,
                 });
             });
+        } else {
+            console.log('[Server] Websockets integration disabled.');
         }
 
         function handleRecordsCorsHeaders(req: Request, res: Response) {
@@ -576,6 +583,10 @@ export class Server {
             );
 
             server.on('upgrade', (request, socket, head) => {
+                socket.on('error', (err) => {
+                    console.error('[Server] Error on websocket.', err);
+                });
+
                 this._wsServer.handleUpgrade(
                     request,
                     socket as any,

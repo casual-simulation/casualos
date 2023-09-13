@@ -206,7 +206,7 @@ export default defineConfig(({ command, mode }) => ({
         proxy: {
             '/api': 'http://localhost:2999',
             '/websocket': {
-                target: 'http://localhost:2999',
+                target: 'http://localhost:2998',
                 ws: true,
             },
         },
