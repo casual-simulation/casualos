@@ -84,6 +84,7 @@ model AuthSession {
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     secretHash String
+    connectionSecret String?
     grantedTime DateTime
     expireTime DateTime
     revokeTime DateTime?

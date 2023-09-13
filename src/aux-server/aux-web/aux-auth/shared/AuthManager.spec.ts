@@ -113,6 +113,7 @@ describe('AuthManager', () => {
                     requestId: 'myrequestid',
                     expireTimeMs: 1234,
                     sessionKey: 'sessionKey',
+                    connectionKey: 'connectionKey',
                 } as CompleteLoginSuccess,
             });
 
@@ -128,6 +129,7 @@ describe('AuthManager', () => {
                 requestId: 'myrequestid',
                 expireTimeMs: 1234,
                 sessionKey: 'sessionKey',
+                connectionKey: 'connectionKey',
             });
             expect(getLastPost()).toEqual([
                 'http://myendpoint.localhost/api/v2/completeLogin',

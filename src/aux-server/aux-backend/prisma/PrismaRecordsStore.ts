@@ -238,6 +238,8 @@ export class PrismaRecordsStore implements RecordsStore {
                 studio: {
                     select: {
                         displayName: true,
+                        subscriptionId: true,
+                        subscriptionStatus: true,
                     },
                 },
             },
@@ -249,6 +251,8 @@ export class PrismaRecordsStore implements RecordsStore {
             role: a.role as StudioAssignmentRole,
             isPrimaryContact: a.isPrimaryContact,
             displayName: a.studio.displayName,
+            subscriptionId: a.studio.subscriptionId,
+            subscriptionStatus: a.studio.subscriptionStatus,
         }));
     }
 

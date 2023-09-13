@@ -304,6 +304,7 @@ export class PrismaAuthStore implements AuthStore {
             previousSessionId: session.previousSessionId,
             nextSessionId: session.nextSessionId,
             ipAddress: session.ipAddress,
+            connectionSecret: session.connectionSecret,
         };
         await this._client.authSession.upsert({
             where: {
@@ -340,6 +341,7 @@ export class PrismaAuthStore implements AuthStore {
                         requestId: newSession.requestId,
                         ipAddress: newSession.ipAddress,
                         previousSessionId: session.sessionId,
+                        connectionSecret: newSession.connectionSecret,
                     },
                 },
             },
@@ -733,6 +735,7 @@ export class PrismaAuthStore implements AuthStore {
             previousSessionId: session.previousSessionId,
             ipAddress: session.ipAddress,
             nextSessionId: session.nextSessionId,
+            connectionSecret: session.connectionSecret,
         };
     }
 
@@ -761,109 +764,4 @@ export class PrismaAuthStore implements AuthStore {
 
         return null;
     }
-}
-
-export interface MongoDBAuthUser {
-    _id: string;
-    name: string;
-    email: string;
-    phoneNumber: string;
-    avatarPortraitUrl: string;
-    avatarUrl: string;
-    allSessionRevokeTimeMs: number;
-    currentLoginRequestId: string;
-    stripeCustomerId?: string;
-    subscriptionStatus?: string;
-    subscriptionId?: string;
-    banTimeMs?: number;
-    banReason?: AuthUser['banReason'];
-}
-
-export interface MongoDBLoginRequest {
-    _id: string;
-    userId: string;
-    secretHash: string;
-    requestTimeMs: number;
-    expireTimeMs: number;
-    completedTimeMs: number | null;
-    attemptCount: number;
-    address: string;
-    addressType: AddressType;
-    ipAddress: string;
-}
-
-/**
- * Defines an interface that represents a login session for the user.
- */
-export interface MongoDBAuthSession {
-    /**
-     * The ID of the session.
-     */
-    _id: string;
-
-    /**
-     * The ID of the user that the session is for.
-     */
-    userId: string;
-
-    /**
-     * The hash of the token that provides access to this session.
-     */
-    secretHash: string;
-
-    /**
-     * The unix timestamp in miliseconds that the session was granted at.
-     */
-    grantedTimeMs: number;
-
-    /**
-     * The unix timestamp in miliseconds that the session will expire at.
-     */
-    expireTimeMs: number;
-
-    /**
-     * The unix timestamp in miliseconds that the session was revoked at.
-     * If null, then the session has not been revoked.
-     */
-    revokeTimeMs: number | null;
-
-    /**
-     * The ID of the login request that was used to obtain this session.
-     */
-    requestId: string | null;
-
-    /**
-     * The ID of the previous session that was used to obtain this session.
-     */
-    previousSessionId: string | null;
-
-    /**
-     * The ID of the session that replaced this session.
-     */
-    nextSessionId: string | null;
-
-    /**
-     * The IP Address that the session was granted to.
-     */
-    ipAddress: string;
-}
-
-/**
- * Defines an interface that represents an email rule stored in MongoDB.
- */
-export interface MongoDBEmailRule extends RegexRule {
-    /**
-     * The ID of the rule.
-     */
-    _id: string;
-}
-
-/**
- * Defines an interface that represents an sms rule stored in MongoDB.
- */
-export interface MongoDBSmsRule extends RegexRule {
-    /**
-     * The ID of the rule.
-     */
-    _id: string;
 }
