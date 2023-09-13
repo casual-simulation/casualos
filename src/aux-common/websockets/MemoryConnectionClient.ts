@@ -19,6 +19,10 @@ export class MemoryConnectionClient implements ConnectionClient {
     sentMessages: WebsocketMessage[];
     events = new Map<WebsocketMessage['type'], Subject<any>>();
 
+    get info() {
+        return this._info;
+    }
+
     event<T>(name: WebsocketMessage['type']): Observable<T> {
         return (this.events.get(name) as any) || never();
     }

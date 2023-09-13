@@ -95,6 +95,8 @@ export class WebsocketController {
         message: LoginMessage
     ): Promise<void> {
         try {
+            let userId: string | null = null;
+            let sessionId: string | null = null;
             if (!message.connectionToken) {
                 if (!message.clientConnectionId) {
                     await this._messenger.sendEvent(connectionId, [
@@ -137,10 +139,17 @@ export class WebsocketController {
                     clientConnectionId: validationResult.connectionId,
                     token: message.connectionToken,
                 });
+                userId = validationResult.userId;
+                sessionId = validationResult.sessionId;
             }
 
             await this._messenger.sendMessage([connectionId], {
                 type: 'login_result',
+                info: {
+                    userId,
+                    sessionId,
+                    connectionId,
+                },
             });
         } catch (err) {
             console.error(

@@ -43,6 +43,11 @@ export interface ConnectionClient {
     isConnected: boolean;
 
     /**
+     * Gets the current connection info.
+     */
+    info: ConnectionInfo | null;
+
+    /**
      * Gets an observable for events with the given name.
      * @param name The name of the events.
      */

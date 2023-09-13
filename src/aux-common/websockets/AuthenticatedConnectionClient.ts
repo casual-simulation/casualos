@@ -62,6 +62,10 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
             .subscribe(this._connectionStateChanged);
     }
 
+    get info() {
+        return this._connectionStateChanged.value.info;
+    }
+
     get connectionState(): Observable<ClientConnectionState> {
         return this._connectionStateChanged;
     }

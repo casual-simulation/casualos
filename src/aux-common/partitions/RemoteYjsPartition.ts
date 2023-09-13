@@ -1,17 +1,3 @@
-// import {
-//     User,
-//     StatusUpdate,
-//     Action,
-//     SESSION_ID_CLAIM,
-//     device,
-//     RemoteActions,
-// } from '@casual-simulation/causal-trees';
-// import {
-//     CausalRepoClient,
-//     CurrentVersion,
-//     treeVersion,
-//     VersionVector,
-// } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
     auxTree,
@@ -108,6 +94,8 @@ import {
     RemoteActions,
     StatusUpdate,
     CurrentVersion,
+    device,
+    VersionVector,
 } from '../common';
 import { InstRecordsClient } from '../websockets';
 
@@ -117,11 +105,10 @@ import { InstRecordsClient } from '../websockets';
  * @param config The config.
  */
 export function createRemoteClientYjsPartition(
-    config: PartitionConfig,
-    indicator: ConnectionIndicator
+    config: PartitionConfig
 ): YjsPartition {
     if (config.type === 'yjs_client') {
-        return new RemoteYjsPartitionImpl(indicator, config.client, config);
+        return new RemoteYjsPartitionImpl(config.client, config);
     }
     return undefined;
 }
@@ -153,7 +140,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
 
     private _isLocalTransaction: boolean = true;
     private _isRemoteUpdate: boolean = false;
-    private _indicator: ConnectionIndicator;
     private _static: boolean;
     private _watchingBranch: any;
     private _synced: boolean;
@@ -246,13 +232,11 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     }
 
     constructor(
-        indicator: ConnectionIndicator,
         client: InstRecordsClient,
         config: YjsClientPartitionConfig | RemoteYjsPartitionConfig
     ) {
         this.private = config.private || false;
         this._client = client;
-        this._indicator = indicator;
         this._static = config.static;
         this._remoteEvents =
             'remoteEvents' in config ? config.remoteEvents : true;
@@ -567,8 +551,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     this._onStatusUpdated.next({
                         type: 'authentication',
                         authenticated: true,
-
-                        user: this._user,
+                        info: this._client.connection.info,
                     });
                     this._onStatusUpdated.next({
                         type: 'authorization',
@@ -604,7 +587,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         this._onStatusUpdated.next({
                             type: 'authentication',
                             authenticated: true,
-                            user: this._user,
                             info: state.info,
                         });
                         this._onStatusUpdated.next({
@@ -621,9 +603,11 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._sub.add(
             this._client
                 .watchBranchUpdates({
+                    type: 'repo/watch_branch',
+                    recordName: this._recordName,
+                    inst: this._inst,
                     branch: this._branch,
                     temporary: this._temporary,
-                    siteId: this._currentSite,
                 })
                 .subscribe(
                     (event) => {
@@ -648,9 +632,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                                 name: remoteAction.eventName,
                                                 that: remoteAction.argument,
                                                 remoteId:
-                                                    event.action.device.claims[
-                                                        SESSION_ID_CLAIM
-                                                    ],
+                                                    event.action.connection
+                                                        .connectionId,
                                             }
                                         ),
                                         action(
@@ -661,22 +644,20 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                                 name: remoteAction.eventName,
                                                 that: remoteAction.argument,
                                                 playerId:
-                                                    event.action.device.claims[
-                                                        SESSION_ID_CLAIM
-                                                    ],
+                                                    event.action.connection
+                                                        .connectionId,
                                             }
                                         ),
                                     ]);
                                 } else if (hasValue(event.action.taskId)) {
                                     const newEvent = device(
-                                        event.action.device,
+                                        event.action.connection,
                                         {
                                             ...event.action.event,
                                             taskId: event.action.taskId,
                                             playerId:
-                                                event.action.device.claims[
-                                                    SESSION_ID_CLAIM
-                                                ],
+                                                event.action.connection
+                                                    .connectionId,
                                         } as AsyncAction,
                                         event.action.taskId
                                     );
@@ -750,7 +731,12 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     origin === APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN)
             ) {
                 const updates = [fromByteArray(update)];
-                this._client.addUpdates(this._branch, updates);
+                this._client.addUpdates(
+                    this._recordName,
+                    this._inst,
+                    this._branch,
+                    updates
+                );
                 this._onUpdates.next(updates);
             }
         };

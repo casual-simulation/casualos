@@ -3,7 +3,6 @@ import {
     isEventForDevice,
     connectionInfo,
 } from './WebsocketController';
-import { MemoryUpdatesStore } from '@casual-simulation/causal-trees/core2';
 import { MemoryWebsocketConnectionStore } from './MemoryWebsocketConnectionStore';
 import { DeviceConnection } from './WebsocketConnectionStore';
 import { MemoryWebsocketMessenger } from './MemoryWebsocketMessenger';
@@ -23,7 +22,6 @@ import {
 } from '@casual-simulation/aux-common/partitions/YjsPartition';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
-import { getStateFromUpdates } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import {
     device,
     deviceError,
@@ -155,6 +153,17 @@ describe('WebsocketController', () => {
                 userId: userId,
                 sessionId: sessionId,
             });
+
+            expect(messenger.getMessages(serverConnectionId)).toEqual([
+                {
+                    type: 'login_result',
+                    info: {
+                        userId: userId,
+                        sessionId: sessionId,
+                        connectionId: connectionId,
+                    },
+                },
+            ]);
         });
 
         it('should allow the connection when no token is specified', async () => {
@@ -175,6 +184,17 @@ describe('WebsocketController', () => {
                 userId: null,
                 sessionId: null,
             });
+
+            expect(messenger.getMessages(serverConnectionId)).toEqual([
+                {
+                    type: 'login_result',
+                    info: {
+                        userId: null,
+                        sessionId: null,
+                        connectionId: connectionId,
+                    },
+                },
+            ]);
         });
 
         it('should send a unacceptable_connection_token error if the token is wrong', async () => {

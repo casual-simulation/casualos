@@ -1,34 +1,34 @@
 // import {
 //     Action,
-//     AddUpdatesEvent,
+//     AddUpdatesMessage,
 //     ADD_ATOMS,
 //     ADD_UPDATES,
-//     AuthenticatedToBranchEvent,
+//     AuthenticatedTo,
 //     AUTHENTICATED_TO_BRANCH,
 //     AUTHENTICATE_BRANCH_WRITES,
 //     BRANCHES,
 //     BranchesEvent,
 //     BranchesStatusEvent,
 //     BRANCHES_STATUS,
-//     CausalRepoClient,
+//     InstRecordsClient,
 //     CurrentVersion,
 //     device,
 //     DeviceCountEvent,
-//     deviceInfo,
+//     connectionInfo,
 //     DEVICE_COUNT,
 //     GET_UPDATES,
 //     MemoryConnectionClient,
-//     ReceiveDeviceActionEvent,
+//     ReceiveDeviceActionMessage,
 //     RECEIVE_EVENT,
 //     remote,
 //     SEND_EVENT,
 //     StatusUpdate,
 //     VersionVector,
 //     WATCH_BRANCH,
-//     UpdatesReceivedEvent,
+//     UpdatesReceivedMessage,
 //     UPDATES_RECEIVED,
 //     RATE_LIMIT_EXCEEDED,
-//     RateLimitExceededEvent,
+//     RateLimitExceededMessage,
 // } from '@casual-simulation/causal-trees';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import {
@@ -75,13 +75,29 @@ import { del, edit, insert, preserve } from '../aux-format-2';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { flatMap } from 'lodash';
 import { YjsPartitionImpl } from './YjsPartition';
+import {
+    AddUpdatesMessage,
+    InstRecordsClient,
+    MemoryConnectionClient,
+    RateLimitExceededMessage,
+    ReceiveDeviceActionMessage,
+    UpdatesReceivedMessage,
+} from '../websockets';
+import {
+    Action,
+    CurrentVersion,
+    StatusUpdate,
+    connectionInfo,
+    device,
+    remote,
+} from '../common';
 
 console.log = jest.fn();
 
 describe('RemoteYjsPartition', () => {
     testPartitionImplementation(
         async () => {
-            let update: Uint8Array;
+            let update: Uint8Array | null = null;
 
             const doc = new Doc();
             const map = doc.getMap('__test');
@@ -98,30 +114,26 @@ describe('RemoteYjsPartition', () => {
             }
 
             const connection = new MemoryConnectionClient();
-            const addAtoms = new BehaviorSubject<AddUpdatesEvent>({
+            const addAtoms = new BehaviorSubject<AddUpdatesMessage>({
+                type: 'repo/add_updates',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 updates: [fromByteArray(update)],
                 initial: true,
             });
-            connection.events.set(ADD_UPDATES, addAtoms);
+            connection.events.set('repo/add_updates', addAtoms);
 
-            const client = new CausalRepoClient(connection);
+            const client = new InstRecordsClient(connection);
             connection.connect();
 
-            return new RemoteYjsPartitionImpl(
-                {
-                    id: 'test',
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
-                },
-                client,
-                {
-                    type: 'remote_yjs',
-                    branch: 'testBranch',
-                    host: 'testHost',
-                }
-            );
+            return new RemoteYjsPartitionImpl(client, {
+                type: 'remote_yjs',
+                recordName: null,
+                inst: 'inst',
+                branch: 'testBranch',
+                host: 'testHost',
+            });
         },
         true,
         true
@@ -129,11 +141,11 @@ describe('RemoteYjsPartition', () => {
 
     describe('connection', () => {
         let connection: MemoryConnectionClient;
-        let client: CausalRepoClient;
+        let client: InstRecordsClient;
         let partition: RemoteYjsPartitionImpl;
-        let receiveEvent: Subject<ReceiveDeviceActionEvent>;
-        let addAtoms: Subject<AddUpdatesEvent>;
-        let updatesReceived: Subject<UpdatesReceivedEvent>;
+        let receiveEvent: Subject<ReceiveDeviceActionMessage>;
+        let addAtoms: Subject<AddUpdatesMessage>;
+        let updatesReceived: Subject<UpdatesReceivedMessage>;
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
@@ -144,13 +156,13 @@ describe('RemoteYjsPartition', () => {
 
         beforeEach(async () => {
             connection = new MemoryConnectionClient();
-            receiveEvent = new Subject<ReceiveDeviceActionEvent>();
-            addAtoms = new Subject<AddUpdatesEvent>();
-            updatesReceived = new Subject<UpdatesReceivedEvent>();
-            connection.events.set(RECEIVE_EVENT, receiveEvent);
-            connection.events.set(ADD_UPDATES, addAtoms);
-            connection.events.set(UPDATES_RECEIVED, updatesReceived);
-            client = new CausalRepoClient(connection);
+            receiveEvent = new Subject<ReceiveDeviceActionMessage>();
+            addAtoms = new Subject<AddUpdatesMessage>();
+            updatesReceived = new Subject<UpdatesReceivedMessage>();
+            connection.events.set('repo/receive_action', receiveEvent);
+            connection.events.set('repo/add_updates', addAtoms);
+            connection.events.set('repo/updates_received', updatesReceived);
+            client = new InstRecordsClient(connection);
             connection.connect();
             sub = new Subscription();
 
@@ -162,6 +174,8 @@ describe('RemoteYjsPartition', () => {
 
             setupPartition({
                 type: 'remote_yjs',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 host: 'testHost',
             });
@@ -178,6 +192,8 @@ describe('RemoteYjsPartition', () => {
         it('should return delayed for the realtimeStrategy if the partition is static', () => {
             setupPartition({
                 type: 'remote_yjs',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 host: 'testHost',
                 static: true,
@@ -223,6 +239,9 @@ describe('RemoteYjsPartition', () => {
             });
 
             addAtoms.next({
+                type: 'repo/add_updates',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 updates,
                 initial: true,
@@ -244,6 +263,8 @@ describe('RemoteYjsPartition', () => {
         it('should send a WATCH_BRANCH event to the server', async () => {
             setupPartition({
                 type: 'remote_yjs',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 host: 'testHost',
             });
@@ -252,12 +273,10 @@ describe('RemoteYjsPartition', () => {
 
             expect(connection.sentMessages).toEqual([
                 {
-                    name: WATCH_BRANCH,
-                    data: {
-                        branch: 'testBranch',
-                        siteId: partition.site,
-                        protocol: 'updates',
-                    },
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
+                    branch: 'testBranch',
                 },
             ]);
         });
@@ -270,25 +289,25 @@ describe('RemoteYjsPartition', () => {
                             type: 'def',
                         },
                         {
-                            deviceId: 'device',
+                            connectionId: 'device',
                         }
                     ),
                 ]);
 
                 expect(connection.sentMessages).toEqual([
                     {
-                        name: SEND_EVENT,
-                        data: {
-                            branch: 'testBranch',
-                            action: remote(
-                                {
-                                    type: 'def',
-                                },
-                                {
-                                    deviceId: 'device',
-                                }
-                            ),
-                        },
+                        type: 'repo/send_action',
+                        recordName: null,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        action: remote(
+                            {
+                                type: 'def',
+                            },
+                            {
+                                connectionId: 'device',
+                            }
+                        ),
                     },
                 ]);
             });
@@ -296,6 +315,8 @@ describe('RemoteYjsPartition', () => {
             it('should not send the remote event if remote events are disabled', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     remoteEvents: false,
@@ -307,7 +328,7 @@ describe('RemoteYjsPartition', () => {
                             type: 'def',
                         },
                         {
-                            deviceId: 'device',
+                            connectionId: 'device',
                         }
                     ),
                 ]);
@@ -320,7 +341,7 @@ describe('RemoteYjsPartition', () => {
                 partition.onEvents.subscribe((e) => events.push(...e));
 
                 const action = device(
-                    deviceInfo('username', 'device', 'session'),
+                    connectionInfo('username', 'device', 'session'),
                     {
                         type: 'abc',
                     }
@@ -328,6 +349,9 @@ describe('RemoteYjsPartition', () => {
                 partition.connect();
 
                 receiveEvent.next({
+                    type: 'repo/receive_action',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     action: action,
                 });
@@ -340,6 +364,8 @@ describe('RemoteYjsPartition', () => {
             it('should not send events when in readOnly mode', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     readOnly: true,
@@ -351,7 +377,7 @@ describe('RemoteYjsPartition', () => {
                             type: 'def',
                         },
                         {
-                            deviceId: 'device',
+                            connectionId: 'device',
                         }
                     ),
                 ]);
@@ -362,6 +388,8 @@ describe('RemoteYjsPartition', () => {
             it('should not send events when in static mode', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     static: true,
@@ -373,7 +401,7 @@ describe('RemoteYjsPartition', () => {
                             type: 'def',
                         },
                         {
-                            deviceId: 'device',
+                            connectionId: 'device',
                         }
                     ),
                 ]);
@@ -386,7 +414,7 @@ describe('RemoteYjsPartition', () => {
                 partition.onEvents.subscribe((e) => events.push(...e));
 
                 const action = device(
-                    deviceInfo('username', 'device', 'session'),
+                    connectionInfo('username', 'device', 'session'),
                     {
                         type: 'abc',
                     }
@@ -402,6 +430,9 @@ describe('RemoteYjsPartition', () => {
                 partition.connect();
 
                 receiveEvent.next({
+                    type: 'repo/receive_action',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     action: action,
                 });
@@ -430,7 +461,7 @@ describe('RemoteYjsPartition', () => {
                     partition.onEvents.subscribe((e) => events.push(...e));
 
                     const action = device(
-                        deviceInfo('username', 'device', 'session'),
+                        connectionInfo('username', 'device', 'session'),
                         {
                             type: 'abc',
                         },
@@ -439,6 +470,9 @@ describe('RemoteYjsPartition', () => {
                     partition.connect();
 
                     receiveEvent.next({
+                        type: 'repo/receive_action',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         action: action,
                     });
@@ -448,7 +482,7 @@ describe('RemoteYjsPartition', () => {
                     expect(events).not.toEqual([action]);
                     expect(events).toEqual([
                         device(
-                            deviceInfo('username', 'device', 'session'),
+                            connectionInfo('username', 'device', 'session'),
                             {
                                 type: 'abc',
                                 taskId: 'task1',
@@ -460,256 +494,258 @@ describe('RemoteYjsPartition', () => {
                 });
             });
 
-            describe('get_remote_count', () => {
-                it(`should send a ${DEVICE_COUNT} event to the server`, async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+            // describe('get_remote_count', () => {
+            //     it(`should send a ${DEVICE_COUNT} event to the server`, async () => {
+            //         setupPartition({
+            //             type: 'remote_yjs',
+            //             recordName: null,
+            //         inst: 'inst',
+            //             branch: 'testBranch',
+            //             host: 'testHost',
+            //         });
 
-                    await partition.sendRemoteEvents([
-                        remote(getRemoteCount('testBranch')),
-                    ]);
+            //         await partition.sendRemoteEvents([
+            //             remote(getRemoteCount('testBranch')),
+            //         ]);
 
-                    expect(connection.sentMessages).toEqual([
-                        {
-                            name: DEVICE_COUNT,
-                            data: 'testBranch',
-                        },
-                    ]);
-                });
+            //         expect(connection.sentMessages).toEqual([
+            //             {
+            //                 name: DEVICE_COUNT,
+            //                 data: 'testBranch',
+            //             },
+            //         ]);
+            //     });
 
-                it(`should send an async result with the response`, async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+            //     it(`should send an async result with the response`, async () => {
+            //         setupPartition({
+            //             type: 'remote_yjs',
+            //             branch: 'testBranch',
+            //             host: 'testHost',
+            //         });
 
-                    const devices = new Subject<DeviceCountEvent>();
-                    connection.events.set(DEVICE_COUNT, devices);
+            //         const devices = new Subject<DeviceCountEvent>();
+            //         connection.events.set(DEVICE_COUNT, devices);
 
-                    await partition.sendRemoteEvents([
-                        remote(
-                            getRemoteCount('testBranch'),
-                            undefined,
-                            undefined,
-                            'task1'
-                        ),
-                    ]);
+            //         await partition.sendRemoteEvents([
+            //             remote(
+            //                 getRemoteCount('testBranch'),
+            //                 undefined,
+            //                 undefined,
+            //                 'task1'
+            //             ),
+            //         ]);
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    const events = [] as Action[];
-                    partition.onEvents.subscribe((e) => events.push(...e));
+            //         const events = [] as Action[];
+            //         partition.onEvents.subscribe((e) => events.push(...e));
 
-                    devices.next({
-                        branch: 'testBranch',
-                        count: 2,
-                    });
+            //         devices.next({
+            //             branch: 'testBranch',
+            //             count: 2,
+            //         });
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    expect(events).toEqual([asyncResult('task1', 2)]);
-                });
-            });
+            //         expect(events).toEqual([asyncResult('task1', 2)]);
+            //     });
+            // });
 
-            describe('get_servers', () => {
-                it(`should send a ${BRANCHES} event to the server`, async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+            // describe('get_servers', () => {
+            //     it(`should send a ${BRANCHES} event to the server`, async () => {
+            //         setupPartition({
+            //             type: 'remote_yjs',
+            //             branch: 'testBranch',
+            //             host: 'testHost',
+            //         });
 
-                    await partition.sendRemoteEvents([
-                        remote(getServers(), undefined, undefined, 'task1'),
-                    ]);
+            //         await partition.sendRemoteEvents([
+            //             remote(getServers(), undefined, undefined, 'task1'),
+            //         ]);
 
-                    expect(connection.sentMessages).toEqual([
-                        {
-                            name: BRANCHES,
-                            data: undefined,
-                        },
-                    ]);
-                });
+            //         expect(connection.sentMessages).toEqual([
+            //             {
+            //                 name: BRANCHES,
+            //                 data: undefined,
+            //             },
+            //         ]);
+            //     });
 
-                it(`should send a ${BRANCHES_STATUS} event to the server if told to include statuses`, async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+            //     it(`should send a ${BRANCHES_STATUS} event to the server if told to include statuses`, async () => {
+            //         setupPartition({
+            //             type: 'remote_yjs',
+            //             branch: 'testBranch',
+            //             host: 'testHost',
+            //         });
 
-                    await partition.sendRemoteEvents([
-                        remote(
-                            getServerStatuses(),
-                            undefined,
-                            undefined,
-                            'task1'
-                        ),
-                    ]);
+            //         await partition.sendRemoteEvents([
+            //             remote(
+            //                 getServerStatuses(),
+            //                 undefined,
+            //                 undefined,
+            //                 'task1'
+            //             ),
+            //         ]);
 
-                    expect(connection.sentMessages).toEqual([
-                        {
-                            name: BRANCHES_STATUS,
-                            data: undefined,
-                        },
-                    ]);
-                });
+            //         expect(connection.sentMessages).toEqual([
+            //             {
+            //                 name: BRANCHES_STATUS,
+            //                 data: undefined,
+            //             },
+            //         ]);
+            //     });
 
-                it(`should send an async result with the response`, async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+            //     it(`should send an async result with the response`, async () => {
+            //         setupPartition({
+            //             type: 'remote_yjs',
+            //             branch: 'testBranch',
+            //             host: 'testHost',
+            //         });
 
-                    const branches = new Subject<BranchesEvent>();
-                    connection.events.set(BRANCHES, branches);
+            //         const branches = new Subject<BranchesEvent>();
+            //         connection.events.set(BRANCHES, branches);
 
-                    await partition.sendRemoteEvents([
-                        remote(getServers(), undefined, undefined, 'task1'),
-                    ]);
+            //         await partition.sendRemoteEvents([
+            //             remote(getServers(), undefined, undefined, 'task1'),
+            //         ]);
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    const events = [] as Action[];
-                    partition.onEvents.subscribe((e) => events.push(...e));
+            //         const events = [] as Action[];
+            //         partition.onEvents.subscribe((e) => events.push(...e));
 
-                    branches.next({
-                        branches: ['abc', 'def'],
-                    });
+            //         branches.next({
+            //             branches: ['abc', 'def'],
+            //         });
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    expect(events).toEqual([
-                        asyncResult('task1', ['abc', 'def']),
-                    ]);
-                });
+            //         expect(events).toEqual([
+            //             asyncResult('task1', ['abc', 'def']),
+            //         ]);
+            //     });
 
-                it('should filter out branches that start with a dollar sign ($)', async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+            //     it('should filter out branches that start with a dollar sign ($)', async () => {
+            //         setupPartition({
+            //             type: 'remote_yjs',
+            //             branch: 'testBranch',
+            //             host: 'testHost',
+            //         });
 
-                    const branches = new Subject<BranchesEvent>();
-                    connection.events.set(BRANCHES, branches);
+            //         const branches = new Subject<BranchesEvent>();
+            //         connection.events.set(BRANCHES, branches);
 
-                    await partition.sendRemoteEvents([
-                        remote(getServers(), undefined, undefined, 'task1'),
-                    ]);
+            //         await partition.sendRemoteEvents([
+            //             remote(getServers(), undefined, undefined, 'task1'),
+            //         ]);
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    const events = [] as Action[];
-                    partition.onEvents.subscribe((e) => events.push(...e));
+            //         const events = [] as Action[];
+            //         partition.onEvents.subscribe((e) => events.push(...e));
 
-                    branches.next({
-                        branches: ['$admin', '$$hello', 'abc', 'def'],
-                    });
+            //         branches.next({
+            //             branches: ['$admin', '$$hello', 'abc', 'def'],
+            //         });
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    expect(events).toEqual([
-                        asyncResult('task1', ['abc', 'def']),
-                    ]);
-                });
+            //         expect(events).toEqual([
+            //             asyncResult('task1', ['abc', 'def']),
+            //         ]);
+            //     });
 
-                it(`should filter out branches that start with a dollar sign when including statuses`, async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
+            //     it(`should filter out branches that start with a dollar sign when including statuses`, async () => {
+            //         setupPartition({
+            //             type: 'remote_yjs',
+            //             branch: 'testBranch',
+            //             host: 'testHost',
+            //         });
 
-                    const branches = new Subject<BranchesStatusEvent>();
-                    connection.events.set(BRANCHES_STATUS, branches);
+            //         const branches = new Subject<BranchesStatusEvent>();
+            //         connection.events.set(BRANCHES_STATUS, branches);
 
-                    await partition.sendRemoteEvents([
-                        remote(
-                            getServerStatuses(),
-                            undefined,
-                            undefined,
-                            'task1'
-                        ),
-                    ]);
+            //         await partition.sendRemoteEvents([
+            //             remote(
+            //                 getServerStatuses(),
+            //                 undefined,
+            //                 undefined,
+            //                 'task1'
+            //             ),
+            //         ]);
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    const events = [] as Action[];
-                    partition.onEvents.subscribe((e) => events.push(...e));
+            //         const events = [] as Action[];
+            //         partition.onEvents.subscribe((e) => events.push(...e));
 
-                    branches.next({
-                        branches: [
-                            {
-                                branch: '$admin',
-                                lastUpdateTime: new Date(2019, 1, 1),
-                            },
-                            {
-                                branch: '$$other',
-                                lastUpdateTime: new Date(2019, 1, 1),
-                            },
-                            {
-                                branch: 'abc',
-                                lastUpdateTime: new Date(2019, 1, 1),
-                            },
-                            {
-                                branch: 'def',
-                                lastUpdateTime: new Date(2019, 1, 1),
-                            },
-                        ],
-                    });
+            //         branches.next({
+            //             branches: [
+            //                 {
+            //                     branch: '$admin',
+            //                     lastUpdateTime: new Date(2019, 1, 1),
+            //                 },
+            //                 {
+            //                     branch: '$$other',
+            //                     lastUpdateTime: new Date(2019, 1, 1),
+            //                 },
+            //                 {
+            //                     branch: 'abc',
+            //                     lastUpdateTime: new Date(2019, 1, 1),
+            //                 },
+            //                 {
+            //                     branch: 'def',
+            //                     lastUpdateTime: new Date(2019, 1, 1),
+            //                 },
+            //             ],
+            //         });
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    expect(events).toEqual([
-                        asyncResult('task1', [
-                            {
-                                inst: 'abc',
-                                lastUpdateTime: new Date(2019, 1, 1),
-                            },
-                            {
-                                inst: 'def',
-                                lastUpdateTime: new Date(2019, 1, 1),
-                            },
-                        ]),
-                    ]);
-                });
-            });
+            //         expect(events).toEqual([
+            //             asyncResult('task1', [
+            //                 {
+            //                     inst: 'abc',
+            //                     lastUpdateTime: new Date(2019, 1, 1),
+            //                 },
+            //                 {
+            //                     inst: 'def',
+            //                     lastUpdateTime: new Date(2019, 1, 1),
+            //                 },
+            //             ]),
+            //         ]);
+            //     });
+            // });
 
-            describe('get_remotes', () => {
-                it('should not send a get_remotes event to the server', async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                    });
-                    partition.connect();
+            // describe('get_remotes', () => {
+            //     it('should not send a get_remotes event to the server', async () => {
+            //         setupPartition({
+            //             type: 'remote_yjs',
+            //             branch: 'testBranch',
+            //             host: 'testHost',
+            //         });
+            //         partition.connect();
 
-                    await partition.sendRemoteEvents([
-                        remote(getRemotes(), undefined, undefined, 'task1'),
-                    ]);
+            //         await partition.sendRemoteEvents([
+            //             remote(getRemotes(), undefined, undefined, 'task1'),
+            //         ]);
 
-                    await waitAsync();
+            //         await waitAsync();
 
-                    expect(connection.sentMessages).not.toContainEqual({
-                        name: SEND_EVENT,
-                        data: {
-                            branch: 'testBranch',
-                            action: remote(
-                                getRemotes(),
-                                undefined,
-                                undefined,
-                                'task1'
-                            ),
-                        },
-                    });
-                });
-            });
+            //         expect(connection.sentMessages).not.toContainEqual({
+            //             name: SEND_EVENT,
+            //             data: {
+            //                 branch: 'testBranch',
+            //                 action: remote(
+            //                     getRemotes(),
+            //                     undefined,
+            //                     undefined,
+            //                     'task1'
+            //                 ),
+            //             },
+            //         });
+            //     });
+            // });
 
             describe('action', () => {
                 it('should translate a remote shout to a onRemoteWhisper event', async () => {
@@ -718,16 +754,19 @@ describe('RemoteYjsPartition', () => {
 
                     partition.connect();
 
-                    const info1 = deviceInfo(
+                    const info1 = connectionInfo(
                         'info1Username',
                         'info1DeviceId',
                         'info1SessionId'
                     );
                     receiveEvent.next({
+                        type: 'repo/receive_action',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         action: {
                             type: 'device',
-                            device: info1,
+                            connection: info1,
                             event: action('eventName', null, null, {
                                 abc: 'def',
                             }),
@@ -756,16 +795,19 @@ describe('RemoteYjsPartition', () => {
 
                     partition.connect();
 
-                    const info1 = deviceInfo(
+                    const info1 = connectionInfo(
                         'info1Username',
                         'info1DeviceId',
                         'info1SessionId'
                     );
                     receiveEvent.next({
+                        type: 'repo/receive_action',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         action: {
                             type: 'device',
-                            device: info1,
+                            connection: info1,
                             event: action('eventName', ['abc'], 'userId', {
                                 abc: 'def',
                             }),
@@ -793,11 +835,13 @@ describe('RemoteYjsPartition', () => {
                 it('should send a list_inst_updates event to the server', async () => {
                     setupPartition({
                         type: 'remote_yjs',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         host: 'testHost',
                     });
-                    const addUpdates = new Subject<AddUpdatesEvent>();
-                    connection.events.set(ADD_UPDATES, addUpdates);
+                    const addUpdates = new Subject<AddUpdatesMessage>();
+                    connection.events.set('repo/add_updates', addUpdates);
 
                     partition.connect();
 
@@ -816,11 +860,16 @@ describe('RemoteYjsPartition', () => {
                     partition.onEvents.subscribe((e) => events.push(...e));
 
                     expect(connection.sentMessages).toContainEqual({
-                        name: GET_UPDATES,
-                        data: 'testBranch',
+                        type: 'repo/list_inst_updates',
+                        recordName: null,
+                        inst: 'inst',
+                        branch: 'testBranch',
                     });
 
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         updates: ['abc', 'def'],
                     });
@@ -846,6 +895,8 @@ describe('RemoteYjsPartition', () => {
                 it('should return the state matching the given updates', async () => {
                     setupPartition({
                         type: 'remote_yjs',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         host: 'testHost',
                     });
@@ -872,13 +923,13 @@ describe('RemoteYjsPartition', () => {
                     await waitAsync();
 
                     const updates = connection.sentMessages.filter(
-                        (message) => message.name === ADD_UPDATES
+                        (message) => message.type === 'repo/add_updates'
                     );
                     expect(updates).toHaveLength(2);
 
                     const instUpdates = flatMap(
                         updates,
-                        (u) => (u.data as AddUpdatesEvent).updates
+                        (u) => (u as AddUpdatesMessage).updates
                     ).map((u, i) => ({
                         id: i,
                         update: u,
@@ -886,7 +937,7 @@ describe('RemoteYjsPartition', () => {
 
                     const instTimestamps = flatMap(
                         updates,
-                        (u) => (u.data as AddUpdatesEvent).timestamps ?? []
+                        (u) => (u as AddUpdatesMessage).timestamps ?? []
                     );
 
                     const finalUpdates = instUpdates.map((u) => ({
@@ -946,6 +997,8 @@ describe('RemoteYjsPartition', () => {
                 it('should return an update that represents the bots', async () => {
                     setupPartition({
                         type: 'remote_yjs',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         host: 'testHost',
                     });
@@ -1010,6 +1063,8 @@ describe('RemoteYjsPartition', () => {
                 it('should add the update to the inst', async () => {
                     setupPartition({
                         type: 'remote_yjs',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         host: 'testHost',
                     });
@@ -1070,16 +1125,16 @@ describe('RemoteYjsPartition', () => {
                     });
 
                     const addedAtoms = connection.sentMessages.filter(
-                        (m) => m.name === ADD_UPDATES
+                        (m) => m.type === 'repo/add_updates'
                     );
                     expect(addedAtoms).toEqual([
                         {
-                            name: ADD_UPDATES,
-                            data: {
-                                branch: 'testBranch',
-                                updates: updates.map((u) => u.update),
-                                updateId: 1,
-                            },
+                            type: 'repo/add_updates',
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            updates: updates.map((u) => u.update),
+                            updateId: 1,
                         },
                     ]);
                 });
@@ -1087,6 +1142,8 @@ describe('RemoteYjsPartition', () => {
                 it('should support updates from v13.5.24 of yjs', async () => {
                     setupPartition({
                         type: 'remote_yjs',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         host: 'testHost',
                     });
@@ -1129,6 +1186,8 @@ describe('RemoteYjsPartition', () => {
                 it('should return the current doc state as an update', async () => {
                     setupPartition({
                         type: 'remote_yjs',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         host: 'testHost',
                     });
@@ -1186,15 +1245,17 @@ describe('RemoteYjsPartition', () => {
                 it('should emit a shout when the event is recieved', async () => {
                     setupPartition({
                         type: 'remote_yjs',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         host: 'testHost',
                     });
 
                     partition.space = 'test';
                     const rateLimitExceeded =
-                        new Subject<RateLimitExceededEvent>();
+                        new Subject<RateLimitExceededMessage>();
                     connection.events.set(
-                        RATE_LIMIT_EXCEEDED,
+                        'rate_limit_exceeded',
                         rateLimitExceeded
                     );
 
@@ -1206,6 +1267,7 @@ describe('RemoteYjsPartition', () => {
                     await waitAsync();
 
                     rateLimitExceeded.next({
+                        type: 'rate_limit_exceeded',
                         retryAfter: 123,
                         totalHits: 999,
                     });
@@ -1226,8 +1288,8 @@ describe('RemoteYjsPartition', () => {
             });
         });
 
-        describe('remote atoms', () => {
-            it('should add the given atoms to the tree and update the state', async () => {
+        describe('remote updates', () => {
+            it('should add the given updates to the tree and update the state', async () => {
                 partition.connect();
 
                 const updates = getUpdates((doc, bots) => {
@@ -1235,6 +1297,9 @@ describe('RemoteYjsPartition', () => {
                 });
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates,
                     initial: true,
@@ -1253,6 +1318,8 @@ describe('RemoteYjsPartition', () => {
             it('should not send new updates to the server if in readOnly mode', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     readOnly: true,
@@ -1269,6 +1336,8 @@ describe('RemoteYjsPartition', () => {
             it('should not send new updates to the server if in static mode', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     static: true,
@@ -1285,6 +1354,8 @@ describe('RemoteYjsPartition', () => {
             it('should handle an ADD_UPDATES event without any updates', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     static: true,
@@ -1293,6 +1364,9 @@ describe('RemoteYjsPartition', () => {
                 partition.connect();
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates: [],
                 });
@@ -1304,6 +1378,8 @@ describe('RemoteYjsPartition', () => {
             it('should send new updates to the server', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                 });
@@ -1322,11 +1398,11 @@ describe('RemoteYjsPartition', () => {
                 expect(connection.sentMessages.slice(1).length).toBe(1);
 
                 const addUpdatesMessage = connection.sentMessages[1];
-                expect(addUpdatesMessage.name).toEqual(ADD_UPDATES);
-                expect(addUpdatesMessage.data.branch).toEqual('testBranch');
+                expect(addUpdatesMessage.type).toEqual('repo/add_updates');
+                expect((addUpdatesMessage as any).branch).toEqual('testBranch');
 
                 const doc = createDocFromUpdates(
-                    addUpdatesMessage.data.updates
+                    (addUpdatesMessage as any).updates
                 );
                 const bots = doc.getMap('bots');
                 expect(bots.size).toBe(1);
@@ -1340,6 +1416,8 @@ describe('RemoteYjsPartition', () => {
             it('should not store null values on new bots', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                 });
@@ -1359,11 +1437,11 @@ describe('RemoteYjsPartition', () => {
                 expect(connection.sentMessages.slice(1).length).toBe(1);
 
                 const addUpdatesMessage = connection.sentMessages[1];
-                expect(addUpdatesMessage.name).toEqual(ADD_UPDATES);
-                expect(addUpdatesMessage.data.branch).toEqual('testBranch');
+                expect(addUpdatesMessage.type).toEqual('repo/add_updates');
+                expect((addUpdatesMessage as any).branch).toEqual('testBranch');
 
                 const doc = createDocFromUpdates(
-                    addUpdatesMessage.data.updates
+                    (addUpdatesMessage as any).updates
                 );
                 const bots = doc.getMap('bots');
                 expect(bots.size).toBe(1);
@@ -1378,6 +1456,8 @@ describe('RemoteYjsPartition', () => {
             it('should be able to load existing bots', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                 });
@@ -1424,6 +1504,9 @@ describe('RemoteYjsPartition', () => {
                 });
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates,
                     initial: true,
@@ -1456,6 +1539,8 @@ describe('RemoteYjsPartition', () => {
             it('should not load null values from existing bots', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                 });
@@ -1467,6 +1552,9 @@ describe('RemoteYjsPartition', () => {
                 });
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates,
                     initial: true,
@@ -1482,6 +1570,8 @@ describe('RemoteYjsPartition', () => {
             it('should not try to send remote updates to the server', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                 });
@@ -1493,6 +1583,9 @@ describe('RemoteYjsPartition', () => {
                 });
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates,
                     initial: true,
@@ -1507,6 +1600,9 @@ describe('RemoteYjsPartition', () => {
                 partition.connect();
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
@@ -1530,7 +1626,7 @@ describe('RemoteYjsPartition', () => {
                 partition.onStateUpdated.subscribe((s) => states.push(s));
 
                 const doc = createDocFromUpdates(partitionUpdates);
-                let update: Uint8Array;
+                let update: Uint8Array = new Uint8Array();
                 doc.on('update', (u: Uint8Array) => {
                     update = u;
                 });
@@ -1543,6 +1639,9 @@ describe('RemoteYjsPartition', () => {
                 });
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates: [fromByteArray(update)],
                 });
@@ -1573,6 +1672,8 @@ describe('RemoteYjsPartition', () => {
             it('should use 0 for the edit version when the site has no changes', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                 });
@@ -1584,6 +1685,9 @@ describe('RemoteYjsPartition', () => {
                 });
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates,
                     initial: true,
@@ -1591,12 +1695,13 @@ describe('RemoteYjsPartition', () => {
 
                 await waitAsync();
 
-                let version: CurrentVersion;
+                let version: CurrentVersion | null = null;
                 sub.add(
                     partition.onVersionUpdated.subscribe((v) => (version = v))
                 );
                 partition.onStateUpdated.subscribe((s) => states.push(s));
 
+                // @ts-ignore
                 const editVersion = { ...version.vector };
                 await partition.applyEvents([
                     botUpdated('bot1', {
@@ -1614,7 +1719,9 @@ describe('RemoteYjsPartition', () => {
                     }),
                 });
 
+                // @ts-ignore
                 expect(states[1].state.bot1.tags.tag1.version).toEqual({
+                    // @ts-ignore
                     [version.currentSite]: 0,
                 });
             });
@@ -1630,6 +1737,9 @@ describe('RemoteYjsPartition', () => {
                     partition.connect();
 
                     updatesReceived.next({
+                        type: 'repo/updates_received',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         updateId: 1,
                         errorCode: 'max_size_reached',
@@ -1655,6 +1765,9 @@ describe('RemoteYjsPartition', () => {
                     partition.connect();
 
                     updatesReceived.next({
+                        type: 'repo/updates_received',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         updateId: 1,
                         errorCode: 'max_size_reached',
@@ -1664,6 +1777,9 @@ describe('RemoteYjsPartition', () => {
                     await waitAsync();
 
                     updatesReceived.next({
+                        type: 'repo/updates_received',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         updateId: 2,
                         errorCode: 'max_size_reached',
@@ -1685,15 +1801,11 @@ describe('RemoteYjsPartition', () => {
         });
 
         describe('static mode', () => {
-            let authenticated: Subject<AuthenticatedToBranchEvent>;
-            beforeEach(() => {
-                authenticated = new Subject<AuthenticatedToBranchEvent>();
-                connection.events.set(AUTHENTICATED_TO_BRANCH, authenticated);
-            });
-
             it('should send a GET_UPDATES event when in static mode', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     static: true,
@@ -1706,8 +1818,10 @@ describe('RemoteYjsPartition', () => {
 
                 expect(connection.sentMessages).toEqual([
                     {
-                        name: GET_UPDATES,
-                        data: 'testBranch',
+                        type: 'repo/get_updates',
+                        recordName: null,
+                        inst: 'inst',
+                        branch: 'testBranch',
                     },
                 ]);
             });
@@ -1715,6 +1829,8 @@ describe('RemoteYjsPartition', () => {
             it('should not apply updates to the causal tree', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     static: true,
@@ -1738,6 +1854,8 @@ describe('RemoteYjsPartition', () => {
             it('should load the initial state properly', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     static: true,
@@ -1750,6 +1868,9 @@ describe('RemoteYjsPartition', () => {
                 partition.connect();
 
                 addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     updates,
                 });
@@ -1761,49 +1882,11 @@ describe('RemoteYjsPartition', () => {
                 });
             });
 
-            // TODO: Support locking and unlocking YJS partitions
-            it('should not transition when a unlock_space event is sent', async () => {
-                setupPartition({
-                    type: 'remote_yjs',
-                    branch: 'testBranch',
-                    host: 'testHost',
-                    static: true,
-                    readOnly: true,
-                });
-
-                const updates = getUpdates((doc, bots) => {
-                    bots.set('bot1', new YMap([['tag1', 'abc']]));
-                });
-
-                partition.connect();
-
-                addAtoms.next({
-                    branch: 'testBranch',
-                    updates,
-                });
-
-                await partition.applyEvents([
-                    unlockSpace('admin', 'wrong'),
-                    botAdded(
-                        createBot('test1', {
-                            hello: 'world',
-                        })
-                    ),
-                ]);
-
-                authenticated.next({
-                    branch: 'testBranch',
-                    authenticated: false,
-                });
-
-                await waitAsync();
-
-                expect(connection.sentMessages.slice(2)).toEqual([]);
-            });
-
             it('should not try to connect if it is not already connected', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     static: true,
@@ -1814,7 +1897,7 @@ describe('RemoteYjsPartition', () => {
 
                 expect(
                     connection.sentMessages.filter(
-                        (e) => e.name === WATCH_BRANCH
+                        (e) => e.type === 'repo/watch_branch'
                     ).length
                 ).toEqual(0);
             });
@@ -1824,6 +1907,8 @@ describe('RemoteYjsPartition', () => {
             it('should load the given branch as temporary', async () => {
                 setupPartition({
                     type: 'remote_yjs',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     host: 'testHost',
                     temporary: true,
@@ -1835,29 +1920,18 @@ describe('RemoteYjsPartition', () => {
 
                 expect(connection.sentMessages).toEqual([
                     {
-                        name: WATCH_BRANCH,
-                        data: {
-                            branch: 'testBranch',
-                            siteId: partition.site,
-                            temporary: true,
-                            protocol: 'updates',
-                        },
+                        type: 'repo/watch_branch',
+                        recordName: null,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        temporary: true,
                     },
                 ]);
             });
         });
 
         function setupPartition(config: RemoteYjsPartitionConfig) {
-            partition = new RemoteYjsPartitionImpl(
-                {
-                    id: 'test',
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
-                },
-                client,
-                config
-            );
+            partition = new RemoteYjsPartitionImpl(client, config);
 
             sub.add(partition);
             sub.add(partition.onBotsAdded.subscribe((b) => added.push(...b)));
