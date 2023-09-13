@@ -190,6 +190,7 @@ describe('WebsocketController', () => {
                     1,
                     'unacceptable_connection_token',
                     'The given connection token is invalid. It must be a correctly formatted string.',
+                    null,
                 ],
             ]);
 
@@ -210,7 +211,7 @@ describe('WebsocketController', () => {
             const connection = await connectionStore.getConnection(
                 'connectionId'
             );
-            expect(connection).toBeUndefined();
+            expect(connection).toBeNull();
         });
 
         it('should delete temporary updates when all devices have left the branch', async () => {
@@ -2261,19 +2262,19 @@ describe('WebsocketController', () => {
             }
         );
 
-        const deviceIdCases = [
-            [true, 'matches', 'deviceId', 'deviceId'] as const,
-            [false, 'does not match', 'deviceId', 'no match'] as const,
+        const sessionIdCases = [
+            [true, 'matches', 'sessionId', 'sessionId'] as const,
+            [false, 'does not match', 'sessionId', 'no match'] as const,
         ];
 
-        it.each(deviceIdCases)(
-            'should return %s if the device ID %s',
-            (expected, desc, deviceId, eventDeviceId) => {
+        it.each(sessionIdCases)(
+            'should return %s if the session ID %s',
+            (expected, desc, sessionId, eventSessionId) => {
                 let device: DeviceConnection = {
                     serverConnectionId: 'connection',
                     clientConnectionId: 'sessionId',
-                    userId: deviceId,
-                    sessionId: 'test',
+                    userId: 'userId',
+                    sessionId: sessionId,
                     token: 'abc',
                 };
 
@@ -2282,7 +2283,7 @@ describe('WebsocketController', () => {
                         <any>{
                             type: 'remote',
                             event: null,
-                            deviceId: eventDeviceId,
+                            sessionId: eventSessionId,
                         },
                         device
                     )
@@ -2425,6 +2426,7 @@ describe('WebsocketController', () => {
                     1,
                     'not_supported',
                     'Upload requests are not supported.',
+                    null,
                 ],
             ]);
         });

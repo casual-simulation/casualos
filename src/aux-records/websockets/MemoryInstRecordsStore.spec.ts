@@ -9,13 +9,10 @@ describe('MemoryInstRecordsStore', () => {
     });
 
     describe('getAllUpdates()', () => {
-        it('should return an empty array by default', async () => {
+        it('should return an null by default', async () => {
             expect(
                 await subject.getAllUpdates('recordName', 'inst', 'test')
-            ).toEqual({
-                updates: [],
-                timestamps: [],
-            });
+            ).toEqual(null);
         });
 
         it('should return the added updates', async () => {
@@ -28,8 +25,9 @@ describe('MemoryInstRecordsStore', () => {
             expect(
                 await subject.getAllUpdates('recordName', 'inst', 'test')
             ).toEqual({
-                updates: ['abc', 'def'],
-                timestamps: [expect.any(Number), expect.any(Number)],
+                updates: ['def'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 3,
             });
         });
     });
@@ -45,10 +43,7 @@ describe('MemoryInstRecordsStore', () => {
             await subject.deleteBranch('recordName', 'inst', 'test');
             expect(
                 await subject.getAllUpdates('recordName', 'inst', 'test')
-            ).toEqual({
-                updates: [],
-                timestamps: [],
-            });
+            ).toEqual(null);
         });
     });
 });
