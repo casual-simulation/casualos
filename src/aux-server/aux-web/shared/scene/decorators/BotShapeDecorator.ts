@@ -70,6 +70,7 @@ import {
     setColor,
     setDepthTest,
     setDepthWrite,
+    setLightIntensity,
     setOpacity,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
@@ -232,6 +233,7 @@ export class BotShapeDecorator
         this._updateAspectRatio(aspectRatio);
         this._updateDepth(calc);
         this._updateDepthWrite(calc);
+        this._updateLightIntensity(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -504,6 +506,8 @@ export class BotShapeDecorator
         }
 
         this.bot3D.display.remove(this.container);
+        this.light = null;
+
         disposeMesh(this.mesh, true, true, true);
         if (this.stroke) {
             this.stroke.dispose();
@@ -587,6 +591,16 @@ export class BotShapeDecorator
         this._setDepthWrite(depthWrite);
     }
 
+    private _updateLightIntensity(calc: BotCalculationContext) {
+        const lightIntensity = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightIntensity',
+            1
+        );
+        this._setLightIntensity(lightIntensity);
+    }
+
     private _updateOpacity(calc: BotCalculationContext) {
         const opacity = calculateNumericalTagValue(
             calc,
@@ -663,6 +677,20 @@ export class BotShapeDecorator
             setDepthWrite(this.mesh, depthWrite);
         }
     }
+
+    private _setLightIntensity(lightIntensity: number) {
+        if (this.scene) {
+            // Change
+            this.scene.traverse((obj) => {
+                if (obj instanceof Light) {
+                    setLightIntensity(obj, lightIntensity);
+                }
+            });
+        } else {
+            setLightIntensity(this.light, lightIntensity);
+        }
+    }
+
     private _setOpacity(opacity: number) {
         if (this.scene) {
             // Set opacity on all meshes inside the gltf scene.
@@ -736,7 +764,8 @@ export class BotShapeDecorator
             this.mesh ||
             this.scene ||
             this._shapeSubscription ||
-            this._keyboard
+            this._keyboard ||
+            this.light
         ) {
             this.dispose();
         }
@@ -1178,7 +1207,7 @@ export class BotShapeDecorator
     private _createPointLight() {
         const collider = (this.collider = createCube(1));
         setColor(collider, 'clear');
-        const pointLight = new PointLight(0xffffff, 1, 10);
+        const pointLight = new PointLight(0xffffff, 1, 10, 2);
         this.light = pointLight;
         this.container.add(this.collider);
         this.bot3D.colliders.push(this.collider);
@@ -1188,7 +1217,7 @@ export class BotShapeDecorator
     private _createAmbientLight() {
         const collider = (this.collider = createCube(1));
         setColor(collider, 'clear');
-        const ambientLight = new AmbientLight(0x404040);
+        const ambientLight = new AmbientLight(0x404040, 1);
         this.light = ambientLight;
         this.container.add(this.collider);
         this.bot3D.colliders.push(this.collider);
@@ -1210,8 +1239,15 @@ export class BotShapeDecorator
     private _createSpotLight() {
         const collider = (this.collider = createCube(1));
         setColor(collider, 'clear');
-        const spotLight = new SpotLight(0x00ff00);
+        const spotLight = new SpotLight(0x00ff00, 1, 0, 0.5, 0, 0); //color, intensity, distance, angle, penumbra, decay
         this.light = spotLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(spotLight);
+        spotLight.position.set(0, 0, 0);
+
+        //const targetObject = spotLight.target
+
         //Todo
         // spotLight.castShadow = true;
 

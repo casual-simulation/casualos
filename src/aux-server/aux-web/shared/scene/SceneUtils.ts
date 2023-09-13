@@ -47,6 +47,7 @@ import {
     SphereGeometry,
     CameraHelper,
     Light,
+    SpotLight,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -832,6 +833,13 @@ export function setDepthWrite(
         MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
     >mesh.material;
     shapeMat.depthWrite = depthWrite;
+}
+
+export function setLightIntensity(light: Light, intensity: number) {
+    if (!light) {
+        return;
+    }
+    light.intensity = intensity;
 }
 
 /**
