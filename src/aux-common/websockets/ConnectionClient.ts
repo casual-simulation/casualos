@@ -17,12 +17,12 @@ export interface ClientConnectionState {
     info: ConnectionInfo;
 }
 
-type ActionSelector<
+export type ActionSelector<
     T extends WebsocketMessage['type'],
     U extends { type: WebsocketMessage['type'] }
 > = U extends { type: T } ? U : never;
 
-type WebsocketType<T extends WebsocketMessage['type']> = ActionSelector<
+export type WebsocketType<T extends WebsocketMessage['type']> = ActionSelector<
     T,
     WebsocketMessage
 >;

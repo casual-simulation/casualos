@@ -188,16 +188,10 @@ type ZodLoginMessageAssertion = HasType<ZodLoginMessage, LoginMessage>;
 export interface LoginResultMessage {
     type: 'login_result';
 
-    // // TODO:
-    // /**
-    //  * The ID of the user that logged in.
-    //  */
-    // userId: string | null;
-
-    // /**
-    //  * The ID of the session that logged in.
-    //  */
-    // sessionId: string | null;
+    /**
+     * The info for the connection.
+     */
+    info: ConnectionInfo;
 }
 export const loginResultMessageSchema = z.object({
     type: z.literal('login_result'),

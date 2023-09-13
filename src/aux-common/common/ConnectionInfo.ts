@@ -9,12 +9,12 @@ export interface ConnectionInfo {
     /**
      * The ID of the session.
      */
-    sessionId: string;
+    sessionId: string | null;
 
     /**
      * The ID of the user that is associated with the connection.
      */
-    userId: string;
+    userId: string | null;
 }
 export const connectionInfoSchema = z.object({
     connectionId: z.string(),
