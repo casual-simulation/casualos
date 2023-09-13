@@ -85,22 +85,24 @@ export const websocketUploadResponseEventSchema = z.tuple([
     z.record(z.string()),
 ]);
 
+export type WebsocketErrorCode =
+    | ServerError
+    | NotSupportedError
+    | 'unacceptable_connection_token'
+    | 'invalid_token'
+    | 'session_expired'
+    | 'user_is_banned'
+    | 'unacceptable_connection_id'
+    | 'message_not_found'
+    | 'unnaceptable_request';
+
 /**
  * Defines a websocket event that contains a response to an upload request.
  */
 export type WebsocketErrorEvent = [
     type: WebsocketEventTypes.Error,
     id: number,
-    errorCode:
-        | ServerError
-        | NotSupportedError
-        | 'unacceptable_connection_token'
-        | 'invalid_token'
-        | 'session_expired'
-        | 'user_is_banned'
-        | 'unacceptable_connection_id'
-        | 'message_not_found'
-        | 'unnaceptable_request',
+    errorCode: WebsocketErrorCode,
     errorMessage: string,
     issues: ZodIssue[]
 ];
@@ -185,6 +187,17 @@ type ZodLoginMessageAssertion = HasType<ZodLoginMessage, LoginMessage>;
  */
 export interface LoginResultMessage {
     type: 'login_result';
+
+    // // TODO:
+    // /**
+    //  * The ID of the user that logged in.
+    //  */
+    // userId: string | null;
+
+    // /**
+    //  * The ID of the session that logged in.
+    //  */
+    // sessionId: string | null;
 }
 export const loginResultMessageSchema = z.object({
     type: z.literal('login_result'),

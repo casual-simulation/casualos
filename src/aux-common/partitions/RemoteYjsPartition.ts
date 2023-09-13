@@ -1,17 +1,17 @@
-import {
-    User,
-    StatusUpdate,
-    Action,
-    SESSION_ID_CLAIM,
-    device,
-    RemoteActions,
-} from '@casual-simulation/causal-trees';
-import {
-    CausalRepoClient,
-    CurrentVersion,
-    treeVersion,
-    VersionVector,
-} from '@casual-simulation/causal-trees/core2';
+// import {
+//     User,
+//     StatusUpdate,
+//     Action,
+//     SESSION_ID_CLAIM,
+//     device,
+//     RemoteActions,
+// } from '@casual-simulation/causal-trees';
+// import {
+//     CausalRepoClient,
+//     CurrentVersion,
+//     treeVersion,
+//     VersionVector,
+// } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
     auxTree,
@@ -74,8 +74,6 @@ import {
 } from '../bots';
 import {
     PartitionConfig,
-    CausalRepoPartitionConfig,
-    YjsPartitionConfig,
     YjsClientPartitionConfig,
     RemoteYjsPartitionConfig,
 } from './AuxPartitionConfig';
@@ -104,18 +102,26 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import { startWith } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
 import { ensureTagIsSerializable } from './PartitionUtils';
+import {
+    Action,
+    ConnectionIndicator,
+    RemoteActions,
+    StatusUpdate,
+    CurrentVersion,
+} from '../common';
+import { InstRecordsClient } from '../websockets';
 
 /**
  * Attempts to create a YjsPartition from the given config.
- * @param user The user.
+ * @param indicator The connection indicator.
  * @param config The config.
  */
 export function createRemoteClientYjsPartition(
     config: PartitionConfig,
-    user: User
+    indicator: ConnectionIndicator
 ): YjsPartition {
     if (config.type === 'yjs_client') {
-        return new RemoteYjsPartitionImpl(user, config.client, config);
+        return new RemoteYjsPartitionImpl(indicator, config.client, config);
     }
     return undefined;
 }
@@ -141,16 +147,18 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _doc: Doc = new Doc();
     private _bots: Map<TagsMap>;
     private _masks: Map<MapValue>;
-    private _client: CausalRepoClient;
+    private _client: InstRecordsClient;
     private _currentVersion: CurrentVersion;
     private _internalPartition: MemoryPartitionImpl;
 
     private _isLocalTransaction: boolean = true;
     private _isRemoteUpdate: boolean = false;
-    private _user: User;
+    private _indicator: ConnectionIndicator;
     private _static: boolean;
     private _watchingBranch: any;
     private _synced: boolean;
+    private _recordName: string | null;
+    private _inst: string;
     private _branch: string;
     private _temporary: boolean;
     private _readOnly: boolean;
@@ -238,16 +246,18 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     }
 
     constructor(
-        user: User,
-        client: CausalRepoClient,
+        indicator: ConnectionIndicator,
+        client: InstRecordsClient,
         config: YjsClientPartitionConfig | RemoteYjsPartitionConfig
     ) {
         this.private = config.private || false;
         this._client = client;
-        this._user = user;
+        this._indicator = indicator;
         this._static = config.static;
         this._remoteEvents =
             'remoteEvents' in config ? config.remoteEvents : true;
+        this._recordName = config.recordName;
+        this._inst = config.inst;
         this._branch = config.branch;
         this._temporary = config.temporary;
 
@@ -359,89 +369,95 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         for (let event of events) {
             if (event.type === 'remote') {
                 if (event.event.type === 'get_remote_count') {
-                    const action = <GetRemoteCountAction>event.event;
-                    this._client.deviceCount(action.inst).subscribe(
-                        (count) => {
-                            this._onEvents.next([
-                                asyncResult(event.taskId, count),
-                            ]);
-                        },
-                        (err) => {
-                            this._onEvents.next([
-                                asyncError(event.taskId, err),
-                            ]);
-                        }
-                    );
+                    // const action = <GetRemoteCountAction>event.event;
+                    // this._client.deviceCount(action.inst).subscribe(
+                    //     (count) => {
+                    //         this._onEvents.next([
+                    //             asyncResult(event.taskId, count),
+                    //         ]);
+                    //     },
+                    //     (err) => {
+                    //         this._onEvents.next([
+                    //             asyncError(event.taskId, err),
+                    //         ]);
+                    //     }
+                    // );
                 } else if (event.event.type === 'get_servers') {
-                    const action = <GetServersAction>event.event;
-                    if (action.includeStatuses) {
-                        this._client.branchesStatus().subscribe(
-                            (e) => {
-                                this._onEvents.next([
-                                    asyncResult(
-                                        event.taskId,
-                                        e.branches
-                                            .filter(
-                                                (b) => !b.branch.startsWith('$')
-                                            )
-                                            .map((b) => ({
-                                                inst: b.branch,
-                                                lastUpdateTime:
-                                                    b.lastUpdateTime,
-                                            }))
-                                    ),
-                                ]);
-                            },
-                            (err) => {
-                                this._onEvents.next([
-                                    asyncError(event.taskId, err),
-                                ]);
-                            }
-                        );
-                    } else {
-                        this._client.branches().subscribe(
-                            (e) => {
-                                this._onEvents.next([
-                                    asyncResult(
-                                        event.taskId,
-                                        e.branches.filter(
-                                            (b) => !b.startsWith('$')
-                                        )
-                                    ),
-                                ]);
-                            },
-                            (err) => {
-                                this._onEvents.next([
-                                    asyncError(event.taskId, err),
-                                ]);
-                            }
-                        );
-                    }
+                    // const action = <GetServersAction>event.event;
+                    // if (action.includeStatuses) {
+                    //     this._client.branchesStatus().subscribe(
+                    //         (e) => {
+                    //             this._onEvents.next([
+                    //                 asyncResult(
+                    //                     event.taskId,
+                    //                     e.branches
+                    //                         .filter(
+                    //                             (b) => !b.branch.startsWith('$')
+                    //                         )
+                    //                         .map((b) => ({
+                    //                             inst: b.branch,
+                    //                             lastUpdateTime:
+                    //                                 b.lastUpdateTime,
+                    //                         }))
+                    //                 ),
+                    //             ]);
+                    //         },
+                    //         (err) => {
+                    //             this._onEvents.next([
+                    //                 asyncError(event.taskId, err),
+                    //             ]);
+                    //         }
+                    //     );
+                    // } else {
+                    //     this._client.branches().subscribe(
+                    //         (e) => {
+                    //             this._onEvents.next([
+                    //                 asyncResult(
+                    //                     event.taskId,
+                    //                     e.branches.filter(
+                    //                         (b) => !b.startsWith('$')
+                    //                     )
+                    //                 ),
+                    //             ]);
+                    //         },
+                    //         (err) => {
+                    //             this._onEvents.next([
+                    //                 asyncError(event.taskId, err),
+                    //             ]);
+                    //         }
+                    //     );
+                    // }
                 } else if (event.event.type === 'get_remotes') {
                     // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.
                     // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
                     //       we do this type of logic.
                 } else if (event.event.type === 'list_inst_updates') {
                     const action = <ListInstUpdatesAction>event.event;
-                    this._client.getBranchUpdates(this._branch).subscribe(
-                        ({ updates, timestamps }) => {
-                            this._onEvents.next([
-                                asyncResult(
-                                    event.taskId,
-                                    updates.map((u, i) => ({
-                                        id: i,
-                                        update: u,
-                                        timestamp: timestamps?.[i],
-                                    }))
-                                ),
-                            ]);
-                        },
-                        (err) => {
-                            this._onEvents.next([
-                                asyncError(event.taskId, err),
-                            ]);
-                        }
-                    );
+                    this._client
+                        .getBranchUpdates(
+                            this._recordName,
+                            this._inst,
+                            this._branch
+                        )
+                        .subscribe({
+                            next: ({ updates, timestamps }) => {
+                                this._onEvents.next([
+                                    asyncResult(
+                                        event.taskId,
+                                        updates.map((u, i) => ({
+                                            id: i,
+                                            update: u,
+                                            timestamp: timestamps?.[i],
+                                        }))
+                                    ),
+                                ]);
+                            },
+                            error: (err) => {
+                                this._onEvents.next([
+                                    asyncError(event.taskId, err),
+                                ]);
+                            },
+                        });
                 } else if (event.event.type === 'get_inst_state_from_updates') {
                     const action = <GetInstStateFromUpdatesAction>event.event;
                     try {
@@ -521,41 +537,54 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         this._onEvents.next([asyncError(event.taskId, err)]);
                     }
                 } else {
-                    this._client.sendEvent(this._branch, event);
+                    this._client.sendAction(
+                        this._recordName,
+                        this._inst,
+                        this._branch,
+                        event
+                    );
                 }
             } else {
-                this._client.sendEvent(this._branch, event);
+                this._client.sendAction(
+                    this._recordName,
+                    this._inst,
+                    this._branch,
+                    event
+                );
             }
         }
     }
 
     private _requestBranch() {
-        this._client.getBranchUpdates(this._branch).subscribe(
-            (updates) => {
-                this._onStatusUpdated.next({
-                    type: 'connection',
-                    connected: true,
-                });
-                this._onStatusUpdated.next({
-                    type: 'authentication',
-                    authenticated: true,
-                    user: this._user,
-                });
-                this._onStatusUpdated.next({
-                    type: 'authorization',
-                    authorized: true,
-                });
+        this._client
+            .getBranchUpdates(this._recordName, this._inst, this._branch)
+            .subscribe(
+                (updates) => {
+                    this._onStatusUpdated.next({
+                        type: 'connection',
+                        connected: true,
+                    });
+                    this._onStatusUpdated.next({
+                        type: 'authentication',
+                        authenticated: true,
 
-                this._updateSynced(true);
-                this._applyUpdates(updates.updates);
+                        user: this._user,
+                    });
+                    this._onStatusUpdated.next({
+                        type: 'authorization',
+                        authorized: true,
+                    });
 
-                if (!this._static) {
-                    // the partition has been unlocked while getting the branch
-                    this._watchBranch();
-                }
-            },
-            (err) => this._onError.next(err)
-        );
+                    this._updateSynced(true);
+                    this._applyUpdates(updates.updates);
+
+                    if (!this._static) {
+                        // the partition has been unlocked while getting the branch
+                        this._watchBranch();
+                    }
+                },
+                (err) => this._onError.next(err)
+            );
     }
 
     private _watchBranch() {

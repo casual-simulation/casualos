@@ -6,21 +6,22 @@ import {
     BotSpace,
     PortalType,
 } from './Bot';
-import {
-    Action,
-    DeviceAction,
-    RemoteAction,
-    DeviceSelector,
-    RemoteActionResult,
-    RemoteActionError,
-    DeviceActionResult,
-    DeviceActionError,
-    remoteResult,
-    remoteError,
-} from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 import { InstUpdate } from './StoredAux';
+import {
+    DeviceAction,
+    RemoteAction,
+    RemoteActionError,
+    RemoteActionResult,
+    DeviceActionResult,
+    DeviceActionError,
+    Action,
+    DeviceSelector,
+    remoteError,
+    remoteResult,
+    RemoteActions,
+} from '../common';
 
 /**
  * Defines a symbol that can be used to signal to the runtime that the action should not be mapped for bots.
