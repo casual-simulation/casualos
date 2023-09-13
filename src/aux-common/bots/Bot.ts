@@ -2684,6 +2684,7 @@ export const KNOWN_TAGS: string[] = [
     'formRenderOrder',
     'formDepthTest',
     'formDepthWrite',
+    'formLightIntensity',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',

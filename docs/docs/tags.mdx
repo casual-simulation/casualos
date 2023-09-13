@@ -891,6 +891,10 @@ The shape that the bot should be displayed as.
     The bot will appear as an input box in the menu portal.
     You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
   </PossibleValueCode>
+  <PossibleValueCode value='light'>
+    The bot will appear as a light.
+    You can change the type of light using the <TagLink tag='formSubtype'/> tag.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `formSubtype`
@@ -912,6 +916,36 @@ The subtype that the form should use. Useful for specifying how a mesh should be
   <PossibleValueCode value='src'>
     The URL that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe.
   </PossibleValueCode>
+  <PossibleValueCode value='pointLight'>
+    A bot with the form <TagLink tag='light'/> will appear as a pointlight
+  </PossibleValueCode>
+  <PossibleValueCode value='ambientLight'>
+    A bot with the form <TagLink tag='light'/> will appear as an ambientLight
+  </PossibleValueCode>
+  <PossibleValueCode value='directionalLight'>
+    A bot with the form <TagLink tag='light'/> will appear as a directionalLight
+  </PossibleValueCode>
+  <PossibleValueCode value='spotLight'>
+    A bot with the form <TagLink tag='light'/> will appear as a spotLight
+  </PossibleValueCode>
+  <PossibleValueCode value='hemisphereLight'>
+    A bot with the form <TagLink tag='light'/> will appear as a hemisphereLight
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightIntensity`
+
+  The intensity of the light.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    Changes the intensity of the light.
+  </PossibleValue>
 </PossibleValuesTable>
 
 ### `formAddress`
@@ -1044,6 +1078,21 @@ Whether depth testing is enabled for this bot in the grid portals.
 </PossibleValuesTable>
 
 ### `formDepthWrite`
+
+Whether depth writing is enabled for this bot in the grid portals.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disable depth writing.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightIntensity`
 
 Whether depth writing is enabled for this bot in the grid portals.
 
