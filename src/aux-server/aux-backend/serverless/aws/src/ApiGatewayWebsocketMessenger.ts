@@ -56,9 +56,9 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
     async presignMessageUpload(): Promise<PresignFileUploadResult> {
         try {
             const uploadUrl = await getMessageUploadUrl(
+                this._s3,
                 this._bucket,
-                uuid(),
-                this._s3
+                uuid()
             );
             return {
                 success: true,
@@ -84,7 +84,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         method: string,
         headers: UploadHttpHeaders
     ): Promise<string> {
-        return await downloadObject(this._bucket, url, this._s3);
+        return await downloadObject(this._s3, this._bucket, url);
     }
 
     async sendMessage(
