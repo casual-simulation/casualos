@@ -31,3 +31,6 @@ export * from './AppVersion';
 export * from './ApiVersion';
 export * from './partitions';
 export * from './DebugHelpers';
+export * from './Errors';
+export * from './common';
+export * from './websockets';

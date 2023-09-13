@@ -1,5 +1,5 @@
 import { RegexRule } from './Utils';
-import { ServerError } from './Errors';
+import { ServerError } from '@casual-simulation/aux-common/Errors';
 
 /**
  * Defines an interface that represents an auth store.

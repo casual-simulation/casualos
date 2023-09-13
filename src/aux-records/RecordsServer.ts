@@ -44,7 +44,7 @@ import {
     WebsocketRequestMessage,
     websocketEventSchema,
     websocketRequestMessageSchema,
-} from './websockets/WebsocketEvents';
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 
 /**
  * Defines an interface for a generic HTTP request.

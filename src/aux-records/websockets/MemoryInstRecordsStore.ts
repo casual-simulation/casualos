@@ -1,4 +1,3 @@
-import { up } from 'inquirer/lib/utils/readline';
 import {
     AddUpdatesResult,
     ReplaceUpdatesResult,

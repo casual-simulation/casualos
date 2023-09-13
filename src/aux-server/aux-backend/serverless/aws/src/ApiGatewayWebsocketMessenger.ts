@@ -12,16 +12,18 @@ import {
 import { S3 } from '@aws-sdk/client-s3';
 import {
     PresignFileUploadResult,
-    UploadHttpHeaders,
     WebsocketConnectionStore,
+    WebsocketMessenger,
+    signRequest,
+} from '@casual-simulation/aux-records';
+import {
+    UploadHttpHeaders,
     WebsocketDownloadRequestEvent,
     WebsocketEvent,
     WebsocketEventTypes,
     WebsocketMessage,
     WebsocketMessageEvent,
-    WebsocketMessenger,
-    signRequest,
-} from '@casual-simulation/aux-records';
+} from '@casual-simulation/aux-common';
 import axios, { Method } from 'axios';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { AwsCredentialIdentityProvider } from '@aws-sdk/types';

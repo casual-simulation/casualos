@@ -1,4 +1,7 @@
-import { NotSupportedError, ServerError } from './Errors';
+import {
+    NotSupportedError,
+    ServerError,
+} from '@casual-simulation/aux-common/Errors';
 
 /**
  * Defines an interface for systems that are able to store info about file records.

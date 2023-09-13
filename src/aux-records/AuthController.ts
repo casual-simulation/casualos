@@ -5,7 +5,7 @@ import {
     AuthStore,
     AuthUser,
 } from './AuthStore';
-import { ServerError } from './Errors';
+import { ServerError } from '@casual-simulation/aux-common/Errors';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import {

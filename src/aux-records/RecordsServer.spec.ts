@@ -73,10 +73,13 @@ import {
     WebsocketEventTypes,
     WebsocketMessage,
     WebsocketMessageEvent,
-} from './websockets/WebsocketEvents';
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { toast } from '@casual-simulation/aux-common/bots';
-import { device, remote } from './common/RemoteActions';
-import { ConnectionInfo } from './common/ConnectionInfo';
+import {
+    device,
+    remote,
+} from '@casual-simulation/aux-common/common/RemoteActions';
+import { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
 
 console.log = jest.fn();
 

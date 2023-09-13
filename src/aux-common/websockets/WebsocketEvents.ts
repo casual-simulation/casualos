@@ -1,4 +1,3 @@
-import { ValidateConnectionTokenFailure } from '../AuthController';
 import { NotSupportedError, ServerError } from '../Errors';
 import { ConnectionInfo, connectionInfoSchema } from '../common/ConnectionInfo';
 import {
@@ -95,7 +94,10 @@ export type WebsocketErrorEvent = [
     errorCode:
         | ServerError
         | NotSupportedError
-        | ValidateConnectionTokenFailure['errorCode']
+        | 'unacceptable_connection_token'
+        | 'invalid_token'
+        | 'session_expired'
+        | 'user_is_banned'
         | 'unacceptable_connection_id'
         | 'message_not_found'
         | 'unnaceptable_request',

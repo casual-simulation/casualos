@@ -11,7 +11,6 @@ import {
     StoredUpdates,
 } from './InstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
-import WebTileLayer from 'esri/layers/WebTileLayer';
 
 /**
  * Defines a class that implements the InstRecordsStore interface by first storing updates in a temporary store and then sending them to a permanent store.

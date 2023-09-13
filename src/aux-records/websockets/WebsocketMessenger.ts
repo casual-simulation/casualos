@@ -2,8 +2,7 @@ import {
     UploadHttpHeaders,
     WebsocketEvent,
     WebsocketMessage,
-} from './WebsocketEvents';
-import { ServerError, NotSupportedError } from '../Errors';
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { PresignFileUploadResult } from '../FileRecordsStore';
 
 /**

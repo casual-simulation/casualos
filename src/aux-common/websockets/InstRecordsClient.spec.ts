@@ -8,7 +8,7 @@ import {
 } from './InstRecordsClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
-import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import { waitAsync } from '../test/TestHelpers';
 import {
     AddUpdatesMessage,
     ConnectedToBranchMessage,

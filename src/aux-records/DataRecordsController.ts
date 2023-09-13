@@ -3,7 +3,7 @@ import {
     NotLoggedInError,
     ServerError,
     SubscriptionLimitReached,
-} from './Errors';
+} from '@casual-simulation/aux-common/Errors';
 import {
     DataRecordsStore,
     EraseDataStoreResult,

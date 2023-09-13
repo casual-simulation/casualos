@@ -1,4 +1,3 @@
-import { StoredUpdates } from '@casual-simulation/causal-trees';
 import { BranchRecordWithInst, CurrentUpdates } from './InstRecordsStore';
 
 /**

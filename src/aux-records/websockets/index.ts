@@ -10,5 +10,4 @@ export * from './MemoryWebsocketMessenger';
 export * from './Utils';
 export * from './WebsocketConnectionStore';
 export * from './WebsocketMessenger';
-export * from './WebsocketEvents';
 export * from './WebsocketController';

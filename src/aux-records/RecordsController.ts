@@ -20,7 +20,7 @@ import {
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
-} from './Errors';
+} from '@casual-simulation/aux-common/Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
 import { AuthStore } from './AuthStore';
 import { v4 as uuid } from 'uuid';

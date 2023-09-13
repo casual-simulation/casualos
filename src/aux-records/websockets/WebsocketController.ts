@@ -18,7 +18,7 @@ import {
     RemoteAction,
     RemoteActionError,
     RemoteActionResult,
-} from '../common/RemoteActions';
+} from '@casual-simulation/aux-common/common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, mergeUpdates } from 'yjs';
 import {
@@ -35,8 +35,8 @@ import {
     WebsocketErrorEvent,
     WebsocketEvent,
     WebsocketEventTypes,
-} from './WebsocketEvents';
-import { ConnectionInfo } from '../common/ConnectionInfo';
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
 import { AuthController } from '../AuthController';
 import {
     CurrentUpdates,

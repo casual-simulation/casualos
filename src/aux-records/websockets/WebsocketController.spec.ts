@@ -31,8 +31,8 @@ import {
     remote,
     remoteError,
     remoteResult,
-} from '../common/RemoteActions';
-import { WebsocketEventTypes } from './WebsocketEvents';
+} from '@casual-simulation/aux-common/common/RemoteActions';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { createTestControllers, createTestUser } from '../TestUtils';
 import { generateV1ConnectionToken } from '../AuthUtils';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';

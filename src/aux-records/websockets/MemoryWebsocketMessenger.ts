@@ -1,5 +1,8 @@
 import { PresignFileUploadResult } from '../FileRecordsStore';
-import { WebsocketEvent, WebsocketEventTypes } from './WebsocketEvents';
+import {
+    WebsocketEvent,
+    WebsocketEventTypes,
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { WebsocketMessenger } from './WebsocketMessenger';
 
 export class MemoryWebsocketMessenger implements WebsocketMessenger {
