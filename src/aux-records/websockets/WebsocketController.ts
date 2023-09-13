@@ -638,7 +638,7 @@ export class WebsocketController {
 
         let finalAction: RemoteAction | RemoteActionResult | RemoteActionError;
         if (
-            event.action.deviceId ||
+            event.action.sessionId ||
             event.action.connectionId ||
             event.action.userId ||
             (typeof event.action.broadcast !== 'undefined' &&
@@ -1125,7 +1125,7 @@ export function isEventForDevice(
         return true;
     } else if (event.connectionId === device.clientConnectionId) {
         return true;
-    } else if (event.deviceId === device.userId) {
+    } else if (event.sessionId === device.sessionId) {
         return true;
     }
     return false;

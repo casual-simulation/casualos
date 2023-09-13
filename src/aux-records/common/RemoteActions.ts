@@ -42,9 +42,9 @@ export interface DeviceSelector {
     connectionId?: string;
 
     /**
-     * The ID of the device that the event should be sent to.
+     * The ID of the session that the event should be sent to.
      */
-    deviceId?: string;
+    sessionId?: string;
 
     /**
      * The ID of the user that the event should be sent to.
@@ -58,7 +58,7 @@ export interface DeviceSelector {
 }
 export const deviceSelectorSchema = z.object({
     connectionId: z.string().optional(),
-    deviceId: z.string().optional(),
+    sessionId: z.string().optional(),
     userId: z.string().optional(),
     broadcast: z.boolean().optional(),
 });

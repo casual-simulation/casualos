@@ -24,4 +24,16 @@ export const connectionInfoSchema = z.object({
 type ZodConnectionInfo = z.infer<typeof connectionInfoSchema>;
 type ZodConnectionInfoAssertion = HasType<ZodConnectionInfo, ConnectionInfo>;
 
+export function connectionInfo(
+    userId: string,
+    sessionId: string,
+    connectionId: string
+): ConnectionInfo {
+    return {
+        userId,
+        sessionId,
+        connectionId,
+    };
+}
+
 type HasType<T, Q extends T> = Q;

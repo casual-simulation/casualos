@@ -146,7 +146,8 @@ export type WebsocketRequestMessage =
     | WatchBranchDevicesMessage
     | UnwatchBranchDevicesMessage
     | ConnectionCountMessage
-    | TimeSyncRequestMessage;
+    | TimeSyncRequestMessage
+    | GetUpdatesMessage;
 
 export type WebsocketMessage =
     | WebsocketRequestMessage
@@ -413,6 +414,40 @@ type ZodAddUpdatesMessage = z.infer<typeof addUpdatesMessageSchema>;
 type ZodAddUpdatesMessageAssertion = HasType<
     ZodAddUpdatesMessage,
     AddUpdatesMessage
+>;
+
+/**
+ * Defines an event which indicates that the updates for the given branch should be retrieved.
+ */
+export interface GetUpdatesMessage {
+    type: 'repo/get_updates';
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The branch that the updates are for.
+     */
+    branch: string;
+}
+export const getUpdatesMessageSchema = z.object({
+    type: z.literal('repo/get_updates'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
+    branch: z.string(),
+});
+type ZodGetUpdatesMessage = z.infer<typeof getUpdatesMessageSchema>;
+type ZodGetUpdatesMessageAssertion = HasType<
+    ZodGetUpdatesMessage,
+    GetUpdatesMessage
 >;
 
 /**
@@ -924,6 +959,7 @@ export const websocketRequestMessageSchema = z.discriminatedUnion('type', [
     unwatchBranchDevicesMessageSchema,
     connectionCountMessageSchema,
     timeSyncRequestMessageSchema,
+    getUpdatesMessageSchema,
 ]);
 type ZodWebsocketRequestMessage = z.infer<typeof websocketRequestMessageSchema>;
 type ZodWebsocketRequestMessageAssertion = HasType<
@@ -948,8 +984,9 @@ export const websocketMessageSchema = z.discriminatedUnion('type', [
     timeSyncRequestMessageSchema,
     timeSyncResponseMessageSchema,
     rateLimitExceededMessageSchema,
+    getUpdatesMessageSchema,
 ]);
-type ZodWebsocketMessage = z.infer<typeof websocketRequestMessageSchema>;
+type ZodWebsocketMessage = z.infer<typeof websocketMessageSchema>;
 type ZodWebsocketMessageAssertion = HasType<
     ZodWebsocketMessage,
     WebsocketRequestMessage
