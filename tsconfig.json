@@ -42,6 +42,8 @@
         { "path": "./src/js-interpreter" },
         { "path": "./src/multi-streams-mixer" },
         { "path": "./src/vue-shortkey" },
-        { "path": "./src/rate-limit-redis" }
+        { "path": "./src/rate-limit-redis" },
+        { "path": "./src/aux-websocket" },
+        { "path": "./src/aux-websocket-aws" }
     ]
 }

@@ -39,6 +39,8 @@
         { "path": "./src/chalk" },
         { "path": "./src/websocket" },
         { "path": "./src/js-interpreter" },
-        { "path": "./src/rate-limit-redis" }
+        { "path": "./src/rate-limit-redis" },
+        { "path": "./src/aux-websocket" },
+        { "path": "./src/aux-websocket-aws" }
     ]
 }

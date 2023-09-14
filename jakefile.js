@@ -33,6 +33,8 @@ let folders = [
     `${__dirname}/src/js-interpreter`,
     `${__dirname}/src/vue-shortkey`,
     `${__dirname}/src/rate-limit-redis`,
+    `${__dirname}/src/aux-websocket`,
+    `${__dirname}/src/aux-websocket-aws`,
 ];
 
 let patterns = [
