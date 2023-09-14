@@ -4,13 +4,13 @@ import {
     StateUpdatedEvent,
     ProxyBridgePartitionImpl,
     StoredAux,
+    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
     AuxConfig,
     AuxVM,
-    AuxUser,
     ChannelActionResult,
 } from '@casual-simulation/aux-vm';
 import {
@@ -63,7 +63,7 @@ export class AuxVMImpl implements AuxVM {
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
-    private _initialUser: AuxUser;
+    private _initialIndicator: ConnectionIndicator;
     closed: boolean;
 
     /**
@@ -74,8 +74,8 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Creates a new Simulation VM.
      */
-    constructor(user: AuxUser, config: AuxConfig) {
-        this._initialUser = user;
+    constructor(indicator: ConnectionIndicator, config: AuxConfig) {
+        this._initialIndicator = indicator;
         this._config = config;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -147,7 +147,7 @@ export class AuxVMImpl implements AuxVM {
         const wrapper = wrap<AuxStatic>(this._channel.port1);
         this._proxy = await new wrapper(
             location.origin,
-            this._initialUser,
+            this._initialIndicator,
             processPartitions(this._config)
         );
 
@@ -186,16 +186,6 @@ export class AuxVMImpl implements AuxVM {
 
     get versionUpdated(): Observable<RuntimeStateVersion> {
         return this._versionUpdated;
-    }
-
-    async setUser(user: AuxUser): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setUser(user);
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setGrant(grant);
     }
 
     /**
@@ -280,13 +270,13 @@ export class AuxVMImpl implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, user } = await subChannel.getInfo();
+        const { id, indicator } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id: id,
-            user: user,
+            indicator: indicator,
             vm: this._createSubVM(channel),
             channel,
         };

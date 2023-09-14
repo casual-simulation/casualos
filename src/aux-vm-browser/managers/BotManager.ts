@@ -23,10 +23,11 @@ import {
     getBotsStateFromStoredAux,
     BotActions,
     BotAction,
+    ConnectionIndicator,
+    getConnectionId,
+    DEFAULT_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
-
 import {
-    AuxUser,
     AuxVM,
     BaseSimulation,
     LoginManager,
@@ -114,11 +115,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     static createPartitions(
         id: string,
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         config: AuxConfig['config'],
         defaultHost: string = location.origin
     ): AuxPartitionConfig {
         const parsedId = parseSimulationId(id);
+        const connectionId = getConnectionId(indicator);
         const host = getFinalUrl(defaultHost, parsedId.host);
         const causalRepoHost = getFinalUrl(
             config.causalRepoConnectionUrl || defaultHost,
@@ -126,34 +128,26 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
         const protocol = config.causalRepoConnectionProtocol;
         const versions = config.sharedPartitionsVersion;
-        const isV2 = versions === 'v2';
         const isCollaborative = !!config.device?.isCollaborative;
 
         if (!isCollaborative) {
             console.log('[BotManager] Disabling Collaboration Features');
         } else {
-            if (isV2) {
-                console.log('[BotManager] Using v2 shared partitions');
-            }
+            console.log('[BotManager] Using v2 shared partitions');
         }
 
         let partitions: AuxPartitionConfig = {
             // Use a memory partition instead of a shared partition
             // when collaboration is disabled.
             shared: isCollaborative
-                ? isV2
-                    ? {
-                          type: 'remote_yjs',
-                          branch: parsedId.channel,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                      }
-                    : {
-                          type: 'remote_causal_repo',
-                          branch: parsedId.channel,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                      }
+                ? {
+                      type: 'remote_yjs',
+                      recordName: null,
+                      inst: id,
+                      branch: DEFAULT_BRANCH_NAME,
+                      host: causalRepoHost,
+                      connectionProtocol: protocol,
+                  }
                 : {
                       type: 'memory',
                       initialState: {},
@@ -170,29 +164,22 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 type: 'memory',
                 private: true,
                 initialState: {
-                    [user.id]: createBot(user.id, {
+                    [connectionId]: createBot(connectionId, {
                         inst: id,
                     }),
                 },
             },
             [TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
-                ? isV2
-                    ? {
-                          type: 'remote_yjs',
-                          branch: `${parsedId.channel}-player-${user.id}`,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                          temporary: true,
-                          remoteEvents: false,
-                      }
-                    : {
-                          type: 'remote_causal_repo',
-                          branch: `${parsedId.channel}-player-${user.id}`,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                          temporary: true,
-                          remoteEvents: false,
-                      }
+                ? {
+                      type: 'remote_yjs',
+                      recordName: null,
+                      inst: parsedId.channel,
+                      branch: `${DEFAULT_BRANCH_NAME}-player-${connectionId}`,
+                      host: causalRepoHost,
+                      connectionProtocol: protocol,
+                      temporary: true,
+                      remoteEvents: false,
+                  }
                 : {
                       type: 'memory',
                       initialState: {},
@@ -200,12 +187,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
                 ? {
                       type: 'other_players_repo',
-                      branch: parsedId.channel,
+                      recordName: null,
+                      inst: parsedId.channel,
+                      branch: DEFAULT_BRANCH_NAME,
                       host: causalRepoHost,
                       connectionProtocol: protocol,
-                      childPartitionType: isV2
-                          ? 'yjs_client'
-                          : 'causal_repo_client',
+                      childPartitionType: 'yjs_client',
                   }
                 : null,
             [BOOTSTRAP_PARTITION_ID]: {
@@ -217,35 +204,18 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             },
         };
 
-        // Enable the admin partition and error partition when using the websocket protocol.
-        if (
-            !config.causalRepoConnectionProtocol ||
-            config.causalRepoConnectionProtocol === 'websocket'
-        ) {
-            partitions[ADMIN_PARTITION_ID] = isCollaborative
-                ? {
-                      type: 'remote_causal_repo',
-                      branch: ADMIN_BRANCH_NAME,
-                      host: causalRepoHost,
-                      connectionProtocol: protocol,
-                      private: true,
-                      static: true,
-                  }
-                : null;
-        }
-
         return partitions;
     }
 
     constructor(
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         id: string,
         config: AuxConfig['config'],
         vm: AuxVM
     ) {
         super(id, vm);
         this._config = config;
-        this.helper.userId = user ? user.id : null;
+        this.helper.userId = getConnectionId(indicator);
         this._authHelper = new AuthHelper(
             config.authOrigin,
             config.recordsOrigin
@@ -324,9 +294,13 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
     }
 
-    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
+    protected _createSubSimulation(
+        indicator: ConnectionIndicator,
+        id: string,
+        vm: AuxVM
+    ) {
         return new BotManager(
-            user,
+            indicator,
             id,
             {
                 version: this._config.version,

@@ -4,11 +4,11 @@ import {
     createAuxPartition,
     PartitionConfig,
     AuxPartition,
+    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
     AuxSubChannel,
-    AuxUser,
     BaseAuxChannel,
 } from '@casual-simulation/aux-vm';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
@@ -16,8 +16,12 @@ import { proxy } from 'comlink';
 import { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export class DenoAuxChannel extends RemoteAuxChannel {
-    constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
-        super(user, config, {});
+    constructor(
+        defaultHost: string,
+        indicator: ConnectionIndicator,
+        config: AuxConfig
+    ) {
+        super(indicator, config, {});
     }
 
     protected async _createPartition(
@@ -28,11 +32,11 @@ export class DenoAuxChannel extends RemoteAuxChannel {
     }
 
     protected _createSubChannel(
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
-        const channel = new DenoAuxChannel(null, user, config);
+        const channel = new DenoAuxChannel(null, indicator, config);
         channel._runtime = runtime;
         return channel;
     }

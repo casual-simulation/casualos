@@ -15,10 +15,7 @@ describe('MenuPortal', () => {
         simulationManager = new SimulationManager<RemoteSimulation>((id) =>
             nodeSimulationWithConfig(
                 {
-                    id: 'user',
-                    name: 'user',
-                    token: 'token',
-                    username: 'username',
+                    connectionId: 'user',
                 },
                 id,
                 {

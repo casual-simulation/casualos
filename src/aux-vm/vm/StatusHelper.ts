@@ -1,5 +1,4 @@
 import { StatusUpdate } from '@casual-simulation/aux-common';
-import { AuxUser } from '../AuxUser';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 
 /**

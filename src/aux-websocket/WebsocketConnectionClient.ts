@@ -57,10 +57,7 @@ export class WebsocketConnectionClient implements ConnectionClient {
         socketEmit(this._socket, this._requestCounter, message);
     }
 
-    constructor(
-        socket: ReconnectableSocketInterface,
-        token: ConnectionIndicatorToken
-    ) {
+    constructor(socket: ReconnectableSocketInterface) {
         this._socket = socket;
         this._connectionStateChanged =
             new BehaviorSubject<ClientConnectionState>({

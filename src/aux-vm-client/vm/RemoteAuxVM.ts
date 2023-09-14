@@ -4,7 +4,6 @@ import {
     BotAction,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
 import {
     AuxChannel,
     AuxChannelErrorType,
@@ -131,16 +130,6 @@ export class RemoteAuxVM implements AuxVM {
         return this._versionUpdated;
     }
 
-    async setUser(user: AuxUser): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setUser(user);
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setGrant(grant);
-    }
-
     /**
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.
@@ -220,13 +209,13 @@ export class RemoteAuxVM implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, user } = await subChannel.getInfo();
+        const { id, indicator } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            user,
+            indicator,
             vm: this._createSubVM(channel),
             channel,
         };

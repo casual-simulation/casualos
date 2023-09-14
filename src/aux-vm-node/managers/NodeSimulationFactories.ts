@@ -1,30 +1,35 @@
-import { AuxUser } from '@casual-simulation/aux-vm';
 import {
     RemoteAuxChannel,
     RemoteSimulationImpl,
 } from '@casual-simulation/aux-vm-client';
 import { AuxVMNode } from '../vm/AuxVMNode';
-import { CausalRepoClient } from '@casual-simulation/aux-common/core2';
 import { AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
-    CausalRepoClientPartitionConfig,
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     TEMPORARY_BOT_PARTITION_ID,
     AuxPartitionConfig,
+    InstRecordsClient,
+    ConnectionIndicator,
+    getConnectionId,
+    DEFAULT_BRANCH_NAME,
+    YjsClientPartitionConfig,
 } from '@casual-simulation/aux-common';
 
 export function nodeSimulationForBranch(
-    user: AuxUser,
-    client: CausalRepoClient,
+    indicator: ConnectionIndicator,
+    client: InstRecordsClient,
     branch: string,
-    extraOptions?: Partial<CausalRepoClientPartitionConfig>
+    extraOptions?: Partial<YjsClientPartitionConfig>
 ) {
+    const connectionId = getConnectionId(indicator);
     const partitions: AuxPartitionConfig = {
         shared: {
-            type: 'causal_repo_client',
+            type: 'yjs_client',
             ...(extraOptions || {}),
-            branch: branch,
+            recordName: null,
+            inst: branch,
+            branch: DEFAULT_BRANCH_NAME,
             client: client,
         },
         [TEMPORARY_BOT_PARTITION_ID]: {
@@ -33,15 +38,19 @@ export function nodeSimulationForBranch(
             initialState: {},
         },
         [TEMPORARY_SHARED_PARTITION_ID]: {
-            type: 'causal_repo_client',
-            branch: `${branch}-player-${user.id}`,
+            type: 'yjs_client',
+            recordName: null,
+            inst: branch,
+            branch: `${DEFAULT_BRANCH_NAME}-player-${connectionId}`,
             client: client,
             temporary: true,
             remoteEvents: false,
         },
         [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
             type: 'other_players_client',
-            branch: branch,
+            recordName: null,
+            inst: branch,
+            branch: DEFAULT_BRANCH_NAME,
             client: client,
         },
     };
@@ -49,7 +58,7 @@ export function nodeSimulationForBranch(
         branch,
         new AuxVMNode(
             new RemoteAuxChannel(
-                user,
+                indicator,
                 {
                     config: null,
                     partitions,
@@ -60,17 +69,20 @@ export function nodeSimulationForBranch(
     );
 }
 
-export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
+export function nodeSimulationForLocalRepo(
+    indicator: ConnectionIndicator,
+    id: string
+) {
     const partitions: AuxPartitionConfig = {
         shared: {
-            type: 'causal_repo',
+            type: 'yjs',
         },
     };
     return new RemoteSimulationImpl(
         id,
         new AuxVMNode(
             new RemoteAuxChannel(
-                user,
+                indicator,
                 {
                     config: null,
                     partitions,
@@ -82,12 +94,12 @@ export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
 }
 
 export function nodeSimulationWithConfig(
-    user: AuxUser,
+    indicator: ConnectionIndicator,
     id: string,
     config: AuxConfig
 ) {
     return new RemoteSimulationImpl(
         id,
-        new AuxVMNode(new RemoteAuxChannel(user, config, {}))
+        new AuxVMNode(new RemoteAuxChannel(indicator, config, {}))
     );
 }

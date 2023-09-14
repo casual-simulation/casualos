@@ -259,7 +259,6 @@ import {
     insert,
     preserve,
     remoteEdit,
-    tagValueHash,
 } from '@casual-simulation/aux-common/bots';
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
@@ -275,7 +274,6 @@ import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringi
 import {
     formatV1RecordKey,
     formatV2RecordKey,
-    fromBase64String,
 } from '@casual-simulation/aux-records';
 import {
     isGenerator,

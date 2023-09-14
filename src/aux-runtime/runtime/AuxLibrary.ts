@@ -580,9 +580,9 @@ export type Mod = BotTags | Bot;
  * An interface that is used to say which user/device/session an event should be sent to.
  */
 export interface SessionSelector {
-    username?: string;
-    device?: string;
-    session?: string;
+    userId?: string;
+    sessionId?: string;
+    connectionId?: string;
     broadcast?: boolean;
 }
 
@@ -14179,6 +14179,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *                 is the secret that was used to create the given keypair.
      * @param keypair The keypair that the new certificate should use.
      */
+    // DELETE:
     function createCertificate(
         certificate: Bot | string,
         secret: string,
@@ -14213,6 +14214,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot that should be signed.
      * @param tag The tag that should be signed.
      */
+    // DELETE:
     function signTag(
         certificate: Bot | string,
         secret: string,
@@ -14240,16 +14242,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot.
      * @param tag The tag to check.
      */
+    // DELETE:
     function verifyTag(bot: RuntimeBot | string, tag: string): boolean {
-        tag = trimTag(tag);
-        const id = getID(bot);
-        const realBot = isRuntimeBot(bot) ? bot : getBot('id', id);
-        if (!realBot.signatures) {
-            return false;
-        }
-        const value = realBot.raw[tag];
-        const sig = tagValueHash(id, tag, value);
-        return realBot.signatures[sig] === tag;
+        return false;
     }
 
     /**
@@ -14268,6 +14263,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *                 then this is the secret for the revoked certificate.
      * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
      */
+    // DELETE:
     function revokeCertificate(
         certificate: Bot | string,
         secret: string,
@@ -16144,9 +16140,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
         return selector
             ? {
-                  sessionId: selector.session,
-                  username: selector.username,
-                  deviceId: selector.device,
+                  sessionId: selector.sessionId,
+                  userId: selector.userId,
+                  connectionId: selector.connectionId,
                   broadcast: selector.broadcast,
               }
             : undefined;

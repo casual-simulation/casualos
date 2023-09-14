@@ -183,18 +183,6 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
         }
     }
 
-    async setUser(user: any): Promise<void> {
-        if (this._bridge.setUser) {
-            await this._bridge.setUser(user);
-        }
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (this._bridge.setGrant) {
-            await this._bridge.setGrant(grant);
-        }
-    }
-
     connect(): void {
         this._bridge.connect();
     }

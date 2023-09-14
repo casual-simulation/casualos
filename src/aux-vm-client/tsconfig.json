@@ -16,6 +16,8 @@
         { "path": "../aux-vm" },
         { "path": "../crypto-browser" },
         { "path": "../websocket" },
-        { "path": "../timesync" }
+        { "path": "../timesync" },
+        { "path": "../aux-websocket" },
+        { "path": "../aux-websocket-aws" }
     ]
 }

@@ -21,10 +21,11 @@ import {
     getTagValueForSpace,
     getUpdateForTagAndSpace,
     BotAction,
+    ConnectionIndicator,
+    getConnectionId,
 } from '@casual-simulation/aux-common';
 
 import {
-    AuxUser,
     AuxVM,
     BaseSimulation,
     LoginManager,
@@ -115,8 +116,12 @@ export class PlaywrightSimulation
         return this._portals;
     }
 
-    static createPartitions(id: string, user: AuxUser): AuxPartitionConfig {
+    static createPartitions(
+        id: string,
+        indicator: ConnectionIndicator
+    ): AuxPartitionConfig {
         const parsedId = parseSimulationId(id);
+        const connectionId = getConnectionId(indicator);
 
         let partitions: AuxPartitionConfig = {
             // Use a memory partition instead of a shared partition
@@ -137,7 +142,7 @@ export class PlaywrightSimulation
                 type: 'memory',
                 private: true,
                 initialState: {
-                    [user.id]: createBot(user.id, {
+                    [connectionId]: createBot(connectionId, {
                         inst: id,
                     }),
                 },
@@ -158,14 +163,14 @@ export class PlaywrightSimulation
     }
 
     constructor(
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         id: string,
         config: AuxConfig['config'],
         vm: AuxVM
     ) {
         super(id, vm);
         this._config = config;
-        this.helper.userId = user ? user.id : null;
+        this.helper.userId = getConnectionId(indicator);
 
         this._authHelper = new AuthHelper(
             config.authOrigin,
@@ -277,9 +282,13 @@ export class PlaywrightSimulation
         );
     }
 
-    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
+    protected _createSubSimulation(
+        indicator: ConnectionIndicator,
+        id: string,
+        vm: AuxVM
+    ) {
         return new PlaywrightSimulation(
-            user,
+            indicator,
             id,
             {
                 version: this._config.version,

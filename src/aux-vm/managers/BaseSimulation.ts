@@ -6,11 +6,10 @@ import {
     AuxPartitionConfig,
     LocalActions,
     StoredAux,
+    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
-
-import { AuxUser } from '../AuxUser';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
 import { AuxVM } from '../vm/AuxVM';
@@ -245,7 +244,11 @@ export class BaseSimulation implements Simulation {
 
         this._subscriptions.push(
             this._vm.subVMAdded.subscribe(async (vm) => {
-                const sim = this._createSubSimulation(vm.user, vm.id, vm.vm);
+                const sim = this._createSubSimulation(
+                    vm.indicator,
+                    vm.id,
+                    vm.vm
+                );
                 if (sim) {
                     this._subSimulations.set(vm.id, sim);
                     this._onSubSimulationAdded.next(sim);
@@ -268,7 +271,11 @@ export class BaseSimulation implements Simulation {
      * @param id The ID of the sim.
      * @param vm The VM that the simulation should use.
      */
-    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
+    protected _createSubSimulation(
+        indicator: ConnectionIndicator,
+        id: string,
+        vm: AuxVM
+    ) {
         return new BaseSimulation(id, vm);
     }
 

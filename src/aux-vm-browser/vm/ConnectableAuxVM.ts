@@ -11,7 +11,6 @@ import {
     AuxVM,
     AuxChannel,
     AuxChannelErrorType,
-    AuxUser,
     ChannelActionResult,
 } from '@casual-simulation/aux-vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
@@ -126,16 +125,6 @@ export class ConnectableAuxVM implements AuxVM {
         return this._versionUpdated;
     }
 
-    async setUser(user: AuxUser): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setUser(user);
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setGrant(grant);
-    }
-
     /**
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.
@@ -195,13 +184,13 @@ export class ConnectableAuxVM implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, user } = await subChannel.getInfo();
+        const { id, indicator } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            user,
+            indicator,
             vm: this._createSubVM(channel),
             channel,
         };

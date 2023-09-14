@@ -13,6 +13,7 @@ import {
     tagsOnBot,
     StateUpdatedEvent,
     StoredAux,
+    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,
@@ -20,7 +21,6 @@ import {
     CurrentVersion,
 } from '@casual-simulation/aux-common';
 import { union } from 'lodash';
-import { AuxUser } from '../../AuxUser';
 import { ChannelActionResult } from '../../vm';
 import {
     AuxRuntime,
@@ -48,7 +48,7 @@ export class TestAuxVM implements AuxVM {
     subVMRemoved: Subject<AuxSubVM>;
 
     grant: string;
-    user: AuxUser;
+    indicator: ConnectionIndicator;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -98,13 +98,6 @@ export class TestAuxVM implements AuxVM {
             actions: final.actions,
             results: await Promise.all(final.results),
         };
-    }
-
-    async setUser(user: AuxUser): Promise<void> {
-        this.user = user;
-    }
-    async setGrant(grant: string): Promise<void> {
-        this.grant = grant;
     }
 
     async sendEvents(events: BotAction[]): Promise<void> {

@@ -18,7 +18,6 @@ import {
     StatusUpdate,
     DeviceAction,
 } from '@casual-simulation/aux-common';
-import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
 import {
     RuntimeActions,
     RuntimeStateVersion,
@@ -92,14 +91,6 @@ export class AuxVMNode implements AuxVM {
         this._subVMMap = new Map();
     }
 
-    setUser(user: AuxUser): Promise<void> {
-        return this._channel.setUser(user);
-    }
-
-    setGrant(grant: string): Promise<void> {
-        return this._channel.setGrant(grant);
-    }
-
     sendEvents(events: BotAction[]): Promise<void> {
         return this._channel.sendEvents(events);
     }
@@ -156,12 +147,12 @@ export class AuxVMNode implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, user } = await subChannel.getInfo();
+        const { id, indicator } = await subChannel.getInfo();
         const channel = await subChannel.getChannel();
 
         const subVM = {
             id,
-            user,
+            indicator,
             vm: this._createSubVM(channel),
             channel,
         };

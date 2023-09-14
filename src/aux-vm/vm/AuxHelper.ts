@@ -34,6 +34,8 @@ import {
     StoredAux,
     getBotsStateFromStoredAux,
     StoredAuxVersion1,
+    ConnectionIndicator,
+    getConnectionId,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
@@ -44,7 +46,6 @@ import {
 import { Subject } from 'rxjs';
 import { union, sortBy, pick, transform } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
-import { AuxUser } from '../AuxUser';
 import {
     AuxRuntime,
     CompiledBot,
@@ -289,11 +290,12 @@ export class AuxHelper extends BaseHelper<Bot> {
      * @param user The user that the bot is for.
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
-    async createOrUpdateUserBot(user: AuxUser, userBot: Bot) {
+    async createOrUpdateUserBot(indicator: ConnectionIndicator, userBot: Bot) {
         if (!userBot) {
+            const connectionId = getConnectionId(indicator);
             this._log('[AuxHelper] Create user bot');
             await this.createBot(
-                user.id,
+                connectionId,
                 {},
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
                     ? TEMPORARY_BOT_PARTITION_ID

@@ -21,7 +21,6 @@ import { v4 as uuid } from 'uuid';
 import { WebConfig } from '../../shared/WebConfig';
 import {
     SimulationManager,
-    AuxUser,
     AuxConfig,
     parseVersionNumber,
 } from '@casual-simulation/aux-vm';

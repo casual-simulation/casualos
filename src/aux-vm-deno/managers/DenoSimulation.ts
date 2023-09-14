@@ -1,42 +1,22 @@
 import {
-    Bot,
-    merge,
     parseSimulationId,
-    createBot,
-    DEVICE_BOT_ID,
-    LOCAL_BOT_ID,
-    botUpdated,
     TEMPORARY_BOT_PARTITION_ID,
-    COOKIE_BOT_PARTITION_ID,
-    COOKIE_BOT_ID,
-    BotTags,
-    isBotTags,
-    isBot,
     AuxPartitionConfig,
     ADMIN_PARTITION_ID,
     ADMIN_BRANCH_NAME,
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
+    ConnectionIndicator,
+    getConnectionId,
+    DEFAULT_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
 
-import {
-    AuxUser,
-    AuxVM,
-    BaseSimulation,
-    LoginManager,
-    getTreeName,
-    Simulation,
-    AuxConfig,
-} from '@casual-simulation/aux-vm';
+import { BaseSimulation, LoginManager } from '@casual-simulation/aux-vm';
 import { DenoVM } from '../vm/DenoVM';
 import {
     PortalManager,
     ProgressManager,
 } from '@casual-simulation/aux-vm/managers';
-import { filter, flatMap, tap, map } from 'rxjs/operators';
-import { ConsoleMessages } from '@casual-simulation/aux-common';
-import { Observable, fromEventPattern, Subscription } from 'rxjs';
-import { pickBy } from 'lodash';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 
@@ -76,23 +56,19 @@ export class DenoSimulationImpl
 
     static createPartitions(
         id: string,
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         defaultHost: string
     ): AuxPartitionConfig {
         const parsedId = parseSimulationId(id);
         const host = getFinalUrl(defaultHost, parsedId.host);
+        const connectionId = getConnectionId(indicator);
         return {
             shared: {
-                type: 'remote_causal_repo',
-                branch: parsedId.channel,
+                type: 'remote_yjs',
+                recordName: null,
+                inst: parsedId.channel,
+                branch: DEFAULT_BRANCH_NAME,
                 host: host,
-            },
-            [ADMIN_PARTITION_ID]: {
-                type: 'remote_causal_repo',
-                branch: ADMIN_BRANCH_NAME,
-                host: host,
-                private: true,
-                static: true,
             },
             [TEMPORARY_BOT_PARTITION_ID]: {
                 type: 'memory',
@@ -100,23 +76,27 @@ export class DenoSimulationImpl
                 initialState: {},
             },
             [TEMPORARY_SHARED_PARTITION_ID]: {
-                type: 'remote_causal_repo',
-                branch: `${parsedId.channel}-player-${user.id}`,
+                type: 'remote_yjs',
+                recordName: null,
+                inst: parsedId.channel,
+                branch: `${DEFAULT_BRANCH_NAME}-player-${connectionId}`,
                 host: host,
                 temporary: true,
                 remoteEvents: false,
             },
             [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
                 type: 'other_players_repo',
-                branch: parsedId.channel,
+                recordName: null,
+                inst: parsedId.channel,
+                branch: DEFAULT_BRANCH_NAME,
                 host: host,
             },
         };
     }
 
-    constructor(user: AuxUser, id: string, vm: DenoVM) {
+    constructor(indicator: ConnectionIndicator, id: string, vm: DenoVM) {
         super(id, vm);
-        this.helper.userId = user ? user.id : null;
+        this.helper.userId = getConnectionId(indicator);
 
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);

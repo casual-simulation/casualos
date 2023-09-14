@@ -1,6 +1,5 @@
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { AuxUser } from '../AuxUser';
 import { Observable, SubscriptionLike } from 'rxjs';
 import {
     RuntimeActions,
@@ -8,6 +7,7 @@ import {
 } from '@casual-simulation/aux-runtime';
 import {
     BotAction,
+    ConnectionIndicator,
     DeviceAction,
     StateUpdatedEvent,
     StatusUpdate,
@@ -21,7 +21,11 @@ export interface AuxStatic {
     /**
      * Creates a new AUX using the given config.
      */
-    new (defaultHost: string, user: AuxUser, config: AuxConfig): AuxChannel;
+    new (
+        defaultHost: string,
+        indicator: ConnectionIndicator,
+        config: AuxConfig
+    ): AuxChannel;
 }
 
 /**
@@ -133,18 +137,6 @@ export interface AuxChannel extends SubscriptionLike {
     ): Promise<void>;
 
     /**
-     * Sets the user that the channel should use.
-     * @param user The user.
-     */
-    setUser(user: AuxUser): Promise<void>;
-
-    /**
-     * Sets the grant that the channel should use to authenticate the user.
-     * @param grant The grant to use.
-     */
-    setGrant(grant: string): Promise<void>;
-
-    /**
      * Sends the given list of bots events to the AUX for processing.
      * @param events The events.
      */
@@ -227,7 +219,7 @@ export interface AuxSubChannelInfo {
     id: string;
 
     /**
-     * The user info for the sub channel.
+     * The connection indicator to use for the sub channel.
      */
-    user: AuxUser;
+    indicator: ConnectionIndicator;
 }

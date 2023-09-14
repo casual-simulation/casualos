@@ -1,4 +1,9 @@
-import { merge, dotCaseToCamelCase } from './utils';
+import {
+    merge,
+    dotCaseToCamelCase,
+    toBase64String,
+    fromBase64String,
+} from './utils';
 
 describe('utils', () => {
     describe('merge()', () => {
@@ -95,5 +100,19 @@ describe('utils', () => {
         it.each(cases)('should convert %s to %s', (given, expected) => {
             expect(dotCaseToCamelCase(given)).toBe(expected);
         });
+    });
+
+    const cases = [['abc', 'YWJj']];
+
+    it.each(cases)('toBase64String(%s) -> %s', (input, output) => {
+        const result = toBase64String(input);
+
+        expect(result).toBe(output);
+    });
+
+    it.each(cases)('%s <- fromBase64String(%s)', (input, output) => {
+        const result = fromBase64String(output);
+
+        expect(result).toBe(input);
     });
 });

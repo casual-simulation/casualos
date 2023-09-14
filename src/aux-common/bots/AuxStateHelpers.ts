@@ -2,12 +2,10 @@ import {
     BotsState,
     PartialBotsState,
     Bot,
-    PrecalculatedBotsState,
-    PartialPrecalculatedBotsState,
     PrecalculatedBot,
 } from '../bots/Bot';
-import { merge, splice } from '../utils';
-import { hasValue, isBot, convertToString } from '../bots/BotCalculations';
+import { splice } from '../utils';
+import { hasValue, convertToString } from '../bots/BotCalculations';
 import { VersionVector } from '../common';
 
 /**
@@ -334,136 +332,6 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
 }
 
 /**
- * Calculates the individual bot updates that are contained in the given update.
- * @param state The state.
- * @param update The update.
- */
-export function updates(
-    state: BotsState,
-    update: PartialBotsState | PartialPrecalculatedBotsState
-) {
-    let result: BotStateUpdates = {
-        addedBots: [],
-        removedBots: [],
-        updatedBots: [],
-    };
-
-    for (let id in update) {
-        let botUpdate = update[id];
-        let existingBot = state[id];
-        if (!existingBot) {
-            // bot was added
-            if (isBot(botUpdate)) {
-                result.addedBots.push(botUpdate);
-            }
-        } else if (!botUpdate) {
-            // bot was removed
-            result.removedBots.push(existingBot.id);
-        } else {
-            let updatedTags = new Set<string>();
-            let updatedSignatures = new Set<string>();
-            // bot was updated
-            let updatedBot = {
-                ...existingBot,
-                tags: {
-                    ...existingBot.tags,
-                },
-            };
-            if (existingBot.signatures) {
-                updatedBot.signatures = {
-                    ...existingBot.signatures,
-                };
-            }
-            if (existingBot.masks) {
-                updatedBot.masks = {};
-                for (let space in existingBot.masks) {
-                    updatedBot.masks[space] = {
-                        ...existingBot.masks[space],
-                    };
-                }
-            }
-
-            if (botUpdate.tags) {
-                for (let tag in botUpdate.tags) {
-                    const value = botUpdate.tags[tag];
-                    if (value === null) {
-                        delete updatedBot.tags[tag];
-                    } else {
-                        updatedBot.tags[tag] = value;
-                    }
-                    updatedTags.add(tag);
-                }
-            }
-            if (botUpdate.signatures) {
-                for (let tag in botUpdate.signatures) {
-                    const value = botUpdate.signatures[tag];
-                    if (value === null) {
-                        if (!!updatedBot.signatures) {
-                            delete updatedBot.signatures[tag];
-                        }
-                    } else {
-                        if (!updatedBot.signatures) {
-                            updatedBot.signatures = {};
-                        }
-                        updatedBot.signatures[tag] = value;
-                    }
-                    updatedSignatures.add(tag);
-                }
-                if (
-                    !!updatedBot.signatures &&
-                    Object.keys(updatedBot.signatures).length <= 0
-                ) {
-                    delete updatedBot.signatures;
-                }
-            }
-            const updatedMasks = new Set<string>();
-            if (botUpdate.masks) {
-                for (let space in botUpdate.masks) {
-                    const tags = botUpdate.masks[space];
-                    for (let tag in tags) {
-                        const value = tags[tag];
-                        if (value === null) {
-                            delete updatedBot.masks[space][tag];
-                        } else {
-                            if (!updatedBot.masks) {
-                                updatedBot.masks = {};
-                            }
-                            if (!updatedBot.masks[space]) {
-                                updatedBot.masks[space] = {};
-                            }
-                            updatedBot.masks[space][tag] = value;
-                        }
-                        updatedMasks.add(tag);
-                    }
-                }
-            }
-            if (updatedTags.size > 0 || updatedSignatures.size > 0) {
-                if (updatedMasks.size > 0) {
-                    updatedTags = new Set([
-                        ...updatedTags.values(),
-                        ...updatedMasks.values(),
-                    ]);
-                }
-                result.updatedBots.push(
-                    updatedSignatures.size <= 0
-                        ? {
-                              bot: updatedBot,
-                              tags: updatedTags,
-                          }
-                        : {
-                              bot: updatedBot,
-                              tags: updatedTags,
-                              signatures: updatedSignatures,
-                          }
-                );
-            }
-        }
-    }
-
-    return result;
-}
-
-/**
  * Applies the given tag edit to the given value and returns a value suitable for use in a tag.
  * i.e. This converts empty strings to null.
  * @param value The value to edit.
@@ -501,33 +369,4 @@ export function applyEdit(value: any, edit: TagEdit): any {
         }
     }
     return value;
-}
-
-/**
- * Defines an interface that contains a list of bot that were added, removed, and updated.
- */
-export interface BotStateUpdates {
-    addedBots: Bot[];
-    removedBots: string[];
-    updatedBots: UpdatedBot[];
-}
-
-/**
- * Defines an interface for a bot that was updated.
- */
-export interface UpdatedBot {
-    /**
-     * The updated bot.
-     */
-    bot: Bot;
-
-    /**
-     * The tags that were updated on the bot.
-     */
-    tags: Set<string>;
-
-    /**
-     * The tags that had updated signatures.
-     */
-    signatures?: Set<string>;
 }

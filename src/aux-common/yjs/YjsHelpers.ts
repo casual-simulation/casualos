@@ -1,4 +1,4 @@
-import { VersionVector } from '@casual-simulation/aux-common';
+import { VersionVector } from '../common';
 import {
     createAbsolutePositionFromRelativePosition,
     createID,

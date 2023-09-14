@@ -45,7 +45,7 @@ export interface ConnectionClient {
     /**
      * Gets the current connection info.
      */
-    info: ConnectionInfo | null;
+    get info(): ConnectionInfo | null;
 
     /**
      * Gets an observable for events with the given name.

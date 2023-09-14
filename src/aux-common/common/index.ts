@@ -6,3 +6,5 @@ export * from './StatusUpdate';
 export * from './CurrentVersion';
 export * from './StatusUpdateUtils';
 export * from './LoadingProgress';
+export * from './ConnectionToken';
+export * from './Iterators';

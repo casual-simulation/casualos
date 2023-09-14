@@ -5,7 +5,10 @@ import {
     RecordsStore,
     StudioAssignmentRole,
 } from './RecordsStore';
-import { toBase64String, fromBase64String } from './Utils';
+import {
+    toBase64String,
+    fromBase64String,
+} from '@casual-simulation/aux-common';
 import {
     createRandomPassword,
     hashHighEntropyPasswordWithSalt,

@@ -18,23 +18,21 @@ import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
 import {
     cleanupObject,
-    fromBase64String,
     isActiveSubscription,
     isStringValid,
     RegexRule,
-    toBase64String,
 } from './Utils';
 import {
     formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
-    parseConnectionToken,
     parseSessionKey,
     randomCode,
     verifyConnectionToken,
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
+import { parseConnectionToken } from '@casual-simulation/aux-common';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.

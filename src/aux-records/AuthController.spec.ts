@@ -23,7 +23,10 @@ import {
     hashHighEntropyPasswordWithSalt,
     hashPasswordWithSalt,
 } from '@casual-simulation/crypto';
-import { fromBase64String, toBase64String } from './Utils';
+import {
+    fromBase64String,
+    toBase64String,
+} from '@casual-simulation/aux-common';
 import { padStart } from 'lodash';
 import {
     allowAllFeatures,

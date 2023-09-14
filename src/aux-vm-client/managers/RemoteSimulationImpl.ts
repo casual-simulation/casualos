@@ -1,12 +1,5 @@
-import {
-    AuxUser,
-    AuxVM,
-    BaseSimulation,
-    LoginManager,
-    AuxConfig,
-} from '@casual-simulation/aux-vm';
+import { AuxVM, BaseSimulation, LoginManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from './RemoteSimulation';
-import { AuxPartitionConfig } from '@casual-simulation/aux-common';
 import { PortalManager } from '@casual-simulation/aux-vm/managers';
 
 /**
