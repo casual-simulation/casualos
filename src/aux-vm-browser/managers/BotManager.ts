@@ -47,7 +47,10 @@ import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
-import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
+import {
+    AuthHelperInterface,
+    SimulationOrigin,
+} from '@casual-simulation/aux-vm/managers';
 import { LivekitManager } from './LivekitManager';
 
 /**
@@ -115,17 +118,13 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     static createPartitions(
         id: string,
+        origin: SimulationOrigin,
         indicator: ConnectionIndicator,
         config: AuxConfig['config'],
         defaultHost: string = location.origin
     ): AuxPartitionConfig {
-        const parsedId = parseSimulationId(id);
         const connectionId = getConnectionId(indicator);
-        const host = getFinalUrl(defaultHost, parsedId.host);
-        const causalRepoHost = getFinalUrl(
-            config.causalRepoConnectionUrl || defaultHost,
-            parsedId.host
-        );
+        const host = origin.host;
         const protocol = config.causalRepoConnectionProtocol;
         const versions = config.sharedPartitionsVersion;
         const isCollaborative = !!config.device?.isCollaborative;
@@ -142,10 +141,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             shared: isCollaborative
                 ? {
                       type: 'remote_yjs',
-                      recordName: null,
-                      inst: id,
+                      recordName: origin.recordName,
+                      inst: origin.inst,
                       branch: DEFAULT_BRANCH_NAME,
-                      host: causalRepoHost,
+                      host: host,
                       connectionProtocol: protocol,
                   }
                 : {
@@ -156,7 +155,9 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 type: 'proxy',
                 partition: new LocalStoragePartitionImpl({
                     type: 'local_storage',
-                    namespace: `aux/${parsedId.channel}`,
+                    namespace: !origin.recordName
+                        ? `aux/${origin.inst}`
+                        : `aux/${origin.recordName}/${origin.inst}`,
                     private: true,
                 }),
             },
@@ -172,10 +173,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             [TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
                 ? {
                       type: 'remote_yjs',
-                      recordName: null,
-                      inst: parsedId.channel,
+                      recordName: origin.recordName,
+                      inst: origin.inst,
                       branch: `${DEFAULT_BRANCH_NAME}-player-${connectionId}`,
-                      host: causalRepoHost,
+                      host: host,
                       connectionProtocol: protocol,
                       temporary: true,
                       remoteEvents: false,
@@ -187,10 +188,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
                 ? {
                       type: 'other_players_repo',
-                      recordName: null,
-                      inst: parsedId.channel,
+                      recordName: origin.recordName,
+                      inst: origin.inst,
                       branch: DEFAULT_BRANCH_NAME,
-                      host: causalRepoHost,
+                      host: host,
                       connectionProtocol: protocol,
                       childPartitionType: 'yjs_client',
                   }

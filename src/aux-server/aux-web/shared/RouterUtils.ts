@@ -1,9 +1,3 @@
-import { appManager } from './AppManager';
-import VueRouter from 'vue-router';
-import {
-    GoToDimensionAction,
-    simulationIdToString,
-} from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 
 export interface SimulationInfo {
@@ -18,7 +12,7 @@ export interface SimulationInfo {
 export function createSimulationInfo(simulation: Simulation): SimulationInfo {
     return {
         id: simulation.id,
-        displayName: simulationIdToString(simulation.parsedId),
+        displayName: simulation.id,
         online: false,
         synced: false,
         lostConnection: false,

@@ -1,9 +1,10 @@
 import Axios from 'axios';
 import Vue from 'vue';
-import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
-import { map, scan } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject, SubscriptionLike } from 'rxjs';
+import { filter, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
 import {
+    ConnectionIndicator,
     ProgressMessage,
     remapProgressPercent,
     remote,
@@ -23,6 +24,7 @@ import {
     SimulationManager,
     AuxConfig,
     parseVersionNumber,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import {
     AuxVMImpl,
@@ -36,6 +38,7 @@ import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 import { merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
+import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -74,19 +77,19 @@ export class AppManager {
     }
 
     private _progress: BehaviorSubject<ProgressMessage>;
-    private _userSubject: BehaviorSubject<AuxUser>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<BotManager>;
-    private _user: AuxUser;
     private _config: WebConfig;
     private _deviceConfig: AuxConfig['config']['device'];
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
     private _systemPortal: SystemPortalCoordinator<BotManager>;
     private _db: IDBDatabase;
+    private _indicatorSubject = new BehaviorSubject<ConnectionIndicator>(null);
+    private _indicator: ConnectionIndicator;
     private _simulationFactory: (
-        user: AuxUser,
         id: string,
+        origin: SimulationOrigin,
         config: AuxConfig['config']
     ) => BotManager;
 
@@ -97,35 +100,40 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
-        this._simulationFactory = (user, id, config) => {
-            const partitions = BotManager.createPartitions(id, user, config);
+        this._simulationFactory = (id, origin, config) => {
+            const partitions = BotManager.createPartitions(
+                id,
+                origin,
+                this.indicator,
+                config
+            );
             return new BotManager(
-                user,
+                this.indicator,
                 id,
                 config,
-                new AuxVMImpl(user, {
+                new AuxVMImpl(this.indicator, {
                     config,
                     partitions,
                 })
             );
         };
-        this._simulationManager = new SimulationManager((id) => {
+        this._simulationManager = new SimulationManager((id, config) => {
             const params = new URLSearchParams(location.search);
             const forceSignedScripts =
                 params.get('forceSignedScripts') === 'true';
             if (forceSignedScripts) {
                 console.log('[AppManager] Forcing signed scripts for ' + id);
             }
+            const { ...origin } = config;
             return this._simulationFactory(
-                this._user,
                 id,
+                origin,
                 this.createSimulationConfig({ forceSignedScripts })
             );
         });
         this._systemPortal = new SystemPortalCoordinator(
             this._simulationManager
         );
-        this._userSubject = new BehaviorSubject<AuxUser>(null);
     }
 
     createSimulationConfig(options: {
@@ -162,12 +170,12 @@ export class AppManager {
         return this._simulationManager;
     }
 
-    get userObservable(): Observable<AuxUser> {
-        return this._userSubject;
+    get indicatorObservable() {
+        return this._indicatorSubject;
     }
 
-    get user(): AuxUser {
-        return this._user;
+    get indicator() {
+        return this._indicator;
     }
 
     get config(): WebConfig {
@@ -194,8 +202,8 @@ export class AppManager {
 
     set simulationFactory(
         factory: (
-            user: AuxUser,
             id: string,
+            origin: SimulationOrigin,
             config: AuxConfig['config']
         ) => BotManager
     ) {
@@ -219,7 +227,7 @@ export class AppManager {
     async downloadState(): Promise<void> {
         const stored = await this.simulationManager.primary.export();
         const serverId = this._simulationManager.primary.id;
-        downloadAuxState(stored, `${this.user.name}-${serverId || 'default'}`);
+        downloadAuxState(stored, `${serverId || 'default'}`);
     }
 
     /**
@@ -257,22 +265,32 @@ export class AppManager {
      */
     whileLoggedIn(
         setup: (
-            user: AuxUser,
+            indicator: ConnectionIndicator,
             botManager: BrowserSimulation
         ) => SubscriptionLike[]
     ): SubscriptionLike {
-        return this.userObservable
+        return this._indicatorSubject
             .pipe(
-                scan((subs: SubscriptionLike[], user: AuxUser, index) => {
-                    if (subs) {
-                        subs.forEach((s) => s.unsubscribe());
-                    }
-                    if (user && this.simulationManager.primary) {
-                        return setup(user, this.simulationManager.primary);
-                    } else {
-                        return null;
-                    }
-                }, null)
+                scan(
+                    (
+                        subs: SubscriptionLike[],
+                        indicator: ConnectionIndicator,
+                        index
+                    ) => {
+                        if (subs) {
+                            subs.forEach((s) => s.unsubscribe());
+                        }
+                        if (indicator && this.simulationManager.primary) {
+                            return setup(
+                                indicator,
+                                this.simulationManager.primary
+                            );
+                        } else {
+                            return null;
+                        }
+                    },
+                    null
+                )
             )
             .subscribe();
     }
@@ -388,37 +406,48 @@ export class AppManager {
         }
     }
 
-    async setPrimarySimulation(serverId: string) {
-        serverId = serverId || 'default';
+    async setPrimarySimulation(recordName: string | null, inst: string) {
+        const simulationId = `${recordName ?? ''}/${inst}`;
         if (
             (this.simulationManager.primary &&
-                this.simulationManager.primary.id === serverId) ||
-            this.simulationManager.primaryId === serverId
+                this.simulationManager.primary.id === simulationId) ||
+            this.simulationManager.primaryId === simulationId
         ) {
             return await this._primaryPromise;
         }
-        this.simulationManager.primaryId = serverId;
-        this._primaryPromise = this._setPrimarySimulation(serverId);
+        this.simulationManager.primaryId = simulationId;
+        this._primaryPromise = this._setPrimarySimulation(
+            simulationId,
+            recordName,
+            inst
+        );
 
         return await this._primaryPromise;
     }
 
-    private async _setPrimarySimulation(serverId: string) {
+    private async _setPrimarySimulation(
+        id: string,
+        recordName: string | null,
+        inst: string
+    ) {
         this._sendProgress('Requesting inst...', 0.1);
 
-        console.log('[AppManager] Setting primary simulation:', serverId);
+        console.log(
+            '[AppManager] Setting primary simulation:',
+            recordName,
+            inst
+        );
 
-        const user = await this._getCurrentUserOrGuest();
-        this._user = user;
-        // Always give the user a new ID.
-        this._user.id = uuid();
+        this._indicator = await this._getConnectionIndicator(recordName, inst);
 
-        await this._setCurrentUser(user);
         await this.simulationManager.clear();
-        await this.simulationManager.setPrimary(serverId);
+        await this.simulationManager.setPrimary(id, {
+            recordName,
+            inst,
+        });
 
         this._initOffline();
-        this._userSubject.next(this._user);
+        this._indicatorSubject.next(this._indicator);
 
         const sim = this.simulationManager.primary;
 
@@ -444,148 +473,59 @@ export class AppManager {
         return sim;
     }
 
-    private async _getUser(username: string): Promise<AuxUser> {
+    private async _getConnectionIndicator(
+        recordName: string | null,
+        inst: string
+    ): Promise<ConnectionIndicator> {
         try {
-            return await getItem<AuxUser>(this._db, 'users', username);
+            const connectionId = uuid();
+            const key = await this._getConnectionKey();
+            if (key) {
+                const token = generateV1ConnectionToken(
+                    key,
+                    connectionId,
+                    recordName,
+                    inst
+                );
+                return {
+                    connectionToken: token,
+                };
+            } else {
+                return {
+                    connectionId,
+                };
+            }
         } catch (err) {
-            console.log('Unable to get user from DB', err);
+            console.log('Unable to get connection indicator from DB', err);
             return null;
         }
     }
 
-    private async _saveUser(user: AuxUser) {
+    private async _getConnectionKey(): Promise<string> {
         try {
-            await putItem(this._db, 'users', user);
+            return await getItem<string>(this._db, 'users', 'connectionKey');
+        } catch (err) {
+            console.log('Unable to get connectionKey from DB', err);
+            return null;
+        }
+    }
+
+    private async _saveConnectionKey(key: string) {
+        try {
+            await putItem(this._db, 'users', 'connectionKey');
             // await this._db.users.put(user);
         } catch (err) {
-            console.log('Unable to save user to DB', err);
+            console.log('Unable to save connectionKey to DB', err);
         }
-    }
-
-    /**
-     * Gets the username that is currently being used.
-     */
-    private async _getCurrentUsername(): Promise<string> {
-        try {
-            const stored = await getItem<StoredValue<string>>(
-                this._db,
-                'keyval',
-                'username'
-            );
-            if (stored) {
-                return stored.value;
-            }
-            return null;
-        } catch (err) {
-            console.error('Unable to get Username', err);
-            return null;
-        }
-    }
-
-    /**
-     * Sets the username that is currently being used.
-     */
-    private async _setCurrentUsername(username: string) {
-        try {
-            await putItem(this._db, 'keyval', {
-                key: 'username',
-                value: username,
-            });
-        } catch (err) {
-            console.error('Unable to save username', err);
-        }
-    }
-
-    private async _getCurrentUser(): Promise<AuxUser> {
-        const currentUsername = await this._getCurrentUsername();
-        if (currentUsername) {
-            return this._getUser(currentUsername);
-        }
-        return null;
-    }
-
-    private async _setCurrentUser(user: AuxUser): Promise<void> {
-        if (user) {
-            await this._saveUser(user);
-            await this._setCurrentUsername(user.username);
-        } else {
-            await this._setCurrentUsername(null);
-        }
-    }
-
-    private async _getCurrentUserOrGuest(): Promise<AuxUser> {
-        const current = await this._getCurrentUser();
-        if (!current) {
-            return this._createUser(`guest_${uuid()}`);
-        }
-        return current;
-    }
-
-    private async _getOrCreateUser(username: string): Promise<AuxUser> {
-        let user = await this._getUser(username);
-        if (!user) {
-            user = this._createUser(username);
-            await this._saveUser(user);
-        }
-        return user;
     }
 
     logout() {
-        if (this.user) {
+        if (this.indicator) {
             console.log('[AppManager] Logout');
-
             this.simulationManager.clear();
-            this._user = null;
-            this._setCurrentUsername(null);
-            this._userSubject.next(null);
+            this._saveConnectionKey(null);
+            this._indicatorSubject.next(null);
         }
-    }
-
-    getUsers(): Promise<AuxUser[]> {
-        return getItems<AuxUser>(this._db, 'users');
-        // return this._db.users.toCollection().toArray();
-    }
-
-    getUser(username: string): Promise<AuxUser> {
-        return this._getOrCreateUser(username);
-    }
-
-    removeUser(username: string): Promise<void> {
-        try {
-            return deleteItem(this._db, 'users', username);
-            // return this._db.users.delete(username);
-        } catch (err) {
-            console.log('Unable to remove user', err);
-        }
-    }
-
-    async setCurrentUser(user: AuxUser): Promise<void> {
-        await this._setCurrentUser(user);
-        this._user = user;
-        this._userSubject.next(user);
-    }
-
-    private _createUser(username: string) {
-        let user: AuxUser = {
-            username: username,
-            name: username,
-            token: this._generateRandomKey(),
-            id: uuid(),
-        };
-
-        if (user.name.includes('guest_')) {
-            user.name = 'Guest';
-        }
-
-        return user;
-    }
-
-    private _exceptionMessage(ex: unknown) {
-        if (ex instanceof Error) {
-            return ex.message;
-        }
-
-        return 'General Error';
     }
 
     private async _getConfig(): Promise<WebConfig> {
@@ -657,29 +597,6 @@ export class AppManager {
             console.error('Unable to fetch config from storage', err);
             return null;
         }
-    }
-
-    private _generateRandomKey(): string {
-        console.log('[AppManager] Generating new login key...');
-        let arr = new Uint8Array(16);
-        if (window.crypto) {
-            window.crypto.getRandomValues(arr);
-        } else {
-            console.warn(
-                '[AppManager] Generating login key using Math.random.'
-            );
-
-            for (let i = 0; i < arr.length; i++) {
-                arr[i] = this._getRandomInt(0, 256);
-            }
-        }
-        return fromByteArray(arr);
-    }
-
-    private _getRandomInt(min: number, max: number) {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
     }
 }
 

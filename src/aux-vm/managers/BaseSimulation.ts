@@ -41,8 +41,6 @@ export class BaseSimulation implements Simulation {
     protected _subscriptions: SubscriptionLike[];
     private _status: string;
     private _id: string;
-    private _originalId: string;
-    private _parsedId: SimulationIdParseSuccess;
 
     private _errored: boolean;
 
@@ -52,18 +50,7 @@ export class BaseSimulation implements Simulation {
      * Gets the ID of the simulation that is currently being used.
      */
     get id() {
-        return this._originalId;
-    }
-
-    /**
-     * Gets the parsed ID of the simulation.
-     */
-    get parsedId(): SimulationIdParseSuccess {
-        return this._parsedId;
-    }
-
-    set parsedId(id: SimulationIdParseSuccess) {
-        this._parsedId = id;
+        return this._id;
     }
 
     /**
@@ -133,10 +120,8 @@ export class BaseSimulation implements Simulation {
      */
     constructor(id: string, vm: AuxVM) {
         this._vm = vm;
-        this._originalId = id || 'default';
-        this._vm.id = this._originalId;
-        this._parsedId = parseSimulationId(this._originalId);
-        this._id = this._getTreeName(this._parsedId.channel);
+        this._vm.id = id;
+        this._id = id;
         this._onSubSimulationAdded = new Subject();
         this._onSubSimulationRemoved = new Subject();
         this._subSimulations = new Map();
@@ -164,12 +149,6 @@ export class BaseSimulation implements Simulation {
     init(): Promise<void> {
         console.log('[BaseSimulation] init');
         return this._init();
-    }
-
-    updateID(id: string) {
-        let temp = id || 'default';
-        this._parsedId = parseSimulationId(temp);
-        this._id = this._getTreeName(this._parsedId.channel);
     }
 
     /**

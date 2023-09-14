@@ -71,7 +71,6 @@ import {
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
 import {
-    bot,
     del,
     edit,
     edits,

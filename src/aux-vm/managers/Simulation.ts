@@ -15,6 +15,23 @@ import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
 import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
+export interface SimulationOrigin {
+    /**
+     * The name of the record that the simulation should be loaded from.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the simulation should be loaded from.
+     */
+    inst: string;
+
+    /**
+     * The host for the simulation.
+     */
+    host?: string;
+}
+
 /**
  * Defines an interface for objects that represent bot simulations.
  */
@@ -23,11 +40,6 @@ export interface Simulation extends Initable {
      * Gets the ID of the simulation that is currently being used.
      */
     id: string;
-
-    /**
-     * Gets the parsed ID of the simulation.
-     */
-    parsedId: SimulationIdParseSuccess;
 
     /**
      * Gets whether the app is connected to the inst but may
