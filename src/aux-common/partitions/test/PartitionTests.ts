@@ -12,7 +12,6 @@ import {
     BotSpace,
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
-import { CurrentVersion, StatusUpdate } from '@casual-simulation/causal-trees';
 import { waitAsync, allDataTypeCases } from '../../test/TestHelpers';
 import {
     first,
@@ -40,6 +39,7 @@ import {
 } from '../../test/FuzzingHelpers';
 import '../../BlobPolyfill';
 import '../../../../jest/jest-matchers';
+import { CurrentVersion, StatusUpdate } from '../../common';
 
 expect.extend({
     toBeEditMatching: (received: TagEdit, expected: TagEdit) => {
@@ -1244,13 +1244,15 @@ export function testPartitionImplementation(
                     }),
                 });
 
-                const partitionEdit = updates[1].state.test.tags.abc;
+                const partitionEdit = updates?.[1]?.state?.test?.tags?.abc;
 
+                const currentSite = version?.currentSite ?? '';
+                const remoteSite = version?.remoteSite ?? '';
                 expect(partitionEdit.version).not.toEqual({
-                    [version.currentSite]: expect.any(Number),
+                    [currentSite]: expect.any(Number),
                 });
                 expect(partitionEdit.version).toEqual({
-                    [version.remoteSite]: expect.any(Number),
+                    [remoteSite]: expect.any(Number),
                 });
 
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);

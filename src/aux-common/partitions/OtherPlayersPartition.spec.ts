@@ -651,6 +651,9 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch-player-device1SessionId',
                         updates: [update],
                     });
@@ -710,8 +713,12 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                             protocol: 'updates',
                         },
@@ -737,6 +744,9 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch-player-device1SessionId',
                         updates: [update],
                         initial: true,
@@ -759,6 +769,9 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch-player-device1SessionId',
                         updates: [update],
                     });
@@ -820,8 +833,12 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
@@ -830,7 +847,10 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device1,
                     });
@@ -840,15 +860,17 @@ describe('OtherPlayersPartition', () => {
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device1SessionId',
-                                temporary: true,
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                         {
-                            name: UNWATCH_BRANCH,
-                            data: 'testBranch-player-device1SessionId',
+                            type: 'repo/unwatch_branch',
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
                         },
                     ]);
                 });
@@ -859,8 +881,12 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
@@ -881,6 +907,9 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch-player-device1SessionId',
                         updates: [update],
                         initial: true,
@@ -889,7 +918,10 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device1,
                     });
@@ -930,8 +962,12 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                             protocol: 'updates',
                         },
@@ -954,18 +990,10 @@ describe('OtherPlayersPartition', () => {
 
                     await waitAsync();
 
-                    const tag1 = atom(
-                        atomId('device1', 2),
-                        null,
-                        tagMask('test1', 'abc')
-                    );
-                    const value1 = atom(
-                        atomId('device1', 3),
-                        tag1,
-                        value('def')
-                    );
-
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch-player-device1SessionId',
                         updates: [update],
                         initial: true,
@@ -974,7 +1002,10 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device1,
                     });
@@ -1023,8 +1054,12 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
@@ -1058,8 +1093,12 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: userDevice,
@@ -1081,8 +1120,12 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                             protocol: 'updates',
                         },
@@ -1094,11 +1137,11 @@ describe('OtherPlayersPartition', () => {
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-server',
-                                temporary: true,
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-server',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                     ]);
                 });
@@ -1109,16 +1152,24 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
                     });
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
@@ -1129,12 +1180,11 @@ describe('OtherPlayersPartition', () => {
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device1SessionId',
-                                temporary: true,
-
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                     ]);
 
@@ -1153,6 +1203,9 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch-player-device1SessionId',
                         updates: [update],
                         initial: true,
@@ -1195,13 +1248,19 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device1,
                     });
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device1,
                     });
@@ -1218,15 +1277,22 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
                     });
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device1,
                     });
@@ -1236,16 +1302,17 @@ describe('OtherPlayersPartition', () => {
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device1SessionId',
-                                temporary: true,
-
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                         {
-                            name: UNWATCH_BRANCH,
-                            data: 'testBranch-player-device1SessionId',
+                            type: 'repo/unwatch_branch',
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
                         },
                     ]);
 
@@ -1264,6 +1331,9 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch-player-device1SessionId',
                         updates: [update],
                         initial: true,
@@ -1286,24 +1356,36 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
                     });
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device2,
                     });
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device3,
@@ -1314,47 +1396,54 @@ describe('OtherPlayersPartition', () => {
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device1SessionId',
-                                temporary: true,
-
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device2SessionId',
-                                temporary: true,
-
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device2SessionId',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device3SessionId',
-                                temporary: true,
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device3SessionId',
+                            temporary: true,
 
-                                protocol: 'updates',
-                            },
+                            protocol: 'updates',
                         },
                     ]);
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device2,
                     });
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device1,
                     });
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device3,
                     });
@@ -1363,16 +1452,22 @@ describe('OtherPlayersPartition', () => {
 
                     expect(connection.sentMessages.slice(4)).toEqual([
                         {
-                            name: UNWATCH_BRANCH,
-                            data: 'testBranch-player-device2SessionId',
+                            type: 'repo/unwatch_branch',
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device2SessionId',
                         },
                         {
-                            name: UNWATCH_BRANCH,
-                            data: 'testBranch-player-device1SessionId',
+                            type: 'repo/unwatch_branch',
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
                         },
                         {
-                            name: UNWATCH_BRANCH,
-                            data: 'testBranch-player-device3SessionId',
+                            type: 'repo/unwatch_branch',
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device3SessionId',
                         },
                     ]);
                 });
@@ -1383,24 +1478,36 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
                     });
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device2,
                     });
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device3,
@@ -1411,30 +1518,27 @@ describe('OtherPlayersPartition', () => {
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device1SessionId',
-                                temporary: true,
-
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device2SessionId',
-                                temporary: true,
-
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device2SessionId',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device3SessionId',
-                                temporary: true,
-
-                                protocol: 'updates',
-                            },
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device3SessionId',
+                            temporary: true,
+                            protocol: 'updates',
                         },
                     ]);
 
@@ -1454,24 +1558,36 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
                     });
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device2,
                     });
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device3,
@@ -1482,30 +1598,30 @@ describe('OtherPlayersPartition', () => {
                     expect(connection.sentMessages.slice(1)).toEqual([
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device1SessionId',
-                                temporary: true,
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device1SessionId',
+                            temporary: true,
 
-                                protocol: 'updates',
-                            },
+                            protocol: 'updates',
                         },
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device2SessionId',
-                                temporary: true,
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device2SessionId',
+                            temporary: true,
 
-                                protocol: 'updates',
-                            },
+                            protocol: 'updates',
                         },
                         {
                             type: 'repo/watch_branch',
-                            data: {
-                                branch: 'testBranch-player-device3SessionId',
-                                temporary: true,
+                            recordName: null,
+                            inst: 'inst',
+                            branch: 'testBranch-player-device3SessionId',
+                            temporary: true,
 
-                                protocol: 'updates',
-                            },
+                            protocol: 'updates',
                         },
                     ]);
 
@@ -1606,8 +1722,12 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                             protocol: 'updates',
                         },
@@ -1631,6 +1751,9 @@ describe('OtherPlayersPartition', () => {
                     );
 
                     addUpdates.next({
+                        type: 'repo/add_updates',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch-player-device1SessionId',
                         updates: [update],
                         initial: true,
@@ -1694,8 +1817,12 @@ describe('OtherPlayersPartition', () => {
                     partition.onEvents.subscribe((e) => events.push(...e));
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
@@ -1732,8 +1859,12 @@ describe('OtherPlayersPartition', () => {
                     partition.onEvents.subscribe((e) => events.push(...e));
 
                     deviceConnected.next({
+                        type: 'repo/connected_to_branch',
                         broadcast: false,
                         branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst: 'inst',
                             branch: 'testBranch',
                         },
                         connection: device1,
@@ -1742,7 +1873,10 @@ describe('OtherPlayersPartition', () => {
                     await waitAsync();
 
                     deviceDisconnected.next({
+                        type: 'repo/disconnected_from_branch',
                         broadcast: false,
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         connection: device1,
                     });
@@ -1778,16 +1912,7 @@ describe('OtherPlayersPartition', () => {
         });
 
         function setupPartition(config: OtherPlayersRepoPartitionConfig) {
-            partition = new OtherPlayersPartitionImpl(
-                {
-                    id: 'test',
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
-                },
-                client,
-                config
-            );
+            partition = new OtherPlayersPartitionImpl(client, config);
 
             sub.add(partition);
             sub.add(partition.onBotsAdded.subscribe((b) => added.push(...b)));

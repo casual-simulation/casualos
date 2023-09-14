@@ -34,7 +34,6 @@ import {
 } from '../bots';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { skip, startWith } from 'rxjs/operators';
-import { createCausalRepoClientPartition } from './RemoteCausalRepoPartition';
 import { sortBy } from 'lodash';
 import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
 import { InstRecordsClient } from '../websockets';

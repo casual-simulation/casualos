@@ -1,9 +1,3 @@
-import { User, StatusUpdate, Action } from '@casual-simulation/causal-trees';
-import {
-    CurrentVersion,
-    treeVersion,
-    VersionVector,
-} from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
     auxTree,
@@ -47,13 +41,8 @@ import {
     botUpdated,
     convertToString,
 } from '../bots';
-import {
-    PartitionConfig,
-    CausalRepoPartitionConfig,
-    YjsPartitionConfig,
-} from './AuxPartitionConfig';
+import { PartitionConfig, YjsPartitionConfig } from './AuxPartitionConfig';
 import { flatMap, random } from 'lodash';
-import { v4 as uuid } from 'uuid';
 import {
     Doc,
     Text,
@@ -73,6 +62,7 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import { ensureTagIsSerializable } from './PartitionUtils';
+import { Action, CurrentVersion, StatusUpdate, VersionVector } from '../common';
 
 /**
  * Attempts to create a YjsPartition from the given config.

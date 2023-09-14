@@ -32,7 +32,7 @@ describe('YjsPartition', () => {
 
         const version = await mem.onVersionUpdated.pipe(first()).toPromise();
 
-        expect(version.currentSite).not.toBe(null);
-        expect(version.currentSite).toBeDefined();
+        expect(version?.currentSite).not.toBe(null);
+        expect(version?.currentSite).toBeDefined();
     });
 });

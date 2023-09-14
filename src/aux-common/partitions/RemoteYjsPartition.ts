@@ -353,64 +353,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         for (let event of events) {
             if (event.type === 'remote') {
                 if (event.event.type === 'get_remote_count') {
-                    // const action = <GetRemoteCountAction>event.event;
-                    // this._client.deviceCount(action.inst).subscribe(
-                    //     (count) => {
-                    //         this._onEvents.next([
-                    //             asyncResult(event.taskId, count),
-                    //         ]);
-                    //     },
-                    //     (err) => {
-                    //         this._onEvents.next([
-                    //             asyncError(event.taskId, err),
-                    //         ]);
-                    //     }
-                    // );
                 } else if (event.event.type === 'get_servers') {
-                    // const action = <GetServersAction>event.event;
-                    // if (action.includeStatuses) {
-                    //     this._client.branchesStatus().subscribe(
-                    //         (e) => {
-                    //             this._onEvents.next([
-                    //                 asyncResult(
-                    //                     event.taskId,
-                    //                     e.branches
-                    //                         .filter(
-                    //                             (b) => !b.branch.startsWith('$')
-                    //                         )
-                    //                         .map((b) => ({
-                    //                             inst: b.branch,
-                    //                             lastUpdateTime:
-                    //                                 b.lastUpdateTime,
-                    //                         }))
-                    //                 ),
-                    //             ]);
-                    //         },
-                    //         (err) => {
-                    //             this._onEvents.next([
-                    //                 asyncError(event.taskId, err),
-                    //             ]);
-                    //         }
-                    //     );
-                    // } else {
-                    //     this._client.branches().subscribe(
-                    //         (e) => {
-                    //             this._onEvents.next([
-                    //                 asyncResult(
-                    //                     event.taskId,
-                    //                     e.branches.filter(
-                    //                         (b) => !b.startsWith('$')
-                    //                     )
-                    //                 ),
-                    //             ]);
-                    //         },
-                    //         (err) => {
-                    //             this._onEvents.next([
-                    //                 asyncError(event.taskId, err),
-                    //             ]);
-                    //         }
-                    //     );
-                    // }
                 } else if (event.event.type === 'get_remotes') {
                     // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.
                     // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time

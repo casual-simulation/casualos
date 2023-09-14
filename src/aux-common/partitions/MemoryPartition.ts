@@ -21,11 +21,6 @@ import {
     BotSpace,
 } from '../bots';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import {
-    StatusUpdate,
-    Action,
-    CurrentVersion,
-} from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
@@ -41,6 +36,7 @@ import {
     ensureBotIsSerializable,
     ensureTagIsSerializable,
 } from './PartitionUtils';
+import { Action, CurrentVersion, StatusUpdate } from '../common';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
