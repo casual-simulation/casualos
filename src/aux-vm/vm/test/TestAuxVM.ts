@@ -18,7 +18,7 @@ import {
     StatusUpdate,
     DeviceAction,
     CurrentVersion,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
 import { ChannelActionResult } from '../../vm';

@@ -7,7 +7,7 @@ import {
     ProgressMessage,
     remapProgressPercent,
     remote,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import {
     hasValue,
     KNOWN_PORTALS,

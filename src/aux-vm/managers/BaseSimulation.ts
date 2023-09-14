@@ -17,13 +17,7 @@ import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
-import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import {
-    DeviceAction,
-    DevicesEvent,
-    LoadingProgressCallback,
-} from '@casual-simulation/causal-trees';
-import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
+import { DeviceAction } from '@casual-simulation/aux-common';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';

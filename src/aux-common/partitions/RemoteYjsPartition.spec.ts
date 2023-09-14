@@ -1,35 +1,3 @@
-// import {
-//     Action,
-//     AddUpdatesMessage,
-//     ADD_ATOMS,
-//     ADD_UPDATES,
-//     AuthenticatedTo,
-//     AUTHENTICATED_TO_BRANCH,
-//     AUTHENTICATE_BRANCH_WRITES,
-//     BRANCHES,
-//     BranchesEvent,
-//     BranchesStatusEvent,
-//     BRANCHES_STATUS,
-//     InstRecordsClient,
-//     CurrentVersion,
-//     device,
-//     DeviceCountEvent,
-//     connectionInfo,
-//     DEVICE_COUNT,
-//     GET_UPDATES,
-//     MemoryConnectionClient,
-//     ReceiveDeviceActionMessage,
-//     RECEIVE_EVENT,
-//     remote,
-//     SEND_EVENT,
-//     StatusUpdate,
-//     VersionVector,
-//     WATCH_BRANCH,
-//     UpdatesReceivedMessage,
-//     UPDATES_RECEIVED,
-//     RATE_LIMIT_EXCEEDED,
-//     RateLimitExceededMessage,
-// } from '@casual-simulation/causal-trees';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import {
     applyUpdate,
@@ -71,7 +39,7 @@ import {
 } from '../bots';
 import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { wait, waitAsync } from '../test/TestHelpers';
-import { del, edit, insert, preserve } from '../aux-format-2';
+import { del, edit, insert, preserve } from '../bots';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { flatMap } from 'lodash';
 import { YjsPartitionImpl } from './YjsPartition';

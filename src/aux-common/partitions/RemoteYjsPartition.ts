@@ -1,7 +1,4 @@
 import {
-    AuxCausalTree,
-    auxTree,
-    applyEvents,
     isTagEdit,
     TagEditOp,
     preserve,
@@ -9,7 +6,7 @@ import {
     insert,
     edit,
     TagEdit,
-} from '../aux-format-2';
+} from '../bots';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
     CausalRepoPartition,

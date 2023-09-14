@@ -30,6 +30,9 @@ import {
     createBot,
     getBotSpace,
     StoredAux,
+    ConnectionInfo,
+    DeviceAction,
+    StatusUpdate,
 } from '@casual-simulation/aux-common';
 import {
     realtimeStrategyToRealtimeEditMode,
@@ -44,16 +47,6 @@ import {
 } from '@casual-simulation/aux-runtime';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
-import {
-    StatusUpdate,
-    remapProgressPercent,
-    DeviceAction,
-    RemoteAction,
-    DeviceInfo,
-    Action,
-    RemoteActions,
-    CurrentVersion,
-} from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
@@ -70,7 +63,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
-    protected _deviceInfo: DeviceInfo;
+    protected _deviceInfo: ConnectionInfo;
     protected _partitionEditModeProvider: AuxPartitionRealtimeEditModeProvider;
     protected _partitions: AuxPartitions;
     protected _portalHelper: CustomAppHelper;

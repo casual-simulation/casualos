@@ -1,3 +1,3 @@
-import { User } from '@casual-simulation/causal-trees';
+import { User } from '@casual-simulation/aux-common';
 
 export interface AuxUser extends User {}

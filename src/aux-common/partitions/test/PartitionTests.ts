@@ -31,7 +31,7 @@ import {
     TAG_EDIT_NAME,
     TagEdit,
     isTagEdit,
-} from '../../aux-format-2';
+} from '../../bots';
 import faker from 'faker';
 import {
     generateRandomEditCases,

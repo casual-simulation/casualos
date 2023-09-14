@@ -17,7 +17,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Prop, Watch } from 'vue-property-decorator';
 import { loadStripe } from '../../shared/checkout/utils';
-import { remote } from '@casual-simulation/causal-trees';
+import { remote } from '@casual-simulation/aux-common';
 
 @Component({})
 export default class CheckoutForm extends Vue {
@@ -304,7 +304,8 @@ export default class CheckoutForm extends Vue {
                     }
                 );
 
-                const canMakePayment = await this._paymentRequest.canMakePayment();
+                const canMakePayment =
+                    await this._paymentRequest.canMakePayment();
                 this.hasPaymentRequestButton = !!canMakePayment;
                 if (canMakePayment) {
                     this._paymentRequestButton.mount(

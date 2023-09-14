@@ -136,13 +136,12 @@ import {
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
 import { sortBy, forOwn, merge, union, mapValues } from 'lodash';
-import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2/AuxOpTypes';
 import {
     applyTagEdit,
     isTagEdit,
     mergeVersions,
-} from '@casual-simulation/aux-common/aux-format-2';
-import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common/bots';
+import { CurrentVersion, VersionVector } from '@casual-simulation/aux-common';
 import {
     RuntimeStateVersion,
     updateRuntimeVersion,
@@ -261,7 +260,6 @@ export class AuxRuntime
 
     private _library: AuxLibrary;
     private _editModeProvider: AuxRealtimeEditModeProvider;
-    private _forceSignedScripts: boolean;
     private _exemptSpaces: BotSpace[];
     private _batchPending: boolean = false;
     private _jobQueueCheckPending: boolean = false;
@@ -321,10 +319,6 @@ export class AuxRuntime
      */
     repeatedErrorLimit: number = 1000;
 
-    get forceSignedScripts() {
-        return this._forceSignedScripts;
-    }
-
     get context() {
         return this._globalContext;
     }
@@ -355,7 +349,6 @@ export class AuxRuntime
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary,
         editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider(),
-        forceSignedScripts: boolean = false,
         exemptSpaces: BotSpace[] = ['local', 'tempLocal'],
         forceSyncScripts: boolean = false,
         interpreter: InterpreterType = null
@@ -380,7 +373,6 @@ export class AuxRuntime
             },
         });
         this._editModeProvider = editModeProvider;
-        this._forceSignedScripts = forceSignedScripts;
         this._exemptSpaces = exemptSpaces;
         this._onActions = new Subject();
         this._onErrors = new Subject();
@@ -586,7 +578,6 @@ export class AuxRuntime
             this._globalContext.device,
             this._libraryFactory,
             this._editModeProvider,
-            this._forceSignedScripts,
             this._exemptSpaces,
             forceSyncScripts,
             interpreter
@@ -3010,17 +3001,6 @@ export class AuxRuntime
         script: string,
         options: CompileOptions
     ) {
-        if (this._forceSignedScripts) {
-            if (this._exemptSpaces.indexOf(bot.space) < 0) {
-                const hash = tagValueHash(bot.id, tag, script);
-                if (!bot.signatures || bot.signatures[hash] !== tag) {
-                    throw new Error(
-                        'Unable to compile script. It is not signed with a valid certificate.'
-                    );
-                }
-            }
-        }
-
         script = replaceMacros(script);
 
         let functionName: string;

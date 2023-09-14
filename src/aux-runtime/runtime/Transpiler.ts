@@ -15,7 +15,7 @@ import {
     createRelativePositionFromStateVector,
     getClock,
 } from '@casual-simulation/aux-common/yjs/YjsHelpers';
-import { VersionVector } from '@casual-simulation/causal-trees';
+import { VersionVector } from '@casual-simulation/aux-common';
 
 /**
  * The symbol that is used in script dependencies to represent any argument.

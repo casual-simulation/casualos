@@ -1,23 +1,23 @@
-import { User } from '@casual-simulation/causal-trees';
-import { CausalRepoClient, CausalRepoClientTimeSyncConnection } from '@casual-simulation/causal-trees/core2';
+import { User } from '@casual-simulation/aux-common';
+import {
+    CausalRepoClient,
+    CausalRepoClientTimeSyncConnection,
+} from '@casual-simulation/aux-common/core2';
 import { BotHttpClient } from './BotHttpClient';
 import {
     PartitionConfig,
     RemoteCausalRepoPartition,
-    RemoteCausalRepoPartitionImpl,
     BotPartition,
-    BotPartitionImpl,
     OtherPlayersPartition,
     OtherPlayersPartitionImpl,
     RemoteCausalRepoProtocol,
     RemoteYjsPartitionImpl,
     YjsPartition,
 } from '@casual-simulation/aux-common';
-import {
-    AwsSocket,
-    ApiaryConnectionClient,
-} from '@casual-simulation/causal-tree-client-apiary';
-import { WebSocketConnectionClient } from '@casual-simulation/causal-tree-client-websocket';
+// import {
+//     AwsSocket,
+//     ApiaryConnectionClient,
+// } from '@casual-simulation/causal-tree-client-apiary';
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
 import { TimeSyncController } from '@casual-simulation/timesync';
@@ -184,10 +184,19 @@ export async function createBotPartition(
     return undefined;
 }
 
-export function createTimeSyncController(config: AuxTimeSyncConfiguration, user: User): TimeSyncController {
+export function createTimeSyncController(
+    config: AuxTimeSyncConfiguration,
+    user: User
+): TimeSyncController {
     if (config.host) {
-        const client = getClientForHostAndProtocol(config.host, user, config.connectionProtocol);
-        return new TimeSyncController(new CausalRepoClientTimeSyncConnection(client));
+        const client = getClientForHostAndProtocol(
+            config.host,
+            user,
+            config.connectionProtocol
+        );
+        return new TimeSyncController(
+            new CausalRepoClientTimeSyncConnection(client)
+        );
     }
 
     return undefined;

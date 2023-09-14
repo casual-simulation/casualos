@@ -1,4 +1,4 @@
-import { createBot } from '../bots/BotCalculations';
+import { createBot } from './BotCalculations';
 import {
     apply,
     applyEdit,
@@ -13,7 +13,7 @@ import {
     remoteEdits,
     updates,
 } from './AuxStateHelpers';
-import { Bot } from '../bots/Bot';
+import { Bot } from './Bot';
 
 describe('AuxStateHelpers', () => {
     describe('apply()', () => {

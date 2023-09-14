@@ -13,7 +13,6 @@
     "references": [
         { "path": "../aux-common" },
         { "path": "../aux-records" },
-        { "path": "../causal-trees" },
         { "path": "../crypto" },
         { "path": "../fast-json-stable-stringify" },
         { "path": "../expect" }

@@ -357,7 +357,7 @@ import {
     remote as calcRemote,
     DeviceSelector,
     RemoteAction,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { RanOutOfEnergyError } from './AuxResults';
 import '@casual-simulation/aux-common/polyfill/Array.first.polyfill';
 import '@casual-simulation/aux-common/polyfill/Array.last.polyfill';
@@ -388,14 +388,13 @@ import {
     isAsymmetricEncrypted,
     isEncrypted,
 } from '@casual-simulation/crypto';
-import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2/AuxOpTypes';
 import {
     apply,
     del,
     insert,
     isTagEdit,
     preserve,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import {
     Euler,
     Vector3 as ThreeVector3,

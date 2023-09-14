@@ -26,11 +26,8 @@ import {
 } from 'rxjs/operators';
 import { values } from 'lodash';
 import { BotHelper } from './BotHelper';
-import {
-    isTagEdit,
-    TagEditOp,
-} from '@casual-simulation/aux-common/aux-format-2';
-import { VersionVector } from '@casual-simulation/causal-trees';
+import { isTagEdit, TagEditOp } from '@casual-simulation/aux-common/bots';
+import { VersionVector } from '@casual-simulation/aux-common';
 import {
     RuntimeStateVersion,
     updateRuntimeVersion,

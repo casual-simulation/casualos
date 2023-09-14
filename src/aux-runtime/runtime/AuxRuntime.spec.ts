@@ -113,7 +113,7 @@ import {
     device,
     deviceResult,
     deviceError,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { possibleTagValueCases } from '@casual-simulation/aux-common/bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
@@ -133,8 +133,7 @@ import {
     edit,
     insert,
     preserve,
-    tagValueHash,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { flatMap, pickBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
@@ -209,7 +208,6 @@ describe('AuxRuntime', () => {
                         [<any>'delayed', RealtimeEditMode.Delayed],
                     ])
                 ),
-                undefined,
                 undefined,
                 undefined,
                 interpreter
@@ -9645,157 +9643,6 @@ describe('AuxRuntime', () => {
             });
         });
 
-        describe('forceSignedScripts', () => {
-            beforeEach(() => {
-                runtime = new AuxRuntime(
-                    version,
-                    auxDevice,
-                    undefined,
-                    new DefaultRealtimeEditModeProvider(
-                        new Map<BotSpace, RealtimeEditMode>([
-                            ['shared', RealtimeEditMode.Immediate],
-                            [<any>'delayed', RealtimeEditMode.Delayed],
-                        ])
-                    ),
-                    true
-                );
-
-                events = [];
-                allEvents = [];
-                errors = [];
-                allErrors = [];
-
-                runtime.onActions.subscribe((a) => {
-                    events.push(a);
-                    allEvents.push(...a);
-                });
-                runtime.onErrors.subscribe((e) => {
-                    errors.push(e);
-                    allErrors.push(...e);
-                });
-            });
-
-            it('should only allow scripts that have signatures', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            script: '@os.toast("abc")',
-                        }),
-                        test2: {
-                            id: 'test2',
-                            tags: {
-                                script: '@os.toast("def")',
-                            },
-                            signatures: {
-                                [tagValueHash(
-                                    'test2',
-                                    'script',
-                                    '@os.toast("def")'
-                                )]: 'script',
-                            },
-                        },
-                    })
-                );
-
-                const result = await runtime.shout('script');
-                expect(result.actions).toEqual([toast('def')]);
-            });
-
-            it('should compile scripts that had signatures added afterwards', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            script: '@os.toast("abc")',
-                        }),
-                    })
-                );
-
-                const hash = tagValueHash('test', 'script', '@os.toast("abc")');
-
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            signatures: {
-                                [hash]: 'script',
-                            },
-                        },
-                    })
-                );
-
-                const result = await runtime.shout('script');
-                expect(result.actions).toEqual([toast('abc')]);
-            });
-
-            it('should remove scripts that had signatures removed afterwards', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            id: 'test',
-                            tags: {
-                                script: '@os.toast("def")',
-                            },
-                            signatures: {
-                                [tagValueHash(
-                                    'test',
-                                    'script',
-                                    '@os.toast("def")'
-                                )]: 'script',
-                            },
-                        },
-                    })
-                );
-
-                const hash = tagValueHash('test', 'script', '@os.toast("def")');
-
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            signatures: {
-                                [hash]: null,
-                            },
-                        },
-                    })
-                );
-
-                const result = await runtime.shout('script');
-                expect(result.actions).toEqual([]);
-            });
-
-            it('should allow scripts on tempLocal bots', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot(
-                            'test',
-                            {
-                                script: '@os.toast("abc")',
-                            },
-                            'tempLocal'
-                        ),
-                    })
-                );
-
-                const result = await runtime.shout('script');
-                expect(result.actions).toEqual([toast('abc')]);
-            });
-
-            it('should allow scripts on local bots', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot(
-                            'test',
-                            {
-                                script: '@os.toast("abc")',
-                            },
-                            'local'
-                        ),
-                    })
-                );
-
-                const result = await runtime.shout('script');
-                expect(result.actions).toEqual([toast('abc')]);
-            });
-        });
-
         describe('os.createDebugger()', () => {
             it('should return a promise that resolves with an object that contains library functions', async () => {
                 runtime.stateUpdated(
@@ -11715,7 +11562,6 @@ describe('AuxRuntime', () => {
                         [<any>'delayed', RealtimeEditMode.Delayed],
                     ])
                 ),
-                undefined,
                 undefined,
                 undefined,
                 interpreter

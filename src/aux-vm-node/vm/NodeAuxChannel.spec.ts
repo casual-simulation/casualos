@@ -4,7 +4,7 @@ import {
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     SERVER_ROLE,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import {
     MemoryPartition,
     createMemoryPartition,

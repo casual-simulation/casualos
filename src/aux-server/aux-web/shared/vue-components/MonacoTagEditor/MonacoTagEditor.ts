@@ -36,7 +36,7 @@ import {
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
 import { filter, flatMap, tap } from 'rxjs/operators';
-import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2';
+import { tagValueHash } from '@casual-simulation/aux-common/bots';
 import { ScriptPrefix } from '@casual-simulation/aux-vm';
 import { getActiveTheme } from '../utils';
 import CodeToolsPortal from '../CodeToolsPortal/CodeToolsPortal';

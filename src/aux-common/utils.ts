@@ -97,14 +97,6 @@ export function shortUuid() {
 }
 
 /**
- * Parses the given RealtimeChannelInfo ID to the ID of the aux.
- * @param id The id to parse.
- */
-export function parseRealtimeChannelId(id: string): string {
-    return id.substring(4);
-}
-
-/**
  * Converts the given string from dot case (dot.case) to camel case (camelCase).
  * @param dotCase The string to convert.
  */

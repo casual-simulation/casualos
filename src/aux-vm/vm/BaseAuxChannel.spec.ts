@@ -1,42 +1,30 @@
 import { BaseAuxChannel } from './BaseAuxChannel';
 import {
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
     RemoteAction,
     DeviceAction,
     remote,
-    DeviceInfo,
+    ConnectionInfo,
     Action,
     CurrentVersion,
     StatusUpdate,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import {
     createBot,
     botAdded,
-    browseHistory,
     MemoryPartition,
     createMemoryPartition,
     MemoryPartitionConfig,
     PartitionConfig,
     AuxPartition,
     createAuxPartition,
-    SearchPartitionClientConfig,
-    MemoryBotClient,
     StateUpdatedEvent,
     createPrecalculatedBot,
-    BotAction,
     toast,
-    createBotClientPartition,
     AuxPartitions,
     action,
-    Bot,
-    runScript,
     stateUpdatedEvent,
-    createCausalRepoPartition,
     MemoryPartitionImpl,
     MemoryPartitionStateConfig,
-    LocalActions,
     asyncResult,
     botUpdated,
 } from '@casual-simulation/aux-common';
@@ -54,11 +42,7 @@ import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
 import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
-import {
-    edit,
-    insert,
-    preserve,
-} from '@casual-simulation/aux-common/aux-format-2';
+import { edit, insert, preserve } from '@casual-simulation/aux-common/bots';
 import { AuxSubChannel } from './AuxChannel';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -71,7 +55,7 @@ console.error = jest.fn();
 describe('BaseAuxChannel', () => {
     let channel: AuxChannelImpl;
     let user: AuxUser;
-    let device: DeviceInfo;
+    let device: ConnectionInfo;
     let config: AuxConfig;
     let memory: MemoryPartition;
 
@@ -1805,13 +1789,13 @@ describe('BaseAuxChannel', () => {
 class AuxChannelImpl extends BaseAuxChannel {
     remoteEvents: RemoteAction[];
 
-    private _device: DeviceInfo;
+    private _device: ConnectionInfo;
 
     get runtime() {
         return this._runtime;
     }
 
-    constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
+    constructor(user: AuxUser, device: ConnectionInfo, config: AuxConfig) {
         super(user, config, {});
         this._device = device;
         this.remoteEvents = [];

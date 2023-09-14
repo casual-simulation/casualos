@@ -34,7 +34,7 @@ import {
     ProgressManager,
 } from '@casual-simulation/aux-vm/managers';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
-import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { ConsoleMessages } from '@casual-simulation/aux-common';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { pickBy } from 'lodash';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';

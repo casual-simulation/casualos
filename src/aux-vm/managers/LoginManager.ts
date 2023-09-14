@@ -1,8 +1,8 @@
 import {
     LoginErrorReason,
     StatusUpdate,
-    DeviceInfo,
-} from '@casual-simulation/causal-trees';
+    ConnectionInfo,
+} from '@casual-simulation/aux-common';
 import { Observable, SubscriptionLike, Subscription } from 'rxjs';
 import { AuxVM } from '../vm/AuxVM';
 import {
@@ -23,7 +23,7 @@ export class LoginManager implements SubscriptionLike {
     private _sub: Subscription;
     private _loginStateChanged: Observable<LoginState>;
     private _userChanged: Observable<AuxUser>;
-    private _deviceChanged: Observable<DeviceInfo>;
+    private _deviceChanged: Observable<ConnectionInfo>;
 
     get loginStateChanged(): Observable<LoginState> {
         return this._loginStateChanged;
@@ -33,7 +33,7 @@ export class LoginManager implements SubscriptionLike {
         return this._userChanged;
     }
 
-    get deviceChanged(): Observable<DeviceInfo> {
+    get deviceChanged(): Observable<ConnectionInfo> {
         return this._deviceChanged;
     }
 
@@ -111,7 +111,7 @@ export interface LoginState {
     authorized: boolean;
 
     user?: AuxUser;
-    info?: DeviceInfo;
+    info?: ConnectionInfo;
     authenticationError?: LoginErrorReason;
     authorizationError?: LoginErrorReason;
 }

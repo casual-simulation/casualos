@@ -6,7 +6,6 @@ import {
 import { MemoryWebsocketConnectionStore } from './MemoryWebsocketConnectionStore';
 import { DeviceConnection } from './WebsocketConnectionStore';
 import { MemoryWebsocketMessenger } from './MemoryWebsocketMessenger';
-import { RATE_LIMIT_EXCEEDED } from '@casual-simulation/causal-trees';
 import {
     action,
     botAdded,
@@ -2344,7 +2343,7 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    type: RATE_LIMIT_EXCEEDED,
+                    type: 'rate_limit_exceeded',
                     retryAfter: 1000,
                     totalHits: 10,
                 },
@@ -2400,7 +2399,7 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    type: RATE_LIMIT_EXCEEDED,
+                    type: 'rate_limit_exceeded',
                     retryAfter: 1000,
                     totalHits: 10,
                 },

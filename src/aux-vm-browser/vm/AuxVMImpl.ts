@@ -24,7 +24,7 @@ import {
     remapProgressPercent,
     DeviceAction,
     CurrentVersion,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import Bowser from 'bowser';
 import axios from 'axios';
 import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';

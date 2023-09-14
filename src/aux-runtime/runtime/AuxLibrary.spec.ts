@@ -233,7 +233,7 @@ import {
     getFile,
     listUserStudios,
 } from './RecordsEvents';
-import { remote } from '@casual-simulation/causal-trees';
+import { remote } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import {
     TestScriptBotFactory,
@@ -253,7 +253,6 @@ import {
     decryptV1,
     keypair,
 } from '@casual-simulation/crypto';
-import { CERTIFIED_SPACE } from '@casual-simulation/aux-common/aux-format-2/AuxWeaveReducer';
 import {
     del,
     edit,
@@ -261,7 +260,7 @@ import {
     preserve,
     remoteEdit,
     tagValueHash,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import {

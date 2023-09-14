@@ -4,7 +4,7 @@ import {
     RemoteSimulationImpl,
 } from '@casual-simulation/aux-vm-client';
 import { AuxVMNode } from '../vm/AuxVMNode';
-import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
+import { CausalRepoClient } from '@casual-simulation/aux-common/core2';
 import { AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
     CausalRepoClientPartitionConfig,

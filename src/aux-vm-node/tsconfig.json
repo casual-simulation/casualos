@@ -15,7 +15,6 @@
         { "path": "../aux-runtime" },
         { "path": "../aux-vm" },
         { "path": "../aux-vm-client" },
-        { "path": "../crypto-node" },
-        { "path": "../causal-tree-server" }
+        { "path": "../crypto-node" }
     ]
 }

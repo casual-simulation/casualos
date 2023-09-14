@@ -14,28 +14,6 @@
         "src/aux-vm-node/**/*.d.ts": { "when": "$(basename).ts" },
         "src/aux-vm-browser/**/*.d.ts": { "when": "$(basename).ts" },
         "src/aux-vm-deno/**/*.d.ts": { "when": "$(basename).ts" },
-        "src/causal-trees/**/*.d.ts": { "when": "$(basename).ts" },
-        "src/causal-tree-server/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
-        "src/causal-tree-server-websocket/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
-        "src/causal-tree-client-websocket/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
-        "src/causal-tree-client-apiary/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
-        "src/causal-tree-store-mongodb/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
-        "src/causal-tree-store-cassandradb/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
-        "src/causal-tree-store-browser/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
         "src/crypto/**/*.d.ts": { "when": "$(basename).ts" },
         "src/multi-streams-mixer/**/*.d.ts": { "when": "$(basename).ts" },
         "src/crypto-browser/**/*.d.ts": { "when": "$(basename).ts" },

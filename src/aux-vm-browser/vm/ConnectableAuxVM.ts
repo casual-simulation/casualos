@@ -16,7 +16,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
+import { DeviceAction, StatusUpdate } from '@casual-simulation/aux-common';
 import { proxy, releaseProxy, Remote, wrap } from 'comlink';
 import { Observable, Subject, Subscription } from 'rxjs';
 

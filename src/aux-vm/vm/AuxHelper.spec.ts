@@ -32,7 +32,7 @@ import {
     RuntimeActions,
     ScriptError,
 } from '@casual-simulation/aux-runtime';
-import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
+import { bot, tag, value } from '@casual-simulation/aux-common/bots';
 import { AuxHelper } from './AuxHelper';
 import {
     DeviceAction,
@@ -51,7 +51,7 @@ import {
     remoteError,
     AUTHENTICATE_BRANCH_WRITES,
     SET_BRANCH_PASSWORD,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import {
     waitAsync,

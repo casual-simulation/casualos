@@ -1,12 +1,12 @@
 import { AuxVMNode } from './AuxVMNode';
 import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 import {
-    DeviceInfo,
+    ConnectionInfo,
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     SERVER_ROLE,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from './NodeAuxChannel';
 import {
     MemoryPartition,
@@ -19,7 +19,7 @@ describe('AuxVMNode', () => {
     let memory: MemoryPartition;
     let config: AuxConfig;
     let user: AuxUser;
-    let device: DeviceInfo;
+    let device: ConnectionInfo;
     let vm: AuxVMNode;
     let channel: NodeAuxChannel;
     beforeEach(async () => {

@@ -18,7 +18,6 @@ import {
     botUpdated,
 } from '../bots';
 import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
-import { bot, tag, value, deleteOp, tagMask } from '../aux-format-2';
 import { waitAsync, wait } from '../test/TestHelpers';
 import { takeWhile, bufferCount, skip } from 'rxjs/operators';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';

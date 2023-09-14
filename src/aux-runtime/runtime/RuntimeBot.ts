@@ -15,7 +15,7 @@ import {
     mergeEdits,
     remoteEdit,
     TagEditOp,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import {
     BotSpace,
     BotTags,

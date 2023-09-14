@@ -24,13 +24,7 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
-import {
-    applyTagEdit,
-    edits,
-    isTagEdit,
-    TagEdit,
-    TagEditOp,
-} from '../aux-format-2';
+import { applyTagEdit, edits, isTagEdit, TagEdit, TagEditOp } from '../bots';
 import { v4 as uuid } from 'uuid';
 import {
     ensureBotIsSerializable,

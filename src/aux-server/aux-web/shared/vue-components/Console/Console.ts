@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { messages } from '../../Console';
-import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { ConsoleMessages } from '@casual-simulation/aux-common';
 import ConsoleMessage from '../ConsoleMessage/ConsoleMessage';
 import { Prop } from 'vue-property-decorator';
 
@@ -22,7 +22,7 @@ export default class Console extends Vue {
 
     get filteredMessages() {
         return this.consoleMessages.filter(
-            m => this.selectedSources.indexOf(m.source) >= 0
+            (m) => this.selectedSources.indexOf(m.source) >= 0
         );
     }
 
@@ -38,7 +38,7 @@ export default class Console extends Vue {
     }
 
     created() {
-        this._sub = messages.subscribe(m => {
+        this._sub = messages.subscribe((m) => {
             this.consoleMessages.unshift(m);
             if (this.sources.indexOf(m.source) < 0) {
                 this.sources.push(m.source);

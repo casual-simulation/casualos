@@ -18,10 +18,7 @@ import {
 } from '../RuntimeBot';
 import { createCompiledBot, CompiledBot } from '../CompiledBot';
 import { pickBy } from 'lodash';
-import {
-    applyTagEdit,
-    isTagEdit,
-} from '@casual-simulation/aux-common/aux-format-2';
+import { applyTagEdit, isTagEdit } from '@casual-simulation/aux-common/bots';
 import { RuntimeActions } from '../RuntimeEvents';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {

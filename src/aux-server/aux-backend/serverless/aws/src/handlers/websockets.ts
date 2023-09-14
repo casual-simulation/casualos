@@ -13,7 +13,7 @@ import {
     UNWATCH_BRANCH_DEVICES,
     WATCH_BRANCH,
     WATCH_BRANCH_DEVICES,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import {
     MESSAGES_BUCKET_NAME,
     downloadObject,

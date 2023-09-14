@@ -79,7 +79,7 @@ import {
     mergeVersions,
     preserve,
     TagEditOp,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import { Color } from '@casual-simulation/three';
 import { invertColor } from './scene/ColorUtils';
 import {

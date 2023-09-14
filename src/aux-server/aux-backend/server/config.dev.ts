@@ -15,14 +15,15 @@ export default function (): Config {
             proxy: {
                 trust: 'loopback',
             },
-            dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
-            drives: path.resolve(__dirname, '..', '..', 'drives'),
+            dist: path.resolve(__dirname, '..', '..', '..', 'aux-web', 'dist'),
+            drives: path.resolve(__dirname, '..', '..', '..', 'drives'),
             debug: false,
         },
         backend: {
             httpPort: 2998,
             dist: path.resolve(
                 __dirname,
+                '..',
                 '..',
                 '..',
                 'aux-web',

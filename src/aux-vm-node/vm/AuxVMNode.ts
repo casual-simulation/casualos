@@ -17,7 +17,7 @@ import {
     LoadingProgressCallback,
     StatusUpdate,
     DeviceAction,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
 import {
     RuntimeActions,

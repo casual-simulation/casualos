@@ -51,7 +51,7 @@ import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
-import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
+import { ConnectionInfo, ADMIN_ROLE } from '@casual-simulation/aux-common';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import VueBarcode from '../../shared/public/VueBarcode';
@@ -266,7 +266,7 @@ export default class PlayerApp extends Vue {
     chatBarPlaceholderColor: string = null;
 
     showConsole: boolean = false;
-    loginInfo: DeviceInfo = null;
+    loginInfo: ConnectionInfo = null;
     loginState: LoginState = null;
 
     streamImu: boolean = false;

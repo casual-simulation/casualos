@@ -40,7 +40,7 @@ import {
     DeviceAction,
     RemoteActionResult,
     RemoteActions,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { union, sortBy, pick, transform } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';

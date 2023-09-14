@@ -4,11 +4,11 @@ import { first } from 'rxjs/operators';
 import { AuxUser } from '../AuxUser';
 import {
     USERNAME_CLAIM,
-    DeviceInfo,
+    ConnectionInfo,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     User,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { Bot } from '@casual-simulation/aux-common';
 
 describe('LoginManager', () => {
@@ -133,8 +133,8 @@ describe('LoginManager', () => {
 
             let user1: User;
             let user2: User;
-            let sub1 = subject.userChanged.subscribe(user => (user1 = user));
-            let sub2 = subject.userChanged.subscribe(user => (user2 = user));
+            let sub1 = subject.userChanged.subscribe((user) => (user1 = user));
+            let sub2 = subject.userChanged.subscribe((user) => (user2 = user));
 
             expect(user1).toEqual({
                 id: 'id',
@@ -152,7 +152,7 @@ describe('LoginManager', () => {
 
         it('should only resolve when the user changes', async () => {
             let users: AuxUser[] = [];
-            subject.userChanged.subscribe(u => users.push(u));
+            subject.userChanged.subscribe((u) => users.push(u));
 
             let user = {
                 id: 'id',
@@ -225,10 +225,10 @@ describe('LoginManager', () => {
         });
 
         it('should only resolve when the user changes', async () => {
-            let devices: DeviceInfo[] = [];
-            subject.deviceChanged.subscribe(u => devices.push(u));
+            let devices: ConnectionInfo[] = [];
+            subject.deviceChanged.subscribe((u) => devices.push(u));
 
-            let device: DeviceInfo = {
+            let device: ConnectionInfo = {
                 claims: {
                     [USERNAME_CLAIM]: 'test',
                     [DEVICE_ID_CLAIM]: 'deviceId',

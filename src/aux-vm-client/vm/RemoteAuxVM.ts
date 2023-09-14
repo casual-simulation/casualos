@@ -18,7 +18,7 @@ import {
     DeviceAction,
     remapProgressPercent,
     StatusUpdate,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { proxy, Remote, createEndpoint } from 'comlink';
 import {

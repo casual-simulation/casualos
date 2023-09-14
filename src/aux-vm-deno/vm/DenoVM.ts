@@ -22,7 +22,7 @@ import {
     StatusUpdate,
     remapProgressPercent,
     DeviceAction,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';

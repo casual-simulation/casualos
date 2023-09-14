@@ -1,4 +1,4 @@
-import { VersionVector } from '@casual-simulation/causal-trees';
+import { VersionVector } from '@casual-simulation/aux-common';
 import {
     createAbsolutePositionFromRelativePosition,
     createID,

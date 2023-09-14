@@ -6,7 +6,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
-import { DeviceAction } from '@casual-simulation/causal-trees';
+import { DeviceAction } from '@casual-simulation/aux-common';
 import { Initable } from './Initable';
 import { BotHelper } from './BotHelper';
 import { ConnectionManager } from './ConnectionManager';

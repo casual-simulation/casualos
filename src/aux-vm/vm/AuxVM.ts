@@ -4,7 +4,7 @@ import {
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
+import { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';

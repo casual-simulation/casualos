@@ -1,9 +1,3 @@
-import {
-    BotAction,
-    StateUpdatedEvent,
-    StoredAux,
-} from '@casual-simulation/aux-common';
-import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
@@ -12,6 +6,13 @@ import {
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
+import {
+    BotAction,
+    DeviceAction,
+    StateUpdatedEvent,
+    StatusUpdate,
+    StoredAux,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for the static members of an AUX.

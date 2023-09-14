@@ -17,7 +17,7 @@ import {
     StatusUpdate,
     Action,
     CurrentVersion,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { wrap, proxy, releaseProxy, Remote } from 'comlink';
 import { startWith } from 'rxjs/operators';

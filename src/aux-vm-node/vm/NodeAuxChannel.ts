@@ -1,8 +1,8 @@
 import {
     ADMIN_ROLE,
     RemoteAction,
-    DeviceInfo,
-} from '@casual-simulation/causal-trees';
+    ConnectionInfo,
+} from '@casual-simulation/aux-common';
 import {
     PartitionConfig,
     AuxPartition,
@@ -16,13 +16,13 @@ import { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _remoteEvents: Subject<RemoteAction[]>;
-    private _device: DeviceInfo;
+    private _device: ConnectionInfo;
 
     get remoteEvents(): Observable<RemoteAction[]> {
         return this._remoteEvents;
     }
 
-    constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
+    constructor(user: AuxUser, device: ConnectionInfo, config: AuxConfig) {
         super(user, config, {});
         this._device = device;
         this._remoteEvents = new Subject<RemoteAction[]>();

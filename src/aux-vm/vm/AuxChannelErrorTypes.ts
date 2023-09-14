@@ -1,4 +1,4 @@
-import { LoginError } from '@casual-simulation/causal-trees';
+import { LoginError } from '@casual-simulation/aux-common';
 
 export type AuxChannelErrorType = LoginError | AuxGeneralErrorType;
 
