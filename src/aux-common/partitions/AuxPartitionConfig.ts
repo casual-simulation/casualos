@@ -1,4 +1,4 @@
-import { InstRecordsClient } from 'websockets';
+import { InstRecordsClient } from '../websockets';
 import { BotsState } from '../bots';
 import {
     AuxPartition,
