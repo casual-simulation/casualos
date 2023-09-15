@@ -97,6 +97,7 @@ export class WebsocketController {
         try {
             let userId: string | null = null;
             let sessionId: string | null = null;
+            let clientConnectionId: string | null;
             if (!message.connectionToken) {
                 if (!message.clientConnectionId) {
                     await this._messenger.sendEvent(connectionId, [
@@ -116,6 +117,7 @@ export class WebsocketController {
                     sessionId: null,
                     token: null,
                 });
+                clientConnectionId = message.clientConnectionId;
             } else {
                 const validationResult =
                     await this._auth.validateConnectionToken(
@@ -141,6 +143,7 @@ export class WebsocketController {
                 });
                 userId = validationResult.userId;
                 sessionId = validationResult.sessionId;
+                clientConnectionId = validationResult.connectionId;
             }
 
             await this._messenger.sendMessage([connectionId], {
@@ -148,7 +151,7 @@ export class WebsocketController {
                 info: {
                     userId,
                     sessionId,
-                    connectionId,
+                    connectionId: clientConnectionId,
                 },
             });
         } catch (err) {
