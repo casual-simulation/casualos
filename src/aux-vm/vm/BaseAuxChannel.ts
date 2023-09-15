@@ -633,9 +633,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected async _handleStatusUpdated(state: StatusUpdate) {
+        if (state.type === 'progress') {
+            console.log(
+                `[BaseAuxChannel] Loading Progress (${
+                    state.progress * 100
+                }%): ${state.message}`
+            );
+        }
         if (state.type === 'authentication') {
+            console.log(
+                `[BaseAuxChannel] Authentication (${state.authenticated}):`,
+                state.info
+            );
             this._deviceInfo = state.info;
         } else if (state.type === 'sync' && state.synced) {
+            console.log(`[BaseAuxChannel] Sync (${state.synced})`);
             await this._ensureSetup();
         }
 

@@ -109,6 +109,7 @@ export class AppManager {
             );
             return new BotManager(
                 this.indicator,
+                origin,
                 id,
                 config,
                 new AuxVMImpl(this.indicator, {

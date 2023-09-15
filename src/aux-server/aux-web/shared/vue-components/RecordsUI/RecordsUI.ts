@@ -308,7 +308,7 @@ export default class RecordsUI extends Vue {
                     this.completedGrantInstAdminPermission = false;
                     this.grantInstPermissionEvent = e;
                     this.allowRecordName = e.recordName;
-                    this.grantInstId = sim.id;
+                    this.grantInstId = sim.inst;
                 }
             })
         );

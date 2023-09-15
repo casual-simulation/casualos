@@ -56,6 +56,10 @@ export function nodeSimulationForBranch(
     };
     return new RemoteSimulationImpl(
         branch,
+        {
+            recordName: null,
+            inst: null,
+        },
         new AuxVMNode(
             new RemoteAuxChannel(
                 indicator,
@@ -80,6 +84,10 @@ export function nodeSimulationForLocalRepo(
     };
     return new RemoteSimulationImpl(
         id,
+        {
+            recordName: null,
+            inst: null,
+        },
         new AuxVMNode(
             new RemoteAuxChannel(
                 indicator,
@@ -100,6 +108,10 @@ export function nodeSimulationWithConfig(
 ) {
     return new RemoteSimulationImpl(
         id,
+        {
+            recordName: null,
+            inst: null,
+        },
         new AuxVMNode(new RemoteAuxChannel(indicator, config, {}))
     );
 }

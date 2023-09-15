@@ -11,6 +11,10 @@ appManager.simulationFactory = (id, origin, config) => {
     );
     return new PlaywrightSimulation(
         appManager.indicator,
+        {
+            recordName: null,
+            inst: null,
+        },
         id,
         config,
         new AuxVMImpl(appManager.indicator, {

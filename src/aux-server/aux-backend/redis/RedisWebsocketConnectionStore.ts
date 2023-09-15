@@ -1,6 +1,7 @@
 import { RedisClient } from 'redis';
 import { promisify } from 'util';
 import {
+    BranchConnectionMode,
     DeviceBranchConnection,
     DeviceConnection,
     WebsocketConnectionStore,
@@ -63,6 +64,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         await this.hset([
             branchConnectionsKey(
                 this._globalNamespace,
+                connection.mode,
                 connection.recordName,
                 connection.inst,
                 connection.branch
@@ -86,6 +88,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
 
     async deleteBranchConnection(
         connectionId: string,
+        mode: BranchConnectionMode,
         recordName: string,
         inst: string,
         branch: string
@@ -93,6 +96,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         await this.hdel([
             branchConnectionsKey(
                 this._globalNamespace,
+                mode,
                 recordName,
                 inst,
                 branch
@@ -144,6 +148,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     }
 
     async getConnectionsByBranch(
+        mode: BranchConnectionMode,
         recordName: string,
         inst: string,
         branch: string
@@ -151,6 +156,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         const values = await this.hvals(
             branchConnectionsKey(
                 this._globalNamespace,
+                mode,
                 recordName,
                 inst,
                 branch
@@ -161,6 +167,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     }
 
     async countConnectionsByBranch(
+        mode: BranchConnectionMode,
         recordName: string,
         inst: string,
         branch: string
@@ -168,6 +175,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         const count = await this.hlen(
             branchConnectionsKey(
                 this._globalNamespace,
+                mode,
                 recordName,
                 inst,
                 branch
@@ -189,6 +197,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
 
     async getBranchConnection(
         connectionId: string,
+        mode: BranchConnectionMode,
         recordName: string,
         inst: string,
         branch: string
@@ -196,6 +205,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         const connectionJson = await this.hget(
             branchConnectionsKey(
                 this._globalNamespace,
+                mode,
                 recordName,
                 inst,
                 branch
@@ -258,11 +268,12 @@ function connectionsKey(globalNamespace: string) {
 
 function branchConnectionsKey(
     globalNamespace: string,
+    mode: BranchConnectionMode,
     recordName: string,
     inst: string,
     branch: string
 ) {
-    return `/${globalNamespace}/namespace_connections/${
+    return `/${globalNamespace}//namespace_connections/${mode}/${
         recordName ?? ''
     }/${inst}/${branch}`;
 }

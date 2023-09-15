@@ -17,7 +17,7 @@ import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { DeviceAction } from '@casual-simulation/aux-common';
-import { Simulation } from './Simulation';
+import { Simulation, SimulationOrigin } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
 import { RuntimeActions } from '@casual-simulation/aux-runtime';
@@ -196,7 +196,7 @@ export class BaseSimulation implements Simulation {
         await this._vm.init();
         this._afterVmInit();
 
-        this._setStatus('Initialized.');
+        this._setStatus('VM Initialized.');
     }
 
     /**

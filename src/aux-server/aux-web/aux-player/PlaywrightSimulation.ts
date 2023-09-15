@@ -48,7 +48,10 @@ import { filter, tap } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/aux-common';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
-import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
+import {
+    AuthHelperInterface,
+    SimulationOrigin,
+} from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -67,6 +70,19 @@ export class PlaywrightSimulation
     private _recordsManager: RecordsManager;
     private _livekitManager: LivekitManager;
     private _config: AuxConfig['config'];
+    private _origin: SimulationOrigin;
+
+    get origin() {
+        return this._origin;
+    }
+
+    get inst() {
+        return this._origin.inst ?? this.id;
+    }
+
+    get recordName() {
+        return this._origin.recordName;
+    }
 
     /**
      * Gets the bots panel manager.
@@ -164,11 +180,13 @@ export class PlaywrightSimulation
 
     constructor(
         indicator: ConnectionIndicator,
+        origin: SimulationOrigin,
         id: string,
         config: AuxConfig['config'],
         vm: AuxVM
     ) {
         super(id, vm);
+        this._origin = origin;
         this._config = config;
         this.helper.userId = getConnectionId(indicator);
 
@@ -289,6 +307,10 @@ export class PlaywrightSimulation
     ) {
         return new PlaywrightSimulation(
             indicator,
+            {
+                recordName: null,
+                inst: null,
+            },
             id,
             {
                 version: this._config.version,

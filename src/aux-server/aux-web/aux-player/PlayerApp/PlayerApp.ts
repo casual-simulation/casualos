@@ -1221,11 +1221,11 @@ export default class PlayerApp extends Vue {
                             info.lostConnection = true;
                             await this._superAction(
                                 ON_INST_STREAM_LOST_ACTION_NAME,
-                                onServerStreamLostArg(simulation.id)
+                                onServerStreamLostArg(simulation.inst)
                             );
                             await this._superAction(
                                 ON_SERVER_STREAM_LOST_ACTION_NAME,
-                                onServerStreamLostArg(simulation.id)
+                                onServerStreamLostArg(simulation.inst)
                             );
                         }
                     } else {
@@ -1235,15 +1235,15 @@ export default class PlayerApp extends Vue {
                             info.subscribed = true;
                             await this._superAction(
                                 ON_INST_JOINED_ACTION_NAME,
-                                onServerSubscribedArg(simulation.id)
+                                onServerSubscribedArg(simulation.inst)
                             );
                             await this._superAction(
                                 ON_SERVER_JOINED_ACTION_NAME,
-                                onServerSubscribedArg(simulation.id)
+                                onServerSubscribedArg(simulation.inst)
                             );
                             await this._superAction(
                                 ON_SERVER_SUBSCRIBED_ACTION_NAME,
-                                onServerSubscribedArg(simulation.id)
+                                onServerSubscribedArg(simulation.inst)
                             );
 
                             // Send onInstJoined events for already loaded insts
@@ -1257,17 +1257,17 @@ export default class PlayerApp extends Vue {
                                 await simulation.helper.action(
                                     ON_INST_JOINED_ACTION_NAME,
                                     null,
-                                    onServerSubscribedArg(info.id)
+                                    onServerSubscribedArg(info.inst)
                                 );
                                 await simulation.helper.action(
                                     ON_SERVER_JOINED_ACTION_NAME,
                                     null,
-                                    onServerSubscribedArg(info.id)
+                                    onServerSubscribedArg(info.inst)
                                 );
                                 await simulation.helper.action(
                                     ON_SERVER_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    onServerSubscribedArg(info.id)
+                                    onServerSubscribedArg(info.inst)
                                 );
                             }
 
@@ -1294,11 +1294,11 @@ export default class PlayerApp extends Vue {
 
                         await this._superAction(
                             ON_INST_STREAMING_ACTION_NAME,
-                            onServerStreamingArg(simulation.id)
+                            onServerStreamingArg(simulation.inst)
                         );
                         await this._superAction(
                             ON_SERVER_STREAMING_ACTION_NAME,
-                            onServerStreamingArg(simulation.id)
+                            onServerStreamingArg(simulation.inst)
                         );
                     }
                 }
@@ -1322,15 +1322,15 @@ export default class PlayerApp extends Vue {
             new Subscription(async () => {
                 await this._superAction(
                     ON_INST_LEAVE_ACTION_NAME,
-                    onServerUnsubscribedArg(simulation.id)
+                    onServerUnsubscribedArg(simulation.inst)
                 );
                 await this._superAction(
                     ON_SERVER_LEAVE_ACTION_NAME,
-                    onServerUnsubscribedArg(simulation.id)
+                    onServerUnsubscribedArg(simulation.inst)
                 );
                 await this._superAction(
                     ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
-                    onServerUnsubscribedArg(simulation.id)
+                    onServerUnsubscribedArg(simulation.inst)
                 );
             })
         );

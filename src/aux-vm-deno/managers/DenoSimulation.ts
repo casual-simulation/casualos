@@ -16,6 +16,7 @@ import { DenoVM } from '../vm/DenoVM';
 import {
     PortalManager,
     ProgressManager,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
@@ -41,6 +42,19 @@ export class DenoSimulationImpl
     private _login: LoginManager;
     private _progress: ProgressManager;
     private _portals: PortalManager;
+    private _origin: SimulationOrigin;
+
+    get origin() {
+        return this._origin;
+    }
+
+    get inst() {
+        return this._origin.inst ?? this.id;
+    }
+
+    get recordName() {
+        return this._origin.recordName;
+    }
 
     get login() {
         return this._login;
@@ -94,8 +108,14 @@ export class DenoSimulationImpl
         };
     }
 
-    constructor(indicator: ConnectionIndicator, id: string, vm: DenoVM) {
+    constructor(
+        indicator: ConnectionIndicator,
+        origin: SimulationOrigin,
+        id: string,
+        vm: DenoVM
+    ) {
         super(id, vm);
+        this._origin = origin;
         this.helper.userId = getConnectionId(indicator);
 
         this._login = new LoginManager(this._vm);
