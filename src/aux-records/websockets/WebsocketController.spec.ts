@@ -169,7 +169,7 @@ describe('WebsocketController', () => {
             await server.login(serverConnectionId, 1, {
                 type: 'login',
                 connectionToken: null as any,
-                clientConnectionId: connectionId,
+                connectionId: connectionId,
             });
 
             const connection = await connectionStore.getConnection(

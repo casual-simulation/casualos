@@ -130,8 +130,6 @@
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
 
-            <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
-
             <md-snackbar
                 md-position="center"
                 :md-duration="snackbar.duration != undefined ? snackbar.duration : 2000"

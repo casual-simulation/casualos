@@ -48,6 +48,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         if (tempResult) {
             const { branchSizeInBytes, ...result } = tempResult;
             return result;
+        } else if (!recordName) {
+            return null;
         }
 
         const info = await this._permanent.getBranchByName(
@@ -63,8 +65,13 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     }
 
     async saveInst(inst: InstWithBranches): Promise<void> {
-        await this._permanent.saveInst(inst);
-        await this._temp.deleteAllInstBranchInfo(inst.recordName, inst.inst);
+        if (inst.recordName) {
+            await this._permanent.saveInst(inst);
+            await this._temp.deleteAllInstBranchInfo(
+                inst.recordName,
+                inst.inst
+            );
+        }
     }
 
     async saveBranch(branch: BranchRecord): Promise<void> {
@@ -225,10 +232,16 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string
     ): Promise<void> {
-        await Promise.all([
+        let promises = [
             this._temp.deleteBranch(recordName, inst, branch),
-            this._permanent.deleteBranch(recordName, inst, branch),
-        ]);
+        ] as Promise<any>[];
+
+        if (recordName) {
+            promises.push(
+                this._permanent.deleteBranch(recordName, inst, branch)
+            );
+        }
+        await Promise.all(promises);
     }
 
     async replaceCurrentUpdates(

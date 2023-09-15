@@ -172,12 +172,12 @@ export interface LoginMessage {
      * The ID that the client wants to use for the connection.
      * Must be unique.
      */
-    clientConnectionId?: string;
+    connectionId?: string;
 }
 export const loginMessageSchema = z.object({
     type: z.literal('login'),
     connectionToken: z.string().optional(),
-    clientConnectionId: z.string().optional(),
+    connectionId: z.string().optional(),
 });
 type ZodLoginMessage = z.infer<typeof loginMessageSchema>;
 type ZodLoginMessageAssertion = HasType<ZodLoginMessage, LoginMessage>;

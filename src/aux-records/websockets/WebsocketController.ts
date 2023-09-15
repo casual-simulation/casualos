@@ -99,7 +99,7 @@ export class WebsocketController {
             let sessionId: string | null = null;
             let clientConnectionId: string | null;
             if (!message.connectionToken) {
-                if (!message.clientConnectionId) {
+                if (!message.connectionId) {
                     await this._messenger.sendEvent(connectionId, [
                         WebsocketEventTypes.Error,
                         requestId,
@@ -112,12 +112,12 @@ export class WebsocketController {
 
                 await this._connectionStore.saveConnection({
                     serverConnectionId: connectionId,
-                    clientConnectionId: message.clientConnectionId,
+                    clientConnectionId: message.connectionId,
                     userId: null,
                     sessionId: null,
                     token: null,
                 });
-                clientConnectionId = message.clientConnectionId;
+                clientConnectionId = message.connectionId;
             } else {
                 const validationResult =
                     await this._auth.validateConnectionToken(

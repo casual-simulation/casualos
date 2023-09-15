@@ -113,7 +113,6 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
             namespaces.map((n) =>
                 this.hdel([
                     `/${this._globalNamespace}/namespace_connections/${n}`,
-                    ,
                     connectionId,
                 ])
             )

@@ -143,6 +143,28 @@ describe('SplitInstRecordsStore', () => {
             );
             expect(result).toBeNull();
         });
+
+        it('should return null if the recordName is null and does not exist in the temp store', async () => {
+            await perm.saveInst({
+                recordName: null,
+                inst: instName,
+                markers: [PUBLIC_READ_MARKER],
+            });
+            await perm.saveBranch({
+                recordName: null,
+                inst: instName,
+                branch: branchName,
+                temporary: false,
+            });
+
+            const result = await store.getBranchByName(
+                null,
+                instName,
+                branchName
+            );
+
+            expect(result).toEqual(null);
+        });
     });
 
     describe('saveInst()', () => {
@@ -279,7 +301,7 @@ describe('SplitInstRecordsStore', () => {
                 markers: ['test'],
             });
 
-            const result = await perm.getInstByName(recordName, instName);
+            const result = await perm.getInstByName(null as any, instName);
             expect(result).toEqual(null);
         });
     });
@@ -909,6 +931,36 @@ describe('SplitInstRecordsStore', () => {
                 timestamps: [expect.any(Number)],
                 instSizeInBytes: 3,
                 branchSizeInBytes: 3,
+            });
+        });
+
+        it('should not delete the branch from the permanent store if the record name is null', async () => {
+            await perm.saveInst({
+                recordName: null,
+                inst: instName,
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await perm.saveBranch({
+                branch: branchName,
+                inst: instName,
+                recordName: null,
+                temporary: false,
+            });
+
+            await perm.addUpdates(null, instName, branchName, ['abc'], 3);
+
+            await store.deleteBranch(null, instName, branchName);
+
+            const result = await perm.getAllUpdates(
+                null as any,
+                instName,
+                branchName
+            );
+            expect(result).toEqual({
+                updates: ['abc'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 3,
             });
         });
     });

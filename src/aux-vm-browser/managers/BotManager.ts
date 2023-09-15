@@ -124,7 +124,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         defaultHost: string = location.origin
     ): AuxPartitionConfig {
         const connectionId = getConnectionId(indicator);
-        const host = origin.host;
+        const host = origin.host ?? defaultHost;
         const protocol = config.causalRepoConnectionProtocol;
         const versions = config.sharedPartitionsVersion;
         const isCollaborative = !!config.device?.isCollaborative;
