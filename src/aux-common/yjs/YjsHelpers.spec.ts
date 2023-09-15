@@ -1,4 +1,4 @@
-import { first } from '@casual-simulation/aux-common';
+import { first } from '../common';
 import {
     applyUpdate,
     createRelativePositionFromTypeIndex,

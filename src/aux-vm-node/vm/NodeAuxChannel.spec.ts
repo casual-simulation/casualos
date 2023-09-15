@@ -1,11 +1,5 @@
 import { NodeAuxChannel } from './NodeAuxChannel';
 import {
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
-    SERVER_ROLE,
-} from '@casual-simulation/aux-common';
-import {
     MemoryPartition,
     createMemoryPartition,
 } from '@casual-simulation/aux-common';
@@ -27,18 +21,12 @@ describe('NodeAuxChannel', () => {
     function createChannel(id: string) {
         return (channel = new NodeAuxChannel(
             {
-                id: 'server',
-                name: 'Server',
-                token: 'token',
-                username: 'server',
+                connectionId: 'connectionId',
             },
             {
-                claims: {
-                    [USERNAME_CLAIM]: 'server',
-                    [DEVICE_ID_CLAIM]: 'deviceId',
-                    [SESSION_ID_CLAIM]: 'sessionId',
-                },
-                roles: [SERVER_ROLE],
+                connectionId: 'connectionId',
+                sessionId: null,
+                userId: null,
             },
             {
                 config: {

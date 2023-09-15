@@ -4,8 +4,6 @@ import {
     createBot,
     AuxPartitions,
     createMemoryPartition,
-    createBotClientPartition,
-    MemoryBotClient,
 } from '@casual-simulation/aux-common';
 
 describe('AuxPartitionRealtimeEditModeProvider', () => {
@@ -40,11 +38,9 @@ describe('AuxPartitionRealtimeEditModeProvider', () => {
             });
 
             it('should be able to return delayed modes', () => {
-                partitions[space] = createBotClientPartition({
-                    type: 'bot_client',
-                    client: new MemoryBotClient(),
-                    inst: 'server',
-                });
+                partitions[space] = {
+                    realtimeStrategy: RealtimeEditMode.Delayed,
+                } as any;
                 expect(subject.getEditMode(space)).toEqual(
                     RealtimeEditMode.Delayed
                 );
