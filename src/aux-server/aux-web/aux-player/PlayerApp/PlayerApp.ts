@@ -56,7 +56,6 @@ import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import VueBarcode from '../../shared/public/VueBarcode';
 import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
-import Checkout from '../Checkout/Checkout';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
@@ -133,7 +132,6 @@ declare function sa_event(name: string, callback: Function): void;
         'ide-portal': IdePortal,
         console: Console,
         tagline: Tagline,
-        checkout: Checkout,
         'imu-portal': ImuPortal,
         'html-portals': HtmlAppContainer,
         'system-portal': SystemPortal,

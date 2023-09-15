@@ -30,7 +30,6 @@
             <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui>
 
             <upload-files></upload-files>
-            <checkout></checkout>
             <show-input></show-input>
             <show-confirm></show-confirm>
 
