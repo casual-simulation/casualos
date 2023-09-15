@@ -24,11 +24,6 @@ describe('NodeAuxChannel', () => {
                 connectionId: 'connectionId',
             },
             {
-                connectionId: 'connectionId',
-                sessionId: null,
-                userId: null,
-            },
-            {
                 config: {
                     versionHash: 'abc',
                     version: 'v1.0.0',

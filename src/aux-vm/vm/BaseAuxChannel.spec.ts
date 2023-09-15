@@ -502,7 +502,6 @@ describe('BaseAuxChannel', () => {
                     {
                         type: 'authentication',
                         authenticated: true,
-                        user: indicator,
                     },
                 ]
             );
@@ -616,7 +615,7 @@ describe('BaseAuxChannel', () => {
                 botAdded(createBot('test')),
                 {
                     type: 'device',
-                    device: null,
+                    connection: null,
                     event: botAdded(createBot('abc')),
                 },
             ]);
@@ -633,7 +632,7 @@ describe('BaseAuxChannel', () => {
                 },
                 {
                     type: 'device',
-                    device: null,
+                    connection: null,
                     event: botAdded(createBot('abc')),
                 },
             ]);
@@ -993,9 +992,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...indicator,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(await subChannel.getChannel()).toBeInstanceOf(
@@ -1052,9 +1050,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...indicator,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1150,9 +1147,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...indicator,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1254,9 +1250,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...indicator,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1367,9 +1362,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...indicator,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);

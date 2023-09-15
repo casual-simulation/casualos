@@ -14,15 +14,6 @@ import {
     createMemoryPartition,
     AuxPartitions,
     iteratePartitions,
-    clearSpace,
-    unlockSpace,
-    asyncError,
-    createCertificate,
-    signTag,
-    revokeCertificate,
-    setSpacePassword,
-    updatedBot,
-    Bot,
 } from '@casual-simulation/aux-common';
 import {
     AuxRuntime,
@@ -217,109 +208,6 @@ describe('AuxHelper', () => {
 
             expect(Object.keys(helper.botsState)).toEqual(['abcdefghijklmnop']);
             expect(Object.keys(mem.state)).toEqual(['abcdefghijklmnop']);
-        });
-
-        it('should send create_certificate actions to the shared partition', async () => {
-            let mem = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-            let shared = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-            helper = createHelper({
-                shared: shared,
-                TEST: mem,
-            });
-
-            const sharedSpy = jest.spyOn(shared, 'applyEvents');
-            const memSpy = jest.spyOn(mem, 'applyEvents');
-            const keys = keypair('password');
-            await helper.transaction(
-                createCertificate(
-                    {
-                        keypair: keys,
-                        signingPassword: 'password',
-                    },
-                    'test1'
-                )
-            );
-
-            expect(sharedSpy).toBeCalledWith([
-                createCertificate(
-                    {
-                        keypair: keys,
-                        signingPassword: 'password',
-                    },
-                    'test1'
-                ),
-            ]);
-            expect(memSpy).not.toBeCalledWith([
-                createCertificate(
-                    {
-                        keypair: keys,
-                        signingPassword: 'password',
-                    },
-                    'test1'
-                ),
-            ]);
-        });
-
-        it('should send sign_tag actions to the shared partition', async () => {
-            let mem = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-            let shared = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-            helper = createHelper({
-                shared: shared,
-                TEST: mem,
-            });
-
-            const sharedSpy = jest.spyOn(shared, 'applyEvents');
-            const memSpy = jest.spyOn(mem, 'applyEvents');
-            await helper.transaction(
-                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1')
-            );
-
-            expect(sharedSpy).toBeCalledWith([
-                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
-            ]);
-            expect(memSpy).not.toBeCalledWith([
-                signTag('test1', 'password', 'test2', 'tag', 'value', 'task1'),
-            ]);
-        });
-
-        it('should send revoke_certificate actions to the shared partition', async () => {
-            let mem = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-            let shared = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-            helper = createHelper({
-                shared: shared,
-                TEST: mem,
-            });
-
-            const sharedSpy = jest.spyOn(shared, 'applyEvents');
-            const memSpy = jest.spyOn(mem, 'applyEvents');
-            await helper.transaction(
-                revokeCertificate('test1', 'password', 'test2')
-            );
-
-            expect(sharedSpy).toBeCalledWith([
-                revokeCertificate('test1', 'password', 'test2'),
-            ]);
-            expect(memSpy).not.toBeCalledWith([
-                revokeCertificate('test1', 'password', 'test2'),
-            ]);
         });
 
         it('should ignore bots going to partitions that dont exist', async () => {
@@ -1160,14 +1048,14 @@ describe('AuxHelper', () => {
 
             await helper.transaction({
                 type: 'device',
-                device: null,
+                connection: null,
                 event: toast('test'),
             });
 
             expect(events).toEqual([
                 {
                     type: 'device',
-                    device: null,
+                    connection: null,
                     event: toast('test'),
                 },
             ]);

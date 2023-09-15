@@ -18,19 +18,13 @@ import { createRemoteYjsPartition } from '@casual-simulation/aux-vm-client';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _remoteEvents: Subject<RemoteAction[]>;
-    private _device: ConnectionInfo;
 
     get remoteEvents(): Observable<RemoteAction[]> {
         return this._remoteEvents;
     }
 
-    constructor(
-        indicator: ConnectionIndicator,
-        device: ConnectionInfo,
-        config: AuxConfig
-    ) {
+    constructor(indicator: ConnectionIndicator, config: AuxConfig) {
         super(indicator, config, {});
-        this._device = device;
         this._remoteEvents = new Subject<RemoteAction[]>();
     }
 
@@ -62,7 +56,7 @@ export class NodeAuxChannel extends BaseAuxChannel {
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
-        const channel = new NodeAuxChannel(indicator, this._device, config);
+        const channel = new NodeAuxChannel(indicator, config);
         channel._runtime = runtime;
         return channel;
     }

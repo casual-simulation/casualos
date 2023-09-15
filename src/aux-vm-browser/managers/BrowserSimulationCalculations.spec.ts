@@ -66,11 +66,10 @@ describe('BrowserSimulationCalculations', () => {
             vm.connectionStateChanged.next({
                 type: 'authentication',
                 authenticated: true,
-                user: {
-                    id: userId,
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
+                info: {
+                    userId: 'username',
+                    connectionId: userId,
+                    sessionId: 'sessionId',
                 },
             });
 
@@ -98,11 +97,10 @@ describe('BrowserSimulationCalculations', () => {
             vm.connectionStateChanged.next({
                 type: 'authentication',
                 authenticated: true,
-                user: {
-                    id: userId,
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
+                info: {
+                    userId: 'username',
+                    connectionId: userId,
+                    sessionId: 'sessionId',
                 },
             });
 
@@ -125,11 +123,10 @@ describe('BrowserSimulationCalculations', () => {
             vm.connectionStateChanged.next({
                 type: 'authentication',
                 authenticated: true,
-                user: {
-                    id: userId,
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
+                info: {
+                    userId: 'username',
+                    connectionId: userId,
+                    sessionId: 'sessionId',
                 },
             });
 
@@ -161,11 +158,10 @@ describe('BrowserSimulationCalculations', () => {
             vm.connectionStateChanged.next({
                 type: 'authentication',
                 authenticated: true,
-                user: {
-                    id: userId,
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
+                info: {
+                    userId: 'username',
+                    connectionId: userId,
+                    sessionId: 'sessionId',
                 },
             });
 
@@ -200,11 +196,10 @@ describe('BrowserSimulationCalculations', () => {
             vm.connectionStateChanged.next({
                 type: 'authentication',
                 authenticated: true,
-                user: {
-                    id: userId,
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
+                info: {
+                    userId: 'username',
+                    connectionId: userId,
+                    sessionId: 'sessionId',
                 },
             });
 
@@ -240,11 +235,10 @@ describe('BrowserSimulationCalculations', () => {
             vm.connectionStateChanged.next({
                 type: 'authentication',
                 authenticated: true,
-                user: {
-                    id: userId,
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
+                info: {
+                    userId: 'username',
+                    connectionId: userId,
+                    sessionId: 'sessionId',
                 },
             });
 

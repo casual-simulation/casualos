@@ -1,12 +1,6 @@
 import { AuxVMNode } from './AuxVMNode';
-import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
-import {
-    ConnectionInfo,
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
-    SERVER_ROLE,
-} from '@casual-simulation/aux-common';
+import { AuxConfig } from '@casual-simulation/aux-vm';
+import { ConnectionInfo } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from './NodeAuxChannel';
 import {
     MemoryPartition,
@@ -18,8 +12,7 @@ console.log = jest.fn();
 describe('AuxVMNode', () => {
     let memory: MemoryPartition;
     let config: AuxConfig;
-    let user: AuxUser;
-    let device: ConnectionInfo;
+    let connection: ConnectionInfo;
     let vm: AuxVMNode;
     let channel: NodeAuxChannel;
     beforeEach(async () => {
@@ -40,29 +33,20 @@ describe('AuxVMNode', () => {
                 },
             },
         };
-        user = {
-            id: 'server',
-            name: 'Server',
-            token: 'token',
-            username: 'server',
-        };
-        device = {
-            claims: {
-                [USERNAME_CLAIM]: 'server',
-                [DEVICE_ID_CLAIM]: 'serverDeviceId',
-                [SESSION_ID_CLAIM]: 'serverSessionId',
-            },
-            roles: [SERVER_ROLE],
+        connection = {
+            connectionId: 'connectionId',
+            sessionId: null,
+            userId: null,
         };
 
-        channel = new NodeAuxChannel(user, device, config);
+        channel = new NodeAuxChannel(connection, config);
         vm = new AuxVMNode(channel);
     });
 
     it('should initialize the channel', async () => {
         await vm.init();
 
-        const bot = memory.state['server'];
+        const bot = memory.state['connectionId'];
         expect(bot).toBeTruthy();
     });
 });

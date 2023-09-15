@@ -24,10 +24,7 @@ describe('BotManager', () => {
         localEvents = vm.localEvents = new Subject();
         sim = new BotManager(
             {
-                id: 'userId',
-                name: 'name',
-                token: 'token',
-                username: 'username',
+                connectionId: 'userId',
             },
             'sim',
             {

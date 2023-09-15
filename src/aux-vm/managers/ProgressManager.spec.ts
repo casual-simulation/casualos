@@ -60,7 +60,7 @@ describe('ProgressManager', () => {
         vm.connectionStateChanged.next({
             type: 'authentication',
             authenticated: false,
-            reason: 'wrong_token',
+            reason: 'invalid_token',
         });
 
         expect(messages).toEqual([
