@@ -53,16 +53,9 @@ import {
     goToURL,
     openURL,
     openConsole,
-    checkout,
     playSound,
     setupServer,
     shell,
-    backupToGithub,
-    backupAsDownload,
-    finishCheckout,
-    markHistory,
-    browseHistory,
-    restoreHistoryMark,
     loadFile,
     saveFile,
     reject,
@@ -78,10 +71,8 @@ import {
     share,
     unlockSpace,
     getRemoteCount,
-    getServers,
     getRemotes,
     action,
-    getServerStatuses,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
@@ -126,9 +117,6 @@ import {
     serialDrainPin,
     serialPausePin,
     serialResumePin,
-    createCertificate,
-    signTag,
-    revokeCertificate,
     setSpacePassword,
     bufferSound,
     cancelSound,
@@ -233,7 +221,7 @@ import {
     getFile,
     listUserStudios,
 } from './RecordsEvents';
-import { remote } from '@casual-simulation/aux-common';
+import { DEFAULT_BRANCH_NAME, remote } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import {
     TestScriptBotFactory,
@@ -4914,27 +4902,6 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.checkout()', () => {
-            it('should emit a start checkout event', () => {
-                const action = library.api.os.checkout({
-                    publishableKey: 'key',
-                    productId: 'ID1',
-                    title: 'Product 1',
-                    description: '$50.43',
-                    processingInst: 'channel2',
-                });
-                const expected = checkout({
-                    publishableKey: 'key',
-                    productId: 'ID1',
-                    title: 'Product 1',
-                    description: '$50.43',
-                    processingInst: 'channel2',
-                });
-                expect(action).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
         describe('os.playSound()', () => {
             it('should emit a PlaySoundEvent', () => {
                 const promise: any = library.api.os.playSound('abc');
@@ -8617,210 +8584,6 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.backupToGithub()', () => {
-            it('should emit a remote backup to github event', () => {
-                const action = library.api.server.backupToGithub('abc');
-                expect(action).toEqual(remote(backupToGithub('abc')));
-                expect(context.actions).toEqual([
-                    remote(backupToGithub('abc')),
-                ]);
-            });
-        });
-
-        describe('server.backupAsDownload()', () => {
-            it('should emit a remote backup as download event', () => {
-                const action = library.api.server.backupAsDownload({
-                    username: 'abc',
-                    device: '123',
-                    session: 'def',
-                });
-                const expected = remote(
-                    backupAsDownload({
-                        username: 'abc',
-                        deviceId: '123',
-                        sessionId: 'def',
-                    })
-                );
-                expect(action).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('server.finishCheckout()', () => {
-            it('should emit a finish checkout event', () => {
-                const action = library.api.server.finishCheckout({
-                    secretKey: 'key',
-                    token: 'token1',
-                    description: 'Test',
-                    amount: 100,
-                    currency: 'usd',
-                });
-                const expected = finishCheckout(
-                    'key',
-                    'token1',
-                    100,
-                    'usd',
-                    'Test'
-                );
-                expect(action).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should include extra info', () => {
-                const action = library.api.server.finishCheckout({
-                    secretKey: 'key',
-                    token: 'token1',
-                    description: 'Test',
-                    amount: 100,
-                    currency: 'usd',
-                    extra: {
-                        abc: 'def',
-                    },
-                });
-                const expected = finishCheckout(
-                    'key',
-                    'token1',
-                    100,
-                    'usd',
-                    'Test',
-                    {
-                        abc: 'def',
-                    }
-                );
-                expect(action).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('server.markHistory()', () => {
-            it('should emit a mark_history event', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.markHistory({
-                    message: 'testMark',
-                });
-                const expected = remote(
-                    markHistory({
-                        message: 'testMark',
-                    }),
-                    undefined,
-                    false,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.markHistory({
-                    message: 'test',
-                });
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.browseHistory()', () => {
-            it('should emit a browse_history event', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.browseHistory();
-                const expected = remote(
-                    browseHistory(),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.browseHistory();
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.restoreHistoryMark()', () => {
-            it('should emit a restore_history_mark event', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any =
-                    library.api.server.restoreHistoryMark('mark');
-                const expected = remote(
-                    restoreHistoryMark('mark'),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.restoreHistoryMark('mark');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.restoreHistoryMarkToServer()', () => {
-            it('should emit a restore_history_mark event', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any =
-                    library.api.server.restoreHistoryMarkToServer(
-                        'mark',
-                        'server'
-                    );
-                const expected = remote(
-                    restoreHistoryMark('mark', 'server'),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.restoreHistoryMarkToServer('mark', 'server');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.restoreHistoryMarkToInst()', () => {
-            it('should emit a restore_history_mark event', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.restoreHistoryMarkToInst(
-                    'mark',
-                    'inst'
-                );
-                const expected = remote(
-                    restoreHistoryMark('mark', 'inst'),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.restoreHistoryMarkToInst('mark', 'inst');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
         describe('server.loadFile()', () => {
             it('should issue a LoadFileAction in a remote event', () => {
                 uuidMock.mockReturnValueOnce('task1');
@@ -8891,7 +8654,7 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const action: any = library.api.server.serverRemoteCount();
                 const expected = remote(
-                    getRemoteCount('channel'),
+                    getRemoteCount(null, 'channel', DEFAULT_BRANCH_NAME),
                     undefined,
                     undefined,
                     'uuid'
@@ -8906,7 +8669,7 @@ describe('AuxLibrary', () => {
                 const action: any =
                     library.api.server.serverRemoteCount('test');
                 const expected = remote(
-                    getRemoteCount('test'),
+                    getRemoteCount(null, 'test', DEFAULT_BRANCH_NAME),
                     undefined,
                     undefined,
                     'uuid'
@@ -8944,7 +8707,7 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const action: any = library.api.os.remoteCount();
                 const expected = remote(
-                    getRemoteCount('channel'),
+                    getRemoteCount(null, 'channel', DEFAULT_BRANCH_NAME),
                     undefined,
                     undefined,
                     'uuid'
@@ -8958,7 +8721,7 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 const action: any = library.api.os.remoteCount('test');
                 const expected = remote(
-                    getRemoteCount('test'),
+                    getRemoteCount(null, 'test', DEFAULT_BRANCH_NAME),
                     undefined,
                     undefined,
                     'uuid'
@@ -9357,14 +9120,14 @@ describe('AuxLibrary', () => {
 
             it('should send the right selector', () => {
                 const action = library.api.remote(library.api.os.toast('abc'), {
-                    session: 's',
-                    username: 'u',
-                    device: 'd',
+                    sessionId: 's',
+                    userId: 'u',
+                    connectionId: 'd',
                 });
                 const expected = remote(toast('abc'), {
                     sessionId: 's',
-                    username: 'u',
-                    deviceId: 'd',
+                    userId: 'u',
+                    connectionId: 'd',
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -9397,9 +9160,9 @@ describe('AuxLibrary', () => {
                 const action = library.api.remote(library.api.os.toast('abc'), [
                     'abc',
                     {
-                        session: 's',
-                        username: 'u',
-                        device: 'd',
+                        sessionId: 's',
+                        userId: 'u',
+                        connectionId: 'd',
                     },
                 ]);
                 const expected = [
@@ -9408,8 +9171,8 @@ describe('AuxLibrary', () => {
                     }),
                     remote(toast('abc'), {
                         sessionId: 's',
-                        username: 'u',
-                        deviceId: 'd',
+                        userId: 'u',
+                        connectionId: 'd',
                     }),
                 ];
                 expect(action).toEqual(expected);
@@ -19988,265 +19751,6 @@ describe('AuxLibrary', () => {
             expect(() => {
                 library.api.crypto.verify(keypair, 'wrong', 'abc');
             }).toThrow();
-        });
-    });
-
-    const keypair1 =
-        'vK1.X9EJQT0znVqXj7D0kRyLSF1+F5u2bT7xKunF/H/SUxU=.djEueE1FL0VkOU1VanNaZGEwUDZ3cnlicjF5bnExZFptVzcubkxrNjV4ckdOTlM3Si9STGQzbGUvbUUzUXVEdmlCMWQucWZocVJQT21KeEhMbXVUWThORGwvU0M0dGdOdUVmaDFlcFdzMndYUllHWWxRZWpJRWthb1dJNnVZdXdNMFJVUTFWamkyc3JwMUpFTWJobk5sZ2Y2d01WTzRyTktDaHpwcUZGbFFnTUg0ZVU9';
-    describe('crypto.createCertificate()', () => {
-        it('should emit a CreateCertificateAction for self-signed certs', () => {
-            const promise: any = library.api.crypto.createCertificate(
-                null,
-                'password',
-                keypair1
-            );
-
-            const expected = createCertificate(
-                {
-                    keypair: keypair1,
-                    signingPassword: 'password',
-                },
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-
-        it('should emit a CreateCertificateAction for normal certs', () => {
-            const cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
-            addToContext(context, cert);
-            const promise: any = library.api.crypto.createCertificate(
-                cert,
-                'password',
-                keypair1
-            );
-
-            const expected = createCertificate(
-                {
-                    keypair: keypair1,
-                    signingBotId: 'test1',
-                    signingPassword: 'password',
-                },
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-
-        it('should be able to be given a bot ID', () => {
-            const promise: any = library.api.crypto.createCertificate(
-                'test1',
-                'password',
-                keypair1
-            );
-
-            const expected = createCertificate(
-                {
-                    keypair: keypair1,
-                    signingBotId: 'test1',
-                    signingPassword: 'password',
-                },
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-    });
-
-    describe('crypto.signTag()', () => {
-        let bot1: RuntimeBot;
-        let cert: RuntimeBot;
-        beforeEach(() => {
-            cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
-            bot1 = createDummyRuntimeBot('bot1', {
-                abc: 'def',
-            });
-            addToContext(context, bot1, cert);
-        });
-
-        it('should emit a SignTagAction', () => {
-            const promise: any = library.api.crypto.signTag(
-                'test1',
-                'password',
-                'bot1',
-                'abc'
-            );
-
-            const expected = signTag(
-                'test1',
-                'password',
-                'bot1',
-                'abc',
-                'def',
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-
-        it('should support using an # symbol at the beginning of a tag', () => {
-            const promise: any = library.api.crypto.signTag(
-                'test1',
-                'password',
-                'bot1',
-                '#abc'
-            );
-
-            const expected = signTag(
-                'test1',
-                'password',
-                'bot1',
-                'abc',
-                'def',
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-
-        it('should support using an @ symbol at the beginning of a tag', () => {
-            const promise: any = library.api.crypto.signTag(
-                'test1',
-                'password',
-                'bot1',
-                '@abc'
-            );
-
-            const expected = signTag(
-                'test1',
-                'password',
-                'bot1',
-                'abc',
-                'def',
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-
-        it('should be able to be given bots', () => {
-            const promise: any = library.api.crypto.signTag(
-                cert,
-                'password',
-                bot1,
-                'abc'
-            );
-
-            const expected = signTag(
-                'test1',
-                'password',
-                'bot1',
-                'abc',
-                'def',
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-    });
-
-    describe('crypto.verifyTag()', () => {
-        let bot1: RuntimeBot;
-        beforeEach(() => {
-            bot1 = createDummyRuntimeBot(
-                'bot1',
-                {
-                    abc: 'def',
-                },
-                undefined,
-                {
-                    [tagValueHash('bot1', 'abc', 'def')]: 'abc',
-                }
-            );
-            addToContext(context, bot1);
-        });
-
-        it('should return true if the bot has a signature for the given tag', () => {
-            const result = library.api.crypto.verifyTag(bot1, 'abc');
-            expect(result).toBe(true);
-        });
-
-        it('should return false if the bot does not have a signature for the given tag', () => {
-            const result = library.api.crypto.verifyTag(bot1, 'missing');
-            expect(result).toBe(false);
-        });
-
-        it('should return false if the bot has a signature for the given tag but the value is different', () => {
-            bot1.tags.abc = 'different';
-            const result = library.api.crypto.verifyTag(bot1, 'abc');
-            expect(result).toBe(false);
-        });
-
-        it('should support using an # symbol at the beginning of a tag', () => {
-            const result = library.api.crypto.verifyTag(bot1, '#abc');
-            expect(result).toBe(true);
-        });
-
-        it('should support using an @ symbol at the beginning of a tag', () => {
-            const result = library.api.crypto.verifyTag(bot1, '@abc');
-            expect(result).toBe(true);
-        });
-    });
-
-    describe('crypto.revokeCertificate()', () => {
-        let bot1: RuntimeBot;
-        let cert: RuntimeBot;
-        beforeEach(() => {
-            cert = createDummyRuntimeBot('test1', {}, CERTIFIED_SPACE);
-            bot1 = createDummyRuntimeBot('bot1', {
-                abc: 'def',
-            });
-            addToContext(context, bot1, cert);
-        });
-
-        it('should emit a RevokeCertificateAction', () => {
-            const promise: any = library.api.crypto.revokeCertificate(
-                'test1',
-                'password',
-                'bot1'
-            );
-
-            const expected = revokeCertificate(
-                'bot1',
-                'password',
-                'test1',
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-
-        it('should be able to be given bots', () => {
-            const promise: any = library.api.crypto.revokeCertificate(
-                cert,
-                'password',
-                bot1
-            );
-
-            const expected = revokeCertificate(
-                'bot1',
-                'password',
-                'test1',
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
-        });
-
-        it('should be able to be given a single bot', () => {
-            const promise: any = library.api.crypto.revokeCertificate(
-                cert,
-                'password'
-            );
-
-            const expected = revokeCertificate(
-                'test1',
-                'password',
-                'test1',
-                context.tasks.size
-            );
-            expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-            expect(context.actions).toEqual([expected]);
         });
     });
 

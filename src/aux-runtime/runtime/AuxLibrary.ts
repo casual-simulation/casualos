@@ -61,9 +61,6 @@ import {
     superShout as calcSuperShout,
     share as calcShare,
     registerPrefix as calcRegisterPrefix,
-    createCertificate as calcCreateCertificate,
-    signTag as calcSignTag,
-    revokeCertificate as calcRevokeCertificate,
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
     animateTag as calcAnimateTag,
@@ -340,6 +337,7 @@ import {
 import {
     Action,
     remote as calcRemote,
+    DEFAULT_BRANCH_NAME,
     DeviceSelector,
     RemoteAction,
 } from '@casual-simulation/aux-common';
@@ -3576,10 +3574,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 keypair,
                 sign,
                 verify,
-                createCertificate,
-                signTag,
-                verifyTag,
-                revokeCertificate,
             },
 
             perf: {
@@ -10482,7 +10476,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const actualServer = hasValue(inst) ? inst : getCurrentServer();
         const event = calcRemote(
-            getRemoteCount(actualServer),
+            getRemoteCount(null, actualServer, DEFAULT_BRANCH_NAME),
             undefined,
             undefined,
             task.taskId
@@ -13946,118 +13940,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             throw new Error('The data to encrypt must be a string.');
         }
-    }
-
-    /**
-     * Creates a new certified bot that is signed using the given certified bot.
-     * @param certificate The certified bot that the new certificate should be signed with.
-     *                    This is commonly known as the signing certificate.
-     *                    If given null, then the new certificate will be self-signed.
-     * @param secret The signing certificate's secret. This is the secret that was used to create
-     *                 the keypair for the signing certificate. If the new certificate will be self-signed, then this
-     *                 is the secret that was used to create the given keypair.
-     * @param keypair The keypair that the new certificate should use.
-     */
-    // DELETE:
-    function createCertificate(
-        certificate: Bot | string,
-        secret: string,
-        keypair: string
-    ): Promise<RuntimeBot> {
-        const signingBotId = getID(certificate);
-        const task = context.createTask();
-        const action = hasValue(signingBotId)
-            ? calcCreateCertificate(
-                  {
-                      keypair: keypair,
-                      signingBotId: signingBotId,
-                      signingPassword: secret,
-                  },
-                  task.taskId
-              )
-            : calcCreateCertificate(
-                  {
-                      keypair: keypair,
-                      signingPassword: secret,
-                  },
-                  task.taskId
-              );
-
-        return addAsyncAction(task, action);
-    }
-
-    /**
-     * Signs the tag on the given bot using the given certificate and secret.
-     * @param certificate The certificate to use to create the signature.
-     * @param secret The secret to use to decrypt the certificate's private key.
-     * @param bot The bot that should be signed.
-     * @param tag The tag that should be signed.
-     */
-    // DELETE:
-    function signTag(
-        certificate: Bot | string,
-        secret: string,
-        bot: Bot | string,
-        tag: string
-    ): Promise<void> {
-        tag = trimTag(tag);
-        const signingBotId = getID(certificate);
-        const realBot = getBot('id', getID(bot));
-        const value = realBot.raw[tag];
-        const task = context.createTask();
-        const action = calcSignTag(
-            signingBotId,
-            secret,
-            realBot.id,
-            tag,
-            value,
-            task.taskId
-        );
-        return addAsyncAction(task, action);
-    }
-
-    /**
-     * Verifies that the given tag on the given bot has been signed by a certificate.
-     * @param bot The bot.
-     * @param tag The tag to check.
-     */
-    // DELETE:
-    function verifyTag(bot: RuntimeBot | string, tag: string): boolean {
-        return false;
-    }
-
-    /**
-     * Revokes the given certificate using the given secret.
-     * In effect, this deletes the certificate bot from the inst.
-     * Additionally, any tags signed with the given certificate will no longer be verified.
-     *
-     * If given a signer, then the specified certificate will be used to sign the revocation.
-     * This lets you use a parent or grandparent certificate to remove the child.
-     *
-     * If no signer is given, then the certificate will be used to revoke itself.
-     *
-     * @param certificate The certificate that should be revoked.
-     * @param secret The secret that should be used to decrypt the corresponding certificate's private key.
-     *                 If given a signer, then this is the secret for the signer certificate. If no signer is given,
-     *                 then this is the secret for the revoked certificate.
-     * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
-     */
-    // DELETE:
-    function revokeCertificate(
-        certificate: Bot | string,
-        secret: string,
-        signer?: Bot | string
-    ): Promise<void> {
-        const certId = getID(certificate);
-        const signerId = getID(signer || certificate);
-        const task = context.createTask();
-        const action = calcRevokeCertificate(
-            signerId,
-            secret,
-            certId,
-            task.taskId
-        );
-        return addAsyncAction(task, action);
     }
 
     /**

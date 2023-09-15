@@ -23,9 +23,6 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
-    CreateCertificateAction,
-    SignTagAction,
-    RevokeCertificateAction,
     StateUpdatedEvent,
     stateUpdatedEvent,
     BotsState,
@@ -213,10 +210,7 @@ export class YjsPartitionImpl implements YjsPartition {
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
-                e.type === 'update_bot' ||
-                e.type === 'create_certificate' ||
-                e.type === 'sign_tag' ||
-                e.type === 'revoke_certificate'
+                e.type === 'update_bot'
             ) {
                 return [e] as const;
             } else {
@@ -254,14 +248,7 @@ export class YjsPartitionImpl implements YjsPartition {
     }
 
     private _applyEvents(
-        events: (
-            | AddBotAction
-            | RemoveBotAction
-            | UpdateBotAction
-            | CreateCertificateAction
-            | SignTagAction
-            | RevokeCertificateAction
-        )[]
+        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
         this._isLocalTransaction = true;
         this._doc.transact((t) => {

@@ -57,14 +57,6 @@ import {
     openConsole,
     setupServer,
     shell,
-    backupToGithub,
-    backupAsDownload,
-    checkout,
-    finishCheckout,
-    markHistory,
-    browseHistory,
-    restoreHistoryMark,
-    RestoreHistoryMarkAction,
     loadSimulation,
     unloadSimulation,
     BotSpace,
@@ -113,6 +105,7 @@ import {
     device,
     deviceResult,
     deviceError,
+    DEFAULT_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
 import { possibleTagValueCases } from '@casual-simulation/aux-common/bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
@@ -4915,7 +4908,7 @@ describe('AuxRuntime', () => {
                 expect(events).toEqual([
                     [
                         remote(
-                            getRemoteCount('test'),
+                            getRemoteCount(null, 'test', DEFAULT_BRANCH_NAME),
                             undefined,
                             undefined,
                             'task1'
@@ -4943,7 +4936,7 @@ describe('AuxRuntime', () => {
                 expect(events).toEqual([
                     [
                         remote(
-                            getRemoteCount('test'),
+                            getRemoteCount(null, 'test', DEFAULT_BRANCH_NAME),
                             undefined,
                             undefined,
                             'task1'
@@ -17618,289 +17611,6 @@ describe('original action tests', () => {
         });
     });
 
-    describe('server.backupToGithub()', () => {
-        it('should emit a remote backup to github event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: '@server.backupToGithub("abc")',
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([remote(backupToGithub('abc'))]);
-        });
-    });
-
-    describe('server.backupAsDownload()', () => {
-        it('should emit a remote backup as download event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: '@server.backupAsDownload({ username: "abc", device: "123", session: "def" })',
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(
-                    backupAsDownload({
-                        username: 'abc',
-                        deviceId: '123',
-                        sessionId: 'def',
-                    })
-                ),
-            ]);
-        });
-    });
-
-    describe('os.checkout()', () => {
-        it('should emit a start checkout event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: `@os.checkout({
-                            publishableKey: 'key',
-                            productId: 'ID1',
-                            title: 'Product 1',
-                            description: '$50.43',
-                            processingInst: 'channel2'
-                        })`,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                checkout({
-                    publishableKey: 'key',
-                    productId: 'ID1',
-                    title: 'Product 1',
-                    description: '$50.43',
-                    processingInst: 'channel2',
-                }),
-            ]);
-        });
-    });
-
-    describe('server.finishCheckout()', () => {
-        it('should emit a finish checkout event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: `@server.finishCheckout({
-                            secretKey: 'key',
-                            token: 'token1',
-                            description: 'Test',
-                            amount: 100,
-                            currency: 'usd'
-                        })`,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                finishCheckout('key', 'token1', 100, 'usd', 'Test'),
-            ]);
-        });
-
-        it('should include extra info', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: `@server.finishCheckout({
-                            secretKey: 'key',
-                            token: 'token1',
-                            description: 'Test',
-                            amount: 100,
-                            currency: 'usd',
-                            extra: {
-                                abc: 'def'
-                            }
-                        })`,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                finishCheckout('key', 'token1', 100, 'usd', 'Test', {
-                    abc: 'def',
-                }),
-            ]);
-        });
-    });
-
-    describe('server.markHistory()', () => {
-        it('should emit a mark_history event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: `@server.markHistory({
-                            message: 'testMark'
-                        })`,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(
-                    markHistory({
-                        message: 'testMark',
-                    }),
-                    undefined,
-                    false,
-                    'uuid-0'
-                ),
-            ]);
-        });
-    });
-
-    describe('server.browseHistory()', () => {
-        it('should emit a browse_history event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: `@server.browseHistory()`,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(browseHistory(), undefined, undefined, 'uuid-0'),
-            ]);
-        });
-    });
-
-    describe('server.restoreHistoryMark()', () => {
-        it('should emit a restore_history_mark event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: `@server.restoreHistoryMark("mark")`,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(
-                    restoreHistoryMark('mark'),
-                    undefined,
-                    undefined,
-                    'uuid-0'
-                ),
-            ]);
-        });
-    });
-
-    describe('server.restoreHistoryMarkToServer()', () => {
-        it('should emit a restore_history_mark event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: `@server.restoreHistoryMarkToServer("mark", "server")`,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(
-                    <RestoreHistoryMarkAction>{
-                        type: 'restore_history_mark',
-                        mark: 'mark',
-                        inst: 'server',
-                    },
-                    undefined,
-                    undefined,
-                    'uuid-0'
-                ),
-            ]);
-        });
-    });
-
-    describe('server.restoreHistoryMarkToInst()', () => {
-        it('should emit a restore_history_mark event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: `@server.restoreHistoryMarkToInst("mark", "server")`,
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(
-                    <RestoreHistoryMarkAction>{
-                        type: 'restore_history_mark',
-                        mark: 'mark',
-                        inst: 'server',
-                    },
-                    undefined,
-                    undefined,
-                    'uuid-0'
-                ),
-            ]);
-        });
-    });
-
     describe('remote()', () => {
         const cases = [
             ['os.toast("My Message!")', toast('My Message!')] as const,
@@ -17930,22 +17640,6 @@ describe('original action tests', () => {
                 'os.showInputForTag(this, "abc")',
                 showInputForTag('thisBot', 'abc'),
             ] as const,
-            [
-                `os.checkout({
-                publishableKey: 'my_key',
-                productId: 'ID1',
-                title: 'Product 1',
-                description: '$50.43',
-                processingInst: 'channel2'
-            })`,
-                checkout({
-                    publishableKey: 'my_key',
-                    productId: 'ID1',
-                    title: 'Product 1',
-                    description: '$50.43',
-                    processingInst: 'channel2',
-                }),
-            ] as const,
             ['os.openDevConsole()', openConsole()] as const,
         ];
 
@@ -17973,9 +17667,9 @@ describe('original action tests', () => {
                     id: 'thisBot',
                     tags: {
                         test: `@remote(os.toast("Hi!"), {
-                            session: 's',
-                            username: 'u',
-                            device: 'd'
+                            sessionId: 's',
+                            userId: 'u',
+                            connectionId: 'd'
                         })`,
                     },
                 },
@@ -17989,8 +17683,8 @@ describe('original action tests', () => {
             expect(result.actions).toEqual([
                 remote(toast('Hi!'), {
                     sessionId: 's',
-                    username: 'u',
-                    deviceId: 'd',
+                    userId: 'u',
+                    connectionId: 'd',
                 }),
             ]);
         });

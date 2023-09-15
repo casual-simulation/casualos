@@ -50,9 +50,6 @@ export type BotActions =
     | AddBotAction
     | RemoveBotAction
     | UpdateBotAction
-    | CreateCertificateAction
-    | SignTagAction
-    | RevokeCertificateAction
     | ApplyStateAction;
 
 /**
@@ -168,9 +165,6 @@ export type AsyncActions =
     | SerialDrainAction
     | SerialPauseAction
     | SerialResumeAction
-    | CreateCertificateAction
-    | SignTagAction
-    | RevokeCertificateAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -292,89 +286,6 @@ export interface UpdateBotAction extends Action {
     type: 'update_bot';
     id: string;
     update: PartialBot;
-}
-
-/**
- * Defines the set of options required for creating a certificate.
- */
-export interface CreateCertificateOptions {
-    /**
-     * The keypair that should be used for the certificate.
-     */
-    keypair: string;
-
-    /**
-     * The ID of the certified bot that is signing the new certificate.
-     */
-    signingBotId?: string;
-
-    /**
-     * The password that should be used to sign the new certificate.
-     */
-    signingPassword: string;
-}
-
-/**
- * Defines a bot event that creates a new certificate from the given keypair.
- */
-export interface CreateCertificateAction
-    extends AsyncAction,
-        CreateCertificateOptions {
-    type: 'create_certificate';
-}
-
-/**
- * Defines a bot event that creates a signature for the given tag on the given bot using the given certified bot and password.
- */
-export interface SignTagAction extends AsyncAction {
-    type: 'sign_tag';
-
-    /**
-     * The ID of the certified bot that is signing the tag value.
-     */
-    signingBotId: string;
-
-    /**
-     * The password that should be used to sign the value.
-     */
-    signingPassword: string;
-
-    /**
-     * The ID of the bot whose tag is being signed.
-     */
-    botId: string;
-
-    /**
-     * The tag that should be signed.
-     */
-    tag: string;
-
-    /**
-     * The value that should be signed.
-     */
-    value: any;
-}
-
-/**
- * Defines a bot event that revokes a certificate.
- */
-export interface RevokeCertificateAction extends AsyncAction {
-    type: 'revoke_certificate';
-
-    /**
-     * The ID of the bot that should be used to sign the revocation.
-     */
-    signingBotId: string;
-
-    /**
-     * The password that should be used to sign the revocation.
-     */
-    signingPassword: string;
-
-    /**
-     * The ID of the certificate that should be revoked.
-     */
-    certificateBotId: string;
 }
 
 /**
@@ -1186,10 +1097,20 @@ export interface GetRemoteCountAction extends Action {
     type: 'get_remote_count';
 
     /**
+     * The name of the record.
+     */
+    recordName?: string | null;
+
+    /**
      * The instance that the device count should be retrieved for.
      * If omitted, then the total device count will be returned.
      */
     inst?: string;
+
+    /**
+     * The name of the branch.
+     */
+    branch?: string;
 }
 /**
  * Defines an event that is used to get the list of remote devices on the instance.
@@ -4622,11 +4543,17 @@ export function saveFile(
  * Creates a new GetRemoteCountAction.
  * @param inst The instance that the device count should be retrieved for.
  */
-export function getRemoteCount(inst?: string): GetRemoteCountAction {
+export function getRemoteCount(
+    recordName?: string | null,
+    inst?: string | null,
+    branch?: string | null
+): GetRemoteCountAction {
     if (hasValue(inst)) {
         return {
             type: 'get_remote_count',
+            recordName,
             inst,
+            branch,
         };
     } else {
         return {
@@ -6222,71 +6149,6 @@ export function registerPrefix(
         type: 'register_prefix',
         prefix,
         options,
-        taskId,
-    };
-}
-
-/**
- * Creates an action that requests a new certificate be created.
- * @param options The options.
- * @param taskId The ID of the task.
- */
-export function createCertificate(
-    options: CreateCertificateOptions,
-    taskId?: number | string
-): CreateCertificateAction {
-    return {
-        type: 'create_certificate',
-        ...options,
-        taskId,
-    };
-}
-
-/**
- * Creates an action that requests a tag on a bot be signed.
- * @param signingBotId The ID of the certificate bot that is creating the signature.
- * @param signingPassword The password used to decrypt the certificate's private key.
- * @param botId The ID of the bot whose tag is being signed.
- * @param tag The tag that is being signed.
- * @param value The value that is being signed.
- */
-export function signTag(
-    signingBotId: string,
-    signingPassword: string,
-    botId: string,
-    tag: string,
-    value: any,
-    taskId?: number | string
-): SignTagAction {
-    return {
-        type: 'sign_tag',
-        signingBotId,
-        signingPassword,
-        botId,
-        tag,
-        value,
-        taskId,
-    };
-}
-
-/**
- * Creates an action that requests that a certificate be revoked.
- * @param signingBotId The ID of the certificate that is signing the revocation.
- * @param signingPassword The password used to decrypt the signing certificate's private key.
- * @param certificateBotId The ID of the bot whose tag is being signed.
- * @param taskId The task ID.
- */
-export function revokeCertificate(
-    signingBotId: string,
-    signingPassword: string,
-    certificateBotId: string,
-    taskId?: number | string
-): RevokeCertificateAction {
-    return {
-        type: 'revoke_certificate',
-        signingBotId,
-        signingPassword,
-        certificateBotId,
         taskId,
     };
 }

@@ -32,6 +32,7 @@ import {
     unlockSpace,
     UpdatedBot,
     getCurrentInstUpdate,
+    getRemoteCount,
 } from '../bots';
 import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { wait, waitAsync } from '../test/TestHelpers';
@@ -41,6 +42,8 @@ import { flatMap } from 'lodash';
 import { YjsPartitionImpl } from './YjsPartition';
 import {
     AddUpdatesMessage,
+    ConnectionCountMessage,
+    DEFAULT_BRANCH_NAME,
     InstRecordsClient,
     MemoryConnectionClient,
     RateLimitExceededMessage,
@@ -542,6 +545,61 @@ describe('RemoteYjsPartition', () => {
                                 playerId: 'info1SessionId',
                             }),
                         ]);
+                    });
+                });
+
+                describe('get_remote_count', () => {
+                    it('should send a repo/count_connections event to the server', async () => {
+                        setupPartition({
+                            type: 'remote_yjs',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+                        const connectionCount =
+                            new Subject<ConnectionCountMessage>();
+                        connection.events.set(
+                            'repo/connection_count',
+                            connectionCount
+                        );
+
+                        partition.connect();
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                getRemoteCount(recordName, 'inst', 'myBranch'),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        expect(connection.sentMessages).toContainEqual({
+                            type: 'repo/connection_count',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'myBranch',
+                        });
+
+                        connectionCount.next({
+                            type: 'repo/connection_count',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'myBranch',
+                            count: 20,
+                        });
+
+                        await waitAsync();
+
+                        expect(events).toEqual([asyncResult('task1', 20)]);
                     });
                 });
 

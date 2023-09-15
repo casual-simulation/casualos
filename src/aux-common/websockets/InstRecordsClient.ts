@@ -534,6 +534,45 @@ export class InstRecordsClient {
         });
     }
 
+    /**
+     * Requests the number of devices that are currently connected.
+     * @param branch The branch that the devices should be counted on.
+     */
+    connectionCount(
+        recordName: string = null,
+        inst: string = null,
+        branch: string = null
+    ) {
+        recordName = recordName ?? null;
+        inst = inst ?? null;
+        branch = branch ?? null;
+        return this._whenConnected().pipe(
+            tap((connected) => {
+                this._client.send({
+                    type: 'repo/connection_count',
+                    recordName,
+                    inst,
+                    branch,
+                });
+            }),
+            switchMap((connected) =>
+                merge(
+                    this._client
+                        .event('repo/connection_count')
+                        .pipe(
+                            first(
+                                (e) =>
+                                    e.recordName === recordName &&
+                                    e.inst === inst &&
+                                    e.branch === branch
+                            )
+                        )
+                )
+            ),
+            map((e) => e.count)
+        );
+    }
+
     private _whenConnected(filter: boolean = true) {
         return whenConnected(this._client.connectionState, filter);
     }

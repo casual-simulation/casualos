@@ -847,13 +847,15 @@ export interface ConnectionCountMessage {
 
     /**
      * The name of the inst.
+     * Null if all connections should be counted.
      */
-    inst: string;
+    inst: string | null;
 
     /**
      * The name of the branch.
+     * Null if all connections should be counted.
      */
-    branch: string;
+    branch: string | null;
 
     /**
      * The number of connections.
@@ -863,8 +865,8 @@ export interface ConnectionCountMessage {
 export const connectionCountMessageSchema = z.object({
     type: z.literal('repo/connection_count'),
     recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
+    inst: z.string().nullable(),
+    branch: z.string().nullable(),
     count: z.number().optional(),
 });
 type ZodConnectionCountMessage = z.infer<typeof connectionCountMessageSchema>;

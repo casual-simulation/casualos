@@ -1,15 +1,5 @@
 import { testPartitionImplementation } from './test/PartitionTests';
 import { createYjsPartition, YjsPartitionImpl } from './YjsPartition';
-import {
-    createCertificate,
-    asyncResult,
-    botAdded,
-    createBot,
-    signTag,
-    AsyncResultAction,
-    revokeCertificate,
-} from '../bots';
-import { YjsPartition } from './AuxPartition';
 import { first } from 'rxjs/operators';
 
 describe('YjsPartition', () => {

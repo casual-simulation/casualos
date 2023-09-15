@@ -6,6 +6,7 @@ import {
     insert,
     edit,
     TagEdit,
+    GetRemoteCountAction,
 } from '../bots';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
@@ -23,9 +24,6 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
-    CreateCertificateAction,
-    SignTagAction,
-    RevokeCertificateAction,
     StateUpdatedEvent,
     stateUpdatedEvent,
     BotsState,
@@ -304,9 +302,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             | AddBotAction
             | RemoveBotAction
             | UpdateBotAction
-            | CreateCertificateAction
-            | SignTagAction
-            | RevokeCertificateAction
         )[];
         for (let e of events) {
             if (e.type === 'apply_state') {
@@ -314,10 +309,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
-                e.type === 'update_bot' ||
-                e.type === 'create_certificate' ||
-                e.type === 'sign_tag' ||
-                e.type === 'revoke_certificate'
+                e.type === 'update_bot'
             ) {
                 finalEvents.push(e);
             } else if (e.type === 'unlock_space') {
@@ -351,6 +343,26 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.
                     // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
                     //       we do this type of logic.
+                } else if (event.event.type === 'get_remote_count') {
+                    const action = <GetRemoteCountAction>event.event;
+                    this._client
+                        .connectionCount(
+                            action.recordName,
+                            action.inst,
+                            action.branch
+                        )
+                        .subscribe({
+                            next: (count) => {
+                                this._onEvents.next([
+                                    asyncResult(event.taskId, count),
+                                ]);
+                            },
+                            error: (err) => {
+                                this._onEvents.next([
+                                    asyncError(event.taskId, err),
+                                ]);
+                            },
+                        });
                 } else if (event.event.type === 'list_inst_updates') {
                     const action = <ListInstUpdatesAction>event.event;
                     this._client
@@ -694,14 +706,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     }
 
     private _applyEvents(
-        events: (
-            | AddBotAction
-            | RemoveBotAction
-            | UpdateBotAction
-            | CreateCertificateAction
-            | SignTagAction
-            | RevokeCertificateAction
-        )[]
+        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
         try {
             this._isLocalTransaction = true;

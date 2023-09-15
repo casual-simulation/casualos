@@ -12,6 +12,7 @@ import { waitAsync } from '../test/TestHelpers';
 import {
     AddUpdatesMessage,
     ConnectedToBranchMessage,
+    ConnectionCountMessage,
     DisconnectedFromBranchMessage,
     RateLimitExceededMessage,
     ReceiveDeviceActionMessage,
@@ -1501,6 +1502,76 @@ describe('InstRecordsClient', () => {
                     serverReceiveTime: 456,
                     serverTransmitTime: 789,
                     currentTime: 1000,
+                },
+            ]);
+        });
+    });
+
+    describe('connectionCount()', () => {
+        it('should send a connection count event after connecting', async () => {
+            client.connectionCount().subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/connection_count',
+                    recordName: null,
+                    inst: null,
+                    branch: null,
+                },
+            ]);
+        });
+
+        it('should return an observable of device info', async () => {
+            const connections = new Subject<ConnectionCountMessage>();
+            connection.events.set('repo/connection_count', connections);
+
+            let counts = [] as number[];
+            client.connectionCount().subscribe((e) => counts.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            connections.next({
+                type: 'repo/connection_count',
+                count: 2,
+                recordName: null,
+                inst: null,
+                branch: null,
+            });
+            await waitAsync();
+
+            connections.next({
+                type: 'repo/connection_count',
+                count: 1,
+                recordName: null,
+                inst: null,
+                branch: null,
+            });
+            await waitAsync();
+
+            expect(counts).toEqual([2]);
+        });
+
+        it('should send the given record, inst, and branch names', async () => {
+            const devices = new Subject<ConnectionCountMessage>();
+            connection.events.set('repo/connection_count', devices);
+
+            client.connectionCount('haha', 'abc', 'def').subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/connection_count',
+                    recordName: 'haha',
+                    inst: 'abc',
+                    branch: 'def',
                 },
             ]);
         });
