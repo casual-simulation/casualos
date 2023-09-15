@@ -236,11 +236,6 @@ declare type ExtraActions =
     | ShellAction
     | OpenConsoleAction
     | DownloadAction
-    | BackupToGithubAction
-    | BackupAsDownloadAction
-    | StartCheckoutAction
-    | CheckoutSubmittedAction
-    | FinishCheckoutAction
     | PasteStateAction
     | ReplaceDragBotAction
     | SetupChannelAction
@@ -248,9 +243,6 @@ declare type ExtraActions =
     | ShowChatBarAction
     | RunScriptAction
     | ShowUploadAuxFileAction
-    | MarkHistoryAction
-    | BrowseHistoryAction
-    | RestoreHistoryMarkAction
     | LoadSpaceAction
     | EnableARAction
     | EnableVRAction
@@ -509,184 +501,6 @@ declare interface ReplaceDragBotAction extends Action {
     bot: Bot | BotTags;
 }
 
-/**
- * An event that is used to request that the inst be backed up to github.
- */
-declare interface BackupToGithubAction extends Action {
-    type: 'backup_to_github';
-
-    /**
-     * The authentication key to use.
-     */
-    auth: string;
-
-    /**
-     * The options that should be used for backing up.
-     */
-    options?: BackupOptions;
-}
-
-/**
- * An event that is used to request that the inst be backed up to a zip bot and downloaded.
- */
-declare interface BackupAsDownloadAction extends Action {
-    type: 'backup_as_download';
-
-    /**
-     * The options that should be used for backing up.
-     */
-    options?: BackupOptions;
-
-    /**
-     * The device(s) that the download should be sent to.
-     */
-    target: DeviceSelector;
-}
-
-/**
- * Defines the list of possible options for backing up a inst.
- */
-declare interface BackupOptions {
-    /**
-     * Whether to include archived atoms.
-     */
-    includeArchived?: boolean;
-}
-
-declare interface StartCheckoutOptions {
-    /**
-     * The publishable API key that should be used for interfacing with the Stripe API.
-     */
-    publishableKey: string;
-
-    /**
-     * The ID of the product that is being checked out.
-     */
-    productId: string;
-
-    /**
-     * The title of the product.
-     */
-    title: string;
-
-    /**
-     * The description of the product.
-     */
-    description: string;
-
-    /**
-     * The inst that the payment processing should occur in.
-     */
-    processingInst: string;
-
-    /**
-     * Whether to request the payer's billing address.
-     */
-    requestBillingAddress?: boolean;
-
-    /**
-     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
-     */
-    paymentRequest?: PaymentRequestOptions;
-}
-
-/**
- * Defines an interface of payment request options.
- */
-declare interface PaymentRequestOptions {
-    /**
-     * The two letter country code of your payment processor account.
-     */
-    country: string;
-
-    /**
-     * The three character currency code.
-     */
-    currency: string;
-
-    /**
-     * The total that should be charged to the user.
-     */
-    total: {
-        /**
-         * The label that should be displayed for the total.
-         */
-        label: string;
-
-        /**
-         * The amount in the currency's smallest unit. (cents, etc.)
-         */
-        amount: number;
-    };
-}
-
-/**
- * An event that is used to initiate the checkout flow.
- */
-declare interface StartCheckoutAction extends Action, StartCheckoutOptions {
-    type: 'start_checkout';
-}
-
-/**
- * An event that is used to indicate that the checkout was submitted.
- */
-declare interface CheckoutSubmittedAction extends Action {
-    type: 'checkout_submitted';
-
-    /**
-     * The ID of the product that was checked out.
-     */
-    productId: string;
-
-    /**
-     * The token that allows payment.
-     */
-    token: string;
-
-    /**
-     * The inst that processing should happen in.
-     */
-    processingInst: string;
-}
-
-/**
- * An event that is used to finish the checkout process by charging the user's card/account.
- */
-declare interface FinishCheckoutAction extends Action {
-    type: 'finish_checkout';
-
-    /**
-     * The Secret API Key that should be used to finish the checkout process.
-     */
-    secretKey: string;
-
-    /**
-     * The token that was created from the checkout process.
-     * You should have recieved this from the onCheckout() event.
-     */
-    token: string;
-
-    /**
-     * The amount to charge in the smallest currency unit.
-     * For USD, this is cents. So an amount of 100 equals $1.00.
-     */
-    amount: number;
-
-    /**
-     * The currency that the amount is in.
-     */
-    currency: string;
-
-    /**
-     * The description for the charge.
-     */
-    description: string;
-
-    /**
-     * The extra info that this event contains.
-     */
-    extra: any;
-}
 
 /**
  * An event that is used to run a shell script.
@@ -1739,43 +1553,6 @@ declare interface UploadedFile {
      * The data that the file contains.
      */
     data: string | ArrayBuffer;
-}
-
-/**
- * Defines an event that marks a specific point in history.
- */
-declare interface MarkHistoryAction {
-    type: 'mark_history';
-
-    /**
-     * The message that the mark should contain.
-     */
-    message: string;
-}
-
-/**
- * Defines an event that loads the history into the inst.
- */
-declare interface BrowseHistoryAction {
-    type: 'browse_history';
-}
-
-/**
- * Defines an event that restores the current state to a specific bookmark.
- */
-declare interface RestoreHistoryMarkAction {
-    type: 'restore_history_mark';
-
-    /**
-     * The ID of the mark that should be restored.
-     */
-    mark: string;
-
-    /**
-     * The inst that the mark should be restored to.
-     * If not specified, then the current inst will be used.
-     */
-    inst?: string;
 }
 
 /**
@@ -3794,6 +3571,14 @@ export interface ListedStudio {
      */
     subscriptionTier: string;
 }
+
+/**
+ * Defines the list of possible studio roles that a user can be assigned.
+ *
+ * @dochash types/records/studios
+ * @docname StudioAssignmentRole
+ */
+export type StudioAssignmentRole = 'admin' | 'member';
 
 
 export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
@@ -11224,23 +11009,6 @@ interface Os {
     showConfirm(options: ShowConfirmOptions): Promise<boolean>;
 
     /**
-     * Shows a checkout screen that lets the user purchase something.
-     *
-     * @param options The options for the payment box.
-     *
-     * @example
-     * // Show a checkout box for 10 cookies
-     * os.checkout({
-     *   productId: '10_cookies',
-     *   title: '10 Cookies',
-     *   description: '$5.00',
-     *   processingServer: 'cookies_checkout'
-     * });
-     *
-     */
-    checkout(options: CheckoutOptions): StartCheckoutAction;
-
-    /**
      * Gets the dimension that the player is currently viewing.
      */
     getCurrentDimension(): string;
@@ -12365,17 +12133,6 @@ interface Server {
     shell(script: string): ShellAction;
 
     /**
-     * Backs up all the AUX instances to a Github Gist.
-     * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
-     */
-    backupToGithub(auth: string): BackupToGithubAction;
-
-    /**
-     * Backs up all the AUX instances to a zip bot.
-     */
-    backupAsDownload(target: SessionSelector): BackupAsDownloadAction;
-
-    /**
      * Gets the total number of devices that are connected to the server.
      */
     totalRemoteCount(): Promise<number>;
@@ -12406,58 +12163,6 @@ interface Server {
      * @param options The options.
      */
     saveFile(path: string, data: string, options?: SaveFileOptions): Promise<SaveFileResult>;
-
-    /**
-     * Finishes the checkout process by charging the payment fee to the user.
-     *
-     * @param options The options for finishing the checkout.
-     *
-     * @example
-     * // Finish the checkout process
-     * server.finishCheckout({
-     *   secretKey: 'YOUR_SECRET_API_KEY',
-     *   token: 'token from onCheckout',
-     *
-     *   // 1000 cents == $10.00
-     *   amount: 1000,
-     *   currency: 'usd',
-     *   description: 'Description for purchase'
-     * });
-     */
-    finishCheckout(options: FinishCheckoutOptions): FinishCheckoutOptions;
-
-    /**
-     * Saves the current state as a history mark.
-     * @param options The options that describe what information the mark should contain.
-     *
-     * @example
-     * // Bookmark the current state with a message
-     * server.markHistory({
-     *   message: "Save recent changes"
-     * });
-     */
-    markHistory(options: MarkHistoryOptions): MarkHistoryAction;
-
-    /**
-     * Loads the "history" space into the server.
-     */
-    browseHistory(): Promise<void>;
-
-    /**
-     * Restores the current state to the given mark.
-     * @param mark The bot or bot ID that represents the mark that should be restored.
-     */
-    restoreHistoryMark(mark: Bot | string): Promise<void>;
-
-    /**
-     * Restores the current state to the given mark.
-     * @param mark The bot or bot ID that represents the mark that should be restored.
-     * @param inst The inst that the mark should be restored to.
-     */
-    restoreHistoryMarkToInst(
-        mark: Bot | string,
-        inst: string
-    ): Promise<void>;
 };
 
 interface Web {

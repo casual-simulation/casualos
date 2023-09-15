@@ -80,19 +80,11 @@ export type ExtraActions =
     | ShellAction
     | OpenConsoleAction
     | DownloadAction
-    | BackupToGithubAction
-    | BackupAsDownloadAction
-    | StartCheckoutAction
-    | CheckoutSubmittedAction
-    | FinishCheckoutAction
     | PasteStateAction
     | ReplaceDragBotAction
     | SetClipboardAction
     | ShowChatBarAction
     | ShowUploadAuxFileAction
-    | MarkHistoryAction
-    | BrowseHistoryAction
-    | RestoreHistoryMarkAction
     | LoadSpaceAction
     | EnableARAction
     | EnableVRAction
@@ -457,185 +449,6 @@ export interface ReplaceDragBotAction extends Action {
      * The bot that should be used to drag.
      */
     bot: Bot | BotTags;
-}
-
-/**
- * An event that is used to request that the instance be backed up to github.
- */
-export interface BackupToGithubAction extends Action {
-    type: 'backup_to_github';
-
-    /**
-     * The authentication key to use.
-     */
-    auth: string;
-
-    /**
-     * The options that should be used for backing up.
-     */
-    options?: BackupOptions;
-}
-
-/**
- * An event that is used to request that the instance be backed up to a zip bot and downloaded.
- */
-export interface BackupAsDownloadAction extends Action {
-    type: 'backup_as_download';
-
-    /**
-     * The options that should be used for backing up.
-     */
-    options?: BackupOptions;
-
-    /**
-     * The device(s) that the download should be sent to.
-     */
-    target: DeviceSelector;
-}
-
-/**
- * Defines the list of possible options for backing up a instance.
- */
-export interface BackupOptions {
-    /**
-     * Whether to include archived atoms.
-     */
-    includeArchived?: boolean;
-}
-
-export interface StartCheckoutOptions {
-    /**
-     * The publishable API key that should be used for interfacing with the Stripe API.
-     */
-    publishableKey: string;
-
-    /**
-     * The ID of the product that is being checked out.
-     */
-    productId: string;
-
-    /**
-     * The title of the product.
-     */
-    title: string;
-
-    /**
-     * The description of the product.
-     */
-    description: string;
-
-    /**
-     * The instance that the payment processing should occur in.
-     */
-    processingInst: string;
-
-    /**
-     * Whether to request the payer's billing address.
-     */
-    requestBillingAddress?: boolean;
-
-    /**
-     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
-     */
-    paymentRequest?: PaymentRequestOptions;
-}
-
-/**
- * Defines an interface of payment request options.
- */
-export interface PaymentRequestOptions {
-    /**
-     * The two letter country code of your payment processor account.
-     */
-    country: string;
-
-    /**
-     * The three character currency code.
-     */
-    currency: string;
-
-    /**
-     * The total that should be charged to the user.
-     */
-    total: {
-        /**
-         * The label that should be displayed for the total.
-         */
-        label: string;
-
-        /**
-         * The amount in the currency's smallest unit. (cents, etc.)
-         */
-        amount: number;
-    };
-}
-
-/**
- * An event that is used to initiate the checkout flow.
- */
-export interface StartCheckoutAction extends Action, StartCheckoutOptions {
-    type: 'start_checkout';
-}
-
-/**
- * An event that is used to indicate that the checkout was submitted.
- */
-export interface CheckoutSubmittedAction extends Action {
-    type: 'checkout_submitted';
-
-    /**
-     * The ID of the product that was checked out.
-     */
-    productId: string;
-
-    /**
-     * The token that allows payment.
-     */
-    token: string;
-
-    /**
-     * The inst that processing should happen in.
-     */
-    processingInst: string;
-}
-
-/**
- * An event that is used to finish the checkout process by charging the user's card/account.
- */
-export interface FinishCheckoutAction extends Action {
-    type: 'finish_checkout';
-
-    /**
-     * The Secret API Key that should be used to finish the checkout process.
-     */
-    secretKey: string;
-
-    /**
-     * The token that was created from the checkout process.
-     * You should have recieved this from the onCheckout() event.
-     */
-    token: string;
-
-    /**
-     * The amount to charge in the smallest currency unit.
-     * For USD, this is cents. So an amount of 100 equals $1.00.
-     */
-    amount: number;
-
-    /**
-     * The currency that the amount is in.
-     */
-    currency: string;
-
-    /**
-     * The description for the charge.
-     */
-    description: string;
-
-    /**
-     * The extra info that this event contains.
-     */
-    extra: any;
 }
 
 /**
@@ -1378,19 +1191,6 @@ export interface GetRemoteCountAction extends Action {
      */
     inst?: string;
 }
-
-/**
- * Defines an event that is used to get the list of instances from the server.
- */
-export interface GetServersAction extends Action {
-    type: 'get_servers';
-
-    /**
-     * Whether to get the instance statuses.
-     */
-    includeStatuses?: boolean;
-}
-
 /**
  * Defines an event that is used to get the list of remote devices on the instance.
  */
@@ -2541,43 +2341,6 @@ export interface ShowUploadAuxFileAction {
  */
 export interface ShowUploadFilesAction extends AsyncAction {
     type: 'show_upload_files';
-}
-
-/**
- * Defines an event that marks a specific point in history.
- */
-export interface MarkHistoryAction {
-    type: 'mark_history';
-
-    /**
-     * The message that the mark should contain.
-     */
-    message: string;
-}
-
-/**
- * Defines an event that loads the history into the instance.
- */
-export interface BrowseHistoryAction {
-    type: 'browse_history';
-}
-
-/**
- * Defines an event that restores the current state to a specific bookmark.
- */
-export interface RestoreHistoryMarkAction {
-    type: 'restore_history_mark';
-
-    /**
-     * The ID of the mark that should be restored.
-     */
-    mark: string;
-
-    /**
-     * The instance that the mark should be restored to.
-     * If not specified, then the current instance will be used.
-     */
-    inst?: string;
 }
 
 /**
@@ -4767,36 +4530,6 @@ export function openConsole(): OpenConsoleAction {
 }
 
 /**
- * Creates a new BackupToGithub event.
- * @param auth The authentication key that should be used.
- * @param options The options that should be used.
- */
-export function backupToGithub(
-    auth: string,
-    options?: BackupOptions
-): BackupToGithubAction {
-    return {
-        type: 'backup_to_github',
-        auth,
-        options,
-    };
-}
-
-/**
- * Creates a new BackupAsDownload event.
- */
-export function backupAsDownload(
-    target: DeviceSelector,
-    options?: BackupOptions
-): BackupAsDownloadAction {
-    return {
-        type: 'backup_as_download',
-        target,
-        options,
-    };
-}
-
-/**
  * Creates a new DownloadAction.
  * @param data The data that should be downloaded.
  * @param filename The name of the file.
@@ -4812,61 +4545,6 @@ export function download(
         data,
         filename,
         mimeType,
-    };
-}
-
-/**
- * Creates a new StartCheckoutAction.
- * @param options The options.
- */
-export function checkout(options: StartCheckoutOptions): StartCheckoutAction {
-    return {
-        type: 'start_checkout',
-        ...options,
-    };
-}
-
-/**
- * Creates a new CheckoutSubmittedAction.
- */
-export function checkoutSubmitted(
-    productId: string,
-    token: string,
-    processingInst: string
-): CheckoutSubmittedAction {
-    return {
-        type: 'checkout_submitted',
-        productId: productId,
-        token: token,
-        processingInst: processingInst,
-    };
-}
-
-/**
- * Creates a new FinishCheckoutAction.
- * @param secretKey The secret stripe API Key.
- * @param token The token.
- * @param amount The amount.
- * @param currency The currency.
- * @param description The description.
- * @param extra Any extra info to send.
- */
-export function finishCheckout(
-    secretKey: string,
-    token: string,
-    amount: number,
-    currency: string,
-    description: string,
-    extra?: any
-): FinishCheckoutAction {
-    return {
-        type: 'finish_checkout',
-        secretKey: secretKey,
-        amount: amount,
-        currency: currency,
-        description: description,
-        token: token,
-        extra: extra,
     };
 }
 
@@ -4956,26 +4634,6 @@ export function getRemoteCount(inst?: string): GetRemoteCountAction {
         };
     }
 }
-
-/**
- * Creates a new GetServersAction.
- */
-export function getServers(): GetServersAction {
-    return {
-        type: 'get_servers',
-    };
-}
-
-/**
- * Creates a new GetServersAction that includes statuses.
- */
-export function getServerStatuses(): GetServersAction {
-    return {
-        type: 'get_servers',
-        includeStatuses: true,
-    };
-}
-
 /**
  * Creates a new GetRemotesAction.
  */
@@ -6054,53 +5712,6 @@ export function showUploadFiles(
         type: 'show_upload_files',
         taskId,
     };
-}
-
-/**
- * Creates a MarkHistoryAction.
- * @param options The options to use.
- */
-export function markHistory(options: MarkHistoryOptions): MarkHistoryAction {
-    return {
-        type: 'mark_history',
-        ...options,
-    };
-}
-
-export interface MarkHistoryOptions {
-    message: string;
-}
-
-/**
- * Creates a BrowseHistoryAction.
- */
-export function browseHistory(): BrowseHistoryAction {
-    return {
-        type: 'browse_history',
-    };
-}
-
-/**
- * Creates a RestoreHistoryMarkAction.
- * @param mark The ID of the mark that history should be restored to.
- * @param inst The instance that the mark should be restored to. If not specified, then the current instance will be used.
- */
-export function restoreHistoryMark(
-    mark: string,
-    inst?: string
-): RestoreHistoryMarkAction {
-    if (!inst) {
-        return {
-            type: 'restore_history_mark',
-            mark,
-        };
-    } else {
-        return {
-            type: 'restore_history_mark',
-            mark,
-            inst,
-        };
-    }
 }
 
 /**

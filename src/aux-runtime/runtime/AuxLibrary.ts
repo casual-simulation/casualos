@@ -48,18 +48,11 @@ import {
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
     openURL as calcOpenURL,
-    checkout as calcCheckout,
     playSound as calcPlaySound,
     bufferSound as calcBufferSound,
     cancelSound as calcCancelSound,
     setupServer as calcSetupServer,
     shell as calcShell,
-    backupToGithub as calcBackupToGithub,
-    backupAsDownload as calcBackupAsDownload,
-    finishCheckout as calcFinishCheckout,
-    markHistory as calcMarkHistory,
-    browseHistory as calcBrowseHistory,
-    restoreHistoryMark as calcRestoreHistoryMark,
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     reject as calcReject,
@@ -89,7 +82,6 @@ import {
     ShowInputOptions,
     KNOWN_PORTALS,
     openConsole,
-    StartCheckoutOptions,
     tagsOnBot,
     getOriginalObject,
     getBotSpace,
@@ -103,12 +95,10 @@ import {
     ShareOptions,
     unlockSpace,
     getRemoteCount,
-    getServers,
     getRemotes,
     listInstUpdates as calcListInstUpdates,
     getInstStateFromUpdates as calcGetInstStateFromUpdates,
     action,
-    getServerStatuses,
     setSpacePassword,
     rpioInitPin,
     rpioExitPin,
@@ -204,14 +194,9 @@ import {
     GoToURLAction,
     OpenURLAction,
     OpenConsoleAction,
-    StartCheckoutAction,
-    FinishCheckoutAction,
-    ShowUploadFilesAction,
-    ApplyStateAction,
     RejectAction,
     FocusOnOptions,
     animateToPosition,
-    AsyncAction,
     beginAudioRecording as calcBeginAudioRecording,
     endAudioRecording as calcEndAudioRecording,
     beginRecording as calcBeginRecording,
@@ -3326,7 +3311,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 goToURL,
                 openURL,
                 openDevConsole,
-                checkout,
                 playSound,
                 bufferSound,
                 cancelSound,
@@ -3420,10 +3404,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 applyUpdatesToInst,
                 getCurrentInstUpdate,
                 mergeInstUpdates,
-                instances: servers,
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
-                instStatuses: serverStatuses,
 
                 beginAudioRecording,
                 endAudioRecording,
@@ -3493,24 +3475,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 serialPause,
                 serialResume,
                 shell,
-                backupToGithub,
-                backupAsDownload,
-                finishCheckout,
-                markHistory,
-                browseHistory,
-                restoreHistoryMark,
-                restoreHistoryMarkToServer,
-                restoreHistoryMarkToInst: restoreHistoryMarkToServer,
                 loadFile,
                 saveFile,
                 serverRemoteCount,
                 totalRemoteCount,
-                serverStatuses,
                 remotes,
-                servers,
 
-                // TODO: Remove deprecated function names
-                stories: servers,
                 players: remotes,
                 serverPlayerCount: serverRemoteCount,
                 totalPlayerCount: totalRemoteCount,
@@ -7329,27 +7299,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a checkout screen that lets the user purchase something.
-     *
-     * @param options The options for the payment box.
-     *
-     * @example
-     * // Show a checkout box for 10 cookies
-     * os.checkout({
-     *   productId: '10_cookies',
-     *   title: '10 Cookies',
-     *   description: '$5.00',
-     *   processingServer: 'cookies_checkout'
-     * });
-     *
-     * @hidden
-     */
-    function checkout(options: StartCheckoutOptions): StartCheckoutAction {
-        const event = calcCheckout(options);
-        return addAction(event);
-    }
-
-    /**
      * Loads and plays the audio (MP3, WAV, etc.) from the given URL.
      *
      * Returns a promise that resolves with the ID of the sound when the sound starts playing. The sound ID can then be used with {@link os.cancelSound} to stop the sound.
@@ -10467,125 +10416,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Backs up all the AUX instances to a Github Gist.
-     * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
-     */
-    function backupToGithub(auth: string): RemoteAction | RemoteAction[] {
-        return remote(calcBackupToGithub(auth));
-    }
-
-    /**
-     * Backs up all the AUX instances to a zip bot.
-     */
-    function backupAsDownload(
-        target: SessionSelector
-    ): RemoteAction | RemoteAction[] {
-        return remote(calcBackupAsDownload(convertSessionSelector(target)));
-    }
-
-    /**
-     * Finishes the checkout process by charging the payment fee to the user.
-     *
-     * @param options The options for finishing the checkout.
-     *
-     * @example
-     * // Finish the checkout process
-     * inst.finishCheckout({
-     *   secretKey: 'YOUR_SECRET_API_KEY',
-     *   token: 'token from onCheckout',
-     *
-     *   // 1000 cents == $10.00
-     *   amount: 1000,
-     *   currency: 'usd',
-     *   description: 'Description for purchase'
-     * });
-     */
-    function finishCheckout(
-        options: FinishCheckoutOptions
-    ): FinishCheckoutAction {
-        const event = calcFinishCheckout(
-            options.secretKey,
-            options.token,
-            options.amount,
-            options.currency,
-            options.description,
-            options.extra
-        );
-        return addAction(event);
-    }
-
-    /**
-     * Saves the current state as a history mark.
-     * @param options The options that describe what information the mark should contain.
-     *
-     * @example
-     * // Bookmark the current state with a message
-     * inst.markHistory({
-     *   message: "Save recent changes"
-     * });
-     */
-    function markHistory(options: MarkHistoryOptions): Promise<void> {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            calcMarkHistory(options),
-            undefined,
-            false,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Loads the "history" space into the inst.
-     */
-    function browseHistory(): Promise<void> {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            calcBrowseHistory(),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Restores the current state to the given mark.
-     * @param mark The bot or bot ID that represents the mark that should be restored.
-     */
-    function restoreHistoryMark(mark: Bot | string): Promise<void> {
-        const id = getID(mark);
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            calcRestoreHistoryMark(id),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Restores the current state to the given mark.
-     * @param mark The bot or bot ID that represents the mark that should be restored.
-     * @param inst The inst that the mark should be restored to.
-     */
-    function restoreHistoryMarkToServer(
-        mark: Bot | string,
-        inst: string
-    ): Promise<void> {
-        const id = getID(mark);
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            calcRestoreHistoryMark(id, inst),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
      * Loads a file from the server at the given path.
      * @param path The path of the file.
      * @param options The options.
@@ -10675,57 +10505,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             getRemoteCount(),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Gets the list of instances that are stored on the server. Returns a promise that resolves with the list of inst names.
-     *
-     * @example Get the list of instances on the server.
-     * const instances = await os.instances();
-     * os.toast("Instances " + instances.join(','));
-     *
-     * @dochash actions/os
-     * @docname os.instances
-     * @docgroup 10-remotes
-     */
-    function servers(): Promise<string[]> {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            getServers(),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Gets the list of instances that are stored on the server along with the last time that they were updated. Returns a promise that resolves with the list of instances.
-     *
-     * The resolved list is sorted by the most recently updated first and the least recently updated last.
-     *
-     * @example Get the list of instances on the server along with their status.
-     * const instances = await os.instStatuses();
-     * os.toast("Instances " + getJSON(instances));
-     *
-     * @dochash actions/os
-     * @docname os.instStatuses
-     * @docgroup 10-remotes
-     */
-    function serverStatuses(): Promise<
-        {
-            inst: string;
-            lastUpdateTime: Date;
-        }[]
-    > {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            getServerStatuses(),
             undefined,
             undefined,
             task.taskId

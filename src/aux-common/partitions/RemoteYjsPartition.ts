@@ -41,10 +41,8 @@ import {
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
     AsyncAction,
-    GetRemoteCountAction,
     asyncResult,
     asyncError,
-    GetServersAction,
     convertToString,
     ListInstUpdatesAction,
     GetInstStateFromUpdatesAction,
@@ -349,9 +347,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         }
         for (let event of events) {
             if (event.type === 'remote') {
-                if (event.event.type === 'get_remote_count') {
-                } else if (event.event.type === 'get_servers') {
-                } else if (event.event.type === 'get_remotes') {
+                if (event.event.type === 'get_remotes') {
                     // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.
                     // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
                     //       we do this type of logic.
