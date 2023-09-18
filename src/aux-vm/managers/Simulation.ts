@@ -24,7 +24,7 @@ export interface SimulationOrigin {
     /**
      * The name of the inst that the simulation should be loaded from.
      */
-    inst: string;
+    inst: string | null;
 
     /**
      * The host for the simulation.

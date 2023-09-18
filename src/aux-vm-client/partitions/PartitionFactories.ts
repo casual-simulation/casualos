@@ -17,10 +17,6 @@ import {
     RemoteYjsPartitionImpl,
     YjsPartition,
 } from '@casual-simulation/aux-common';
-// import {
-//     AwsSocket,
-//     ApiaryConnectionClient,
-// } from '@casual-simulation/causal-tree-client-apiary';
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
 import { TimeSyncController } from '@casual-simulation/timesync';

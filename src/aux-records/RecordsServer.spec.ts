@@ -10779,7 +10779,7 @@ describe('RecordsServer', () => {
                         connectionId,
                         messageEvent(1, {
                             type: 'login',
-                            clientConnectionId: 'clientConnectionId',
+                            connectionId: 'clientConnectionId',
                         })
                     )
                 );
@@ -10865,7 +10865,7 @@ describe('RecordsServer', () => {
                     connectionToken = null;
                     await websocketController.login(connectionId, 1, {
                         type: 'login',
-                        clientConnectionId,
+                        connectionId: clientConnectionId,
                     });
                     connectionInfo = {
                         connectionId: clientConnectionId,
@@ -11119,7 +11119,7 @@ describe('RecordsServer', () => {
                     expectNoWebSocketErrors(connectionId);
                     await websocketController.login('connection2', 99, {
                         type: 'login',
-                        clientConnectionId: 'clientConnectionId2',
+                        connectionId: 'clientConnectionId2',
                     });
                     await websocketController.watchBranch('connection2', {
                         type: 'repo/watch_branch',
@@ -11164,7 +11164,7 @@ describe('RecordsServer', () => {
                     expectNoWebSocketErrors(connectionId);
                     await websocketController.login('connection2', 99, {
                         type: 'login',
-                        clientConnectionId: 'clientConnectionId2',
+                        connectionId: 'clientConnectionId2',
                     });
                     await websocketController.watchBranch('connection2', {
                         type: 'repo/watch_branch',
@@ -11218,7 +11218,7 @@ describe('RecordsServer', () => {
 
                     await websocketController.login('connection2', 99, {
                         type: 'login',
-                        clientConnectionId: 'clientConnectionId2',
+                        connectionId: 'clientConnectionId2',
                     });
                     await websocketController.watchBranch('connection2', {
                         type: 'repo/watch_branch',
@@ -11269,7 +11269,7 @@ describe('RecordsServer', () => {
 
                     await websocketController.login('connection2', 99, {
                         type: 'login',
-                        clientConnectionId: 'clientConnectionId2',
+                        connectionId: 'clientConnectionId2',
                     });
                     await websocketController.watchBranch('connection2', {
                         type: 'repo/watch_branch',
@@ -11357,7 +11357,7 @@ describe('RecordsServer', () => {
 
                     await websocketController.login('connection2', 99, {
                         type: 'login',
-                        clientConnectionId: 'clientConnectionId2',
+                        connectionId: 'clientConnectionId2',
                     });
                     await websocketController.watchBranch('connection2', {
                         type: 'repo/watch_branch',
@@ -11389,7 +11389,7 @@ describe('RecordsServer', () => {
 
                     await websocketController.login('connection2', 99, {
                         type: 'login',
-                        clientConnectionId: 'clientConnectionId2',
+                        connectionId: 'clientConnectionId2',
                     });
 
                     await websocketController.watchBranch('connection2', {

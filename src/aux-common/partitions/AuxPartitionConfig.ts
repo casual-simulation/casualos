@@ -132,9 +132,8 @@ export type SharedPartitionsVersion = 'v2';
  * The possible protocol types.
  *
  * - "apiary-aws" indicates that the protocol will use WebSockets and a customized protocol wrapper to connect to a Causal Repo Server which
- *    is hosted on AWS Lambda. This customized protocol is required since AWS API Gateway has limitations (like message sizes) that need working around. See the causal-tree-client-apiary project for more info.
+ *    is hosted on AWS Lambda. This customized protocol is required since AWS API Gateway has limitations (like message sizes) that need working around.
  * - "websocket" indicates that the protocol will use native WebSockets to connect to the causal repo server.
- *   See the causal-tree-client-websocket project for more info.
  */
 export type RemoteCausalRepoProtocol = 'apiary-aws' | 'websocket';
 
