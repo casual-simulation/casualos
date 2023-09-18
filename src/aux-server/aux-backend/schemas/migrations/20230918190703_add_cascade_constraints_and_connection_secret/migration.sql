@@ -70,11 +70,14 @@ ALTER TABLE "RoleAssignment" DROP CONSTRAINT "RoleAssignment_recordName_fkey";
 -- DropForeignKey
 ALTER TABLE "SubscriptionPeriod" DROP CONSTRAINT "SubscriptionPeriod_subscriptionId_fkey";
 
--- AddForeignKey
-ALTER TABLE "LoginRequest" ADD CONSTRAINT "LoginRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AlterTable
+ALTER TABLE "AuthSession" ADD COLUMN     "connectionSecret" STRING;
 
 -- AddForeignKey
-ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "LoginRequest" ADD CONSTRAINT "LoginRequest_userId_fkey1" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_userId_fkey1" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RecordKey" ADD CONSTRAINT "RecordKey_recordName_fkey1" FOREIGN KEY ("recordName") REFERENCES "Record"("name") ON DELETE CASCADE ON UPDATE CASCADE;
