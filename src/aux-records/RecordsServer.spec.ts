@@ -70,9 +70,12 @@ import { SplitInstRecordsStore } from './websockets/SplitInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './websockets/MemoryTempInstRecordsStore';
 import { MemoryInstRecordsStore } from './websockets/MemoryInstRecordsStore';
 import {
+    LoginMessage,
+    WebsocketDownloadRequestEvent,
     WebsocketEventTypes,
     WebsocketMessage,
     WebsocketMessageEvent,
+    WebsocketUploadRequestEvent,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { botAdded, createBot, toast } from '@casual-simulation/aux-common/bots';
 import {
@@ -10844,6 +10847,16 @@ describe('RecordsServer', () => {
                     sessionId: null,
                     token: null,
                 });
+                expect(websocketMessenger.getMessages(connectionId)).toEqual([
+                    messageEvent(-1, {
+                        type: 'login_result',
+                        info: {
+                            connectionId: 'clientConnectionId',
+                            sessionId: null,
+                            userId: null,
+                        },
+                    }),
+                ]);
             });
 
             it('should create a new connection for authenticated users', async () => {
@@ -11503,6 +11516,63 @@ describe('RecordsServer', () => {
                 ]);
             });
         });
+
+        describe('download request', () => {
+            it('should download and process the message', async () => {
+                websocketMessenger.uploadedMessages = new Map([
+                    [
+                        'message 1',
+                        JSON.stringify({
+                            type: 'login',
+                            connectionId: 'clientConnectionId',
+                        } as LoginMessage),
+                    ],
+                ]);
+
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        downloadRequestEvent(1, 'message 1', 'GET', {})
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                expect(websocketMessenger.getMessages(connectionId)).toEqual([
+                    {
+                        type: 'login_result',
+                        info: {
+                            connectionId: 'clientConnectionId',
+                            sessionId: null,
+                            userId: null,
+                        },
+                    },
+                ]);
+            });
+        });
+
+        describe('upload request', () => {
+            it('should return a URL that the client can upload to', async () => {
+                websocketMessenger.messageUploadUrl = 'upload_url';
+
+                await server.handleWebsocketRequest(
+                    wsMessage(connectionId, uploadRequestEvent(1))
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                const messages = websocketMessenger.getEvents(connectionId);
+                expect(messages).toEqual([
+                    [
+                        WebsocketEventTypes.UploadResponse,
+                        1,
+                        'upload_url',
+                        'POST',
+                        {},
+                    ],
+                ]);
+            });
+        });
     });
 
     function expectNoWebSocketErrors(connectionId: string) {
@@ -11849,6 +11919,32 @@ describe('RecordsServer', () => {
             requestId,
             body,
         ];
+        return JSON.stringify(e);
+    }
+
+    function uploadRequestEvent(requestId: number): string {
+        const e: WebsocketUploadRequestEvent = [
+            WebsocketEventTypes.UploadRequest,
+            requestId,
+        ];
+
+        return JSON.stringify(e);
+    }
+
+    function downloadRequestEvent(
+        requestId: number,
+        downloadUrl: string,
+        downloadMethod: string,
+        downloadHeaders: any
+    ): string {
+        const e: WebsocketDownloadRequestEvent = [
+            WebsocketEventTypes.DownloadRequest,
+            requestId,
+            downloadUrl,
+            downloadMethod,
+            downloadHeaders,
+        ];
+
         return JSON.stringify(e);
     }
 
