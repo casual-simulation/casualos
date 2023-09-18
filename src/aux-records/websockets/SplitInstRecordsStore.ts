@@ -19,6 +19,14 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     private _temp: TemporaryInstRecordsStore;
     private _permanent: InstRecordsStore;
 
+    get temp() {
+        return this._temp;
+    }
+
+    get perm() {
+        return this._permanent;
+    }
+
     constructor(
         temporary: TemporaryInstRecordsStore,
         permanent: InstRecordsStore
@@ -244,6 +252,20 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         await Promise.all(promises);
     }
 
+    /**
+     * Replaces the current set of updates with a new update.
+     * Useful for when updates have been merged and the old ones should be replaced by the new one.
+     *
+     * Depending on the implementation, this function may or may not be concurrent safe.
+     * That is, if two clients call this function at the same time for the same branch, then it is possible that the branch will be put into an invalid state.
+     *
+     * @param recordName The name of the record. If null, then the updates will be added to a tempPublic inst.
+     * @param inst The name of the inst.
+     * @param branch The branch in the inst.
+     * @param updatesToRemove The updates that should be moved. Only valid if the result from getUpdates() is used.
+     * @param updateToAdd The update that should be added.
+     * @param sizeInBytes The size of the new update in bytes.
+     */
     async replaceCurrentUpdates(
         recordName: string,
         inst: string,

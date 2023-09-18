@@ -20,6 +20,7 @@ import {
 } from '@casual-simulation/aux-records';
 import { Server as WebsocketServer } from 'ws';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
+import { concatMap, interval } from 'rxjs';
 
 const imageMimeTypes = [
     'image/png',
@@ -231,8 +232,13 @@ export class Server {
             builder.useAI();
         }
 
-        const { server, filesController, mongoDatabase, websocketMessenger } =
-            await builder.buildAsync();
+        const {
+            server,
+            filesController,
+            mongoDatabase,
+            websocketMessenger,
+            websocketController,
+        } = await builder.buildAsync();
         const filesCollection =
             mongoDatabase.collection<any>('recordsFilesData');
 
@@ -467,6 +473,15 @@ export class Server {
         } else {
             console.log('[Server] Websockets integration disabled.');
         }
+
+        interval(30 * 1000)
+            .pipe(
+                concatMap(
+                    async () =>
+                        await websocketController.savePermanentBranches()
+                )
+            )
+            .subscribe();
 
         function handleRecordsCorsHeaders(req: Request, res: Response) {
             if (allowedRecordsOrigins.has(req.headers.origin as string)) {

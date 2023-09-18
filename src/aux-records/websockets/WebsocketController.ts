@@ -43,10 +43,15 @@ import {
     InstRecord,
     InstRecordsStore,
 } from './InstRecordsStore';
-import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import {
+    BranchName,
+    TemporaryInstRecordsStore,
+} from './TemporaryInstRecordsStore';
 import { sumBy } from 'lodash';
 import { PUBLIC_READ_MARKER, PUBLIC_WRITE_MARKER } from '../PolicyPermissions';
 import { ZodIssue } from 'zod';
+import { SplitInstRecordsStore } from './SplitInstRecordsStore';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -535,39 +540,6 @@ export class WebsocketController {
                         result
                     );
                     if (result.errorCode === 'max_size_reached') {
-                        // if (this.mergeUpdatesOnMaxSizeExceeded) {
-                        //     try {
-                        //         console.log(
-                        //             `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Merging branch updates.`
-                        //         );
-
-                        //         const updates = await this._instStore.getUpdates(
-                        //             namespace
-                        //         );
-                        //         const mergedUpdates = mergeUpdates([
-                        //             ...updates.updates.map((u) => toByteArray(u)),
-                        //             ...event.updates.map((u) => toByteArray(u)),
-                        //         ]);
-                        //         result = await this._updatesStore.replaceUpdates(
-                        //             namespace,
-                        //             updates,
-                        //             [fromByteArray(mergedUpdates)]
-                        //         );
-
-                        //         if (result.success === false) {
-                        //             console.log(
-                        //                 `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to merge branch updates`,
-                        //                 result
-                        //             );
-                        //         }
-                        //     } catch (err) {
-                        //         console.error(
-                        //             '[CausalRepoServer] Unable to merge branch updates!',
-                        //             err
-                        //         );
-                        //     }
-                        // }
-
                         if (result.success === false) {
                             if ('updateId' in event) {
                                 let { success, branch, ...rest } = result;
@@ -586,6 +558,17 @@ export class WebsocketController {
                             }
                             return;
                         }
+                    }
+                } else {
+                    if (
+                        event.recordName &&
+                        this._instStore instanceof SplitInstRecordsStore
+                    ) {
+                        this._instStore.temp.markBranchAsDirty({
+                            recordName: event.recordName,
+                            inst: event.inst,
+                            branch: event.branch,
+                        });
                     }
                 }
             }
@@ -1096,6 +1079,126 @@ export class WebsocketController {
                 errorMessage: 'Error while processing download request.',
             };
         }
+    }
+
+    /**
+     * Saves all of the permanent branches that are currently in memory.
+     */
+    async savePermanentBranches(): Promise<void> {
+        const store = this._instStore;
+        if (store instanceof SplitInstRecordsStore) {
+            const generation = await store.temp.getDirtyBranchGeneration();
+            store.temp.setDirtyBranchGeneration(uuid());
+            const branches = await store.temp.listDirtyBranches(generation);
+
+            for (let branch of branches) {
+                if (!branch.recordName) {
+                    continue;
+                }
+                await this._saveBranchUpdates(store, branch);
+            }
+
+            await store.temp.clearDirtyBranches(generation);
+            console.log(`[WebsocketController] Saved permanent branches.`);
+        }
+    }
+
+    private async _saveBranchUpdates(
+        store: SplitInstRecordsStore,
+        branch: BranchName
+    ) {
+        console.log(
+            `[WebsocketController] Saving branch updates for ${branch.recordName}/${branch.inst}/${branch.branch}`
+        );
+
+        let [updateCount, size] = await Promise.all([
+            store.temp.countBranchUpdates(
+                branch.recordName,
+                branch.inst,
+                branch.branch
+            ),
+            store.temp.getBranchSize(
+                branch.recordName,
+                branch.inst,
+                branch.branch
+            ),
+        ]);
+
+        if (updateCount <= 0) {
+            console.log(`[WebsocketController] Branch has no updates to save.`);
+            return;
+        }
+
+        const branchInfo = await store.getBranchByName(
+            branch.recordName,
+            branch.inst,
+            branch.branch
+        );
+
+        if (!branchInfo) {
+            console.log(`[WebsocketController] Branch info not found.`);
+            return;
+        }
+
+        if (branchInfo.temporary) {
+            console.log(`[WebsocketController] Branch is temporary.`);
+            return;
+        }
+
+        const updates = await store.temp.getUpdates(
+            branch.recordName,
+            branch.inst,
+            branch.branch
+        );
+
+        if (updates) {
+            const updatesBytes = updates.updates.map((u) => toByteArray(u));
+            const mergedBytes = mergeUpdates(updatesBytes);
+            const mergedBase64 = fromByteArray(mergedBytes);
+            const permanentReplaceResult =
+                await store.perm.replaceCurrentUpdates(
+                    branch.recordName,
+                    branch.inst,
+                    branch.branch,
+                    mergedBase64,
+                    mergedBase64.length
+                );
+
+            if (permanentReplaceResult.success === false) {
+                console.error(
+                    `[WebsocketController] Failed to replace permanent updates.`,
+                    permanentReplaceResult
+                );
+                return;
+            }
+
+            await store.temp.addUpdates(
+                branch.recordName,
+                branch.inst,
+                branch.branch,
+                [mergedBase64],
+                mergedBase64.length
+            );
+            await store.temp.trimUpdates(
+                branch.recordName,
+                branch.inst,
+                branch.branch,
+                updateCount
+            );
+            await Promise.all([
+                store.temp.addBranchSize(
+                    branch.recordName,
+                    branch.inst,
+                    branch.branch,
+                    -size
+                ),
+                store.temp.addInstSize(branch.recordName, branch.inst, -size),
+            ]);
+        } else {
+            console.log(`[WebsocketController] No updates found.`);
+        }
+
+        console.log(`[WebsocketController] Updates complete.`);
     }
 
     async sendError(connectionId: string, error: WebsocketControllerError) {

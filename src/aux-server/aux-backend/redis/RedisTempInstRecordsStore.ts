@@ -1,4 +1,5 @@
 import {
+    BranchName,
     BranchUpdates,
     TempBranchInfo,
     TemporaryInstRecordsStore,
@@ -12,6 +13,7 @@ import { Multi, RedisClient } from 'redis';
 export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _globalNamespace: string;
     private _redis: RedisClient;
+    private _currentGenerationKey: string;
 
     private rpush: (args: [string, ...string[]]) => Promise<number>;
     private incr: (args: [string]) => Promise<number>;
@@ -33,6 +35,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
     constructor(globalNamespace: string, redis: RedisClient) {
         this._globalNamespace = globalNamespace;
         this._redis = redis;
+        this._currentGenerationKey = `${this._globalNamespace}/currentGeneration`;
 
         this._redis.get('abc');
         this.get = promisify(this._redis.get).bind(this._redis);
@@ -47,6 +50,39 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         this.sadd = promisify(this._redis.sadd.bind(this._redis));
         this.smembers = promisify(this._redis.smembers.bind(this._redis));
         this.multi = promisify(this._redis.multi.bind(this._redis));
+    }
+
+    async setDirtyBranchGeneration(generation: string): Promise<void> {
+        await this.set(this._currentGenerationKey, generation);
+    }
+
+    async getDirtyBranchGeneration(): Promise<string> {
+        const generation = await this.get(this._currentGenerationKey);
+        return generation ?? '0';
+    }
+
+    async markBranchAsDirty(branch: BranchName): Promise<void> {
+        const generation = await this.getDirtyBranchGeneration();
+        const key = this._generationKey(generation);
+        await this.sadd(key, JSON.stringify(branch));
+    }
+
+    async listDirtyBranches(generation?: string): Promise<BranchName[]> {
+        if (!generation) {
+            generation = await this.getDirtyBranchGeneration();
+        }
+        const key = this._generationKey(generation);
+        const branches = (await this.smembers(key)) ?? [];
+        return branches.map((b) => JSON.parse(b));
+    }
+
+    async clearDirtyBranches(generation: string): Promise<void> {
+        const key = this._generationKey(generation);
+        await this.del(key);
+    }
+
+    private _generationKey(generation: string) {
+        return `${this._globalNamespace}/dirtyBranches/${generation}`;
     }
 
     private _getUpdatesKey(
