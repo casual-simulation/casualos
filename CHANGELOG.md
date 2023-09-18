@@ -37,6 +37,9 @@
     -   All the `server.serialXYZ` functions.
     -   All the `adminSpace` functions.
 -   `SHARED_PARTITIONS_VERSION` is now always `v2`.
+-   Removed all the `causal-tree` packages.
+    -   They are no longer needed since YJS does such a good job.
+-   Merged all the websocket and data synchronization code into `aux-common`, `aux-records`, and `aux-server`.
 
 ### :rocket: Improvements
 
