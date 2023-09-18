@@ -45,6 +45,7 @@ import {
     websocketEventSchema,
     websocketRequestMessageSchema,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import { DEFAULT_BRANCH_NAME } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -809,6 +810,12 @@ export class RecordsServer {
                 request,
                 await this._manageSubscriptionV2(request),
                 this._allowedAccountOrigins
+            );
+        } else if (request.method === 'GET' && request.path === '/instData') {
+            return formatResponse(
+                request,
+                await this._getInstData(request),
+                true
             );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
@@ -4006,6 +4013,35 @@ export class RecordsServer {
         return returnResult({
             success: true,
             url: result.url,
+        });
+    }
+
+    private async _getInstData(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        const schema = z.object({
+            recordName: z.string().nonempty().nullable().optional(),
+            inst: z.string().nonempty(),
+            branch: z.string().nonempty().default(DEFAULT_BRANCH_NAME),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, inst, branch } = parseResult.data;
+
+        const data = await this._websocketController.getBranchData(
+            recordName ?? null,
+            inst,
+            branch
+        );
+
+        return returnResult({
+            success: true,
+            ...data,
         });
     }
 

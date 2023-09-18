@@ -74,12 +74,16 @@ import {
     WebsocketMessage,
     WebsocketMessageEvent,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import { toast } from '@casual-simulation/aux-common/bots';
+import { botAdded, createBot, toast } from '@casual-simulation/aux-common/bots';
 import {
     device,
     remote,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
+import {
+    YjsPartitionImpl,
+    constructInitializationUpdate,
+} from '@casual-simulation/aux-common';
 
 console.log = jest.fn();
 
@@ -10686,6 +10690,49 @@ describe('RecordsServer', () => {
                 })
             );
         });
+    });
+
+    describe('GET /instData', () => {
+        it('should return the inst data that is stored', async () => {
+            const update = constructInitializationUpdate({
+                type: 'create_initialization_update',
+                bots: [
+                    createBot('test', {
+                        test: true,
+                    }),
+                ],
+            });
+
+            await instStore.addUpdates(
+                null,
+                'inst',
+                'branch',
+                [update.update],
+                update.update.length
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet('/instData?inst=inst&branch=branch', defaultHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    version: 1,
+                    state: {
+                        test: createBot('test', {
+                            test: true,
+                        }),
+                    },
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet('/instData?inst=inst&branch=branch', defaultHeaders)
+        );
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {

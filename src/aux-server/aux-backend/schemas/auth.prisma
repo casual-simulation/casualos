@@ -61,7 +61,7 @@ model User {
 model LoginRequest {
     requestId String @id
     userId String
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "LoginRequest_userId_fkey1")
     secretHash String
     requestTime DateTime
     expireTime DateTime
@@ -81,7 +81,7 @@ model LoginRequest {
 model AuthSession {
     sessionId String @id
     userId String
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AuthSession_userId_fkey1")
 
     secretHash String
     connectionSecret String?
