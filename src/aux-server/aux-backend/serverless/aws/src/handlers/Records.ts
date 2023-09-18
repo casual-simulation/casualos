@@ -1,5 +1,4 @@
 // Create clients and set shared const values outside of the handler.
-import { getAllowedAPIOrigins, allowedOrigins } from '../utils';
 import {
     GenericHttpRequest,
     GenericHttpHeaders,
@@ -10,95 +9,9 @@ import type {
     EventBridgeEvent,
     S3Event,
 } from 'aws-lambda';
-import {
-    BuilderOptions,
-    ServerBuilder,
-} from '../../../../shared/ServerBuilder';
-import { loadConfig } from '../../../../shared/ConfigUtils';
-import { merge } from 'lodash';
+import { constructServerBuilder, FILES_BUCKET } from '../LoadServer';
 
-declare var S3_ENDPOINT: string;
-declare var DEVELOPMENT: boolean;
-
-// Get the DynamoDB table name from environment variables
-const FILES_BUCKET = process.env.FILES_BUCKET;
-const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
-const REGION = process.env.AWS_REGION;
-
-const staticConfig = loadConfig();
-const dynamicConfig: BuilderOptions = {
-    s3: {
-        region: REGION,
-        filesBucket: FILES_BUCKET,
-        filesStorageClass: FILES_STORAGE_CLASS,
-
-        // We reference the Vite server in development.
-        // since any preflight request with an Origin header is rejected by localstack (see https://github.com/localstack/localstack/issues/4056)
-        // This parameter is mostly only used so that the file URLs point to the correct S3 instance. As such,
-        // this value is mostly used by browsers trying to upload files.
-        host: DEVELOPMENT ? `http://localhost:3002/s3` : undefined,
-        options: {
-            endpoint: S3_ENDPOINT,
-            s3ForcePathStyle: DEVELOPMENT,
-        },
-    },
-};
-
-const config = merge({}, staticConfig, dynamicConfig);
-
-const allowedApiOrigins = new Set([
-    'http://localhost:3000',
-    'http://localhost:3002',
-    'http://player.localhost:3000',
-    'https://localhost:3000',
-    'https://localhost:3002',
-    'https://player.localhost:3000',
-    'https://casualos.com',
-    'https://casualos.me',
-    'https://ab1.link',
-    'https://publicos.com',
-    'https://alpha.casualos.com',
-    'https://static.casualos.com',
-    'https://stable.casualos.com',
-    ...getAllowedAPIOrigins(),
-]);
-
-const builder = new ServerBuilder(config)
-    .useAllowedApiOrigins(allowedApiOrigins)
-    .useAllowedAccountOrigins(allowedOrigins);
-
-if (config.prisma && config.s3) {
-    builder.usePrismaWithS3();
-}
-
-if (config.livekit) {
-    builder.useLivekit();
-}
-
-if (config.textIt && config.textIt.apiKey && config.textIt.flowId) {
-    builder.useTextItAuthMessenger();
-} else if (config.ses) {
-    builder.useSesAuthMessenger();
-} else {
-    builder.useConsoleAuthMessenger();
-}
-
-if (
-    config.stripe &&
-    config.stripe.secretKey &&
-    config.stripe.publishableKey &&
-    config.subscriptions
-) {
-    builder.useStripeSubscriptions();
-}
-
-if (config.rateLimit && config.rateLimit.windowMs && config.rateLimit.maxHits) {
-    builder.useRedisRateLimit();
-}
-
-if (config.ai) {
-    builder.useAI();
-}
+const builder = constructServerBuilder();
 
 const { server, filesStore } = builder.build();
 
