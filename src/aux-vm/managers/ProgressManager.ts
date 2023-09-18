@@ -1,4 +1,4 @@
-import { ProgressMessage } from '@casual-simulation/causal-trees';
+import { ProgressMessage } from '@casual-simulation/aux-common';
 import { AuxVM } from '../vm/AuxVM';
 import {
     BehaviorSubject,
@@ -30,8 +30,8 @@ export class ProgressManager implements SubscriptionLike {
         });
         this._sub = this._vm.connectionStateChanged
             .pipe(
-                takeWhile(m => m.type !== 'init'),
-                tap(message => {
+                takeWhile((m) => m.type !== 'init'),
+                tap((message) => {
                     if (message.type === 'progress') {
                         this._progress.next(message);
                     } else if (message.type === 'authorization') {
@@ -57,7 +57,7 @@ export class ProgressManager implements SubscriptionLike {
             )
             .subscribe(
                 null,
-                err => console.error(err),
+                (err) => console.error(err),
                 () => {
                     this._progress.next({
                         type: 'progress',

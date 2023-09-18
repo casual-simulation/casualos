@@ -9,7 +9,7 @@ import {
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
-} from './Errors';
+} from '@casual-simulation/aux-common/Errors';
 import {
     ADMIN_ROLE_NAME,
     AssignPolicyPermission,
@@ -28,7 +28,6 @@ import {
     AvailableRolePermissions,
 } from './PolicyPermissions';
 import {
-    ListedStudio,
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
     StudioAssignmentRole,

@@ -1,5 +1,5 @@
 import { RegexRule } from './Utils';
-import { ServerError } from './Errors';
+import { ServerError } from '@casual-simulation/aux-common/Errors';
 
 /**
  * Defines an interface that represents an auth store.
@@ -356,6 +356,11 @@ export interface AuthSession {
      * The hash of the token that provides access to this session.
      */
     secretHash: string;
+
+    /**
+     * The secret of the token that provides connection access to this session.
+     */
+    connectionSecret: string;
 
     /**
      * The unix timestamp in miliseconds that the session was granted at.

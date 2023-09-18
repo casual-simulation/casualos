@@ -2,14 +2,17 @@ import {
     AuthController,
     CompleteLoginSuccess,
     INVALID_KEY_ERROR_MESSAGE,
+    INVALID_TOKEN_ERROR_MESSAGE,
     ListSessionsSuccess,
     LOGIN_REQUEST_ID_BYTE_LENGTH,
     LOGIN_REQUEST_LIFETIME_MS,
     SESSION_LIFETIME_MS,
 } from './AuthController';
 import {
+    formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
+    generateV1ConnectionToken,
     parseSessionKey,
 } from './AuthUtils';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
@@ -20,7 +23,10 @@ import {
     hashHighEntropyPasswordWithSalt,
     hashPasswordWithSalt,
 } from '@casual-simulation/crypto';
-import { fromBase64String, toBase64String } from './Utils';
+import {
+    fromBase64String,
+    toBase64String,
+} from '@casual-simulation/aux-common';
 import { padStart } from 'lodash';
 import {
     allowAllFeatures,
@@ -734,6 +740,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -759,7 +766,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(150);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -777,12 +785,19 @@ describe('AuthController', () => {
                         fromByteArray(sessionSecret),
                         150 + SESSION_LIFETIME_MS
                     ),
+                    connectionKey: formatV1ConnectionKey(
+                        'myid',
+                        fromByteArray(sessionId),
+                        fromByteArray(connectionSecret),
+                        150 + SESSION_LIFETIME_MS
+                    ),
                     expireTimeMs: 150 + SESSION_LIFETIME_MS,
                 });
 
-                expect(randomBytesMock).toHaveBeenCalledTimes(2);
+                expect(randomBytesMock).toHaveBeenCalledTimes(3);
                 expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
                 expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
+                expect(randomBytesMock).toHaveBeenNthCalledWith(3, 16); // Should request 16 bytes (128 bits) for the connection secret
 
                 expect(store.sessions).toEqual([
                     {
@@ -794,6 +809,7 @@ describe('AuthController', () => {
                             fromByteArray(sessionSecret),
                             fromByteArray(sessionId)
                         ),
+                        connectionSecret: fromByteArray(connectionSecret),
                         grantedTimeMs: 150,
                         expireTimeMs: 150 + SESSION_LIFETIME_MS,
                         revokeTimeMs: null,
@@ -847,6 +863,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -872,7 +889,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(150);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -896,6 +914,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -921,7 +940,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(200);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -942,6 +962,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -967,7 +988,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(400);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -988,6 +1010,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -1013,7 +1036,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(400);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -1034,6 +1058,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -1059,7 +1084,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(400);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -1080,6 +1106,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -1105,7 +1132,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(400);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -1245,6 +1273,7 @@ describe('AuthController', () => {
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1282,6 +1311,7 @@ describe('AuthController', () => {
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1302,7 +1332,7 @@ describe('AuthController', () => {
                     });
                 });
 
-                it('should return the User ID if given a valid key', async () => {
+                it('should include the users subscription tier', async () => {
                     await store.saveUser({
                         id: 'myid',
                         email: 'email',
@@ -1329,6 +1359,7 @@ describe('AuthController', () => {
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1373,6 +1404,7 @@ describe('AuthController', () => {
                             code,
                             sessionId
                         ),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1413,6 +1445,7 @@ describe('AuthController', () => {
                             code,
                             sessionId
                         ),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1463,6 +1496,7 @@ describe('AuthController', () => {
                             code,
                             sessionId
                         ),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1498,6 +1532,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -1534,6 +1569,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -1571,6 +1607,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -1616,6 +1653,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -1644,6 +1682,7 @@ describe('AuthController', () => {
             const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
             const sessionId = new Uint8Array([7, 8, 9]);
             const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([13, 14, 15]);
 
             await store.saveUser({
                 id: 'myid',
@@ -1669,7 +1708,8 @@ describe('AuthController', () => {
             nowMock.mockReturnValue(150);
             randomBytesMock
                 .mockReturnValueOnce(sessionId)
-                .mockReturnValueOnce(sessionSecret);
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
 
             const response = (await controller.completeLogin({
                 userId: 'myid',
@@ -1677,6 +1717,14 @@ describe('AuthController', () => {
                 code: code,
                 ipAddress: '127.0.0.1',
             })) as CompleteLoginSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
 
             const validateResponse = await controller.validateSessionKey(
                 response.sessionKey
@@ -1696,6 +1744,7 @@ describe('AuthController', () => {
             const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
             const sessionId = new Uint8Array([7, 8, 9]);
             const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([13, 14, 15]);
 
             await store.saveUser({
                 id: 'myid',
@@ -1721,7 +1770,8 @@ describe('AuthController', () => {
             nowMock.mockReturnValue(150);
             randomBytesMock
                 .mockReturnValueOnce(sessionId)
-                .mockReturnValueOnce(sessionSecret);
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
 
             const response = (await controller.completeLogin({
                 userId: 'myid',
@@ -1778,6 +1828,460 @@ describe('AuthController', () => {
         });
     });
 
+    describe('validateConnectionToken()', () => {
+        describe('v1 tokens', () => {
+            beforeEach(async () => {
+                await store.saveUser({
+                    id: 'myid',
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                });
+            });
+
+            it('should return the User ID if given a valid key', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'recordName',
+                    'inst'
+                );
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    sessionId: sessionId,
+                    connectionId: 'connectionId',
+                    recordName: 'recordName',
+                    inst: 'inst',
+                });
+            });
+
+            it('should fail if the token doesnt match the connection secret', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String('wrong'),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'recordName',
+                    'inst'
+                );
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The connection token is invalid.',
+                });
+            });
+
+            it('should include the users subscription tier', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveUser({
+                    id: 'myid',
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    subscriptionId: 'sub_2',
+                    subscriptionStatus: 'active',
+                });
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'recordName',
+                    'inst'
+                );
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    sessionId: sessionId,
+                    connectionId: 'connectionId',
+                    recordName: 'recordName',
+                    inst: 'inst',
+                    subscriptionTier: 'alpha',
+                    subscriptionId: 'sub_2',
+                });
+            });
+
+            it('should fail if the token is malformed', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const result = await controller.validateConnectionToken(
+                    'wrong token'
+                );
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_connection_token',
+                    errorMessage:
+                        'The given connection token is invalid. It must be a correctly formatted string.',
+                });
+            });
+
+            it('should fail if the session has expired', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'recordName',
+                    'inst'
+                );
+
+                nowMock.mockReturnValue(400);
+
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'session_expired',
+                    errorMessage: 'The session has expired.',
+                });
+            });
+
+            it('should fail if the session has been revoked', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: 150,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'recordName',
+                    'inst'
+                );
+
+                nowMock.mockReturnValue(175);
+
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                });
+            });
+
+            it('should fail if the session was granted before all sessions were revoked', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: 101,
+                    currentLoginRequestId: requestId,
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'recordName',
+                    'inst'
+                );
+
+                nowMock.mockReturnValue(175);
+
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                });
+            });
+        });
+
+        it('should work with keys created by completeLogin()', async () => {
+            const address = 'myAddress';
+            const addressType = 'email';
+            const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+            const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([13, 14, 15]);
+
+            await store.saveUser({
+                id: 'myid',
+                email: address,
+                phoneNumber: address,
+                currentLoginRequestId: requestId,
+                allSessionRevokeTimeMs: undefined,
+            });
+
+            await store.saveLoginRequest({
+                userId: 'myid',
+                requestId: requestId,
+                secretHash: hashPasswordWithSalt(code, requestId),
+                expireTimeMs: 200,
+                requestTimeMs: 100,
+                completedTimeMs: null,
+                attemptCount: 0,
+                address,
+                addressType,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            const response = (await controller.completeLogin({
+                userId: 'myid',
+                requestId: requestId,
+                code: code,
+                ipAddress: '127.0.0.1',
+            })) as CompleteLoginSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
+
+            const token = generateV1ConnectionToken(
+                response.connectionKey,
+                'connectionId',
+                'recordName',
+                'inst'
+            );
+
+            const validateResponse = await controller.validateConnectionToken(
+                token
+            );
+
+            expect(validateResponse).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionId: fromByteArray(sessionId),
+                connectionId: 'connectionId',
+                recordName: 'recordName',
+                inst: 'inst',
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidKeyCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+            it.each(invalidKeyCases)(
+                'should fail if given a %s key',
+                async (desc, key) => {
+                    const response = await controller.validateConnectionToken(
+                        key
+                    );
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_connection_token',
+                        errorMessage:
+                            'The given connection token is invalid. It must be a correctly formatted string.',
+                    });
+                }
+            );
+        });
+    });
+
     describe('revokeSessionKey()', () => {
         beforeEach(async () => {
             await store.saveUser({
@@ -1801,6 +2305,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1814,6 +2319,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1838,6 +2344,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1860,6 +2367,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1896,6 +2404,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1909,6 +2418,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1950,6 +2460,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1963,6 +2474,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1997,6 +2509,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2010,6 +2523,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectinoSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2052,6 +2566,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2065,6 +2580,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2180,6 +2696,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2261,6 +2778,12 @@ describe('AuthController', () => {
         const code = 'code';
         const userId = 'myid';
         const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+        const connectionKey = formatV1ConnectionKey(
+            userId,
+            sessionId,
+            code,
+            200
+        );
 
         beforeEach(async () => {
             await store.saveUser({
@@ -2275,6 +2798,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2288,11 +2812,13 @@ describe('AuthController', () => {
         it('should issue a new session and revoke the given session', async () => {
             const newSessionId = new Uint8Array([7, 8, 9]);
             const newSessionSecret = new Uint8Array([10, 11, 12]);
+            const newConnectionSecret = new Uint8Array([13, 14, 15]);
 
             nowMock.mockReturnValue(150);
             randomBytesMock
                 .mockReturnValueOnce(newSessionId)
-                .mockReturnValueOnce(newSessionSecret);
+                .mockReturnValueOnce(newSessionSecret)
+                .mockReturnValueOnce(newConnectionSecret);
 
             const result = await controller.replaceSession({
                 sessionKey: sessionKey,
@@ -2308,6 +2834,12 @@ describe('AuthController', () => {
                     fromByteArray(newSessionSecret),
                     150 + SESSION_LIFETIME_MS
                 ),
+                connectionKey: formatV1ConnectionKey(
+                    userId,
+                    fromByteArray(newSessionId),
+                    fromByteArray(newConnectionSecret),
+                    150 + SESSION_LIFETIME_MS
+                ),
                 expireTimeMs: 150 + SESSION_LIFETIME_MS,
             });
 
@@ -2315,6 +2847,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2335,6 +2868,7 @@ describe('AuthController', () => {
                     fromByteArray(newSessionSecret),
                     fromByteArray(newSessionId)
                 ),
+                connectionSecret: fromByteArray(newConnectionSecret),
                 expireTimeMs: 150 + SESSION_LIFETIME_MS,
                 grantedTimeMs: 150,
                 revokeTimeMs: null,
@@ -2362,6 +2896,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2453,6 +2988,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
                 previousSessionId: null,
@@ -2467,6 +3003,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId: 'session' + (i + 1),
                     secretHash: 'hash' + (i + 1),
+                    connectionSecret: 'connectionSecret' + (i + 1),
                     expireTimeMs: 1000 + (i + 1),
                     grantedTimeMs: 100 + (i + 1),
                     previousSessionId: null,
@@ -2533,6 +3070,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'session20',
                 secretHash: 'hash20',
+                connectionSecret: 'connectionSecret20',
                 expireTimeMs: 1020,
                 grantedTimeMs: 120,
                 previousSessionId: null,
@@ -2652,6 +3190,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
                 previousSessionId: null,
@@ -2836,6 +3375,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
                 previousSessionId: null,

@@ -30,7 +30,6 @@
             <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui>
 
             <upload-files></upload-files>
-            <checkout></checkout>
             <show-input></show-input>
             <show-confirm></show-confirm>
 
@@ -130,8 +129,6 @@
                 v-bind:md-content="alertDialogOptions.body"
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
-
-            <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
 
             <md-snackbar
                 md-position="center"

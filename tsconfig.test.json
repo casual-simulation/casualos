@@ -29,12 +29,6 @@
         { "path": "./src/aux-vm-deno" },
         { "path": "./src/aux-records" },
         { "path": "./src/aux-records-aws" },
-        { "path": "./src/causal-trees" },
-        { "path": "./src/causal-tree-client-apiary" },
-        { "path": "./src/causal-tree-store-mongodb" },
-        { "path": "./src/causal-tree-store-cassandradb" },
-        { "path": "./src/causal-tree-server-websocket" },
-        { "path": "./src/causal-tree-client-websocket" },
         { "path": "./src/crypto-browser" },
         { "path": "./src/crypto-node" },
         { "path": "./src/stacktrace" },
@@ -45,6 +39,8 @@
         { "path": "./src/chalk" },
         { "path": "./src/websocket" },
         { "path": "./src/js-interpreter" },
-        { "path": "./src/rate-limit-redis" }
+        { "path": "./src/rate-limit-redis" },
+        { "path": "./src/aux-websocket" },
+        { "path": "./src/aux-websocket-aws" }
     ]
 }

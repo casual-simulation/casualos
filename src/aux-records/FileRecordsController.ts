@@ -12,7 +12,7 @@ import {
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
-} from './Errors';
+} from '@casual-simulation/aux-common/Errors';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,

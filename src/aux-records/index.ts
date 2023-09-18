@@ -13,7 +13,7 @@ export * from './EventRecordsController';
 export * from './EventRecordsStore';
 
 export * from './LivekitEvents';
-export * from './RecordsHttpServer';
+export * from './RecordsServer';
 
 export * from './SubscriptionController';
 export * from './StripeInterface';
@@ -40,3 +40,5 @@ export * from './SubscriptionConfiguration';
 export * from './MetricsStore';
 export * from './MemoryStore';
 export * from './MemoryFileRecordsLookup';
+
+export * from './websockets';

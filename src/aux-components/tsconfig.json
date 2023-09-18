@@ -13,7 +13,6 @@
     "references": [
         { "path": "../aux-vm" },
         { "path": "../aux-vm-client" },
-        { "path": "../causal-trees" },
         { "path": "../crypto" }
     ]
 }

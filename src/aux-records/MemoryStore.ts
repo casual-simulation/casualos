@@ -25,7 +25,7 @@ import {
     StudioAssignment,
     CountRecordsFilter,
     ListedRecord,
-    ListedStudio,
+    StoreListedStudio,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import {
@@ -365,7 +365,7 @@ export class MemoryStore
         return this._studios.find((s) => s.stripeCustomerId === customerId);
     }
 
-    async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
+    async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
         const assignments = await this.listUserAssignments(userId);
         const studios = await Promise.all(
             assignments.map(async (a) => {
@@ -381,6 +381,8 @@ export class MemoryStore
             displayName: s.displayName,
             role: s.role,
             isPrimaryContact: s.isPrimaryContact,
+            subscriptionId: s.subscriptionId,
+            subscriptionStatus: s.subscriptionStatus,
         }));
     }
 

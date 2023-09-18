@@ -12,9 +12,9 @@
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
     "references": [
         { "path": "../aux-common" },
+        { "path": "../aux-runtime" },
         { "path": "../aux-vm" },
         { "path": "../aux-vm-client" },
-        { "path": "../crypto-node" },
-        { "path": "../causal-tree-server" }
+        { "path": "../crypto-node" }
     ]
 }

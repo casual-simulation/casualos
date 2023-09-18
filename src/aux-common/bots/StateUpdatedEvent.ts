@@ -6,10 +6,10 @@ import {
     UpdatedBot,
 } from './Bot';
 import { merge } from '../utils';
-import { apply } from '../aux-format-2/AuxStateHelpers';
+import { apply } from '../bots/AuxStateHelpers';
 import { hasValue } from './BotCalculations';
 import { cloneDeep } from 'lodash';
-import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
+import { CurrentVersion } from '../common';
 
 /**
  * Defines an event for state updates from the VM.

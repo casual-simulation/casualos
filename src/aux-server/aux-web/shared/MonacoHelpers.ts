@@ -3,8 +3,6 @@ import {
     Bot,
     tagsOnBot,
     isFormula,
-    Transpiler,
-    replaceMacros,
     KNOWN_TAGS,
     isScript,
     hasValue,
@@ -73,7 +71,6 @@ import {
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
 import {
-    bot,
     del,
     edit,
     edits,
@@ -81,7 +78,7 @@ import {
     mergeVersions,
     preserve,
     TagEditOp,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import { Color } from '@casual-simulation/three';
 import { invertColor } from './scene/ColorUtils';
 import {
@@ -97,6 +94,7 @@ import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
 import './public/monaco-editor/quick-search-all/quick-search-all';
 import { getModelUriFromId } from './MonacoUtils';
+import { Transpiler, replaceMacros } from '@casual-simulation/aux-runtime';
 
 export function setup() {
     // Tell monaco how to create the web workers

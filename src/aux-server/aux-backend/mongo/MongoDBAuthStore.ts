@@ -11,7 +11,7 @@ import {
     ListStudioAssignmentFilters,
     ListedStudioAssignment,
     ListedRecord,
-    ListedStudio,
+    StoreListedStudio,
 } from '@casual-simulation/aux-records';
 import {
     AddressType,
@@ -388,6 +388,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     previousSessionId: session.previousSessionId,
                     nextSessionId: session.nextSessionId,
                     ipAddress: session.ipAddress,
+                    connectionSecret: session.connectionSecret,
                 },
             },
             {
@@ -886,7 +887,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         };
     }
 
-    async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
+    async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
         const studios = await this._studios
             .find({
                 assignments: {
@@ -904,6 +905,8 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                 displayName: s.displayName,
                 role: assignment.role,
                 isPrimaryContact: assignment.isPrimaryContact,
+                subscriptionId: s.subscriptionId,
+                subscriptionStatus: s.subscriptionStatus,
             };
         });
     }
@@ -1131,6 +1134,11 @@ export interface MongoDBAuthSession {
      * The hash of the token that provides access to this session.
      */
     secretHash: string;
+
+    /**
+     * The secret of the token that provides connection access to this session.
+     */
+    connectionSecret: string;
 
     /**
      * The unix timestamp in miliseconds that the session was granted at.

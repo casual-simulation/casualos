@@ -3,7 +3,11 @@ import {
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
-import { NotLoggedInError, NotSupportedError, ServerError } from './Errors';
+import {
+    NotLoggedInError,
+    NotSupportedError,
+    ServerError,
+} from '@casual-simulation/aux-common/Errors';
 import {
     EventRecordsStore,
     AddEventCountStoreResult,

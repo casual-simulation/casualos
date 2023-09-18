@@ -4,41 +4,35 @@ import {
     AuxPartition,
     createAuxPartition,
     createMemoryPartition,
-    createCausalRepoPartition,
-    createCausalRepoClientPartition,
-    createCausalRepoHistoryClientPartition,
-    createBotClientPartition,
     iteratePartitions,
     createOtherPlayersClientPartition,
     createYjsPartition,
     createRemoteClientYjsPartition,
-    AuxRuntime,
+    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
     BaseAuxChannel,
-    AuxUser,
     AuxChannelOptions,
 } from '@casual-simulation/aux-vm';
 import {
-    createBotPartition,
-    createRemoteCausalRepoPartition,
     createOtherPlayersRepoPartition,
     createRemoteYjsPartition,
     createTimeSyncController,
 } from '../partitions';
 import { TimeSyncController } from '@casual-simulation/timesync';
 import { AuxSubChannel } from '@casual-simulation/aux-vm/vm';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
 
 export class RemoteAuxChannel extends BaseAuxChannel {
     constructor(
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         config: AuxConfig,
         options: RemoteAuxChannelOptions
     ) {
-        super(user, config, options);
+        super(indicator, config, options);
     }
 
     protected async _createPartition(
@@ -47,18 +41,11 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         return await createAuxPartition(
             config,
             createMemoryPartition,
-            (config) => createCausalRepoPartition(config, this.user),
-            (config) => createRemoteCausalRepoPartition(config, this.user),
-            (config) => createCausalRepoClientPartition(config, this.user),
-            (config) =>
-                createCausalRepoHistoryClientPartition(config, this.user),
-            (config) => createBotPartition(config),
-            (config) => createBotClientPartition(config),
-            (config) => createOtherPlayersClientPartition(config, this.user),
-            (config) => createOtherPlayersRepoPartition(config, this.user),
+            (config) => createOtherPlayersClientPartition(config),
+            (config) => createOtherPlayersRepoPartition(config, this.indicator),
             (config) => createYjsPartition(config),
-            (config) => createRemoteYjsPartition(config, this.user),
-            (config) => createRemoteClientYjsPartition(config, this.user)
+            (config) => createRemoteYjsPartition(config, this.indicator),
+            (config) => createRemoteClientYjsPartition(config)
         );
     }
 
@@ -67,7 +54,7 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             return (
                 createTimeSyncController(
                     this._config.config.timesync,
-                    this.user
+                    this.indicator
                 ) ?? super._createTimeSyncController()
             );
         }
@@ -101,11 +88,11 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     }
 
     protected _createSubChannel(
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
-        const channel = new RemoteAuxChannel(user, config, this._options);
+        const channel = new RemoteAuxChannel(indicator, config, this._options);
         channel._runtime = runtime;
         return channel;
     }

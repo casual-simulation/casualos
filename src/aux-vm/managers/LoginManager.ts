@@ -1,8 +1,8 @@
 import {
-    LoginErrorReason,
     StatusUpdate,
-    DeviceInfo,
-} from '@casual-simulation/causal-trees';
+    ConnectionInfo,
+    WebsocketErrorCode,
+} from '@casual-simulation/aux-common';
 import { Observable, SubscriptionLike, Subscription } from 'rxjs';
 import { AuxVM } from '../vm/AuxVM';
 import {
@@ -12,7 +12,6 @@ import {
     map,
     distinctUntilChanged,
 } from 'rxjs/operators';
-import { AuxUser } from '../AuxUser';
 import { isEqual } from 'lodash';
 
 /**
@@ -22,31 +21,14 @@ export class LoginManager implements SubscriptionLike {
     private _vm: AuxVM;
     private _sub: Subscription;
     private _loginStateChanged: Observable<LoginState>;
-    private _userChanged: Observable<AuxUser>;
-    private _deviceChanged: Observable<DeviceInfo>;
+    private _deviceChanged: Observable<ConnectionInfo>;
 
     get loginStateChanged(): Observable<LoginState> {
         return this._loginStateChanged;
     }
 
-    get userChanged(): Observable<AuxUser> {
-        return this._userChanged;
-    }
-
-    get deviceChanged(): Observable<DeviceInfo> {
+    get deviceChanged(): Observable<ConnectionInfo> {
         return this._deviceChanged;
-    }
-
-    /**
-     * Sets the grant that the user should use.
-     * @param grant The grant.
-     */
-    setGrant(grant: string): Promise<void> {
-        return this._vm.setGrant(grant);
-    }
-
-    setUser(user: AuxUser): Promise<void> {
-        return this._vm.setUser(user);
     }
 
     constructor(vm: AuxVM) {
@@ -60,7 +42,6 @@ export class LoginManager implements SubscriptionLike {
                             ...acc,
                             authenticated: update.authenticated,
                             authenticationError: update.reason,
-                            user: update.user,
                             info: update.info,
                             authorized: <boolean>null,
                         };
@@ -82,18 +63,12 @@ export class LoginManager implements SubscriptionLike {
             distinctUntilChanged(),
             shareReplay(1)
         );
-        this._userChanged = this._loginStateChanged.pipe(
-            map((state) => state.user || null),
-            distinctUntilChanged(isEqual),
-            shareReplay(1)
-        );
 
         this._deviceChanged = this._loginStateChanged.pipe(
             map((state) => state.info || null),
             distinctUntilChanged()
         );
         this._sub = this._loginStateChanged.subscribe();
-        this._sub.add(this._userChanged.subscribe());
         this._sub.add(this._deviceChanged.subscribe());
     }
 
@@ -109,9 +84,7 @@ export class LoginManager implements SubscriptionLike {
 export interface LoginState {
     authenticated: boolean;
     authorized: boolean;
-
-    user?: AuxUser;
-    info?: DeviceInfo;
-    authenticationError?: LoginErrorReason;
-    authorizationError?: LoginErrorReason;
+    info?: ConnectionInfo;
+    authenticationError?: WebsocketErrorCode;
+    authorizationError?: WebsocketErrorCode;
 }

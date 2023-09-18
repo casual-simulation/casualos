@@ -1,5 +1,50 @@
 # CasualOS Changelog
 
+## V3.2.7
+
+#### Date: 9/18/2023
+
+### :boom: Breaking Changes
+
+-   The `SessionSelector` parameter for `remote(action, selector?)` has changed.
+    -   Before, `session`, `username`, and `device` were valid properties.
+    -   Now they are `sessionId`, `userId`, and `connectionId`.
+-   The following obsolete functions have been removed:
+    -   `os.checkout()`
+    -   `os.finishCheckout()`
+    -   `os.instances()`
+    -   `os.instStatuses()`
+    -   `server.setupServer()`
+    -   `os.setupInst()`
+    -   `server.backupToGithub()`
+    -   `server.backupAsDownload()`
+    -   `server.finishCheckout()`
+    -   `server.markHistory()`
+    -   `server.browseHistory()`
+    -   `server.restoreHistoryMark()`
+    -   `server.restoreHistoryMarkToServer()`
+    -   `server.restoreHistoryMarkToInst()`
+    -   `server.serverStatuses()`
+    -   `server.servers()`
+    -   `server.stories()`
+    -   `server.loadFile()`
+    -   `server.saveFile()`
+    -   `crypto.createCertificate()`
+    -   `crypto.signTag()`
+    -   `crypto.verifyTag()`
+    -   `crypto.revokeCertificate()`
+    -   All the `server.rpioXYZ` functions.
+    -   All the `server.serialXYZ` functions.
+    -   All the `adminSpace` functions.
+-   `SHARED_PARTITIONS_VERSION` is now always `v2`.
+-   Removed all the `causal-tree` packages.
+    -   They are no longer needed since YJS does such a good job.
+-   Merged all the websocket and data synchronization code into `aux-common`, `aux-records`, and `aux-server`.
+
+### :rocket: Improvements
+
+-   Improved `os.listUserStudios()` to include the subscription tier of each studio.
+
 ## V3.2.6
 
 #### Date: 9/1/2023
