@@ -2,15 +2,18 @@ import {
     LocalActions,
     BotAction,
     StateUpdatedEvent,
-    RuntimeStateVersion,
     StoredAux,
+    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
-import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
+import { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { AuxUser } from '../AuxUser';
 import { ChannelActionResult } from './AuxChannel';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -24,7 +27,7 @@ export interface AuxVM extends Initable {
     /**
      * Gets the observable list of local events from the simulation.
      */
-    localEvents: Observable<LocalActions[]>;
+    localEvents: Observable<RuntimeActions[]>;
 
     /**
      * Gets the observable list of device events from the simulation.
@@ -60,18 +63,6 @@ export interface AuxVM extends Initable {
      * Gets an observable that resolves whenever a VM is removed.
      */
     subVMRemoved: Observable<AuxSubVM>;
-
-    /**
-     * Sets the user that the VM should be using.
-     * @param user The user.
-     */
-    setUser(user: AuxUser): Promise<void>;
-
-    /**
-     * Sets the authentication grant that should be used for the user.
-     * @param grant The grant to use.
-     */
-    setGrant(grant: string): Promise<void>;
 
     /**
      * Sends the given list of events to the simulation.
@@ -142,7 +133,7 @@ export interface AuxSubVM {
     id: string;
 
     /**
-     * The user for the sub VM.
+     * The connection indicator that should be used for the sub vm.
      */
-    user: AuxUser;
+    indicator: ConnectionIndicator;
 }

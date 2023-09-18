@@ -12,11 +12,15 @@ export const DEV_CONFIG: BuilderOptions = {
         endpoint: 'ws://localhost:7880',
     },
     prisma: {},
+    ws: {},
     redis: {
         host: 'localhost',
         port: 6379,
         rateLimitPrefix: 'aux-rate-limit/',
         tls: false,
+        tempInstRecordsStoreNamespace: 'tempInsts',
+        websocketConnectionNamespace: 'connections',
+        publicInstRecordsStoreNamespace: 'insts',
     },
     mongodb: {
         url: 'mongodb://localhost:27017',

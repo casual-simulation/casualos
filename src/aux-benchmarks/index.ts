@@ -1,6 +1,5 @@
 import 'platform';
 import Benchmark from 'benchmark';
-import CausalTreeBenchmarks from '@casual-simulation/causal-trees/benchmarks';
 import RuntimeBenchmarks from '@casual-simulation/aux-common/benchmarks';
 
 run([...RuntimeBenchmarks]);

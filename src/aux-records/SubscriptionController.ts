@@ -17,7 +17,7 @@ import {
     StripeInterface,
     StripeInvoice,
 } from './StripeInterface';
-import { ServerError } from './Errors';
+import { ServerError } from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';

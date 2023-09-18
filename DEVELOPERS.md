@@ -161,22 +161,6 @@ A set of abstractions and common utilities required to run an AUX on any platfor
 -   [AUX VM Client](./src/aux-vm-client)
 -   [AUX VM Node](./src/aux-vm-node)
 
-### [Causal Trees](./src/causal-trees/)
-
-<a href="https://www.npmjs.com/package/@casual-simulation/aux-vm">
-    <img alt="Causal Trees NPM" src="https://img.shields.io/npm/v/@casual-simulation/causal-trees/latest"/>
-</a>
-
-A library to create persistent, distributed, realtime, and conflict-free data types.
-
-#### Related libraries
-
--   [Causal Tree Client Websocket](./src/causal-tree-client-native)
--   [Causal Tree Server](./src/causal-tree-server)
--   [Causal Tree Server Websocket](./src/causal-tree-server-websocket)
--   [Causal Tree Store Browser](./src/causal-tree-store-browser)
--   [Causal Tree Store MongoDB](./src/causal-tree-store-mongodb)
-
 ### [AUX Proxy](./src/aux-proxy/)
 
 <a href="https://hub.docker.com/r/casualsimulation/aux-proxy">

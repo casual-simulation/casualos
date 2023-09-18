@@ -1,20 +1,21 @@
 import {
     BotAction,
-    LocalActions,
-    RuntimeStateVersion,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
+import {
     AuxVM,
     AuxChannel,
     AuxChannelErrorType,
-    AuxUser,
     ChannelActionResult,
 } from '@casual-simulation/aux-vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
+import { DeviceAction, StatusUpdate } from '@casual-simulation/aux-common';
 import { proxy, releaseProxy, Remote, wrap } from 'comlink';
 import { Observable, Subject, Subscription } from 'rxjs';
 
@@ -22,7 +23,7 @@ import { Observable, Subject, Subscription } from 'rxjs';
  * Gets an AUX VM that is able to communicate with a proxied aux channel.
  */
 export class ConnectableAuxVM implements AuxVM {
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -44,7 +45,7 @@ export class ConnectableAuxVM implements AuxVM {
     constructor(id: string, port: MessagePort) {
         this.id = id;
         this._proxy = wrap(port);
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
@@ -105,7 +106,7 @@ export class ConnectableAuxVM implements AuxVM {
     /**
      * The observable list of events that should be produced locally.
      */
-    get localEvents(): Observable<LocalActions[]> {
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 
@@ -122,16 +123,6 @@ export class ConnectableAuxVM implements AuxVM {
 
     get versionUpdated(): Observable<RuntimeStateVersion> {
         return this._versionUpdated;
-    }
-
-    async setUser(user: AuxUser): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setUser(user);
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setGrant(grant);
     }
 
     /**
@@ -193,13 +184,13 @@ export class ConnectableAuxVM implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, user } = await subChannel.getInfo();
+        const { id, indicator } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            user,
+            indicator,
             vm: this._createSubVM(channel),
             channel,
         };

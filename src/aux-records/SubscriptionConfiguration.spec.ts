@@ -45,6 +45,9 @@ describe('getSubscriptionFeatures()', () => {
                             allowed: false,
                         },
                     },
+                    insts: {
+                        allowed: true,
+                    },
                 },
             },
         },
@@ -73,6 +76,9 @@ describe('getSubscriptionFeatures()', () => {
                         allowed: false,
                     },
                 },
+                insts: {
+                    allowed: true,
+                },
             },
             user: {
                 data: {
@@ -97,6 +103,9 @@ describe('getSubscriptionFeatures()', () => {
                     skyboxes: {
                         allowed: false,
                     },
+                },
+                insts: {
+                    allowed: true,
                 },
             },
         },
@@ -143,6 +152,9 @@ describe('getSubscriptionFeatures()', () => {
                                 allowed: false,
                             },
                         },
+                        insts: {
+                            allowed: true,
+                        },
                     },
                 },
             },
@@ -171,6 +183,9 @@ describe('getSubscriptionFeatures()', () => {
                             allowed: false,
                         },
                     },
+                    insts: {
+                        allowed: true,
+                    },
                 },
                 user: {
                     data: {
@@ -195,6 +210,9 @@ describe('getSubscriptionFeatures()', () => {
                         skyboxes: {
                             allowed: false,
                         },
+                    },
+                    insts: {
+                        allowed: true,
                     },
                 },
             },
@@ -370,6 +388,9 @@ describe('getSubscriptionTier()', () => {
                         allowed: false,
                     },
                 },
+                insts: {
+                    allowed: true,
+                },
             },
             user: {
                 data: {
@@ -394,6 +415,9 @@ describe('getSubscriptionTier()', () => {
                     skyboxes: {
                         allowed: false,
                     },
+                },
+                insts: {
+                    allowed: true,
                 },
             },
         },
@@ -447,6 +471,9 @@ describe('getSubscriptionTier()', () => {
                             allowed: false,
                         },
                     },
+                    insts: {
+                        allowed: true,
+                    },
                 },
                 user: {
                     data: {
@@ -471,6 +498,9 @@ describe('getSubscriptionTier()', () => {
                         skyboxes: {
                             allowed: false,
                         },
+                    },
+                    insts: {
+                        allowed: true,
                     },
                 },
             },

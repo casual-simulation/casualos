@@ -1,23 +1,26 @@
-import { User } from '@casual-simulation/causal-trees';
-import { CausalRepoClient, CausalRepoClientTimeSyncConnection } from '@casual-simulation/causal-trees/core2';
-import { BotHttpClient } from './BotHttpClient';
+import {
+    AuthenticatedConnectionClient,
+    ConnectionIndicator,
+    InstRecordsClient,
+    InstRecordsClientTimeSyncConnection,
+    connectionCountMessageSchema,
+} from '@casual-simulation/aux-common';
+import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
+import { WebsocketConnectionClient } from '@casual-simulation/aux-websocket';
 import {
     PartitionConfig,
     RemoteCausalRepoPartition,
-    RemoteCausalRepoPartitionImpl,
     BotPartition,
-    BotPartitionImpl,
     OtherPlayersPartition,
     OtherPlayersPartitionImpl,
     RemoteCausalRepoProtocol,
     RemoteYjsPartitionImpl,
     YjsPartition,
 } from '@casual-simulation/aux-common';
-import {
-    AwsSocket,
-    ApiaryConnectionClient,
-} from '@casual-simulation/causal-tree-client-apiary';
-import { WebSocketConnectionClient } from '@casual-simulation/causal-tree-client-websocket';
+// import {
+//     AwsSocket,
+//     ApiaryConnectionClient,
+// } from '@casual-simulation/causal-tree-client-apiary';
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
 import { TimeSyncController } from '@casual-simulation/timesync';
@@ -26,13 +29,13 @@ import { TimeSyncController } from '@casual-simulation/timesync';
  * A map of hostnames to CausalRepoClients.
  * Helps prevent duplicating websocket connections to the same host.
  */
-let awsApiaryClientCache = new Map<string, CausalRepoClient>();
+let awsApiaryClientCache = new Map<string, InstRecordsClient>();
 
 /**
  * A map of hostnames to CausalRepoClients.
  * Helps prevent duplicating websocket connections to the same host.
  */
-let websocketClientCache = new Map<string, CausalRepoClient>();
+let websocketClientCache = new Map<string, InstRecordsClient>();
 
 /**
  * Gets the causal repo client that should be used for the given host.
@@ -40,13 +43,13 @@ let websocketClientCache = new Map<string, CausalRepoClient>();
  */
 export function getClientForHostAndProtocol(
     host: string,
-    user: User,
+    indicator: ConnectionIndicator,
     protocol: RemoteCausalRepoProtocol
-): CausalRepoClient {
+): InstRecordsClient {
     if (protocol === 'apiary-aws') {
-        return getAWSApiaryClientForHostAndProtocol(host, user);
+        return getAWSApiaryClientForHostAndProtocol(host, indicator);
     } else {
-        return getWebSocketClientForHost(host, user);
+        return getWebSocketClientForHost(host, indicator);
     }
 }
 
@@ -57,18 +60,24 @@ export function getClientForHostAndProtocol(
  */
 export function getAWSApiaryClientForHostAndProtocol(
     host: string,
-    user: User
-): CausalRepoClient {
+    indicator: ConnectionIndicator
+): InstRecordsClient {
     let client = awsApiaryClientCache.get(host);
     if (!client) {
         const manager = new WebSocketManager(host);
         manager.init();
-        const socket = new AwsSocket(manager.socket);
-        const connection = new ApiaryConnectionClient(socket, user);
-        client = new CausalRepoClient(connection);
+
+        const awsConnection = new ApiGatewayWebsocketConnectionClient(
+            manager.socket
+        );
+        const connection = new AuthenticatedConnectionClient(
+            awsConnection,
+            indicator
+        );
+        client = new InstRecordsClient(connection);
         awsApiaryClientCache.set(host, client);
 
-        socket.open();
+        connection.connect();
     }
 
     return client;
@@ -80,8 +89,8 @@ export function getAWSApiaryClientForHostAndProtocol(
  */
 export function getWebSocketClientForHost(
     host: string,
-    user: User
-): CausalRepoClient {
+    indicator: ConnectionIndicator
+): InstRecordsClient {
     let client = websocketClientCache.get(host);
     if (!client) {
         const url = new URL('/websocket', host);
@@ -94,8 +103,9 @@ export function getWebSocketClientForHost(
 
         const manager = new WebSocketManager(url.href);
         manager.init();
-        const connection = new WebSocketConnectionClient(manager.socket, user);
-        client = new CausalRepoClient(connection);
+        const inner = new WebsocketConnectionClient(manager.socket);
+        const connection = new AuthenticatedConnectionClient(inner, indicator);
+        client = new InstRecordsClient(connection);
         websocketClientCache.set(host, client);
 
         connection.connect();
@@ -108,44 +118,18 @@ export function getWebSocketClientForHost(
  * Attempts to create a CausalTree2Partition from the given config.
  * @param config The config.
  */
-export async function createRemoteCausalRepoPartition(
-    config: PartitionConfig,
-    user: User,
-    useCache: boolean = true
-): Promise<RemoteCausalRepoPartition> {
-    if (config.type === 'remote_causal_repo') {
-        const client = getClientForHostAndProtocol(
-            config.host,
-            user,
-            config.connectionProtocol
-        );
-        const partition = new RemoteCausalRepoPartitionImpl(
-            user,
-            client,
-            config
-        );
-        await partition.init();
-        return partition;
-    }
-    return undefined;
-}
-
-/**
- * Attempts to create a CausalTree2Partition from the given config.
- * @param config The config.
- */
 export async function createRemoteYjsPartition(
     config: PartitionConfig,
-    user: User,
+    indicator: ConnectionIndicator,
     useCache: boolean = true
 ): Promise<YjsPartition> {
     if (config.type === 'remote_yjs') {
         const client = getClientForHostAndProtocol(
             config.host,
-            user,
+            indicator,
             config.connectionProtocol
         );
-        const partition = new RemoteYjsPartitionImpl(user, client, config);
+        const partition = new RemoteYjsPartitionImpl(client, config);
         await partition.init();
         return partition;
     }
@@ -158,36 +142,34 @@ export async function createRemoteYjsPartition(
  */
 export async function createOtherPlayersRepoPartition(
     config: PartitionConfig,
-    user: User,
+    indicator: ConnectionIndicator,
     useCache: boolean = true
 ): Promise<OtherPlayersPartition> {
     if (config.type === 'other_players_repo') {
         const client = getClientForHostAndProtocol(
             config.host,
-            user,
+            indicator,
             config.connectionProtocol
         );
-        const partition = new OtherPlayersPartitionImpl(user, client, config);
+        const partition = new OtherPlayersPartitionImpl(client, config);
         return partition;
     }
     return undefined;
 }
 
-export async function createBotPartition(
-    config: PartitionConfig
-): Promise<BotPartition> {
-    if (config.type === 'bot') {
-        const client = new BotHttpClient(config.host);
-        const partition = new BotPartitionImpl(client, config);
-        return partition;
-    }
-    return undefined;
-}
-
-export function createTimeSyncController(config: AuxTimeSyncConfiguration, user: User): TimeSyncController {
+export function createTimeSyncController(
+    config: AuxTimeSyncConfiguration,
+    indicator: ConnectionIndicator
+): TimeSyncController {
     if (config.host) {
-        const client = getClientForHostAndProtocol(config.host, user, config.connectionProtocol);
-        return new TimeSyncController(new CausalRepoClientTimeSyncConnection(client));
+        const client = getClientForHostAndProtocol(
+            config.host,
+            indicator,
+            config.connectionProtocol
+        );
+        return new TimeSyncController(
+            new InstRecordsClientTimeSyncConnection(client)
+        );
     }
 
     return undefined;

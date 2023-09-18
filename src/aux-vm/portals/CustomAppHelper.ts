@@ -1,16 +1,14 @@
 import {
     asyncError,
     asyncResult,
-    AuxRuntime,
-    BotAction,
     hasValue,
-    registerCustomApp,
     ON_DOCUMENT_AVAILABLE_ACTION_NAME,
     action,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from '../vm';
 import { HtmlAppBackend } from './HtmlAppBackend';
 import { AppBackend } from './AppBackend';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 const ROOT_APP_ID = '_root';
 
@@ -27,7 +25,7 @@ export class CustomAppHelper {
         this.helper = helper;
     }
 
-    handleEvents(events: BotAction[]): void {
+    handleEvents(events: RuntimeActions[]): void {
         for (let event of events) {
             if (event.type === 'register_custom_app') {
                 let appId = event.appId;

@@ -1,4 +1,7 @@
-import { fromBase64String, toBase64String } from './Utils';
+import {
+    fromBase64String,
+    toBase64String,
+} from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyFailure,
     CreatePublicRecordKeySuccess,

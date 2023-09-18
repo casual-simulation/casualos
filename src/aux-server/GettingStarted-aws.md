@@ -94,12 +94,6 @@ Use the following to configure the records system:
 -   `AUTH_ORIGIN`: The HTTP Origin that the player should use for auth. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
 
-#### Build Configuration
-
-The AUX build can be configured using the following environment variables:
-
--   `PROXY_CORS_REQUESTS` - Whether to proxy HTTP GET requests that would trigger CORS through the proxy hosted by the server. Possible options are `true` and `false`. (Defaults to `false`)
-
 ## Security Note
 
 In the default configuration, CasualOS allows running arbitrary user scripts inside the web server process. Potential capabilities include filesystem access, executing commands, making arbitrary web requests, and reading environment variables.

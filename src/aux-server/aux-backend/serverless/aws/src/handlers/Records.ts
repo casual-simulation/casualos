@@ -159,7 +159,7 @@ export async function handleApiEvent(
         headers[key.toLowerCase()] = value;
     }
 
-    const response = await server.handleRequest({
+    const response = await server.handleHttpRequest({
         method: event.httpMethod as GenericHttpRequest['method'],
         path: event.path,
         pathParams: event.pathParameters,

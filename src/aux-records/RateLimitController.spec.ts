@@ -44,6 +44,8 @@ describe('RateLimitController', () => {
                 success: false,
                 errorCode: 'rate_limit_exceeded',
                 errorMessage: 'Rate limit exceeded.',
+                retryAfterSeconds: 0.1,
+                totalHits: 3,
             });
         });
 

@@ -7,6 +7,7 @@ import {
     S3ClientConfig,
     PutObjectCommand,
     GetObjectCommandInput,
+    GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -30,28 +31,41 @@ export function getS3Client() {
     return new S3();
 }
 
-export async function uploadMessage(client: S3, data: string): Promise<string> {
+export async function uploadMessage(
+    client: S3,
+    bucket: string,
+    data: string
+): Promise<string> {
     const key = uuid();
     const response = await client.putObject({
-        Bucket: MESSAGES_BUCKET_NAME,
+        Bucket: bucket,
         Key: key,
         ContentType: 'application/json',
         Body: data,
-        ACL: 'public-read',
+        ACL: 'bucket-owner-full-control',
     });
 
     if (isOffline()) {
-        return `http://localhost:4569/${MESSAGES_BUCKET_NAME}/${key}`;
+        return `http://localhost:4569/${bucket}/${key}`;
     } else {
-        return `https://${MESSAGES_BUCKET_NAME}.s3.amazonaws.com/${key}`;
+        const params = new GetObjectCommand({
+            Bucket: bucket,
+            Key: key,
+        });
+
+        return await getSignedUrl(client, params, {
+            expiresIn: 3600,
+        });
     }
 }
 
-export async function getMessageUploadUrl(): Promise<string> {
-    const client = getS3Client();
-    const key = uuid();
+export async function getMessageUploadUrl(
+    client: S3,
+    bucket: string,
+    key: string = uuid()
+): Promise<string> {
     const params = new PutObjectCommand({
-        Bucket: MESSAGES_BUCKET_NAME,
+        Bucket: bucket,
         Key: key,
         ContentType: 'application/json',
         ACL: 'bucket-owner-full-control',
@@ -64,11 +78,14 @@ export async function getMessageUploadUrl(): Promise<string> {
     return url;
 }
 
-export async function downloadObject(url: string): Promise<string> {
+export async function downloadObject(
+    client: S3,
+    bucket: string,
+    url: string
+): Promise<string> {
     const parsed = new URL(url);
-    const client = getS3Client();
     const params: GetObjectCommandInput = {
-        Bucket: MESSAGES_BUCKET_NAME,
+        Bucket: bucket,
         Key: parsed.pathname.slice(1),
     };
     const response = await client.getObject(params);

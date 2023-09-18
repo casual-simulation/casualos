@@ -1,5 +1,5 @@
+import { InstRecordsClient } from '../websockets';
 import { BotsState } from '../bots';
-import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 import {
     AuxPartition,
     ProxyBridgePartition,
@@ -7,7 +7,6 @@ import {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
 } from './AuxPartition';
-import { BotClient } from './BotClient';
 
 /**
  * Defines a set of options for configuring partitioning of bots.
@@ -23,17 +22,11 @@ export interface AuxPartitionConfig {
  * That is, a config which specifies how to build a partition.
  */
 export type PartitionConfig =
-    | CausalRepoPartitionConfig
-    | RemoteCausalRepoPartitionConfig
-    | CausalRepoHistoryClientPartitionConfig
-    | CausalRepoClientPartitionConfig
     | MemoryPartitionStateConfig
     | MemoryPartitionInstanceConfig
     | ProxyPartitionConfig
     | ProxyClientPartitionConfig
     | LocalStoragePartitionConfig
-    | BotPartitionConfig
-    | SearchPartitionClientConfig
     | OtherPlayersClientPartitionConfig
     | OtherPlayersRepoPartitionConfig
     | YjsPartitionConfig
@@ -126,51 +119,6 @@ export interface LocalStoragePartitionConfig extends PartitionConfigBase {
 }
 
 /**
- * Defines a causal tree partition that uses the new Causal Repo API.
- */
-export interface CausalRepoPartitionConfig extends PartitionConfigBase {
-    type: 'causal_repo';
-}
-
-/**
- * Defines a causal tree partition that uses the new Causal Repo API.
- */
-export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
-    type: 'causal_repo_client';
-
-    /**
-     * The branch to load.
-     */
-    branch: string;
-
-    /**
-     * The client that should be used to connect.
-     */
-    client: CausalRepoClient;
-
-    /**
-     * Whether the partition should be loaded in read-only mode.
-     */
-    readOnly?: boolean;
-
-    /**
-     * Whether the partition should be loaded without realtime updates.
-     * Basically this means that all you get is the initial state.
-     */
-    static?: boolean;
-
-    /**
-     * Whether the partition should be temporary.
-     */
-    temporary?: boolean;
-
-    /**
-     * Whether to support remote events. (Default is true)
-     */
-    remoteEvents?: boolean;
-}
-
-/**
  * The possible version numbers for the shared partitions.
  * "Shared partitions" means the set of partitions which are designed to work together to provide the "shared", "tempShared", and "remoteTempShared" spaces.
  *
@@ -178,7 +126,7 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
  * - "v2" indicates that the shared partitions will be provided by the causal repo system combined with yjs.
  *        That is, partitions use yjs to track changes and communicate via Causal Repo Servers (websocket or otherwise) using the "updates" protocol.
  */
-export type SharedPartitionsVersion = 'v1' | 'v2';
+export type SharedPartitionsVersion = 'v2';
 
 /**
  * The possible protocol types.
@@ -191,53 +139,20 @@ export type SharedPartitionsVersion = 'v1' | 'v2';
 export type RemoteCausalRepoProtocol = 'apiary-aws' | 'websocket';
 
 /**
- * Defines a causal tree partition that uses the new Causal Repo API.
- */
-export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
-    type: 'remote_causal_repo';
-
-    /**
-     * The branch to load.
-     */
-    branch: string;
-
-    /**
-     * The host that the branch should be loaded from.
-     */
-    host: string;
-
-    /**
-     * Whether the partition should be loaded in read-only mode.
-     */
-    readOnly?: boolean;
-
-    /**
-     * Whether the partition should be loaded without realtime updates.
-     * Basically this means that all you get is the initial state.
-     */
-    static?: boolean;
-
-    /**
-     * Whether the partition should be temporary.
-     */
-    temporary?: boolean;
-
-    /**
-     * Whether to support remote events. (Default is true)
-     */
-    remoteEvents?: boolean;
-
-    /**
-     * Whether to use websocket or the apiary protocol to connect. (Default is websocket)
-     */
-    connectionProtocol?: RemoteCausalRepoProtocol;
-}
-
-/**
  * Defines a partition that uses the Causal Repo API to watch for other players on the given branch.
  */
 export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
     type: 'other_players_repo';
+
+    /**
+     * The name of the record that should be loaded.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that should be loaded.
+     */
+    inst: string;
 
     /**
      * The branch to watch for players.
@@ -258,9 +173,7 @@ export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
      * The type of partitions that should be used for the child partitions.
      * Defaults to causal_repo_client.
      */
-    childPartitionType?:
-        | CausalRepoClientPartitionConfig['type']
-        | YjsClientPartitionConfig['type'];
+    childPartitionType?: YjsClientPartitionConfig['type'];
 }
 
 /**
@@ -270,6 +183,16 @@ export interface OtherPlayersClientPartitionConfig extends PartitionConfigBase {
     type: 'other_players_client';
 
     /**
+     * The name of the record that should be loaded.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that should be loaded.
+     */
+    inst: string;
+
+    /**
      * The branch to watch for players.
      */
     branch: string;
@@ -277,67 +200,13 @@ export interface OtherPlayersClientPartitionConfig extends PartitionConfigBase {
     /**
      * The client that should be used.
      */
-    client: CausalRepoClient;
+    client: InstRecordsClient;
 
     /**
      * The type of partitions that should be used for the child partitions.
      * Defaults to causal_repo_client.
      */
-    childPartitionType?:
-        | CausalRepoClientPartitionConfig['type']
-        | YjsClientPartitionConfig['type'];
-}
-
-/**
- * Defines a causal repo partition that loads history for a branch.
- */
-export interface CausalRepoHistoryClientPartitionConfig
-    extends PartitionConfigBase {
-    type: 'causal_repo_history_client';
-
-    /**
-     * The branch to load history from.
-     */
-    branch: string;
-
-    /**
-     * The client that should be used to load the history.
-     */
-    client: CausalRepoClient;
-}
-
-/**
- * Defines a partition that allows storing immutable bots and querying them later.
- */
-export interface BotPartitionConfig extends PartitionConfigBase {
-    type: 'bot';
-
-    /**
-     * The host that should be queried.
-     */
-    host: string;
-
-    /**
-     * The instance that should be used from the host.
-     */
-    inst: string;
-}
-
-/**
- * Defines a partition that allows storing immutable bots and querying them later.
- */
-export interface SearchPartitionClientConfig extends PartitionConfigBase {
-    type: 'bot_client';
-
-    /**
-     * The instance that should be used.
-     */
-    inst: string;
-
-    /**
-     * The client that the partition should connect with.
-     */
-    client: BotClient;
+    childPartitionType?: YjsClientPartitionConfig['type'];
 }
 
 /**
@@ -352,6 +221,16 @@ export interface YjsPartitionConfig extends PartitionConfigBase {
  */
 export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
     type: 'remote_yjs';
+
+    /**
+     * The name of the record that should be loaded.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that should be loaded.
+     */
+    inst: string;
 
     /**
      * The branch to load.
@@ -397,6 +276,16 @@ export interface YjsClientPartitionConfig extends PartitionConfigBase {
     type: 'yjs_client';
 
     /**
+     * The name of the record that should be loaded.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that should be loaded.
+     */
+    inst: string;
+
+    /**
      * The branch to load.
      */
     branch: string;
@@ -404,7 +293,7 @@ export interface YjsClientPartitionConfig extends PartitionConfigBase {
     /**
      * The client that should be used to connect.
      */
-    client: CausalRepoClient;
+    client: InstRecordsClient;
 
     /**
      * Whether the partition should be loaded in read-only mode.

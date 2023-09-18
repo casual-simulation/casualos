@@ -1,5 +1,5 @@
 import { AddressType } from './AuthStore';
-import { ServerError } from './Errors';
+import { ServerError } from '@casual-simulation/aux-common/Errors';
 
 /**
  * Defines an interface for a service that is able to send messages to addresses for login requests.

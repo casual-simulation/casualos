@@ -29,37 +29,20 @@ export class AuxBot3DDecoratorFactory {
 
     loadDecorators(bot3d: AuxBot3D): AuxBot3DDecorator[] {
         let decorators: AuxBot3DDecorator[] = [];
-        // TODO: Replace user mesh decorator with
-        //       a frustum form.
-        const isUser = false;
-        const isLocalUser = isUser && bot3d.bot.id === appManager.user.id;
 
-        if (isUser) {
-            if (isLocalUser) {
-                // Local user gets controls for changing their user position in contexts.
-                decorators.push(new UserControlsDecorator(bot3d, this.game));
-            } else {
-                // Remote user gets mesh to visualize where it is in contexts.
-                decorators.push(new UserMeshDecorator(bot3d));
-            }
-        } else {
-            let botShapeDecorator = new BotShapeDecorator(bot3d, this.game);
-            let textureDecorator = new TextureDecorator(
-                bot3d,
-                botShapeDecorator
-            );
+        let botShapeDecorator = new BotShapeDecorator(bot3d, this.game);
+        let textureDecorator = new TextureDecorator(bot3d, botShapeDecorator);
 
-            let progressBarDecorator = new ProgressBarDecorator(
-                bot3d,
-                botShapeDecorator
-            );
+        let progressBarDecorator = new ProgressBarDecorator(
+            bot3d,
+            botShapeDecorator
+        );
 
-            decorators.push(
-                botShapeDecorator,
-                textureDecorator,
-                progressBarDecorator
-            );
-        }
+        decorators.push(
+            botShapeDecorator,
+            textureDecorator,
+            progressBarDecorator
+        );
 
         if (!!this.game) {
             decorators.push(new TransformerDecorator(bot3d));
@@ -67,7 +50,7 @@ export class AuxBot3DDecoratorFactory {
 
         decorators.push(
             new ScaleDecorator(bot3d),
-            new DimensionPositionDecorator(bot3d, this.game, { lerp: isUser })
+            new DimensionPositionDecorator(bot3d, this.game, { lerp: false })
         );
 
         if (!!this.game) {

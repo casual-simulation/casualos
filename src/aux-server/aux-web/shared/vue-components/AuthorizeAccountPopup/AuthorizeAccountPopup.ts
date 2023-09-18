@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { loginToSim, generateGuestId } from '../../LoginUtils';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
@@ -27,7 +26,6 @@ export default class AuthorizeAccountPopup extends Vue {
     }
 
     async cancel() {
-        await loginToSim(this._sim, generateGuestId());
         this.close();
     }
 
@@ -40,6 +38,6 @@ export default class AuthorizeAccountPopup extends Vue {
     }
 
     private _grant(token: string) {
-        return this._sim.login.setGrant(token);
+        // return this._sim.login.setGrant(token);
     }
 }

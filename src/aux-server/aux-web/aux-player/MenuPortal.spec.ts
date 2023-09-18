@@ -15,10 +15,7 @@ describe('MenuPortal', () => {
         simulationManager = new SimulationManager<RemoteSimulation>((id) =>
             nodeSimulationWithConfig(
                 {
-                    id: 'user',
-                    name: 'user',
-                    token: 'token',
-                    username: 'username',
+                    connectionId: 'user',
                 },
                 id,
                 {
@@ -52,7 +49,10 @@ describe('MenuPortal', () => {
     it('should keep bots that are in both dimensions', async () => {
         const dim = new MenuPortal(simulationManager, ['menuPortal']);
 
-        const sim = await simulationManager.addSimulation('test');
+        const sim = await simulationManager.addSimulation('test', {
+            recordName: null,
+            inst: 'test',
+        });
         sim.helper.userId = 'user';
 
         await waitForSync(sim);
@@ -81,7 +81,10 @@ describe('MenuPortal', () => {
     it('should sort items by their sort order', async () => {
         const dim = new MenuPortal(simulationManager, ['menuPortal']);
 
-        const sim = await simulationManager.addSimulation('test');
+        const sim = await simulationManager.addSimulation('test', {
+            recordName: null,
+            inst: 'inst',
+        });
         sim.helper.userId = 'user';
 
         await waitForSync(sim);

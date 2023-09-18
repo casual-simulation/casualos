@@ -4,6 +4,32 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   The `SessionSelector` parameter for `remote(action, selector?)` has changed.
+    -   Before, `session`, `username`, and `device` were valid properties.
+    -   Now they are `sessionId`, `userId`, and `connectionId`.
+-   The following obsolete functions have been removed:
+    -   `os.checkout()`
+    -   `os.finishCheckout()`
+    -   `os.instances()`
+    -   `os.instStatuses()`
+    -   `server.backupToGithub()`
+    -   `server.backupAsDownload()`
+    -   `server.finishCheckout()`
+    -   `server.markHistory()`
+    -   `server.browseHistory()`
+    -   `server.restoreHistoryMark()`
+    -   `server.restoreHistoryMarkToServer()`
+    -   `server.restoreHistoryMarkToInst()`
+    -   `server.serverStatuses()`
+    -   `server.servers()`
+    -   `server.stories()`
+    -   `crypto.createCertificate()`
+    -   `crypto.signTag()`
+    -   `crypto.verifyTag()`
+    -   `crypto.revokeCertificate()`
+
 ### :rocket: Improvements
 
 -   Improved `os.listUserStudios()` to include the subscription tier of each studio.

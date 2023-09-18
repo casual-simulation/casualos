@@ -6,13 +6,31 @@ import {
 } from '@casual-simulation/aux-common';
 import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
-import { DeviceAction } from '@casual-simulation/causal-trees';
+import { DeviceAction } from '@casual-simulation/aux-common';
 import { Initable } from './Initable';
 import { BotHelper } from './BotHelper';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
+
+export interface SimulationOrigin {
+    /**
+     * The name of the record that the simulation should be loaded from.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the simulation should be loaded from.
+     */
+    inst: string;
+
+    /**
+     * The host for the simulation.
+     */
+    host?: string;
+}
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -22,11 +40,6 @@ export interface Simulation extends Initable {
      * Gets the ID of the simulation that is currently being used.
      */
     id: string;
-
-    /**
-     * Gets the parsed ID of the simulation.
-     */
-    parsedId: SimulationIdParseSuccess;
 
     /**
      * Gets whether the app is connected to the inst but may
@@ -73,7 +86,7 @@ export interface Simulation extends Initable {
     /**
      * Gets the observable list of events that should have an effect on the UI.
      */
-    localEvents: Observable<LocalActions>;
+    localEvents: Observable<RuntimeActions>;
 
     /**
      * Gets the observable list of events that were received from a remote device.

@@ -240,7 +240,8 @@ export interface Studio {
     subscriptionStatus?: string;
 
     /**
-     * The ID of the stripe subscription that this studio currently has.
+     * The ID of the purchasable subscription that the user has.
+     * Note that this is the ID of the subscription in the config, not the ID of the stripe subscription.
      */
     subscriptionId?: string;
 
