@@ -14,6 +14,8 @@
     -   `os.finishCheckout()`
     -   `os.instances()`
     -   `os.instStatuses()`
+    -   `server.setupServer()`
+    -   `os.setupInst()`
     -   `server.backupToGithub()`
     -   `server.backupAsDownload()`
     -   `server.finishCheckout()`
@@ -25,10 +27,16 @@
     -   `server.serverStatuses()`
     -   `server.servers()`
     -   `server.stories()`
+    -   `server.loadFile()`
+    -   `server.saveFile()`
     -   `crypto.createCertificate()`
     -   `crypto.signTag()`
     -   `crypto.verifyTag()`
     -   `crypto.revokeCertificate()`
+    -   All the `server.rpioXYZ` functions.
+    -   All the `server.serialXYZ` functions.
+    -   All the `adminSpace` functions.
+-   `SHARED_PARTITIONS_VERSION` is now always `v2`.
 
 ### :rocket: Improvements
 
