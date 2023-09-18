@@ -9,7 +9,6 @@ import { MemoryWebsocketMessenger } from './MemoryWebsocketMessenger';
 import {
     action,
     botAdded,
-    setupServer,
     ON_WEBHOOK_ACTION_NAME,
     botRemoved,
 } from '@casual-simulation/aux-common/bots';

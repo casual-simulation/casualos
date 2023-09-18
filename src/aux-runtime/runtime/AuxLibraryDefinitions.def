@@ -225,8 +225,6 @@ declare type ExtraActions =
     | UnloadServerAction
     | SuperShoutAction
     | SendWebhookAction
-    | LoadFileAction
-    | SaveFileAction
     | GoToDimensionAction
     | GoToURLAction
     | OpenURLAction
@@ -238,7 +236,6 @@ declare type ExtraActions =
     | DownloadAction
     | PasteStateAction
     | ReplaceDragBotAction
-    | SetupChannelAction
     | SetClipboardAction
     | ShowChatBarAction
     | RunScriptAction
@@ -270,8 +267,6 @@ declare type AsyncActions =
     | CreateCertificateAction
     | SignTagAction
     | RevokeCertificateAction
-    | UnlockSpaceAction
-    | SetSpacePasswordAction
     | BufferSoundAction
     | PlaySoundAction
     | CancelSoundAction
@@ -1045,87 +1040,6 @@ declare interface AnimateTagFunctionOptions {
 }
 
 /**
- * Defines an event that is used to load a file.
- */
-declare interface LoadFileAction extends Action {
-    type: 'load_file';
-
-    /**
-     * The options for the action.
-     */
-    options: LoadFileOptions;
-}
-
-/**
- * Options for loading a file.
- */
-declare interface LoadFileOptions {
-    /**
-     * The file path that should be loaded.
-     */
-    path?: string;
-
-    /**
-     * The shout that should be made when the request finishes.
-     */
-    callbackShout?: string;
-}
-
-/**
- * The data returned from loading a file.
- */
-declare interface LoadFileResult {
-    path: string;
-    url: string;
-    data: string | Buffer;
-}
-
-/**
- * Defines an event that is used to save a file to a drive.
- */
-declare interface SaveFileAction extends Action {
-    type: 'save_file';
-
-    /**
-     * The options for the action.
-     */
-    options: SaveFileOptions;
-}
-
-/**
- * Options for saving a file.
- */
-declare interface SaveFileOptions {
-    /**
-     * The path that the mod should be saved.
-     */
-    path?: string;
-
-    /**
-     * The data to save to the file.
-     */
-    data?: string;
-
-    /**
-     * The shout that should be made when the request finishes.
-     */
-    callbackShout?: string;
-
-    /**
-     * Whether to overwrite existing files.
-     */
-    overwriteExistingFile?: boolean;
-}
-
-/**
- * The data returned from saving a file.
- */
-declare interface SaveFileResult {
-    path: string;
-    url: string;
-}
-
-/**
  * Defines an event that is used to send the player to a dimension.
  */
 declare interface GoToDimensionAction extends Action {
@@ -1421,23 +1335,6 @@ declare interface RejectAction {
 }
 
 /**
- * Defines an event that creates a inst if it doesn't exist.
- */
-declare interface SetupChannelAction {
-    type: 'setup_server';
-
-    /**
-     * The inst that should be created.
-     */
-    channel: string;
-
-    /**
-     * The bot or mod that should be cloned into the new inst.
-     */
-    botOrMod?: Bot | BotTags;
-}
-
-/**
  * Defines an event that sets some text on the user's clipboard.
  */
 declare interface SetClipboardAction {
@@ -1618,49 +1515,6 @@ declare interface ClearSpaceAction {
      * The space to clear.
      */
     space: BotSpace;
-}
-
-/**
- * Defines an event that unlocks the given space for editing.
- * Once a space is unlocked, it cannot be locked for the remainder of the session.
- * 
- * Only supported for the following spaces:
- * - admin
- */
-export interface UnlockSpaceAction {
-    type: 'unlock_space';
-
-    /**
-     * The space to unlock.
-     */
-    space: BotSpace;
-
-    /**
-     * The password to use to unlock the space.
-     */
-    password: string;
-}
-
-/**
- * Defines an event that sets the password used to unlock the given space for editing.
- */
-export interface SetSpacePasswordAction extends AsyncAction {
-    type: 'set_space_password';
-
-    /**
-     * The space to set the password for.
-     */
-    space: BotSpace;
-
-    /**
-     * The old password for the space.
-     */
-    oldPassword: string;
-
-    /**
-     * The new password for the space.
-     */
-    newPassword: string;
 }
 
 /**
@@ -8455,11 +8309,6 @@ declare global {
     const action: Actions;
 
     /**
-     * Defines a set of functions that manage admin space.
-     */
-    const adminSpace: AdminSpace;
-
-    /**
      * Defines a set of functions that relate to common math operations.
      */
     const math: Math;
@@ -9288,11 +9137,6 @@ interface DebuggerBase {
      * Defines a set of functions that handle actions.
      */
     action: Actions;
-
-    /**
-     * Defines a set of functions that manage admin space.
-     */
-    adminSpace: AdminSpace;
 
     /**
      * Defines a set of functions that relate to common math operations.
@@ -11692,13 +11536,6 @@ interface Os {
     mergeInstUpdates(updates: InstUpdate[]): InstUpdate;
 
     /**
-     * Sends an event to the server to setup a new inst if it does not exist.
-     * @param inst The inst.
-     * @param botOrMod The bot or mod that should be cloned into the new inst.
-     */
-    setupInst(inst: string, botOrMod?: Mod): Promise<void>;
-
-    /**
     * Gets the total number of devices that are connected to the server.
     */
     totalRemoteCount(): Promise<number>;
@@ -11757,12 +11594,6 @@ interface Os {
 }
 
 interface Server {
-    /**
-     * Sends an event to the server to setup a new inst if it does not exist.
-     * @param inst The inst.
-     * @param botOrMod The bot or mod that should be cloned into the new inst.
-     */
-    setupInst(inst: string, botOrMod?: Mod): Promise<void>;
 
     /**
      * Executes the given shell script on the server.
@@ -11787,20 +11618,6 @@ interface Server {
         inst: string,
         lastUpdateTime: Date
     }[]>;
-
-    /**
-     * Loads a file from the server at the given path.
-     * @param path The path of the file.
-     * @param options The options.
-     */
-    loadFile(path: string, options?: LoadFileOptions): Promise<LoadFileResult>;
-
-    /**
-     * Saves a file on the server at the given path.
-     * @param path The path of the file.
-     * @param options The options.
-     */
-    saveFile(path: string, data: string, options?: SaveFileOptions): Promise<SaveFileResult>;
 };
 
 interface Web {
@@ -11864,22 +11681,6 @@ interface Actions {
      * @param action The action to reject.
      */
     reject(action: any): BotAction;
-};
-
-interface AdminSpace {
-    /**
-     * Unlocks admin space using the given password.
-     * Returns a promise that resolves when the space is unlocked.
-     * @param password The password to use to unlock admin space.
-     */
-    unlock(): Promise<void>;
-
-    /**
-     * Sets the password that should be used for admin space.
-     * @param oldPassword The old password for the admin space.
-     * @param newPassword The new password that should be used.
-     */
-    setPassword(oldPassword: string, newPassword: string): Promise<void>;
 };
 
 interface Math {

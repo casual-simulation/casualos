@@ -26,7 +26,6 @@ import {
     KNOWN_PORTALS,
     replaceDragBot,
     ReplaceDragBotAction,
-    loadFile,
     showJoinCode,
     requestFullscreen,
     exitFullscreen,
@@ -55,7 +54,6 @@ import {
     goToURL,
     openURL,
     openConsole,
-    setupServer,
     shell,
     loadSimulation,
     unloadSimulation,
@@ -15322,36 +15320,6 @@ describe('original action tests', () => {
         });
     });
 
-    describe('server.loadFile()', () => {
-        it('should issue a LoadFileAction in a remote event', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        abc: true,
-                        test: '@server.loadFile("path")',
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot']);
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(
-                    loadFile({
-                        path: 'path',
-                    }),
-                    undefined,
-                    undefined,
-                    'uuid-0'
-                ),
-            ]);
-        });
-    });
-
     describe('subtractMods()', () => {
         it('should set the tags from the given mod to null', () => {
             const state: BotsState = {
@@ -17511,82 +17479,6 @@ describe('original action tests', () => {
                         name: 'bob',
                     },
                 }),
-            ]);
-        });
-    });
-
-    describe('server.setupServer()', () => {
-        it('should send a SetupChannelAction in a RemoteAction', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: '@server.setupServer("channel", this)',
-                    },
-                },
-                userBot: {
-                    id: 'userBot',
-                    tags: {
-                        auxPlayerName: 'testUser',
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(
-                    setupServer(
-                        'channel',
-                        createBot('thisBot', {
-                            test: '@server.setupServer("channel", this)',
-                        })
-                    ),
-                    undefined,
-                    undefined,
-                    'uuid-0'
-                ),
-            ]);
-        });
-    });
-
-    describe('os.setupInst()', () => {
-        it('should send a SetupChannelAction in a RemoteAction', () => {
-            const state: BotsState = {
-                thisBot: {
-                    id: 'thisBot',
-                    tags: {
-                        test: '@os.setupInst("channel", this)',
-                    },
-                },
-                userBot: {
-                    id: 'userBot',
-                    tags: {
-                        auxPlayerName: 'testUser',
-                    },
-                },
-            };
-
-            // specify the UUID to use next
-            uuidMock.mockReturnValue('uuid-0');
-            const botAction = action('test', ['thisBot'], 'userBot');
-            const result = calculateActionResults(state, botAction);
-
-            expect(result.actions).toEqual([
-                remote(
-                    setupServer(
-                        'channel',
-                        createBot('thisBot', {
-                            test: '@os.setupInst("channel", this)',
-                        })
-                    ),
-                    undefined,
-                    undefined,
-                    'uuid-0'
-                ),
             ]);
         });
     });

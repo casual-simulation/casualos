@@ -54,10 +54,7 @@ import {
     openURL,
     openConsole,
     playSound,
-    setupServer,
     shell,
-    loadFile,
-    saveFile,
     reject,
     ORIGINAL_OBJECT,
     webhook,
@@ -69,11 +66,9 @@ import {
     localFormAnimation,
     showInput,
     share,
-    unlockSpace,
     getRemoteCount,
     getRemotes,
     action,
-    setSpacePassword,
     bufferSound,
     cancelSound,
     localPositionTween,
@@ -7361,149 +7356,11 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('server.setupServer()', () => {
-            it('should send a SetupChannelAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                bot1.tags.abc = true;
-                const action: any = library.api.server.setupServer(
-                    'channel',
-                    bot1
-                );
-                const expected = remote(
-                    setupServer('channel', createBot(bot1.id, bot1.tags)),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.setupServer('channel');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-
-            it('should convert the given bot to a copiable value', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                bot1.tags.abc = true;
-                const action: any = library.api.server.setupServer('channel', {
-                    botTag: bot1,
-                });
-                const expected = remote(
-                    setupServer('channel', {
-                        botTag: createBot(bot1.id, bot1.tags),
-                    }),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('os.setupInst()', () => {
-            it('should send a SetupChannelAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                bot1.tags.abc = true;
-                const action: any = library.api.os.setupInst('channel', bot1);
-                const expected = remote(
-                    setupServer('channel', createBot(bot1.id, bot1.tags)),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.os.setupInst('channel');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-
-            it('should convert the given bot to a copiable value', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                bot1.tags.abc = true;
-                const action: any = library.api.os.setupInst('channel', {
-                    botTag: bot1,
-                });
-                const expected = remote(
-                    setupServer('channel', {
-                        botTag: createBot(bot1.id, bot1.tags),
-                    }),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
         describe('server.shell()', () => {
             it('should emit a remote shell event', () => {
                 const action = library.api.server.shell('abc');
                 expect(action).toEqual(remote(shell('abc')));
                 expect(context.actions).toEqual([remote(shell('abc'))]);
-            });
-        });
-
-        describe('server.loadFile()', () => {
-            it('should issue a LoadFileAction in a remote event', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.loadFile('path');
-                const expected = remote(
-                    loadFile({
-                        path: 'path',
-                    }),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.loadFile('path');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.saveFile()', () => {
-            it('should issue a SaveFileAction in a remote event', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.saveFile('path', 'data');
-                const expected = remote(
-                    saveFile({
-                        path: 'path',
-                        data: 'data',
-                    }),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.saveFile('path', 'data');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
@@ -10032,36 +9889,6 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
                 expect(action.actions).toEqual([original1, original2]);
-            });
-        });
-
-        describe('adminSpace.unlock()', () => {
-            it('should issue a unlock_space event with the given password', () => {
-                const promise: any = library.api.adminSpace.unlock('password');
-                const expected = unlockSpace(
-                    'admin',
-                    'password',
-                    context.tasks.size
-                );
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('adminSpace.setPassword()', () => {
-            it('should issue a set_space_password event with the given password', () => {
-                const promise: any = library.api.adminSpace.setPassword(
-                    'old',
-                    'new'
-                );
-                const expected = setSpacePassword(
-                    'admin',
-                    'old',
-                    'new',
-                    context.tasks.size
-                );
-                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
             });
         });
 

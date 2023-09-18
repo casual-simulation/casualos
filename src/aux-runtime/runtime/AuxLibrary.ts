@@ -51,10 +51,7 @@ import {
     playSound as calcPlaySound,
     bufferSound as calcBufferSound,
     cancelSound as calcCancelSound,
-    setupServer as calcSetupServer,
     shell as calcShell,
-    loadFile as calcLoadFile,
-    saveFile as calcSaveFile,
     reject as calcReject,
     localFormAnimation as calcLocalFormAnimation,
     webhook as calcWebhook,
@@ -90,13 +87,11 @@ import {
     ORIGINAL_OBJECT,
     AsyncActions,
     ShareOptions,
-    unlockSpace,
     getRemoteCount,
     getRemotes,
     listInstUpdates as calcListInstUpdates,
     getInstStateFromUpdates as calcGetInstStateFromUpdates,
     action,
-    setSpacePassword,
     Easing,
     LocalPositionTweenAction,
     LocalRotationTweenAction,
@@ -523,76 +518,6 @@ export interface SessionSelector {
     sessionId?: string;
     connectionId?: string;
     broadcast?: boolean;
-}
-
-/**
- * Defines an interface for options that complete payment for a product.
- */
-interface FinishCheckoutOptions {
-    /**
-     * The secret API key that should be used to checkout with stripe.
-     */
-    secretKey: string;
-
-    /**
-     * The token that authorized payment from the user.
-     */
-    token: string;
-
-    /**
-     * The amount that should be charged in the currency's smallest unit. (cents, etc.)
-     */
-    amount: number;
-
-    /**
-     * The three character currency code.
-     */
-    currency: string;
-
-    /**
-     * The description for the charge.
-     */
-    description: string;
-
-    /**
-     * Any extra info that should be included in the onPaymentSuccessful() or onPaymentFailed() events for this checkout.
-     */
-    extra?: any;
-}
-
-/**
- * Defines an interface for options that mark a specific time in history.
- */
-interface MarkHistoryOptions {
-    /**
-     * The message that the mark should contain.
-     */
-    message: string;
-}
-
-/**
- * Options for loading a file.
- */
-interface LoadFileOptions {
-    /**
-     * The shout that should be made when the request finishes.
-     */
-    callbackShout?: string;
-}
-
-/**
- * Options for saving a file.
- */
-interface SaveFileOptions {
-    /**
-     * The shout that should be made when the request finishes.
-     */
-    callbackShout?: string;
-
-    /**
-     * Whether to overwrite an existing file.
-     */
-    overwriteExistingFile?: boolean;
 }
 
 /**
@@ -1291,11 +1216,6 @@ export interface DebuggerBase {
      * @docsource ActionActions
      */
     action: {};
-
-    // /**
-    //  * Defines a set of functions that manage admin space.
-    //  */
-    // adminSpace: object;
 
     // /**
     //  * Defines a set of functions that relate to common math operations.
@@ -3350,7 +3270,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 attachDebugger,
                 detachDebugger,
 
-                setupInst: setupServer,
                 remotes,
                 listInstUpdates,
                 getInstStateFromUpdates,
@@ -3383,10 +3302,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             server: {
-                setupServer,
                 shell,
-                loadFile,
-                saveFile,
                 serverRemoteCount,
                 totalRemoteCount,
                 remotes,
@@ -3399,14 +3315,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             action: {
                 perform,
                 reject,
-            },
-
-            /**
-             * @hidden
-             */
-            adminSpace: {
-                unlock: unlockAdminSpace,
-                setPassword: setAdminSpacePassword,
             },
 
             experiment: {
@@ -9514,71 +9422,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends an event to the server to setup a new instance if it does not exist.
-     * @param inst The instance.
-     * @param botOrMod The bot or mod that should be cloned into the new inst.
-     */
-    function setupServer(inst: string, botOrMod?: Mod) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            calcSetupServer(inst, convertToCopiableValue(botOrMod)),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
      * Executes the given shell script on the server.
      * @param script The shell script  that should be executed.
      */
     function shell(script: string): RemoteAction | RemoteAction[] {
         return remote(calcShell(script));
-    }
-
-    /**
-     * Loads a file from the server at the given path.
-     * @param path The path of the file.
-     * @param options The options.
-     */
-    function loadFile(path: string, options?: LoadFileOptions): Promise<any> {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            calcLoadFile({
-                path: path,
-                ...(options || {}),
-            }),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Saves a file at the given path.
-     * @param path The path.
-     * @param data The data to save.
-     * @param options The options to use.
-     */
-    function saveFile(
-        path: string,
-        data: string,
-        options?: SaveFileOptions
-    ): Promise<any> {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            calcSaveFile({
-                path: path,
-                data: data,
-                ...(options || {}),
-            }),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
     }
 
     /**
@@ -10833,36 +10681,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ? calcReject(...original)
             : calcReject(original);
         return addAction(event);
-    }
-
-    /**
-     * Unlocks admin space using the given password.
-     * Returns a promise that resolves when the space is unlocked.
-     * @param password The password to use to unlock admin space.
-     */
-    function unlockAdminSpace(password: string): Promise<void> {
-        const task = context.createTask();
-        const event = unlockSpace('admin', password, task.taskId);
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sets the password that should be used for admin space.
-     * @param oldPassword The old password for the admin space.
-     * @param newPassword The new password that should be used.
-     */
-    function setAdminSpacePassword(
-        oldPassword: string,
-        newPassword: string
-    ): Promise<void> {
-        const task = context.createTask();
-        const event = setSpacePassword(
-            'admin',
-            oldPassword,
-            newPassword,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
     }
 
     /**

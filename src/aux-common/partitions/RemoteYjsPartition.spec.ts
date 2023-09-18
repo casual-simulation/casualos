@@ -29,7 +29,6 @@ import {
     ON_SPACE_MAX_SIZE_REACHED,
     stateUpdatedEvent,
     StateUpdatedEvent,
-    unlockSpace,
     UpdatedBot,
     getCurrentInstUpdate,
     getRemoteCount,
@@ -1674,26 +1673,6 @@ describe('RemoteYjsPartition', () => {
                             tag1: 'abc',
                         }),
                     });
-                });
-
-                it('should not try to connect if it is not already connected', async () => {
-                    setupPartition({
-                        type: 'remote_yjs',
-                        recordName: recordName,
-                        inst: 'inst',
-                        branch: 'testBranch',
-                        host: 'testHost',
-                        static: true,
-                        readOnly: true,
-                    });
-
-                    await partition.applyEvents([unlockSpace('admin', '3342')]);
-
-                    expect(
-                        connection.sentMessages.filter(
-                            (e) => e.type === 'repo/watch_branch'
-                        ).length
-                    ).toEqual(0);
                 });
             });
 

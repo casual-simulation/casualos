@@ -118,11 +118,6 @@ export type AsyncActions =
     | ClearSpaceAction
     | SendWebhookAction
     | AnimateTagAction
-    | UnlockSpaceAction
-    | SetSpacePasswordAction
-    | LoadFileAction
-    | SaveFileAction
-    | SetupChannelAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -985,70 +980,6 @@ export interface AnimateTagOptions {
 }
 
 /**
- * Defines an event that is used to load a file.
- */
-export interface LoadFileAction extends AsyncAction {
-    type: 'load_file';
-
-    /**
-     * The options for the action.
-     */
-    options: LoadFileOptions;
-}
-
-/**
- * Options for loading a file.
- */
-export interface LoadFileOptions {
-    /**
-     * The file path that should be loaded.
-     */
-    path?: string;
-
-    /**
-     * The shout that should be made when the request finishes.
-     */
-    callbackShout?: string;
-}
-
-/**
- * Defines an event that is used to save a file to a drive.
- */
-export interface SaveFileAction extends AsyncAction {
-    type: 'save_file';
-
-    /**
-     * The options for the action.
-     */
-    options: SaveFileOptions;
-}
-
-/**
- * Options for saving a file.
- */
-export interface SaveFileOptions {
-    /**
-     * The path that the mod should be saved.
-     */
-    path: string;
-
-    /**
-     * The data to save to the file.
-     */
-    data: string;
-
-    /**
-     * The shout that should be made when the request finishes.
-     */
-    callbackShout?: string;
-
-    /**
-     * Whether to overwrite existing files.
-     */
-    overwriteExistingFile?: boolean;
-}
-
-/**
  * Defines an event that is used to get the player count.
  */
 export interface GetRemoteCountAction extends Action {
@@ -1437,23 +1368,6 @@ export interface RejectAction {
 }
 
 /**
- * Defines an event that creates a channel if it doesn't exist.
- */
-export interface SetupChannelAction extends AsyncAction {
-    type: 'setup_server';
-
-    /**
-     * The channel that should be created.
-     */
-    channel: string;
-
-    /**
-     * The bot or mod that should be cloned into the new channel.
-     */
-    botOrMod?: Bot | BotTags;
-}
-
-/**
  * Defines an event that sets some text on the user's clipboard.
  */
 export interface SetClipboardAction {
@@ -1624,49 +1538,6 @@ export interface ClearSpaceAction extends AsyncAction {
      * The space to clear.
      */
     space: string;
-}
-
-/**
- * Defines an event that unlocks the given space for editing.
- * Once a space is unlocked, it cannot be locked for the remainder of the session.
- *
- * Only supported for the following spaces:
- * - admin
- */
-export interface UnlockSpaceAction extends AsyncAction {
-    type: 'unlock_space';
-
-    /**
-     * The space to unlock.
-     */
-    space: BotSpace;
-
-    /**
-     * The password to use to unlock the space.
-     */
-    password: string;
-}
-
-/**
- * Defines an event that sets the password used to unlock the given space for editing.
- */
-export interface SetSpacePasswordAction extends AsyncAction {
-    type: 'set_space_password';
-
-    /**
-     * The space to set the password for.
-     */
-    space: BotSpace;
-
-    /**
-     * The old password for the space.
-     */
-    oldPassword: string;
-
-    /**
-     * The new password for the space.
-     */
-    newPassword: string;
 }
 
 /**
@@ -3805,38 +3676,6 @@ export function animateTag(
 }
 
 /**
- * Creates a new LoadFileAction.
- * @param options The options.
- * @param taskId The ID of the async task.
- */
-export function loadFile(
-    options: LoadFileOptions,
-    taskId?: number | string
-): LoadFileAction {
-    return {
-        type: 'load_file',
-        options: options,
-        taskId,
-    };
-}
-
-/**
- * Creates a new SaveFileAction.
- * @param options The options.
- * @param taskId The ID of the async task.
- */
-export function saveFile(
-    options: SaveFileOptions,
-    taskId?: number | string
-): SaveFileAction {
-    return {
-        type: 'save_file',
-        options: options,
-        taskId,
-    };
-}
-
-/**
  * Creates a new GetRemoteCountAction.
  * @param inst The instance that the device count should be retrieved for.
  */
@@ -3934,27 +3773,6 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
     return {
         type: 'replace_drag_bot',
         bot,
-    };
-}
-
-/**
- * Creates a channel if it doesn't exist and places the given bot in it.
- * @param channel The ID of the channel to setup.
- * @param botOrMod The bot that should be cloned into the new channel.
- * @param taskId The ID of the async task.
- */
-export function setupServer(
-    channel: string,
-    botOrMod?: Bot | BotTags,
-    taskId?: string | number,
-    playerId?: string
-): SetupChannelAction {
-    return {
-        type: 'setup_server',
-        channel,
-        botOrMod,
-        taskId,
-        playerId,
     };
 }
 
@@ -4191,55 +4009,6 @@ export function clearSpace(
     return {
         type: 'clear_space',
         space: space,
-        taskId,
-    };
-}
-
-/**
- * Requests that the given space be unlocked for editing.
- *
- * Only supported for the following spaces:
- * - admin
- *
- * @param space The space to unlock.
- * @param password The password to use to unlock the space.
- * @param taskId The ID of the task that this event represents.
- */
-export function unlockSpace(
-    space: BotSpace,
-    password: string,
-    taskId?: number | string
-): UnlockSpaceAction {
-    return {
-        type: 'unlock_space',
-        space,
-        password,
-        taskId,
-    };
-}
-
-/**
- * Requests that the given new password be used to unlock the space for editing.
- *
- * Only supported for the following spaces:
- * - admin
- *
- * @param space The space to unlock.
- * @param oldPassword The old password.
- * @param newPassword The new password to use to unlock the space.
- * @param taskId The ID of the task that this event represents.
- */
-export function setSpacePassword(
-    space: BotSpace,
-    oldPassword: string,
-    newPassword: string,
-    taskId?: number | string
-): SetSpacePasswordAction {
-    return {
-        type: 'set_space_password',
-        space,
-        oldPassword,
-        newPassword,
         taskId,
     };
 }

@@ -312,9 +312,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 e.type === 'update_bot'
             ) {
                 finalEvents.push(e);
-            } else if (e.type === 'unlock_space') {
-                // Resolve the unlock_space task
-                this._onEvents.next([asyncResult(e.taskId, undefined)]);
             }
         }
 
