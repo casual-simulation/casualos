@@ -916,11 +916,19 @@ export class RecordsServer {
                     message
                 );
             } else if (type === WebsocketEventTypes.UploadRequest) {
-                const [id] = rest;
-                return await this._processWebsocketUploadRequest(request, id);
+                return await this._processWebsocketUploadRequest(
+                    request,
+                    requestId
+                );
             } else if (type === WebsocketEventTypes.DownloadRequest) {
-                const [url] = rest;
-                return await this._processWebsocketDownload(request, url);
+                const [url, method, headers] = rest;
+                return await this._processWebsocketDownload(
+                    request,
+                    requestId,
+                    url,
+                    method,
+                    headers
+                );
             } else {
                 // not supported
                 return;
@@ -1019,13 +1027,51 @@ export class RecordsServer {
 
     private async _processWebsocketDownload(
         request: GenericWebsocketRequest,
-        url: string
-    ) {}
+        requestId: number,
+        url: string,
+        method: string,
+        headers: GenericHttpHeaders
+    ) {
+        const connectionId = request.connectionId;
+        const result = await this._websocketController.downloadRequest(
+            connectionId,
+            requestId,
+            url,
+            method,
+            headers
+        );
+
+        if (result.success === false) {
+            await this._websocketController.sendError(connectionId, result);
+            return;
+        }
+
+        const parseResult = tryParseJson(result.message);
+
+        if (!parseResult.success) {
+            await this._websocketController.sendError(connectionId, {
+                requestId: requestId,
+                errorCode: 'unnaceptable_request',
+                errorMessage:
+                    'The request was invalid. The downloaded file must contain JSON.',
+            });
+            return;
+        }
+
+        await this._processWebsocketMessage(
+            request,
+            requestId,
+            parseResult.value
+        );
+    }
 
     private async _processWebsocketUploadRequest(
         request: GenericWebsocketRequest,
-        id: string
-    ) {}
+        requestId: number
+    ) {
+        const connectionId = request.connectionId;
+        await this._websocketController.uploadRequest(connectionId, requestId);
+    }
 
     private async _stripeWebhook(
         request: GenericHttpRequest
