@@ -408,7 +408,7 @@ export class AppManager {
     }
 
     async setPrimarySimulation(recordName: string | null, inst: string) {
-        const simulationId = `${recordName ?? ''}/${inst}`;
+        const simulationId = getSimulationId(recordName, inst);
         if (
             (this.simulationManager.primary &&
                 this.simulationManager.primary.id === simulationId) ||
@@ -598,6 +598,22 @@ export class AppManager {
             console.error('Unable to fetch config from storage', err);
             return null;
         }
+    }
+}
+
+/**
+ * Gets the ID for a simulation with the given origin.
+ * @param recordName The name of the record for the simulation.
+ * @param inst The name of the inst for the simulation.
+ */
+export function getSimulationId(
+    recordName: string | null,
+    inst: string
+): string {
+    if (recordName) {
+        return `${recordName ?? ''}/${inst}`;
+    } else {
+        return inst;
     }
 }
 

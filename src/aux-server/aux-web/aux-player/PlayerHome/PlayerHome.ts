@@ -20,7 +20,7 @@ import {
     getBotTheme,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
-import { appManager } from '../../shared/AppManager';
+import { appManager, getSimulationId } from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
 import { Dictionary } from 'vue-router/types/router';
 import {
@@ -247,7 +247,7 @@ export default class PlayerHome extends Vue {
             }
             await appManager.simulationManager.updateSimulations(
                 newServer.map((s) => ({
-                    id: `${''}/${s}`,
+                    id: getSimulationId(null, s),
                     options: {
                         recordName: null,
                         inst: s,
