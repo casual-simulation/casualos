@@ -10848,14 +10848,14 @@ describe('RecordsServer', () => {
                     token: null,
                 });
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
-                    messageEvent(-1, {
+                    {
                         type: 'login_result',
                         info: {
                             connectionId: 'clientConnectionId',
                             sessionId: null,
                             userId: null,
                         },
-                    }),
+                    },
                 ]);
             });
 
