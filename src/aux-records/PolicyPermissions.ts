@@ -761,7 +761,7 @@ type ZodReadInstPermissionAssertion = HasType<
 >;
 
 /**
- * Defines an interface that describes a permission to update an inst.
+ * Defines an interface that describes a permission to update information about an inst.
  */
 export interface UpdateInstPermission extends InstPermission {
     type: 'inst.update';
@@ -1138,6 +1138,81 @@ export const DEFAULT_PUBLIC_READ_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'inst.read',
+            role: true,
+            insts: true,
+        },
+    ],
+};
+
+/**
+ * Defines a policy document that applies only to resources marked with the "publicWrite" marker.
+ */
+export const DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT: PolicyDocument = {
+    permissions: [
+        {
+            type: 'data.create',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.delete',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.read',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.update',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.list',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'file.read',
+            role: true,
+        },
+        {
+            type: 'file.create',
+            role: true,
+        },
+        {
+            type: 'file.delete',
+            role: true,
+        },
+        {
+            type: 'event.count',
+            role: true,
+            events: true,
+        },
+        {
+            type: 'event.increment',
+            role: true,
+            events: true,
+        },
+        {
+            type: 'inst.read',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.updateData',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.delete',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.create',
             role: true,
             insts: true,
         },
