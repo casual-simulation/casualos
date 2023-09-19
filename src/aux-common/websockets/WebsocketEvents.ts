@@ -88,13 +88,19 @@ export const websocketUploadResponseEventSchema = z.tuple([
 export type WebsocketErrorCode =
     | ServerError
     | NotSupportedError
+    | 'invalid_record_key'
     | 'unacceptable_connection_token'
     | 'invalid_token'
     | 'session_expired'
     | 'user_is_banned'
     | 'unacceptable_connection_id'
     | 'message_not_found'
-    | 'unnaceptable_request';
+    | 'unacceptable_request'
+    | 'record_not_found'
+    | 'not_authorized'
+    | 'action_not_supported'
+    | 'not_logged_in'
+    | 'subscription_limit_reached';
 
 /**
  * Defines a websocket event that contains a response to an upload request.

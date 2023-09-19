@@ -10,6 +10,7 @@ import {
     StoredUpdates,
 } from '@casual-simulation/aux-records';
 import { PrismaClient } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -89,22 +90,32 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
     }
 
     async saveInst(inst: InstWithBranches): Promise<void> {
-        await this._prisma.instRecord.upsert({
-            where: {
-                recordName_name: {
-                    recordName: inst.recordName,
-                    name: inst.inst,
+        try {
+            await this._prisma.instRecord.upsert({
+                where: {
+                    recordName_name: {
+                        recordName: inst.recordName,
+                        name: inst.inst,
+                    },
                 },
-            },
-            update: {
-                markers: inst.markers,
-            },
-            create: {
-                name: inst.inst,
-                recordName: inst.recordName,
-                markers: inst.markers,
-            },
-        });
+                update: {
+                    markers: inst.markers,
+                },
+                create: {
+                    name: inst.inst,
+                    recordName: inst.recordName,
+                    markers: inst.markers,
+                },
+            });
+        } catch (err) {
+            if (err instanceof PrismaClientKnownRequestError) {
+                if (err.code === 'P2003') {
+                    // Foreign key violation
+                } else {
+                    throw err;
+                }
+            }
+        }
     }
 
     async saveBranch(branch: BranchRecord): Promise<void> {

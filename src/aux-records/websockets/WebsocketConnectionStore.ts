@@ -120,6 +120,30 @@ export interface WebsocketConnectionStore {
         connectionId: string,
         timeMs: number | null
     ): Promise<void>;
+
+    /**
+     * Saves that the given record name and inst have been authorized by the given connection.
+     * @param connectionId The ID of the connection.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
+     */
+    saveAuthorizedInst(
+        connectionId: string,
+        recordName: string | null,
+        inst: string
+    ): Promise<void>;
+
+    /**
+     * Gets whether the given record name and inst have been authorized by the given connection.
+     * @param connectionId The ID of the connection.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
+     */
+    isAuthorizedInst(
+        connectionId: string,
+        recordName: string | null,
+        inst: string
+    ): Promise<boolean>;
 }
 
 /**

@@ -1,20 +1,22 @@
-import { MemoryInstRecordsStore } from './MemoryInstRecordsStore';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
 import { PUBLIC_READ_MARKER } from '../PolicyPermissions';
+import { MemoryStore } from '../MemoryStore';
 
 describe('SplitInstRecordsStore', () => {
     let store: SplitInstRecordsStore;
     let temp: TemporaryInstRecordsStore;
-    let perm: MemoryInstRecordsStore;
+    let perm: MemoryStore;
 
     const recordName = 'recordName';
     const instName = 'instName';
     const branchName = 'branchName';
 
     beforeEach(() => {
-        perm = new MemoryInstRecordsStore();
+        perm = new MemoryStore({
+            subscriptions: null as any,
+        });
         temp = new MemoryTempInstRecordsStore();
         store = new SplitInstRecordsStore(temp, perm);
     });

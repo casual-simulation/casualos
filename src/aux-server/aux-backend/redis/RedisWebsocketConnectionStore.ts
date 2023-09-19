@@ -24,6 +24,8 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     private set: (key: string, value: any) => Promise<void>;
     private del: (key: string) => Promise<void>;
     private expire: (key: string, seconds: number) => Promise<void>;
+    private sadd: (key: string, ...values: string[]) => Promise<number>;
+    private sismember: (key: string, value: string) => Promise<number>;
 
     constructor(globalNamespace: string, client: RedisClient) {
         this._globalNamespace = globalNamespace;
@@ -39,6 +41,8 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         this.expire = promisify(this._redis.expire).bind(this._redis);
         this.get = promisify(this._redis.get).bind(this._redis);
         this.set = promisify(this._redis.set).bind(this._redis);
+        this.sadd = promisify(this._redis.sadd).bind(this._redis);
+        this.sismember = promisify(this._redis.sismember).bind(this._redis);
     }
 
     // /{global}/connections
@@ -48,6 +52,31 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     //    - connection1
     // /{global}/connections/{connection}
     //    - {recordName}/{inst}/{branch}
+    // /{global}/authorized/{connection}
+    //    - {recordName}/{inst}
+
+    async saveAuthorizedInst(
+        connectionId: string,
+        recordName: string,
+        inst: string
+    ): Promise<void> {
+        await this.sadd(
+            authorizedInstsKey(this._globalNamespace, connectionId),
+            `${recordName ?? ''}/${inst ?? ''}`
+        );
+    }
+
+    async isAuthorizedInst(
+        connectionId: string,
+        recordName: string,
+        inst: string
+    ): Promise<boolean> {
+        const authorized = await this.sismember(
+            authorizedInstsKey(this._globalNamespace, connectionId),
+            `${recordName ?? ''}/${inst ?? ''}`
+        );
+        return authorized === 1;
+    }
 
     async saveConnection(connection: DeviceConnection): Promise<void> {
         await this.hset([
@@ -123,6 +152,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         );
         await this.hdel([connectionsKey(this._globalNamespace), connectionId]);
         await this.del(connectionIdKey(this._globalNamespace, connectionId));
+        await this.del(authorizedInstsKey(this._globalNamespace, connectionId));
     }
 
     async expireConnection(connectionId: string): Promise<void> {
@@ -143,6 +173,10 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         await this.hdel([connectionsKey(this._globalNamespace), connectionId]);
         await this.expire(
             connectionIdKey(this._globalNamespace, connectionId),
+            10
+        );
+        await this.expire(
+            authorizedInstsKey(this._globalNamespace, connectionId),
             10
         );
     }
@@ -288,4 +322,8 @@ function connectionField(recordName: string, inst: string, branch: string) {
 
 function connectionRateLimitKey(globalNamespace: string, connectionId: string) {
     return `/${globalNamespace}/rate_limited/${connectionId}`;
+}
+
+function authorizedInstsKey(globalNamespace: string, connectionId: string) {
+    return `/${globalNamespace}/authorized/${connectionId}`;
 }

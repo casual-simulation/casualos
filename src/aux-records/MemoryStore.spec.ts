@@ -1,11 +1,13 @@
-import { PUBLIC_READ_MARKER } from '../PolicyPermissions';
-import { MemoryInstRecordsStore } from './MemoryInstRecordsStore';
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { MemoryStore } from './MemoryStore';
 
-describe('MemoryInstRecordsStore', () => {
-    let subject: MemoryInstRecordsStore;
+describe('MemoryStore', () => {
+    let subject: MemoryStore;
 
     beforeEach(() => {
-        subject = new MemoryInstRecordsStore();
+        subject = new MemoryStore({
+            subscriptions: null as any,
+        });
     });
 
     describe('getAllUpdates()', () => {

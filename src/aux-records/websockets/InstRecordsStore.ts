@@ -1,3 +1,5 @@
+import { ServerError } from '@casual-simulation/aux-common';
+
 /**
  * Defines an interface for services which are able to store inst update data.
  *
@@ -32,13 +34,13 @@ export interface InstRecordsStore {
      * If branches are included, then they will be added/updated to the inst as well.
      * @param inst The inst that should be saved.
      */
-    saveInst(inst: InstWithBranches): Promise<void>;
+    saveInst(inst: InstWithBranches): Promise<SaveInstResult>;
 
     /**
      * Creates or updates the given branch record.
      * @param branch The branch that should be saved.
      */
-    saveBranch(branch: BranchRecord): Promise<void>;
+    saveBranch(branch: BranchRecord): Promise<SaveBranchResult>;
 
     /**
      * Gets the list of updates for the given branch in the given inst and record.
@@ -251,4 +253,28 @@ export interface InstWithBranches extends InstRecord {
 
 export interface CurrentUpdates extends StoredUpdates {
     instSizeInBytes: number;
+}
+
+export type SaveInstResult = SaveInstSuccess | SaveInstFailure;
+
+export interface SaveInstSuccess {
+    success: true;
+}
+
+export interface SaveInstFailure {
+    success: false;
+    errorCode: ServerError | 'record_not_found';
+    errorMessage: string;
+}
+
+export type SaveBranchResult = SaveBranchSuccess | SaveBranchFailure;
+
+export interface SaveBranchSuccess {
+    success: true;
+}
+
+export interface SaveBranchFailure {
+    success: false;
+    errorCode: ServerError | 'inst_not_found';
+    errorMessage: string;
 }

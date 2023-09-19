@@ -937,6 +937,12 @@ export const PUBLIC_READ_MARKER = 'publicRead';
 export const PUBLIC_WRITE_MARKER = 'publicWrite';
 
 /**
+ * The name of the "private" resource marker.
+ * Used by default for private insts.
+ */
+export const PRIVATE_MARKER = 'private';
+
+/**
  * The name of the "account" resource marker.
  * Used by default for policy and role records.
  */

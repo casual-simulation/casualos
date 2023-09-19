@@ -27,7 +27,6 @@ import {
     InstRecordsStore,
     WebsocketMessenger,
     SplitInstRecordsStore,
-    MemoryInstRecordsStore,
     TemporaryInstRecordsStore,
 } from '@casual-simulation/aux-records';
 import {

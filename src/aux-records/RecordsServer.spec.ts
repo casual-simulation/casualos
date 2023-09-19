@@ -68,7 +68,6 @@ import { InstRecordsStore } from './websockets/InstRecordsStore';
 import { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
 import { SplitInstRecordsStore } from './websockets/SplitInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './websockets/MemoryTempInstRecordsStore';
-import { MemoryInstRecordsStore } from './websockets/MemoryInstRecordsStore';
 import {
     LoginMessage,
     WebsocketDownloadRequestEvent,
@@ -209,7 +208,7 @@ describe('RecordsServer', () => {
             },
         });
         manualDataStore = new MemoryStore({
-            subscriptions: null,
+            subscriptions: null as any,
         });
 
         authMessenger = new MemoryAuthMessenger();
@@ -274,7 +273,7 @@ describe('RecordsServer', () => {
         websocketMessenger = new MemoryWebsocketMessenger();
         instStore = new SplitInstRecordsStore(
             new MemoryTempInstRecordsStore(),
-            new MemoryInstRecordsStore()
+            store
         );
         tempInstStore = new MemoryTempInstRecordsStore();
         websocketController = new WebsocketController(

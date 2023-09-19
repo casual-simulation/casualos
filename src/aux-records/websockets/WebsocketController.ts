@@ -42,16 +42,27 @@ import {
     CurrentUpdates,
     InstRecord,
     InstRecordsStore,
+    SaveInstFailure,
 } from './InstRecordsStore';
 import {
     BranchName,
     TemporaryInstRecordsStore,
 } from './TemporaryInstRecordsStore';
 import { sumBy } from 'lodash';
-import { PUBLIC_READ_MARKER, PUBLIC_WRITE_MARKER } from '../PolicyPermissions';
+import {
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+} from '../PolicyPermissions';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid } from 'uuid';
+import {
+    AuthorizeDenied,
+    DenialReason,
+    PolicyController,
+    returnAuthorizationResult,
+} from '../PolicyController';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -62,6 +73,7 @@ export class WebsocketController {
     private _instStore: InstRecordsStore;
     private _temporaryStore: TemporaryInstRecordsStore;
     private _auth: AuthController;
+    private _policies: PolicyController;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -79,13 +91,15 @@ export class WebsocketController {
         messenger: WebsocketMessenger,
         instStore: InstRecordsStore,
         temporaryInstStore: TemporaryInstRecordsStore,
-        auth: AuthController
+        auth: AuthController,
+        policies: PolicyController
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;
         this._instStore = instStore;
         this._temporaryStore = temporaryInstStore;
         this._auth = auth;
+        this._policies = policies;
     }
 
     /**
@@ -146,6 +160,11 @@ export class WebsocketController {
                     clientConnectionId: validationResult.connectionId,
                     token: message.connectionToken,
                 });
+                await this._connectionStore.saveAuthorizedInst(
+                    connectionId,
+                    validationResult.recordName,
+                    validationResult.inst
+                );
                 userId = validationResult.userId;
                 sessionId = validationResult.sessionId;
                 clientConnectionId = validationResult.connectionId;
@@ -251,9 +270,39 @@ export class WebsocketController {
         );
         if (!connection) {
             throw new Error(
-                'Unable to watch_branch. The connection was not found!'
+                'Unable to watch branch. The connection was not found!'
             );
         }
+
+        if (event.recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                event.recordName,
+                event.inst
+            );
+
+            if (!authorized) {
+                this.sendErrorResult(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
+        const instResult = await this._getOrCreateInst(
+            event.recordName,
+            event.inst,
+            connection.userId
+        );
+
+        if (instResult.success === false) {
+            this.sendErrorResult(connectionId, -1, instResult);
+            return;
+        }
+        const inst = instResult.inst;
+
         await this._connectionStore.saveBranchConnection({
             ...connection,
             serverConnectionId: connectionId,
@@ -264,10 +313,6 @@ export class WebsocketController {
             temporary: event.temporary || false,
         });
 
-        const inst: InstRecord | null = await this._getOrCreateInst(
-            event.recordName,
-            event.inst
-        );
         const branch = await this._getOrCreateBranch(
             event.recordName,
             event.inst,
@@ -337,28 +382,55 @@ export class WebsocketController {
 
     private async _getOrCreateInst(
         recordName: string | null,
-        instName: string
-    ) {
+        instName: string,
+        userId: string
+    ): Promise<GetOrCreateInstResult> {
         let inst: InstRecord | null = null;
         if (recordName) {
-            let inst = await this._instStore.getInstByName(
+            const savedInst = await this._instStore.getInstByName(
                 recordName,
                 instName
             );
-            if (!inst) {
+            if (!savedInst) {
+                const authorizeResult = await this._policies.authorizeRequest({
+                    action: 'inst.create',
+                    recordKeyOrRecordName: recordName,
+                    inst: instName,
+                    userId,
+                    resourceMarkers: [PRIVATE_MARKER],
+                });
+
+                if (authorizeResult.allowed === false) {
+                    console.log(
+                        '[WebsocketController] Unable to authorize inst creation.',
+                        authorizeResult
+                    );
+                    return returnAuthorizationResult(authorizeResult);
+                }
+
                 // Create the inst
                 inst = {
                     recordName: recordName,
                     inst: instName,
-
-                    // TODO: Choose a better default marker for auto-created insts
-                    markers: [PUBLIC_WRITE_MARKER],
+                    markers: [PRIVATE_MARKER],
                 };
-                await this._instStore.saveInst(inst);
+                const result = await this._instStore.saveInst(inst);
+                if (result.success === false) {
+                    console.log(
+                        '[WebsocketController] Unable to save inst.',
+                        result
+                    );
+                    return result;
+                }
+            } else {
+                inst = savedInst;
             }
         }
 
-        return inst;
+        return {
+            success: true,
+            inst,
+        };
     }
 
     private async _getOrCreateBranch(
@@ -501,7 +573,7 @@ export class WebsocketController {
                     `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Branch not found!`
                 );
 
-                await this._getOrCreateInst(event.recordName, event.inst);
+                await this._getOrCreateInst(event.recordName, event.inst, null);
                 await this._instStore.saveBranch({
                     branch: event.branch,
                     inst: event.inst,
@@ -1211,6 +1283,20 @@ export class WebsocketController {
         ]);
     }
 
+    async sendErrorResult(
+        connectionId: string,
+        requestId: number,
+        result: GetOrCreateInstFailure
+    ) {
+        await this.sendEvent(connectionId, [
+            WebsocketEventTypes.Error,
+            requestId,
+            result.errorCode,
+            result.errorMessage,
+            null,
+        ]);
+    }
+
     async sendEvent(connectionId: string, event: WebsocketEvent) {
         await this._messenger.sendEvent(connectionId, event);
     }
@@ -1265,4 +1351,20 @@ export interface WebsocketControllerError {
     errorCode: WebsocketErrorEvent[2];
     errorMessage: string;
     issues?: ZodIssue[];
+}
+
+export type GetOrCreateInstResult =
+    | GetOrCreateInstSuccess
+    | GetOrCreateInstFailure;
+
+export interface GetOrCreateInstSuccess {
+    success: true;
+    inst: InstRecord | null;
+}
+
+export interface GetOrCreateInstFailure {
+    success: false;
+    errorCode: AuthorizeDenied['errorCode'] | SaveInstFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
 }

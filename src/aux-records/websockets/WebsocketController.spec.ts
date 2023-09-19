@@ -33,9 +33,13 @@ import { createTestControllers, createTestUser } from '../TestUtils';
 import { generateV1ConnectionToken } from '../AuthUtils';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
-import { MemoryInstRecordsStore } from './MemoryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
-import { PUBLIC_READ_MARKER, PUBLIC_WRITE_MARKER } from '../PolicyPermissions';
+import {
+    ACCOUNT_MARKER,
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+} from '../PolicyPermissions';
 import { getStateFromUpdates } from '@casual-simulation/aux-common';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -100,14 +104,15 @@ describe('WebsocketController', () => {
         tempUpdatesStore = new MemoryTempInstRecordsStore();
         instStore = new SplitInstRecordsStore(
             new MemoryTempInstRecordsStore(),
-            new MemoryInstRecordsStore()
+            services.store
         );
         server = new WebsocketController(
             connectionStore,
             messenger,
             instStore,
             tempUpdatesStore,
-            services.auth
+            services.auth,
+            services.policies
         );
 
         uuidMock.mockReturnValueOnce('userId');
@@ -219,6 +224,21 @@ describe('WebsocketController', () => {
 
             expect(connection).toBeFalsy();
         });
+
+        it('should add the recordName and inst to the list of authorized insts for the connection', async () => {
+            await server.login(serverConnectionId, 1, {
+                type: 'login',
+                connectionToken,
+            });
+
+            const authorized = await connectionStore.isAuthorizedInst(
+                serverConnectionId,
+                recordName,
+                inst
+            );
+
+            expect(authorized).toBe(true);
+        });
     });
 
     describe('disconnect()', () => {
@@ -285,7 +305,7 @@ describe('WebsocketController', () => {
         });
     });
 
-    describe('repo/watch_branch', () => {
+    describe.only('repo/watch_branch', () => {
         describe('updates', () => {
             it('should load the given branch and send the current updates', async () => {
                 await connectionStore.saveConnection(device1Info);
@@ -479,6 +499,197 @@ describe('WebsocketController', () => {
                     expect(await instStore.getInstByName(null, inst)).toBe(
                         null
                     );
+                });
+            });
+        });
+
+        describe.only('records', () => {
+            it('should return a record_not_found error if the record does not exist', async () => {
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken,
+                });
+
+                await server.watchBranch(serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName,
+                    inst,
+                    branch: 'test',
+                });
+
+                expect(messenger.getEvents(serverConnectionId)).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        'record_not_found',
+                        'Record not found.',
+                        null,
+                    ],
+                ]);
+            });
+
+            describe('private', () => {
+                beforeEach(async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+                });
+
+                describe('anonymous', () => {
+                    it('should return a not_authorized error if the user is trying to create an inst in a record they do not have access to', async () => {
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionId,
+                        });
+
+                        await server.watchBranch(serverConnectionId, {
+                            type: 'repo/watch_branch',
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                        });
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    'not_authorized',
+                                    'You are not authorized to access this inst.',
+                                    null,
+                                ],
+                            ]
+                        );
+                    });
+                });
+
+                describe('token', () => {
+                    const otherUserConnectionId = 'otherConnectionId';
+                    let otherUserId: string;
+                    let otherUserConnectionKey: string;
+                    let otherUserToken: string;
+
+                    beforeEach(async () => {
+                        uuidMock.mockReturnValueOnce('otherUserId');
+                        const otherUser = await createTestUser(
+                            services,
+                            'other@example.com'
+                        );
+                        otherUserToken = generateV1ConnectionToken(
+                            otherUser.connectionKey,
+                            otherUserConnectionId,
+                            recordName,
+                            inst
+                        );
+                        otherUserId = otherUser.userId;
+                        otherUserConnectionKey = otherUser.connectionKey;
+                    });
+
+                    describe('creation', () => {
+                        it('should return a not_authorized error if the user is trying to create an inst in a record they do not have access to', async () => {
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken: otherUserToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    'not_authorized',
+                                    'You are not authorized to perform this action.',
+                                    null,
+                                ],
+                            ]);
+                        });
+
+                        it('should create the inst if the user is the owner of the record', async () => {
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken: connectionToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
+
+                            expect(
+                                await instStore.getInstByName(recordName, inst)
+                            ).toEqual({
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            });
+                        });
+
+                        it('should create the inst if the user has been granted permission', async () => {
+                            services.store.policies[recordName] = {
+                                [PRIVATE_MARKER]: {
+                                    document: {
+                                        permissions: [
+                                            {
+                                                type: 'inst.create',
+                                                role: 'developer',
+                                                insts: true,
+                                            },
+                                            {
+                                                type: 'policy.assign',
+                                                role: 'developer',
+                                                policies: true,
+                                            },
+                                        ],
+                                    },
+                                    markers: [ACCOUNT_MARKER],
+                                },
+                            };
+
+                            services.store.roles[recordName] = {
+                                [otherUserId]: new Set(['developer']),
+                            };
+
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken: otherUserToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
+
+                            expect(
+                                await instStore.getInstByName(recordName, inst)
+                            ).toEqual({
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            });
+                        });
+                    });
                 });
             });
         });
