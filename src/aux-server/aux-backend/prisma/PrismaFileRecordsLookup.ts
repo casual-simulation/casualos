@@ -19,7 +19,6 @@ import {
     ListFilesLookupResult,
     UpdateFileResult,
 } from '@casual-simulation/aux-records/FileRecordsStore';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { convertMarkers } from './Utils';
 
@@ -287,18 +286,6 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
             }
         }
     }
-}
-
-/**
- * Gets the Access Control List (ACL) that should be used for files uploaded with the given markers.
- * @param markers The markers that are applied to the file.
- */
-export function s3AclForMarkers(markers: readonly string[]): string {
-    if (markers.some((m) => m === PUBLIC_READ_MARKER)) {
-        return 'public-read';
-    }
-
-    return 'private';
 }
 
 /**

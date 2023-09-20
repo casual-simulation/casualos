@@ -1,13 +1,9 @@
 import {
     AssignedRole,
-    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
     GetUserPolicyResult,
     ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
-    PUBLIC_READ_MARKER,
-    PolicyDocument,
     PolicyStore,
     RoleAssignment,
     UpdateRolesUpdate,
@@ -18,6 +14,14 @@ import {
 } from '@casual-simulation/aux-records';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { convertMarkers, convertToDate, convertToMillis } from './Utils';
+import {
+    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+    PolicyDocument,
+} from '@casual-simulation/aux-common';
 
 /**
  * Implements PolicyStore for Prisma.
@@ -36,6 +40,8 @@ export class PrismaPolicyStore implements PolicyStore {
         const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
+        } else if (marker === PUBLIC_WRITE_MARKER) {
+            policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
         }
         // const id = policyId(recordName, marker);
         const policy = await this._client.policy.findUnique({

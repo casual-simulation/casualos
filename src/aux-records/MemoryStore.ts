@@ -79,7 +79,9 @@ import {
 import {
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
     PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
     PolicyDocument,
 } from '@casual-simulation/aux-common';
 import {
@@ -1461,6 +1463,8 @@ export class MemoryStore
         const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
+        } else if (marker === PUBLIC_WRITE_MARKER) {
+            policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
         }
         const policy = this.policies[recordName]?.[marker];
         if (policy) {
