@@ -741,6 +741,108 @@ describe('WebsocketController', () => {
                             });
                         });
                     });
+
+                    describe('read', () => {
+                        beforeEach(async () => {
+                            await instStore.saveInst({
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            });
+                        });
+
+                        it('should return a not_authorized error if the user is trying to read an inst in a record they do not have access to', async () => {
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken: otherUserToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            kind: 'user',
+                                            id: otherUserId,
+                                            marker: 'private',
+                                            permission: 'inst.read',
+                                            role: null,
+                                        },
+                                    },
+                                ],
+                            ]);
+                        });
+
+                        it('should succeed if the user is the record owner', async () => {
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken: connectionToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
+                        });
+
+                        it('should succeed if the user has been granted permission', async () => {
+                            services.store.policies[recordName] = {
+                                [PRIVATE_MARKER]: {
+                                    document: {
+                                        permissions: [
+                                            {
+                                                type: 'inst.read',
+                                                role: 'developer',
+                                                insts: true,
+                                            },
+                                        ],
+                                    },
+                                    markers: [ACCOUNT_MARKER],
+                                },
+                            };
+
+                            services.store.roles[recordName] = {
+                                [otherUserId]: new Set(['developer']),
+                            };
+
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken: otherUserToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
+                        });
+                    });
                 });
             });
         });

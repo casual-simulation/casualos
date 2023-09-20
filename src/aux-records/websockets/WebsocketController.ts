@@ -421,6 +421,22 @@ export class WebsocketController {
                     return result;
                 }
             } else {
+                const authorizeResult = await this._policies.authorizeRequest({
+                    action: 'inst.read',
+                    recordKeyOrRecordName: recordName,
+                    inst: instName,
+                    userId,
+                    resourceMarkers: savedInst.markers,
+                });
+
+                if (authorizeResult.allowed === false) {
+                    console.log(
+                        '[WebsocketController] Unable to authorize inst read.',
+                        authorizeResult
+                    );
+                    return returnAuthorizationResult(authorizeResult);
+                }
+
                 inst = savedInst;
             }
         }
