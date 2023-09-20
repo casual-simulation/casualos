@@ -16,7 +16,7 @@ import {
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
     PolicyDocument,
     PUBLIC_READ_MARKER,
-} from './PolicyPermissions';
+} from '@casual-simulation/aux-common';
 import {
     CreateRecordSuccess,
     CreateStudioResult,

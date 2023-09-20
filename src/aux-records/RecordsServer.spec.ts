@@ -40,7 +40,7 @@ import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
-} from './PolicyPermissions';
+} from '@casual-simulation/aux-common';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
@@ -10807,7 +10807,7 @@ describe('RecordsServer', () => {
                     [
                         WebsocketEventTypes.Error,
                         1,
-                        'unnaceptable_request',
+                        'unacceptable_request',
                         'The request was invalid. One or more fields were invalid.',
                         [
                             {

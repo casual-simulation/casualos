@@ -27,7 +27,7 @@ import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
-} from './PolicyPermissions';
+} from '@casual-simulation/aux-common';
 import { merge, sortBy } from 'lodash';
 import {
     FeaturesConfiguration,

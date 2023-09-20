@@ -33,6 +33,7 @@ import {
     UploadHttpHeaders,
     WatchBranchMessage,
     WebsocketErrorEvent,
+    WebsocketErrorInfo,
     WebsocketEvent,
     WebsocketEventTypes,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
@@ -53,13 +54,13 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-} from '../PolicyPermissions';
+    DenialReason,
+} from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid } from 'uuid';
 import {
     AuthorizeDenied,
-    DenialReason,
     PolicyController,
     returnAuthorizationResult,
 } from '../PolicyController';
@@ -119,13 +120,12 @@ export class WebsocketController {
             let clientConnectionId: string | null;
             if (!message.connectionToken) {
                 if (!message.connectionId) {
-                    await this._messenger.sendEvent(connectionId, [
-                        WebsocketEventTypes.Error,
-                        requestId,
-                        'unacceptable_connection_id',
-                        'A connection ID must be specified when logging in without a connection token.',
-                        null,
-                    ]);
+                    this.sendError(connectionId, requestId, {
+                        success: false,
+                        errorCode: 'unacceptable_connection_id',
+                        errorMessage:
+                            'A connection ID must be specified when logging in without a connection token.',
+                    });
                     return;
                 }
 
@@ -143,13 +143,11 @@ export class WebsocketController {
                         message.connectionToken
                     );
                 if (validationResult.success === false) {
-                    await this._messenger.sendEvent(connectionId, [
-                        WebsocketEventTypes.Error,
-                        requestId,
-                        validationResult.errorCode,
-                        validationResult.errorMessage,
-                        undefined,
-                    ]);
+                    await this.sendError(connectionId, requestId, {
+                        success: false,
+                        errorCode: validationResult.errorCode,
+                        errorMessage: validationResult.errorMessage,
+                    });
                     return;
                 }
 
@@ -183,8 +181,8 @@ export class WebsocketController {
                 '[WebsocketController] [login] Error while logging in.',
                 err
             );
-            await this.sendError(connectionId, {
-                requestId: requestId,
+            await this.sendError(connectionId, requestId, {
+                success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred while logging in.',
             });
@@ -1074,8 +1072,8 @@ export class WebsocketController {
                 console.log(
                     `[WebsocketController] [uploadRequest] Upload requests are not supported!`
                 );
-                await this.sendError(connectionId, {
-                    requestId,
+                await this.sendError(connectionId, requestId, {
+                    success: false,
                     errorCode: 'not_supported',
                     errorMessage: 'Upload requests are not supported.',
                 });
@@ -1094,8 +1092,8 @@ export class WebsocketController {
                 '[WebsocketController] [uploadRequest] Error while processing upload request.',
                 err
             );
-            await this.sendError(connectionId, {
-                requestId,
+            await this.sendError(connectionId, requestId, {
+                success: false,
                 errorCode: 'server_error',
                 errorMessage: 'Error while processing upload request.',
             });
@@ -1121,14 +1119,12 @@ export class WebsocketController {
                 );
                 return {
                     success: false,
-                    requestId,
                     errorCode: 'not_supported',
                     errorMessage: 'Download requests are not supported.',
                 };
             } else if (message === null) {
                 return {
                     success: false,
-                    requestId,
                     errorCode: 'message_not_found',
                     errorMessage: 'Message not found.',
                 };
@@ -1146,7 +1142,6 @@ export class WebsocketController {
             );
             return {
                 success: false,
-                requestId,
                 errorCode: 'server_error',
                 errorMessage: 'Error while processing download request.',
             };
@@ -1273,13 +1268,15 @@ export class WebsocketController {
         console.log(`[WebsocketController] Updates complete.`);
     }
 
-    async sendError(connectionId: string, error: WebsocketControllerError) {
+    async sendError(
+        connectionId: string,
+        requestId: number,
+        info: WebsocketErrorInfo
+    ) {
         await this.sendEvent(connectionId, [
             WebsocketEventTypes.Error,
-            error.requestId,
-            error.errorCode,
-            error.errorMessage,
-            error.issues,
+            requestId,
+            info,
         ]);
     }
 
@@ -1291,9 +1288,12 @@ export class WebsocketController {
         await this.sendEvent(connectionId, [
             WebsocketEventTypes.Error,
             requestId,
-            result.errorCode,
-            result.errorMessage,
-            null,
+            {
+                success: false,
+                errorCode: result.errorCode,
+                errorMessage: result.errorMessage,
+                reason: result.reason,
+            },
         ]);
     }
 
@@ -1342,15 +1342,8 @@ export interface DownloadRequestSuccess {
     message: string;
 }
 
-export interface DownloadRequestFailure extends WebsocketControllerError {
+export interface DownloadRequestFailure extends WebsocketErrorInfo {
     success: false;
-}
-
-export interface WebsocketControllerError {
-    requestId: number;
-    errorCode: WebsocketErrorEvent[2];
-    errorMessage: string;
-    issues?: ZodIssue[];
 }
 
 export type GetOrCreateInstResult =

@@ -1,3 +1,4 @@
+import { DenialReason } from '../common/DenialReason';
 import { NotSupportedError, ServerError } from '../Errors';
 import { ConnectionInfo, connectionInfoSchema } from '../common/ConnectionInfo';
 import {
@@ -103,21 +104,50 @@ export type WebsocketErrorCode =
     | 'subscription_limit_reached';
 
 /**
+ * Defines an interface that contains information about an error that occurred.
+ */
+export interface WebsocketErrorInfo {
+    success: false;
+
+    /**
+     * The error code that occurred.
+     */
+    errorCode: WebsocketErrorCode;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+
+    /**
+     * The list of parsing issues that occurred.
+     */
+    issues?: ZodIssue[];
+
+    /**
+     * The authorization denial reason.
+     */
+    reason?: DenialReason;
+}
+export const websocketErrorInfoSchema = z.object({
+    errorCode: z.string(),
+    errorMessage: z.string(),
+    issues: z.array(z.any()).optional(),
+    reason: z.any().optional(),
+});
+
+/**
  * Defines a websocket event that contains a response to an upload request.
  */
 export type WebsocketErrorEvent = [
     type: WebsocketEventTypes.Error,
     id: number,
-    errorCode: WebsocketErrorCode,
-    errorMessage: string,
-    issues: ZodIssue[]
+    info: WebsocketErrorInfo
 ];
 export const websocketErrorEventSchema = z.tuple([
     z.literal(WebsocketEventTypes.Error),
     z.number(),
-    z.string(),
-    z.string(),
-    z.array(z.any()),
+    websocketErrorInfoSchema,
 ]);
 
 /**

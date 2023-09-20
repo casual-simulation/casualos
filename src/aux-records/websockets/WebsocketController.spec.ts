@@ -39,7 +39,7 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-} from '../PolicyPermissions';
+} from '@casual-simulation/aux-common';
 import { getStateFromUpdates } from '@casual-simulation/aux-common';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -521,9 +521,11 @@ describe('WebsocketController', () => {
                     [
                         WebsocketEventTypes.Error,
                         -1,
-                        'record_not_found',
-                        'Record not found.',
-                        null,
+                        {
+                            success: false,
+                            errorCode: 'record_not_found',
+                            errorMessage: 'Record not found.',
+                        },
                     ],
                 ]);
             });
@@ -556,9 +558,47 @@ describe('WebsocketController', () => {
                                 [
                                     WebsocketEventTypes.Error,
                                     -1,
-                                    'not_authorized',
-                                    'You are not authorized to access this inst.',
-                                    null,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to access this inst.',
+                                    },
+                                ],
+                            ]
+                        );
+                    });
+
+                    it('should return a not_authorized error if the user is trying to read an inst in a record they do not have access to', async () => {
+                        await instStore.saveInst({
+                            recordName,
+                            inst,
+                            markers: [PRIVATE_MARKER],
+                        });
+
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionId,
+                        });
+
+                        await server.watchBranch(serverConnectionId, {
+                            type: 'repo/watch_branch',
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                        });
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to access this inst.',
+                                    },
                                 ],
                             ]
                         );
@@ -607,9 +647,20 @@ describe('WebsocketController', () => {
                                 [
                                     WebsocketEventTypes.Error,
                                     -1,
-                                    'not_authorized',
-                                    'You are not authorized to perform this action.',
-                                    null,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            kind: 'user',
+                                            id: otherUserId,
+                                            marker: 'private',
+                                            permission: 'inst.create',
+                                            role: null,
+                                        },
+                                    },
                                 ],
                             ]);
                         });

@@ -81,7 +81,7 @@ import {
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
     PUBLIC_READ_MARKER,
     PolicyDocument,
-} from './PolicyPermissions';
+} from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
     AIImageMetrics,
