@@ -305,7 +305,7 @@ describe('WebsocketController', () => {
         });
     });
 
-    describe.only('repo/watch_branch', () => {
+    describe('repo/watch_branch', () => {
         describe('updates', () => {
             it('should load the given branch and send the current updates', async () => {
                 await connectionStore.saveConnection(device1Info);
@@ -503,7 +503,7 @@ describe('WebsocketController', () => {
             });
         });
 
-        describe.only('records', () => {
+        describe('records', () => {
             it('should return a record_not_found error if the record does not exist', async () => {
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
@@ -783,6 +783,60 @@ describe('WebsocketController', () => {
                                             permission: 'inst.read',
                                             role: null,
                                         },
+                                    },
+                                ],
+                            ]);
+                        });
+
+                        it('should return a not_authorized error if the user is trying to read an inst they have access to but their token does not grant', async () => {
+                            await instStore.saveInst({
+                                recordName,
+                                inst: 'otherInst',
+                                markers: [PRIVATE_MARKER],
+                            });
+
+                            services.store.policies[recordName] = {
+                                [PRIVATE_MARKER]: {
+                                    document: {
+                                        permissions: [
+                                            {
+                                                type: 'inst.read',
+                                                role: 'developer',
+                                                insts: true,
+                                            },
+                                        ],
+                                    },
+                                    markers: [ACCOUNT_MARKER],
+                                },
+                            };
+
+                            services.store.roles[recordName] = {
+                                [otherUserId]: new Set(['developer']),
+                            };
+
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken: otherUserToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst: 'otherInst',
+                                branch: 'testBranch',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to access this inst.',
                                     },
                                 ],
                             ]);
@@ -1084,6 +1138,269 @@ describe('WebsocketController', () => {
                     updateId: 1,
                 },
             ]);
+        });
+
+        describe('records', () => {
+            it('should return a inst_not_found error if the record does not exist', async () => {
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken,
+                });
+
+                await server.getUpdates(
+                    serverConnectionId,
+                    recordName,
+                    inst,
+                    'test'
+                );
+
+                expect(messenger.getEvents(serverConnectionId)).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'inst_not_found',
+                            errorMessage: 'The inst was not found.',
+                        },
+                    ],
+                ]);
+            });
+
+            describe('private', () => {
+                beforeEach(async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+                });
+
+                it('should return a inst_not_found error if the inst does not exist', async () => {
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+
+                    await server.getUpdates(
+                        serverConnectionId,
+                        recordName,
+                        inst,
+                        'test'
+                    );
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'inst_not_found',
+                                errorMessage: 'The inst was not found.',
+                            },
+                        ],
+                    ]);
+                });
+
+                describe('token', () => {
+                    const otherUserConnectionId = 'otherConnectionId';
+                    let otherUserId: string;
+                    let otherUserConnectionKey: string;
+                    let otherUserToken: string;
+
+                    beforeEach(async () => {
+                        uuidMock.mockReturnValueOnce('otherUserId');
+                        const otherUser = await createTestUser(
+                            services,
+                            'other@example.com'
+                        );
+                        otherUserToken = generateV1ConnectionToken(
+                            otherUser.connectionKey,
+                            otherUserConnectionId,
+                            recordName,
+                            inst
+                        );
+                        otherUserId = otherUser.userId;
+                        otherUserConnectionKey = otherUser.connectionKey;
+
+                        await instStore.saveInst({
+                            recordName,
+                            inst,
+                            markers: [PRIVATE_MARKER],
+                        });
+                    });
+
+                    it('should return a not_authorized error if the user is trying to read an inst in a record they do not have access to', async () => {
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken: otherUserToken,
+                        });
+
+                        await server.getUpdates(
+                            serverConnectionId,
+                            recordName,
+                            inst,
+                            'test'
+                        );
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            kind: 'user',
+                                            permission: 'inst.read',
+                                            role: null,
+                                            id: otherUserId,
+                                            marker: 'private',
+                                        },
+                                    },
+                                ],
+                            ]
+                        );
+                    });
+
+                    it('should return a not_authorized error if the user token doesnt match the inst', async () => {
+                        await instStore.saveInst({
+                            recordName,
+                            inst: 'otherInst',
+                            markers: [PRIVATE_MARKER],
+                        });
+
+                        services.store.policies[recordName] = {
+                            [PRIVATE_MARKER]: {
+                                document: {
+                                    permissions: [
+                                        {
+                                            type: 'inst.read',
+                                            role: 'developer',
+                                            insts: true,
+                                        },
+                                    ],
+                                },
+                                markers: [ACCOUNT_MARKER],
+                            },
+                        };
+
+                        services.store.roles[recordName] = {
+                            [otherUserId]: new Set(['developer']),
+                        };
+
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken: otherUserToken,
+                        });
+
+                        await server.getUpdates(
+                            serverConnectionId,
+                            recordName,
+                            'otherInst',
+                            'test'
+                        );
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to access this inst.',
+                                    },
+                                ],
+                            ]
+                        );
+                    });
+
+                    it('should succeed if the user is the record owner', async () => {
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken: connectionToken,
+                        });
+
+                        await server.getUpdates(
+                            serverConnectionId,
+                            recordName,
+                            inst,
+                            'test'
+                        );
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            []
+                        );
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName,
+                                inst,
+                                branch: 'test',
+                                updates: [],
+                                timestamps: [],
+                            },
+                        ]);
+                    });
+
+                    it('should succeed if the user has been granted access', async () => {
+                        services.store.policies[recordName] = {
+                            [PRIVATE_MARKER]: {
+                                document: {
+                                    permissions: [
+                                        {
+                                            type: 'inst.read',
+                                            role: 'developer',
+                                            insts: true,
+                                        },
+                                    ],
+                                },
+                                markers: [ACCOUNT_MARKER],
+                            },
+                        };
+
+                        services.store.roles[recordName] = {
+                            [otherUserId]: new Set(['developer']),
+                        };
+
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken: otherUserToken,
+                        });
+
+                        await server.getUpdates(
+                            serverConnectionId,
+                            recordName,
+                            inst,
+                            'test'
+                        );
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            []
+                        );
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName,
+                                inst,
+                                branch: 'test',
+                                updates: [],
+                                timestamps: [],
+                            },
+                        ]);
+                    });
+                });
+            });
         });
     });
 

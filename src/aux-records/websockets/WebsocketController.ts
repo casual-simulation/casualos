@@ -280,7 +280,7 @@ export class WebsocketController {
             );
 
             if (!authorized) {
-                this.sendErrorResult(connectionId, -1, {
+                await this.sendError(connectionId, -1, {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
@@ -296,7 +296,7 @@ export class WebsocketController {
         );
 
         if (instResult.success === false) {
-            this.sendErrorResult(connectionId, -1, instResult);
+            await this.sendError(connectionId, -1, instResult);
             return;
         }
         const inst = instResult.inst;
@@ -378,6 +378,16 @@ export class WebsocketController {
         await Promise.all(promises);
     }
 
+    /**
+     * Gets or creates the inst with the given name in the given record.
+     *
+     * If the inst already exists, and the given user is not authorized to read the inst, then an error is returned.
+     * If the inst does not exist, and the user is not authorized to create a new inst, then an error is returned.
+     *
+     * @param recordName The name of the record.
+     * @param instName The name of the inst.
+     * @param userId The ID of the user that is trying to access the inst.
+     */
     private async _getOrCreateInst(
         recordName: string | null,
         instName: string,
@@ -385,10 +395,17 @@ export class WebsocketController {
     ): Promise<GetOrCreateInstResult> {
         let inst: InstRecord | null = null;
         if (recordName) {
-            const savedInst = await this._instStore.getInstByName(
+            const getInstResult = await this._getInst(
                 recordName,
-                instName
+                instName,
+                userId
             );
+
+            if (getInstResult.success === false) {
+                return getInstResult;
+            }
+
+            const savedInst = getInstResult.inst;
             if (!savedInst) {
                 const authorizeResult = await this._policies.authorizeRequest({
                     action: 'inst.create',
@@ -421,6 +438,39 @@ export class WebsocketController {
                     return result;
                 }
             } else {
+                inst = savedInst;
+            }
+        }
+
+        return {
+            success: true,
+            inst,
+        };
+    }
+
+    /**
+     * Gets the inst with the given name in the given record.
+     *
+     * If the inst does not exist, then null is returned.
+     * If the given user is not authorized to read the inst, then an error is returned.
+     *
+     * @param recordName The name of the record.
+     * @param instName The name of the inst.
+     * @param userId The ID of the user that is trying to access the inst.
+     */
+    private async _getInst(
+        recordName: string | null,
+        instName: string,
+        userId: string
+    ): Promise<GetOrCreateInstResult> {
+        let inst: InstRecord | null = null;
+        if (recordName) {
+            const savedInst = await this._instStore.getInstByName(
+                recordName,
+                instName
+            );
+
+            if (savedInst) {
                 const authorizeResult = await this._policies.authorizeRequest({
                     action: 'inst.read',
                     recordKeyOrRecordName: recordName,
@@ -436,9 +486,12 @@ export class WebsocketController {
                     );
                     return returnAuthorizationResult(authorizeResult);
                 }
-
-                inst = savedInst;
             }
+
+            return {
+                success: true,
+                inst: savedInst,
+            };
         }
 
         return {
@@ -929,10 +982,44 @@ export class WebsocketController {
             );
         }
 
+        if (recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                recordName,
+                inst
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
         // const namespace = branchNamespace(recordName, inst, branch);
         console.log(
             `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Get Updates`
         );
+
+        const instResult = await this._getInst(
+            recordName,
+            inst,
+            connection.userId
+        );
+        if (instResult.success === false) {
+            await this.sendError(connectionId, -1, instResult);
+            return;
+        } else if (recordName && !instResult.inst) {
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'inst_not_found',
+                errorMessage: 'The inst was not found.',
+            });
+            return;
+        }
 
         const updates = (await this._instStore.getAllUpdates(
             recordName,
@@ -943,7 +1030,7 @@ export class WebsocketController {
             timestamps: [],
         };
 
-        this._messenger.sendMessage([connection.serverConnectionId], {
+        await this._messenger.sendMessage([connection.serverConnectionId], {
             type: 'repo/add_updates',
             recordName,
             inst,
@@ -1293,23 +1380,6 @@ export class WebsocketController {
             WebsocketEventTypes.Error,
             requestId,
             info,
-        ]);
-    }
-
-    async sendErrorResult(
-        connectionId: string,
-        requestId: number,
-        result: GetOrCreateInstFailure
-    ) {
-        await this.sendEvent(connectionId, [
-            WebsocketEventTypes.Error,
-            requestId,
-            {
-                success: false,
-                errorCode: result.errorCode,
-                errorMessage: result.errorMessage,
-                reason: result.reason,
-            },
         ]);
     }
 

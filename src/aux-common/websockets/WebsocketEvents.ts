@@ -101,7 +101,8 @@ export type WebsocketErrorCode =
     | 'not_authorized'
     | 'action_not_supported'
     | 'not_logged_in'
-    | 'subscription_limit_reached';
+    | 'subscription_limit_reached'
+    | 'inst_not_found';
 
 /**
  * Defines an interface that contains information about an error that occurred.
