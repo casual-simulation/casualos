@@ -273,7 +273,7 @@ export class WebsocketController {
             );
         }
 
-        if (event.recordName) {
+        if (connection.token && event.recordName) {
             const authorized = await this._connectionStore.isAuthorizedInst(
                 connectionId,
                 event.recordName,
@@ -955,6 +955,19 @@ export class WebsocketController {
                 'Unable to watch_branch_devices. The connection was not found!'
             );
         }
+
+        if (recordName) {
+            const instResult = await this._getInst(
+                recordName,
+                inst,
+                connection.userId
+            );
+            if (instResult.success === false) {
+                await this.sendError(connectionId, -1, instResult);
+                return;
+            }
+        }
+
         await this._connectionStore.saveBranchConnection({
             ...connection,
             mode: 'watch_branch',
@@ -1083,7 +1096,7 @@ export class WebsocketController {
             );
         }
 
-        if (recordName) {
+        if (connection.token && recordName) {
             const authorized = await this._connectionStore.isAuthorizedInst(
                 connectionId,
                 recordName,
