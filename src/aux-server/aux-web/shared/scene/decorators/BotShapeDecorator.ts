@@ -6,6 +6,7 @@ import {
     LocalActions,
     StartFormAnimationAction,
     calculateBooleanTagValue,
+    calculateBotIds,
     calculateBotValue,
     calculateNumericalTagValue,
     calculateStringTagValue,
@@ -87,9 +88,11 @@ import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
 import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import { AnimationMixerHandle } from '../AnimationHelper';
+import { AuxBotVisualizerFinder } from 'aux-web/shared/AuxBotVisualizerFinder';
 
 export const gltfPool = getGLTFPool('main');
 
+const DEFAULT_LIGHT_TARGET = new Object3D();
 const KEYBOARD_COLORS = {
     keyboardBack: 0x858585,
     panelBack: 0x262626,
@@ -131,6 +134,7 @@ export class BotShapeDecorator
 
     private _game: Game;
     private _shapeSubscription: SubscriptionLike;
+    private _finder: AuxBotVisualizerFinder;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -158,9 +162,10 @@ export class BotShapeDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    constructor(bot3D: AuxBot3D, game: Game) {
+    constructor(bot3D: AuxBot3D, game: Game, finder: AuxBotVisualizerFinder) {
         super(bot3D);
         this._game = game;
+        this._finder = finder;
     }
 
     frameUpdate() {
@@ -168,6 +173,7 @@ export class BotShapeDecorator
             this._animationMixer.update(this._game.getTime().deltaTime);
             this.scene?.updateMatrixWorld(true);
         }
+        this._updateLightTarget(null);
     }
 
     botUpdated(calc: BotCalculationContext): void {
@@ -234,6 +240,7 @@ export class BotShapeDecorator
         this._updateDepth(calc);
         this._updateDepthWrite(calc);
         this._updateLightIntensity(calc);
+        this._updateLightTarget(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -1238,6 +1245,7 @@ export class BotShapeDecorator
 
     private _createSpotLight() {
         const collider = (this.collider = createCube(1));
+        const targetObject = new Object3D();
         setColor(collider, 'clear');
         const spotLight = new SpotLight(0x00ff00, 1, 0, 0.5, 0, 0); //color, intensity, distance, angle, penumbra, decay
         this.light = spotLight;
@@ -1245,6 +1253,7 @@ export class BotShapeDecorator
         this.bot3D.colliders.push(this.collider);
         this.container.add(spotLight);
         spotLight.position.set(0, 0, 0);
+        //spotLight.target = targetObject;
 
         //const targetObject = spotLight.target
 
@@ -1272,6 +1281,45 @@ export class BotShapeDecorator
         this.bot3D.colliders.push(this.collider);
         this.container.add(hemisphereLight);
         hemisphereLight.position.set(0, 0, 0);
+    }
+    private _updateLightTarget(calc: BotCalculationContext) {
+        console.log('hit');
+        if (!this._finder) {
+            return;
+        } else if (
+            !(
+                this.light instanceof SpotLight ||
+                this.light instanceof DirectionalLight
+            )
+        ) {
+            return;
+        }
+        console.log('found');
+        let lightTarget = calculateBotIds(this.bot3D.bot, 'formLightTarget');
+        //let validLightTarget: number[];
+
+        if (!hasValue(lightTarget)) {
+            this.light.target = DEFAULT_LIGHT_TARGET;
+            return;
+        }
+
+        let hasLightTarget = false;
+
+        for (let id of lightTarget) {
+            if (this.bot3D.bot.id === id) continue;
+            const bots = this._finder.findBotsById(id);
+            const auxBot = bots.find((bot) => {
+                return bot instanceof AuxBot3D;
+            }) as AuxBot3D;
+            if (auxBot) {
+                this.light.target = auxBot;
+                hasLightTarget = true;
+                break;
+            }
+        }
+        if (!hasLightTarget) {
+            this.light.target = DEFAULT_LIGHT_TARGET;
+        }
     }
 
     private async _createHex() {
