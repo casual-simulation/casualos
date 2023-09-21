@@ -379,215 +379,6 @@ export class WebsocketController {
         await Promise.all(promises);
     }
 
-    /**
-     * Gets or creates the inst with the given name in the given record.
-     *
-     * If the inst already exists, and the given user is not authorized to read the inst, then an error is returned.
-     * If the inst does not exist, and the user is not authorized to create a new inst, then an error is returned.
-     *
-     * @param recordName The name of the record.
-     * @param instName The name of the inst.
-     * @param userId The ID of the user that is trying to access the inst.
-     * @param context The authorization context.
-     */
-    private async _getOrCreateInst(
-        recordName: string | null,
-        instName: string,
-        userId: string,
-        context: AuthorizationContext = null
-    ): Promise<GetOrCreateInstResult> {
-        let inst: InstRecord | null = null;
-        if (recordName) {
-            const getInstResult = await this._getInst(
-                recordName,
-                instName,
-                userId,
-                context
-            );
-
-            if (getInstResult.success === false) {
-                return getInstResult;
-            }
-
-            const savedInst = getInstResult.inst;
-            if (!context) {
-                context = getInstResult.context;
-            }
-            if (!savedInst) {
-                if (!context) {
-                    const contextResult =
-                        await this._policies.constructAuthorizationContext({
-                            recordKeyOrRecordName: recordName,
-                            userId,
-                        });
-
-                    if (contextResult.success === false) {
-                        return contextResult;
-                    }
-                    context = contextResult.context;
-                }
-
-                const authorizeCreateResult =
-                    await this._policies.authorizeRequestUsingContext(context, {
-                        action: 'inst.create',
-                        recordKeyOrRecordName: recordName,
-                        inst: instName,
-                        userId,
-                        resourceMarkers: [PRIVATE_MARKER],
-                    });
-
-                if (authorizeCreateResult.allowed === false) {
-                    console.log(
-                        '[WebsocketController] Unable to authorize inst creation.',
-                        authorizeCreateResult
-                    );
-                    return returnAuthorizationResult(authorizeCreateResult);
-                }
-
-                const authorizeReadResult =
-                    await this._policies.authorizeRequestUsingContext(context, {
-                        action: 'inst.read',
-                        recordKeyOrRecordName: recordName,
-                        inst: instName,
-                        userId,
-                        resourceMarkers: [PRIVATE_MARKER],
-                    });
-
-                if (authorizeReadResult.allowed === false) {
-                    console.log(
-                        '[WebsocketController] Unable to authorize inst creation.',
-                        authorizeReadResult
-                    );
-                    return returnAuthorizationResult(authorizeReadResult);
-                }
-
-                // Create the inst
-                inst = {
-                    recordName: recordName,
-                    inst: instName,
-                    markers: [PRIVATE_MARKER],
-                };
-                const result = await this._instStore.saveInst(inst);
-                if (result.success === false) {
-                    console.log(
-                        '[WebsocketController] Unable to save inst.',
-                        result
-                    );
-                    return result;
-                }
-            } else {
-                inst = savedInst;
-            }
-        }
-
-        return {
-            success: true,
-            inst,
-            context,
-        };
-    }
-
-    /**
-     * Gets the inst with the given name in the given record.
-     *
-     * If the inst does not exist, then null is returned.
-     * If the given user is not authorized to read the inst, then an error is returned.
-     *
-     * @param recordName The name of the record.
-     * @param instName The name of the inst.
-     * @param userId The ID of the user that is trying to access the inst.
-     */
-    private async _getInst(
-        recordName: string | null,
-        instName: string,
-        userId: string,
-        context: AuthorizationContext = null
-    ): Promise<GetOrCreateInstResult> {
-        let inst: InstRecord | null = null;
-        if (recordName) {
-            const savedInst = await this._instStore.getInstByName(
-                recordName,
-                instName
-            );
-
-            if (savedInst) {
-                if (!context) {
-                    const contextResult =
-                        await this._policies.constructAuthorizationContext({
-                            recordKeyOrRecordName: recordName,
-                            userId,
-                        });
-
-                    if (contextResult.success === false) {
-                        return contextResult;
-                    }
-                    context = contextResult.context;
-                }
-
-                const authorizeResult =
-                    await this._policies.authorizeRequestUsingContext(context, {
-                        action: 'inst.read',
-                        recordKeyOrRecordName: recordName,
-                        inst: instName,
-                        userId,
-                        resourceMarkers: savedInst.markers,
-                    });
-
-                if (authorizeResult.allowed === false) {
-                    console.log(
-                        '[WebsocketController] Unable to authorize inst read.',
-                        authorizeResult
-                    );
-                    return returnAuthorizationResult(authorizeResult);
-                }
-            }
-
-            return {
-                success: true,
-                inst: savedInst,
-                context,
-            };
-        }
-
-        return {
-            success: true,
-            inst,
-            context,
-        };
-    }
-
-    private async _getOrCreateBranch(
-        recordName: string,
-        inst: string,
-        branch: string,
-        temporary: boolean,
-        linkedInst: InstRecord
-    ) {
-        let b = await this._instStore.getBranchByName(recordName, inst, branch);
-        if (!b) {
-            if (temporary) {
-                // Save the branch to the temp store
-                await this._temporaryStore.saveBranchInfo({
-                    recordName: recordName,
-                    inst: inst,
-                    branch: branch,
-                    temporary: true,
-                    linkedInst: linkedInst,
-                });
-            }
-            // Save the branch to the inst store
-            await this._instStore.saveBranch({
-                branch: branch,
-                inst: inst,
-                recordName: recordName,
-                temporary: temporary || false,
-            });
-            b = await this._instStore.getBranchByName(recordName, inst, branch);
-        }
-
-        return b;
-    }
-
     async unwatchBranch(
         connectionId: string,
         recordName: string | null,
@@ -903,6 +694,65 @@ export class WebsocketController {
         const currentConnection = await this._connectionStore.getConnection(
             connectionId
         );
+
+        if (currentConnection.token && event.recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                event.recordName,
+                event.inst
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
+        if (event.recordName) {
+            const instResult = await this._getInst(
+                event.recordName,
+                event.inst,
+                currentConnection.userId
+            );
+
+            if (instResult.success === false) {
+                await this.sendError(connectionId, -1, instResult);
+                return;
+            } else if (!instResult.inst) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                });
+                return;
+            }
+
+            const authorizeResult =
+                await this._policies.authorizeRequestUsingContext(
+                    instResult.context,
+                    {
+                        action: 'inst.sendAction',
+                        recordKeyOrRecordName: event.recordName,
+                        inst: event.inst,
+                        resourceMarkers: instResult.inst.markers,
+                        userId: currentConnection.userId,
+                    }
+                );
+
+            if (authorizeResult.allowed === false) {
+                await this.sendError(
+                    connectionId,
+                    -1,
+                    returnAuthorizationResult(authorizeResult)
+                );
+                return;
+            }
+        }
+
         const targetedDevices = connectedDevices.filter((d) =>
             isEventForDevice(finalAction, d)
         );
@@ -1385,6 +1235,215 @@ export class WebsocketController {
             await store.temp.clearDirtyBranches(generation);
             console.log(`[WebsocketController] Saved permanent branches.`);
         }
+    }
+
+    /**
+     * Gets or creates the inst with the given name in the given record.
+     *
+     * If the inst already exists, and the given user is not authorized to read the inst, then an error is returned.
+     * If the inst does not exist, and the user is not authorized to create a new inst, then an error is returned.
+     *
+     * @param recordName The name of the record.
+     * @param instName The name of the inst.
+     * @param userId The ID of the user that is trying to access the inst.
+     * @param context The authorization context.
+     */
+    private async _getOrCreateInst(
+        recordName: string | null,
+        instName: string,
+        userId: string,
+        context: AuthorizationContext = null
+    ): Promise<GetOrCreateInstResult> {
+        let inst: InstRecord | null = null;
+        if (recordName) {
+            const getInstResult = await this._getInst(
+                recordName,
+                instName,
+                userId,
+                context
+            );
+
+            if (getInstResult.success === false) {
+                return getInstResult;
+            }
+
+            const savedInst = getInstResult.inst;
+            if (!context) {
+                context = getInstResult.context;
+            }
+            if (!savedInst) {
+                if (!context) {
+                    const contextResult =
+                        await this._policies.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                        });
+
+                    if (contextResult.success === false) {
+                        return contextResult;
+                    }
+                    context = contextResult.context;
+                }
+
+                const authorizeCreateResult =
+                    await this._policies.authorizeRequestUsingContext(context, {
+                        action: 'inst.create',
+                        recordKeyOrRecordName: recordName,
+                        inst: instName,
+                        userId,
+                        resourceMarkers: [PRIVATE_MARKER],
+                    });
+
+                if (authorizeCreateResult.allowed === false) {
+                    console.log(
+                        '[WebsocketController] Unable to authorize inst creation.',
+                        authorizeCreateResult
+                    );
+                    return returnAuthorizationResult(authorizeCreateResult);
+                }
+
+                const authorizeReadResult =
+                    await this._policies.authorizeRequestUsingContext(context, {
+                        action: 'inst.read',
+                        recordKeyOrRecordName: recordName,
+                        inst: instName,
+                        userId,
+                        resourceMarkers: [PRIVATE_MARKER],
+                    });
+
+                if (authorizeReadResult.allowed === false) {
+                    console.log(
+                        '[WebsocketController] Unable to authorize inst creation.',
+                        authorizeReadResult
+                    );
+                    return returnAuthorizationResult(authorizeReadResult);
+                }
+
+                // Create the inst
+                inst = {
+                    recordName: recordName,
+                    inst: instName,
+                    markers: [PRIVATE_MARKER],
+                };
+                const result = await this._instStore.saveInst(inst);
+                if (result.success === false) {
+                    console.log(
+                        '[WebsocketController] Unable to save inst.',
+                        result
+                    );
+                    return result;
+                }
+            } else {
+                inst = savedInst;
+            }
+        }
+
+        return {
+            success: true,
+            inst,
+            context,
+        };
+    }
+
+    /**
+     * Gets the inst with the given name in the given record.
+     *
+     * If the inst does not exist, then null is returned.
+     * If the given user is not authorized to read the inst, then an error is returned.
+     *
+     * @param recordName The name of the record.
+     * @param instName The name of the inst.
+     * @param userId The ID of the user that is trying to access the inst.
+     */
+    private async _getInst(
+        recordName: string | null,
+        instName: string,
+        userId: string,
+        context: AuthorizationContext = null
+    ): Promise<GetOrCreateInstResult> {
+        let inst: InstRecord | null = null;
+        if (recordName) {
+            const savedInst = await this._instStore.getInstByName(
+                recordName,
+                instName
+            );
+
+            if (savedInst) {
+                if (!context) {
+                    const contextResult =
+                        await this._policies.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                        });
+
+                    if (contextResult.success === false) {
+                        return contextResult;
+                    }
+                    context = contextResult.context;
+                }
+
+                const authorizeResult =
+                    await this._policies.authorizeRequestUsingContext(context, {
+                        action: 'inst.read',
+                        recordKeyOrRecordName: recordName,
+                        inst: instName,
+                        userId,
+                        resourceMarkers: savedInst.markers,
+                    });
+
+                if (authorizeResult.allowed === false) {
+                    console.log(
+                        '[WebsocketController] Unable to authorize inst read.',
+                        authorizeResult
+                    );
+                    return returnAuthorizationResult(authorizeResult);
+                }
+            }
+
+            return {
+                success: true,
+                inst: savedInst,
+                context,
+            };
+        }
+
+        return {
+            success: true,
+            inst,
+            context,
+        };
+    }
+
+    private async _getOrCreateBranch(
+        recordName: string,
+        inst: string,
+        branch: string,
+        temporary: boolean,
+        linkedInst: InstRecord
+    ) {
+        let b = await this._instStore.getBranchByName(recordName, inst, branch);
+        if (!b) {
+            if (temporary) {
+                // Save the branch to the temp store
+                await this._temporaryStore.saveBranchInfo({
+                    recordName: recordName,
+                    inst: inst,
+                    branch: branch,
+                    temporary: true,
+                    linkedInst: linkedInst,
+                });
+            }
+            // Save the branch to the inst store
+            await this._instStore.saveBranch({
+                branch: branch,
+                inst: inst,
+                recordName: recordName,
+                temporary: temporary || false,
+            });
+            b = await this._instStore.getBranchByName(recordName, inst, branch);
+        }
+
+        return b;
     }
 
     private async _saveBranchUpdates(
