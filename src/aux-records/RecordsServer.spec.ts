@@ -39,6 +39,7 @@ import { PolicyController } from './PolicyController';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
+    PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
 import { RateLimitController } from './RateLimitController';
@@ -281,7 +282,8 @@ describe('RecordsServer', () => {
             websocketMessenger,
             instStore,
             tempInstStore,
-            authController
+            authController,
+            policyController
         );
 
         stripe = stripeMock = {
@@ -10721,14 +10723,83 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
-                    version: 1,
-                    state: {
-                        test: createBot('test', {
-                            test: true,
-                        }),
+                    data: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                test: true,
+                            }),
+                        },
                     },
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return the inst data for private insts', async () => {
+            store.policies[recordName] = {
+                [PRIVATE_MARKER]: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'inst.read',
+                                role: 'developer',
+                                insts: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            store.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await instStore.saveInst({
+                recordName,
+                inst: 'inst',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const update = constructInitializationUpdate({
+                type: 'create_initialization_update',
+                bots: [
+                    createBot('test', {
+                        test: true,
+                    }),
+                ],
+            });
+
+            await instStore.addUpdates(
+                recordName,
+                'inst',
+                'branch',
+                [update.update],
+                update.update.length
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/instData?recordName=${recordName}&inst=inst&branch=branch`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    data: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                test: true,
+                            }),
+                        },
+                    },
+                },
+                headers: accountCorsHeaders,
             });
         });
 

@@ -4069,6 +4069,18 @@ export class RecordsServer {
     private async _getInstData(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        let userId: string = null;
+        const validation = await this._validateSessionKey(request);
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                userId = null;
+            } else {
+                return returnResult(validation);
+            }
+        } else {
+            userId = validation.userId;
+        }
+
         const schema = z.object({
             recordName: z.string().nonempty().nullable().optional(),
             inst: z.string().nonempty(),
@@ -4084,6 +4096,7 @@ export class RecordsServer {
         const { recordName, inst, branch } = parseResult.data;
 
         const data = await this._websocketController.getBranchData(
+            userId,
             recordName ?? null,
             inst,
             branch
