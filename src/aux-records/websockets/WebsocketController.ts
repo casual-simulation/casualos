@@ -806,6 +806,23 @@ export class WebsocketController {
             );
         }
 
+        if (connection.token && recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                recordName,
+                inst
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
         if (recordName) {
             const instResult = await this._getInst(
                 recordName,
@@ -883,6 +900,47 @@ export class WebsocketController {
                       branch
                   )
                 : await this._connectionStore.countConnections();
+
+        const currentConnection = await this._connectionStore.getConnection(
+            connectionId
+        );
+
+        if (recordName && currentConnection?.token) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                recordName,
+                inst
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
+        if (recordName) {
+            const instResult = await this._getInst(
+                recordName,
+                inst,
+                currentConnection?.userId
+            );
+
+            if (instResult.success === false) {
+                await this.sendError(connectionId, -1, instResult);
+                return;
+            } else if (!instResult.inst) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                });
+                return;
+            }
+        }
 
         await this._messenger.sendMessage([connectionId], {
             type: 'repo/connection_count',

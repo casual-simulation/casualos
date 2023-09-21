@@ -4051,235 +4051,237 @@ describe('WebsocketController', () => {
     });
 
     describe('repo/watch_branch_connections', () => {
-        it('should send an event when a device connects to a branch', async () => {
-            await connectionStore.saveConnection(device1Info);
-            await connectionStore.saveConnection(device2Info);
+        describe('no record', () => {
+            it('should send an event when a device connects to a branch', async () => {
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
 
-            await server.watchBranchDevices(
-                device1Info.serverConnectionId,
-                null,
-                inst,
-                'testBranch'
-            );
+                await server.watchBranchDevices(
+                    device1Info.serverConnectionId,
+                    null,
+                    inst,
+                    'testBranch'
+                );
 
-            await server.watchBranch(device2Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch',
-            });
-
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([
-                {
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                    },
-                    connection: connectionInfo(device2Info),
-                },
-            ]);
-        });
-
-        it('should send an event when a device unwatches a branch', async () => {
-            await connectionStore.saveConnection(device1Info);
-            await connectionStore.saveConnection(device2Info);
-
-            await server.watchBranchDevices(
-                device1Info.serverConnectionId,
-                null,
-                inst,
-                'testBranch'
-            );
-
-            await server.watchBranch(device2Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch',
-            });
-
-            await server.unwatchBranch(
-                device2Info.serverConnectionId,
-                null,
-                inst,
-                'testBranch'
-            );
-
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([
-                {
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                    },
-                    connection: connectionInfo(device2Info),
-                },
-                {
-                    type: 'repo/disconnected_from_branch',
-                    broadcast: false,
+                await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     recordName: null,
                     inst,
                     branch: 'testBranch',
-                    connection: connectionInfo(device2Info),
-                },
-            ]);
-        });
+                });
 
-        it('should send an event when a device disconnects', async () => {
-            await connectionStore.saveConnection(device1Info);
-            await connectionStore.saveConnection(device2Info);
-
-            await server.watchBranchDevices(
-                device1Info.serverConnectionId,
-                null,
-                inst,
-                'testBranch'
-            );
-
-            await server.watchBranch(device2Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch',
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'repo/connected_to_branch',
+                        broadcast: false,
+                        branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst,
+                            branch: 'testBranch',
+                        },
+                        connection: connectionInfo(device2Info),
+                    },
+                ]);
             });
 
-            await server.disconnect(device2Info.serverConnectionId);
+            it('should send an event when a device unwatches a branch', async () => {
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
 
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([
-                {
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                    },
-                    connection: connectionInfo(device2Info),
-                },
-                {
-                    type: 'repo/disconnected_from_branch',
-                    broadcast: false,
+                await server.watchBranchDevices(
+                    device1Info.serverConnectionId,
+                    null,
+                    inst,
+                    'testBranch'
+                );
+
+                await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     recordName: null,
                     inst,
                     branch: 'testBranch',
-                    connection: connectionInfo(device2Info),
-                },
-            ]);
-        });
+                });
 
-        it('should send events for all the currently connected devices only for the specified branch', async () => {
-            await connectionStore.saveConnection(device1Info);
-            await connectionStore.saveConnection(device2Info);
-            await connectionStore.saveConnection(device3Info);
-            await connectionStore.saveConnection(device4Info);
+                await server.unwatchBranch(
+                    device2Info.serverConnectionId,
+                    null,
+                    inst,
+                    'testBranch'
+                );
 
-            await server.watchBranch(device2Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch',
-            });
-
-            await server.watchBranch(device3Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch',
-            });
-
-            await server.watchBranch(device4Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch2',
-            });
-
-            await server.watchBranchDevices(
-                device1Info.serverConnectionId,
-                null,
-                inst,
-                'testBranch'
-            );
-
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([
-                {
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'repo/connected_to_branch',
+                        broadcast: false,
+                        branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst,
+                            branch: 'testBranch',
+                        },
+                        connection: connectionInfo(device2Info),
+                    },
+                    {
+                        type: 'repo/disconnected_from_branch',
+                        broadcast: false,
                         recordName: null,
                         inst,
                         branch: 'testBranch',
-                        temporary: false,
+                        connection: connectionInfo(device2Info),
                     },
-                    connection: connectionInfo(device2Info),
-                },
-                {
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        temporary: false,
-                    },
-                    connection: connectionInfo(device3Info),
-                },
-            ]);
-        });
-
-        it('should include whether the branch is temporary when a device connects', async () => {
-            await connectionStore.saveConnection(device1Info);
-            await connectionStore.saveConnection(device2Info);
-
-            await server.watchBranchDevices(
-                device1Info.serverConnectionId,
-                null,
-                inst,
-                'testBranch'
-            );
-
-            await server.watchBranch(device2Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch',
-                temporary: true,
+                ]);
             });
 
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([
-                {
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
+            it('should send an event when a device disconnects', async () => {
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
+
+                await server.watchBranchDevices(
+                    device1Info.serverConnectionId,
+                    null,
+                    inst,
+                    'testBranch'
+                );
+
+                await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                });
+
+                await server.disconnect(device2Info.serverConnectionId);
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'repo/connected_to_branch',
+                        broadcast: false,
+                        branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst,
+                            branch: 'testBranch',
+                        },
+                        connection: connectionInfo(device2Info),
+                    },
+                    {
+                        type: 'repo/disconnected_from_branch',
+                        broadcast: false,
                         recordName: null,
                         inst,
                         branch: 'testBranch',
-                        temporary: true,
+                        connection: connectionInfo(device2Info),
                     },
-                    connection: connectionInfo(device2Info),
-                },
-            ]);
+                ]);
+            });
+
+            it('should send events for all the currently connected devices only for the specified branch', async () => {
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
+                await connectionStore.saveConnection(device3Info);
+                await connectionStore.saveConnection(device4Info);
+
+                await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                });
+
+                await server.watchBranch(device3Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                });
+
+                await server.watchBranch(device4Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch2',
+                });
+
+                await server.watchBranchDevices(
+                    device1Info.serverConnectionId,
+                    null,
+                    inst,
+                    'testBranch'
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'repo/connected_to_branch',
+                        broadcast: false,
+                        branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                        },
+                        connection: connectionInfo(device2Info),
+                    },
+                    {
+                        type: 'repo/connected_to_branch',
+                        broadcast: false,
+                        branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                        },
+                        connection: connectionInfo(device3Info),
+                    },
+                ]);
+            });
+
+            it('should include whether the branch is temporary when a device connects', async () => {
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
+
+                await server.watchBranchDevices(
+                    device1Info.serverConnectionId,
+                    null,
+                    inst,
+                    'testBranch'
+                );
+
+                await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                    temporary: true,
+                });
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'repo/connected_to_branch',
+                        broadcast: false,
+                        branch: {
+                            type: 'repo/watch_branch',
+                            recordName: null,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: true,
+                        },
+                        connection: connectionInfo(device2Info),
+                    },
+                ]);
+            });
         });
 
         describe('records', () => {
@@ -4546,6 +4548,56 @@ describe('WebsocketController', () => {
                         },
                     ]);
                 });
+
+                it('should return a not_authorized error if the record name doesnt match the connection token', async () => {
+                    await server.watchBranchDevices(
+                        serverConnectionId,
+                        'wrong',
+                        inst,
+                        'testBranch'
+                    );
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to access this inst.',
+                            },
+                        ],
+                    ]);
+                });
+
+                it('should return a not_authorized error if the inst name doesnt match the connection token', async () => {
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'wrong',
+                        markers: [PUBLIC_WRITE_MARKER],
+                    });
+
+                    await server.watchBranchDevices(
+                        serverConnectionId,
+                        recordName,
+                        'wrong',
+                        'testBranch'
+                    );
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to access this inst.',
+                            },
+                        ],
+                    ]);
+                });
             });
 
             describe('guest', () => {
@@ -4719,66 +4771,366 @@ describe('WebsocketController', () => {
     });
 
     describe('repo/connection_count', () => {
-        it('should send a response with the number of devices', async () => {
-            await connectionStore.saveConnection(device1Info);
-            await connectionStore.saveConnection(device2Info);
+        describe('no record', () => {
+            it('should send a response with the number of devices', async () => {
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
 
-            await server.deviceCount(
-                device1Info.serverConnectionId,
-                null,
-                null,
-                null
-            );
+                await server.deviceCount(
+                    device1Info.serverConnectionId,
+                    null,
+                    null,
+                    null
+                );
 
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([
-                {
-                    type: 'repo/connection_count',
-                    recordName: null,
-                    inst: null,
-                    branch: null,
-                    count: 2,
-                },
-            ]);
-        });
-
-        it('should send a response with the number of devices that are connected to the given branch', async () => {
-            await connectionStore.saveConnection(device1Info);
-            await connectionStore.saveConnection(device2Info);
-            await connectionStore.saveConnection(device3Info);
-
-            await server.watchBranch(device2Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch',
-            });
-            await server.watchBranch(device3Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                recordName: null,
-                inst,
-                branch: 'testBranch',
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'repo/connection_count',
+                        recordName: null,
+                        inst: null,
+                        branch: null,
+                        count: 2,
+                    },
+                ]);
             });
 
-            await server.deviceCount(
-                device1Info.serverConnectionId,
-                null,
-                inst,
-                'testBranch'
-            );
+            it('should send a response with the number of devices that are connected to the given branch', async () => {
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
+                await connectionStore.saveConnection(device3Info);
 
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([
-                {
-                    type: 'repo/connection_count',
+                await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     recordName: null,
                     inst,
                     branch: 'testBranch',
-                    count: 2,
-                },
-            ]);
+                });
+                await server.watchBranch(device3Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                });
+
+                await server.deviceCount(
+                    device1Info.serverConnectionId,
+                    null,
+                    inst,
+                    'testBranch'
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'repo/connection_count',
+                        recordName: null,
+                        inst,
+                        branch: 'testBranch',
+                        count: 2,
+                    },
+                ]);
+            });
+        });
+
+        describe('record', () => {
+            beforeEach(async () => {
+                await services.records.createRecord({
+                    userId,
+                    recordName,
+                    ownerId: userId,
+                });
+            });
+
+            it('should send a inst_not_found result if the inst does not exist', async () => {
+                await server.deviceCount(
+                    serverConnectionId,
+                    recordName,
+                    inst,
+                    'testBranch'
+                );
+
+                expect(messenger.getEvents(serverConnectionId)).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'inst_not_found',
+                            errorMessage: 'The inst was not found.',
+                        },
+                    ],
+                ]);
+            });
+
+            describe('owner', () => {
+                beforeEach(async () => {
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+                });
+
+                it('should send a response with the number of devices', async () => {
+                    await connectionStore.saveBranchConnection({
+                        ...device1Info,
+                        mode: 'branch',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        temporary: false,
+                    });
+                    await connectionStore.saveBranchConnection({
+                        ...device2Info,
+                        mode: 'branch',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        temporary: false,
+                    });
+
+                    await server.deviceCount(
+                        serverConnectionId,
+                        recordName,
+                        inst,
+                        'testBranch'
+                    );
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([
+                        {
+                            type: 'repo/connection_count',
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            count: 2,
+                        },
+                    ]);
+                });
+
+                it('should return a not_authorized error if the record name doesnt match the connection token', async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName: 'wrong',
+                        ownerId: userId,
+                    });
+
+                    await instStore.saveInst({
+                        recordName: 'wrong',
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    await connectionStore.saveBranchConnection({
+                        ...device1Info,
+                        mode: 'branch',
+                        recordName: 'wrong',
+                        inst,
+                        branch: 'testBranch',
+                        temporary: false,
+                    });
+                    await connectionStore.saveBranchConnection({
+                        ...device2Info,
+                        mode: 'branch',
+                        recordName: 'wrong',
+                        inst,
+                        branch: 'testBranch',
+                        temporary: false,
+                    });
+
+                    await server.deviceCount(
+                        serverConnectionId,
+                        'wrong',
+                        inst,
+                        'testBranch'
+                    );
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to access this inst.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
+
+                it('should return a not_authorized error if the inst name doesnt match the connection token', async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'wrong',
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    await connectionStore.saveBranchConnection({
+                        ...device1Info,
+                        mode: 'branch',
+                        recordName,
+                        inst: 'wrong',
+                        branch: 'testBranch',
+                        temporary: false,
+                    });
+                    await connectionStore.saveBranchConnection({
+                        ...device2Info,
+                        mode: 'branch',
+                        recordName,
+                        inst: 'wrong',
+                        branch: 'testBranch',
+                        temporary: false,
+                    });
+
+                    await server.deviceCount(
+                        serverConnectionId,
+                        recordName,
+                        'wrong',
+                        'testBranch'
+                    );
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to access this inst.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
+            });
+
+            describe('guest', () => {
+                const otherUserConnectionId = 'otherConnectionId';
+                let otherUserId: string;
+                let otherUserConnectionKey: string;
+                let otherUserToken: string;
+
+                beforeEach(async () => {
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    uuidMock.mockReturnValueOnce('otherUserId');
+                    const otherUser = await createTestUser(
+                        services,
+                        'other@example.com'
+                    );
+                    otherUserToken = generateV1ConnectionToken(
+                        otherUser.connectionKey,
+                        otherUserConnectionId,
+                        recordName,
+                        inst
+                    );
+                    otherUserId = otherUser.userId;
+                    otherUserConnectionKey = otherUser.connectionKey;
+
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken: otherUserToken,
+                    });
+                });
+
+                it('should return a not_authorized error if the user is not authorized to read the inst', async () => {
+                    await server.deviceCount(
+                        serverConnectionId,
+                        recordName,
+                        inst,
+                        'testBranch'
+                    );
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                                reason: {
+                                    type: 'missing_permission',
+                                    kind: 'user',
+                                    permission: 'inst.read',
+                                    role: null,
+                                    id: otherUserId,
+                                    marker: PRIVATE_MARKER,
+                                },
+                            },
+                        ],
+                    ]);
+                });
+
+                it('should work if the user has the inst.read permission', async () => {
+                    services.policyStore.policies[recordName] = {
+                        [PRIVATE_MARKER]: {
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'inst.read',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    services.policyStore.roles[recordName] = {
+                        [otherUserId]: new Set(['developer']),
+                    };
+
+                    await server.deviceCount(
+                        serverConnectionId,
+                        recordName,
+                        inst,
+                        'testBranch'
+                    );
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([
+                        {
+                            type: 'repo/connection_count',
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            count: 0,
+                        },
+                    ]);
+                });
+            });
         });
     });
 
