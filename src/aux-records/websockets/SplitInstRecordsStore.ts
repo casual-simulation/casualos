@@ -144,7 +144,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
             inst,
             branch
         );
-        if (updates.updates.length > 0) {
+        if (updates && updates.updates.length > 0) {
             await this._temp.addUpdates(
                 recordName,
                 inst,

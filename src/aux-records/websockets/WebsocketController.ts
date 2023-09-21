@@ -55,6 +55,7 @@ import {
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
     DenialReason,
+    ServerError,
 } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
@@ -952,13 +953,27 @@ export class WebsocketController {
     }
 
     async getBranchData(
+        userId: string | null,
         recordName: string | null,
         inst: string,
         branch: string
-    ): Promise<StoredAux> {
+    ): Promise<GetBranchDataResult> {
         console.log(
             `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}] Get Data`
         );
+
+        if (recordName) {
+            const instResult = await this._getInst(recordName, inst, userId);
+            if (instResult.success === false) {
+                return instResult;
+            } else if (!instResult.inst) {
+                return {
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                };
+            }
+        }
 
         const updates = (await this._instStore.getCurrentUpdates(
             recordName,
@@ -977,8 +992,11 @@ export class WebsocketController {
         }
 
         return {
-            version: 1,
-            state: partition.state,
+            success: true,
+            data: {
+                version: 1,
+                state: partition.state,
+            },
         };
     }
 
@@ -1079,6 +1097,11 @@ export class WebsocketController {
         headers: object,
         data: object
     ): Promise<number> {
+        // TODO: Change webhooks to be records.
+        if (recordName) {
+            return;
+        }
+
         // const namespace = branchNamespace(recordName, inst, branch);
         const b = await this._instStore.getBranchByName(
             recordName,
@@ -1681,6 +1704,24 @@ export interface GetOrCreateInstSuccess {
 export interface GetOrCreateInstFailure {
     success: false;
     errorCode: AuthorizeDenied['errorCode'] | SaveInstFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
+}
+
+export type GetBranchDataResult = GetBranchDataSuccess | GetBranchDataFailure;
+
+export interface GetBranchDataSuccess {
+    success: true;
+    data: StoredAux;
+}
+
+export interface GetBranchDataFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | 'inst_not_found'
+        | AuthorizeDenied['errorCode']
+        | GetOrCreateInstFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;
 }

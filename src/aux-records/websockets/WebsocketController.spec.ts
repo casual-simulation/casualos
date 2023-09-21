@@ -5178,52 +5178,274 @@ describe('WebsocketController', () => {
     });
 
     describe('getBranchData()', () => {
-        it('should return an empty AUX if there is no branch updates', async () => {
-            const data = await server.getBranchData(null, inst, 'testBranch');
+        describe('no record', () => {
+            it('should return an empty AUX if there is no branch updates', async () => {
+                const data = await server.getBranchData(
+                    null,
+                    null,
+                    inst,
+                    'testBranch'
+                );
 
-            expect(data).toEqual({
-                version: 1,
-                state: {},
+                expect(data).toEqual({
+                    success: true,
+                    data: {
+                        version: 1,
+                        state: {},
+                    },
+                });
+            });
+
+            it('should return the aux file for the given branch', async () => {
+                const partition = createYjsPartition({
+                    type: 'yjs',
+                });
+
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test1', {
+                            abc: 'def',
+                            ghi: 123,
+                        })
+                    ),
+                ]);
+
+                const updateBytes = encodeStateAsUpdate(
+                    (partition as YjsPartitionImpl).doc
+                );
+                const updateBase64 = fromByteArray(updateBytes);
+
+                await instStore.addUpdates(
+                    null,
+                    inst,
+                    'testBranch',
+                    [updateBase64],
+                    updateBase64.length
+                );
+
+                const data = await server.getBranchData(
+                    null,
+                    null,
+                    inst,
+                    'testBranch'
+                );
+
+                expect(data).toEqual({
+                    success: true,
+                    data: {
+                        version: 1,
+                        state: {
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                ghi: 123,
+                            }),
+                        },
+                    },
+                });
             });
         });
 
-        it('should return the aux file for the given branch', async () => {
-            const partition = createYjsPartition({
-                type: 'yjs',
+        describe('records', () => {
+            beforeEach(async () => {
+                await services.records.createRecord({
+                    userId,
+                    recordName,
+                    ownerId: userId,
+                });
             });
 
-            await partition.applyEvents([
-                botAdded(
-                    createBot('test1', {
-                        abc: 'def',
-                        ghi: 123,
-                    })
-                ),
-            ]);
+            it('should return inst_not_found if the inst does not exist', async () => {
+                const data = await server.getBranchData(
+                    'wrongUserId',
+                    recordName,
+                    inst,
+                    'testBranch'
+                );
 
-            const updateBytes = encodeStateAsUpdate(
-                (partition as YjsPartitionImpl).doc
-            );
-            const updateBase64 = fromByteArray(updateBytes);
+                expect(data).toEqual({
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                });
+            });
 
-            await instStore.addUpdates(
-                null,
-                inst,
-                'testBranch',
-                [updateBase64],
-                updateBase64.length
-            );
+            it('should return not_authorized if the user is not authorized to read the inst', async () => {
+                await instStore.saveInst({
+                    recordName,
+                    inst,
+                    markers: [PRIVATE_MARKER],
+                });
 
-            const data = await server.getBranchData(null, inst, 'testBranch');
+                const data = await server.getBranchData(
+                    'wrongUserId',
+                    recordName,
+                    inst,
+                    'testBranch'
+                );
 
-            expect(data).toEqual({
-                version: 1,
-                state: {
-                    test1: createBot('test1', {
-                        abc: 'def',
-                        ghi: 123,
-                    }),
-                },
+                expect(data).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: 'wrongUserId',
+                        permission: 'inst.read',
+                        role: null,
+                        marker: PRIVATE_MARKER,
+                    },
+                });
+            });
+
+            it('should return not_logged_in if the user does not give an ID', async () => {
+                await instStore.saveInst({
+                    recordName,
+                    inst,
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const data = await server.getBranchData(
+                    null,
+                    recordName,
+                    inst,
+                    'testBranch'
+                );
+
+                expect(data).toEqual({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                });
+            });
+
+            it('should return the data if the user is the owner', async () => {
+                await instStore.saveInst({
+                    recordName,
+                    inst,
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const partition = createYjsPartition({
+                    type: 'yjs',
+                });
+
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test1', {
+                            abc: 'def',
+                            ghi: 123,
+                        })
+                    ),
+                ]);
+
+                const updateBytes = encodeStateAsUpdate(
+                    (partition as YjsPartitionImpl).doc
+                );
+                const updateBase64 = fromByteArray(updateBytes);
+
+                await instStore.addUpdates(
+                    recordName,
+                    inst,
+                    'testBranch',
+                    [updateBase64],
+                    updateBase64.length
+                );
+
+                const data = await server.getBranchData(
+                    userId,
+                    recordName,
+                    inst,
+                    'testBranch'
+                );
+
+                expect(data).toEqual({
+                    success: true,
+                    data: {
+                        version: 1,
+                        state: {
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                ghi: 123,
+                            }),
+                        },
+                    },
+                });
+            });
+
+            it('should return the data if the user has the inst.read permission', async () => {
+                await instStore.saveInst({
+                    recordName,
+                    inst,
+                    markers: [PRIVATE_MARKER],
+                });
+
+                services.policyStore.policies[recordName] = {
+                    [PRIVATE_MARKER]: {
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'inst.read',
+                                    role: 'developer',
+                                    insts: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                services.policyStore.roles[recordName] = {
+                    ['guestUserId']: new Set(['developer']),
+                };
+
+                const partition = createYjsPartition({
+                    type: 'yjs',
+                });
+
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test1', {
+                            abc: 'def',
+                            ghi: 123,
+                        })
+                    ),
+                ]);
+
+                const updateBytes = encodeStateAsUpdate(
+                    (partition as YjsPartitionImpl).doc
+                );
+                const updateBase64 = fromByteArray(updateBytes);
+
+                await instStore.addUpdates(
+                    recordName,
+                    inst,
+                    'testBranch',
+                    [updateBase64],
+                    updateBase64.length
+                );
+
+                const data = await server.getBranchData(
+                    'guestUserId',
+                    recordName,
+                    inst,
+                    'testBranch'
+                );
+
+                expect(data).toEqual({
+                    success: true,
+                    data: {
+                        version: 1,
+                        state: {
+                            test1: createBot('test1', {
+                                abc: 'def',
+                                ghi: 123,
+                            }),
+                        },
+                    },
+                });
             });
         });
     });
@@ -5676,7 +5898,18 @@ describe('WebsocketController', () => {
             );
             update2Base64 = fromByteArray(update2Bytes);
 
-            await server.addUpdates(connectionId, {
+            await services.records.createRecord({
+                recordName,
+                userId,
+                ownerId: userId,
+            });
+
+            await server.login(serverConnectionId, 1, {
+                type: 'login',
+                connectionToken,
+            });
+
+            await server.addUpdates(serverConnectionId, {
                 type: 'repo/add_updates',
                 recordName,
                 inst,
