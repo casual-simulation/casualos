@@ -1094,6 +1094,8 @@ export class PolicyController {
             return this._authorizeInstDeleteRequest(context, request);
         } else if (request.action === 'inst.list') {
             return this._authorizeInstListRequest(context, request);
+        } else if (request.action === 'inst.sendAction') {
+            return this._authorizeInstSendActionRequest(context, request);
         }
 
         return {
@@ -4333,6 +4335,93 @@ export class PolicyController {
         };
     }
 
+    private _authorizeInstSendActionRequest(
+        context: AuthorizationContext,
+        request: AuthorizeInstSendActionListRequest
+    ): Promise<AuthorizeResult> {
+        return this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeInstSendAction(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeInstSendAction(
+        context: RolesContext<AuthorizeInstSendActionListRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byInst('inst.sendAction', context.request.inst),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context, type, id),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'inst.sendAction',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -5153,7 +5242,8 @@ export type AuthorizeRequest =
     | AuthorizeInstReadRequest
     | AuthorizeInstUpdateDataRequest
     | AuthorizeInstUpdateRequest
-    | AuthorizeInstListRequest;
+    | AuthorizeInstListRequest
+    | AuthorizeInstSendActionListRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -5515,6 +5605,11 @@ export interface AuthorizeInstListRequest extends AuthorizeRequestBase {
      * The list of insts.
      */
     insts: ListedInstItem[];
+}
+
+export interface AuthorizeInstSendActionListRequest
+    extends AuthorizeInstRequest {
+    action: 'inst.sendAction';
 }
 
 export interface ListedDataItem {

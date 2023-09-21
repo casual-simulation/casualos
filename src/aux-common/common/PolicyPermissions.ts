@@ -79,7 +79,8 @@ export type AvailableInstPermissions =
     | DeleteInstPermission
     | UpdateInstPermission
     | UpdateDataInstPermission
-    | ListInstPermission;
+    | ListInstPermission
+    | SendInstActionPermission;
 
 /**
  * Defines an interface that describes common options for all permissions.
@@ -824,6 +825,24 @@ type ZodListInstPermissionAssertion = HasType<
     ListInstPermission
 >;
 
+/**
+ * Defines an interface that describes a permission to send actions in insts.
+ */
+export interface SendInstActionPermission extends InstPermission {
+    type: 'inst.sendAction';
+}
+
+export const SEND_INST_ACTION_PERMISSION_VALIDATION = INST_VALIDATION.extend({
+    type: z.literal('inst.sendAction'),
+});
+type ZodSendInstActionPermission = z.infer<
+    typeof SEND_INST_ACTION_PERMISSION_VALIDATION
+>;
+type ZodSendInstActionPermissionAssertion = HasType<
+    ZodSendInstActionPermission,
+    SendInstActionPermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     CREATE_DATA_VALIDATION,
     READ_DATA_VALIDATION,
@@ -854,6 +873,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     UPDATE_DATA_INST_VALIDATION,
     DELETE_INST_VALIDATION,
     LIST_INST_VALIDATION,
+    SEND_INST_ACTION_PERMISSION_VALIDATION,
 ]);
 
 // /**
@@ -1105,6 +1125,11 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'inst.list',
+            role: ADMIN_ROLE_NAME,
+            insts: true,
+        },
+        {
+            type: 'inst.sendAction',
             role: ADMIN_ROLE_NAME,
             insts: true,
         },
