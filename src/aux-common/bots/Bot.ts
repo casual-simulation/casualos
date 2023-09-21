@@ -1,4 +1,4 @@
-import { TagEditOp } from '../aux-format-2';
+import { TagEditOp } from './AuxStateHelpers';
 
 export type PartialBot = Partial<Bot>;
 

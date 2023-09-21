@@ -17,7 +17,7 @@ import {
     edit,
     insert,
     preserve,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 
 describe('BotWatcher', () => {
     let vm: TestAuxVM;

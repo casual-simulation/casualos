@@ -61,7 +61,7 @@ model User {
 model LoginRequest {
     requestId String @id
     userId String
-    user User @relation(fields: [userId], references: [id])
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "LoginRequest_userId_fkey1")
     secretHash String
     requestTime DateTime
     expireTime DateTime
@@ -81,9 +81,10 @@ model LoginRequest {
 model AuthSession {
     sessionId String @id
     userId String
-    user User @relation(fields: [userId], references: [id])
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AuthSession_userId_fkey1")
 
     secretHash String
+    connectionSecret String?
     grantedTime DateTime
     expireTime DateTime
     revokeTime DateTime?
@@ -178,6 +179,9 @@ model Record {
     manualDataRecords ManualDataRecord[]
     fileRecords FileRecord[]
     eventRecords EventRecord[]
+    instRecords InstRecord[]
+    instBranches InstBranch[]
+    branchUpdates BranchUpdate[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -187,7 +191,7 @@ model RecordKey {
     @@id([recordName, secretHash])
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "RecordKey_recordName_fkey1")
 
     secretHash String
     policy String
@@ -203,7 +207,7 @@ model Policy {
     @@id([recordName, marker])
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "Policy_recordName_fkey1")
     marker String
     document Json
     markers String[]
@@ -215,7 +219,7 @@ model Policy {
 model Role {
     @@id([recordName, name])
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "Role_recordName_fkey1")
 
     name String
     markers String[]
@@ -228,7 +232,7 @@ model RoleAssignment {
     @@id([recordName, roleId, subjectId])
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "RoleAssignment_recordName_fkey1")
     roleId String
 
     subjectId String
@@ -250,7 +254,7 @@ model DataRecord {
     @@id([recordName, address])
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "DataRecord_recordName_fkey1")
     
     address String
     data Json
@@ -275,7 +279,7 @@ model ManualDataRecord {
     @@id([recordName, address])
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "ManualDataRecord_recordName_fkey1")
     
     address String
     data Json
@@ -299,6 +303,8 @@ model FileRecord {
     @@id([recordName, fileName])
 
     recordName String
+
+    // Don't cascade FileRecord deletes because they have storage in other places besides the database
     record Record @relation(fields: [recordName], references: [name])
     fileName String
 
@@ -323,7 +329,7 @@ model EventRecord {
     @@id([recordName, name])
 
     recordName String
-    record Record @relation(fields: [recordName], references: [name])
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "EventRecord_recordName_fkey1")
     name String
 
     count BigInt
@@ -331,6 +337,62 @@ model EventRecord {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model InstRecord {
+    @@id([recordName, name])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "InstRecord_recordName_fkey1")
+
+    name String
+
+    markers String[]
+
+    branches InstBranch[]
+    updates BranchUpdate[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model InstBranch {
+    @@id([recordName, instName, name])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "InstBranch_recordName_fkey1")
+
+    instName String
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade, map: "InstBranch_instName_fkey1")
+
+    name String
+    temporary Boolean
+
+    updates BranchUpdate[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model BranchUpdate {
+    id String @id @db.Uuid()
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "BranchUpdate_recordName_fkey1")
+
+    instName String
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade, map: "BranchUpdate_instName_fkey1")
+
+    branchName String
+    branch InstBranch @relation(fields: [recordName, instName, branchName], references: [recordName, instName, name], onDelete: Cascade, map: "BranchUpdate_branchName_fkey1")
+
+    sizeInBytes Int
+    updateData String
+
+    createdAt DateTime @default(now())
+    updated DateTime @updatedAt
+
+    @@index([recordName, instName, branchName, id])
 }
 
 model Configuration {
@@ -368,7 +430,7 @@ model SubscriptionPeriod {
     id String @id @db.Uuid
 
     subscriptionId String @db.Uuid
-    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+    subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade, map: "SubscriptionPeriod_subscriptionId_fkey1")
 
     invoiceId String @unique @db.Uuid
     invoice Invoice?
@@ -385,10 +447,10 @@ model Invoice {
     stripeInvoiceId String @unique
 
     subscriptionId String @db.Uuid
-    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+    subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade, map: "Invoice_subscriptionId_fkey1")
 
     periodId String @unique @db.Uuid
-    period SubscriptionPeriod @relation(fields: [periodId], references: [id])
+    period SubscriptionPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade, map: "Invoice_periodId_fkey1")
 
     description String?
     status String
@@ -412,10 +474,10 @@ model AiChatMetrics {
     tokens Int
 
     userId String?
-    user User? @relation(fields: [userId], references: [id])
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiChatMetrics_userId_fkey1")
 
     studioId String?
-    studio Studio? @relation(fields: [studioId], references: [id])
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiChatMetrics_studioId_fkey1")
 }
 
 model AiImageMetrics {
@@ -424,10 +486,10 @@ model AiImageMetrics {
     squarePixelsGenerated Int
 
     userId String?
-    user User? @relation(fields: [userId], references: [id])
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiImageMetrics_userId_fkey1")
 
     studioId String?
-    studio Studio? @relation(fields: [studioId], references: [id])
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiImageMetrics_studioId_fkey1")
 }
 
 model AiSkyboxMetrics {
@@ -436,8 +498,8 @@ model AiSkyboxMetrics {
     skyboxesGenerated Int
 
     userId String?
-    user User? @relation(fields: [userId], references: [id])
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiSkyboxMetrics_userId_fkey1")
 
     studioId String?
-    studio Studio? @relation(fields: [studioId], references: [id])
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSkyboxMetrics_studioId_fkey1")
 }

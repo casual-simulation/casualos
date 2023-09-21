@@ -1,13 +1,9 @@
-import { appManager } from './AppManager';
-import VueRouter from 'vue-router';
-import {
-    GoToDimensionAction,
-    simulationIdToString,
-} from '@casual-simulation/aux-common';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 export interface SimulationInfo {
     id: string;
+    inst: string;
+    recordName: string | null;
     displayName: string;
     online: boolean;
     synced: boolean;
@@ -15,10 +11,14 @@ export interface SimulationInfo {
     subscribed: boolean;
 }
 
-export function createSimulationInfo(simulation: Simulation): SimulationInfo {
+export function createSimulationInfo(
+    simulation: BrowserSimulation
+): SimulationInfo {
     return {
         id: simulation.id,
-        displayName: simulationIdToString(simulation.parsedId),
+        inst: simulation.inst,
+        recordName: simulation.recordName,
+        displayName: simulation.id,
         online: false,
         synced: false,
         lostConnection: false,

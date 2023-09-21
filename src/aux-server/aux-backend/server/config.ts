@@ -13,39 +13,12 @@ export interface Config {
      * The config for the collaboration features of the server.
      */
     collaboration: {
-        socket: WebSocket.ServerOptions;
         httpPort: number;
         player: ClientConfig;
-        mongodb: MongoDbConfig;
-
-        redis: RedisConfig | null;
-        trees: CausalTreeServerConfig;
-
-        /**
-         * The config that should be used for Causal Repos.
-         */
-        repos: CausalReposServerConfig;
-        bots: BotsServerConfig;
-        directory: DirectoryConfig;
-        proxy: ProxyConfig | null;
         dist: string;
         drives: string;
         tls: TLSOptions | null;
-
-        /**
-         * The type of sandbox that should be used.
-         */
-        sandbox: SandboxType;
-
-        /**
-         * Whether to let the server instantate server-side runtimes for instances that get loaded.
-         */
-        executeLoadedInstances: boolean;
-
-        /**
-         * Whether to enable GPIO support.
-         */
-        gpio: boolean;
+        proxy: ProxyConfig;
 
         /**
          * Whether to enable debug logging.

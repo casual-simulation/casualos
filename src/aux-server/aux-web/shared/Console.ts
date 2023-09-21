@@ -7,7 +7,7 @@ import {
     ReplaySubject,
 } from 'rxjs';
 import { share, shareReplay } from 'rxjs/operators';
-import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { ConsoleMessages } from '@casual-simulation/aux-common';
 
 const externalMessages = new ReplaySubject<ConsoleMessages>(1000);
 
@@ -34,7 +34,7 @@ function createMessagesObservable(
 ): Observable<ConsoleMessages> {
     return Observable.create((observer: Observer<ConsoleMessages>) => {
         let prev = console[type];
-        console[type] = function() {
+        console[type] = function () {
             observer.next(<any>{
                 type: type,
                 messages: [...arguments],

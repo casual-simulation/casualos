@@ -2,7 +2,6 @@ import {
     action,
     asyncResult,
     AuxPartitions,
-    AuxRuntime,
     BotAction,
     botAdded,
     createBot,
@@ -16,6 +15,7 @@ import {
     toast,
     unregisterCustomApp,
 } from '@casual-simulation/aux-common';
+import { AuxRuntime, RuntimeActions } from '@casual-simulation/aux-runtime';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -25,7 +25,7 @@ import { HtmlAppBackend, HtmlPortalSetupResult } from './HtmlAppBackend';
 
 describe('CustomAppHelper', () => {
     let runtime: AuxRuntime;
-    let actions: BotAction[];
+    let actions: RuntimeActions[];
     let memory: MemoryPartition;
     let userId: string = 'user';
     let helper: AuxHelper;

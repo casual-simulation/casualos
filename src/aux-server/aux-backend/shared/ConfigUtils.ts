@@ -1,8 +1,9 @@
 import { tryParseJson } from '@casual-simulation/aux-records';
 import { BuilderOptions, optionsSchema } from '../shared/ServerBuilder';
-import { merge } from 'lodash';
+import { merge } from '@casual-simulation/aux-common';
 
 declare const DEVELOPMENT: boolean;
+declare const SERVER_CONFIG: string;
 
 export const DEV_CONFIG: BuilderOptions = {
     livekit: {
@@ -11,11 +12,15 @@ export const DEV_CONFIG: BuilderOptions = {
         endpoint: 'ws://localhost:7880',
     },
     prisma: {},
+    ws: {},
     redis: {
         host: 'localhost',
         port: 6379,
         rateLimitPrefix: 'aux-rate-limit/',
         tls: false,
+        tempInstRecordsStoreNamespace: 'tempInsts',
+        websocketConnectionNamespace: 'connections',
+        publicInstRecordsStoreNamespace: 'insts',
     },
     mongodb: {
         url: 'mongodb://localhost:27017',
@@ -26,28 +31,16 @@ export const DEV_CONFIG: BuilderOptions = {
 };
 
 export function loadConfig(required: boolean = true) {
-    const SERVER_CONFIG = process.env.SERVER_CONFIG;
+    const injectedConfig = parseObject(SERVER_CONFIG);
+    const envConfig = parseObject(process.env.SERVER_CONFIG);
 
-    let configObject: any;
-
-    if (typeof SERVER_CONFIG === 'string') {
-        const serverConfigParseResult = tryParseJson(SERVER_CONFIG);
-
-        if (serverConfigParseResult.success === false) {
-            throw new Error(
-                `SERVER_CONFIG must be valid JSON: ${serverConfigParseResult.error}`
-            );
-        }
-        configObject = serverConfigParseResult.value;
-    } else if (typeof SERVER_CONFIG === 'object') {
-        configObject = SERVER_CONFIG;
-    } else if (required) {
-        throw new Error(`SERVER_CONFIG must be a JSON string or an object.`);
-    } else {
-        return null;
+    if (!injectedConfig && !envConfig && required) {
+        throw new Error(`SERVER_CONFIG must be specified!`);
     }
 
-    const optionsResult = optionsSchema.safeParse(configObject);
+    const merged = merge({}, injectedConfig ?? {}, envConfig ?? {});
+
+    const optionsResult = optionsSchema.safeParse(merged);
 
     if (optionsResult.success === false) {
         console.error(
@@ -64,4 +57,21 @@ export function loadConfig(required: boolean = true) {
     }
 
     return options;
+}
+
+function parseObject(input: string | object) {
+    if (typeof input === 'string') {
+        const serverConfigParseResult = tryParseJson(input);
+
+        if (serverConfigParseResult.success === false) {
+            throw new Error(
+                `SERVER_CONFIG must be valid JSON: ${serverConfigParseResult.error}`
+            );
+        }
+        return serverConfigParseResult.value;
+    } else if (typeof input === 'object') {
+        return input;
+    } else {
+        return null;
+    }
 }

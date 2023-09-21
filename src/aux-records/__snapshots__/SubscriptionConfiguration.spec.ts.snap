@@ -22,6 +22,9 @@ Object {
   "files": Object {
     "allowed": true,
   },
+  "insts": Object {
+    "allowed": true,
+  },
   "records": Object {
     "allowed": true,
   },

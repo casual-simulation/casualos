@@ -2,26 +2,7 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import _, { omitBy, padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
 import { PUBLIC_READ_MARKER } from './PolicyPermissions';
-
-/**
- * Converts the given string into a base64 string.
- * @param str The string to convert.
- */
-export function toBase64String(str: string): string {
-    const encoder = new TextEncoder();
-    const array = encoder.encode(str);
-    return fromByteArray(array);
-}
-
-/**
- * Converts the given string from a base64 string.
- * @param base64
- */
-export function fromBase64String(base64: string): string {
-    const decoder = new TextDecoder();
-    const array = toByteArray(base64);
-    return decoder.decode(array);
-}
+import axios from 'axios';
 
 /**
  * Signs the given request and adds the related headers to it.
@@ -521,4 +502,27 @@ export function getMarkersOrDefault(markers: string[] | null): string[] {
     }
 
     return markers;
+}
+
+/**
+ * Handles axios errors and ensures they get logged properly.
+ * @param err The error.
+ */
+export function handleAxiosErrors(err: any) {
+    if (axios.isAxiosError(err)) {
+        console.error(
+            'An axios error occcurred:',
+            '\nStatus:',
+            err.response.status,
+            '\nHeaders:',
+            err.response.headers,
+            '\nData:',
+            err.response.data,
+            '\nRequest:',
+            err.request
+        );
+        throw new Error('An axios error occurred: ' + err.message);
+    } else {
+        throw err;
+    }
 }

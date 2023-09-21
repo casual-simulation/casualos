@@ -22,9 +22,6 @@ Parameters:
     AllowedApiOriginsParameter:
         Type: String
         Description: The allowed origin domains that are able to make requests for the records APIs. This value should be a space-separated string that includes the origins that are allowed to request/publish records to this site.
-    ServerConfigParameter:
-        Type: String
-        Description: The JSON configuration that should be used.
     SESIdentityNameParameter:
         Type: String
         Description: The Simple Email Service (SES) Identity that the lambda function should be allowed to send emails from.
@@ -55,7 +52,7 @@ Resources:
         Properties:
             Handler: Records.handleRecords
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function that publishes and retreives records for the user.
@@ -70,12 +67,13 @@ Resources:
                   ]
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     REGION: !Ref 'AWS::Region'
                     FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
             Events:
                 HandleApiV2:
                     Type: Api
@@ -112,6 +110,16 @@ Resources:
                     Properties:
                         Path: /api/stripeWebhook
                         Method: POST
+                Webhook:
+                    Type: Api
+                    Properties:
+                        Path: /webhook
+                        Method: ANY
+                DataPortal:
+                    Type: Api
+                    Properties:
+                        Path: /instData
+                        Method: GET
     HandleRecordsLogGroup:
         Type: AWS::Logs::LogGroup
         Properties:
@@ -285,7 +293,7 @@ Resources:
         Properties:
             Handler: websockets.connect
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handles websocket connections
@@ -294,7 +302,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleConnectPermission:
@@ -317,7 +324,7 @@ Resources:
         Properties:
             Handler: websockets.disconnect
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function that handles websocket disconnections.
@@ -326,7 +333,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleDisconnectPermission:
@@ -349,7 +355,7 @@ Resources:
         Properties:
             Handler: websockets.message
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handle websocket messages.
@@ -358,7 +364,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleMessagePermission:
@@ -374,66 +379,6 @@ Resources:
         DeletionPolicy: Delete
         Properties:
             LogGroupName: !Sub '/aws/lambda/${HandleMessageFunction}'
-            RetentionInDays: 14
-
-    HandleWebhooksFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: websockets.webhook
-            CodeUri: dist/handlers
-            Runtime: nodejs14.x
-            MemorySize: 256
-            Timeout: 100
-            Description: A function handle webhook requests.
-            Role: !GetAtt
-                - ExecutionRole
-                - Arn
-            Environment:
-                Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
-                    MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
-            Events:
-                Webhook:
-                    Type: Api
-                    Properties:
-                        Path: /webhook
-                        Method: ANY
-    HandleWebhooksLogGroup:
-        Type: AWS::Logs::LogGroup
-        DeletionPolicy: Delete
-        Properties:
-            LogGroupName: !Sub '/aws/lambda/${HandleWebhooksFunction}'
-            RetentionInDays: 14
-
-    HandleInstDataFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: websockets.instData
-            CodeUri: dist/handlers
-            Runtime: nodejs14.x
-            MemorySize: 256
-            Timeout: 100
-            Description: A function handle inst data requests.
-            Role: !GetAtt
-                - ExecutionRole
-                - Arn
-            Environment:
-                Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
-                    MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
-            Events:
-                DataPortal:
-                    Type: Api
-                    Properties:
-                        Path: /instData
-                        Method: GET
-    HandleInstDataLogGroup:
-        Type: AWS::Logs::LogGroup
-        DeletionPolicy: Delete
-        Properties:
-            LogGroupName: !Sub '/aws/lambda/${HandleInstDataFunction}'
             RetentionInDays: 14
 
     # S3 Bucket to large messages

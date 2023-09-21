@@ -1,3 +1,4 @@
+import { Action, RemoteActions, StatusUpdate, CurrentVersion } from '../common';
 import {
     BotsState,
     BotAction,
@@ -6,14 +7,6 @@ import {
     PartialBotsState,
     StateUpdatedEvent,
 } from '../bots';
-import {
-    StatusUpdate,
-    RemoteAction,
-    User,
-    Action,
-    RemoteActions,
-    CurrentVersion,
-} from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike } from 'rxjs';
 
 /**
@@ -86,18 +79,6 @@ export interface AuxPartitionBase extends SubscriptionLike {
      * @param events The events to send.
      */
     sendRemoteEvents?(events: RemoteActions[]): Promise<void>;
-
-    /**
-     * Sets the user that the partition should use.
-     * @param user
-     */
-    setUser?(user: User): Promise<void>;
-
-    /**
-     * Sets the grant that the partition should use.
-     * @param grant
-     */
-    setGrant?(grant: string): Promise<void>;
 
     /**
      * Tells the partition to connect to it's backing store.

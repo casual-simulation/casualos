@@ -1,8 +1,15 @@
-import AWS from 'aws-sdk';
 import { v4 as uuid } from 'uuid';
 import { AwsMessage } from './AwsMessages';
 import axios from 'axios';
 import { URL } from 'url';
+import {
+    S3,
+    S3ClientConfig,
+    PutObjectCommand,
+    GetObjectCommandInput,
+    GetObjectCommand,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export const MESSAGES_BUCKET_NAME = process.env.MESSAGES_BUCKET;
 
@@ -10,89 +17,79 @@ export function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-let _documentClient: AWS.DynamoDB.DocumentClient;
-
-/**
- * Gets a new instance of a DynamoDB document client.
- * Can be used to interact with DynamoDB.
- */
-export function getDocumentClient() {
-    if (!_documentClient) {
-        _documentClient = createDocumentClient();
-    }
-    return _documentClient;
-}
-
-function createDocumentClient() {
-    if (isOffline()) {
-        return new AWS.DynamoDB.DocumentClient({
-            region: 'localhost',
-            endpoint: 'http://localhost:8000',
-        });
-    } else {
-        return new AWS.DynamoDB.DocumentClient();
-    }
-}
-
 export function getS3Client() {
     if (isOffline()) {
-        return new AWS.S3({
-            s3ForcePathStyle: true,
-            accessKeyId: 'S3RVER',
-            secretAccessKey: 'S3RVER',
-            endpoint: new AWS.Endpoint('http://localhost:4569'),
-            signatureVersion: 'v4',
+        return new S3({
+            forcePathStyle: true,
+            credentials: {
+                accessKeyId: 'S3RVER',
+                secretAccessKey: 'S3RVER',
+            },
+            endpoint: 'http://localhost:4569',
         });
     }
-    return new AWS.S3({
-        signatureVersion: 'v4',
-    });
+    return new S3();
 }
 
 export async function uploadMessage(
-    client: AWS.S3,
+    client: S3,
+    bucket: string,
     data: string
 ): Promise<string> {
     const key = uuid();
-    const response = await client
-        .putObject({
-            Bucket: MESSAGES_BUCKET_NAME,
-            Key: key,
-            ContentType: 'application/json',
-            Body: data,
-            ACL: 'public-read',
-        })
-        .promise();
+    const response = await client.putObject({
+        Bucket: bucket,
+        Key: key,
+        ContentType: 'application/json',
+        Body: data,
+        ACL: 'bucket-owner-full-control',
+    });
 
     if (isOffline()) {
-        return `http://localhost:4569/${MESSAGES_BUCKET_NAME}/${key}`;
+        return `http://localhost:4569/${bucket}/${key}`;
     } else {
-        return `https://${MESSAGES_BUCKET_NAME}.s3.amazonaws.com/${key}`;
+        const params = new GetObjectCommand({
+            Bucket: bucket,
+            Key: key,
+        });
+
+        return await getSignedUrl(client, params, {
+            expiresIn: 3600,
+        });
     }
 }
 
-export async function getMessageUploadUrl(): Promise<string> {
-    const client = getS3Client();
-    const key = uuid();
-    const params: AWS.S3.Types.PutObjectRequest = {
-        Bucket: MESSAGES_BUCKET_NAME,
+export async function getMessageUploadUrl(
+    client: S3,
+    bucket: string,
+    key: string = uuid()
+): Promise<string> {
+    const params = new PutObjectCommand({
+        Bucket: bucket,
         Key: key,
         ContentType: 'application/json',
         ACL: 'bucket-owner-full-control',
-    };
-    const url = await client.getSignedUrlPromise('putObject', params);
+    });
+
+    const url = await getSignedUrl(client, params, {
+        expiresIn: 3600,
+        unhoistableHeaders: new Set(['x-amz-acl']),
+    });
     return url;
 }
 
-export async function downloadObject(url: string): Promise<string> {
+export async function downloadObject(
+    client: S3,
+    bucket: string,
+    url: string
+): Promise<string> {
     const parsed = new URL(url);
-    const client = getS3Client();
-    const params: AWS.S3.Types.GetObjectRequest = {
-        Bucket: MESSAGES_BUCKET_NAME,
+    const params: GetObjectCommandInput = {
+        Bucket: bucket,
         Key: parsed.pathname.slice(1),
     };
-    const response = await client.getObject(params).promise();
-    return response.Body.toString('utf8');
+    const response = await client.getObject(params);
+    return response.Body.transformToString('utf8');
 }
 
 /**

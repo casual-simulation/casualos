@@ -1,12 +1,14 @@
 import {
     ListedRecord,
-    ListedStudio,
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
     RecordsStore,
     StudioAssignmentRole,
 } from './RecordsStore';
-import { toBase64String, fromBase64String } from './Utils';
+import {
+    toBase64String,
+    fromBase64String,
+} from '@casual-simulation/aux-common';
 import {
     createRandomPassword,
     hashHighEntropyPasswordWithSalt,
@@ -21,13 +23,16 @@ import {
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
-} from './Errors';
+} from '@casual-simulation/aux-common/Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
 import { AuthStore } from './AuthStore';
 import { v4 as uuid } from 'uuid';
 import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
-import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import {
+    getSubscriptionFeatures,
+    getSubscriptionTier,
+} from './SubscriptionConfiguration';
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
@@ -743,13 +748,13 @@ export class RecordsController {
             filter
         );
 
-        if (!features.records.allowed) {
+        if (!features.records?.allowed) {
             return {
                 success: false,
                 errorCode: 'not_authorized',
                 errorMessage: 'Records are not allowed for this subscription.',
             } as const;
-        } else if (features.records.maxRecords >= 0) {
+        } else if (features.records?.maxRecords >= 0) {
             if (features.records.maxRecords <= metrics.totalRecords + 1) {
                 return {
                     success: false,
@@ -895,15 +900,22 @@ export class RecordsController {
     async listStudios(userId: string): Promise<ListStudiosResult> {
         try {
             const studios = await this._store.listStudiosForUser(userId);
-
+            const config = await this._config.getSubscriptionConfiguration();
             return {
                 success: true,
-                studios: studios.map((s) => ({
-                    studioId: s.studioId,
-                    displayName: s.displayName,
-                    role: s.role,
-                    isPrimaryContact: s.isPrimaryContact,
-                })),
+                studios: studios.map((s) => {
+                    return {
+                        studioId: s.studioId,
+                        displayName: s.displayName,
+                        role: s.role,
+                        isPrimaryContact: s.isPrimaryContact,
+                        subscriptionTier: getSubscriptionTier(
+                            config,
+                            s.subscriptionStatus,
+                            s.subscriptionId
+                        ),
+                    };
+                }),
             };
         } catch (err) {
             console.error(
@@ -1399,17 +1411,83 @@ export interface CreateStudioFailure {
     errorMessage: string;
 }
 
+/**
+ * Defines the list of possible results for the {@link os.listUserStudios} function.
+ *
+ * @dochash types/records/studios
+ * @doctitle Studio Types
+ * @docsidebar Studios
+ * @docdescription Types that are used for actions that manage studios.
+ * @docname ListStudiosResult
+ */
 export type ListStudiosResult = ListStudiosSuccess | ListStudiosFailure;
 
+/**
+ * Defines an interface that represents a successful "list studios" result.
+ *
+ * @dochash types/records/studios
+ * @docname ListStudiosSuccess
+ */
 export interface ListStudiosSuccess {
     success: true;
+
+    /**
+     * The list of studios that the user is a member of.
+     */
     studios: ListedStudio[];
 }
 
+/**
+ * Defines an interface that represents a failed "list studios" result.
+ *
+ * @dochash types/records/studios
+ * @docname ListStudiosFailure
+ */
 export interface ListStudiosFailure {
     success: false;
+
+    /**
+     * The error code.
+     */
     errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+
+    /**
+     * The error message.
+     */
     errorMessage: string;
+}
+
+/**
+ * Defines an interface that represents a studio that has been listed.
+ *
+ * @dochash types/records/studios
+ * @docname ListedStudio
+ */
+export interface ListedStudio {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The name of the studio.
+     */
+    displayName: string;
+
+    /**
+     * The role that the user has in the studio.
+     */
+    role: StudioAssignmentRole;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
+
+    /**
+     * The tier of the studio's subscription.
+     */
+    subscriptionTier: string;
 }
 
 export type ListStudioMembersResult =

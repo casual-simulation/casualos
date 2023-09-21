@@ -47,10 +47,10 @@ export function userBotTagsChanged(
 }
 
 export function userBotChangedCore(login: LoginManager, watcher: BotWatcher) {
-    return login.userChanged.pipe(
+    return login.deviceChanged.pipe(
         switchMap((user) => {
             if (user) {
-                return watcher.botTagsChanged(user.id);
+                return watcher.botTagsChanged(user.connectionId);
             } else {
                 return never();
             }

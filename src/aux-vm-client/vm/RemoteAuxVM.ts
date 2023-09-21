@@ -1,11 +1,9 @@
 import {
     LocalActions,
     StateUpdatedEvent,
-    RuntimeStateVersion,
     BotAction,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
 import {
     AuxChannel,
     AuxChannelErrorType,
@@ -19,15 +17,19 @@ import {
     DeviceAction,
     remapProgressPercent,
     StatusUpdate,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { proxy, Remote, createEndpoint } from 'comlink';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a VM that is able to wrap a remote aux channel.
  */
 export class RemoteAuxVM implements AuxVM {
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -55,7 +57,7 @@ export class RemoteAuxVM implements AuxVM {
      * Creates a new Simulation VM.
      */
     constructor(channel: Remote<AuxChannel>) {
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
@@ -109,7 +111,7 @@ export class RemoteAuxVM implements AuxVM {
     /**
      * The observable list of events that should be produced locally.
      */
-    get localEvents(): Observable<LocalActions[]> {
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 
@@ -126,16 +128,6 @@ export class RemoteAuxVM implements AuxVM {
 
     get versionUpdated(): Observable<RuntimeStateVersion> {
         return this._versionUpdated;
-    }
-
-    async setUser(user: AuxUser): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setUser(user);
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setGrant(grant);
     }
 
     /**
@@ -217,13 +209,13 @@ export class RemoteAuxVM implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, user } = await subChannel.getInfo();
+        const { id, indicator } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            user,
+            indicator,
             vm: this._createSubVM(channel),
             channel,
         };

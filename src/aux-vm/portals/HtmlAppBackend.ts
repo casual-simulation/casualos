@@ -1,9 +1,6 @@
 import {
     action,
     asyncResult,
-    AuxRuntime,
-    Bot,
-    BotAction,
     hasValue,
     ON_APP_SETUP_ACTION_NAME,
     registerHtmlApp,
@@ -24,6 +21,7 @@ import undom, {
 import { render } from 'preact';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { first, map } from 'rxjs/operators';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
 
@@ -132,7 +130,7 @@ export class HtmlAppBackend implements AppBackend {
         );
     }
 
-    handleEvents(events: BotAction[]): void {
+    handleEvents(events: RuntimeActions[]): void {
         for (let event of events) {
             if (event.type === 'async_result') {
                 if (event.taskId === this._initTaskId) {

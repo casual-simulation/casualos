@@ -1,18 +1,15 @@
-const AWS = require('aws-sdk');
+const { S3 } = require('@aws-sdk/client-s3');
 const { readFileSync } = require('fs');
 const path = require('path');
 const YAML = require('yaml');
 const { v4: uuid } = require('uuid');
 
-AWS.config.update({
-    region: 'us-east-1',
-
-    // Dummy credentials
+const region = 'us-east-1';
+const s3 = new S3({
+    region: region,
     accessKeyId: 'xxxx',
     secretAccessKey: 'xxxx',
-});
 
-const s3 = new AWS.S3({
     endpoint: 'http://localhost:4566',
     apiVersion: '2006-03-01',
     s3ForcePathStyle: true,
@@ -51,7 +48,7 @@ start().then(
 
 async function createS3Buckets(reset) {
     try {
-        const buckets = await s3.listBuckets().promise();
+        const buckets = await s3.listBuckets({});
         const hasFilesBucket = buckets.Buckets.some(
             (b) => b.Name === FILES_BUCKET
         );
@@ -61,28 +58,24 @@ async function createS3Buckets(reset) {
             }
 
             console.log('Creating Files Bucket');
-            await s3
-                .createBucket({
-                    Bucket: FILES_BUCKET,
-                })
-                .promise();
+            await s3.createBucket({
+                Bucket: FILES_BUCKET,
+            });
 
-            await s3
-                .putBucketCors({
-                    Bucket: FILES_BUCKET,
-                    CORSConfiguration: {
-                        CORSRules: [
-                            {
-                                AllowedHeaders: ['*'],
-                                AllowedMethods: ['GET', 'PUT', 'POST'],
-                                AllowedOrigins: ['*'],
-                                ExposeHeaders: [],
-                                MaxAgeSeconds: 3000,
-                            },
-                        ],
-                    },
-                })
-                .promise();
+            await s3.putBucketCors({
+                Bucket: FILES_BUCKET,
+                CORSConfiguration: {
+                    CORSRules: [
+                        {
+                            AllowedHeaders: ['*'],
+                            AllowedMethods: ['GET', 'PUT', 'POST'],
+                            AllowedOrigins: ['*'],
+                            ExposeHeaders: [],
+                            MaxAgeSeconds: 3000,
+                        },
+                    ],
+                },
+            });
         } else {
             console.log('Files Bucket already exists');
         }
@@ -93,24 +86,18 @@ async function createS3Buckets(reset) {
 
 async function deleteBucket(bucketName) {
     console.log(`Deleting "${bucketName}" Bucket`);
-    const objects = await s3
-        .listObjects({
-            Bucket: bucketName,
-        })
-        .promise();
+    const objects = await s3.listObjects({
+        Bucket: bucketName,
+    });
     await Promise.all(
         objects.Contents.map(async (object) => {
-            await s3
-                .deleteObject({
-                    Bucket: bucketName,
-                    Key: object.Key,
-                })
-                .promise();
+            await s3.deleteObject({
+                Bucket: bucketName,
+                Key: object.Key,
+            });
         })
     );
-    await s3
-        .deleteBucket({
-            Bucket: bucketName,
-        })
-        .promise();
+    await s3.deleteBucket({
+        Bucket: bucketName,
+    });
 }

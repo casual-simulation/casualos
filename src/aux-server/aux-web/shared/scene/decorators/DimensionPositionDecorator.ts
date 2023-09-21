@@ -20,7 +20,6 @@ import {
     getBotScale,
     getAnchorPointOffset,
     LocalActions,
-    RemoteCausalRepoPartitionImpl,
     Easing,
     EaseMode,
     hasValue,

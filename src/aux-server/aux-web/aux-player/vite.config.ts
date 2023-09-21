@@ -107,7 +107,6 @@ export default defineConfig(({ command, mode }) => ({
         GIT_TAG: JSON.stringify(
             command === 'serve' ? 'v9.9.9-dev:alpha' : GIT_TAG
         ),
-        PROXY_CORS_REQUESTS: process.env.PROXY_CORS_REQUESTS !== 'false',
         PRODUCTION: JSON.stringify(command === 'build'),
     },
     publicDir,
@@ -207,7 +206,7 @@ export default defineConfig(({ command, mode }) => ({
         proxy: {
             '/api': 'http://localhost:2999',
             '/websocket': {
-                target: 'http://localhost:2999',
+                target: 'http://localhost:2998',
                 ws: true,
             },
         },

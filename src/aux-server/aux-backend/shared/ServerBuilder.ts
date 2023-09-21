@@ -12,7 +12,7 @@ import {
     RateLimitController,
     RecordKey,
     RecordsController,
-    RecordsHttpServer,
+    RecordsServer,
     RecordsStore,
     SubscriptionController,
     Record,
@@ -22,6 +22,13 @@ import {
     OpenAIImageInterface,
     StabilityAIImageInterface,
     MetricsStore,
+    WebsocketController,
+    WebsocketConnectionStore,
+    InstRecordsStore,
+    WebsocketMessenger,
+    SplitInstRecordsStore,
+    MemoryInstRecordsStore,
+    TemporaryInstRecordsStore,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -37,8 +44,8 @@ import {
     subscriptionConfigSchema,
 } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { SESV2 } from 'aws-sdk';
-import { createClient as createRedisClient } from 'redis';
+import { SESv2 } from '@aws-sdk/client-sesv2';
+import { RedisClient, createClient as createRedisClient } from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
@@ -94,8 +101,15 @@ import {
 } from '@casual-simulation/aux-records/AIController';
 import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
 import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
+import { S3 } from '@aws-sdk/client-s3';
+import { RedisTempInstRecordsStore } from 'aux-backend/redis/RedisTempInstRecordsStore';
+import { RedisWebsocketConnectionStore } from 'aux-backend/redis/RedisWebsocketConnectionStore';
+import { ApiGatewayWebsocketMessenger } from 'aux-backend/serverless/aws/src/ApiGatewayWebsocketMessenger';
+import { Subscription, SubscriptionLike } from 'rxjs';
+import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
+import { PrismaInstRecordsStore } from 'aux-backend/prisma/PrismaInstRecordsStore';
 
-export class ServerBuilder {
+export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
     private _mongoClient: MongoClient;
     private _prismaClient: PrismaClient;
@@ -127,6 +141,12 @@ export class ServerBuilder {
 
     private _livekitController: LivekitController;
 
+    private _websocketConnectionStore: WebsocketConnectionStore;
+    private _websocketMessenger: WebsocketMessenger;
+    private _tempInstRecordsStore: TemporaryInstRecordsStore;
+    private _instRecordsStore: InstRecordsStore;
+    private _websocketController: WebsocketController;
+
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
@@ -135,6 +155,8 @@ export class ServerBuilder {
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
+    private _redis: RedisClient | null = null;
+    private _s3: S3;
     private _rateLimitController: RateLimitController;
 
     private _allowedAccountOrigins: Set<string> = new Set([
@@ -158,12 +180,23 @@ export class ServerBuilder {
     private _generateSkyboxInterface: BlockadeLabsGenerateSkyboxInterface;
     private _imagesInterfaces: AIGenerateImageConfiguration['interfaces'];
 
+    private _subscription: Subscription;
+
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
     }
 
     constructor(options?: BuilderOptions) {
         this._options = options ?? {};
+        this._subscription = new Subscription();
+    }
+
+    unsubscribe(): void {
+        this._subscription.unsubscribe();
+    }
+
+    get closed(): boolean {
+        return this._subscription.closed;
     }
 
     useMongoDB(
@@ -180,11 +213,7 @@ export class ServerBuilder {
         this._actions.push({
             priority: 0,
             action: async () => {
-                const connect = pify(MongoClient.connect);
-                const mongo: MongoClient = await connect(mongodb.url, {
-                    useNewUrlParser: mongodb.useNewUrlParser,
-                });
-                this._mongoClient = mongo;
+                const mongo = await this._ensureMongoDB(options);
                 const db = mongo.db(mongodb.database);
 
                 this._mongoDb = db;
@@ -268,33 +297,31 @@ export class ServerBuilder {
         const prisma = options.prisma;
         const s3 = options.s3;
 
-        this._prismaClient = new PrismaClient(prisma.options as any);
-        this._configStore = new PrismaConfigurationStore(this._prismaClient, {
+        const prismaClient = this._ensurePrisma(options);
+        const s3Client = this._ensureS3(options);
+        this._configStore = new PrismaConfigurationStore(prismaClient, {
             subscriptions: options.subscriptions as SubscriptionConfiguration,
         });
         this._metricsStore = new PrismaMetricsStore(
-            this._prismaClient,
+            prismaClient,
             this._configStore
         );
-        this._authStore = new PrismaAuthStore(this._prismaClient);
-        this._recordsStore = new PrismaRecordsStore(this._prismaClient);
-        this._policyStore = new PrismaPolicyStore(this._prismaClient);
-        this._dataStore = new PrismaDataRecordsStore(this._prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(
-            this._prismaClient,
-            true
-        );
-        const filesLookup = new PrismaFileRecordsLookup(this._prismaClient);
+        this._authStore = new PrismaAuthStore(prismaClient);
+        this._recordsStore = new PrismaRecordsStore(prismaClient);
+        this._policyStore = new PrismaPolicyStore(prismaClient);
+        this._dataStore = new PrismaDataRecordsStore(prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
+        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
         this._filesStore = new S3FileRecordsStore(
             s3.region,
             s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
-            undefined,
+            s3Client,
             s3.host,
-            s3.options
+            undefined
         );
-        this._eventsStore = new PrismaEventRecordsStore(this._prismaClient);
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
 
         return this;
     }
@@ -314,54 +341,173 @@ export class ServerBuilder {
             throw new Error('MongoDB options must be provided.');
         }
 
-        const prisma = options.prisma;
         const mongodb = options.mongodb;
-
         this._actions.push({
             priority: 0,
             action: async () => {
-                this._prismaClient = new PrismaClient(prisma.options as any);
-                const connect = pify(MongoClient.connect);
-                const mongo: MongoClient = await connect(mongodb.url, {
-                    useNewUrlParser: mongodb.useNewUrlParser,
-                });
-                this._mongoClient = mongo;
+                const prismaClient = this._ensurePrisma(options);
+                const mongo = await this._ensureMongoDB(options);
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
 
-                this._configStore = new PrismaConfigurationStore(
-                    this._prismaClient,
-                    {
-                        subscriptions:
-                            options.subscriptions as SubscriptionConfiguration,
-                    }
-                );
+                this._configStore = new PrismaConfigurationStore(prismaClient, {
+                    subscriptions:
+                        options.subscriptions as SubscriptionConfiguration,
+                });
                 this._metricsStore = new PrismaMetricsStore(
-                    this._prismaClient,
+                    prismaClient,
                     this._configStore
                 );
-                this._authStore = new PrismaAuthStore(this._prismaClient);
-                this._recordsStore = new PrismaRecordsStore(this._prismaClient);
-                this._policyStore = new PrismaPolicyStore(this._prismaClient);
-                this._dataStore = new PrismaDataRecordsStore(
-                    this._prismaClient
-                );
+                this._authStore = new PrismaAuthStore(prismaClient);
+                this._recordsStore = new PrismaRecordsStore(prismaClient);
+                this._policyStore = new PrismaPolicyStore(prismaClient);
+                this._dataStore = new PrismaDataRecordsStore(prismaClient);
                 this._manualDataStore = new PrismaDataRecordsStore(
-                    this._prismaClient,
+                    prismaClient,
                     true
                 );
-                const filesLookup = new PrismaFileRecordsLookup(
-                    this._prismaClient
-                );
+                const filesLookup = new PrismaFileRecordsLookup(prismaClient);
                 this._filesStore = new MongoDBFileRecordsStore(
                     filesLookup,
                     mongodb.fileUploadUrl as string
                 );
-                this._eventsStore = new PrismaEventRecordsStore(
-                    this._prismaClient
-                );
+                this._eventsStore = new PrismaEventRecordsStore(prismaClient);
             },
         });
+
+        return this;
+    }
+
+    useRedisWebsocketConnectionStore(
+        options: Pick<BuilderOptions, 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Redis Websocket Connection Store.');
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+
+        if (!options.redis.websocketConnectionNamespace) {
+            throw new Error(
+                'Redis websocket connection namespace must be provided.'
+            );
+        }
+
+        const redis = this._ensureRedis(options);
+        this._websocketConnectionStore = new RedisWebsocketConnectionStore(
+            options.redis.websocketConnectionNamespace,
+            redis
+        );
+
+        return this;
+    }
+
+    useApiGatewayWebsocketMessenger(
+        options: Pick<BuilderOptions, 'apiGateway' | 's3'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using API Gateway Websocket Messenger.');
+
+        if (!options.apiGateway) {
+            throw new Error('API Gateway options must be provided.');
+        }
+
+        if (!options.s3) {
+            throw new Error('S3 options must be provided.');
+        }
+
+        if (!options.s3.messagesBucket) {
+            throw new Error('S3 messages bucket must be configured.');
+        }
+
+        if (!this._websocketConnectionStore) {
+            throw new Error(
+                'A websocket connection store must be configured before using API Gateway Websocket Messenger.'
+            );
+        }
+
+        const s3 = this._ensureS3(options);
+        this._websocketMessenger = new ApiGatewayWebsocketMessenger(
+            options.apiGateway.endpoint,
+            options.s3.messagesBucket,
+            s3,
+            this._websocketConnectionStore
+        );
+
+        return this;
+    }
+
+    useWSWebsocketMessenger(
+        options: Pick<BuilderOptions, 'ws'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using WS Websocket Messenger.');
+
+        if (!options.ws) {
+            throw new Error('WS options must be provided.');
+        }
+
+        this._websocketMessenger = new WSWebsocketMessenger();
+
+        return this;
+    }
+
+    usePrismaAndRedisInstRecords(
+        options: Pick<BuilderOptions, 'prisma' | 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Prisma and Redis Inst Records.');
+
+        if (!options.prisma) {
+            throw new Error('Prisma options must be provided.');
+        }
+
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+
+        if (!this._websocketConnectionStore) {
+            throw new Error(
+                'A websocket connection store must be configured before using Inst Records.'
+            );
+        }
+
+        if (!this._websocketMessenger) {
+            throw new Error(
+                'A websocket messenger must be configured before using Inst Records.'
+            );
+        }
+
+        if (!options.redis.tempInstRecordsStoreNamespace) {
+            throw new Error(
+                'Redis temp inst records store namespace must be provided.'
+            );
+        }
+
+        if (!options.redis.publicInstRecordsStoreNamespace) {
+            throw new Error(
+                'Redis public inst records store namespace must be provided.'
+            );
+        }
+
+        const redis = this._ensureRedis(options);
+        const prisma = this._ensurePrisma(options);
+
+        this._tempInstRecordsStore = new RedisTempInstRecordsStore(
+            options.redis.tempInstRecordsStoreNamespace,
+            redis
+        );
+        this._instRecordsStore = new SplitInstRecordsStore(
+            new RedisTempInstRecordsStore(
+                options.redis.publicInstRecordsStoreNamespace,
+                redis
+            ),
+            new PrismaInstRecordsStore(prisma)
+        );
+
+        this._websocketController = new WebsocketController(
+            this._websocketConnectionStore,
+            this._websocketMessenger,
+            this._instRecordsStore,
+            this._tempInstRecordsStore,
+            this._authController
+        );
 
         return this;
     }
@@ -417,10 +563,16 @@ export class ServerBuilder {
         if (!options.ses) {
             throw new Error('SES options must be provided.');
         }
+        let ses = new SESv2();
         this._authMessenger = new SimpleEmailServiceAuthMessenger(
-            new SESV2(),
+            ses,
             options.ses as SimpleEmailServiceAuthMessengerOptions
         );
+
+        this._subscription.add(() => {
+            ses.destroy();
+        });
+
         return this;
     }
 
@@ -440,26 +592,11 @@ export class ServerBuilder {
         if (!options.rateLimit) {
             throw new Error('Rate limit options must be provided.');
         }
-        const client = createRedisClient({
-            host: options.redis.host,
-            port: options.redis.port,
-            password: options.redis.password,
-            tls: options.redis.tls,
-
-            retry_strategy: function (options) {
-                if (options.error && options.error.code === 'ECONNREFUSED') {
-                    // End reconnecting on a specific error and flush all commands with
-                    // a individual error
-                    return new Error('The server refused the connection');
-                }
-                // reconnect after min(100ms per attempt, 3 seconds)
-                return Math.min(options.attempt * 100, 3000);
-            },
-        });
+        const client = this._ensureRedis(options);
         const store = new RedisRateLimitStore({
             sendCommand: (command: string, ...args: (string | number)[]) => {
                 return new Promise((resolve, reject) => {
-                    client.sendCommand(command, args, (err, result) => {
+                    this._redis.sendCommand(command, args, (err, result) => {
                         if (err) {
                             reject(err);
                         } else {
@@ -562,7 +699,6 @@ export class ServerBuilder {
             console.log('[ServerBuilder] Using OpenAI Chat.');
             this._chatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
-                maxTokens: options.openai.maxTokens,
             });
         }
 
@@ -771,7 +907,7 @@ export class ServerBuilder {
             this._aiController = new AIController(this._aiConfiguration);
         }
 
-        const server = new RecordsHttpServer(
+        const server = new RecordsServer(
             this._allowedAccountOrigins,
             this._allowedApiOrigins,
             this._authController,
@@ -784,7 +920,8 @@ export class ServerBuilder {
             this._subscriptionController,
             this._rateLimitController,
             this._policyController,
-            this._aiController
+            this._aiController,
+            this._websocketController
         );
 
         return {
@@ -799,11 +936,84 @@ export class ServerBuilder {
             subscriptionController: this._subscriptionController,
             rateLimitController: this._rateLimitController,
             policyController: this._policyController,
+            websocketController: this._websocketController,
 
             dynamodbClient: this._docClient,
             mongoClient: this._mongoClient,
             mongoDatabase: this._mongoDb,
+            websocketMessenger: this._websocketMessenger,
         };
+    }
+
+    private _ensureRedis(options: Pick<BuilderOptions, 'redis'>): RedisClient {
+        if (!this._redis) {
+            this._redis = createRedisClient({
+                host: options.redis.host,
+                port: options.redis.port,
+                password: options.redis.password,
+                tls: options.redis.tls,
+
+                retry_strategy: function (options) {
+                    if (
+                        options.error &&
+                        options.error.code === 'ECONNREFUSED'
+                    ) {
+                        // End reconnecting on a specific error and flush all commands with
+                        // a individual error
+                        return new Error('The server refused the connection');
+                    }
+                    // reconnect after min(100ms per attempt, 3 seconds)
+                    return Math.min(options.attempt * 100, 3000);
+                },
+            });
+            this._subscription.add(() => {
+                this._redis.quit();
+            });
+        }
+
+        return this._redis;
+    }
+
+    private _ensurePrisma(
+        options: Pick<BuilderOptions, 'prisma'>
+    ): PrismaClient {
+        if (!this._prismaClient) {
+            this._prismaClient = new PrismaClient(
+                options.prisma.options as any
+            );
+            this._subscription.add(() => {
+                this._prismaClient.$disconnect();
+            });
+        }
+
+        return this._prismaClient;
+    }
+
+    private _ensureS3(options: Pick<BuilderOptions, 's3'>): S3 {
+        if (!this._s3) {
+            this._s3 = new S3();
+            this._subscription.add(() => {
+                this._s3.destroy();
+            });
+        }
+        return this._s3;
+    }
+
+    private async _ensureMongoDB(
+        options: Pick<BuilderOptions, 'mongodb'>
+    ): Promise<MongoClient> {
+        if (!this._mongoClient) {
+            const connect = pify(MongoClient.connect);
+            const mongo: MongoClient = await connect(options.mongodb.url, {
+                useNewUrlParser: options.mongodb.useNewUrlParser,
+            });
+            this._mongoClient = mongo;
+            this._subscription.add(() => {
+                mongo.close();
+            });
+        }
+
+        return this._mongoClient;
     }
 }
 
@@ -839,6 +1049,8 @@ const s3Schema = z.object({
     region: z.string().nonempty(),
     filesBucket: z.string().nonempty(),
     filesStorageClass: z.string().nonempty(),
+
+    messagesBucket: z.string().nonempty().optional(),
 
     options: z.object({
         endpoint: z.string().nonempty().optional(),
@@ -887,6 +1099,10 @@ const redisSchema = z.object({
 
     maxBranchSizeBytes: z.number().optional(),
     mergeUpdatesOnMaxSizeExceeded: z.boolean().optional(),
+
+    websocketConnectionNamespace: z.string().optional(),
+    publicInstRecordsStoreNamespace: z.string().optional(),
+    tempInstRecordsStoreNamespace: z.string().optional(),
 });
 
 const rateLimitSchema = z.object({
@@ -913,7 +1129,6 @@ const prismaSchema = z.object({
 
 const openAiSchema = z.object({
     apiKey: z.string().nonempty(),
-    maxTokens: z.number().positive().optional(),
 });
 
 const blockadeLabsSchema = z.object({
@@ -966,9 +1181,16 @@ const aiSchema = z.object({
         .optional(),
 });
 
+const apiGatewaySchema = z.object({
+    endpoint: z.string(),
+});
+
+const wsSchema = z.object({});
+
 export const optionsSchema = z.object({
     dynamodb: dynamoDbSchema.optional(),
     s3: s3Schema.optional(),
+    apiGateway: apiGatewaySchema.optional(),
     mongodb: mongodbSchema.optional(),
     prisma: prismaSchema.optional(),
     livekit: livekitSchema.optional(),
@@ -980,6 +1202,7 @@ export const optionsSchema = z.object({
     blockadeLabs: blockadeLabsSchema.optional(),
     stabilityai: stabilityAiSchema.optional(),
     ai: aiSchema.optional(),
+    ws: wsSchema.optional(),
 
     subscriptions: subscriptionConfigSchema.optional(),
     stripe: stripeSchema.optional(),

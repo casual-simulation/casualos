@@ -3,23 +3,10 @@ import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import {
     Bot,
-    isScript,
-    isFormula,
-    ScriptError,
-    PrecalculatedBot,
-    loadBots,
     hasValue,
     getTagValueForSpace,
-    getUpdateForTagAndSpace,
     DNA_TAG_PREFIX,
-    parseScriptSafe,
-    parseFormulaSafe,
-    isPortalScript,
-    hasPortalScript,
     getScriptPrefix,
-    trimPortalScript,
-    calculateBotValue,
-    isBotLink,
     KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -39,7 +26,6 @@ import {
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
 import { filter, flatMap, tap } from 'rxjs/operators';
-import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2';
 import { ScriptPrefix } from '@casual-simulation/aux-vm';
 
 setup();

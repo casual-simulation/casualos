@@ -1,67 +1,48 @@
 import { BaseAuxChannel } from './BaseAuxChannel';
 import {
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
     RemoteAction,
     DeviceAction,
     remote,
-    DeviceInfo,
+    ConnectionInfo,
     Action,
     CurrentVersion,
     StatusUpdate,
-} from '@casual-simulation/causal-trees';
+    ConnectionIndicator,
+} from '@casual-simulation/aux-common';
 import {
     createBot,
     botAdded,
-    browseHistory,
     MemoryPartition,
     createMemoryPartition,
     MemoryPartitionConfig,
     PartitionConfig,
     AuxPartition,
     createAuxPartition,
-    SearchPartitionClientConfig,
-    MemoryBotClient,
     StateUpdatedEvent,
     createPrecalculatedBot,
-    BotAction,
     toast,
-    createBotClientPartition,
     AuxPartitions,
     action,
-    Bot,
-    runScript,
     stateUpdatedEvent,
-    createCausalRepoPartition,
     MemoryPartitionImpl,
     MemoryPartitionStateConfig,
-    RuntimeStateVersion,
-    LocalActions,
     asyncResult,
-    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
-    AuxRuntime,
-    attachRuntime,
     botUpdated,
-    asyncError,
-    enableAR,
-    arSupported,
-    updatedBot,
-    detachRuntime,
 } from '@casual-simulation/aux-common';
-import { AuxUser } from '../AuxUser';
+import {
+    AuxRuntime,
+    RuntimeActions,
+    RuntimeStateVersion,
+    attachRuntime,
+    detachRuntime,
+} from '@casual-simulation/aux-runtime';
 import { AuxConfig } from './AuxConfig';
 import { v4 as uuid } from 'uuid';
 import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
 import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
-import FeatureTemplatesViewModel from 'esri/widgets/FeatureTemplates/FeatureTemplatesViewModel';
-import {
-    edit,
-    insert,
-    preserve,
-} from '@casual-simulation/aux-common/aux-format-2';
+import { edit, insert, preserve } from '@casual-simulation/aux-common/bots';
 import { AuxSubChannel } from './AuxChannel';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -73,25 +54,19 @@ console.error = jest.fn();
 
 describe('BaseAuxChannel', () => {
     let channel: AuxChannelImpl;
-    let user: AuxUser;
-    let device: DeviceInfo;
+    let indicator: ConnectionIndicator;
+    let device: ConnectionInfo;
     let config: AuxConfig;
     let memory: MemoryPartition;
 
     beforeEach(async () => {
-        user = {
-            id: 'userId',
-            username: 'username',
-            name: 'name',
-            token: 'token',
+        indicator = {
+            connectionId: 'userId',
         };
         device = {
-            claims: {
-                [USERNAME_CLAIM]: 'username',
-                [DEVICE_ID_CLAIM]: 'deviceId',
-                [SESSION_ID_CLAIM]: 'sessionId',
-            },
-            roles: [],
+            userId: null,
+            sessionId: null,
+            connectionId: 'userId',
         };
         memory = createMemoryPartition({ type: 'memory', initialState: {} });
         config = {
@@ -107,7 +82,7 @@ describe('BaseAuxChannel', () => {
             },
         };
 
-        channel = new AuxChannelImpl(user, device, config);
+        channel = new AuxChannelImpl(indicator, device, config);
     });
 
     afterEach(() => {
@@ -133,7 +108,7 @@ describe('BaseAuxChannel', () => {
 
         it('should load the builder aux file', async () => {
             channel = new AuxChannelImpl(
-                user,
+                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -161,7 +136,7 @@ describe('BaseAuxChannel', () => {
 
         it('should not load builder if bootstrap state was included', async () => {
             channel = new AuxChannelImpl(
-                user,
+                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -192,7 +167,7 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                user,
+                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -229,7 +204,7 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                user,
+                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -267,7 +242,7 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                user,
+                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -305,7 +280,7 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                user,
+                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -340,7 +315,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(indicator, device, config);
 
             await expect(channel.initAndWait()).rejects.toEqual(
                 new Error('[BaseAuxChannel] Unable to build partition: shared')
@@ -369,7 +344,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(indicator, device, config);
 
             uuidMock
                 .mockReturnValueOnce('authBot')
@@ -407,27 +382,6 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should pass the forceSignedScripts config option to the runtime', async () => {
-            config = {
-                config: {
-                    version: 'v1.0.0',
-                    versionHash: 'hash',
-                    forceSignedScripts: true,
-                },
-                partitions: {
-                    shared: {
-                        type: 'memory',
-                        initialState: {},
-                    },
-                },
-            };
-            channel = new AuxChannelImpl(user, device, config);
-
-            await channel.initAndWait();
-
-            expect(channel.runtime.forceSignedScripts).toBe(true);
-        });
-
         it('should merge version vectors from different partitions', async () => {
             let shared = new TestPartition({
                 type: 'memory',
@@ -453,7 +407,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(indicator, device, config);
 
             let versions = [] as RuntimeStateVersion[];
 
@@ -531,7 +485,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(indicator, device, config);
 
             let statuses = [] as StatusUpdate[];
             channel.onConnectionStateChanged.subscribe((a) => statuses.push(a));
@@ -548,7 +502,6 @@ describe('BaseAuxChannel', () => {
                     {
                         type: 'authentication',
                         authenticated: true,
-                        user: user,
                     },
                 ]
             );
@@ -569,7 +522,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(indicator, device, config);
 
             await channel.initAndWait();
 
@@ -598,7 +551,7 @@ describe('BaseAuxChannel', () => {
                         },
                     },
                 };
-                channel = new AuxChannelImpl(user, device, config);
+                channel = new AuxChannelImpl(indicator, device, config);
 
                 await channel.initAndWait();
 
@@ -652,20 +605,17 @@ describe('BaseAuxChannel', () => {
             await channel.sendEvents([
                 {
                     type: 'device',
-                    device: {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
-                            [DEVICE_ID_CLAIM]: 'deviceId',
-                            [SESSION_ID_CLAIM]: 'sessionId',
-                        },
-                        roles: ['role'],
+                    connection: {
+                        connectionId: 'deviceId',
+                        sessionId: 'sessionId',
+                        userId: 'username',
                     },
                     event: botAdded(createBot('def')),
                 },
                 botAdded(createBot('test')),
                 {
                     type: 'device',
-                    device: null,
+                    connection: null,
                     event: botAdded(createBot('abc')),
                 },
             ]);
@@ -673,19 +623,16 @@ describe('BaseAuxChannel', () => {
             expect(deviceEvents).toEqual([
                 {
                     type: 'device',
-                    device: {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
-                            [DEVICE_ID_CLAIM]: 'deviceId',
-                            [SESSION_ID_CLAIM]: 'sessionId',
-                        },
-                        roles: ['role'],
+                    connection: {
+                        connectionId: 'deviceId',
+                        sessionId: 'sessionId',
+                        userId: 'username',
                     },
                     event: botAdded(createBot('def')),
                 },
                 {
                     type: 'device',
-                    device: null,
+                    connection: null,
                     event: botAdded(createBot('abc')),
                 },
             ]);
@@ -748,7 +695,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(indicator, device, config);
 
             let localEvents = [] as Action[];
             channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
@@ -805,7 +752,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(indicator, device, config);
 
             let localEvents = [] as Action[];
             channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
@@ -912,77 +859,6 @@ describe('BaseAuxChannel', () => {
                 expect(abc).toBeUndefined();
             });
 
-            it('should handle adding spaces with delayed edit modes', async () => {
-                await channel.initAndWait();
-                let client = new MemoryBotClient();
-
-                await channel.sendEvents([
-                    {
-                        type: 'load_space',
-                        space: <any>'random',
-                        config: <SearchPartitionClientConfig>{
-                            type: 'bot_client',
-                            client: client,
-                            inst: 'inst',
-                        },
-                    },
-                ]);
-
-                await waitAsync();
-
-                let updates = [] as StateUpdatedEvent[];
-                channel.onStateUpdated.subscribe((update) =>
-                    updates.push(update)
-                );
-
-                let actions = [] as BotAction[];
-                channel.onLocalEvents.subscribe((events) =>
-                    actions.push(...events)
-                );
-
-                uuidMock
-                    .mockReturnValueOnce('test1')
-                    .mockReturnValueOnce('test2');
-                await channel.sendEvents([
-                    {
-                        type: 'run_script',
-                        script: 'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); os.toast(bot)',
-                        taskId: null,
-                    },
-                ]);
-
-                await waitAsync();
-
-                // test2 is not included because the bot space doesn't
-                // automatically add all new bots.
-                expect(updates).toEqual([
-                    {
-                        addedBots: ['test1'],
-                        removedBots: [],
-                        updatedBots: [],
-                        state: {
-                            test1: createPrecalculatedBot(
-                                'test1',
-                                {
-                                    value: 'fun',
-                                },
-                                undefined,
-                                'shared'
-                            ),
-                        },
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                ]);
-
-                // the toasted value should be null because the runtime
-                // should know that the new partition is delayed instead of immediate
-                expect(actions).toContainEqual(toast(null));
-            });
-
             it('should resolve load_space events that have a task id', async () => {
                 await channel.initAndWait();
 
@@ -1041,7 +917,7 @@ describe('BaseAuxChannel', () => {
         });
 
         describe('attach_runtime', () => {
-            let events: LocalActions[];
+            let events: RuntimeActions[];
             let subChannels: AuxSubChannel[];
             let stateUpdates: StateUpdatedEvent[];
             let sub: Subscription;
@@ -1116,9 +992,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(await subChannel.getChannel()).toBeInstanceOf(
@@ -1175,9 +1050,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1273,9 +1147,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1377,9 +1250,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1490,9 +1362,8 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1566,7 +1437,7 @@ describe('BaseAuxChannel', () => {
         });
 
         describe('detach_runtime', () => {
-            let events: LocalActions[];
+            let events: RuntimeActions[];
             let subChannels: AuxSubChannel[];
             let removedChannels: string[];
             let stateUpdates: StateUpdatedEvent[];
@@ -1756,7 +1627,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(indicator, device, config);
         });
 
         it('should only export public bots', async () => {
@@ -1808,14 +1679,18 @@ describe('BaseAuxChannel', () => {
 class AuxChannelImpl extends BaseAuxChannel {
     remoteEvents: RemoteAction[];
 
-    private _device: DeviceInfo;
+    private _device: ConnectionInfo;
 
     get runtime() {
         return this._runtime;
     }
 
-    constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
-        super(user, config, {});
+    constructor(
+        indicator: ConnectionIndicator,
+        device: ConnectionInfo,
+        config: AuxConfig
+    ) {
+        super(indicator, config, {});
         this._device = device;
         this.remoteEvents = [];
     }
@@ -1828,7 +1703,6 @@ class AuxChannelImpl extends BaseAuxChannel {
         return createAuxPartition(
             config,
             (cfg) => createMemoryPartition(cfg),
-            (config) => createBotClientPartition(config),
             (config) => createTestPartition(config)
         );
     }
@@ -1852,11 +1726,11 @@ class AuxChannelImpl extends BaseAuxChannel {
     }
 
     protected _createSubChannel(
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
-        const channel = new AuxChannelImpl(user, this._device, config);
+        const channel = new AuxChannelImpl(indicator, this._device, config);
         channel._runtime = runtime;
         return channel;
     }

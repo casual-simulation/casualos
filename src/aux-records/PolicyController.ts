@@ -9,7 +9,7 @@ import {
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
-} from './Errors';
+} from '@casual-simulation/aux-common/Errors';
 import {
     ADMIN_ROLE_NAME,
     AssignPolicyPermission,
@@ -26,9 +26,9 @@ import {
     PolicyPermission,
     ACCOUNT_MARKER,
     AvailableRolePermissions,
+    AvailableInstPermissions,
 } from './PolicyPermissions';
 import {
-    ListedStudio,
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
     StudioAssignmentRole,
@@ -1081,6 +1081,18 @@ export class PolicyController {
             return this._authorizeRoleGrantRequest(context, request);
         } else if (request.action === 'role.revoke') {
             return this._authorizeRoleRevokeRequest(context, request);
+        } else if (request.action === 'inst.create') {
+            return this._authorizeInstCreateRequest(context, request);
+        } else if (request.action === 'inst.read') {
+            return this._authorizeInstReadRequest(context, request);
+        } else if (request.action === 'inst.update') {
+            return this._authorizeInstUpdateRequest(context, request);
+        } else if (request.action === 'inst.updateData') {
+            return this._authorizeInstUpdateDataRequest(context, request);
+        } else if (request.action === 'inst.delete') {
+            return this._authorizeInstDeleteRequest(context, request);
+        } else if (request.action === 'inst.list') {
+            return this._authorizeInstListRequest(context, request);
         }
 
         return {
@@ -3596,6 +3608,730 @@ export class PolicyController {
         };
     }
 
+    private async _authorizeInstCreateRequest(
+        context: AuthorizationContext,
+        request: AuthorizeInstCreateRequest
+    ): Promise<AuthorizeResult> {
+        return this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeCreateInst(context, type, id);
+            }
+        );
+    }
+
+    /**
+     * Authorizes the given subject for inst.create requests.
+     *
+     * @param context The context for the authorization.
+     * @param subjectType The type of subject that is being authorized.
+     * @param id The ID of the subject.
+     * @returns The authorization that approves the subject for the request. Null if the subject is not authorized.
+     */
+    private async _authorizeCreateInst(
+        context: RolesContext<AuthorizeInstCreateRequest>,
+        subjectType: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byInst('inst.create', context.request.inst),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context, subjectType, id),
+                              this._bySubjectRole(
+                                  context,
+                                  subjectType,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: subjectType,
+                        id,
+                        marker: marker.marker,
+                        permission: 'inst.create',
+                        role,
+                    },
+                };
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            const policyPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byPolicy('policy.assign', marker.marker),
+                    this._some(
+                        this._byEveryoneRole(),
+                        this._byRole(actionPermission.permission.role)
+                    )
+                )
+            );
+
+            if (!policyPermission) {
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: subjectType,
+                        id,
+                        marker: marker.marker,
+                        permission: 'policy.assign',
+                        role,
+                    },
+                };
+            }
+
+            authorizations.push({
+                marker: marker.marker,
+                actions: [
+                    {
+                        action: context.request.action,
+                        grantingPolicy: actionPermission.policy,
+                        grantingPermission: actionPermission.permission,
+                    },
+                    {
+                        action: 'policy.assign',
+                        grantingPolicy: policyPermission.policy,
+                        grantingPermission: policyPermission.permission,
+                    },
+                ],
+            });
+        }
+
+        if (!role) {
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
+        }
+
+        return {
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
+        };
+    }
+
+    private _authorizeInstReadRequest(
+        context: AuthorizationContext,
+        request: AuthorizeInstReadRequest
+    ): Promise<AuthorizeResult> {
+        return this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeInstRead(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeInstRead(
+        context: RolesContext<AuthorizeInstReadRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byInst('inst.read', context.request.inst),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context, type, id),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'inst.read',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
+    private async _authorizeInstUpdateRequest(
+        context: AuthorizationContext,
+        request: AuthorizeInstUpdateRequest
+    ): Promise<AuthorizeResult> {
+        if (
+            !willMarkersBeRemaining(
+                request.existingMarkers,
+                request.removedMarkers,
+                request.addedMarkers
+            )
+        ) {
+            return {
+                ...NOT_AUTHORIZED_RESULT,
+                reason: {
+                    type: 'no_markers_remaining',
+                },
+            };
+        }
+
+        return this._authorizeRequest(
+            context,
+            request,
+            union(
+                request.existingMarkers,
+                request.addedMarkers,
+                request.removedMarkers
+            ),
+            (context, type, id) => {
+                return this._authorizeInstUpdate(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeInstUpdate(
+        context: RolesContext<AuthorizeInstUpdateRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        // The denial reason for if the user does not have permission from an existing marker.
+        let denialReason: DenialReason;
+        let hasPermissionFromExistingMarker = false;
+
+        for (let marker of context.markers) {
+            const isAddedMarker =
+                context.request.addedMarkers &&
+                context.request.addedMarkers.includes(marker.marker);
+            const isRemovedMarker =
+                context.request.removedMarkers &&
+                context.request.removedMarkers.includes(marker.marker);
+            const isExistingMarker = context.request.existingMarkers.includes(
+                marker.marker
+            );
+
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byInst('inst.update', context.request.inst),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context, type, id),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                if (isAddedMarker || isRemovedMarker) {
+                    // Deny because the user needs permission for all new & removed markers.
+                    return {
+                        success: false,
+                        reason: {
+                            type: 'missing_permission',
+                            kind: type,
+                            id,
+                            marker: marker.marker,
+                            permission: 'inst.update',
+                            role,
+                        },
+                    };
+                } else {
+                    // Record that the user does not have permission from this marker.
+                    // May or may not be used depending on if a different existing marker
+                    // provides permission.
+                    denialReason = {
+                        type: 'missing_permission',
+                        kind: type,
+                        id,
+                        marker: marker.marker,
+                        permission: 'inst.update',
+                        role,
+                    };
+                    continue;
+                }
+            }
+
+            if (isExistingMarker) {
+                hasPermissionFromExistingMarker = true;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            const actions: ActionAuthorization[] = [
+                {
+                    action: context.request.action,
+                    grantingPolicy: actionPermission.policy,
+                    grantingPermission: actionPermission.permission,
+                },
+            ];
+
+            if (isAddedMarker) {
+                const policyPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byPolicy('policy.assign', marker.marker),
+                        this._some(
+                            this._byEveryoneRole(),
+                            this._byRole(actionPermission.permission.role)
+                        )
+                    )
+                );
+
+                if (!policyPermission) {
+                    return {
+                        success: false,
+                        reason: {
+                            type: 'missing_permission',
+                            kind: type,
+                            id,
+                            marker: marker.marker,
+                            permission: 'policy.assign',
+                            role,
+                        },
+                    };
+                    continue;
+                }
+
+                actions.push({
+                    action: 'policy.assign',
+                    grantingPolicy: policyPermission.policy,
+                    grantingPermission: policyPermission.permission,
+                });
+            } else if (isRemovedMarker) {
+                const policyPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byPolicy('policy.unassign', marker.marker),
+                        this._some(
+                            this._byEveryoneRole(),
+                            this._byRole(actionPermission.permission.role)
+                        )
+                    )
+                );
+
+                if (!policyPermission) {
+                    return {
+                        success: false,
+                        reason: {
+                            type: 'missing_permission',
+                            kind: type,
+                            id,
+                            marker: marker.marker,
+                            permission: 'policy.unassign',
+                            role,
+                        },
+                    };
+                }
+
+                actions.push({
+                    action: 'policy.unassign',
+                    grantingPolicy: policyPermission.policy,
+                    grantingPermission: policyPermission.permission,
+                });
+            }
+
+            authorizations.push({
+                marker: marker.marker,
+                actions,
+            });
+        }
+
+        // Deny the request if the user does not have permission from at least one existing marker.
+        if (!hasPermissionFromExistingMarker && denialReason) {
+            return {
+                success: false,
+                reason: denialReason,
+            };
+        }
+
+        if (!role) {
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
+        }
+
+        return {
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
+        };
+    }
+
+    private _authorizeInstUpdateDataRequest(
+        context: AuthorizationContext,
+        request: AuthorizeInstUpdateDataRequest
+    ): Promise<AuthorizeResult> {
+        return this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeInstUpdateData(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeInstUpdateData(
+        context: RolesContext<AuthorizeInstUpdateDataRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byInst('inst.updateData', context.request.inst),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context, type, id),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'inst.updateData',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
+    private _authorizeInstDeleteRequest(
+        context: AuthorizationContext,
+        request: AuthorizeInstDeleteRequest
+    ): Promise<AuthorizeResult> {
+        return this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeInstDelete(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeInstDelete(
+        context: RolesContext<AuthorizeInstDeleteRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byInst('inst.delete', context.request.inst),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context, type, id),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'inst.delete',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
+    private async _authorizeInstListRequest(
+        context: AuthorizationContext,
+        request: AuthorizeInstListRequest
+    ): Promise<AuthorizeResult> {
+        const allMarkers = union(...request.insts.map((i) => i.markers));
+        return await this._authorizeRequest(
+            context,
+            request,
+            allMarkers,
+            (context, type, id) => {
+                return this._authorizeInstList(context, type, id);
+            },
+            undefined,
+            true
+        );
+    }
+
+    private async _authorizeInstList(
+        context: RolesContext<AuthorizeInstListRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        const allowedInstItems = (context.allowedInstItems =
+            [] as ListedInstItem[]);
+
+        const markers = new Map<
+            string,
+            {
+                marker: MarkerPermission;
+                authorization: MarkerAuthorization;
+                usedPermissions: Set<any>;
+            }
+        >();
+        for (let marker of context.markers) {
+            const authorization: MarkerAuthorization = {
+                marker: marker.marker,
+                actions: [],
+            };
+            authorizations.push(authorization);
+            markers.set(marker.marker, {
+                marker,
+                authorization: authorization,
+                usedPermissions: new Set(),
+            });
+        }
+
+        for (let item of context.request.insts) {
+            let itemPermission: PossiblePermission;
+            for (let m of item.markers) {
+                const a = markers.get(m);
+                if (!a) {
+                    continue;
+                }
+                const { marker, authorization, usedPermissions } = a;
+
+                itemPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byInst('inst.list', item.inst),
+                        role === null
+                            ? this._some(
+                                  this._byEveryoneRole(),
+                                  this._byAdminRole(context, type, id),
+                                  this._bySubjectRole(
+                                      context,
+                                      type,
+                                      context.recordName,
+                                      id
+                                  )
+                              )
+                            : this._byRole(role)
+                    )
+                );
+
+                if (!itemPermission) {
+                    continue;
+                }
+
+                if (role === null) {
+                    role = itemPermission.permission.role;
+                }
+
+                if (!usedPermissions.has(itemPermission.permission)) {
+                    usedPermissions.add(itemPermission.permission);
+                    authorization.actions.push({
+                        action: context.request.action,
+                        grantingPolicy: itemPermission.policy,
+                        grantingPermission: itemPermission.permission,
+                    });
+                }
+
+                if (itemPermission) {
+                    break;
+                }
+            }
+
+            if (itemPermission) {
+                allowedInstItems.push(item);
+            }
+        }
+
+        if (!role) {
+            role = true;
+        }
+
+        return {
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -3698,6 +4434,8 @@ export class PolicyController {
                     rolesContext.allowedFileItems?.slice();
                 let currentEvents: ListedEventItem[] | null =
                     rolesContext.allowedEventItems?.slice();
+                let currentInsts: ListedInstItem[] | null =
+                    rolesContext.allowedInstItems?.slice();
                 const result = await authorize(rolesContext, 'inst', inst);
                 if (currentItems) {
                     rolesContext.allowedDataItems = intersectionBy(
@@ -3718,6 +4456,13 @@ export class PolicyController {
                         currentEvents,
                         rolesContext.allowedEventItems,
                         (item) => item.eventName
+                    );
+                }
+                if (currentInsts) {
+                    rolesContext.allowedInstItems = intersectionBy(
+                        currentInsts,
+                        rolesContext.allowedInstItems,
+                        (item) => item.inst
                     );
                 }
                 return result;
@@ -3759,6 +4504,7 @@ export class PolicyController {
             allowedDataItems: rolesContext.allowedDataItems,
             allowedFileItems: rolesContext.allowedFileItems,
             allowedEventItems: rolesContext.allowedEventItems,
+            allowedInstItems: rolesContext.allowedInstItems,
         };
     }
 
@@ -3922,6 +4668,21 @@ export class PolicyController {
                 return true;
             }
             if (this._testRegex(permission.events, eventName)) {
+                return true;
+            }
+            return false;
+        };
+    }
+
+    private _byInst(type: AvailableInstPermissions['type'], inst: string) {
+        return async (permission: AvailablePermissions) => {
+            if (permission.type !== type) {
+                return false;
+            }
+            if (permission.insts === true) {
+                return true;
+            }
+            if (this._testRegex(permission.insts, inst)) {
                 return true;
             }
             return false;
@@ -4353,6 +5114,7 @@ export interface RolesContext<T extends AuthorizeRequestBase>
     allowedDataItems?: ListedDataItem[];
     allowedFileItems?: ListedFileItem[];
     allowedEventItems?: ListedEventItem[];
+    allowedInstItems?: ListedInstItem[];
 }
 
 type PermissionFilter = (permission: AvailablePermissions) => Promise<boolean>;
@@ -4384,7 +5146,13 @@ export type AuthorizeRequest =
     | AuthorizeListRolesRequest
     | AuthorizeReadRoleRequest
     | AuthorizeGrantRoleRequest
-    | AuthorizeRevokeRoleRequest;
+    | AuthorizeRevokeRoleRequest
+    | AuthorizeInstCreateRequest
+    | AuthorizeInstDeleteRequest
+    | AuthorizeInstReadRequest
+    | AuthorizeInstUpdateDataRequest
+    | AuthorizeInstUpdateRequest
+    | AuthorizeInstListRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -4685,6 +5453,69 @@ export interface AuthorizeRevokeRoleRequest extends AuthorizeRoleRequest {
     targetInstance?: string;
 }
 
+export interface AuthorizeInstRequest extends AuthorizeRequestBase {
+    /**
+     * The inst that the request is being made for.
+     */
+    inst: string;
+
+    /**
+     * The list of resource markers that are applied to the inst.
+     */
+    resourceMarkers: string[];
+}
+
+export interface AuthorizeInstCreateRequest extends AuthorizeInstRequest {
+    action: 'inst.create';
+}
+
+export interface AuthorizeInstDeleteRequest extends AuthorizeInstRequest {
+    action: 'inst.delete';
+}
+
+export interface AuthorizeInstUpdateRequest extends AuthorizeRequestBase {
+    action: 'inst.update';
+
+    /**
+     * The inst that the request is being made for.
+     */
+    inst: string;
+
+    /**
+     * The list of resource markers that are applied to the inst.
+     */
+    existingMarkers: string[];
+
+    /**
+     * The new resource markers that will be added to the inst.
+     * If omitted, then no markers are being added to the inst.
+     */
+    addedMarkers?: string[];
+
+    /**
+     * The markers that will be removed from the inst.
+     * If omitted, then no markers are being removed from the inst.
+     */
+    removedMarkers?: string[];
+}
+
+export interface AuthorizeInstUpdateDataRequest extends AuthorizeInstRequest {
+    action: 'inst.updateData';
+}
+
+export interface AuthorizeInstReadRequest extends AuthorizeInstRequest {
+    action: 'inst.read';
+}
+
+export interface AuthorizeInstListRequest extends AuthorizeRequestBase {
+    action: 'inst.list';
+
+    /**
+     * The list of insts.
+     */
+    insts: ListedInstItem[];
+}
+
 export interface ListedDataItem {
     /**
      * The address of the item.
@@ -4727,6 +5558,18 @@ export interface ListedEventItem {
 
     /**
      * The list of markers for the item.
+     */
+    markers: string[];
+}
+
+export interface ListedInstItem {
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The markers that are applied to the inst.
      */
     markers: string[];
 }
@@ -4779,6 +5622,11 @@ export interface AuthorizeAllowed {
      * The list of allowed event items.
      */
     allowedEventItems?: ListedEventItem[];
+
+    /**
+     * The list of allowed inst items.
+     */
+    allowedInstItems?: ListedInstItem[];
 }
 
 export type GenericResult = GenericAllowed | GenericDenied;

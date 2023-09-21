@@ -231,23 +231,6 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     Only the other remote's session can create, edit, and destroy bots in this space.
     When the other remote's session is closed, the bot is destroyed.
   </PossibleValueCode>
-  <PossibleValueCode value='history'>
-    The bot represents a mark (save point).
-    The history space is not available by default.
-    You need to use the <ActionLink action='server.browseHistory()'/> function to load it.
-    Additionally, the history space is read-only. This means that bots cannot be added or removed from it and they also cannot be edited.
-  </PossibleValueCode>
-  <PossibleValueCode value='admin'>
-    The bot is saved on the server and is shared across all instances.
-    Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
-    You must use the <ActionLink action='adminSpace.unlock(password)'/> function to unlock it.
-  </PossibleValueCode>
-  <PossibleValueCode value='certified'>
-    The bot represents a <a href="https://en.wikipedia.org/wiki/Public_key_certificate">cryptographic certificate</a>.
-    Certified bots cannot be edited or destroyed using traditional means.
-    Instead, you can create and destroy certificates using the <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> and 
-    <ActionLink action='crypto.revokeCertificate(certificate, password, signer?)'/> functions.
-  </PossibleValueCode>
 </PossibleValuesTable>
 
 

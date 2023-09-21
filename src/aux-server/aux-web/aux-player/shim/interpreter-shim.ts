@@ -6,7 +6,7 @@ import {
     Descriptor,
     Value,
 } from '@casual-simulation/engine262';
-import type { InterpreterTypes } from '@casual-simulation/aux-common/runtime/AuxRuntimeDynamicImports';
+import type { InterpreterTypes } from '@casual-simulation/aux-runtime/runtime/AuxRuntimeDynamicImports';
 
 declare global {
     var AuxRuntimeDynamicImports: InterpreterTypes;

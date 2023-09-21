@@ -1,4 +1,4 @@
-import AuxDefinitions from '@casual-simulation/aux-common/runtime/AuxLibraryDefinitions.def?raw';
+import AuxDefinitions from '@casual-simulation/aux-runtime/runtime/AuxLibraryDefinitions.def?raw';
 
 /**
  * Calculates the typescript definitions for the formula library.

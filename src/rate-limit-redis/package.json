@@ -44,7 +44,7 @@
         "url": "https://github.com/wyattjoh"
     },
     "dependencies": {
-        "express-rate-limit": "^6"
+        "express-rate-limit": "6.11.1"
     },
     "devDependencies": {
         "@types/ioredis": "4.28.10",

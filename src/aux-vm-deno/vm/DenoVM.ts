@@ -1,9 +1,7 @@
 import {
-    LocalActions,
     BotAction,
+    ConnectionIndicator,
     StateUpdatedEvent,
-    ProxyBridgePartitionImpl,
-    RuntimeStateVersion,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
@@ -11,7 +9,6 @@ import { wrap, proxy, Remote, expose, transfer, Endpoint } from 'comlink';
 import {
     AuxConfig,
     AuxVM,
-    AuxUser,
     ChannelActionResult,
     AuxSubChannel,
     AuxSubVM,
@@ -25,10 +22,14 @@ import {
     StatusUpdate,
     remapProgressPercent,
     DeviceAction,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 polyfillMessageChannel();
 
@@ -39,7 +40,7 @@ let workerCount = 0;
  * That is, the AUX is run inside a web worker.
  */
 export class DenoVM implements AuxVM {
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -57,7 +58,7 @@ export class DenoVM implements AuxVM {
     private _config: AuxConfig;
     private _worker: DenoWorker;
     private _proxy: Remote<AuxChannel>;
-    private _initialUser: AuxUser;
+    private _initialIndicator: ConnectionIndicator;
     closed: boolean;
 
     /**
@@ -68,10 +69,10 @@ export class DenoVM implements AuxVM {
     /**
      * Creates a new Simulation VM.
      */
-    constructor(user: AuxUser, config: AuxConfig) {
-        this._initialUser = user;
+    constructor(indicator: ConnectionIndicator, config: AuxConfig) {
+        this._initialIndicator = indicator;
         this._config = config;
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
@@ -166,7 +167,11 @@ export class DenoVM implements AuxVM {
         }
 
         const wrapper = wrap<AuxStatic>(<Endpoint>(<any>this._worker));
-        this._proxy = await new wrapper(null, this._initialUser, this._config);
+        this._proxy = await new wrapper(
+            null,
+            this._initialIndicator,
+            this._config
+        );
 
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.initAndWait(
@@ -186,7 +191,7 @@ export class DenoVM implements AuxVM {
     /**
      * The observable list of events that should be produced locally.
      */
-    get localEvents(): Observable<LocalActions[]> {
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 
@@ -203,16 +208,6 @@ export class DenoVM implements AuxVM {
 
     get versionUpdated(): Observable<RuntimeStateVersion> {
         return this._versionUpdated;
-    }
-
-    async setUser(user: AuxUser): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setUser(user);
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (!this._proxy) return null;
-        return await this._proxy.setGrant(grant);
     }
 
     /**
@@ -291,13 +286,13 @@ export class DenoVM implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, user } = await subChannel.getInfo();
+        const { id, indicator } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            user,
+            indicator,
             vm: this._createSubVM(channel),
             channel,
         };

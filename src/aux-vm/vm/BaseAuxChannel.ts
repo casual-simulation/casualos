@@ -1,7 +1,6 @@
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { tap, first, startWith } from 'rxjs/operators';
 import { AuxChannel, AuxSubChannel, ChannelActionResult } from './AuxChannel';
-import { AuxUser } from '../AuxUser';
 import {
     LocalActions,
     BotAction,
@@ -12,20 +11,14 @@ import {
     AuxPartition,
     PartitionConfig,
     iteratePartitions,
-    AuxRuntime,
     BotSpace,
-    realtimeStrategyToRealtimeEditMode,
-    AuxPartitionRealtimeEditModeProvider,
     LoadSpaceAction,
     hasValue,
     asyncResult,
     addDebugApi,
-    RuntimeStateVersion,
     stateUpdatedEvent,
     registerBuiltinPortal,
     defineGlobalBot,
-    isPromise,
-    AttachRuntimeAction,
     createPrecalculatedBot,
     merge,
     BotTagMasks,
@@ -33,24 +26,31 @@ import {
     asyncError,
     botAdded,
     botUpdated,
-    TagMapper,
     createBot,
     getBotSpace,
-    DetachRuntimeAction,
     StoredAux,
-} from '@casual-simulation/aux-common';
-import { AuxHelper } from './AuxHelper';
-import { AuxConfig, buildVersionNumber } from './AuxConfig';
-import {
+    ConnectionInfo,
+    DeviceAction,
     StatusUpdate,
     remapProgressPercent,
-    DeviceAction,
-    RemoteAction,
-    DeviceInfo,
     Action,
     RemoteActions,
-    CurrentVersion,
-} from '@casual-simulation/causal-trees';
+    ConnectionIndicator,
+    getConnectionId,
+} from '@casual-simulation/aux-common';
+import {
+    realtimeStrategyToRealtimeEditMode,
+    AuxPartitionRealtimeEditModeProvider,
+    AuxRuntime,
+    isPromise,
+    AttachRuntimeAction,
+    DetachRuntimeAction,
+    TagMapper,
+    RuntimeStateVersion,
+    RuntimeActions,
+} from '@casual-simulation/aux-runtime';
+import { AuxHelper } from './AuxHelper';
+import { AuxConfig, buildVersionNumber } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
@@ -67,21 +67,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
-    protected _deviceInfo: DeviceInfo;
+    protected _deviceInfo: ConnectionInfo;
     protected _partitionEditModeProvider: AuxPartitionRealtimeEditModeProvider;
     protected _partitions: AuxPartitions;
     protected _portalHelper: CustomAppHelper;
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
-    private _eventBuffer: BotAction[];
+    private _eventBuffer: RuntimeActions[];
     private _hasInitialState: boolean;
     private _version: RuntimeStateVersion;
     private _timeSync: TimeSyncController;
     private _initStartTime: number;
 
     private _subChannels: { channel: BaseAuxChannel; id: string }[];
-    private _user: AuxUser;
-    private _onLocalEvents: Subject<LocalActions[]>;
+    private _indicator: ConnectionIndicator;
+    private _onLocalEvents: Subject<RuntimeActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onVersionUpdated: Subject<RuntimeStateVersion>;
@@ -131,12 +131,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._timeSync;
     }
 
-    protected get user() {
-        return this._user;
+    protected get indicator() {
+        return this._indicator;
     }
 
-    constructor(user: AuxUser, config: AuxConfig, options: AuxChannelOptions) {
-        this._user = user;
+    constructor(
+        indicator: ConnectionIndicator,
+        config: AuxConfig,
+        options: AuxChannelOptions
+    ) {
+        this._indicator = indicator;
         this._config = config;
         this._options = options;
         this._subs = [];
@@ -186,7 +190,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async init(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
@@ -226,7 +230,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async initAndWait(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
@@ -252,7 +256,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async registerListeners(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
@@ -330,7 +334,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._statusHelper = new StatusHelper(
             partitions.map((p) => p.onStatusUpdated)
         );
-        this._statusHelper.defaultUser = this.user;
 
         let statusMapper = remapProgressPercent(0.3, 0.6);
         this._subs.push(
@@ -378,22 +381,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         config: PartitionConfig
     ): Promise<AuxPartition>;
 
-    async setUser(user: AuxUser): Promise<void> {
-        for (let [, partition] of iteratePartitions(this._partitions)) {
-            if (partition.setUser) {
-                await partition.setUser(user);
-            }
-        }
-
-        this._user = user;
-
-        if (this.user && this._helper) {
-            this._helper.userId = this.user.id;
-            await this._initUserBot();
-        }
-    }
-
-    async sendEvents(events: BotAction[]): Promise<void> {
+    async sendEvents(events: RuntimeActions[]): Promise<void> {
         if (this._hasInitialState) {
             if (this._tagNameMapper) {
                 let mappedEvents = [];
@@ -461,14 +449,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     async forkAux(newId: string): Promise<any> {}
 
-    async setGrant(grant: string): Promise<void> {
-        for (let [, partition] of iteratePartitions(this._partitions)) {
-            if (partition.setGrant) {
-                await partition.setGrant(grant);
-            }
-        }
-    }
-
     async exportBots(botIds: string[]): Promise<StoredAux> {
         return this._helper.exportBots(botIds);
     }
@@ -510,7 +490,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _createAuxHelper() {
         const partitions: any = this._partitions;
         let helper = new AuxHelper(partitions, this._runtime);
-        helper.userId = this.user ? this.user.id : null;
+        helper.userId = getConnectionId(this.indicator);
         return helper;
     }
 
@@ -637,7 +617,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._onConnectionStateChanged.next({
                 type: 'authorization',
                 authorized: false,
-                reason: 'unauthorized',
+                reason: 'not_supported',
             });
             return;
         }
@@ -653,9 +633,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected async _handleStatusUpdated(state: StatusUpdate) {
+        if (state.type === 'progress') {
+            console.log(
+                `[BaseAuxChannel] Loading Progress (${
+                    state.progress * 100
+                }%): ${state.message}`
+            );
+        }
         if (state.type === 'authentication') {
+            console.log(
+                `[BaseAuxChannel] Authentication (${state.authenticated}):`,
+                state.info
+            );
             this._deviceInfo = state.info;
         } else if (state.type === 'sync' && state.synced) {
+            console.log(`[BaseAuxChannel] Sync (${state.synced})`);
             await this._ensureSetup();
         }
 
@@ -699,16 +691,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             buildVersionNumber(this._config.config),
             this._config.config ? this._config.config.device : null,
             undefined,
-            this._partitionEditModeProvider,
-            this._config.config
-                ? this._config.config.forceSignedScripts || false
-                : false
+            this._partitionEditModeProvider
         );
-        runtime.userId = this.user ? this.user.id : null;
+        runtime.userId = getConnectionId(this.indicator);
         return runtime;
     }
 
-    protected _handleLocalEvents(e: LocalActions[]) {
+    protected _handleLocalEvents(e: RuntimeActions[]) {
         for (let event of e) {
             if (event.type === 'load_space') {
                 this._loadPartition(event.space, event.config, event);
@@ -784,7 +773,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * @param config The configuration that should be used.
      */
     protected abstract _createSubChannel(
-        user: AuxUser,
+        indicator: ConnectionIndicator,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel;
@@ -819,23 +808,18 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 }
             );
 
-            const channel = this._createSubChannel(
-                {
-                    id: newUserId,
-                    name: newUserId,
-                    token: newUserId,
-                    username: newUserId,
-                },
-                runtime,
-                {
-                    config: {
-                        ...this._config.config,
-                    },
+            const indicator: ConnectionIndicator = {
+                connectionId: newUserId,
+            };
 
-                    // Map all partitions to memory partitions for now
-                    partitions,
-                }
-            );
+            const channel = this._createSubChannel(indicator, runtime, {
+                config: {
+                    ...this._config.config,
+                },
+
+                // Map all partitions to memory partitions for now
+                partitions,
+            });
             channel._runtime.userId = newUserId;
             channel._tagNameMapper = this._createTagNameMapper(
                 event.tagNameMapper
@@ -844,9 +828,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             const subChannel: AuxSubChannel = {
                 getInfo: async () => ({
                     id: channelId,
-                    user: {
-                        ...this._user,
-                        id: newUserId,
+                    indicator: {
+                        connectionId: newUserId,
                     },
                 }),
                 getChannel: async () => channel,
@@ -1025,15 +1008,15 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     private async _initUserBot() {
-        if (!this.user) {
+        if (!this.indicator) {
             console.warn(
-                '[BaseAuxChannel] Not initializing user bot because user is null. (User needs to be specified)'
+                '[BaseAuxChannel] Not initializing user bot because connection indicator is null. (connection indicator needs to be specified)'
             );
             return;
         }
         try {
             const userBot = this._helper.userBot;
-            await this._helper.createOrUpdateUserBot(this.user, userBot);
+            await this._helper.createOrUpdateUserBot(this.indicator, userBot);
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init user bot:', err);
         }

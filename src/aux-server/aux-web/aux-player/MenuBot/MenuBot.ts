@@ -47,7 +47,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
-import { first } from '@casual-simulation/causal-trees';
+import { first } from '@casual-simulation/aux-common';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
 import { Input } from '../../shared/scene/Input';

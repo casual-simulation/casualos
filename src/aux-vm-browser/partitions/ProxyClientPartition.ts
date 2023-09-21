@@ -17,7 +17,7 @@ import {
     StatusUpdate,
     Action,
     CurrentVersion,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { wrap, proxy, releaseProxy, Remote } from 'comlink';
 import { startWith } from 'rxjs/operators';
@@ -180,18 +180,6 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     async sendRemoteEvents(events: any[]): Promise<void> {
         if (this._bridge.sendRemoteEvents) {
             await this._bridge.sendRemoteEvents(events);
-        }
-    }
-
-    async setUser(user: any): Promise<void> {
-        if (this._bridge.setUser) {
-            await this._bridge.setUser(user);
-        }
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (this._bridge.setGrant) {
-            await this._bridge.setGrant(grant);
         }
     }
 

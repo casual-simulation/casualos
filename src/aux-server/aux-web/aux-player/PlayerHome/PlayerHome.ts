@@ -20,7 +20,7 @@ import {
     getBotTheme,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
-import { appManager } from '../../shared/AppManager';
+import { appManager, getSimulationId } from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
 import { Dictionary } from 'vue-router/types/router';
 import {
@@ -56,10 +56,6 @@ export default class PlayerHome extends Vue {
     isLoading: boolean = false;
 
     private _simulations: Map<BrowserSimulation, Subscription>;
-
-    get user() {
-        return appManager.user;
-    }
 
     get botManager() {
         return appManager.simulationManager.primary;
@@ -249,12 +245,20 @@ export default class PlayerHome extends Vue {
             if (!appManager.simulationManager.primary) {
                 await this._loadPrimarySimulation(newServer[0]);
             }
-            await appManager.simulationManager.updateSimulations(newServer);
+            await appManager.simulationManager.updateSimulations(
+                newServer.map((s) => ({
+                    id: getSimulationId(null, s),
+                    options: {
+                        recordName: null,
+                        inst: s,
+                    },
+                }))
+            );
         }
     }
 
     private async _loadPrimarySimulation(newServer: string) {
-        const sim = await appManager.setPrimarySimulation(newServer);
+        const sim = await appManager.setPrimarySimulation(null, newServer);
         sim.connection.syncStateChanged
             .pipe(first((synced) => synced))
             .subscribe(() => {

@@ -35,6 +35,7 @@ export type AvailablePermissions =
     | ReadRolePermission
     | ListRolesPermission
     | UpdateRolePermission
+    | AvailableInstPermissions
     | CreateRecordKeyPermission;
 
 export type AvailableDataPermissions =
@@ -71,6 +72,14 @@ export type AvailableRolePermissions =
     | ListRolesPermission
     | ReadRolePermission
     | UpdateRolePermission;
+
+export type AvailableInstPermissions =
+    | CreateInstPermission
+    | ReadInstPermission
+    | DeleteInstPermission
+    | UpdateInstPermission
+    | UpdateDataInstPermission
+    | ListInstPermission;
 
 /**
  * Defines an interface that describes common options for all permissions.
@@ -704,6 +713,117 @@ type ZodListRolesPermissionAssertion = HasType<
     ListRolesPermission
 >;
 
+export interface InstPermission extends Permission {
+    /**
+     * The insts that this permission allows access to.
+     *
+     * If true, then all insts are allowed.
+     * If a string, then it should be a Regular Expression that matches only insts that are allowed to be manipulated.
+     */
+    insts: string | true;
+}
+export const INST_VALIDATION = PERMISSION_VALIDATION.extend({
+    insts: z.union([z.literal(true), z.string()]),
+});
+type ZodInstPermission = z.infer<typeof INST_VALIDATION>;
+type ZodInstPermissionAssertion = HasType<ZodInstPermission, InstPermission>;
+
+/**
+ * Defines an interface that describes a permission to create an inst.
+ */
+export interface CreateInstPermission extends InstPermission {
+    type: 'inst.create';
+}
+
+export const CREATE_INST_VALIDATION = INST_VALIDATION.extend({
+    type: z.literal('inst.create'),
+});
+type ZodCreateInstPermission = z.infer<typeof CREATE_INST_VALIDATION>;
+type ZodCreateInstPermissionAssertion = HasType<
+    ZodCreateInstPermission,
+    CreateInstPermission
+>;
+
+/**
+ * Defines an interface that describes a permission to read data from an inst.
+ */
+export interface ReadInstPermission extends InstPermission {
+    type: 'inst.read';
+}
+
+export const READ_INST_VALIDATION = INST_VALIDATION.extend({
+    type: z.literal('inst.read'),
+});
+type ZodReadInstPermission = z.infer<typeof READ_INST_VALIDATION>;
+type ZodReadInstPermissionAssertion = HasType<
+    ZodReadInstPermission,
+    ReadInstPermission
+>;
+
+/**
+ * Defines an interface that describes a permission to update information about an inst.
+ */
+export interface UpdateInstPermission extends InstPermission {
+    type: 'inst.update';
+}
+
+export const UPDATE_INST_VALIDATION = INST_VALIDATION.extend({
+    type: z.literal('inst.update'),
+});
+type ZodUpdateInstPermission = z.infer<typeof UPDATE_INST_VALIDATION>;
+type ZodUpdateInstPermissionAssertion = HasType<
+    ZodUpdateInstPermission,
+    UpdateInstPermission
+>;
+
+/**
+ * Defines an interface that describes a permission to update data in an inst.
+ */
+export interface UpdateDataInstPermission extends InstPermission {
+    type: 'inst.updateData';
+}
+
+export const UPDATE_DATA_INST_VALIDATION = INST_VALIDATION.extend({
+    type: z.literal('inst.updateData'),
+});
+type ZodUpdateDataInstPermission = z.infer<typeof UPDATE_DATA_INST_VALIDATION>;
+type ZodUpdateDataInstPermissionAssertion = HasType<
+    ZodUpdateDataInstPermission,
+    UpdateDataInstPermission
+>;
+
+/**
+ * Defines an interface that describes a permission to delete an inst.
+ */
+export interface DeleteInstPermission extends InstPermission {
+    type: 'inst.delete';
+}
+
+export const DELETE_INST_VALIDATION = INST_VALIDATION.extend({
+    type: z.literal('inst.delete'),
+});
+type ZodDeleteInstPermission = z.infer<typeof DELETE_INST_VALIDATION>;
+type ZodDeleteInstPermissionAssertion = HasType<
+    ZodDeleteInstPermission,
+    DeleteInstPermission
+>;
+
+/**
+ * Defines an interface that describes a permission to list insts.
+ */
+export interface ListInstPermission extends InstPermission {
+    type: 'inst.list';
+}
+
+export const LIST_INST_VALIDATION = INST_VALIDATION.extend({
+    type: z.literal('inst.list'),
+});
+type ZodListInstPermission = z.infer<typeof LIST_INST_VALIDATION>;
+type ZodListInstPermissionAssertion = HasType<
+    ZodListInstPermission,
+    ListInstPermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     CREATE_DATA_VALIDATION,
     READ_DATA_VALIDATION,
@@ -727,6 +847,13 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     GRANT_ROLE_VALIDATION,
     REVOKE_ROLE_VALIDATION,
     LIST_ROLES_VALIDATION,
+
+    CREATE_INST_VALIDATION,
+    READ_INST_VALIDATION,
+    UPDATE_INST_VALIDATION,
+    UPDATE_DATA_INST_VALIDATION,
+    DELETE_INST_VALIDATION,
+    LIST_INST_VALIDATION,
 ]);
 
 // /**
@@ -802,6 +929,12 @@ export const RECORD_OWNER_ROLE_NAME = 'recordOwner';
  * Used by default for data, file, and event records.
  */
 export const PUBLIC_READ_MARKER = 'publicRead';
+
+/**
+ * The name of the "publicWrite" resource marker.
+ * Used by default for public insts.
+ */
+export const PUBLIC_WRITE_MARKER = 'publicWrite';
 
 /**
  * The name of the "account" resource marker.
@@ -939,6 +1072,36 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
             role: ADMIN_ROLE_NAME,
             roles: true,
         },
+        {
+            type: 'inst.create',
+            role: ADMIN_ROLE_NAME,
+            insts: true,
+        },
+        {
+            type: 'inst.read',
+            role: ADMIN_ROLE_NAME,
+            insts: true,
+        },
+        {
+            type: 'inst.delete',
+            role: ADMIN_ROLE_NAME,
+            insts: true,
+        },
+        {
+            type: 'inst.update',
+            role: ADMIN_ROLE_NAME,
+            insts: true,
+        },
+        {
+            type: 'inst.updateData',
+            role: ADMIN_ROLE_NAME,
+            insts: true,
+        },
+        {
+            type: 'inst.list',
+            role: ADMIN_ROLE_NAME,
+            insts: true,
+        },
 
         // Record Owner Permissions
         {
@@ -972,6 +1135,86 @@ export const DEFAULT_PUBLIC_READ_POLICY_DOCUMENT: PolicyDocument = {
             type: 'event.count',
             role: true,
             events: true,
+        },
+        {
+            type: 'inst.read',
+            role: true,
+            insts: true,
+        },
+    ],
+};
+
+/**
+ * Defines a policy document that applies only to resources marked with the "publicWrite" marker.
+ */
+export const DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT: PolicyDocument = {
+    permissions: [
+        {
+            type: 'data.create',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.delete',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.read',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.update',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.list',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'file.read',
+            role: true,
+        },
+        {
+            type: 'file.create',
+            role: true,
+        },
+        {
+            type: 'file.delete',
+            role: true,
+        },
+        {
+            type: 'event.count',
+            role: true,
+            events: true,
+        },
+        {
+            type: 'event.increment',
+            role: true,
+            events: true,
+        },
+        {
+            type: 'inst.read',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.updateData',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.delete',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.create',
+            role: true,
+            insts: true,
         },
     ],
 };

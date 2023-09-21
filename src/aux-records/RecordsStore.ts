@@ -105,7 +105,7 @@ export interface RecordsStore {
      * Gets the list of studios that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
-    listStudiosForUser(userId: string): Promise<ListedStudio[]>;
+    listStudiosForUser(userId: string): Promise<StoreListedStudio[]>;
 
     /**
      * Adds the given studio assignment to the store.
@@ -240,7 +240,8 @@ export interface Studio {
     subscriptionStatus?: string;
 
     /**
-     * The ID of the stripe subscription that this studio currently has.
+     * The ID of the purchasable subscription that the user has.
+     * Note that this is the ID of the subscription in the config, not the ID of the stripe subscription.
      */
     subscriptionId?: string;
 
@@ -260,6 +261,12 @@ export interface Studio {
     subscriptionPeriodEndMs?: number | null;
 }
 
+/**
+ * Defines the list of possible studio roles that a user can be assigned.
+ *
+ * @dochash types/records/studios
+ * @docname StudioAssignmentRole
+ */
 export type StudioAssignmentRole = 'admin' | 'member';
 
 /**
@@ -366,7 +373,10 @@ export interface ListedStudioAssignmentUser {
     phoneNumber: string;
 }
 
-export interface ListedStudio {
+/**
+ * Defines an interface that represents a studio that a user has access to.
+ */
+export interface StoreListedStudio {
     /**
      * The ID of the studio.
      */
@@ -386,6 +396,16 @@ export interface ListedStudio {
      * Whether the user is the primary contact for this studio.
      */
     isPrimaryContact: boolean;
+
+    /**
+     * The ID of the studio's subscription.
+     */
+    subscriptionId: string;
+
+    /**
+     * The current subscription status for this studio.
+     */
+    subscriptionStatus: string;
 }
 
 export interface ListStudioAssignmentFilters {

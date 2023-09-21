@@ -48,8 +48,8 @@ RUN set -ex \
 # RUN apt-get install docker.io -y
 # RUN gpasswd -a root docker
 
-# Install Node 16.x
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+# Install Node 18.x
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 RUN sudo apt-get install -y nodejs
 
 # Enable Yarn
