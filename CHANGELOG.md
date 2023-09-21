@@ -44,6 +44,10 @@
 ### :rocket: Improvements
 
 -   Improved `os.listUserStudios()` to include the subscription tier of each studio.
+-   Added `light` form.
+    -   Added `pointLight`, `ambientLight`, `directionalLight`, `spotLight`, and `hemisphereLight` subtypes.
+    -   Added `formLightIntensity` tag.
+    -   Added `formLightTarget` tag.
 
 ## V3.2.6
 

@@ -900,19 +900,19 @@ The subtype that the form should use. Useful for specifying how a mesh should be
     The URL that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe.
   </PossibleValueCode>
   <PossibleValueCode value='pointLight'>
-    A bot with the form <TagLink tag='light'/> will appear as a pointlight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a pointlight
   </PossibleValueCode>
   <PossibleValueCode value='ambientLight'>
-    A bot with the form <TagLink tag='light'/> will appear as an ambientLight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as an ambientLight
   </PossibleValueCode>
   <PossibleValueCode value='directionalLight'>
-    A bot with the form <TagLink tag='light'/> will appear as a directionalLight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a directionalLight
   </PossibleValueCode>
   <PossibleValueCode value='spotLight'>
-    A bot with the form <TagLink tag='light'/> will appear as a spotLight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a spotLight
   </PossibleValueCode>
   <PossibleValueCode value='hemisphereLight'>
-    A bot with the form <TagLink tag='light'/> will appear as a hemisphereLight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a hemisphereLight
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -928,6 +928,21 @@ The subtype that the form should use. Useful for specifying how a mesh should be
   </PossibleValueCode>
   <PossibleValue value='Any Number'>
     Changes the intensity of the light.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formLightTarget`
+
+  The target of the light. Bot must have a <TagLink tag='formSubtype'/> of `directionalLight` or `spotLight`. Bot can not target self.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='none'>
+    Light will target (0, 0, 0). (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Bot ID'>
+    The bot id that acts as the light's target. Light's direction is defined by the direction from the position of the light to the target.
   </PossibleValue>
 </PossibleValuesTable>
 

@@ -1283,7 +1283,6 @@ export class BotShapeDecorator
         hemisphereLight.position.set(0, 0, 0);
     }
     private _updateLightTarget(calc: BotCalculationContext) {
-        console.log('hit');
         if (!this._finder) {
             return;
         } else if (
@@ -1294,9 +1293,7 @@ export class BotShapeDecorator
         ) {
             return;
         }
-        console.log('found');
         let lightTarget = calculateBotIds(this.bot3D.bot, 'formLightTarget');
-        //let validLightTarget: number[];
 
         if (!hasValue(lightTarget)) {
             this.light.target = DEFAULT_LIGHT_TARGET;
