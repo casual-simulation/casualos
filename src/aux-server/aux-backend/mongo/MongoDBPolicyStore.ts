@@ -4,6 +4,7 @@ import {
     DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
+    PolicyDocument,
 } from '@casual-simulation/aux-common';
 import {
     AssignedRole,

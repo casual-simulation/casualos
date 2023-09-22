@@ -505,7 +505,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._websocketMessenger,
             this._instRecordsStore,
             this._tempInstRecordsStore,
-            this._authController
+            this._authController,
+            this._policyController
         );
 
         return this;

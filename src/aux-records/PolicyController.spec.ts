@@ -1872,6 +1872,7 @@ describe('PolicyController', () => {
                     recordKeyOrRecordName: recordKey,
                     userId,
                     existingMarkers: [PUBLIC_READ_MARKER, 'secret'],
+                    removedMarkers: ['secret'],
                 });
 
                 expect(result).toEqual({

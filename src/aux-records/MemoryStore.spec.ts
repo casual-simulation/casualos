@@ -18,6 +18,14 @@ describe('MemoryStore', () => {
         });
 
         it('should return the added updates', async () => {
+            await subject.addRecord({
+                name: 'recordName',
+                ownerId: 'ownerId',
+                secretHashes: [],
+                secretSalt: '',
+                studioId: null,
+            });
+
             await subject.saveInst({
                 recordName: 'recordName',
                 inst: 'inst',

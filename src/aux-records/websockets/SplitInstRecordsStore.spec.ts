@@ -13,12 +13,20 @@ describe('SplitInstRecordsStore', () => {
     const instName = 'instName';
     const branchName = 'branchName';
 
-    beforeEach(() => {
+    beforeEach(async () => {
         perm = new MemoryStore({
             subscriptions: null as any,
         });
         temp = new MemoryTempInstRecordsStore();
         store = new SplitInstRecordsStore(temp, perm);
+
+        await perm.addRecord({
+            name: recordName,
+            ownerId: 'ownerId',
+            secretHashes: [],
+            secretSalt: '',
+            studioId: null,
+        });
     });
 
     describe('getBranchByName()', () => {
@@ -423,7 +431,7 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the inst', async () => {
-            perm.saveInst({
+            await perm.saveInst({
                 recordName,
                 inst: instName,
                 markers: [PUBLIC_READ_MARKER],
@@ -933,36 +941,6 @@ describe('SplitInstRecordsStore', () => {
                 timestamps: [expect.any(Number)],
                 instSizeInBytes: 3,
                 branchSizeInBytes: 3,
-            });
-        });
-
-        it('should not delete the branch from the permanent store if the record name is null', async () => {
-            await perm.saveInst({
-                recordName: null,
-                inst: instName,
-                markers: [PUBLIC_READ_MARKER],
-            });
-
-            await perm.saveBranch({
-                branch: branchName,
-                inst: instName,
-                recordName: null,
-                temporary: false,
-            });
-
-            await perm.addUpdates(null, instName, branchName, ['abc'], 3);
-
-            await store.deleteBranch(null, instName, branchName);
-
-            const result = await perm.getAllUpdates(
-                null as any,
-                instName,
-                branchName
-            );
-            expect(result).toEqual({
-                updates: ['abc'],
-                timestamps: [expect.any(Number)],
-                instSizeInBytes: 3,
             });
         });
     });

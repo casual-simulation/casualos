@@ -291,6 +291,7 @@ import {
     DEFAULT_BRANCH_NAME,
     DeviceSelector,
     RemoteAction,
+    AvailablePermissions,
 } from '@casual-simulation/aux-common';
 import { RanOutOfEnergyError } from './AuxResults';
 import '@casual-simulation/aux-common/polyfill/Array.first.polyfill';
@@ -372,7 +373,6 @@ import {
 } from '@casual-simulation/aux-records';
 import type {
     AIChatMessage,
-    AvailablePermissions,
     ListStudiosResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
