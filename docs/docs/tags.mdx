@@ -938,12 +938,72 @@ The subtype that the form should use. Useful for specifying how a mesh should be
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='none'>
+  <PossibleValueCode value='null'>
     Light will target (0, 0, 0). (default)
   </PossibleValueCode>
   <PossibleValue value='Any Bot ID'>
-    The bot id that acts as the light's target. Light's direction is defined by the direction from the position of the light to the target.
+    The bot with the specified ID acts as the light's target. The light's direction is defined by the direction from the position of the light to the target.
   </PossibleValue>
+</PossibleValuesTable>
+
+### `formLightDistance`
+
+The maximum range of the light. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    No limit (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    When distance is non-zero, light will attenuate according to inverse-square law until near the distance cutoff, where it will then attenuate quickly and smoothly to 0.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightAngle`
+
+Represents the angle between edges of spotLight. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. Angle is in radians.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Math.PI / 3 (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    Changes the angle of the light in radians.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightPenumbra`
+
+Represents the percent of the spotlight cone that is attenuated due to penumbra. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. Takes values between 0 and 1.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number between 0 and 1'>
+    Percent of the spotlight cone that is attenuated due to penumbra.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightDecay`
+
+The amount the light dims along the distance of the light. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. In context of physically-correct rendering the default value should not be changed.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='2'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    The amount the light dims along the distance of the light.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `formAddress`
@@ -1089,10 +1149,6 @@ Whether depth writing is enabled for this bot in the grid portals.
     Disable depth writing.
   </PossibleValueCode>
 </PossibleValuesTable>
-
-### `formLightIntensity`
-
-Whether depth writing is enabled for this bot in the grid portals.
 
 #### Possible values are:
 

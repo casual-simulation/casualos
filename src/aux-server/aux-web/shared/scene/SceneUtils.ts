@@ -62,7 +62,6 @@ import {
 import { getOptionalValue } from '../SharedUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BackSide, PCFShadowMap } from 'three';
-import { render } from 'mustache';
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -834,14 +833,42 @@ export function setDepthWrite(
     >mesh.material;
     shapeMat.depthWrite = depthWrite;
 }
-
+//Light Property functions
+//Changes the light's Intensity Property
 export function setLightIntensity(light: Light, intensity: number) {
     if (!light) {
         return;
     }
     light.intensity = intensity;
 }
-
+//Changes the SpotLight Distance Property
+export function setLightDistance(light: SpotLight, distance: number) {
+    if (!light) {
+        return;
+    }
+    light.distance = distance;
+}
+//Changes the SpotLight Angle Property
+export function setLightAngle(light: SpotLight, angle: number) {
+    if (!light) {
+        return;
+    }
+    light.angle = angle * 0.5;
+}
+//Changes the SpotLight Penumbra Property
+export function setLightPenumbra(light: SpotLight, penumbra: number) {
+    if (!light) {
+        return;
+    }
+    light.penumbra = penumbra;
+}
+//Changes the SpotLight Decay Property
+export function setLightDecay(light: SpotLight, decay: number) {
+    if (!light) {
+        return;
+    }
+    light.decay = decay;
+}
 /**
  * Changes the mesh's opacity level.
  * @param mesh The mesh.
