@@ -48,6 +48,13 @@
     -   Added `pointLight`, `ambientLight`, `directionalLight`, `spotLight`, and `hemisphereLight` subtypes.
     -   Added `formLightIntensity` tag.
     -   Added `formLightTarget` tag.
+    -   Added `formLightDistance` tag.
+    -   Added `formLightAngle` tag.
+    -   Added `formLightPenumbra` tag.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
 
 ## V3.2.6
 
