@@ -172,7 +172,7 @@ export default class MonacoTagDiffEditor extends Vue {
 
         this._sub = new Subscription();
         this._sub.add(
-            appManager.whileLoggedIn((user, sim) => {
+            appManager.whileLoggedIn((sim) => {
                 this._simulation = sim;
                 const sub = watchSimulation(sim, () => this.editor);
 

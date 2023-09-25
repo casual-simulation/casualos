@@ -274,6 +274,20 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.getAuthToken();
     }
 
+    async getConnectionKey(): Promise<string> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 6) {
+            return null;
+        }
+        return await this._proxy.getConnectionKey();
+    }
+
     async openAccountPage(): Promise<void> {
         if (!hasValue(this._origin)) {
             return;

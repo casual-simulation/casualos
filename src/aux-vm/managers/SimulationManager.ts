@@ -153,11 +153,14 @@ export class SimulationManager<
         id: string,
         options: SimulationFactoryOptions
     ) {
-        const sim = this._factory(id, options);
+        const sim = await this._factory(id, options);
         return this._initSimulationCore(id, sim);
     }
 
-    private async _initSimulationCore(id: string, sim: TSimulation) {
+    private async _initSimulationCore(
+        id: string,
+        sim: TSimulation
+    ): Promise<TSimulation> {
         let sub = new Subscription();
         sub.add(
             sim.onError.subscribe((e) => {
@@ -266,4 +269,4 @@ export class SimulationManager<
 export type SimulationFactory<TSimulation> = (
     id: string,
     options: SimulationFactoryOptions
-) => TSimulation;
+) => TSimulation | Promise<TSimulation>;

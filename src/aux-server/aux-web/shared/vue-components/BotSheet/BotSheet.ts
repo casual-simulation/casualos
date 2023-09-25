@@ -132,7 +132,6 @@ export default class BotSheet extends Vue {
                 this._updateConfig();
             })
         );
-        // appManager.whileLoggedIn((user, botManager) => {
         //     let subs: SubscriptionLike[] = [];
         //     this._simulation = appManager.simulationManager.primary;
         //     this.bots = [];

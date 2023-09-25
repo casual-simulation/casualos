@@ -27,6 +27,7 @@ import {
     SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import {
+    AuthHelper,
     AuxVMImpl,
     BotManager,
     BrowserSimulation,
@@ -76,6 +77,7 @@ export class AppManager {
         return this._progress;
     }
 
+    private _auth: AuthHelper;
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<BotManager>;
@@ -85,13 +87,13 @@ export class AppManager {
     private _registration: ServiceWorkerRegistration;
     private _systemPortal: SystemPortalCoordinator<BotManager>;
     private _db: IDBDatabase;
-    private _indicatorSubject = new BehaviorSubject<ConnectionIndicator>(null);
-    private _indicator: ConnectionIndicator;
+    private _primarySimulationAvailableSubject: Subject<void> = new Subject();
+
     private _simulationFactory: (
         id: string,
         origin: SimulationOrigin,
         config: AuxConfig['config']
-    ) => BotManager;
+    ) => Promise<BotManager>;
 
     get systemPortal() {
         return this._systemPortal;
@@ -100,25 +102,31 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
-        this._simulationFactory = (id, origin, config) => {
+        this._simulationFactory = async (id, origin, config) => {
+            const indicator = await this.getConnectionIndicator(
+                origin.recordName,
+                origin.inst,
+                origin.host
+            );
             const partitions = BotManager.createPartitions(
                 id,
                 origin,
-                this.indicator,
+                indicator,
                 config
             );
             return new BotManager(
-                this.indicator,
+                indicator,
                 origin,
                 id,
                 config,
-                new AuxVMImpl(this.indicator, {
+                new AuxVMImpl(indicator, {
                     config,
                     partitions,
-                })
+                }),
+                this._auth
             );
         };
-        this._simulationManager = new SimulationManager((id, config) => {
+        this._simulationManager = new SimulationManager(async (id, config) => {
             const params = new URLSearchParams(location.search);
             const forceSignedScripts =
                 params.get('forceSignedScripts') === 'true';
@@ -126,7 +134,7 @@ export class AppManager {
                 console.log('[AppManager] Forcing signed scripts for ' + id);
             }
             const { ...origin } = config;
-            return this._simulationFactory(
+            return await this._simulationFactory(
                 id,
                 origin,
                 this.createSimulationConfig({ forceSignedScripts })
@@ -171,14 +179,6 @@ export class AppManager {
         return this._simulationManager;
     }
 
-    get indicatorObservable() {
-        return this._indicatorSubject;
-    }
-
-    get indicator() {
-        return this._indicator;
-    }
-
     get config(): WebConfig {
         return this._config;
     }
@@ -206,7 +206,7 @@ export class AppManager {
             id: string,
             origin: SimulationOrigin,
             config: AuxConfig['config']
-        ) => BotManager
+        ) => Promise<BotManager>
     ) {
         this._simulationFactory = factory;
     }
@@ -265,33 +265,20 @@ export class AppManager {
      * @param setup
      */
     whileLoggedIn(
-        setup: (
-            indicator: ConnectionIndicator,
-            botManager: BrowserSimulation
-        ) => SubscriptionLike[]
+        setup: (botManager: BrowserSimulation) => SubscriptionLike[]
     ): SubscriptionLike {
-        return this._indicatorSubject
+        return this._primarySimulationAvailableSubject
             .pipe(
-                scan(
-                    (
-                        subs: SubscriptionLike[],
-                        indicator: ConnectionIndicator,
-                        index
-                    ) => {
-                        if (subs) {
-                            subs.forEach((s) => s.unsubscribe());
-                        }
-                        if (indicator && this.simulationManager.primary) {
-                            return setup(
-                                indicator,
-                                this.simulationManager.primary
-                            );
-                        } else {
-                            return null;
-                        }
-                    },
-                    null
-                )
+                scan((subs: SubscriptionLike[]) => {
+                    if (subs) {
+                        subs.forEach((s) => s.unsubscribe());
+                    }
+                    if (this.simulationManager.primary) {
+                        return setup(this.simulationManager.primary);
+                    } else {
+                        return null;
+                    }
+                }, null)
             )
             .subscribe();
     }
@@ -307,7 +294,21 @@ export class AppManager {
         this._sendProgress('Running aux...', 0);
         await this._initConfig();
         await this._initDeviceConfig();
+        await this._initAuth();
         this._sendProgress('Initialized.', 1, true);
+    }
+
+    private async _initAuth() {
+        this._auth = new AuthHelper(
+            this.config.authOrigin,
+            this.config.recordsOrigin
+        );
+        console.log('[AppManager] Authenticating user in background...');
+        if (await this._auth.primary.authenticateInBackground()) {
+            console.log('[AppManager] User is authenticated.');
+        } else {
+            console.log('[AppManager] User is not authenticated.');
+        }
     }
 
     private async _initIndexedDB() {
@@ -439,8 +440,6 @@ export class AppManager {
             inst
         );
 
-        this._indicator = await this._getConnectionIndicator(recordName, inst);
-
         await this.simulationManager.clear();
         await this.simulationManager.setPrimary(id, {
             recordName,
@@ -448,7 +447,7 @@ export class AppManager {
         });
 
         this._initOffline();
-        this._indicatorSubject.next(this._indicator);
+        this._primarySimulationAvailableSubject.next();
 
         const sim = this.simulationManager.primary;
 
@@ -474,13 +473,17 @@ export class AppManager {
         return sim;
     }
 
-    private async _getConnectionIndicator(
+    async getConnectionIndicator(
         recordName: string | null,
-        inst: string
+        inst: string,
+        host: string
     ): Promise<ConnectionIndicator> {
         try {
             const connectionId = uuid();
-            const key = await this._getConnectionKey();
+            const endpoint = !host
+                ? this._auth.primary
+                : this._auth.getEndpoint(host);
+            const key = await endpoint.getConnectionKey();
             if (key) {
                 const token = generateV1ConnectionToken(
                     key,
@@ -502,31 +505,27 @@ export class AppManager {
         }
     }
 
-    private async _getConnectionKey(): Promise<string> {
-        try {
-            return await getItem<string>(this._db, 'users', 'connectionKey');
-        } catch (err) {
-            console.log('Unable to get connectionKey from DB', err);
-            return null;
-        }
-    }
+    // private async _getConnectionKey(): Promise<string> {
+    //     try {
+    //         return await getItem<string>(this._db, 'users', 'connectionKey');
+    //     } catch (err) {
+    //         console.log('Unable to get connectionKey from DB', err);
+    //         return null;
+    //     }
+    // }
 
-    private async _saveConnectionKey(key: string) {
-        try {
-            await putItem(this._db, 'users', 'connectionKey');
-            // await this._db.users.put(user);
-        } catch (err) {
-            console.log('Unable to save connectionKey to DB', err);
-        }
-    }
+    // private async _saveConnectionKey(key: string) {
+    //     try {
+    //         await putItem(this._db, 'users', 'connectionKey');
+    //         // await this._db.users.put(user);
+    //     } catch (err) {
+    //         console.log('Unable to save connectionKey to DB', err);
+    //     }
+    // }
 
     logout() {
-        if (this.indicator) {
-            console.log('[AppManager] Logout');
-            this.simulationManager.clear();
-            this._saveConnectionKey(null);
-            this._indicatorSubject.next(null);
-        }
+        console.log('[AppManager] Logout');
+        this.simulationManager.clear();
     }
 
     private async _getConfig(): Promise<WebConfig> {

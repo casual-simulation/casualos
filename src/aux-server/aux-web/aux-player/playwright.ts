@@ -4,20 +4,22 @@ import { Subscription } from 'rxjs';
 import { appManager } from '../shared/AppManager';
 import { PlaywrightSimulation } from './PlaywrightSimulation';
 
-appManager.simulationFactory = (id, origin, config) => {
-    const partitions = PlaywrightSimulation.createPartitions(
-        id,
-        appManager.indicator
+appManager.simulationFactory = async (id, origin, config) => {
+    const indicator = await appManager.getConnectionIndicator(
+        origin.recordName,
+        origin.inst,
+        origin.host
     );
+    const partitions = PlaywrightSimulation.createPartitions(id, indicator);
     return new PlaywrightSimulation(
-        appManager.indicator,
+        indicator,
         {
             recordName: null,
             inst: null,
         },
         id,
         config,
-        new AuxVMImpl(appManager.indicator, {
+        new AuxVMImpl(indicator, {
             config,
             partitions,
         })
