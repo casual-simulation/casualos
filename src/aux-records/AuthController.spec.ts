@@ -1888,6 +1888,54 @@ describe('AuthController', () => {
                 });
             });
 
+            it('should support connection tokens that have a null record name', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    null,
+                    'inst'
+                );
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    sessionId: sessionId,
+                    connectionId: 'connectionId',
+                    recordName: 'recordName',
+                    inst: 'inst',
+                });
+            });
+
             it('should fail if the token doesnt match the connection secret', async () => {
                 const requestId = 'requestId';
                 const sessionId = toBase64String('sessionId');
