@@ -89,6 +89,7 @@ export class AppManager {
     private _db: IDBDatabase;
     private _primarySimulationAvailableSubject: Subject<void> = new Subject();
     private _startLoadTime: number = Date.now();
+    private _defaultStudioId: string;
 
     private _simulationFactory: (
         id: string,
@@ -212,6 +213,10 @@ export class AppManager {
         this._simulationFactory = factory;
     }
 
+    get defaultStudioId() {
+        return this._defaultStudioId;
+    }
+
     /**
      * Instructs the app manager to check for new updates online.
      */
@@ -320,11 +325,15 @@ export class AppManager {
             this.config.recordsOrigin
         );
         console.log('[AppManager] Authenticating user in background...');
-        if (await this._auth.primary.authenticateInBackground()) {
+        const authData = await this._auth.primary.authenticateInBackground();
+        if (authData) {
             console.log('[AppManager] User is authenticated.');
+            this._defaultStudioId = authData.userId;
         } else {
             console.log('[AppManager] User is not authenticated.');
+            this._defaultStudioId = null;
         }
+        console.log(`[AppManager] defaultStudioId: ${this._defaultStudioId}`);
     }
 
     private async _initIndexedDB() {
