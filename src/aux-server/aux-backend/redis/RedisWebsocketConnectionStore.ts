@@ -1,4 +1,4 @@
-import { RedisClient } from 'redis';
+import { RedisClientType } from 'redis';
 import { promisify } from 'util';
 import {
     BranchConnectionMode,
@@ -12,37 +12,11 @@ import {
  */
 export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     private _globalNamespace: string;
-    private _redis: RedisClient;
+    private _redis: RedisClientType;
 
-    private hset: (args: [string, ...string[]]) => Promise<string[]>;
-    private hdel: (args: [string, ...string[]]) => Promise<void>;
-    private hlen: (key: string) => Promise<number>;
-    private hvals: (key: string) => Promise<string[]>;
-    private hkeys: (key: string) => Promise<string[]>;
-    private hget: (key: string, field: string) => Promise<string>;
-    private get: (key: string) => Promise<string>;
-    private set: (key: string, value: any) => Promise<void>;
-    private del: (key: string) => Promise<void>;
-    private expire: (key: string, seconds: number) => Promise<void>;
-    private sadd: (key: string, ...values: string[]) => Promise<number>;
-    private sismember: (key: string, value: string) => Promise<number>;
-
-    constructor(globalNamespace: string, client: RedisClient) {
+    constructor(globalNamespace: string, client: RedisClientType) {
         this._globalNamespace = globalNamespace;
         this._redis = client;
-
-        this.del = promisify(this._redis.del).bind(this._redis);
-        this.hset = promisify(this._redis.hset).bind(this._redis);
-        this.hdel = promisify(this._redis.hdel).bind(this._redis);
-        this.hvals = promisify(this._redis.hvals).bind(this._redis);
-        this.hkeys = promisify(this._redis.hkeys).bind(this._redis);
-        this.hlen = promisify(this._redis.hlen).bind(this._redis);
-        this.hget = promisify(this._redis.hget).bind(this._redis);
-        this.expire = promisify(this._redis.expire).bind(this._redis);
-        this.get = promisify(this._redis.get).bind(this._redis);
-        this.set = promisify(this._redis.set).bind(this._redis);
-        this.sadd = promisify(this._redis.sadd).bind(this._redis);
-        this.sismember = promisify(this._redis.sismember).bind(this._redis);
     }
 
     // /{global}/connections
@@ -60,7 +34,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         recordName: string,
         inst: string
     ): Promise<void> {
-        await this.sadd(
+        await this._redis.sAdd(
             authorizedInstsKey(this._globalNamespace, connectionId),
             `${recordName ?? ''}/${inst ?? ''}`
         );
@@ -71,26 +45,25 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         recordName: string,
         inst: string
     ): Promise<boolean> {
-        const authorized = await this.sismember(
+        return await this._redis.sIsMember(
             authorizedInstsKey(this._globalNamespace, connectionId),
             `${recordName ?? ''}/${inst ?? ''}`
         );
-        return authorized === 1;
     }
 
     async saveConnection(connection: DeviceConnection): Promise<void> {
-        await this.hset([
+        await this._redis.hSet(
             connectionsKey(this._globalNamespace),
             connection.serverConnectionId,
-            JSON.stringify(connection),
-        ]);
+            JSON.stringify(connection)
+        );
     }
 
     async saveBranchConnection(
         connection: DeviceBranchConnection
     ): Promise<void> {
         const connectionJson = JSON.stringify(connection);
-        await this.hset([
+        await this._redis.hSet(
             branchConnectionsKey(
                 this._globalNamespace,
                 connection.mode,
@@ -99,9 +72,9 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
                 connection.branch
             ),
             connection.serverConnectionId,
-            connectionJson,
-        ]);
-        await this.hset([
+            connectionJson
+        );
+        await this._redis.hSet(
             connectionIdKey(
                 this._globalNamespace,
                 connection.serverConnectionId
@@ -111,8 +84,8 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
                 connection.inst,
                 connection.branch
             ),
-            connectionJson,
-        ]);
+            connectionJson
+        );
     }
 
     async deleteBranchConnection(
@@ -122,7 +95,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         inst: string,
         branch: string
     ): Promise<void> {
-        await this.hdel([
+        await this._redis.hDel(
             branchConnectionsKey(
                 this._globalNamespace,
                 mode,
@@ -130,52 +103,60 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
                 inst,
                 branch
             ),
-            connectionId,
-        ]);
-        await this.hdel([
+            connectionId
+        );
+        await this._redis.hDel(
             connectionIdKey(this._globalNamespace, connectionId),
-            connectionField(recordName, inst, branch),
-        ]);
+            connectionField(recordName, inst, branch)
+        );
     }
 
     async clearConnection(connectionId: string): Promise<void> {
-        const namespaces = await this.hkeys(
+        const namespaces = await this._redis.hKeys(
             connectionIdKey(this._globalNamespace, connectionId)
         );
         await Promise.all(
             namespaces.map((n) =>
-                this.hdel([
+                this._redis.hDel(
                     `/${this._globalNamespace}/namespace_connections/${n}`,
-                    connectionId,
-                ])
+                    connectionId
+                )
             )
         );
-        await this.hdel([connectionsKey(this._globalNamespace), connectionId]);
-        await this.del(connectionIdKey(this._globalNamespace, connectionId));
-        await this.del(authorizedInstsKey(this._globalNamespace, connectionId));
+        await this._redis.hDel(
+            connectionsKey(this._globalNamespace),
+            connectionId
+        );
+        await this._redis.del([
+            connectionIdKey(this._globalNamespace, connectionId),
+            authorizedInstsKey(this._globalNamespace, connectionId),
+        ]);
     }
 
     async expireConnection(connectionId: string): Promise<void> {
         // Delete the connection from the namespaces and from the global list of connections,
         // but set a 10 second expiration on all the namespaces that the connection is connected to.
         // This preserves
-        const namespaces = await this.hkeys(
+        const namespaces = await this._redis.hKeys(
             connectionIdKey(this._globalNamespace, connectionId)
         );
         await Promise.all(
             namespaces.map((n) =>
-                this.hdel([
+                this._redis.hDel(
                     `/${this._globalNamespace}/namespace_connections/${n}`,
-                    connectionId,
-                ])
+                    connectionId
+                )
             )
         );
-        await this.hdel([connectionsKey(this._globalNamespace), connectionId]);
-        await this.expire(
+        await this._redis.hDel(
+            connectionsKey(this._globalNamespace),
+            connectionId
+        );
+        await this._redis.expire(
             connectionIdKey(this._globalNamespace, connectionId),
             10
         );
-        await this.expire(
+        await this._redis.expire(
             authorizedInstsKey(this._globalNamespace, connectionId),
             10
         );
@@ -187,7 +168,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         inst: string,
         branch: string
     ): Promise<DeviceBranchConnection[]> {
-        const values = await this.hvals(
+        const values = await this._redis.hVals(
             branchConnectionsKey(
                 this._globalNamespace,
                 mode,
@@ -206,7 +187,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         inst: string,
         branch: string
     ): Promise<number> {
-        const count = await this.hlen(
+        const count = await this._redis.hLen(
             branchConnectionsKey(
                 this._globalNamespace,
                 mode,
@@ -219,7 +200,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     }
 
     async getConnection(connectionId: string): Promise<DeviceConnection> {
-        const connectionJson = await this.hget(
+        const connectionJson = await this._redis.hGet(
             connectionsKey(this._globalNamespace),
             connectionId
         );
@@ -236,7 +217,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         inst: string,
         branch: string
     ): Promise<DeviceBranchConnection> {
-        const connectionJson = await this.hget(
+        const connectionJson = await this._redis.hGet(
             branchConnectionsKey(
                 this._globalNamespace,
                 mode,
@@ -256,7 +237,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     async getConnections(
         connectionId: string
     ): Promise<DeviceBranchConnection[]> {
-        const values = await this.hvals(
+        const values = await this._redis.hVals(
             connectionIdKey(this._globalNamespace, connectionId)
         );
 
@@ -264,7 +245,9 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     }
 
     async countConnections(): Promise<number> {
-        const count = await this.hlen(connectionsKey(this._globalNamespace));
+        const count = await this._redis.hLen(
+            connectionsKey(this._globalNamespace)
+        );
         return count;
     }
 
@@ -272,7 +255,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         connectionId: string
     ): Promise<number> {
         const key = connectionRateLimitKey(this._globalNamespace, connectionId);
-        const value = await this.get(key);
+        const value = await this._redis.get(key);
         if (!value) {
             return null;
         }
@@ -289,9 +272,10 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     ): Promise<void> {
         const key = connectionRateLimitKey(this._globalNamespace, connectionId);
         if (timeMs === null || timeMs === undefined) {
-            await this.del(key);
+            await this._redis.del(key);
         } else {
-            await this.set(key, timeMs.toString()), await this.expire(key, 100);
+            await this._redis.set(key, timeMs.toString());
+            await this._redis.expire(key, 100);
         }
     }
 }

@@ -149,6 +149,10 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                     temporary: branch.temporary,
                 },
             });
+
+            return {
+                success: true,
+            };
         } catch (err) {
             if (err instanceof PrismaClientKnownRequestError) {
                 if (err.code === 'P2003') {

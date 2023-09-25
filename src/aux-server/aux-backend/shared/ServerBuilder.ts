@@ -44,7 +44,11 @@ import {
 } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { SESv2 } from '@aws-sdk/client-sesv2';
-import { RedisClient, createClient as createRedisClient } from 'redis';
+import {
+    RedisClientOptions,
+    RedisClientType,
+    createClient as createRedisClient,
+} from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
@@ -154,7 +158,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
-    private _redis: RedisClient | null = null;
+    private _redis: RedisClientType | null = null;
     private _s3: S3;
     private _rateLimitController: RateLimitController;
 
@@ -180,6 +184,15 @@ export class ServerBuilder implements SubscriptionLike {
     private _imagesInterfaces: AIGenerateImageConfiguration['interfaces'];
 
     private _subscription: Subscription;
+
+    /**
+     * The promise that resolves when the server has been fully initialized.
+     */
+    private _initPromise: Promise<void>;
+    private _initActions: {
+        priority: number;
+        action: () => Promise<void>;
+    }[] = [];
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -500,15 +513,6 @@ export class ServerBuilder implements SubscriptionLike {
             new PrismaInstRecordsStore(prisma)
         );
 
-        this._websocketController = new WebsocketController(
-            this._websocketConnectionStore,
-            this._websocketMessenger,
-            this._instRecordsStore,
-            this._tempInstRecordsStore,
-            this._authController,
-            this._policyController
-        );
-
         return this;
     }
 
@@ -595,15 +599,7 @@ export class ServerBuilder implements SubscriptionLike {
         const client = this._ensureRedis(options);
         const store = new RedisRateLimitStore({
             sendCommand: (command: string, ...args: (string | number)[]) => {
-                return new Promise((resolve, reject) => {
-                    this._redis.sendCommand(command, args, (err, result) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(result);
-                        }
-                    });
-                });
+                return this._redis.sendCommand([command, ...(args as any[])]);
             },
         });
         store.prefix = options.redis.rateLimitPrefix;
@@ -907,6 +903,22 @@ export class ServerBuilder implements SubscriptionLike {
             this._aiController = new AIController(this._aiConfiguration);
         }
 
+        if (
+            this._websocketConnectionStore &&
+            this._websocketMessenger &&
+            this._instRecordsStore &&
+            this._tempInstRecordsStore
+        ) {
+            this._websocketController = new WebsocketController(
+                this._websocketConnectionStore,
+                this._websocketMessenger,
+                this._instRecordsStore,
+                this._tempInstRecordsStore,
+                this._authController,
+                this._policyController
+            );
+        }
+
         const server = new RecordsServer(
             this._allowedAccountOrigins,
             this._allowedApiOrigins,
@@ -945,25 +957,57 @@ export class ServerBuilder implements SubscriptionLike {
         };
     }
 
-    private _ensureRedis(options: Pick<BuilderOptions, 'redis'>): RedisClient {
-        if (!this._redis) {
-            this._redis = createRedisClient({
-                host: options.redis.host,
-                port: options.redis.port,
-                password: options.redis.password,
-                tls: options.redis.tls,
+    /**
+     * Ensures that all the initialization actions have been performed.
+     * Returns a promise that resolves when the actions have been performed.
+     */
+    ensureInitialized() {
+        if (!this._initPromise) {
+            this._initPromise = this._initCore();
+        }
 
-                retry_strategy: function (options) {
-                    if (
-                        options.error &&
-                        options.error.code === 'ECONNREFUSED'
-                    ) {
-                        // End reconnecting on a specific error and flush all commands with
-                        // a individual error
-                        return new Error('The server refused the connection');
-                    }
-                    // reconnect after min(100ms per attempt, 3 seconds)
-                    return Math.min(options.attempt * 100, 3000);
+        return this._initPromise;
+    }
+
+    private async _initCore(): Promise<void> {
+        console.log('[ServerBuilder] Running initialization actions...');
+        let actions = sortBy(this._initActions, (a) => a.priority);
+        for (let action of actions) {
+            await action.action();
+        }
+        console.log('[ServerBuilder] Done.');
+    }
+
+    private _ensureRedis(
+        options: Pick<BuilderOptions, 'redis'>
+    ): RedisClientType {
+        if (!this._redis) {
+            let retryStrategy = (retries: number, error: Error) => {
+                // reconnect after min(100ms per attempt, 3 seconds)
+                return Math.min(retries * 100, 3000);
+            };
+            if (options.redis.url) {
+                this._redis = createRedisClient({
+                    url: options.redis.url,
+                    socket: {
+                        reconnectStrategy: retryStrategy,
+                    },
+                });
+            } else {
+                this._redis = createRedisClient({
+                    socket: {
+                        host: options.redis.host,
+                        port: options.redis.port,
+                        tls: options.redis.tls,
+                        reconnectStrategy: retryStrategy,
+                    },
+                    password: options.redis.password,
+                });
+            }
+            this._initActions.push({
+                priority: 10,
+                action: async () => {
+                    await this._redis.connect();
                 },
             });
             this._subscription.add(() => {
@@ -1089,6 +1133,7 @@ const sesSchema = z.object({
 });
 
 const redisSchema = z.object({
+    url: z.string().nonempty(),
     host: z.string().nonempty(),
     port: z.number(),
     password: z.string().nonempty().optional(),

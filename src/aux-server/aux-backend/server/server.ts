@@ -239,6 +239,9 @@ export class Server {
             websocketMessenger,
             websocketController,
         } = await builder.buildAsync();
+
+        await builder.ensureInitialized();
+
         const filesCollection =
             mongoDatabase.collection<any>('recordsFilesData');
 
