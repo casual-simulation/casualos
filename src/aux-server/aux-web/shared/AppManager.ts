@@ -88,6 +88,7 @@ export class AppManager {
     private _systemPortal: SystemPortalCoordinator<BotManager>;
     private _db: IDBDatabase;
     private _primarySimulationAvailableSubject: Subject<void> = new Subject();
+    private _startLoadTime: number = Date.now();
 
     private _simulationFactory: (
         id: string,
@@ -285,6 +286,7 @@ export class AppManager {
 
     async init() {
         console.log('[AppManager] Starting init...');
+        this._reportTime('Time to start');
         console.log(
             '[AppManager] CasualOS Version:',
             this.version.latestTaggedVersion,
@@ -293,9 +295,23 @@ export class AppManager {
         await this._initIndexedDB();
         this._sendProgress('Running aux...', 0);
         await this._initConfig();
-        await this._initDeviceConfig();
-        await this._initAuth();
+        this._reportTime('Time to config');
+        await Promise.all([
+            this._initDeviceConfig().then(() => {
+                this._reportTime('Time to device config');
+            }),
+            this._initAuth().then(() => {
+                this._reportTime('Time to auth');
+            }),
+        ]);
+        this._reportTime('Time to init');
         this._sendProgress('Initialized.', 1, true);
+    }
+
+    private _reportTime(message: string) {
+        console.log(
+            `[AppManager] ${message}: ${Date.now() - this._startLoadTime}ms`
+        );
     }
 
     private async _initAuth() {
@@ -447,6 +463,7 @@ export class AppManager {
         });
 
         this._initOffline();
+        this._reportTime('Time to primary simulation');
         this._primarySimulationAvailableSubject.next();
 
         const sim = this.simulationManager.primary;
