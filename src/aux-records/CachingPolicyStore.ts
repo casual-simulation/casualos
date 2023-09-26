@@ -16,6 +16,7 @@ import {
     UpdateUserPolicyResult,
     UpdateUserRolesResult,
     UserPolicyRecord,
+    getExpireTime,
 } from './PolicyStore';
 import { Cache } from './Cache';
 
@@ -96,7 +97,10 @@ export class CachingPolicyStore implements PolicyStore {
         );
 
         if (cacheResult) {
-            return cacheResult;
+            const now = Date.now();
+            return cacheResult.filter(
+                (r) => getExpireTime(r.expireTimeMs) > now
+            );
         }
 
         const roles = await this._store.listRolesForUser(recordName, userId);
@@ -121,7 +125,10 @@ export class CachingPolicyStore implements PolicyStore {
         );
 
         if (cacheResult) {
-            return cacheResult;
+            const now = Date.now();
+            return cacheResult.filter(
+                (r) => getExpireTime(r.expireTimeMs) > now
+            );
         }
 
         const roles = await this._store.listRolesForInst(recordName, inst);
@@ -141,46 +148,95 @@ export class CachingPolicyStore implements PolicyStore {
         recordName: string,
         role: string
     ): Promise<ListedRoleAssignments> {
-        throw new Error('Method not implemented.');
+        return this._store.listAssignmentsForRole(recordName, role);
     }
 
-    listAssignments?(
+    listAssignments(
         recordName: string,
         startingRole: string
     ): Promise<ListedRoleAssignments> {
-        throw new Error('Method not implemented.');
+        return this._store.listAssignments(recordName, startingRole);
     }
 
     getUserPolicy(
         recordName: string,
         marker: string
     ): Promise<GetUserPolicyResult> {
-        throw new Error('Method not implemented.');
+        return this._store.getUserPolicy(recordName, marker);
     }
 
-    updateUserPolicy(
+    async updateUserPolicy(
         recordName: string,
         marker: string,
         policy: UserPolicyRecord
     ): Promise<UpdateUserPolicyResult> {
-        throw new Error('Method not implemented.');
+        const result = await this._store.updateUserPolicy(
+            recordName,
+            marker,
+            policy
+        );
+
+        if (result.success === false) {
+            return result;
+        }
+
+        // Update the cache.
+        await this._cache.remove(`policies/${recordName}/${marker}`);
+
+        return result;
     }
 
-    assignSubjectRole(
+    async assignSubjectRole(
         recordName: string,
         subjectId: string,
         type: 'inst' | 'user',
         role: AssignedRole
     ): Promise<UpdateUserRolesResult> {
-        throw new Error('Method not implemented.');
+        const result = await this._store.assignSubjectRole(
+            recordName,
+            subjectId,
+            type,
+            role
+        );
+
+        if (result.success === false) {
+            return result;
+        }
+
+        // Update the cache.
+        if (type === 'user') {
+            await this._cache.remove(`userRoles/${recordName}/${subjectId}`);
+        } else {
+            await this._cache.remove(`instRoles/${recordName}/${subjectId}`);
+        }
+
+        return result;
     }
 
-    revokeSubjectRole(
+    async revokeSubjectRole(
         recordName: string,
         subjectId: string,
         type: 'inst' | 'user',
         role: string
     ): Promise<UpdateUserRolesResult> {
-        throw new Error('Method not implemented.');
+        const result = await this._store.revokeSubjectRole(
+            recordName,
+            subjectId,
+            type,
+            role
+        );
+
+        if (result.success === false) {
+            return result;
+        }
+
+        // Update the cache.
+        if (type === 'user') {
+            await this._cache.remove(`userRoles/${recordName}/${subjectId}`);
+        } else {
+            await this._cache.remove(`instRoles/${recordName}/${subjectId}`);
+        }
+
+        return result;
     }
 }

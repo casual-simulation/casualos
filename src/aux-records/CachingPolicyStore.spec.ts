@@ -39,6 +39,9 @@ describe('CachingPolicyStore', () => {
         jest.spyOn(inner, 'listUserPolicies');
         jest.spyOn(inner, 'listRolesForUser');
         jest.spyOn(inner, 'listRolesForInst');
+        jest.spyOn(inner, 'listAssignmentsForRole');
+        jest.spyOn(inner, 'listAssignments');
+        jest.spyOn(inner, 'getUserPolicy');
 
         inner.policies['test'] = {
             marker: {
@@ -339,6 +342,36 @@ describe('CachingPolicyStore', () => {
                 ])
             );
         });
+
+        it('should not return expired roles from the cache', async () => {
+            await cache.store(
+                `userRoles/test/user1`,
+                [
+                    {
+                        role: 'role1',
+                        expireTimeMs: 10,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: 12,
+                    },
+                ],
+                1
+            );
+
+            nowMock.mockReturnValue(11);
+
+            const result = await store.listRolesForUser('test', 'user1');
+
+            expect(result).toEqual([
+                {
+                    role: 'role2',
+                    expireTimeMs: 12,
+                },
+            ]);
+
+            expect(inner.listRolesForUser).toBeCalledTimes(0);
+        });
     });
 
     describe('listRolesForInst()', () => {
@@ -408,6 +441,473 @@ describe('CachingPolicyStore', () => {
                     ],
                 ])
             );
+        });
+
+        it('should not return expired roles from the cache', async () => {
+            await cache.store(
+                `instRoles/test/inst1`,
+                [
+                    {
+                        role: 'role1',
+                        expireTimeMs: 10,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: 12,
+                    },
+                ],
+                1
+            );
+
+            nowMock.mockReturnValue(11);
+
+            const result = await store.listRolesForInst('test', 'inst1');
+
+            expect(result).toEqual([
+                {
+                    role: 'role2',
+                    expireTimeMs: 12,
+                },
+            ]);
+
+            expect(inner.listRolesForInst).toBeCalledTimes(0);
+        });
+    });
+
+    describe('listAssignmentsForRole()', () => {
+        it('should not cache anything', async () => {
+            inner.roles['test'] = {
+                user1: new Set(['role1', 'role2']),
+                user2: new Set(['role1']),
+            };
+
+            const list = await store.listAssignmentsForRole('test', 'role1');
+
+            expect(list).toEqual({
+                assignments: [
+                    {
+                        type: 'user',
+                        userId: 'user1',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'user2',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                ],
+                totalCount: 2,
+            });
+
+            const list2 = await store.listAssignmentsForRole('test', 'role1');
+            expect(list2).toEqual(list);
+
+            expect(inner.listAssignmentsForRole).toBeCalledTimes(2);
+        });
+    });
+
+    describe('listAssignments()', () => {
+        it('should not cache anything', async () => {
+            inner.roles['test'] = {
+                user1: new Set(['role1', 'role2']),
+                user2: new Set(['role1']),
+            };
+
+            const list = await store.listAssignments('test', null as any);
+
+            expect(list).toEqual({
+                assignments: [
+                    {
+                        type: 'user',
+                        userId: 'user1',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'user2',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'user1',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                ],
+                totalCount: 3,
+            });
+
+            const list2 = await store.listAssignments('test', null as any);
+            expect(list2).toEqual(list);
+
+            expect(inner.listAssignments).toBeCalledTimes(2);
+        });
+    });
+
+    describe('getUserPolicy()', () => {
+        it('should not cache anything', async () => {
+            const result = await store.getUserPolicy('test', 'marker');
+
+            expect(result).toEqual({
+                success: true,
+                markers: [ACCOUNT_MARKER],
+                document: policy,
+            });
+
+            const result2 = await store.getUserPolicy('test', 'marker');
+            expect(result2).toEqual(result);
+
+            expect(inner.getUserPolicy).toBeCalledTimes(2);
+        });
+    });
+
+    describe('updateUserPolicy()', () => {
+        it('should update the user policy', async () => {
+            const policy2: PolicyDocument = {
+                permissions: [
+                    {
+                        type: 'data.create',
+                        addresses: true,
+                        role: 'dev',
+                    },
+                ],
+            };
+
+            const result = await store.updateUserPolicy('test', 'marker', {
+                document: policy2,
+                markers: [ACCOUNT_MARKER],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(inner.policies['test'].marker).toEqual({
+                document: policy2,
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should delete the policy cache for the given marker', async () => {
+            await cache.store(`policies/test/marker`, [policy], 1);
+
+            const policy2: PolicyDocument = {
+                permissions: [
+                    {
+                        type: 'data.create',
+                        addresses: true,
+                        role: 'dev',
+                    },
+                ],
+            };
+
+            const result = await store.updateUserPolicy('test', 'marker', {
+                document: policy2,
+                markers: [ACCOUNT_MARKER],
+            });
+
+            const cacheResult = await cache.retrieve(`policies/test/marker`);
+
+            expect(cacheResult).toBe(undefined);
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(inner.policies['test'].marker).toEqual({
+                document: policy2,
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+    });
+
+    describe('assignSubjectRole()', () => {
+        describe('user', () => {
+            it('should update the roles for the user', async () => {
+                const result = await store.assignSubjectRole(
+                    'test',
+                    'user1',
+                    'user',
+                    {
+                        role: 'role99',
+                        expireTimeMs: null,
+                    }
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(inner.roleAssignments['test']).toEqual({
+                    user1: [
+                        {
+                            role: 'role99',
+                            expireTimeMs: null,
+                        },
+                    ],
+                });
+            });
+
+            it('should update the cache', async () => {
+                await cache.store(
+                    `userRoles/test/user1`,
+                    [
+                        {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    ],
+                    1
+                );
+
+                const result = await store.assignSubjectRole(
+                    'test',
+                    'user1',
+                    'user',
+                    {
+                        role: 'role99',
+                        expireTimeMs: null,
+                    }
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(inner.roleAssignments['test']).toEqual({
+                    user1: [
+                        {
+                            role: 'role99',
+                            expireTimeMs: null,
+                        },
+                    ],
+                });
+
+                const cacheResult = await cache.retrieve(
+                    `userRoles/test/user1`
+                );
+                expect(cacheResult).toBe(undefined);
+            });
+        });
+
+        describe('inst', () => {
+            it('should update the roles for the inst', async () => {
+                const result = await store.assignSubjectRole(
+                    'test',
+                    'inst1',
+                    'inst',
+                    {
+                        role: 'role99',
+                        expireTimeMs: null,
+                    }
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(inner.roleAssignments['test']).toEqual({
+                    inst1: [
+                        {
+                            role: 'role99',
+                            expireTimeMs: null,
+                        },
+                    ],
+                });
+            });
+
+            it('should update the cache', async () => {
+                await cache.store(
+                    `instRoles/test/inst1`,
+                    [
+                        {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    ],
+                    1
+                );
+
+                const result = await store.assignSubjectRole(
+                    'test',
+                    'inst1',
+                    'inst',
+                    {
+                        role: 'role99',
+                        expireTimeMs: null,
+                    }
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(inner.roleAssignments['test']).toEqual({
+                    inst1: [
+                        {
+                            role: 'role99',
+                            expireTimeMs: null,
+                        },
+                    ],
+                });
+
+                const cacheResult = await cache.retrieve(
+                    `instRoles/test/inst1`
+                );
+                expect(cacheResult).toBe(undefined);
+            });
+        });
+    });
+
+    describe('revokeSubjectRole()', () => {
+        describe('user', () => {
+            it('should update the roles for the user', async () => {
+                inner.roleAssignments['test'] = {
+                    user1: [
+                        {
+                            role: 'role99',
+                            expireTimeMs: null,
+                        },
+                    ],
+                };
+                const result = await store.revokeSubjectRole(
+                    'test',
+                    'user1',
+                    'user',
+                    'role99'
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(inner.roleAssignments['test']).toEqual({
+                    user1: [],
+                });
+            });
+
+            it('should update the cache', async () => {
+                inner.roleAssignments['test'] = {
+                    user1: [
+                        {
+                            role: 'role99',
+                            expireTimeMs: null,
+                        },
+                    ],
+                };
+                await cache.store(
+                    `userRoles/test/user1`,
+                    [
+                        {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    ],
+                    1
+                );
+
+                const result = await store.revokeSubjectRole(
+                    'test',
+                    'user1',
+                    'user',
+                    'role99'
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(inner.roleAssignments['test']).toEqual({
+                    user1: [],
+                });
+
+                const cacheResult = await cache.retrieve(
+                    `userRoles/test/user1`
+                );
+                expect(cacheResult).toBe(undefined);
+            });
+        });
+
+        describe('inst', () => {
+            it('should update the roles for the inst', async () => {
+                inner.roleAssignments['test'] = {
+                    inst1: [
+                        {
+                            role: 'role99',
+                            expireTimeMs: null,
+                        },
+                    ],
+                };
+                const result = await store.revokeSubjectRole(
+                    'test',
+                    'inst1',
+                    'inst',
+                    'role99'
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(inner.roleAssignments['test']).toEqual({
+                    inst1: [],
+                });
+            });
+
+            it('should update the cache', async () => {
+                inner.roleAssignments['test'] = {
+                    inst1: [
+                        {
+                            role: 'role99',
+                            expireTimeMs: null,
+                        },
+                    ],
+                };
+                await cache.store(
+                    `instRoles/test/inst1`,
+                    [
+                        {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    ],
+                    1
+                );
+
+                const result = await store.revokeSubjectRole(
+                    'test',
+                    'inst1',
+                    'inst',
+                    'role99'
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(inner.roleAssignments['test']).toEqual({
+                    inst1: [],
+                });
+
+                const cacheResult = await cache.retrieve(
+                    `instRoles/test/inst1`
+                );
+                expect(cacheResult).toBe(undefined);
+            });
         });
     });
 });
