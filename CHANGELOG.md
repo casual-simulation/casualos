@@ -51,6 +51,8 @@
     -   Added `formLightDistance` tag.
     -   Added `formLightAngle` tag.
     -   Added `formLightPenumbra` tag.
+    -   Added `formLightDecay` tag.
+    -   Added `formLightGroundColor` tag.
 
 ### :bug: Bug Fixes
 
