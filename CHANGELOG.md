@@ -58,10 +58,6 @@
 
 -   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
 
-### :bug: Bug Fixes
-
--   Fixed an issue where setting `scale`, `scaleX`, `scaleY`, or `scaleZ` to `0` would make bots unpointable along the respective dimension.
-
 ## V3.2.6
 
 #### Date: 9/1/2023
