@@ -45,6 +45,10 @@
 
 -   Improved `os.listUserStudios()` to include the subscription tier of each studio.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting `scale`, `scaleX`, `scaleY`, or `scaleZ` to `0` would make bots unpointable along the respective dimension.
+
 ## V3.2.6
 
 #### Date: 9/1/2023
