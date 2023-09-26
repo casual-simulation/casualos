@@ -546,35 +546,69 @@ export class WebsocketController {
                     event.branch
                 );
             } else if (event.recordName) {
-                const instResult = await this._getInst(
-                    event.recordName,
-                    event.inst,
-                    connection.userId
-                );
-                if (instResult.success === false) {
-                    await this.sendError(connectionId, -1, instResult);
+                if (!branch.linkedInst) {
+                    console.error(
+                        '[WebsocketController] The inst was not found even though the branch was found and exists in a record!'
+                    );
+                    await this.sendError(connectionId, -1, {
+                        success: false,
+                        errorCode: 'inst_not_found',
+                        errorMessage: 'The inst was not found.',
+                    });
                     return;
-                } else {
-                    const authorizeResult =
-                        await this._policies.authorizeRequestUsingContext(
-                            instResult.context,
-                            {
-                                action: 'inst.updateData',
-                                inst: event.inst,
-                                recordKeyOrRecordName: event.recordName,
-                                resourceMarkers: instResult.inst.markers,
-                                userId: connection.userId,
-                            }
-                        );
+                }
 
-                    if (authorizeResult.allowed === false) {
-                        await this.sendError(
-                            connectionId,
-                            -1,
-                            returnAuthorizationResult(authorizeResult)
-                        );
-                        return;
-                    }
+                const contextResult =
+                    await this._policies.constructAuthorizationContext({
+                        recordKeyOrRecordName: event.recordName,
+                        userId: connection.userId,
+                    });
+
+                if (contextResult.success === false) {
+                    await this.sendError(connectionId, -1, contextResult);
+                    return;
+                }
+
+                const authorizeReadResult =
+                    await this._policies.authorizeRequestUsingContext(
+                        contextResult.context,
+                        {
+                            action: 'inst.read',
+                            inst: event.inst,
+                            recordKeyOrRecordName: event.recordName,
+                            resourceMarkers: branch.linkedInst.markers,
+                            userId: connection.userId,
+                        }
+                    );
+
+                if (authorizeReadResult.allowed === false) {
+                    await this.sendError(
+                        connectionId,
+                        -1,
+                        returnAuthorizationResult(authorizeReadResult)
+                    );
+                    return;
+                }
+
+                const authorizeUpdateResult =
+                    await this._policies.authorizeRequestUsingContext(
+                        contextResult.context,
+                        {
+                            action: 'inst.updateData',
+                            inst: event.inst,
+                            recordKeyOrRecordName: event.recordName,
+                            resourceMarkers: branch.linkedInst.markers,
+                            userId: connection.userId,
+                        }
+                    );
+
+                if (authorizeUpdateResult.allowed === false) {
+                    await this.sendError(
+                        connectionId,
+                        -1,
+                        returnAuthorizationResult(authorizeUpdateResult)
+                    );
+                    return;
                 }
             }
 
