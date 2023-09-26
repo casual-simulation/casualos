@@ -163,7 +163,8 @@ export class WebsocketController {
                 await this._connectionStore.saveAuthorizedInst(
                     connectionId,
                     validationResult.recordName,
-                    validationResult.inst
+                    validationResult.inst,
+                    'token'
                 );
                 userId = validationResult.userId;
                 sessionId = validationResult.sessionId;
@@ -278,7 +279,8 @@ export class WebsocketController {
             const authorized = await this._connectionStore.isAuthorizedInst(
                 connectionId,
                 event.recordName,
-                event.inst
+                event.inst,
+                'token'
             );
 
             if (!authorized) {
@@ -485,6 +487,24 @@ export class WebsocketController {
             );
         }
 
+        if (connection.token && event.recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                event.recordName,
+                event.inst,
+                'token'
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
         if (event.updates) {
             let branch = await this._instStore.getBranchByName(
                 event.recordName,
@@ -546,69 +566,85 @@ export class WebsocketController {
                     event.branch
                 );
             } else if (event.recordName) {
-                if (!branch.linkedInst) {
-                    console.error(
-                        '[WebsocketController] The inst was not found even though the branch was found and exists in a record!'
-                    );
-                    await this.sendError(connectionId, -1, {
-                        success: false,
-                        errorCode: 'inst_not_found',
-                        errorMessage: 'The inst was not found.',
-                    });
-                    return;
-                }
+                const authorized = await this._connectionStore.isAuthorizedInst(
+                    connectionId,
+                    event.recordName,
+                    event.inst,
+                    'updateData'
+                );
 
-                const contextResult =
-                    await this._policies.constructAuthorizationContext({
-                        recordKeyOrRecordName: event.recordName,
-                        userId: connection.userId,
-                    });
+                if (!authorized) {
+                    if (!branch.linkedInst) {
+                        console.error(
+                            '[WebsocketController] The inst was not found even though the branch was found and exists in a record!'
+                        );
+                        await this.sendError(connectionId, -1, {
+                            success: false,
+                            errorCode: 'inst_not_found',
+                            errorMessage: 'The inst was not found.',
+                        });
+                        return;
+                    }
 
-                if (contextResult.success === false) {
-                    await this.sendError(connectionId, -1, contextResult);
-                    return;
-                }
-
-                const authorizeReadResult =
-                    await this._policies.authorizeRequestUsingContext(
-                        contextResult.context,
-                        {
-                            action: 'inst.read',
-                            inst: event.inst,
+                    const contextResult =
+                        await this._policies.constructAuthorizationContext({
                             recordKeyOrRecordName: event.recordName,
-                            resourceMarkers: branch.linkedInst.markers,
                             userId: connection.userId,
-                        }
-                    );
+                        });
 
-                if (authorizeReadResult.allowed === false) {
-                    await this.sendError(
+                    if (contextResult.success === false) {
+                        await this.sendError(connectionId, -1, contextResult);
+                        return;
+                    }
+
+                    const authorizeReadResult =
+                        await this._policies.authorizeRequestUsingContext(
+                            contextResult.context,
+                            {
+                                action: 'inst.read',
+                                inst: event.inst,
+                                recordKeyOrRecordName: event.recordName,
+                                resourceMarkers: branch.linkedInst.markers,
+                                userId: connection.userId,
+                            }
+                        );
+
+                    if (authorizeReadResult.allowed === false) {
+                        await this.sendError(
+                            connectionId,
+                            -1,
+                            returnAuthorizationResult(authorizeReadResult)
+                        );
+                        return;
+                    }
+
+                    const authorizeUpdateResult =
+                        await this._policies.authorizeRequestUsingContext(
+                            contextResult.context,
+                            {
+                                action: 'inst.updateData',
+                                inst: event.inst,
+                                recordKeyOrRecordName: event.recordName,
+                                resourceMarkers: branch.linkedInst.markers,
+                                userId: connection.userId,
+                            }
+                        );
+
+                    if (authorizeUpdateResult.allowed === false) {
+                        await this.sendError(
+                            connectionId,
+                            -1,
+                            returnAuthorizationResult(authorizeUpdateResult)
+                        );
+                        return;
+                    }
+
+                    await this._connectionStore.saveAuthorizedInst(
                         connectionId,
-                        -1,
-                        returnAuthorizationResult(authorizeReadResult)
+                        event.recordName,
+                        event.inst,
+                        'updateData'
                     );
-                    return;
-                }
-
-                const authorizeUpdateResult =
-                    await this._policies.authorizeRequestUsingContext(
-                        contextResult.context,
-                        {
-                            action: 'inst.updateData',
-                            inst: event.inst,
-                            recordKeyOrRecordName: event.recordName,
-                            resourceMarkers: branch.linkedInst.markers,
-                            userId: connection.userId,
-                        }
-                    );
-
-                if (authorizeUpdateResult.allowed === false) {
-                    await this.sendError(
-                        connectionId,
-                        -1,
-                        returnAuthorizationResult(authorizeUpdateResult)
-                    );
-                    return;
                 }
             }
 
@@ -765,7 +801,8 @@ export class WebsocketController {
             const authorized = await this._connectionStore.isAuthorizedInst(
                 connectionId,
                 event.recordName,
-                event.inst
+                event.inst,
+                'token'
             );
 
             if (!authorized) {
@@ -876,7 +913,8 @@ export class WebsocketController {
             const authorized = await this._connectionStore.isAuthorizedInst(
                 connectionId,
                 recordName,
-                inst
+                inst,
+                'token'
             );
 
             if (!authorized) {
@@ -975,7 +1013,8 @@ export class WebsocketController {
             const authorized = await this._connectionStore.isAuthorizedInst(
                 connectionId,
                 recordName,
-                inst
+                inst,
+                'token'
             );
 
             if (!authorized) {
@@ -1091,7 +1130,8 @@ export class WebsocketController {
             const authorized = await this._connectionStore.isAuthorizedInst(
                 connectionId,
                 recordName,
-                inst
+                inst,
+                'token'
             );
 
             if (!authorized) {

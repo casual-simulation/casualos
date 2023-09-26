@@ -13,10 +13,22 @@ import {
 export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     private _globalNamespace: string;
     private _redis: RedisClientType;
+    private _expireAuthorizationSeconds: number;
 
-    constructor(globalNamespace: string, client: RedisClientType) {
+    /**
+     * Creates a new RedisWebsocketConnectionStore.
+     * @param globalNamespace The global namespace that the store should use.
+     * @param client The Redis Client.
+     * @param expireAuthorizationSeconds The number of seconds that "updateData" authorizations should expire after. This essentially functions as a cache for "inst.read" and "inst.updateData" permissions for repo/add_updates websocket messages.
+     */
+    constructor(
+        globalNamespace: string,
+        client: RedisClientType,
+        expireAuthorizationSeconds: number
+    ) {
         this._globalNamespace = globalNamespace;
         this._redis = client;
+        this._expireAuthorizationSeconds = expireAuthorizationSeconds;
     }
 
     // /{global}/connections
@@ -32,21 +44,29 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     async saveAuthorizedInst(
         connectionId: string,
         recordName: string,
-        inst: string
+        inst: string,
+        scope: 'token' | 'updateData'
     ): Promise<void> {
-        await this._redis.sAdd(
-            authorizedInstsKey(this._globalNamespace, connectionId),
-            `${recordName ?? ''}/${inst ?? ''}`
+        const key = authorizedInstsKey(
+            this._globalNamespace,
+            connectionId,
+            scope
         );
+        await this._redis.sAdd(key, `${recordName ?? ''}/${inst ?? ''}`);
+
+        if (scope === 'updateData') {
+            await this._redis.expire(key, this._expireAuthorizationSeconds);
+        }
     }
 
     async isAuthorizedInst(
         connectionId: string,
         recordName: string,
-        inst: string
+        inst: string,
+        scope: 'token' | 'updateData'
     ): Promise<boolean> {
         return await this._redis.sIsMember(
-            authorizedInstsKey(this._globalNamespace, connectionId),
+            authorizedInstsKey(this._globalNamespace, connectionId, scope),
             `${recordName ?? ''}/${inst ?? ''}`
         );
     }
@@ -129,7 +149,12 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         );
         await this._redis.del([
             connectionIdKey(this._globalNamespace, connectionId),
-            authorizedInstsKey(this._globalNamespace, connectionId),
+            authorizedInstsKey(this._globalNamespace, connectionId, 'token'),
+            authorizedInstsKey(
+                this._globalNamespace,
+                connectionId,
+                'updateData'
+            ),
         ]);
     }
 
@@ -148,18 +173,32 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
                 )
             )
         );
-        await this._redis.hDel(
-            connectionsKey(this._globalNamespace),
-            connectionId
-        );
-        await this._redis.expire(
-            connectionIdKey(this._globalNamespace, connectionId),
-            10
-        );
-        await this._redis.expire(
-            authorizedInstsKey(this._globalNamespace, connectionId),
-            10
-        );
+        await Promise.all([
+            this._redis.hDel(
+                connectionsKey(this._globalNamespace),
+                connectionId
+            ),
+            this._redis.expire(
+                connectionIdKey(this._globalNamespace, connectionId),
+                10
+            ),
+            this._redis.expire(
+                authorizedInstsKey(
+                    this._globalNamespace,
+                    connectionId,
+                    'token'
+                ),
+                10
+            ),
+            this._redis.expire(
+                authorizedInstsKey(
+                    this._globalNamespace,
+                    connectionId,
+                    'updateData'
+                ),
+                10
+            ),
+        ]);
     }
 
     async getConnectionsByBranch(
@@ -308,6 +347,10 @@ function connectionRateLimitKey(globalNamespace: string, connectionId: string) {
     return `/${globalNamespace}/rate_limited/${connectionId}`;
 }
 
-function authorizedInstsKey(globalNamespace: string, connectionId: string) {
-    return `/${globalNamespace}/authorized/${connectionId}`;
+function authorizedInstsKey(
+    globalNamespace: string,
+    connectionId: string,
+    scope: 'token' | 'updateData'
+) {
+    return `/${globalNamespace}/authorized/${connectionId}/${scope}`;
 }

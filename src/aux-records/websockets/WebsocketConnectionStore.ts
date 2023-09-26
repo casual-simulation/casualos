@@ -121,16 +121,19 @@ export interface WebsocketConnectionStore {
         timeMs: number | null
     ): Promise<void>;
 
+    // TODO: Support clearing "updateData" authorized insts when policies/roles for an inst change.
     /**
      * Saves that the given record name and inst have been authorized by the given connection.
      * @param connectionId The ID of the connection.
      * @param recordName The name of the record.
      * @param inst The name of the inst.
+     * @param scope The scope of the authorization. "token" means that the connection has logged in with a valid token for the given record name and inst. "updateData" means that the connection has correct permissions to update the data in the inst.
      */
     saveAuthorizedInst(
         connectionId: string,
         recordName: string | null,
-        inst: string
+        inst: string,
+        scope: 'token' | 'updateData'
     ): Promise<void>;
 
     /**
@@ -138,11 +141,13 @@ export interface WebsocketConnectionStore {
      * @param connectionId The ID of the connection.
      * @param recordName The name of the record.
      * @param inst The name of the inst.
+     * @param scope The scope of the authorization. "token" means that the connection has logged in with a valid token for the given record name and inst. "updateData" means that the connection has correct permissions to update the data in the inst.
      */
     isAuthorizedInst(
         connectionId: string,
         recordName: string | null,
-        inst: string
+        inst: string,
+        scope: 'token' | 'updateData'
     ): Promise<boolean>;
 }
 

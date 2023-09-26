@@ -454,7 +454,8 @@ export class ServerBuilder implements SubscriptionLike {
         const redis = this._ensureRedis(options);
         this._websocketConnectionStore = new RedisWebsocketConnectionStore(
             options.redis.websocketConnectionNamespace,
-            redis
+            redis,
+            options.redis.connectionAuthorizationCacheSeconds
         );
 
         return this;
@@ -1200,6 +1201,11 @@ const redisSchema = z.object({
     websocketConnectionNamespace: z.string().optional(),
     publicInstRecordsStoreNamespace: z.string().optional(),
     tempInstRecordsStoreNamespace: z.string().optional(),
+
+    // The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
+    // Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often.
+    // 5 minutes by default
+    connectionAuthorizationCacheSeconds: z.number().positive().default(300),
 
     cacheNamespace: z.string().nonempty().default('/cache'),
 });

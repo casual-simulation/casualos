@@ -238,7 +238,8 @@ describe('WebsocketController', () => {
             const authorized = await connectionStore.isAuthorizedInst(
                 serverConnectionId,
                 recordName,
-                inst
+                inst,
+                'token'
             );
 
             expect(authorized).toBe(true);
@@ -1830,6 +1831,12 @@ describe('WebsocketController', () => {
             });
 
             it('should return a inst_not_found error if the record does not exist', async () => {
+                connectionToken = generateV1ConnectionToken(
+                    connectionKey,
+                    connectionId,
+                    'otherRecord',
+                    inst
+                );
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
                     connectionToken,
@@ -2607,6 +2614,125 @@ describe('WebsocketController', () => {
                         expect(
                             messenger.getMessages(serverConnectionId).slice(1)
                         ).toEqual([]);
+                    });
+
+                    it('should add the updates if the user is authorized to update the inst data', async () => {
+                        expect(
+                            await connectionStore.isAuthorizedInst(
+                                serverConnectionId,
+                                recordName,
+                                inst,
+                                'updateData'
+                            )
+                        ).toBe(false);
+                        services.policyStore.policies[recordName] = {
+                            [PRIVATE_MARKER]: {
+                                document: {
+                                    permissions: [
+                                        {
+                                            type: 'inst.read',
+                                            role: 'developer',
+                                            insts: true,
+                                        },
+                                        {
+                                            type: 'inst.updateData',
+                                            role: 'developer',
+                                            insts: true,
+                                        },
+                                    ],
+                                },
+                                markers: [ACCOUNT_MARKER],
+                            },
+                        };
+
+                        services.policyStore.roles[recordName] = {
+                            [otherUserId]: new Set(['developer']),
+                        };
+
+                        await server.addUpdates(serverConnectionId, {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            updateId: 0,
+                        });
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            []
+                        );
+
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/updates_received',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updateId: 0,
+                            },
+                        ]);
+
+                        expect(
+                            await connectionStore.isAuthorizedInst(
+                                serverConnectionId,
+                                recordName,
+                                inst,
+                                'updateData'
+                            )
+                        ).toBe(true);
+                    });
+
+                    it('should not query the policy store if the connection is authorized', async () => {
+                        expect(
+                            await connectionStore.isAuthorizedInst(
+                                serverConnectionId,
+                                recordName,
+                                inst,
+                                'updateData'
+                            )
+                        ).toBe(false);
+                        await connectionStore.saveAuthorizedInst(
+                            serverConnectionId,
+                            recordName,
+                            inst,
+                            'updateData'
+                        );
+
+                        await server.addUpdates(serverConnectionId, {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            updateId: 0,
+                        });
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            []
+                        );
+
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/updates_received',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updateId: 0,
+                            },
+                        ]);
+
+                        expect(
+                            await connectionStore.isAuthorizedInst(
+                                serverConnectionId,
+                                recordName,
+                                inst,
+                                'updateData'
+                            )
+                        ).toBe(true);
                     });
                 });
 
@@ -4423,17 +4549,20 @@ describe('WebsocketController', () => {
                     await connectionStore.saveAuthorizedInst(
                         device2Info.serverConnectionId,
                         recordName,
-                        inst
+                        inst,
+                        'token'
                     );
                     await connectionStore.saveAuthorizedInst(
                         device3Info.serverConnectionId,
                         recordName,
-                        inst
+                        inst,
+                        'token'
                     );
                     await connectionStore.saveAuthorizedInst(
                         device4Info.serverConnectionId,
                         recordName,
-                        inst
+                        inst,
+                        'token'
                     );
                 });
 
@@ -4730,17 +4859,20 @@ describe('WebsocketController', () => {
                     await connectionStore.saveAuthorizedInst(
                         device2Info.serverConnectionId,
                         recordName,
-                        inst
+                        inst,
+                        'token'
                     );
                     await connectionStore.saveAuthorizedInst(
                         device3Info.serverConnectionId,
                         recordName,
-                        inst
+                        inst,
+                        'token'
                     );
                     await connectionStore.saveAuthorizedInst(
                         device4Info.serverConnectionId,
                         recordName,
-                        inst
+                        inst,
+                        'token'
                     );
 
                     uuidMock.mockReturnValueOnce('otherUserId');
