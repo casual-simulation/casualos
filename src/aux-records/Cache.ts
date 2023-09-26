@@ -22,11 +22,6 @@ export interface Cache {
      * @param key The key to remove the data for.
      */
     remove(key: string): Promise<void>;
-
-    /**
-     * Clears all the data from the cache.
-     */
-    clear(): Promise<void>;
 }
 
 /**
