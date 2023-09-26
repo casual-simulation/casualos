@@ -48,6 +48,7 @@ import {
     CameraHelper,
     Light,
     SpotLight,
+    HemisphereLight,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -868,6 +869,15 @@ export function setLightDecay(light: SpotLight, decay: number) {
         return;
     }
     light.decay = decay;
+}
+//Changes the HemisphereLight Ground Color
+export function setLightGroundColor(light: HemisphereLight, color: string) {
+    if (!light) {
+        return;
+    }
+    if (light instanceof HemisphereLight) {
+        light.groundColor = buildSRGBColor(color);
+    }
 }
 /**
  * Changes the mesh's opacity level.

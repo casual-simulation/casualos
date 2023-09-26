@@ -77,6 +77,7 @@ import {
     setLightAngle,
     setLightPenumbra,
     setLightDecay,
+    setLightGroundColor,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -249,6 +250,7 @@ export class BotShapeDecorator
         this._updateLightAngle(calc);
         this._updateLightPenumbra(calc);
         this._updateLightDecay(calc);
+        this._updateLightGroundColor(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -621,7 +623,7 @@ export class BotShapeDecorator
             calc,
             this.bot3D.bot,
             'formLightDistance',
-            1
+            0
         );
         this._setLightDistance(lightDistance);
     }
@@ -654,6 +656,15 @@ export class BotShapeDecorator
             2
         );
         this._setLightDecay(lightDecay);
+    }
+
+    private _updateLightGroundColor(calc: BotCalculationContext) {
+        const groundColor = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'formLightGroundColor'
+        );
+        this._setLightGroundColor(groundColor);
     }
 
     private _updateOpacity(calc: BotCalculationContext) {
@@ -791,6 +802,18 @@ export class BotShapeDecorator
             });
         } else if (this.light instanceof SpotLight) {
             setLightDecay(this.light, lightDecay);
+        }
+    }
+
+    private _setLightGroundColor(lightColor: any) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof HemisphereLight) {
+                    setLightGroundColor(obj, lightColor);
+                }
+            });
+        } else if (this.light instanceof HemisphereLight) {
+            setLightGroundColor(this.light, lightColor);
         }
     }
 
@@ -1310,8 +1333,10 @@ export class BotShapeDecorator
     }
 
     private _createPointLight() {
+        //Create Collider
         const collider = (this.collider = createCube(1));
         setColor(collider, 'clear');
+        //Create pointLight
         const pointLight = new PointLight(0xffffff, 1, 10, 2);
         this.light = pointLight;
         this.container.add(this.collider);
@@ -1371,7 +1396,8 @@ export class BotShapeDecorator
     private _createHemisphereLight() {
         const collider = (this.collider = createCube(1));
         setColor(collider, 'clear');
-        const hemisphereLight = new HemisphereLight(0xffffbb, 0x080820, 1);
+        const hemisphereLight = new HemisphereLight(0xffffff, 0xffffff, 1);
+        this.light = hemisphereLight;
         this.container.add(this.collider);
         this.bot3D.colliders.push(this.collider);
         this.container.add(hemisphereLight);
