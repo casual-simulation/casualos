@@ -40,4 +40,7 @@ export * from './MetricsStore';
 export * from './MemoryStore';
 export * from './MemoryFileRecordsLookup';
 
+export * from './Cache';
+export * from './CachingPolicyStore';
+
 export * from './websockets';

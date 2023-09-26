@@ -7,31 +7,33 @@ declare const DEVELOPMENT: boolean;
 
 /**
  * Loads the given environment file into the process environment.
- * @param file The file to load.
+ * @param files The files to load.
  */
-export function loadEnvFile(file: string) {
-    const json = readFileSync(file, { encoding: 'utf-8' });
-    const parsed = tryParseJson(json);
-
+export function loadEnvFiles(files: string[]) {
     const temp = {} as any;
 
-    if (parsed.success) {
-        for (let key in parsed.value) {
-            console.log(
-                `[EnvUtils] Injecting Key from ${path.basename(file)}`,
-                key
-            );
-            const value = parsed.value[key];
-            if (value === null || value === undefined || value === '') {
-                delete temp[key];
-            } else if (typeof value === 'object') {
-                if (typeof temp[key] === 'object') {
-                    temp[key] = merge(temp[key], value);
+    for (let file of files) {
+        const json = readFileSync(file, { encoding: 'utf-8' });
+        const parsed = tryParseJson(json);
+
+        if (parsed.success) {
+            for (let key in parsed.value) {
+                console.log(
+                    `[EnvUtils] Injecting Key from ${path.basename(file)}`,
+                    key
+                );
+                const value = parsed.value[key];
+                if (value === null || value === undefined || value === '') {
+                    delete temp[key];
+                } else if (typeof value === 'object') {
+                    if (typeof temp[key] === 'object') {
+                        temp[key] = merge(temp[key], value);
+                    } else {
+                        temp[key] = value;
+                    }
                 } else {
-                    temp[key] = value;
+                    temp[key] = String(value);
                 }
-            } else {
-                temp[key] = String(value);
             }
         }
     }

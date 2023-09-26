@@ -5,30 +5,7 @@ import { merge } from '@casual-simulation/aux-common';
 declare const DEVELOPMENT: boolean;
 declare const SERVER_CONFIG: string;
 
-export const DEV_CONFIG: BuilderOptions = {
-    livekit: {
-        apiKey: 'APIu7LWFmsZckWx',
-        secretKey: 'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ',
-        endpoint: 'ws://localhost:7880',
-    },
-    prisma: {},
-    ws: {},
-    redis: {
-        host: 'localhost',
-        port: 6379,
-        rateLimitPrefix: 'aux-rate-limit/',
-        tls: false,
-        tempInstRecordsStoreNamespace: 'tempInsts',
-        websocketConnectionNamespace: 'connections',
-        publicInstRecordsStoreNamespace: 'insts',
-    },
-    mongodb: {
-        url: 'mongodb://localhost:27017',
-        useNewUrlParser: true,
-        database: 'aux-auth',
-        fileUploadUrl: 'http://localhost:2998/api/v2/records/file',
-    },
-};
+export const DEV_CONFIG: BuilderOptions = {};
 
 export function loadConfig(required: boolean = true) {
     const injectedConfig = parseObject(SERVER_CONFIG);

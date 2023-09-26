@@ -28,6 +28,8 @@ import {
     WebsocketMessenger,
     SplitInstRecordsStore,
     TemporaryInstRecordsStore,
+    MultiCache,
+    CachingPolicyStore,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -103,20 +105,22 @@ import {
     AIGenerateImageConfiguration,
 } from '@casual-simulation/aux-records/AIController';
 import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
-import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
+import { PrismaMetricsStore } from '../prisma/PrismaMetricsStore';
 import { S3 } from '@aws-sdk/client-s3';
-import { RedisTempInstRecordsStore } from 'aux-backend/redis/RedisTempInstRecordsStore';
-import { RedisWebsocketConnectionStore } from 'aux-backend/redis/RedisWebsocketConnectionStore';
-import { ApiGatewayWebsocketMessenger } from 'aux-backend/serverless/aws/src/ApiGatewayWebsocketMessenger';
+import { RedisTempInstRecordsStore } from '../redis/RedisTempInstRecordsStore';
+import { RedisWebsocketConnectionStore } from '../redis/RedisWebsocketConnectionStore';
+import { ApiGatewayWebsocketMessenger } from '../serverless/aws/src/ApiGatewayWebsocketMessenger';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
-import { PrismaInstRecordsStore } from 'aux-backend/prisma/PrismaInstRecordsStore';
+import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
+import { RedisMultiCache } from '../redis/RedisMultiCache';
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
     private _mongoClient: MongoClient;
     private _prismaClient: PrismaClient;
     private _mongoDb: Db;
+    private _multiCache: MultiCache;
 
     private _configStore: ConfigurationStore;
     private _metricsStore: MetricsStore;
@@ -209,6 +213,26 @@ export class ServerBuilder implements SubscriptionLike {
 
     get closed(): boolean {
         return this._subscription.closed;
+    }
+
+    useRedisCache(
+        options: Pick<BuilderOptions, 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Redis Cache.');
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+
+        if (!options.redis.cacheNamespace) {
+            throw new Error('Redis cache namespace must be provided.');
+        }
+
+        const redis = this._ensureRedis(options);
+        this._multiCache = new RedisMultiCache(
+            redis,
+            options.redis.cacheNamespace
+        );
+        return this;
     }
 
     useMongoDB(
@@ -320,7 +344,10 @@ export class ServerBuilder implements SubscriptionLike {
         );
         this._authStore = new PrismaAuthStore(prismaClient);
         this._recordsStore = new PrismaRecordsStore(prismaClient);
-        this._policyStore = new PrismaPolicyStore(prismaClient);
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
         this._dataStore = new PrismaDataRecordsStore(prismaClient);
         this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
@@ -336,6 +363,23 @@ export class ServerBuilder implements SubscriptionLike {
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
 
         return this;
+    }
+
+    private _ensurePrismaPolicyStore(
+        prismaClient: PrismaClient,
+        options: Pick<BuilderOptions, 'prisma'>
+    ): PolicyStore {
+        const policyStore = new PrismaPolicyStore(prismaClient);
+        if (this._multiCache) {
+            const cache = this._multiCache.getCache('policies');
+            return new CachingPolicyStore(
+                policyStore,
+                cache,
+                options.prisma.policiesCacheSeconds
+            );
+        } else {
+            return policyStore;
+        }
     }
 
     usePrismaWithMongoDBFileStore(
@@ -372,7 +416,10 @@ export class ServerBuilder implements SubscriptionLike {
                 );
                 this._authStore = new PrismaAuthStore(prismaClient);
                 this._recordsStore = new PrismaRecordsStore(prismaClient);
-                this._policyStore = new PrismaPolicyStore(prismaClient);
+                this._policyStore = this._ensurePrismaPolicyStore(
+                    prismaClient,
+                    options
+                );
                 this._dataStore = new PrismaDataRecordsStore(prismaClient);
                 this._manualDataStore = new PrismaDataRecordsStore(
                     prismaClient,
@@ -994,6 +1041,11 @@ export class ServerBuilder implements SubscriptionLike {
                     },
                 });
             } else {
+                if (!options.redis.host) {
+                    throw new Error(
+                        'Redis host must be provided if a URL is not specified.'
+                    );
+                }
                 this._redis = createRedisClient({
                     socket: {
                         host: options.redis.host,
@@ -1133,11 +1185,11 @@ const sesSchema = z.object({
 });
 
 const redisSchema = z.object({
-    url: z.string().nonempty(),
-    host: z.string().nonempty(),
-    port: z.number(),
+    url: z.string().nonempty().optional(),
+    host: z.string().nonempty().optional(),
+    port: z.number().optional(),
     password: z.string().nonempty().optional(),
-    tls: z.boolean(),
+    tls: z.boolean().optional(),
 
     causalRepoNamespace: z.string().nonempty().optional(),
     rateLimitPrefix: z.string().nonempty().optional(),
@@ -1148,6 +1200,8 @@ const redisSchema = z.object({
     websocketConnectionNamespace: z.string().optional(),
     publicInstRecordsStoreNamespace: z.string().optional(),
     tempInstRecordsStoreNamespace: z.string().optional(),
+
+    cacheNamespace: z.string().nonempty().default('/cache'),
 });
 
 const rateLimitSchema = z.object({
@@ -1170,6 +1224,8 @@ const mongodbSchema = z.object({
 
 const prismaSchema = z.object({
     options: z.object({}).passthrough().optional(),
+
+    policiesCacheSeconds: z.number().positive().optional().default(60),
 });
 
 const openAiSchema = z.object({

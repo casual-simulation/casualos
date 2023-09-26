@@ -177,6 +177,10 @@ export class Server {
             .useAllowedAccountOrigins(allowedRecordsOrigins)
             .useAllowedApiOrigins(allowedRecordsOrigins);
 
+        if (options.redis && options.redis.cacheNamespace) {
+            builder.useRedisCache();
+        }
+
         if (options.prisma && options.mongodb) {
             builder.usePrismaWithMongoDBFileStore();
         } else {
