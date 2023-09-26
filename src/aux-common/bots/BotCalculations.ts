@@ -1723,7 +1723,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'keyboard' ||
         shape === 'codeButton' ||
         shape === 'codeHint' ||
-        shape === 'spherePortal'
+        shape === 'spherePortal' ||
+        shape === 'light'
     ) {
         return shape;
     }
@@ -1849,7 +1850,16 @@ export function getBotSubShape(
     bot: Bot
 ): BotSubShape {
     const shape: BotSubShape = calculateBotValue(calc, bot, 'auxFormSubtype');
-    if (shape === 'gltf' || shape === 'html' || shape === 'src') {
+    if (
+        shape === 'gltf' ||
+        shape === 'html' ||
+        shape === 'src' ||
+        shape === 'pointLight' ||
+        shape === 'ambientLight' ||
+        shape === 'directionalLight' ||
+        shape === 'spotLight' ||
+        shape === 'hemisphereLight'
+    ) {
         return shape;
     }
     return null;

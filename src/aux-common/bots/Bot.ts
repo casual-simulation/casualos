@@ -943,7 +943,8 @@ export type BotShape =
     | 'nothing'
     | 'keyboard'
     | 'codeButton'
-    | 'codeHint';
+    | 'codeHint'
+    | 'light';
 
 /**
  * Defines the possible forms that a menu bot can appear as.
@@ -964,7 +965,16 @@ export type MenuBotResolvedHoverStyle = 'hover' | 'none';
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
-export type BotSubShape = 'gltf' | 'src' | 'html' | null;
+export type BotSubShape =
+    | 'gltf'
+    | 'src'
+    | 'html'
+    | 'pointLight'
+    | 'ambientLight'
+    | 'directionalLight'
+    | 'spotLight'
+    | 'hemisphereLight'
+    | null;
 
 /**
  * Defines the possible drag modes that a bot can have.
@@ -2674,6 +2684,13 @@ export const KNOWN_TAGS: string[] = [
     'formRenderOrder',
     'formDepthTest',
     'formDepthWrite',
+    'formLightIntensity',
+    'formLightTarget',
+    'formLightDistance',
+    'formLightAngle',
+    'formLightPenumbra',
+    'formLightDecay',
+    'formLightGroundColor',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',

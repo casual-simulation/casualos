@@ -6,6 +6,7 @@ import {
     LocalActions,
     StartFormAnimationAction,
     calculateBooleanTagValue,
+    calculateBotIds,
     calculateBotValue,
     calculateNumericalTagValue,
     calculateStringTagValue,
@@ -21,13 +22,20 @@ import {
     AnimationMixer,
     Box3,
     Color,
+    DirectionalLight,
     Group,
+    HemisphereLight,
     LoopOnce,
     LoopRepeat,
     Mesh,
     Object3D,
+    PointLight,
+    SpotLight,
     MathUtils as ThreeMath,
     Vector3,
+    AmbientLight,
+    Light,
+    Material,
 } from '@casual-simulation/three';
 import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { sortBy } from 'lodash';
@@ -47,6 +55,7 @@ import {
     DEFAULT_OPACITY,
     DEFAULT_TRANSPARENT,
     baseAuxMeshMaterial,
+    baseAuxPointLight,
     buildSRGBColor,
     calculateScale,
     createCircle,
@@ -62,7 +71,13 @@ import {
     setColor,
     setDepthTest,
     setDepthWrite,
+    setLightIntensity,
     setOpacity,
+    setLightDistance,
+    setLightAngle,
+    setLightPenumbra,
+    setLightDecay,
+    setLightGroundColor,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -78,9 +93,11 @@ import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
 import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import { AnimationMixerHandle } from '../AnimationHelper';
+import { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 
 export const gltfPool = getGLTFPool('main');
 
+const DEFAULT_LIGHT_TARGET = new Object3D();
 const KEYBOARD_COLORS = {
     keyboardBack: 0x858585,
     panelBack: 0x262626,
@@ -122,9 +139,11 @@ export class BotShapeDecorator
 
     private _game: Game;
     private _shapeSubscription: SubscriptionLike;
+    private _finder: AuxBotVisualizerFinder;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
+    light: Light;
 
     collider: Object3D;
     scene: Group;
@@ -148,9 +167,10 @@ export class BotShapeDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    constructor(bot3D: AuxBot3D, game: Game) {
+    constructor(bot3D: AuxBot3D, game: Game, finder: AuxBotVisualizerFinder) {
         super(bot3D);
         this._game = game;
+        this._finder = finder;
     }
 
     frameUpdate() {
@@ -158,6 +178,7 @@ export class BotShapeDecorator
             this._animationMixer.update(this._game.getTime().deltaTime);
             this.scene?.updateMatrixWorld(true);
         }
+        this._updateLightTarget(null);
     }
 
     botUpdated(calc: BotCalculationContext): void {
@@ -223,6 +244,13 @@ export class BotShapeDecorator
         this._updateAspectRatio(aspectRatio);
         this._updateDepth(calc);
         this._updateDepthWrite(calc);
+        this._updateLightIntensity(calc);
+        this._updateLightTarget(calc);
+        this._updateLightDistance(calc);
+        this._updateLightAngle(calc);
+        this._updateLightPenumbra(calc);
+        this._updateLightDecay(calc);
+        this._updateLightGroundColor(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -495,9 +523,14 @@ export class BotShapeDecorator
         }
 
         this.bot3D.display.remove(this.container);
+        this.light = null;
+
         disposeMesh(this.mesh, true, true, true);
         if (this.stroke) {
             this.stroke.dispose();
+        }
+        if (this.collider) {
+            this.container.remove(this.collider);
         }
         disposeObject3D(this.collider);
         if (this._iframe) {
@@ -575,6 +608,65 @@ export class BotShapeDecorator
         this._setDepthWrite(depthWrite);
     }
 
+    private _updateLightIntensity(calc: BotCalculationContext) {
+        const lightIntensity = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightIntensity',
+            1
+        );
+        this._setLightIntensity(lightIntensity);
+    }
+
+    private _updateLightDistance(calc: BotCalculationContext) {
+        const lightDistance = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightDistance',
+            0
+        );
+        this._setLightDistance(lightDistance);
+    }
+
+    private _updateLightAngle(calc: BotCalculationContext) {
+        const lightAngle = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightAngle',
+            Math.PI * 0.3333333333333
+        );
+        this._setLightAngle(lightAngle);
+    }
+
+    private _updateLightPenumbra(calc: BotCalculationContext) {
+        const lightPenumbra = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightPenumbra',
+            0
+        );
+        this._setLightPenumbra(lightPenumbra);
+    }
+
+    private _updateLightDecay(calc: BotCalculationContext) {
+        const lightDecay = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightDecay',
+            2
+        );
+        this._setLightDecay(lightDecay);
+    }
+
+    private _updateLightGroundColor(calc: BotCalculationContext) {
+        const groundColor = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'formLightGroundColor'
+        );
+        this._setLightGroundColor(groundColor);
+    }
+
     private _updateOpacity(calc: BotCalculationContext) {
         const opacity = calculateNumericalTagValue(
             calc,
@@ -595,6 +687,7 @@ export class BotShapeDecorator
             });
         } else {
             setColor(this.mesh, color);
+            setColor(this.light, color);
         }
 
         if (this._keyboard) {
@@ -650,6 +743,80 @@ export class BotShapeDecorator
             setDepthWrite(this.mesh, depthWrite);
         }
     }
+
+    private _setLightIntensity(lightIntensity: number) {
+        if (this.scene) {
+            // Change
+            this.scene.traverse((obj) => {
+                if (obj instanceof Light) {
+                    setLightIntensity(obj, lightIntensity);
+                }
+            });
+        } else {
+            setLightIntensity(this.light, lightIntensity);
+        }
+    }
+
+    private _setLightDistance(lightDistance: number) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof SpotLight) {
+                    setLightDistance(obj, lightDistance);
+                }
+            });
+        } else if (this.light instanceof SpotLight) {
+            setLightDistance(this.light, lightDistance);
+        }
+    }
+
+    private _setLightAngle(lightAngle: number) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof SpotLight) {
+                    setLightAngle(obj, lightAngle);
+                }
+            });
+        } else if (this.light instanceof SpotLight) {
+            setLightAngle(this.light, lightAngle);
+        }
+    }
+
+    private _setLightPenumbra(lightPenumbra: number) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof SpotLight) {
+                    setLightPenumbra(obj, lightPenumbra);
+                }
+            });
+        } else if (this.light instanceof SpotLight) {
+            setLightPenumbra(this.light, lightPenumbra);
+        }
+    }
+
+    private _setLightDecay(lightDecay: number) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof SpotLight) {
+                    setLightDecay(obj, lightDecay);
+                }
+            });
+        } else if (this.light instanceof SpotLight) {
+            setLightDecay(this.light, lightDecay);
+        }
+    }
+
+    private _setLightGroundColor(lightColor: any) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof HemisphereLight) {
+                    setLightGroundColor(obj, lightColor);
+                }
+            });
+        } else if (this.light instanceof HemisphereLight) {
+            setLightGroundColor(this.light, lightColor);
+        }
+    }
+
     private _setOpacity(opacity: number) {
         if (this.scene) {
             // Set opacity on all meshes inside the gltf scene.
@@ -723,7 +890,8 @@ export class BotShapeDecorator
             this.mesh ||
             this.scene ||
             this._shapeSubscription ||
-            this._keyboard
+            this._keyboard ||
+            this.light
         ) {
             this.dispose();
         }
@@ -778,6 +946,20 @@ export class BotShapeDecorator
             this._createCircle();
         } else if (this._shape === 'keyboard') {
             this._createKeyboard();
+        } else if (this._shape === 'light') {
+            if (this._subShape === 'pointLight') {
+                this._createPointLight();
+            } else if (this._subShape === 'ambientLight') {
+                this._createAmbientLight();
+            } else if (this._subShape === 'directionalLight') {
+                this._createDirectionalLight();
+            } else if (this._subShape === 'spotLight') {
+                this._createSpotLight();
+            } else if (this._subShape === 'hemisphereLight') {
+                this._createHemisphereLight();
+            } else {
+                this._createPointLight();
+            }
         }
 
         this.onMeshUpdated.invoke(this);
@@ -1147,6 +1329,114 @@ export class BotShapeDecorator
             this._updateColor(null);
             this._updateOpacity(null);
             this._updateRenderOrder(null);
+        }
+    }
+
+    private _createPointLight() {
+        //Create Collider
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        //Create pointLight
+        const pointLight = new PointLight(0xffffff, 1, 10, 2);
+        this.light = pointLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(pointLight);
+        pointLight.position.set(0, 0, 0);
+    }
+    private _createAmbientLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const ambientLight = new AmbientLight(0x404040, 1);
+        this.light = ambientLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(ambientLight);
+        ambientLight.position.set(0, 0, 0);
+    }
+
+    private _createDirectionalLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const directionalLight = new DirectionalLight(0xffffff, 0.5);
+        this.light = directionalLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(directionalLight);
+        directionalLight.position.set(0, 0, 0);
+    }
+
+    private _createSpotLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const spotLight = new SpotLight(
+            0x00ff00,
+            1,
+            0,
+            Math.PI * 0.3333333333333,
+            0,
+            2
+        ); //color, intensity, distance, angle, penumbra, decay
+        this.light = spotLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(spotLight);
+        spotLight.position.set(0, 0, 0);
+
+        //Todo
+        // spotLight.castShadow = true;
+
+        // spotLight.shadow.mapSize.width = 1024;
+        // spotLight.shadow.mapSize.height = 1024;
+
+        // spotLight.shadow.camera.near = 500;
+        // spotLight.shadow.camera.far = 4000;
+        // spotLight.shadow.camera.fov = 30;
+    }
+    private _createHemisphereLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const hemisphereLight = new HemisphereLight(0xffffff, 0xffffff, 1);
+        this.light = hemisphereLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(hemisphereLight);
+        hemisphereLight.position.set(0, 0, 0);
+    }
+    private _updateLightTarget(calc: BotCalculationContext) {
+        if (!this._finder) {
+            return;
+        } else if (
+            !(
+                this.light instanceof SpotLight ||
+                this.light instanceof DirectionalLight
+            )
+        ) {
+            return;
+        }
+        let lightTarget = calculateBotIds(this.bot3D.bot, 'formLightTarget');
+
+        if (!hasValue(lightTarget)) {
+            this.light.target = DEFAULT_LIGHT_TARGET;
+            return;
+        }
+
+        let hasLightTarget = false;
+
+        for (let id of lightTarget) {
+            if (this.bot3D.bot.id === id) continue;
+            const bots = this._finder.findBotsById(id);
+            const auxBot = bots.find((bot) => {
+                return bot instanceof AuxBot3D;
+            }) as AuxBot3D;
+            if (auxBot) {
+                this.light.target = auxBot;
+                hasLightTarget = true;
+                break;
+            }
+        }
+        if (!hasLightTarget) {
+            this.light.target = DEFAULT_LIGHT_TARGET;
         }
     }
 
