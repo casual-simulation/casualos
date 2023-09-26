@@ -545,6 +545,37 @@ export class WebsocketController {
                     event.inst,
                     event.branch
                 );
+            } else if (event.recordName) {
+                const instResult = await this._getInst(
+                    event.recordName,
+                    event.inst,
+                    connection.userId
+                );
+                if (instResult.success === false) {
+                    await this.sendError(connectionId, -1, instResult);
+                    return;
+                } else {
+                    const authorizeResult =
+                        await this._policies.authorizeRequestUsingContext(
+                            instResult.context,
+                            {
+                                action: 'inst.updateData',
+                                inst: event.inst,
+                                recordKeyOrRecordName: event.recordName,
+                                resourceMarkers: instResult.inst.markers,
+                                userId: connection.userId,
+                            }
+                        );
+
+                    if (authorizeResult.allowed === false) {
+                        await this.sendError(
+                            connectionId,
+                            -1,
+                            returnAuthorizationResult(authorizeResult)
+                        );
+                        return;
+                    }
+                }
             }
 
             if (branch.temporary) {

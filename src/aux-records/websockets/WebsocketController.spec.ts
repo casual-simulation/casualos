@@ -2369,131 +2369,245 @@ describe('WebsocketController', () => {
                     ).toEqual([]);
                 });
 
-                it('should send a not_authorized error if the user is not authorized to read insts', async () => {
-                    await instStore.saveInst({
-                        recordName,
-                        inst,
-                        markers: [PRIVATE_MARKER],
-                    });
-
-                    await server.login(serverConnectionId, 1, {
-                        type: 'login',
-                        connectionToken: otherUserToken,
-                    });
-
-                    await server.addUpdates(serverConnectionId, {
-                        type: 'repo/add_updates',
-                        recordName: recordName,
-                        inst,
-                        branch: 'testBranch',
-                        updates: ['111', '222'],
-                        updateId: 0,
-                    });
-
-                    expect(messenger.getEvents(serverConnectionId)).toEqual([
-                        [
-                            WebsocketEventTypes.Error,
-                            -1,
-                            {
-                                success: false,
-                                errorCode: 'not_authorized',
-                                errorMessage:
-                                    'You are not authorized to perform this action.',
-                                reason: {
-                                    type: 'missing_permission',
-                                    kind: 'user',
-                                    permission: 'inst.read',
-                                    role: null,
-                                    id: otherUserId,
-                                    marker: PRIVATE_MARKER,
-                                },
-                            },
-                        ],
-                    ]);
-
-                    expect(
-                        await instStore.getBranchByName(
+                describe('no branch', () => {
+                    beforeEach(async () => {
+                        await instStore.saveInst({
                             recordName,
                             inst,
-                            'testBranch'
-                        )
-                    ).toEqual(null);
-                    expect(
-                        messenger.getMessages(serverConnectionId).slice(1)
-                    ).toEqual([]);
-                });
+                            markers: [PRIVATE_MARKER],
+                        });
 
-                it('should send a not_authorized error if the user is not authorized to update inst data', async () => {
-                    await instStore.saveInst({
-                        recordName,
-                        inst,
-                        markers: [PRIVATE_MARKER],
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken: otherUserToken,
+                        });
                     });
 
-                    await server.login(serverConnectionId, 1, {
-                        type: 'login',
-                        connectionToken: otherUserToken,
-                    });
+                    it('should send a not_authorized error if the user is not authorized to read insts', async () => {
+                        await server.addUpdates(serverConnectionId, {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            updateId: 0,
+                        });
 
-                    services.policyStore.policies[recordName] = {
-                        [PRIVATE_MARKER]: {
-                            document: {
-                                permissions: [
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
                                     {
-                                        type: 'inst.read',
-                                        role: 'developer',
-                                        insts: true,
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            kind: 'user',
+                                            permission: 'inst.read',
+                                            role: null,
+                                            id: otherUserId,
+                                            marker: PRIVATE_MARKER,
+                                        },
                                     },
                                 ],
-                            },
-                            markers: [ACCOUNT_MARKER],
-                        },
-                    };
+                            ]
+                        );
 
-                    services.policyStore.roles[recordName] = {
-                        [otherUserId]: new Set(['developer']),
-                    };
-
-                    await server.addUpdates(serverConnectionId, {
-                        type: 'repo/add_updates',
-                        recordName: recordName,
-                        inst,
-                        branch: 'testBranch',
-                        updates: ['111', '222'],
-                        updateId: 0,
+                        expect(
+                            await instStore.getBranchByName(
+                                recordName,
+                                inst,
+                                'testBranch'
+                            )
+                        ).toEqual(null);
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([]);
                     });
 
-                    expect(messenger.getEvents(serverConnectionId)).toEqual([
-                        [
-                            WebsocketEventTypes.Error,
-                            -1,
-                            {
-                                success: false,
-                                errorCode: 'not_authorized',
-                                errorMessage:
-                                    'You are not authorized to perform this action.',
-                                reason: {
-                                    type: 'missing_permission',
-                                    kind: 'user',
-                                    permission: 'inst.updateData',
-                                    role: null,
-                                    id: otherUserId,
-                                    marker: PRIVATE_MARKER,
+                    it('should send a not_authorized error if the user is not authorized to update inst data', async () => {
+                        services.policyStore.policies[recordName] = {
+                            [PRIVATE_MARKER]: {
+                                document: {
+                                    permissions: [
+                                        {
+                                            type: 'inst.read',
+                                            role: 'developer',
+                                            insts: true,
+                                        },
+                                    ],
                                 },
+                                markers: [ACCOUNT_MARKER],
                             },
-                        ],
-                    ]);
+                        };
 
-                    expect(
-                        await instStore.getBranchByName(
+                        services.policyStore.roles[recordName] = {
+                            [otherUserId]: new Set(['developer']),
+                        };
+
+                        await server.addUpdates(serverConnectionId, {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            updateId: 0,
+                        });
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            kind: 'user',
+                                            permission: 'inst.updateData',
+                                            role: null,
+                                            id: otherUserId,
+                                            marker: PRIVATE_MARKER,
+                                        },
+                                    },
+                                ],
+                            ]
+                        );
+
+                        expect(
+                            await instStore.getBranchByName(
+                                recordName,
+                                inst,
+                                'testBranch'
+                            )
+                        ).toEqual(null);
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([]);
+                    });
+                });
+
+                describe('branch', () => {
+                    beforeEach(async () => {
+                        await instStore.saveInst({
                             recordName,
                             inst,
-                            'testBranch'
-                        )
-                    ).toEqual(null);
-                    expect(
-                        messenger.getMessages(serverConnectionId).slice(1)
-                    ).toEqual([]);
+                            markers: [PRIVATE_MARKER],
+                        });
+
+                        await instStore.saveBranch({
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                        });
+
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken: otherUserToken,
+                        });
+                    });
+
+                    it('should send a not_authorized error if the user is not authorized to read insts', async () => {
+                        await server.addUpdates(serverConnectionId, {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            updateId: 0,
+                        });
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            kind: 'user',
+                                            permission: 'inst.read',
+                                            role: null,
+                                            id: otherUserId,
+                                            marker: PRIVATE_MARKER,
+                                        },
+                                    },
+                                ],
+                            ]
+                        );
+
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([]);
+                    });
+
+                    it('should send a not_authorized error if the user is not authorized to update inst data', async () => {
+                        services.policyStore.policies[recordName] = {
+                            [PRIVATE_MARKER]: {
+                                document: {
+                                    permissions: [
+                                        {
+                                            type: 'inst.read',
+                                            role: 'developer',
+                                            insts: true,
+                                        },
+                                    ],
+                                },
+                                markers: [ACCOUNT_MARKER],
+                            },
+                        };
+
+                        services.policyStore.roles[recordName] = {
+                            [otherUserId]: new Set(['developer']),
+                        };
+
+                        await server.addUpdates(serverConnectionId, {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            updateId: 0,
+                        });
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            kind: 'user',
+                                            permission: 'inst.updateData',
+                                            role: null,
+                                            id: otherUserId,
+                                            marker: PRIVATE_MARKER,
+                                        },
+                                    },
+                                ],
+                            ]
+                        );
+
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([]);
+                    });
                 });
 
                 it('should create the inst if the user is authorized to create it and update data', async () => {
