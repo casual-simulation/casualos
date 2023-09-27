@@ -121,6 +121,8 @@ export default class PlayerHome extends Vue {
                 (appManager.config.preferredInstSource ?? 'private') ===
                 'public';
 
+            const hasQueryParam = Object.keys(this.query).length > 0;
+
             if (hasValue(recordName)) {
                 update.recordName = recordName;
             } else {
@@ -131,9 +133,10 @@ export default class PlayerHome extends Vue {
                 } else if (
                     !preferPublic &&
                     appManager.defaultStudioId &&
-                    !hasValue(inst)
+                    !hasValue(hasQueryParam)
                 ) {
-                    // Only use the default studio if there is no inst tag
+                    // Only use the default studio if there are no other query params.
+                    // This prevents bad actors from giving the user a URL that auto-populates data into a private inst.
                     update.studio = appManager.defaultStudioId;
                     recordName = appManager.defaultStudioId;
                 } else if (preferPublic) {
