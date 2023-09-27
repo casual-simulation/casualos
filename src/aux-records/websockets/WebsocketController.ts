@@ -308,6 +308,18 @@ export class WebsocketController {
         }
 
         const config = await this._config.getSubscriptionConfiguration();
+
+        if (!event.recordName) {
+            if (config.defaultFeatures?.tempInsts?.allowed === false) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'Temporary insts are not allowed.',
+                });
+                return;
+            }
+        }
+
         const instResult = await this._getOrCreateInst(
             event.recordName,
             event.inst,
@@ -322,20 +334,35 @@ export class WebsocketController {
         const inst = instResult.inst;
         const features = instResult.features;
 
+        let maxConnections: number = null;
+
         if (
             features &&
             typeof features.insts.maxActiveConnectionsPerInst === 'number'
         ) {
+            maxConnections = features.insts.maxActiveConnectionsPerInst;
+        } else if (
+            !event.recordName &&
+            typeof config.defaultFeatures?.tempInsts
+                ?.maxActiveConnectionsPerInst === 'number'
+        ) {
+            maxConnections =
+                config.defaultFeatures.tempInsts.maxActiveConnectionsPerInst;
+        }
+
+        if (maxConnections) {
             const count = await this._connectionStore.countConnectionsByBranch(
                 'branch',
                 event.recordName,
                 event.inst,
                 event.branch
             );
-            if (count >= features.insts.maxActiveConnectionsPerInst) {
+            if (count >= maxConnections) {
                 await this.sendError(connectionId, -1, {
                     success: false,
-                    errorCode: 'subscription_limit_reached',
+                    errorCode: features
+                        ? 'subscription_limit_reached'
+                        : 'not_authorized',
                     errorMessage:
                         'The maximum number of active connections to this inst has been reached.',
                 });
@@ -553,6 +580,17 @@ export class WebsocketController {
             const config = await this._config.getSubscriptionConfiguration();
             let features: FeaturesConfiguration = null;
 
+            if (!event.recordName) {
+                if (config.defaultFeatures?.tempInsts?.allowed === false) {
+                    await this.sendError(connectionId, -1, {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Temporary insts are not allowed.',
+                    });
+                    return;
+                }
+            }
+
             if (!branch) {
                 console.log(
                     `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Branch not found!`
@@ -700,7 +738,23 @@ export class WebsocketController {
                     branch.linkedInst.subscriptionType
                 );
             }
-            if (features) {
+
+            let maxInstSize: number = null;
+
+            if (
+                features &&
+                typeof features.insts.maxBytesPerInst === 'number'
+            ) {
+                maxInstSize = features.insts.maxBytesPerInst;
+            } else if (
+                !event.recordName &&
+                typeof config.defaultFeatures?.tempInsts?.maxBytesPerInst ===
+                    'number'
+            ) {
+                maxInstSize = config.defaultFeatures.tempInsts.maxBytesPerInst;
+            }
+
+            if (maxInstSize) {
                 const currentSize = branch.temporary
                     ? await this._temporaryStore.getInstSize(
                           event.recordName,
@@ -710,13 +764,12 @@ export class WebsocketController {
                           event.recordName,
                           event.inst
                       );
-                if (
-                    typeof features.insts.maxBytesPerInst === 'number' &&
-                    currentSize + updateSize > features.insts.maxBytesPerInst
-                ) {
+                if (currentSize + updateSize > maxInstSize) {
                     await this.sendError(connectionId, -1, {
                         success: false,
-                        errorCode: 'subscription_limit_reached',
+                        errorCode: features
+                            ? 'subscription_limit_reached'
+                            : 'not_authorized',
                         errorMessage:
                             'The maximum number of bytes per inst has been reached.',
                     });

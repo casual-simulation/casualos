@@ -407,6 +407,98 @@ describe('WebsocketController', () => {
                 expect(await instStore.getInstByName(null, inst)).toBe(null);
             });
 
+            it('should return a not_authorized error if recordless insts are not allowed', async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        defaultFeatures: {
+                            tempInsts: {
+                                allowed: false,
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await connectionStore.saveConnection(device1Info);
+
+                await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'doesNotExist',
+                });
+
+                expect(
+                    messenger.getEvents(device1Info.serverConnectionId)
+                ).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage: 'Temporary insts are not allowed.',
+                        },
+                    ],
+                ]);
+
+                expect(
+                    await instStore.getBranchByName(null, inst, 'doesNotExist')
+                ).toEqual(null);
+                // Should not create an inst when the record name is null.
+                expect(await instStore.getInstByName(null, inst)).toBe(null);
+            });
+
+            it('should return a not_authorized error if the maximum number of connections for recordless insts is reached', async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        defaultFeatures: {
+                            tempInsts: {
+                                allowed: true,
+                                maxActiveConnectionsPerInst: 1,
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
+
+                await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'doesNotExist',
+                });
+
+                expect(
+                    messenger.getEvents(device1Info.serverConnectionId)
+                ).toEqual([]);
+
+                await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'doesNotExist',
+                });
+
+                expect(
+                    messenger.getEvents(device2Info.serverConnectionId)
+                ).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'The maximum number of active connections to this inst has been reached.',
+                        },
+                    ],
+                ]);
+            });
+
             describe('temp', () => {
                 it('should load the branch like normal if the branch is temporary', async () => {
                     await connectionStore.saveConnection(device1Info);
@@ -2204,6 +2296,90 @@ describe('WebsocketController', () => {
                     timestamps: [expect.any(Number)],
                     instSizeInBytes: 3,
                 });
+            });
+
+            it('should return a not_authorized error if recordless insts are not allowed', async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        defaultFeatures: {
+                            tempInsts: {
+                                allowed: false,
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await connectionStore.saveConnection(device1Info);
+
+                await server.addUpdates(device1Info.serverConnectionId, {
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
+                    branch: 'doesNotExist',
+                    updates: ['111', '222'],
+                    updateId: 0,
+                });
+
+                expect(
+                    messenger.getEvents(device1Info.serverConnectionId)
+                ).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage: 'Temporary insts are not allowed.',
+                        },
+                    ],
+                ]);
+
+                expect(
+                    await instStore.getBranchByName(null, inst, 'doesNotExist')
+                ).toEqual(null);
+                // Should not create an inst when the record name is null.
+                expect(await instStore.getInstByName(null, inst)).toBe(null);
+            });
+
+            it('should return a not_authorized error if it would exceed the maximum inst size for recordless insts', async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        defaultFeatures: {
+                            tempInsts: {
+                                allowed: true,
+                                maxBytesPerInst: 1,
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await connectionStore.saveConnection(device1Info);
+
+                await server.addUpdates(device1Info.serverConnectionId, {
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
+                    branch: 'doesNotExist',
+                    updates: ['111', '222'],
+                    updateId: 0,
+                });
+
+                expect(
+                    messenger.getEvents(device1Info.serverConnectionId)
+                ).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'The maximum number of bytes per inst has been reached.',
+                        },
+                    ],
+                ]);
             });
         });
 
