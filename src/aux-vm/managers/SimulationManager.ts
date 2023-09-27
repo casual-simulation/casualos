@@ -127,8 +127,6 @@ export class SimulationManager<
         this.primaryPromise = promise;
         let added = await promise;
 
-        this.primary = added;
-
         return added;
     }
 
@@ -154,6 +152,9 @@ export class SimulationManager<
         options: SimulationFactoryOptions
     ) {
         const sim = await this._factory(id, options);
+        if (id === this.primaryId) {
+            this.primary = sim;
+        }
         return this._initSimulationCore(id, sim);
     }
 
