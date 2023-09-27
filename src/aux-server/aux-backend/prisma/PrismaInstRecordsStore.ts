@@ -6,6 +6,7 @@ import {
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
+    InstWithSubscriptionInfo,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
@@ -25,12 +26,42 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         this._prisma = prisma;
     }
 
-    async getInstByName(recordName: string, inst: string): Promise<InstRecord> {
+    async getInstByName(
+        recordName: string,
+        inst: string
+    ): Promise<InstWithSubscriptionInfo> {
         const record = await this._prisma.instRecord.findUnique({
             where: {
                 recordName_name: {
                     recordName: recordName,
                     name: inst,
+                },
+            },
+            select: {
+                name: true,
+                markers: true,
+                recordName: true,
+                record: {
+                    select: {
+                        owner: {
+                            select: {
+                                id: true,
+                                subscriptionId: true,
+                                subscriptionStatus: true,
+                                subscriptionPeriodStart: true,
+                                subscriptionPeriodEnd: true,
+                            },
+                        },
+                        studio: {
+                            select: {
+                                id: true,
+                                subscriptionId: true,
+                                subscriptionStatus: true,
+                                subscriptionPeriodStart: true,
+                                subscriptionPeriodEnd: true,
+                            },
+                        },
+                    },
                 },
             },
         });
@@ -43,6 +74,13 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             inst: record.name,
             markers: record.markers,
             recordName: record.recordName,
+            subscriptionId:
+                record.record.owner?.subscriptionId ??
+                record.record.studio?.subscriptionId,
+            subscriptionStatus:
+                record.record.owner?.subscriptionStatus ??
+                record.record.studio?.subscriptionStatus,
+            subscriptionType: record.record.owner ? 'user' : 'studio',
         };
     }
 
@@ -68,6 +106,28 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                         name: true,
                         recordName: true,
                         markers: true,
+                        record: {
+                            select: {
+                                owner: {
+                                    select: {
+                                        id: true,
+                                        subscriptionId: true,
+                                        subscriptionStatus: true,
+                                        subscriptionPeriodStart: true,
+                                        subscriptionPeriodEnd: true,
+                                    },
+                                },
+                                studio: {
+                                    select: {
+                                        id: true,
+                                        subscriptionId: true,
+                                        subscriptionStatus: true,
+                                        subscriptionPeriodStart: true,
+                                        subscriptionPeriodEnd: true,
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
                 temporary: true,
@@ -78,6 +138,8 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             return null;
         }
 
+        const record = b.inst.record;
+
         return {
             inst: b.instName,
             branch: b.name,
@@ -86,6 +148,13 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 recordName: b.inst.recordName,
                 inst: b.inst.name,
                 markers: b.inst.markers,
+                subscriptionId:
+                    record.owner?.subscriptionId ??
+                    record.studio?.subscriptionId,
+                subscriptionStatus:
+                    record.owner?.subscriptionStatus ??
+                    record.studio?.subscriptionStatus,
+                subscriptionType: record.owner ? 'user' : 'studio',
             },
             temporary: b.temporary,
         };

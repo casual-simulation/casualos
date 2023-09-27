@@ -42,5 +42,6 @@ export * from './MemoryFileRecordsLookup';
 
 export * from './Cache';
 export * from './CachingPolicyStore';
+export * from './CachingConfigStore';
 
 export * from './websockets';

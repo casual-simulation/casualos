@@ -98,6 +98,7 @@ import {
     SubscriptionMetrics,
     AIImageSubscriptionMetrics,
     AISkyboxSubscriptionMetrics,
+    InstSubscriptionMetrics,
 } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
@@ -110,6 +111,7 @@ import {
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
+    InstWithSubscriptionInfo,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
@@ -1812,6 +1814,54 @@ export class MemoryStore
         };
     }
 
+    async getSubscriptionInstMetrics(
+        filter: SubscriptionFilter
+    ): Promise<InstSubscriptionMetrics> {
+        const info = await this._getSubscriptionMetrics(filter);
+
+        let totalInsts = 0;
+        for (let [recordName, insts] of this._instRecords) {
+            let r = this._records.find((r) => r.name === recordName);
+            if (!r) {
+                continue;
+            } else if (
+                r.ownerId === filter.ownerId ||
+                r.studioId === filter.studioId
+            ) {
+                totalInsts += insts.size;
+            }
+        }
+
+        return {
+            ...info,
+            totalInsts,
+        };
+    }
+
+    async getSubscriptionInstMetricsByRecordName(
+        recordName: string
+    ): Promise<InstSubscriptionMetrics> {
+        const info = await this._getSubscriptionInfo(recordName);
+
+        let totalInsts = 0;
+        for (let [recordName, insts] of this._instRecords) {
+            let r = this._records.find((r) => r.name === recordName);
+            if (!r) {
+                continue;
+            } else if (
+                r.ownerId === info.ownerId ||
+                r.studioId === info.studioId
+            ) {
+                totalInsts += insts.size;
+            }
+        }
+
+        return {
+            ...info,
+            totalInsts,
+        };
+    }
+
     async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {
         this._aiChatMetrics.push(metrics);
     }
@@ -1921,6 +1971,7 @@ export class MemoryStore
             subscriptionStatus: null,
             currentPeriodStartMs: currentPeriodStart,
             currentPeriodEndMs: currentPeriodEnd,
+            subscriptionType: filter.ownerId ? 'user' : 'studio',
         };
 
         if (filter.ownerId) {
@@ -1956,17 +2007,36 @@ export class MemoryStore
         }
     }
 
-    async getInstByName(recordName: string, inst: string): Promise<InstRecord> {
+    async getInstByName(
+        recordName: string,
+        inst: string
+    ): Promise<InstWithSubscriptionInfo> {
         const i = await this._getInst(recordName, inst);
 
         if (!i) {
             return null;
         }
 
+        const r = this._records.find((r) => r.name === recordName);
+        if (!r) {
+            return null;
+        }
+
+        const metrics = await this.getSubscriptionInstMetrics({
+            ...r,
+        });
+
         return {
             recordName: i.recordName,
             inst: i.inst,
             markers: i.markers,
+            subscriptionId: metrics.subscriptionId,
+            subscriptionStatus: metrics.subscriptionStatus,
+            subscriptionType: !metrics.subscriptionId
+                ? undefined
+                : metrics.ownerId
+                ? 'user'
+                : 'studio',
         };
     }
 
@@ -1987,6 +2057,15 @@ export class MemoryStore
             return null;
         }
 
+        const r = this._records.find((r) => r.name === recordName);
+        if (!r) {
+            return null;
+        }
+
+        const metrics = await this.getSubscriptionInstMetrics({
+            ...r,
+        });
+
         return {
             recordName: b.recordName,
             inst: b.inst,
@@ -1996,6 +2075,13 @@ export class MemoryStore
                 recordName: i.recordName,
                 inst: i.inst,
                 markers: i.markers,
+                subscriptionId: metrics.subscriptionId,
+                subscriptionStatus: metrics.subscriptionStatus,
+                subscriptionType: !metrics.subscriptionId
+                    ? undefined
+                    : metrics.ownerId
+                    ? 'user'
+                    : 'studio',
             },
         };
     }

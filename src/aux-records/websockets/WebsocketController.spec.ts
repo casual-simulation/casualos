@@ -29,7 +29,11 @@ import {
     remoteResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import { createTestControllers, createTestUser } from '../TestUtils';
+import {
+    createTestControllers,
+    createTestSubConfiguration,
+    createTestUser,
+} from '../TestUtils';
 import { generateV1ConnectionToken } from '../AuthUtils';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
@@ -40,8 +44,15 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
+    merge,
 } from '@casual-simulation/aux-common';
 import { getStateFromUpdates } from '@casual-simulation/aux-common';
+import { MemoryStore } from '../MemoryStore';
+import {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from '../SubscriptionConfiguration';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -85,6 +96,7 @@ describe('WebsocketController', () => {
     let instStore: SplitInstRecordsStore;
     let tempUpdatesStore: TemporaryInstRecordsStore;
     let services: ReturnType<typeof createTestControllers>;
+    let store: MemoryStore;
 
     let userId: string;
     let sessionKey: string;
@@ -100,6 +112,7 @@ describe('WebsocketController', () => {
 
     beforeEach(async () => {
         services = createTestControllers();
+        store = services.store;
         connectionStore = new MemoryWebsocketConnectionStore();
         messenger = new MemoryWebsocketMessenger();
         tempUpdatesStore = new MemoryTempInstRecordsStore();
@@ -113,7 +126,9 @@ describe('WebsocketController', () => {
             instStore,
             tempUpdatesStore,
             services.auth,
-            services.policies
+            services.policies,
+            services.configStore,
+            services.store
         );
 
         uuidMock.mockReturnValueOnce('userId');
@@ -811,6 +826,145 @@ describe('WebsocketController', () => {
                                 markers: [PRIVATE_MARKER],
                             });
                         });
+
+                        it('should return a not_authorized error if insts are not allowed', async () => {
+                            store.subscriptionConfiguration = merge(
+                                createTestSubConfiguration(),
+                                {
+                                    subscriptions: [
+                                        {
+                                            id: 'sub1',
+                                            eligibleProducts: [],
+                                            product: '',
+                                            featureList: [],
+                                            tier: 'tier1',
+                                        },
+                                    ],
+                                    tiers: {
+                                        tier1: {
+                                            features: merge(
+                                                allowAllFeatures(),
+                                                {
+                                                    insts: {
+                                                        allowed: false,
+                                                    },
+                                                } as Partial<FeaturesConfiguration>
+                                            ),
+                                        },
+                                    },
+                                } as Partial<SubscriptionConfiguration>
+                            );
+
+                            await store.saveUser({
+                                id: userId,
+                                allSessionRevokeTimeMs: null,
+                                currentLoginRequestId: null,
+                                email: 'test@example.com',
+                                phoneNumber: null,
+                                subscriptionId: 'sub1',
+                                subscriptionStatus: 'active',
+                            });
+
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'test',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'Insts are not allowed for this subscription.',
+                                    },
+                                ],
+                            ]);
+                        });
+
+                        it('should return a subscription_limit_reached error the subscription has reached the maximum number of insts', async () => {
+                            store.subscriptionConfiguration = merge(
+                                createTestSubConfiguration(),
+                                {
+                                    subscriptions: [
+                                        {
+                                            id: 'sub1',
+                                            eligibleProducts: [],
+                                            product: '',
+                                            featureList: [],
+                                            tier: 'tier1',
+                                        },
+                                    ],
+                                    tiers: {
+                                        tier1: {
+                                            features: merge(
+                                                allowAllFeatures(),
+                                                {
+                                                    insts: {
+                                                        allowed: true,
+                                                        maxInsts: 1,
+                                                    },
+                                                } as Partial<FeaturesConfiguration>
+                                            ),
+                                        },
+                                    },
+                                } as Partial<SubscriptionConfiguration>
+                            );
+
+                            await store.saveUser({
+                                id: userId,
+                                allSessionRevokeTimeMs: null,
+                                currentLoginRequestId: null,
+                                email: 'test@example.com',
+                                phoneNumber: null,
+                                subscriptionId: 'sub1',
+                                subscriptionStatus: 'active',
+                            });
+
+                            await instStore.saveInst({
+                                recordName,
+                                inst: 'otherInst',
+                                markers: [PRIVATE_MARKER],
+                            });
+
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'test',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'subscription_limit_reached',
+                                        errorMessage:
+                                            'The maximum number of insts has been reached.',
+                                    },
+                                ],
+                            ]);
+                        });
                     });
 
                     describe('read', () => {
@@ -966,6 +1120,172 @@ describe('WebsocketController', () => {
                             expect(
                                 messenger.getEvents(serverConnectionId)
                             ).toEqual([]);
+                        });
+
+                        it('should return a not_authorized error if insts are not allowed', async () => {
+                            store.subscriptionConfiguration = merge(
+                                createTestSubConfiguration(),
+                                {
+                                    subscriptions: [
+                                        {
+                                            id: 'sub1',
+                                            eligibleProducts: [],
+                                            product: '',
+                                            featureList: [],
+                                            tier: 'tier1',
+                                        },
+                                    ],
+                                    tiers: {
+                                        tier1: {
+                                            features: merge(
+                                                allowAllFeatures(),
+                                                {
+                                                    insts: {
+                                                        allowed: false,
+                                                    },
+                                                } as Partial<FeaturesConfiguration>
+                                            ),
+                                        },
+                                    },
+                                } as Partial<SubscriptionConfiguration>
+                            );
+
+                            await store.saveUser({
+                                id: userId,
+                                allSessionRevokeTimeMs: null,
+                                currentLoginRequestId: null,
+                                email: 'test@example.com',
+                                phoneNumber: null,
+                                subscriptionId: 'sub1',
+                                subscriptionStatus: 'active',
+                            });
+
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'test',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'Insts are not allowed for this subscription.',
+                                    },
+                                ],
+                            ]);
+                        });
+
+                        it('should return a subscription_limit_reached error the subscription has reached the maximum connections to a branch', async () => {
+                            store.subscriptionConfiguration = merge(
+                                createTestSubConfiguration(),
+                                {
+                                    subscriptions: [
+                                        {
+                                            id: 'sub1',
+                                            eligibleProducts: [],
+                                            product: '',
+                                            featureList: [],
+                                            tier: 'tier1',
+                                        },
+                                    ],
+                                    tiers: {
+                                        tier1: {
+                                            features: merge(
+                                                allowAllFeatures(),
+                                                {
+                                                    insts: {
+                                                        allowed: true,
+                                                        maxActiveConnectionsPerInst: 1,
+                                                    },
+                                                } as Partial<FeaturesConfiguration>
+                                            ),
+                                        },
+                                    },
+                                } as Partial<SubscriptionConfiguration>
+                            );
+
+                            await store.saveUser({
+                                id: userId,
+                                allSessionRevokeTimeMs: null,
+                                currentLoginRequestId: null,
+                                email: 'test@example.com',
+                                phoneNumber: null,
+                                subscriptionId: 'sub1',
+                                subscriptionStatus: 'active',
+                            });
+
+                            await instStore.saveInst({
+                                recordName,
+                                inst: 'otherInst',
+                                markers: [PRIVATE_MARKER],
+                            });
+
+                            await server.login(serverConnectionId, 1, {
+                                type: 'login',
+                                connectionToken,
+                            });
+
+                            await server.watchBranch(serverConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'test',
+                            });
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
+
+                            const otherConnectionToken =
+                                generateV1ConnectionToken(
+                                    connectionKey,
+                                    'otherConnectionId',
+                                    recordName,
+                                    inst
+                                );
+
+                            const otherServerConnectionId =
+                                'otherServerConnectionId';
+
+                            await server.login(otherServerConnectionId, 1, {
+                                type: 'login',
+                                connectionToken: otherConnectionToken,
+                            });
+
+                            await server.watchBranch(otherServerConnectionId, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch: 'test',
+                            });
+
+                            expect(
+                                messenger.getEvents(otherServerConnectionId)
+                            ).toEqual([
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'subscription_limit_reached',
+                                        errorMessage:
+                                            'The maximum number of active connections to this inst has been reached.',
+                                    },
+                                ],
+                            ]);
                         });
                     });
                 });
@@ -1469,6 +1789,72 @@ describe('WebsocketController', () => {
                                 timestamps: [],
                             },
                         ]);
+                    });
+
+                    it('should return a not_authorized error if insts are not allowed', async () => {
+                        store.subscriptionConfiguration = merge(
+                            createTestSubConfiguration(),
+                            {
+                                subscriptions: [
+                                    {
+                                        id: 'sub1',
+                                        eligibleProducts: [],
+                                        product: '',
+                                        featureList: [],
+                                        tier: 'tier1',
+                                    },
+                                ],
+                                tiers: {
+                                    tier1: {
+                                        features: merge(allowAllFeatures(), {
+                                            insts: {
+                                                allowed: false,
+                                            },
+                                        } as Partial<FeaturesConfiguration>),
+                                    },
+                                },
+                            } as Partial<SubscriptionConfiguration>
+                        );
+
+                        await store.saveUser({
+                            id: userId,
+                            allSessionRevokeTimeMs: null,
+                            currentLoginRequestId: null,
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        });
+
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken: otherUserToken,
+                        });
+
+                        await server.getUpdates(
+                            serverConnectionId,
+                            recordName,
+                            inst,
+                            'test'
+                        );
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            [
+                                [
+                                    WebsocketEventTypes.Error,
+                                    -1,
+                                    {
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'Insts are not allowed for this subscription.',
+                                    },
+                                ],
+                            ]
+                        );
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([]);
                     });
                 });
             });
@@ -2304,6 +2690,300 @@ describe('WebsocketController', () => {
                     });
                     expect(messenger.getEvents(serverConnectionId)).toEqual([]);
                 });
+
+                it('should return a not_authorized error if insts are not allowed', async () => {
+                    store.subscriptionConfiguration = merge(
+                        createTestSubConfiguration(),
+                        {
+                            subscriptions: [
+                                {
+                                    id: 'sub1',
+                                    eligibleProducts: [],
+                                    product: '',
+                                    featureList: [],
+                                    tier: 'tier1',
+                                },
+                            ],
+                            tiers: {
+                                tier1: {
+                                    features: merge(allowAllFeatures(), {
+                                        insts: {
+                                            allowed: false,
+                                        },
+                                    } as Partial<FeaturesConfiguration>),
+                                },
+                            },
+                        } as Partial<SubscriptionConfiguration>
+                    );
+
+                    await store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+
+                    await server.addUpdates(serverConnectionId, {
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        updateId: 0,
+                    });
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'Insts are not allowed for this subscription.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
+
+                it('should return a subscription_limit_reached error if creating the inst would exceed the allowed max insts', async () => {
+                    store.subscriptionConfiguration = merge(
+                        createTestSubConfiguration(),
+                        {
+                            subscriptions: [
+                                {
+                                    id: 'sub1',
+                                    eligibleProducts: [],
+                                    product: '',
+                                    featureList: [],
+                                    tier: 'tier1',
+                                },
+                            ],
+                            tiers: {
+                                tier1: {
+                                    features: merge(allowAllFeatures(), {
+                                        insts: {
+                                            allowed: true,
+                                            maxInsts: 1,
+                                        },
+                                    } as Partial<FeaturesConfiguration>),
+                                },
+                            },
+                        } as Partial<SubscriptionConfiguration>
+                    );
+
+                    await store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'otherInst',
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+
+                    await server.addUpdates(serverConnectionId, {
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        updateId: 0,
+                    });
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'subscription_limit_reached',
+                                errorMessage:
+                                    'The maximum number of insts has been reached.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
+
+                it('should return a subscription_limit_reached error if adding the updates to a new inst would exceed the allowed inst size', async () => {
+                    store.subscriptionConfiguration = merge(
+                        createTestSubConfiguration(),
+                        {
+                            subscriptions: [
+                                {
+                                    id: 'sub1',
+                                    eligibleProducts: [],
+                                    product: '',
+                                    featureList: [],
+                                    tier: 'tier1',
+                                },
+                            ],
+                            tiers: {
+                                tier1: {
+                                    features: merge(allowAllFeatures(), {
+                                        insts: {
+                                            allowed: true,
+                                            maxBytesPerInst: 1,
+                                        },
+                                    } as Partial<FeaturesConfiguration>),
+                                },
+                            },
+                        } as Partial<SubscriptionConfiguration>
+                    );
+
+                    await store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+
+                    await server.addUpdates(serverConnectionId, {
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        updateId: 0,
+                    });
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'subscription_limit_reached',
+                                errorMessage:
+                                    'The maximum number of bytes per inst has been reached.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
+
+                it('should return a subscription_limit_reached error if adding the updates to an existing inst would exceed the allowed inst size', async () => {
+                    store.subscriptionConfiguration = merge(
+                        createTestSubConfiguration(),
+                        {
+                            subscriptions: [
+                                {
+                                    id: 'sub1',
+                                    eligibleProducts: [],
+                                    product: '',
+                                    featureList: [],
+                                    tier: 'tier1',
+                                },
+                            ],
+                            tiers: {
+                                tier1: {
+                                    features: merge(allowAllFeatures(), {
+                                        insts: {
+                                            allowed: true,
+                                            maxBytesPerInst: 100,
+                                        },
+                                    } as Partial<FeaturesConfiguration>),
+                                },
+                            },
+                        } as Partial<SubscriptionConfiguration>
+                    );
+
+                    await store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    await instStore.saveBranch({
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        temporary: false,
+                    });
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        'testBranch',
+                        ['abc', 'def'],
+                        99
+                    );
+
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+
+                    await server.addUpdates(serverConnectionId, {
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        updateId: 0,
+                    });
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'subscription_limit_reached',
+                                errorMessage:
+                                    'The maximum number of bytes per inst has been reached.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
             });
 
             describe('guest', () => {
@@ -2818,6 +3498,213 @@ describe('WebsocketController', () => {
                         },
                     ]);
                 });
+
+                it('should return not_authorized if insts are not allowed', async () => {
+                    store.subscriptionConfiguration = merge(
+                        createTestSubConfiguration(),
+                        {
+                            subscriptions: [
+                                {
+                                    id: 'sub1',
+                                    eligibleProducts: [],
+                                    product: '',
+                                    featureList: [],
+                                    tier: 'tier1',
+                                },
+                            ],
+                            tiers: {
+                                tier1: {
+                                    features: merge(allowAllFeatures(), {
+                                        insts: {
+                                            allowed: false,
+                                        },
+                                    } as Partial<FeaturesConfiguration>),
+                                },
+                            },
+                        } as Partial<SubscriptionConfiguration>
+                    );
+
+                    await store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken: otherUserToken,
+                    });
+
+                    services.policyStore.policies[recordName] = {
+                        [PRIVATE_MARKER]: {
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'inst.create',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                    {
+                                        type: 'inst.read',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                    {
+                                        type: 'policy.assign',
+                                        role: 'developer',
+                                        policies: true,
+                                    },
+                                    {
+                                        type: 'inst.updateData',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    services.policyStore.roles[recordName] = {
+                        [otherUserId]: new Set(['developer']),
+                    };
+
+                    await server.addUpdates(serverConnectionId, {
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        updateId: 0,
+                    });
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'Insts are not allowed for this subscription.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
+
+                it('should return subscription_limit_reached if creating the inst would exceed the allowed max insts', async () => {
+                    store.subscriptionConfiguration = merge(
+                        createTestSubConfiguration(),
+                        {
+                            subscriptions: [
+                                {
+                                    id: 'sub1',
+                                    eligibleProducts: [],
+                                    product: '',
+                                    featureList: [],
+                                    tier: 'tier1',
+                                },
+                            ],
+                            tiers: {
+                                tier1: {
+                                    features: merge(allowAllFeatures(), {
+                                        insts: {
+                                            allowed: true,
+                                            maxInsts: 1,
+                                        },
+                                    } as Partial<FeaturesConfiguration>),
+                                },
+                            },
+                        } as Partial<SubscriptionConfiguration>
+                    );
+
+                    await store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'otherInst',
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken: otherUserToken,
+                    });
+
+                    services.policyStore.policies[recordName] = {
+                        [PRIVATE_MARKER]: {
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'inst.create',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                    {
+                                        type: 'inst.read',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                    {
+                                        type: 'policy.assign',
+                                        role: 'developer',
+                                        policies: true,
+                                    },
+                                    {
+                                        type: 'inst.updateData',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    services.policyStore.roles[recordName] = {
+                        [otherUserId]: new Set(['developer']),
+                    };
+
+                    await server.addUpdates(serverConnectionId, {
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        updateId: 0,
+                    });
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'subscription_limit_reached',
+                                errorMessage:
+                                    'The maximum number of insts has been reached.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
             });
         });
         //     updateStore.maxAllowedInstSize = 5;
@@ -3003,7 +3890,7 @@ describe('WebsocketController', () => {
         // });
     });
 
-    describe('repo/send_event', () => {
+    describe('repo/send_action', () => {
         describe('no record', () => {
             it('should notify the device that the event was sent to', async () => {
                 await connectionStore.saveConnection(device1Info);
@@ -4029,6 +4916,73 @@ describe('WebsocketController', () => {
                         },
                     ]);
                 });
+
+                it('should return a not_authorized error if insts are not allowed', async () => {
+                    store.subscriptionConfiguration = merge(
+                        createTestSubConfiguration(),
+                        {
+                            subscriptions: [
+                                {
+                                    id: 'sub1',
+                                    eligibleProducts: [],
+                                    product: '',
+                                    featureList: [],
+                                    tier: 'tier1',
+                                },
+                            ],
+                            tiers: {
+                                tier1: {
+                                    features: merge(allowAllFeatures(), {
+                                        insts: {
+                                            allowed: false,
+                                        },
+                                    } as Partial<FeaturesConfiguration>),
+                                },
+                            },
+                        } as Partial<SubscriptionConfiguration>
+                    );
+
+                    await store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await server.sendAction(serverConnectionId, {
+                        type: 'repo/send_action',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        action: remote(
+                            {
+                                type: 'abc',
+                            },
+                            {
+                                connectionId: otherConnection1.connectionId,
+                            }
+                        ),
+                    });
+
+                    expect(messenger.getEvents(serverConnectionId)).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'Insts are not allowed for this subscription.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
             });
 
             describe('guest', () => {
@@ -4285,6 +5239,106 @@ describe('WebsocketController', () => {
                             }),
                         },
                     ]);
+                });
+
+                it('should return a not_authorized error if insts are not allowed', async () => {
+                    store.subscriptionConfiguration = merge(
+                        createTestSubConfiguration(),
+                        {
+                            subscriptions: [
+                                {
+                                    id: 'sub1',
+                                    eligibleProducts: [],
+                                    product: '',
+                                    featureList: [],
+                                    tier: 'tier1',
+                                },
+                            ],
+                            tiers: {
+                                tier1: {
+                                    features: merge(allowAllFeatures(), {
+                                        insts: {
+                                            allowed: false,
+                                        },
+                                    } as Partial<FeaturesConfiguration>),
+                                },
+                            },
+                        } as Partial<SubscriptionConfiguration>
+                    );
+
+                    await store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    services.policyStore.policies[recordName] = {
+                        [PRIVATE_MARKER]: {
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'inst.read',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                    {
+                                        type: 'inst.sendAction',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    services.policyStore.roles[recordName] = {
+                        [otherUserId]: new Set(['developer']),
+                    };
+
+                    await server.watchBranch(serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                    });
+
+                    await server.sendAction(otherServerConnectionId, {
+                        type: 'repo/send_action',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        action: remote(
+                            {
+                                type: 'abc',
+                            },
+                            {
+                                connectionId: connectionId,
+                            }
+                        ),
+                    });
+
+                    expect(
+                        messenger.getEvents(otherServerConnectionId)
+                    ).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'Insts are not allowed for this subscription.',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
                 });
             });
         });
@@ -5691,6 +6745,62 @@ describe('WebsocketController', () => {
                             }),
                         },
                     },
+                });
+            });
+
+            it('should return a not_authorized error if insts are not allowed', async () => {
+                await instStore.saveInst({
+                    recordName,
+                    inst,
+                    markers: [PRIVATE_MARKER],
+                });
+
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    insts: {
+                                        allowed: false,
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                const result = await server.getBranchData(
+                    userId,
+                    recordName,
+                    inst,
+                    'test'
+                );
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'Insts are not allowed for this subscription.',
                 });
             });
         });

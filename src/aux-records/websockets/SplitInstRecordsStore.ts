@@ -7,6 +7,7 @@ import {
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
+    InstWithSubscriptionInfo,
     ReplaceUpdatesResult,
     SaveBranchFailure,
     SaveBranchResult,
@@ -41,7 +42,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     async getInstByName(
         recordName: string | null,
         inst: string
-    ): Promise<InstRecord> {
+    ): Promise<InstWithSubscriptionInfo> {
         return await this._permanent.getInstByName(recordName, inst);
     }
 

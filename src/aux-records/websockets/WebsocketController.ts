@@ -43,6 +43,7 @@ import {
     CurrentUpdates,
     InstRecord,
     InstRecordsStore,
+    InstWithSubscriptionInfo,
     SaveInstFailure,
 } from './InstRecordsStore';
 import {
@@ -66,6 +67,13 @@ import {
     PolicyController,
     returnAuthorizationResult,
 } from '../PolicyController';
+import { ConfigurationStore } from '../ConfigurationStore';
+import {
+    FeaturesConfiguration,
+    getSubscriptionFeatures,
+    SubscriptionConfiguration,
+} from '../SubscriptionConfiguration';
+import { MetricsStore } from '../MetricsStore';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -77,6 +85,8 @@ export class WebsocketController {
     private _temporaryStore: TemporaryInstRecordsStore;
     private _auth: AuthController;
     private _policies: PolicyController;
+    private _config: ConfigurationStore;
+    private _metrics: MetricsStore;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -95,7 +105,9 @@ export class WebsocketController {
         instStore: InstRecordsStore,
         temporaryInstStore: TemporaryInstRecordsStore,
         auth: AuthController,
-        policies: PolicyController
+        policies: PolicyController,
+        config: ConfigurationStore,
+        metrics: MetricsStore
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;
@@ -103,6 +115,8 @@ export class WebsocketController {
         this._temporaryStore = temporaryInstStore;
         this._auth = auth;
         this._policies = policies;
+        this._config = config;
+        this._metrics = metrics;
     }
 
     /**
@@ -293,10 +307,12 @@ export class WebsocketController {
             }
         }
 
+        const config = await this._config.getSubscriptionConfiguration();
         const instResult = await this._getOrCreateInst(
             event.recordName,
             event.inst,
-            connection.userId
+            connection.userId,
+            config
         );
 
         if (instResult.success === false) {
@@ -304,6 +320,28 @@ export class WebsocketController {
             return;
         }
         const inst = instResult.inst;
+        const features = instResult.features;
+
+        if (
+            features &&
+            typeof features.insts.maxActiveConnectionsPerInst === 'number'
+        ) {
+            const count = await this._connectionStore.countConnectionsByBranch(
+                'branch',
+                event.recordName,
+                event.inst,
+                event.branch
+            );
+            if (count >= features.insts.maxActiveConnectionsPerInst) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The maximum number of active connections to this inst has been reached.',
+                });
+                return;
+            }
+        }
 
         await this._connectionStore.saveBranchConnection({
             ...connection,
@@ -511,6 +549,9 @@ export class WebsocketController {
                 event.inst,
                 event.branch
             );
+            const updateSize = sumBy(event.updates, (u) => u.length);
+            const config = await this._config.getSubscriptionConfiguration();
+            let features: FeaturesConfiguration = null;
 
             if (!branch) {
                 console.log(
@@ -520,7 +561,8 @@ export class WebsocketController {
                 const instResult = await this._getOrCreateInst(
                     event.recordName,
                     event.inst,
-                    connection.userId
+                    connection.userId,
+                    config
                 );
 
                 if (instResult.success === false) {
@@ -548,6 +590,8 @@ export class WebsocketController {
                         return;
                     }
                 }
+
+                features = instResult.features;
 
                 const branchResult = await this._instStore.saveBranch({
                     branch: event.branch,
@@ -648,6 +692,38 @@ export class WebsocketController {
                 }
             }
 
+            if (!features && branch.linkedInst) {
+                features = getSubscriptionFeatures(
+                    config,
+                    branch.linkedInst.subscriptionStatus,
+                    branch.linkedInst.subscriptionId,
+                    branch.linkedInst.subscriptionType
+                );
+            }
+            if (features) {
+                const currentSize = branch.temporary
+                    ? await this._temporaryStore.getInstSize(
+                          event.recordName,
+                          event.inst
+                      )
+                    : await this._instStore.getInstSize(
+                          event.recordName,
+                          event.inst
+                      );
+                if (
+                    typeof features.insts.maxBytesPerInst === 'number' &&
+                    currentSize + updateSize > features.insts.maxBytesPerInst
+                ) {
+                    await this.sendError(connectionId, -1, {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The maximum number of bytes per inst has been reached.',
+                    });
+                    return;
+                }
+            }
+
             if (branch.temporary) {
                 // Temporary branches use a temporary inst data store.
                 // This is because temporary branches are never persisted to disk.
@@ -656,7 +732,7 @@ export class WebsocketController {
                     event.inst,
                     event.branch,
                     event.updates,
-                    sumBy(event.updates, (u) => u.length)
+                    updateSize
                 );
             } else {
                 const result = await this._instStore.addUpdates(
@@ -664,7 +740,7 @@ export class WebsocketController {
                     event.inst,
                     event.branch,
                     event.updates,
-                    sumBy(event.updates, (u) => u.length)
+                    updateSize
                 );
 
                 if (result.success === false) {
@@ -816,10 +892,12 @@ export class WebsocketController {
         }
 
         if (event.recordName) {
+            const config = await this._config.getSubscriptionConfiguration();
             const instResult = await this._getInst(
                 event.recordName,
                 event.inst,
-                currentConnection.userId
+                currentConnection.userId,
+                config
             );
 
             if (instResult.success === false) {
@@ -928,10 +1006,12 @@ export class WebsocketController {
         }
 
         if (recordName) {
+            const config = await this._config.getSubscriptionConfiguration();
             const instResult = await this._getInst(
                 recordName,
                 inst,
-                connection.userId
+                connection.userId,
+                config
             );
             if (instResult.success === false) {
                 await this.sendError(connectionId, -1, instResult);
@@ -1028,10 +1108,12 @@ export class WebsocketController {
         }
 
         if (recordName) {
+            const config = await this._config.getSubscriptionConfiguration();
             const instResult = await this._getInst(
                 recordName,
                 inst,
-                currentConnection?.userId
+                currentConnection?.userId,
+                config
             );
 
             if (instResult.success === false) {
@@ -1067,7 +1149,13 @@ export class WebsocketController {
         );
 
         if (recordName) {
-            const instResult = await this._getInst(recordName, inst, userId);
+            const config = await this._config.getSubscriptionConfiguration();
+            const instResult = await this._getInst(
+                recordName,
+                inst,
+                userId,
+                config
+            );
             if (instResult.success === false) {
                 return instResult;
             } else if (!instResult.inst) {
@@ -1148,11 +1236,12 @@ export class WebsocketController {
         console.log(
             `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Get Updates`
         );
-
+        const config = await this._config.getSubscriptionConfiguration();
         const instResult = await this._getInst(
             recordName,
             inst,
-            connection.userId
+            connection.userId,
+            config
         );
         if (instResult.success === false) {
             await this.sendError(connectionId, -1, instResult);
@@ -1438,14 +1527,17 @@ export class WebsocketController {
         recordName: string | null,
         instName: string,
         userId: string,
+        config: SubscriptionConfiguration,
         context: AuthorizationContext = null
     ): Promise<GetOrCreateInstResult> {
-        let inst: InstRecord | null = null;
+        let inst: InstWithSubscriptionInfo | null = null;
+        let features: FeaturesConfiguration | null = null;
         if (recordName) {
             const getInstResult = await this._getInst(
                 recordName,
                 instName,
                 userId,
+                config,
                 context
             );
 
@@ -1456,6 +1548,9 @@ export class WebsocketController {
             const savedInst = getInstResult.inst;
             if (!context) {
                 context = getInstResult.context;
+            }
+            if (!features) {
+                features = getInstResult.features;
             }
             if (!savedInst) {
                 if (!context) {
@@ -1505,11 +1600,45 @@ export class WebsocketController {
                     return returnAuthorizationResult(authorizeReadResult);
                 }
 
+                const instMetrics =
+                    await this._metrics.getSubscriptionInstMetricsByRecordName(
+                        recordName
+                    );
+
+                features = getSubscriptionFeatures(
+                    config,
+                    instMetrics.subscriptionStatus,
+                    instMetrics.subscriptionId,
+                    instMetrics.subscriptionType
+                );
+
+                if (!features.insts.allowed) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'Insts are not allowed for this subscription.',
+                    };
+                } else if (
+                    typeof features.insts.maxInsts === 'number' &&
+                    instMetrics.totalInsts >= features.insts.maxInsts
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The maximum number of insts has been reached.',
+                    };
+                }
+
                 // Create the inst
                 inst = {
                     recordName: recordName,
                     inst: instName,
                     markers: [PRIVATE_MARKER],
+                    subscriptionId: instMetrics.subscriptionId,
+                    subscriptionStatus: instMetrics.subscriptionStatus,
+                    subscriptionType: instMetrics.subscriptionType,
                 };
                 const result = await this._instStore.saveInst(inst);
                 if (result.success === false) {
@@ -1528,6 +1657,7 @@ export class WebsocketController {
             success: true,
             inst,
             context,
+            features,
         };
     }
 
@@ -1545,9 +1675,11 @@ export class WebsocketController {
         recordName: string | null,
         instName: string,
         userId: string,
+        config: SubscriptionConfiguration,
         context: AuthorizationContext = null
     ): Promise<GetOrCreateInstResult> {
-        let inst: InstRecord | null = null;
+        let inst: InstWithSubscriptionInfo | null = null;
+        let features: FeaturesConfiguration | null = null;
         if (recordName) {
             const savedInst = await this._instStore.getInstByName(
                 recordName,
@@ -1555,6 +1687,22 @@ export class WebsocketController {
             );
 
             if (savedInst) {
+                features = getSubscriptionFeatures(
+                    config,
+                    savedInst.subscriptionStatus,
+                    savedInst.subscriptionId,
+                    savedInst.subscriptionType
+                );
+
+                if (!features.insts.allowed) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'Insts are not allowed for this subscription.',
+                    };
+                }
+
                 if (!context) {
                     const contextResult =
                         await this._policies.constructAuthorizationContext({
@@ -1590,6 +1738,7 @@ export class WebsocketController {
                 success: true,
                 inst: savedInst,
                 context,
+                features,
             };
         }
 
@@ -1597,6 +1746,7 @@ export class WebsocketController {
             success: true,
             inst,
             context,
+            features,
         };
     }
 
@@ -1605,7 +1755,7 @@ export class WebsocketController {
         inst: string,
         branch: string,
         temporary: boolean,
-        linkedInst: InstRecord
+        linkedInst: InstWithSubscriptionInfo
     ) {
         let b = await this._instStore.getBranchByName(recordName, inst, branch);
         if (!b) {
@@ -1797,13 +1947,18 @@ export type GetOrCreateInstResult =
 
 export interface GetOrCreateInstSuccess {
     success: true;
-    inst: InstRecord | null;
+    inst: InstWithSubscriptionInfo | null;
 
     /**
      * The context that was used to authorize the request.
      * Guaranteed to be non-null if the inst is non-null.
      */
     context: AuthorizationContext;
+
+    /**
+     * The features that are available for the subscription.
+     */
+    features: FeaturesConfiguration | null;
 }
 
 export interface GetOrCreateInstFailure {

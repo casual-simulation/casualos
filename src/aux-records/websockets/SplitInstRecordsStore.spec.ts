@@ -58,6 +58,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
             });
 
@@ -76,6 +78,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
                 branchSizeInBytes: 0,
             });
@@ -90,6 +94,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
                 temporary: false,
             });
@@ -109,6 +116,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
             });
         });
@@ -122,6 +132,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
                 temporary: false,
             });
@@ -141,6 +154,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
             });
         });
@@ -190,6 +206,8 @@ describe('SplitInstRecordsStore', () => {
                 recordName,
                 inst: instName,
                 markers: ['test'],
+                subscriptionId: null,
+                subscriptionStatus: null,
             });
         });
 
@@ -211,6 +229,8 @@ describe('SplitInstRecordsStore', () => {
                 recordName,
                 inst: instName,
                 markers: ['test'],
+                subscriptionId: null,
+                subscriptionStatus: null,
             });
         });
 
@@ -223,6 +243,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: ['wrong'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
                 temporary: false,
             });
@@ -263,6 +286,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: ['wrong'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
                 temporary: false,
             });
@@ -300,6 +326,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
             });
         });
@@ -344,6 +372,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: ['test'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
             });
 
@@ -362,6 +392,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: ['test'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
                 branchSizeInBytes: 0,
             });
@@ -442,6 +474,8 @@ describe('SplitInstRecordsStore', () => {
                 recordName,
                 inst: instName,
                 markers: [PUBLIC_READ_MARKER],
+                subscriptionId: null,
+                subscriptionStatus: null,
             });
         });
     });

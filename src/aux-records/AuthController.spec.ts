@@ -1931,7 +1931,7 @@ describe('AuthController', () => {
                     userId: userId,
                     sessionId: sessionId,
                     connectionId: 'connectionId',
-                    recordName: 'recordName',
+                    recordName: null,
                     inst: 'inst',
                 });
             });

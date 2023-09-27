@@ -30,6 +30,7 @@ import {
     TemporaryInstRecordsStore,
     MultiCache,
     CachingPolicyStore,
+    CachingConfigStore,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -335,9 +336,10 @@ export class ServerBuilder implements SubscriptionLike {
 
         const prismaClient = this._ensurePrisma(options);
         const s3Client = this._ensureS3(options);
-        this._configStore = new PrismaConfigurationStore(prismaClient, {
-            subscriptions: options.subscriptions as SubscriptionConfiguration,
-        });
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
         this._metricsStore = new PrismaMetricsStore(
             prismaClient,
             this._configStore
@@ -365,23 +367,6 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    private _ensurePrismaPolicyStore(
-        prismaClient: PrismaClient,
-        options: Pick<BuilderOptions, 'prisma'>
-    ): PolicyStore {
-        const policyStore = new PrismaPolicyStore(prismaClient);
-        if (this._multiCache) {
-            const cache = this._multiCache.getCache('policies');
-            return new CachingPolicyStore(
-                policyStore,
-                cache,
-                options.prisma.policiesCacheSeconds
-            );
-        } else {
-            return policyStore;
-        }
-    }
-
     usePrismaWithMongoDBFileStore(
         options: Pick<
             BuilderOptions,
@@ -406,10 +391,10 @@ export class ServerBuilder implements SubscriptionLike {
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
 
-                this._configStore = new PrismaConfigurationStore(prismaClient, {
-                    subscriptions:
-                        options.subscriptions as SubscriptionConfiguration,
-                });
+                this._configStore = this._ensurePrismaConfigurationStore(
+                    prismaClient,
+                    options
+                );
                 this._metricsStore = new PrismaMetricsStore(
                     prismaClient,
                     this._configStore
@@ -963,7 +948,9 @@ export class ServerBuilder implements SubscriptionLike {
                 this._instRecordsStore,
                 this._tempInstRecordsStore,
                 this._authController,
-                this._policyController
+                this._policyController,
+                this._configStore,
+                this._metricsStore
             );
         }
 
@@ -1112,6 +1099,42 @@ export class ServerBuilder implements SubscriptionLike {
 
         return this._mongoClient;
     }
+
+    private _ensurePrismaPolicyStore(
+        prismaClient: PrismaClient,
+        options: Pick<BuilderOptions, 'prisma'>
+    ): PolicyStore {
+        const policyStore = new PrismaPolicyStore(prismaClient);
+        if (this._multiCache) {
+            const cache = this._multiCache.getCache('policies');
+            return new CachingPolicyStore(
+                policyStore,
+                cache,
+                options.prisma.policiesCacheSeconds
+            );
+        } else {
+            return policyStore;
+        }
+    }
+
+    private _ensurePrismaConfigurationStore(
+        prismaClient: PrismaClient,
+        options: Pick<BuilderOptions, 'prisma' | 'subscriptions'>
+    ): ConfigurationStore {
+        const configStore = new PrismaConfigurationStore(prismaClient, {
+            subscriptions: options.subscriptions as SubscriptionConfiguration,
+        });
+        if (this._multiCache) {
+            const cache = this._multiCache.getCache('config');
+            return new CachingConfigStore(
+                configStore,
+                cache,
+                options.prisma.configurationCacheSeconds
+            );
+        } else {
+            return configStore;
+        }
+    }
 }
 
 /**
@@ -1232,6 +1255,7 @@ const prismaSchema = z.object({
     options: z.object({}).passthrough().optional(),
 
     policiesCacheSeconds: z.number().positive().optional().default(60),
+    configurationCacheSeconds: z.number().positive().optional().default(60),
 });
 
 const openAiSchema = z.object({

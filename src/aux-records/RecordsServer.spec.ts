@@ -285,7 +285,9 @@ describe('RecordsServer', () => {
             instStore,
             tempInstStore,
             authController,
-            policyController
+            policyController,
+            store,
+            store
         );
 
         stripe = stripeMock = {
@@ -11176,11 +11178,6 @@ describe('RecordsServer', () => {
 
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.login(connection2, 1, {
-                        type: 'login',
-                        connectionId: clientConnectionId2,
-                    });
-
                     await websocketController.addUpdates(connection2, {
                         type: 'repo/add_updates',
                         recordName,
@@ -11276,10 +11273,10 @@ describe('RecordsServer', () => {
 
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.login(connection2, 1, {
-                        type: 'login',
-                        connectionId: clientConnectionId2,
-                    });
+                    // await websocketController.login(connection2, 1, {
+                    //     type: 'login',
+                    //     connectionId: clientConnectionId2,
+                    // });
 
                     await websocketController.addUpdates(connection2, {
                         type: 'repo/add_updates',

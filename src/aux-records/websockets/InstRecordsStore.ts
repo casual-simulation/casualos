@@ -15,7 +15,7 @@ export interface InstRecordsStore {
     getInstByName(
         recordName: string | null,
         inst: string
-    ): Promise<InstRecord | null>;
+    ): Promise<InstWithSubscriptionInfo | null>;
 
     /**
      * Gets the info for the given branch. Returns null if the branch does not exist.
@@ -214,12 +214,29 @@ export interface InstRecord {
     markers: string[];
 }
 
+export interface InstWithSubscriptionInfo extends InstRecord {
+    /**
+     * The ID of the subscription that is associated with the inst.
+     */
+    subscriptionId: string | null;
+
+    /**
+     * The status of the subscription that is associated with the inst.
+     */
+    subscriptionStatus: string | null;
+
+    /**
+     * The type of the subscription.
+     */
+    subscriptionType: 'user' | 'studio' | null;
+}
+
 export interface BranchRecordWithInst extends BranchRecord {
     /**
      * The inst that this branch belongs to.
      * Null if the branch does not have a reocrd name.
      */
-    linkedInst: InstRecord | null;
+    linkedInst: InstWithSubscriptionInfo | null;
 }
 
 export interface BranchRecord {
