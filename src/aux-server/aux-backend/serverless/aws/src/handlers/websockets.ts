@@ -8,7 +8,7 @@ import { constructServerBuilder } from '../LoadServer';
 
 const builder = constructServerBuilder();
 
-const { server, filesStore } = builder.build();
+const { server } = builder.build();
 
 export async function connect(
     event: APIGatewayProxyEvent,
