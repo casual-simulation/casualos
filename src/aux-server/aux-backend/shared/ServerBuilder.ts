@@ -542,6 +542,7 @@ export class ServerBuilder implements SubscriptionLike {
             new RedisTempInstRecordsStore(
                 options.redis.publicInstRecordsStoreNamespace,
                 redis
+                options.redis.publicInstRecordsLifetimeSeconds
             ),
             new PrismaInstRecordsStore(prisma)
         );
@@ -1224,6 +1225,12 @@ const redisSchema = z.object({
     websocketConnectionNamespace: z.string().optional(),
     publicInstRecordsStoreNamespace: z.string().optional(),
     tempInstRecordsStoreNamespace: z.string().optional(),
+    publicInstRecordsLifetimeSeconds: z.number()
+        .describe('The lifetime of public inst records in seconds. If null, then public inst records never expire. Defaults to 1 day in seconds (86,400)')
+        .positive()
+        .nullable()
+        .optional()
+        .default(60 * 60 * 24),
 
     // The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
     // Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often.
