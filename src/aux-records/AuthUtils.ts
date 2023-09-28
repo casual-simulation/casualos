@@ -299,7 +299,7 @@ export function parseOpenAiKey(key: string): [key: string] {
 export function generateV1ConnectionToken(
     key: string,
     connectionId: string,
-    recordName: string,
+    recordName: string | null,
     inst: string
 ): string {
     const parsed = parseConnectionKey(key);
@@ -307,6 +307,8 @@ export function generateV1ConnectionToken(
     if (!parsed) {
         return null;
     }
+
+    recordName = recordName ?? '';
 
     const [userId, sessionId, connectionSecret, expireTimeMs] = parsed;
     const hashHex = v1ConnectionTokenHmac(

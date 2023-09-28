@@ -402,7 +402,7 @@ export default class PlayerApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn((user, sim) => {
+            appManager.whileLoggedIn((sim) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
@@ -1271,25 +1271,25 @@ export default class PlayerApp extends Vue {
                                 );
                             }
 
-                            console.log(
-                                '[PlayerApp] Authenticating user in background...'
-                            );
-                            simulation.auth.primary
-                                .authenticateInBackground()
-                                .then((data) => {
-                                    if (data) {
-                                        console.log(
-                                            '[PlayerApp] Authenticated user in background.'
-                                        );
-                                    } else {
-                                        console.log(
-                                            '[PlayerApp] Failed to authenticate user in background.'
-                                        );
-                                    }
-                                })
-                                .catch((err) => {
-                                    console.error(err);
-                                });
+                            // console.log(
+                            //     '[PlayerApp] Authenticating user in background...'
+                            // );
+                            // simulation.auth.primary
+                            //     .authenticateInBackground()
+                            //     .then((data) => {
+                            //         if (data) {
+                            //             console.log(
+                            //                 '[PlayerApp] Authenticated user in background.'
+                            //             );
+                            //         } else {
+                            //             console.log(
+                            //                 '[PlayerApp] Failed to authenticate user in background.'
+                            //             );
+                            //         }
+                            //     })
+                            //     .catch((err) => {
+                            //         console.error(err);
+                            //     });
                         }
 
                         await this._superAction(

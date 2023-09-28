@@ -226,16 +226,15 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         origin: SimulationOrigin,
         id: string,
         config: AuxConfig['config'],
-        vm: AuxVM
+        vm: AuxVM,
+        auth?: AuthHelper
     ) {
         super(id, vm);
         this._origin = origin;
         this._config = config;
         this.helper.userId = getConnectionId(indicator);
-        this._authHelper = new AuthHelper(
-            config.authOrigin,
-            config.recordsOrigin
-        );
+        this._authHelper =
+            auth ?? new AuthHelper(config.authOrigin, config.recordsOrigin);
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
     }

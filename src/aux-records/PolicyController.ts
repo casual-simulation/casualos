@@ -27,7 +27,8 @@ import {
     ACCOUNT_MARKER,
     AvailableRolePermissions,
     AvailableInstPermissions,
-} from './PolicyPermissions';
+    DenialReason,
+} from '@casual-simulation/aux-common';
 import {
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
@@ -1093,6 +1094,8 @@ export class PolicyController {
             return this._authorizeInstDeleteRequest(context, request);
         } else if (request.action === 'inst.list') {
             return this._authorizeInstListRequest(context, request);
+        } else if (request.action === 'inst.sendAction') {
+            return this._authorizeInstSendActionRequest(context, request);
         }
 
         return {
@@ -4332,6 +4335,93 @@ export class PolicyController {
         };
     }
 
+    private _authorizeInstSendActionRequest(
+        context: AuthorizationContext,
+        request: AuthorizeInstSendActionListRequest
+    ): Promise<AuthorizeResult> {
+        return this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeInstSendAction(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeInstSendAction(
+        context: RolesContext<AuthorizeInstSendActionListRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byInst('inst.sendAction', context.request.inst),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context, type, id),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'inst.sendAction',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -5152,7 +5242,8 @@ export type AuthorizeRequest =
     | AuthorizeInstReadRequest
     | AuthorizeInstUpdateDataRequest
     | AuthorizeInstUpdateRequest
-    | AuthorizeInstListRequest;
+    | AuthorizeInstListRequest
+    | AuthorizeInstSendActionListRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -5516,6 +5607,11 @@ export interface AuthorizeInstListRequest extends AuthorizeRequestBase {
     insts: ListedInstItem[];
 }
 
+export interface AuthorizeInstSendActionListRequest
+    extends AuthorizeInstRequest {
+    action: 'inst.sendAction';
+}
+
 export interface ListedDataItem {
     /**
      * The address of the item.
@@ -5756,67 +5852,6 @@ export interface AuthorizeDenied {
      * The reason that the authorization was denied.
      */
     reason?: DenialReason;
-}
-
-export type DenialReason =
-    | NoMarkersDenialReason
-    | MissingPermissionDenialReason
-    | TooManyInstsDenialReason
-    | MissingRoleDenialReason
-    | NoMarkersRemainingDenialReason;
-
-/**
- * Defines an interface that represents a denial reason that is returned when the resource has no markers.
- */
-export interface NoMarkersDenialReason {
-    type: 'no_markers';
-}
-
-export interface MissingPermissionDenialReason {
-    type: 'missing_permission';
-
-    /**
-     * Whether the user or inst is missing the permission.
-     */
-    kind: 'user' | 'inst';
-
-    /**
-     * The ID of the user/inst that is missing the permission.
-     */
-    id: string;
-
-    /**
-     * The marker that was being evaluated.
-     */
-    marker: string;
-
-    /**
-     * The role that was selected for authorization.
-     *
-     * If not specified, then no role could be determined.
-     * This often happens when the user/inst hasn't been assigned a role, but it can also happen when no permissions match any of the roles that the user/inst has assigned.
-     *
-     * If true, then that indicates that the "everyone" role was used.
-     * If a string, then that is the name of the role that was used.
-     */
-    role?: string | true;
-
-    /**
-     * The permission that is missing.
-     */
-    permission: AvailablePermissions['type'];
-}
-
-export interface MissingRoleDenialReason {
-    type: 'missing_role';
-}
-
-export interface NoMarkersRemainingDenialReason {
-    type: 'no_markers_remaining';
-}
-
-export interface TooManyInstsDenialReason {
-    type: 'too_many_insts';
 }
 
 export interface GrantMarkerPermissionRequest {

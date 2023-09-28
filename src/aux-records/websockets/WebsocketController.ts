@@ -33,6 +33,7 @@ import {
     UploadHttpHeaders,
     WatchBranchMessage,
     WebsocketErrorEvent,
+    WebsocketErrorInfo,
     WebsocketEvent,
     WebsocketEventTypes,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
@@ -42,16 +43,37 @@ import {
     CurrentUpdates,
     InstRecord,
     InstRecordsStore,
+    InstWithSubscriptionInfo,
+    SaveInstFailure,
 } from './InstRecordsStore';
 import {
     BranchName,
     TemporaryInstRecordsStore,
 } from './TemporaryInstRecordsStore';
 import { sumBy } from 'lodash';
-import { PUBLIC_READ_MARKER, PUBLIC_WRITE_MARKER } from '../PolicyPermissions';
+import {
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+    DenialReason,
+    ServerError,
+} from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid } from 'uuid';
+import {
+    AuthorizationContext,
+    AuthorizeDenied,
+    PolicyController,
+    returnAuthorizationResult,
+} from '../PolicyController';
+import { ConfigurationStore } from '../ConfigurationStore';
+import {
+    FeaturesConfiguration,
+    getSubscriptionFeatures,
+    SubscriptionConfiguration,
+} from '../SubscriptionConfiguration';
+import { MetricsStore } from '../MetricsStore';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -62,6 +84,9 @@ export class WebsocketController {
     private _instStore: InstRecordsStore;
     private _temporaryStore: TemporaryInstRecordsStore;
     private _auth: AuthController;
+    private _policies: PolicyController;
+    private _config: ConfigurationStore;
+    private _metrics: MetricsStore;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -79,13 +104,19 @@ export class WebsocketController {
         messenger: WebsocketMessenger,
         instStore: InstRecordsStore,
         temporaryInstStore: TemporaryInstRecordsStore,
-        auth: AuthController
+        auth: AuthController,
+        policies: PolicyController,
+        config: ConfigurationStore,
+        metrics: MetricsStore
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;
         this._instStore = instStore;
         this._temporaryStore = temporaryInstStore;
         this._auth = auth;
+        this._policies = policies;
+        this._config = config;
+        this._metrics = metrics;
     }
 
     /**
@@ -105,13 +136,12 @@ export class WebsocketController {
             let clientConnectionId: string | null;
             if (!message.connectionToken) {
                 if (!message.connectionId) {
-                    await this._messenger.sendEvent(connectionId, [
-                        WebsocketEventTypes.Error,
-                        requestId,
-                        'unacceptable_connection_id',
-                        'A connection ID must be specified when logging in without a connection token.',
-                        null,
-                    ]);
+                    this.sendError(connectionId, requestId, {
+                        success: false,
+                        errorCode: 'unacceptable_connection_id',
+                        errorMessage:
+                            'A connection ID must be specified when logging in without a connection token.',
+                    });
                     return;
                 }
 
@@ -129,13 +159,11 @@ export class WebsocketController {
                         message.connectionToken
                     );
                 if (validationResult.success === false) {
-                    await this._messenger.sendEvent(connectionId, [
-                        WebsocketEventTypes.Error,
-                        requestId,
-                        validationResult.errorCode,
-                        validationResult.errorMessage,
-                        undefined,
-                    ]);
+                    await this.sendError(connectionId, requestId, {
+                        success: false,
+                        errorCode: validationResult.errorCode,
+                        errorMessage: validationResult.errorMessage,
+                    });
                     return;
                 }
 
@@ -146,6 +174,12 @@ export class WebsocketController {
                     clientConnectionId: validationResult.connectionId,
                     token: message.connectionToken,
                 });
+                await this._connectionStore.saveAuthorizedInst(
+                    connectionId,
+                    validationResult.recordName,
+                    validationResult.inst,
+                    'token'
+                );
                 userId = validationResult.userId;
                 sessionId = validationResult.sessionId;
                 clientConnectionId = validationResult.connectionId;
@@ -164,8 +198,8 @@ export class WebsocketController {
                 '[WebsocketController] [login] Error while logging in.',
                 err
             );
-            await this.sendError(connectionId, {
-                requestId: requestId,
+            await this.sendError(connectionId, requestId, {
+                success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred while logging in.',
             });
@@ -251,9 +285,91 @@ export class WebsocketController {
         );
         if (!connection) {
             throw new Error(
-                'Unable to watch_branch. The connection was not found!'
+                'Unable to watch branch. The connection was not found!'
             );
         }
+
+        if (connection.token && event.recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                event.recordName,
+                event.inst,
+                'token'
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
+        const config = await this._config.getSubscriptionConfiguration();
+
+        if (!event.recordName) {
+            if (config.defaultFeatures?.tempInsts?.allowed === false) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'Temporary insts are not allowed.',
+                });
+                return;
+            }
+        }
+
+        const instResult = await this._getOrCreateInst(
+            event.recordName,
+            event.inst,
+            connection.userId,
+            config
+        );
+
+        if (instResult.success === false) {
+            await this.sendError(connectionId, -1, instResult);
+            return;
+        }
+        const inst = instResult.inst;
+        const features = instResult.features;
+
+        let maxConnections: number = null;
+
+        if (
+            features &&
+            typeof features.insts.maxActiveConnectionsPerInst === 'number'
+        ) {
+            maxConnections = features.insts.maxActiveConnectionsPerInst;
+        } else if (
+            !event.recordName &&
+            typeof config.defaultFeatures?.tempInsts
+                ?.maxActiveConnectionsPerInst === 'number'
+        ) {
+            maxConnections =
+                config.defaultFeatures.tempInsts.maxActiveConnectionsPerInst;
+        }
+
+        if (maxConnections) {
+            const count = await this._connectionStore.countConnectionsByBranch(
+                'branch',
+                event.recordName,
+                event.inst,
+                event.branch
+            );
+            if (count >= maxConnections) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: features
+                        ? 'subscription_limit_reached'
+                        : 'not_authorized',
+                    errorMessage:
+                        'The maximum number of active connections to this inst has been reached.',
+                });
+                return;
+            }
+        }
+
         await this._connectionStore.saveBranchConnection({
             ...connection,
             serverConnectionId: connectionId,
@@ -264,10 +380,6 @@ export class WebsocketController {
             temporary: event.temporary || false,
         });
 
-        const inst: InstRecord | null = await this._getOrCreateInst(
-            event.recordName,
-            event.inst
-        );
         const branch = await this._getOrCreateBranch(
             event.recordName,
             event.inst,
@@ -333,64 +445,6 @@ export class WebsocketController {
             }),
         ];
         await Promise.all(promises);
-    }
-
-    private async _getOrCreateInst(
-        recordName: string | null,
-        instName: string
-    ) {
-        let inst: InstRecord | null = null;
-        if (recordName) {
-            let inst = await this._instStore.getInstByName(
-                recordName,
-                instName
-            );
-            if (!inst) {
-                // Create the inst
-                inst = {
-                    recordName: recordName,
-                    inst: instName,
-
-                    // TODO: Choose a better default marker for auto-created insts
-                    markers: [PUBLIC_WRITE_MARKER],
-                };
-                await this._instStore.saveInst(inst);
-            }
-        }
-
-        return inst;
-    }
-
-    private async _getOrCreateBranch(
-        recordName: string,
-        inst: string,
-        branch: string,
-        temporary: boolean,
-        linkedInst: InstRecord
-    ) {
-        let b = await this._instStore.getBranchByName(recordName, inst, branch);
-        if (!b) {
-            if (temporary) {
-                // Save the branch to the temp store
-                await this._temporaryStore.saveBranchInfo({
-                    recordName: recordName,
-                    inst: inst,
-                    branch: branch,
-                    temporary: true,
-                    linkedInst: linkedInst,
-                });
-            }
-            // Save the branch to the inst store
-            await this._instStore.saveBranch({
-                branch: branch,
-                inst: inst,
-                recordName: recordName,
-                temporary: temporary || false,
-            });
-            b = await this._instStore.getBranchByName(recordName, inst, branch);
-        }
-
-        return b;
     }
 
     async unwatchBranch(
@@ -489,30 +543,238 @@ export class WebsocketController {
             `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Add Updates`
         );
 
+        const connection = await this._connectionStore.getConnection(
+            connectionId
+        );
+        if (!connection) {
+            throw new Error(
+                'Unable to watch branch. The connection was not found!'
+            );
+        }
+
+        if (connection.token && event.recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                event.recordName,
+                event.inst,
+                'token'
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
         if (event.updates) {
             let branch = await this._instStore.getBranchByName(
                 event.recordName,
                 event.inst,
                 event.branch
             );
+            const updateSize = sumBy(event.updates, (u) => u.length);
+            const config = await this._config.getSubscriptionConfiguration();
+            let features: FeaturesConfiguration = null;
+
+            if (!event.recordName) {
+                if (config.defaultFeatures?.tempInsts?.allowed === false) {
+                    await this.sendError(connectionId, -1, {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Temporary insts are not allowed.',
+                    });
+                    return;
+                }
+            }
 
             if (!branch) {
                 console.log(
                     `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Branch not found!`
                 );
 
-                await this._getOrCreateInst(event.recordName, event.inst);
-                await this._instStore.saveBranch({
+                const instResult = await this._getOrCreateInst(
+                    event.recordName,
+                    event.inst,
+                    connection.userId,
+                    config
+                );
+
+                if (instResult.success === false) {
+                    await this.sendError(connectionId, -1, instResult);
+                    return;
+                } else if (event.recordName) {
+                    const authorizeResult =
+                        await this._policies.authorizeRequestUsingContext(
+                            instResult.context,
+                            {
+                                action: 'inst.updateData',
+                                inst: event.inst,
+                                recordKeyOrRecordName: event.recordName,
+                                resourceMarkers: instResult.inst.markers,
+                                userId: connection.userId,
+                            }
+                        );
+
+                    if (authorizeResult.allowed === false) {
+                        await this.sendError(
+                            connectionId,
+                            -1,
+                            returnAuthorizationResult(authorizeResult)
+                        );
+                        return;
+                    }
+                }
+
+                features = instResult.features;
+
+                const branchResult = await this._instStore.saveBranch({
                     branch: event.branch,
                     inst: event.inst,
                     recordName: event.recordName,
                     temporary: false,
                 });
+
+                if (branchResult.success === false) {
+                    await this.sendError(connectionId, -1, branchResult);
+                    return;
+                }
                 branch = await this._instStore.getBranchByName(
                     event.recordName,
                     event.inst,
                     event.branch
                 );
+            } else if (event.recordName) {
+                const authorized = await this._connectionStore.isAuthorizedInst(
+                    connectionId,
+                    event.recordName,
+                    event.inst,
+                    'updateData'
+                );
+
+                if (!authorized) {
+                    if (!branch.linkedInst) {
+                        console.error(
+                            '[WebsocketController] The inst was not found even though the branch was found and exists in a record!'
+                        );
+                        await this.sendError(connectionId, -1, {
+                            success: false,
+                            errorCode: 'inst_not_found',
+                            errorMessage: 'The inst was not found.',
+                        });
+                        return;
+                    }
+
+                    const contextResult =
+                        await this._policies.constructAuthorizationContext({
+                            recordKeyOrRecordName: event.recordName,
+                            userId: connection.userId,
+                        });
+
+                    if (contextResult.success === false) {
+                        await this.sendError(connectionId, -1, contextResult);
+                        return;
+                    }
+
+                    const authorizeReadResult =
+                        await this._policies.authorizeRequestUsingContext(
+                            contextResult.context,
+                            {
+                                action: 'inst.read',
+                                inst: event.inst,
+                                recordKeyOrRecordName: event.recordName,
+                                resourceMarkers: branch.linkedInst.markers,
+                                userId: connection.userId,
+                            }
+                        );
+
+                    if (authorizeReadResult.allowed === false) {
+                        await this.sendError(
+                            connectionId,
+                            -1,
+                            returnAuthorizationResult(authorizeReadResult)
+                        );
+                        return;
+                    }
+
+                    const authorizeUpdateResult =
+                        await this._policies.authorizeRequestUsingContext(
+                            contextResult.context,
+                            {
+                                action: 'inst.updateData',
+                                inst: event.inst,
+                                recordKeyOrRecordName: event.recordName,
+                                resourceMarkers: branch.linkedInst.markers,
+                                userId: connection.userId,
+                            }
+                        );
+
+                    if (authorizeUpdateResult.allowed === false) {
+                        await this.sendError(
+                            connectionId,
+                            -1,
+                            returnAuthorizationResult(authorizeUpdateResult)
+                        );
+                        return;
+                    }
+
+                    await this._connectionStore.saveAuthorizedInst(
+                        connectionId,
+                        event.recordName,
+                        event.inst,
+                        'updateData'
+                    );
+                }
+            }
+
+            if (!features && branch.linkedInst) {
+                features = getSubscriptionFeatures(
+                    config,
+                    branch.linkedInst.subscriptionStatus,
+                    branch.linkedInst.subscriptionId,
+                    branch.linkedInst.subscriptionType
+                );
+            }
+
+            let maxInstSize: number = null;
+
+            if (
+                features &&
+                typeof features.insts.maxBytesPerInst === 'number'
+            ) {
+                maxInstSize = features.insts.maxBytesPerInst;
+            } else if (
+                !event.recordName &&
+                typeof config.defaultFeatures?.tempInsts?.maxBytesPerInst ===
+                    'number'
+            ) {
+                maxInstSize = config.defaultFeatures.tempInsts.maxBytesPerInst;
+            }
+
+            if (maxInstSize) {
+                const currentSize = branch.temporary
+                    ? await this._temporaryStore.getInstSize(
+                          event.recordName,
+                          event.inst
+                      )
+                    : await this._instStore.getInstSize(
+                          event.recordName,
+                          event.inst
+                      );
+                if (currentSize + updateSize > maxInstSize) {
+                    await this.sendError(connectionId, -1, {
+                        success: false,
+                        errorCode: features
+                            ? 'subscription_limit_reached'
+                            : 'not_authorized',
+                        errorMessage:
+                            'The maximum number of bytes per inst has been reached.',
+                    });
+                    return;
+                }
             }
 
             if (branch.temporary) {
@@ -523,7 +785,7 @@ export class WebsocketController {
                     event.inst,
                     event.branch,
                     event.updates,
-                    sumBy(event.updates, (u) => u.length)
+                    updateSize
                 );
             } else {
                 const result = await this._instStore.addUpdates(
@@ -531,7 +793,7 @@ export class WebsocketController {
                     event.inst,
                     event.branch,
                     event.updates,
-                    sumBy(event.updates, (u) => u.length)
+                    updateSize
                 );
 
                 if (result.success === false) {
@@ -663,6 +925,68 @@ export class WebsocketController {
         const currentConnection = await this._connectionStore.getConnection(
             connectionId
         );
+
+        if (currentConnection.token && event.recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                event.recordName,
+                event.inst,
+                'token'
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
+        if (event.recordName) {
+            const config = await this._config.getSubscriptionConfiguration();
+            const instResult = await this._getInst(
+                event.recordName,
+                event.inst,
+                currentConnection.userId,
+                config
+            );
+
+            if (instResult.success === false) {
+                await this.sendError(connectionId, -1, instResult);
+                return;
+            } else if (!instResult.inst) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                });
+                return;
+            }
+
+            const authorizeResult =
+                await this._policies.authorizeRequestUsingContext(
+                    instResult.context,
+                    {
+                        action: 'inst.sendAction',
+                        recordKeyOrRecordName: event.recordName,
+                        inst: event.inst,
+                        resourceMarkers: instResult.inst.markers,
+                        userId: currentConnection.userId,
+                    }
+                );
+
+            if (authorizeResult.allowed === false) {
+                await this.sendError(
+                    connectionId,
+                    -1,
+                    returnAuthorizationResult(authorizeResult)
+                );
+                return;
+            }
+        }
+
         const targetedDevices = connectedDevices.filter((d) =>
             isEventForDevice(finalAction, d)
         );
@@ -715,6 +1039,39 @@ export class WebsocketController {
                 'Unable to watch_branch_devices. The connection was not found!'
             );
         }
+
+        if (connection.token && recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                recordName,
+                inst,
+                'token'
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
+        if (recordName) {
+            const config = await this._config.getSubscriptionConfiguration();
+            const instResult = await this._getInst(
+                recordName,
+                inst,
+                connection.userId,
+                config
+            );
+            if (instResult.success === false) {
+                await this.sendError(connectionId, -1, instResult);
+                return;
+            }
+        }
+
         await this._connectionStore.saveBranchConnection({
             ...connection,
             mode: 'watch_branch',
@@ -781,6 +1138,50 @@ export class WebsocketController {
                   )
                 : await this._connectionStore.countConnections();
 
+        const currentConnection = await this._connectionStore.getConnection(
+            connectionId
+        );
+
+        if (recordName && currentConnection?.token) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                recordName,
+                inst,
+                'token'
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
+        if (recordName) {
+            const config = await this._config.getSubscriptionConfiguration();
+            const instResult = await this._getInst(
+                recordName,
+                inst,
+                currentConnection?.userId,
+                config
+            );
+
+            if (instResult.success === false) {
+                await this.sendError(connectionId, -1, instResult);
+                return;
+            } else if (!instResult.inst) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                });
+                return;
+            }
+        }
+
         await this._messenger.sendMessage([connectionId], {
             type: 'repo/connection_count',
             recordName,
@@ -791,13 +1192,33 @@ export class WebsocketController {
     }
 
     async getBranchData(
+        userId: string | null,
         recordName: string | null,
         inst: string,
         branch: string
-    ): Promise<StoredAux> {
+    ): Promise<GetBranchDataResult> {
         console.log(
             `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}] Get Data`
         );
+
+        if (recordName) {
+            const config = await this._config.getSubscriptionConfiguration();
+            const instResult = await this._getInst(
+                recordName,
+                inst,
+                userId,
+                config
+            );
+            if (instResult.success === false) {
+                return instResult;
+            } else if (!instResult.inst) {
+                return {
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                };
+            }
+        }
 
         const updates = (await this._instStore.getCurrentUpdates(
             recordName,
@@ -816,8 +1237,11 @@ export class WebsocketController {
         }
 
         return {
-            version: 1,
-            state: partition.state,
+            success: true,
+            data: {
+                version: 1,
+                state: partition.state,
+            },
         };
     }
 
@@ -843,10 +1267,46 @@ export class WebsocketController {
             );
         }
 
+        if (connection.token && recordName) {
+            const authorized = await this._connectionStore.isAuthorizedInst(
+                connectionId,
+                recordName,
+                inst,
+                'token'
+            );
+
+            if (!authorized) {
+                await this.sendError(connectionId, -1, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to access this inst.',
+                });
+                return;
+            }
+        }
+
         // const namespace = branchNamespace(recordName, inst, branch);
         console.log(
             `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Get Updates`
         );
+        const config = await this._config.getSubscriptionConfiguration();
+        const instResult = await this._getInst(
+            recordName,
+            inst,
+            connection.userId,
+            config
+        );
+        if (instResult.success === false) {
+            await this.sendError(connectionId, -1, instResult);
+            return;
+        } else if (recordName && !instResult.inst) {
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'inst_not_found',
+                errorMessage: 'The inst was not found.',
+            });
+            return;
+        }
 
         const updates = (await this._instStore.getAllUpdates(
             recordName,
@@ -857,7 +1317,7 @@ export class WebsocketController {
             timestamps: [],
         };
 
-        this._messenger.sendMessage([connection.serverConnectionId], {
+        await this._messenger.sendMessage([connection.serverConnectionId], {
             type: 'repo/add_updates',
             recordName,
             inst,
@@ -884,6 +1344,11 @@ export class WebsocketController {
         headers: object,
         data: object
     ): Promise<number> {
+        // TODO: Change webhooks to be records.
+        if (recordName) {
+            return;
+        }
+
         // const namespace = branchNamespace(recordName, inst, branch);
         const b = await this._instStore.getBranchByName(
             recordName,
@@ -1002,8 +1467,8 @@ export class WebsocketController {
                 console.log(
                     `[WebsocketController] [uploadRequest] Upload requests are not supported!`
                 );
-                await this.sendError(connectionId, {
-                    requestId,
+                await this.sendError(connectionId, requestId, {
+                    success: false,
                     errorCode: 'not_supported',
                     errorMessage: 'Upload requests are not supported.',
                 });
@@ -1022,8 +1487,8 @@ export class WebsocketController {
                 '[WebsocketController] [uploadRequest] Error while processing upload request.',
                 err
             );
-            await this.sendError(connectionId, {
-                requestId,
+            await this.sendError(connectionId, requestId, {
+                success: false,
                 errorCode: 'server_error',
                 errorMessage: 'Error while processing upload request.',
             });
@@ -1049,14 +1514,12 @@ export class WebsocketController {
                 );
                 return {
                     success: false,
-                    requestId,
                     errorCode: 'not_supported',
                     errorMessage: 'Download requests are not supported.',
                 };
             } else if (message === null) {
                 return {
                     success: false,
-                    requestId,
                     errorCode: 'message_not_found',
                     errorMessage: 'Message not found.',
                 };
@@ -1074,7 +1537,6 @@ export class WebsocketController {
             );
             return {
                 success: false,
-                requestId,
                 errorCode: 'server_error',
                 errorMessage: 'Error while processing download request.',
             };
@@ -1101,6 +1563,276 @@ export class WebsocketController {
             await store.temp.clearDirtyBranches(generation);
             console.log(`[WebsocketController] Saved permanent branches.`);
         }
+    }
+
+    /**
+     * Gets or creates the inst with the given name in the given record.
+     *
+     * If the inst already exists, and the given user is not authorized to read the inst, then an error is returned.
+     * If the inst does not exist, and the user is not authorized to create a new inst, then an error is returned.
+     *
+     * @param recordName The name of the record.
+     * @param instName The name of the inst.
+     * @param userId The ID of the user that is trying to access the inst.
+     * @param context The authorization context.
+     */
+    private async _getOrCreateInst(
+        recordName: string | null,
+        instName: string,
+        userId: string,
+        config: SubscriptionConfiguration,
+        context: AuthorizationContext = null
+    ): Promise<GetOrCreateInstResult> {
+        let inst: InstWithSubscriptionInfo | null = null;
+        let features: FeaturesConfiguration | null = null;
+        if (recordName) {
+            const getInstResult = await this._getInst(
+                recordName,
+                instName,
+                userId,
+                config,
+                context
+            );
+
+            if (getInstResult.success === false) {
+                return getInstResult;
+            }
+
+            const savedInst = getInstResult.inst;
+            if (!context) {
+                context = getInstResult.context;
+            }
+            if (!features) {
+                features = getInstResult.features;
+            }
+            if (!savedInst) {
+                if (!context) {
+                    const contextResult =
+                        await this._policies.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                        });
+
+                    if (contextResult.success === false) {
+                        return contextResult;
+                    }
+                    context = contextResult.context;
+                }
+
+                const authorizeCreateResult =
+                    await this._policies.authorizeRequestUsingContext(context, {
+                        action: 'inst.create',
+                        recordKeyOrRecordName: recordName,
+                        inst: instName,
+                        userId,
+                        resourceMarkers: [PRIVATE_MARKER],
+                    });
+
+                if (authorizeCreateResult.allowed === false) {
+                    console.log(
+                        '[WebsocketController] Unable to authorize inst creation.',
+                        authorizeCreateResult
+                    );
+                    return returnAuthorizationResult(authorizeCreateResult);
+                }
+
+                const authorizeReadResult =
+                    await this._policies.authorizeRequestUsingContext(context, {
+                        action: 'inst.read',
+                        recordKeyOrRecordName: recordName,
+                        inst: instName,
+                        userId,
+                        resourceMarkers: [PRIVATE_MARKER],
+                    });
+
+                if (authorizeReadResult.allowed === false) {
+                    console.log(
+                        '[WebsocketController] Unable to authorize inst creation.',
+                        authorizeReadResult
+                    );
+                    return returnAuthorizationResult(authorizeReadResult);
+                }
+
+                const instMetrics =
+                    await this._metrics.getSubscriptionInstMetricsByRecordName(
+                        recordName
+                    );
+
+                features = getSubscriptionFeatures(
+                    config,
+                    instMetrics.subscriptionStatus,
+                    instMetrics.subscriptionId,
+                    instMetrics.subscriptionType
+                );
+
+                if (!features.insts.allowed) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'Insts are not allowed for this subscription.',
+                    };
+                } else if (
+                    typeof features.insts.maxInsts === 'number' &&
+                    instMetrics.totalInsts >= features.insts.maxInsts
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The maximum number of insts has been reached.',
+                    };
+                }
+
+                // Create the inst
+                inst = {
+                    recordName: recordName,
+                    inst: instName,
+                    markers: [PRIVATE_MARKER],
+                    subscriptionId: instMetrics.subscriptionId,
+                    subscriptionStatus: instMetrics.subscriptionStatus,
+                    subscriptionType: instMetrics.subscriptionType,
+                };
+                const result = await this._instStore.saveInst(inst);
+                if (result.success === false) {
+                    console.log(
+                        '[WebsocketController] Unable to save inst.',
+                        result
+                    );
+                    return result;
+                }
+            } else {
+                inst = savedInst;
+            }
+        }
+
+        return {
+            success: true,
+            inst,
+            context,
+            features,
+        };
+    }
+
+    /**
+     * Gets the inst with the given name in the given record.
+     *
+     * If the inst does not exist, then null is returned.
+     * If the given user is not authorized to read the inst, then an error is returned.
+     *
+     * @param recordName The name of the record.
+     * @param instName The name of the inst.
+     * @param userId The ID of the user that is trying to access the inst.
+     */
+    private async _getInst(
+        recordName: string | null,
+        instName: string,
+        userId: string,
+        config: SubscriptionConfiguration,
+        context: AuthorizationContext = null
+    ): Promise<GetOrCreateInstResult> {
+        let inst: InstWithSubscriptionInfo | null = null;
+        let features: FeaturesConfiguration | null = null;
+        if (recordName) {
+            const savedInst = await this._instStore.getInstByName(
+                recordName,
+                instName
+            );
+
+            if (savedInst) {
+                features = getSubscriptionFeatures(
+                    config,
+                    savedInst.subscriptionStatus,
+                    savedInst.subscriptionId,
+                    savedInst.subscriptionType
+                );
+
+                if (!features.insts.allowed) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'Insts are not allowed for this subscription.',
+                    };
+                }
+
+                if (!context) {
+                    const contextResult =
+                        await this._policies.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                        });
+
+                    if (contextResult.success === false) {
+                        return contextResult;
+                    }
+                    context = contextResult.context;
+                }
+
+                const authorizeResult =
+                    await this._policies.authorizeRequestUsingContext(context, {
+                        action: 'inst.read',
+                        recordKeyOrRecordName: recordName,
+                        inst: instName,
+                        userId,
+                        resourceMarkers: savedInst.markers,
+                    });
+
+                if (authorizeResult.allowed === false) {
+                    console.log(
+                        '[WebsocketController] Unable to authorize inst read.',
+                        authorizeResult
+                    );
+                    return returnAuthorizationResult(authorizeResult);
+                }
+            }
+
+            return {
+                success: true,
+                inst: savedInst,
+                context,
+                features,
+            };
+        }
+
+        return {
+            success: true,
+            inst,
+            context,
+            features,
+        };
+    }
+
+    private async _getOrCreateBranch(
+        recordName: string,
+        inst: string,
+        branch: string,
+        temporary: boolean,
+        linkedInst: InstWithSubscriptionInfo
+    ) {
+        let b = await this._instStore.getBranchByName(recordName, inst, branch);
+        if (!b) {
+            if (temporary) {
+                // Save the branch to the temp store
+                await this._temporaryStore.saveBranchInfo({
+                    recordName: recordName,
+                    inst: inst,
+                    branch: branch,
+                    temporary: true,
+                    linkedInst: linkedInst,
+                });
+            }
+            // Save the branch to the inst store
+            await this._instStore.saveBranch({
+                branch: branch,
+                inst: inst,
+                recordName: recordName,
+                temporary: temporary || false,
+            });
+            b = await this._instStore.getBranchByName(recordName, inst, branch);
+        }
+
+        return b;
     }
 
     private async _saveBranchUpdates(
@@ -1201,13 +1933,15 @@ export class WebsocketController {
         console.log(`[WebsocketController] Updates complete.`);
     }
 
-    async sendError(connectionId: string, error: WebsocketControllerError) {
+    async sendError(
+        connectionId: string,
+        requestId: number,
+        info: WebsocketErrorInfo
+    ) {
         await this.sendEvent(connectionId, [
             WebsocketEventTypes.Error,
-            error.requestId,
-            error.errorCode,
-            error.errorMessage,
-            error.issues,
+            requestId,
+            info,
         ]);
     }
 
@@ -1256,13 +1990,51 @@ export interface DownloadRequestSuccess {
     message: string;
 }
 
-export interface DownloadRequestFailure extends WebsocketControllerError {
+export interface DownloadRequestFailure extends WebsocketErrorInfo {
     success: false;
 }
 
-export interface WebsocketControllerError {
-    requestId: number;
-    errorCode: WebsocketErrorEvent[2];
+export type GetOrCreateInstResult =
+    | GetOrCreateInstSuccess
+    | GetOrCreateInstFailure;
+
+export interface GetOrCreateInstSuccess {
+    success: true;
+    inst: InstWithSubscriptionInfo | null;
+
+    /**
+     * The context that was used to authorize the request.
+     * Guaranteed to be non-null if the inst is non-null.
+     */
+    context: AuthorizationContext;
+
+    /**
+     * The features that are available for the subscription.
+     */
+    features: FeaturesConfiguration | null;
+}
+
+export interface GetOrCreateInstFailure {
+    success: false;
+    errorCode: AuthorizeDenied['errorCode'] | SaveInstFailure['errorCode'];
     errorMessage: string;
-    issues?: ZodIssue[];
+    reason?: DenialReason;
+}
+
+export type GetBranchDataResult = GetBranchDataSuccess | GetBranchDataFailure;
+
+export interface GetBranchDataSuccess {
+    success: true;
+    data: StoredAux;
+}
+
+export interface GetBranchDataFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | 'inst_not_found'
+        | AuthorizeDenied['errorCode']
+        | GetOrCreateInstFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
 }

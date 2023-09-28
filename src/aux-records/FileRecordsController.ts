@@ -24,7 +24,7 @@ import {
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { getMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
 import { MetricsStore } from './MetricsStore';

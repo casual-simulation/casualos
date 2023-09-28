@@ -8,3 +8,5 @@ export * from './StatusUpdateUtils';
 export * from './LoadingProgress';
 export * from './ConnectionToken';
 export * from './Iterators';
+export * from './PolicyPermissions';
+export * from './DenialReason';

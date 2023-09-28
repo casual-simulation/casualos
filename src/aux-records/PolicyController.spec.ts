@@ -16,7 +16,7 @@ import {
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
     PolicyDocument,
     PUBLIC_READ_MARKER,
-} from './PolicyPermissions';
+} from '@casual-simulation/aux-common';
 import {
     CreateRecordSuccess,
     CreateStudioResult,
@@ -1872,6 +1872,7 @@ describe('PolicyController', () => {
                     recordKeyOrRecordName: recordKey,
                     userId,
                     existingMarkers: [PUBLIC_READ_MARKER, 'secret'],
+                    removedMarkers: ['secret'],
                 });
 
                 expect(result).toEqual({
@@ -27010,6 +27011,795 @@ describe('PolicyController', () => {
                             markers: ['secret'],
                         },
                     ],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
+                });
+            });
+        });
+
+        describe('inst.sendAction', () => {
+            it('should allow requests that dont update markers if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: ADMIN_ROLE_NAME,
+                                            insts: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
+                });
+            });
+
+            it('should allow the request if the user has the admin role assigned', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: ADMIN_ROLE_NAME,
+                                            insts: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is the record owner', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId: ownerId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: ADMIN_ROLE_NAME,
+                                            insts: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+
+                expect(await store.getRecordByName(ownerId)).toEqual({
+                    name: ownerId,
+                    ownerId: ownerId,
+                    secretHashes: [],
+                    secretSalt: expect.any(String),
+                    studioId: null,
+                });
+            });
+
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: ADMIN_ROLE_NAME,
+                                            insts: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: ADMIN_ROLE_NAME,
+                                            insts: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.sendAction',
+                    },
+                });
+            });
+
+            it('should allow the request if the user has inst.sendAction access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'inst.sendAction',
+                            role: 'developer',
+                            insts: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: 'developer',
+                                            insts: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has inst.sendAction access to one of the given resources markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'inst.sendAction',
+                            role: 'developer',
+                            insts: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    resourceMarkers: ['other', 'secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: 'developer',
+                                            insts: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user does not have inst.sendAction access', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'inst.sendAction',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                });
+            });
+
+            it('should deny the request if the inst.sendAction permission does not allow the given address', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'inst.sendAction',
+                            role: 'developer',
+                            insts: '^allowed_address$',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'not_allowed_address',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'inst.sendAction',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.sendAction',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if given an invalid record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should deny the request if there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'inst.sendAction',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should allow the request if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: ADMIN_ROLE_NAME,
+                                            insts: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.sendAction',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: ADMIN_ROLE_NAME,
+                                            insts: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'inst.sendAction',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'inst.sendAction',
+                                            role: ADMIN_ROLE_NAME,
+                                            insts: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'inst.sendAction',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'inst.sendAction',
+                                                role: ADMIN_ROLE_NAME,
+                                                insts: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'inst.sendAction',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'inst.sendAction',
+                                                role: ADMIN_ROLE_NAME,
+                                                insts: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
                 });
 
                 expect(result).toEqual({

@@ -1,7 +1,7 @@
 import { fromByteArray, toByteArray } from 'base64-js';
 import _, { omitBy, padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import axios from 'axios';
 
 /**

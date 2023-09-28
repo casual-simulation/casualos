@@ -65,6 +65,10 @@ export function constructServerBuilder() {
         .useAllowedApiOrigins(allowedApiOrigins)
         .useAllowedAccountOrigins(allowedOrigins);
 
+    if (config.redis && config.redis.cacheNamespace) {
+        builder.useRedisCache();
+    }
+
     if (config.prisma && config.s3) {
         builder.usePrismaWithS3();
     }

@@ -275,6 +275,39 @@ describe('generateV1ConnectionToken()', () => {
         expect(inst).toBe(toBase64String('inst'));
         expect(password).toMatchSnapshot();
     });
+
+    it('should generate a connection token with a null recordName', () => {
+        const key = formatV1ConnectionKey(
+            'userId',
+            'sessionId',
+            'password',
+            123
+        );
+
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            null,
+            'inst'
+        );
+
+        const [
+            version,
+            userId,
+            sessionId,
+            connectionId,
+            recordName,
+            inst,
+            password,
+        ] = result.split('.');
+
+        expect(userId).toBe(toBase64String('userId'));
+        expect(sessionId).toBe(toBase64String('sessionId'));
+        expect(connectionId).toBe(toBase64String('connectionId'));
+        expect(recordName).toBe('');
+        expect(inst).toBe(toBase64String('inst'));
+        expect(password).toMatchSnapshot();
+    });
 });
 
 describe('verifyConnectionToken()', () => {
@@ -287,6 +320,16 @@ describe('verifyConnectionToken()', () => {
             key,
             'connectionId',
             'recordName',
+            'inst'
+        );
+        expect(verifyConnectionToken(result, password)).toBe(true);
+    });
+
+    it('should be able to verify a token with a null recordName', () => {
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            null,
             'inst'
         );
         expect(verifyConnectionToken(result, password)).toBe(true);
@@ -440,5 +483,70 @@ describe('verifyConnectionToken()', () => {
         );
 
         expect(verifyConnectionToken(token, 'wrong')).toBe(false);
+    });
+});
+
+describe('parseConnectionToken()', () => {
+    const password = toBase64String('password');
+
+    describe('v1', () => {
+        const key = formatV1ConnectionKey('userId', 'sessionId', password, 123);
+
+        it('should be able to parse a connection token', () => {
+            const result = generateV1ConnectionToken(
+                key,
+                'connectionId',
+                'recordName',
+                'inst'
+            );
+
+            const parsed = parseConnectionToken(result);
+            expect(parsed).toEqual([
+                'userId',
+                'sessionId',
+                'connectionId',
+                'recordName',
+                'inst',
+                expect.any(String),
+            ]);
+        });
+
+        it('should be able to parse a connection token with a null recordName', () => {
+            const result = generateV1ConnectionToken(
+                key,
+                'connectionId',
+                null,
+                'inst'
+            );
+
+            const parsed = parseConnectionToken(result);
+            expect(parsed).toEqual([
+                'userId',
+                'sessionId',
+                'connectionId',
+                null,
+                'inst',
+                expect.any(String),
+            ]);
+        });
+
+        it('should treat empty record names as null', () => {
+            const result = generateV1ConnectionToken(
+                key,
+                'connectionId',
+                '',
+                'inst'
+            );
+
+            const parsed = parseConnectionToken(result);
+            expect(parsed).toEqual([
+                'userId',
+                'sessionId',
+                'connectionId',
+                null,
+                'inst',
+                expect.any(String),
+            ]);
+        });
     });
 });

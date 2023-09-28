@@ -40,6 +40,7 @@
         "@aws-sdk/client-dynamodb": "^3.359.0",
         "@aws-sdk/client-s3": "^3.359.0",
         "@aws-sdk/client-sesv2": "^3.359.0",
-        "@casual-simulation/aux-records": "^3.2.6"
+        "@casual-simulation/aux-records": "^3.2.6",
+        "@casual-simulation/aux-common": "^3.2.6"
     }
 }

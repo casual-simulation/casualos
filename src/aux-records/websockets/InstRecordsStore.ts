@@ -1,3 +1,5 @@
+import { ServerError } from '@casual-simulation/aux-common';
+
 /**
  * Defines an interface for services which are able to store inst update data.
  *
@@ -13,7 +15,7 @@ export interface InstRecordsStore {
     getInstByName(
         recordName: string | null,
         inst: string
-    ): Promise<InstRecord | null>;
+    ): Promise<InstWithSubscriptionInfo | null>;
 
     /**
      * Gets the info for the given branch. Returns null if the branch does not exist.
@@ -32,13 +34,13 @@ export interface InstRecordsStore {
      * If branches are included, then they will be added/updated to the inst as well.
      * @param inst The inst that should be saved.
      */
-    saveInst(inst: InstWithBranches): Promise<void>;
+    saveInst(inst: InstWithBranches): Promise<SaveInstResult>;
 
     /**
      * Creates or updates the given branch record.
      * @param branch The branch that should be saved.
      */
-    saveBranch(branch: BranchRecord): Promise<void>;
+    saveBranch(branch: BranchRecord): Promise<SaveBranchResult>;
 
     /**
      * Gets the list of updates for the given branch in the given inst and record.
@@ -212,12 +214,29 @@ export interface InstRecord {
     markers: string[];
 }
 
+export interface InstWithSubscriptionInfo extends InstRecord {
+    /**
+     * The ID of the subscription that is associated with the inst.
+     */
+    subscriptionId: string | null;
+
+    /**
+     * The status of the subscription that is associated with the inst.
+     */
+    subscriptionStatus: string | null;
+
+    /**
+     * The type of the subscription.
+     */
+    subscriptionType: 'user' | 'studio' | null;
+}
+
 export interface BranchRecordWithInst extends BranchRecord {
     /**
      * The inst that this branch belongs to.
      * Null if the branch does not have a reocrd name.
      */
-    linkedInst: InstRecord | null;
+    linkedInst: InstWithSubscriptionInfo | null;
 }
 
 export interface BranchRecord {
@@ -251,4 +270,28 @@ export interface InstWithBranches extends InstRecord {
 
 export interface CurrentUpdates extends StoredUpdates {
     instSizeInBytes: number;
+}
+
+export type SaveInstResult = SaveInstSuccess | SaveInstFailure;
+
+export interface SaveInstSuccess {
+    success: true;
+}
+
+export interface SaveInstFailure {
+    success: false;
+    errorCode: ServerError | 'record_not_found';
+    errorMessage: string;
+}
+
+export type SaveBranchResult = SaveBranchSuccess | SaveBranchFailure;
+
+export interface SaveBranchSuccess {
+    success: true;
+}
+
+export interface SaveBranchFailure {
+    success: false;
+    errorCode: ServerError | 'inst_not_found';
+    errorMessage: string;
 }

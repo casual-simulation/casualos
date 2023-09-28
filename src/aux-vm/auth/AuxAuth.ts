@@ -231,4 +231,12 @@ export interface AuxAuth {
      * Only supported on protocol version 4 or more.
      */
     getRecordsOrigin(): Promise<string>;
+
+    /**
+     * Gets the connection key for the user.
+     * Returns null if the user is not authenticated.
+     *
+     * Only supported on protocol version 7 or more.
+     */
+    getConnectionKey(): Promise<string>;
 }

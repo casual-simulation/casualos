@@ -26,12 +26,64 @@ export class MemoryWebsocketConnectionStore
     private _connections = new Map<string, DeviceConnection>();
 
     private _rateLimits = new Map<string, number>();
+    private _authorizedInsts = new Map<string, Set<string>>();
+    private _authorizedUpdateDataInsts = new Map<string, Set<string>>();
 
     reset() {
         this._namespaceMap = new Map();
         this._connectionMap = new Map();
         this._connections = new Map();
         this._rateLimits = new Map();
+        this._authorizedInsts = new Map();
+        this._authorizedUpdateDataInsts = new Map();
+    }
+
+    async saveAuthorizedInst(
+        connectionId: string,
+        recordName: string,
+        inst: string,
+        scope: 'token' | 'updateData'
+    ): Promise<void> {
+        if (scope === 'token') {
+            let insts = this._authorizedInsts.get(connectionId);
+            if (!insts) {
+                insts = new Set();
+                this._authorizedInsts.set(connectionId, insts);
+            }
+
+            insts.add(`${recordName ?? ''}/${inst ?? ''}`);
+        } else {
+            let insts = this._authorizedUpdateDataInsts.get(connectionId);
+            if (!insts) {
+                insts = new Set();
+                this._authorizedUpdateDataInsts.set(connectionId, insts);
+            }
+
+            insts.add(`${recordName ?? ''}/${inst ?? ''}`);
+        }
+    }
+
+    async isAuthorizedInst(
+        connectionId: string,
+        recordName: string,
+        inst: string,
+        scope: 'token' | 'updateData'
+    ): Promise<boolean> {
+        if (scope === 'token') {
+            let insts = this._authorizedInsts.get(connectionId);
+            if (!insts) {
+                return false;
+            }
+
+            return insts.has(`${recordName ?? ''}/${inst ?? ''}`);
+        } else {
+            let insts = this._authorizedUpdateDataInsts.get(connectionId);
+            if (!insts) {
+                return false;
+            }
+
+            return insts.has(`${recordName ?? ''}/${inst ?? ''}`);
+        }
     }
 
     async saveConnection(connection: DeviceConnection): Promise<void> {
@@ -140,6 +192,8 @@ export class MemoryWebsocketConnectionStore
 
         this._connectionMap.set(serverConnectionId, []);
         this._connections.delete(serverConnectionId);
+        this._authorizedInsts.delete(serverConnectionId);
+        this._authorizedUpdateDataInsts.delete(serverConnectionId);
     }
 
     expireConnection(serverConnectionId: string): Promise<void> {

@@ -22,7 +22,6 @@ export * from './MemoryRateLimiter';
 export * from './RateLimitController';
 
 export * from './PolicyController';
-export * from './PolicyPermissions';
 export * from './PolicyStore';
 
 export * from './AIChatInterface';
@@ -40,5 +39,9 @@ export * from './SubscriptionConfiguration';
 export * from './MetricsStore';
 export * from './MemoryStore';
 export * from './MemoryFileRecordsLookup';
+
+export * from './Cache';
+export * from './CachingPolicyStore';
+export * from './CachingConfigStore';
 
 export * from './websockets';

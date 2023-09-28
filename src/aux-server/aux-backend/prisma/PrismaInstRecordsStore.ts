@@ -6,10 +6,14 @@ import {
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
+    InstWithSubscriptionInfo,
     ReplaceUpdatesResult,
+    SaveBranchResult,
+    SaveInstResult,
     StoredUpdates,
 } from '@casual-simulation/aux-records';
 import { PrismaClient } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -22,12 +26,42 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         this._prisma = prisma;
     }
 
-    async getInstByName(recordName: string, inst: string): Promise<InstRecord> {
+    async getInstByName(
+        recordName: string,
+        inst: string
+    ): Promise<InstWithSubscriptionInfo> {
         const record = await this._prisma.instRecord.findUnique({
             where: {
                 recordName_name: {
                     recordName: recordName,
                     name: inst,
+                },
+            },
+            select: {
+                name: true,
+                markers: true,
+                recordName: true,
+                record: {
+                    select: {
+                        owner: {
+                            select: {
+                                id: true,
+                                subscriptionId: true,
+                                subscriptionStatus: true,
+                                subscriptionPeriodStart: true,
+                                subscriptionPeriodEnd: true,
+                            },
+                        },
+                        studio: {
+                            select: {
+                                id: true,
+                                subscriptionId: true,
+                                subscriptionStatus: true,
+                                subscriptionPeriodStart: true,
+                                subscriptionPeriodEnd: true,
+                            },
+                        },
+                    },
                 },
             },
         });
@@ -40,6 +74,13 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             inst: record.name,
             markers: record.markers,
             recordName: record.recordName,
+            subscriptionId:
+                record.record.owner?.subscriptionId ??
+                record.record.studio?.subscriptionId,
+            subscriptionStatus:
+                record.record.owner?.subscriptionStatus ??
+                record.record.studio?.subscriptionStatus,
+            subscriptionType: record.record.owner ? 'user' : 'studio',
         };
     }
 
@@ -65,6 +106,28 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                         name: true,
                         recordName: true,
                         markers: true,
+                        record: {
+                            select: {
+                                owner: {
+                                    select: {
+                                        id: true,
+                                        subscriptionId: true,
+                                        subscriptionStatus: true,
+                                        subscriptionPeriodStart: true,
+                                        subscriptionPeriodEnd: true,
+                                    },
+                                },
+                                studio: {
+                                    select: {
+                                        id: true,
+                                        subscriptionId: true,
+                                        subscriptionStatus: true,
+                                        subscriptionPeriodStart: true,
+                                        subscriptionPeriodEnd: true,
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
                 temporary: true,
@@ -75,6 +138,8 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             return null;
         }
 
+        const record = b.inst.record;
+
         return {
             inst: b.instName,
             branch: b.name,
@@ -83,49 +148,94 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 recordName: b.inst.recordName,
                 inst: b.inst.name,
                 markers: b.inst.markers,
+                subscriptionId:
+                    record.owner?.subscriptionId ??
+                    record.studio?.subscriptionId,
+                subscriptionStatus:
+                    record.owner?.subscriptionStatus ??
+                    record.studio?.subscriptionStatus,
+                subscriptionType: record.owner ? 'user' : 'studio',
             },
             temporary: b.temporary,
         };
     }
 
-    async saveInst(inst: InstWithBranches): Promise<void> {
-        await this._prisma.instRecord.upsert({
-            where: {
-                recordName_name: {
-                    recordName: inst.recordName,
-                    name: inst.inst,
+    async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
+        try {
+            await this._prisma.instRecord.upsert({
+                where: {
+                    recordName_name: {
+                        recordName: inst.recordName,
+                        name: inst.inst,
+                    },
                 },
-            },
-            update: {
-                markers: inst.markers,
-            },
-            create: {
-                name: inst.inst,
-                recordName: inst.recordName,
-                markers: inst.markers,
-            },
-        });
+                update: {
+                    markers: inst.markers,
+                },
+                create: {
+                    name: inst.inst,
+                    recordName: inst.recordName,
+                    markers: inst.markers,
+                },
+            });
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            if (err instanceof PrismaClientKnownRequestError) {
+                if (err.code === 'P2003') {
+                    // Foreign key violation
+                    return {
+                        success: false,
+                        errorCode: 'record_not_found',
+                        errorMessage: 'The record was not found.',
+                    };
+                } else {
+                    throw err;
+                }
+            }
+        }
     }
 
-    async saveBranch(branch: BranchRecord): Promise<void> {
-        await this._prisma.instBranch.upsert({
-            where: {
-                recordName_instName_name: {
+    async saveBranch(branch: BranchRecord): Promise<SaveBranchResult> {
+        try {
+            await this._prisma.instBranch.upsert({
+                where: {
+                    recordName_instName_name: {
+                        recordName: branch.recordName,
+                        instName: branch.inst,
+                        name: branch.branch,
+                    },
+                },
+                update: {
+                    temporary: branch.temporary,
+                },
+                create: {
+                    name: branch.branch,
                     recordName: branch.recordName,
                     instName: branch.inst,
-                    name: branch.branch,
+                    temporary: branch.temporary,
                 },
-            },
-            update: {
-                temporary: branch.temporary,
-            },
-            create: {
-                name: branch.branch,
-                recordName: branch.recordName,
-                instName: branch.inst,
-                temporary: branch.temporary,
-            },
-        });
+            });
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            if (err instanceof PrismaClientKnownRequestError) {
+                if (err.code === 'P2003') {
+                    // Foreign key violation
+                    return {
+                        success: false,
+                        errorCode: 'inst_not_found',
+                        errorMessage: 'The inst was not found.',
+                    };
+                } else {
+                    throw err;
+                }
+            }
+        }
     }
 
     async getCurrentUpdates(

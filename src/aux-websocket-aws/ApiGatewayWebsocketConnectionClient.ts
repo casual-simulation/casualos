@@ -136,6 +136,11 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
                         return this._handleDownloadRequest(event);
                     } else if (event[0] === WebsocketEventTypes.Message) {
                         return this._handleMessageData(event);
+                    } else if (event[0] === WebsocketEventTypes.Error) {
+                        console.error(
+                            `[ApiGatewayWebsocketConnectionClient] Error (${event[1]}):`,
+                            event[2]
+                        );
                     }
                 })
             )

@@ -4,67 +4,35 @@ import {
     TempBranchInfo,
     TemporaryInstRecordsStore,
 } from '@casual-simulation/aux-records';
-import { promisify } from 'node:util';
-import { Multi, RedisClient } from 'redis';
+import { RedisClientType } from 'redis';
 
 /**
  * Defines an implementation of a TempInstRecordsStore for redis.
  */
 export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _globalNamespace: string;
-    private _redis: RedisClient;
+    private _redis: RedisClientType;
     private _currentGenerationKey: string;
 
-    private rpush: (args: [string, ...string[]]) => Promise<number>;
-    private incr: (args: [string]) => Promise<number>;
-    private incrBy: (args: [string, number]) => Promise<number>;
-    private lrange: (
-        key: string,
-        start: number,
-        end: number
-    ) => Promise<string[]>;
-    private llen: (key: string) => Promise<number>;
-    private del: (key: string, ...keys: string[]) => Promise<void>;
-    private get: (key: string) => Promise<string>;
-    private set: (key: string, value: string) => Promise<void>;
-    private lpop: (key: string, count: number) => Promise<void>;
-    private sadd: (key: string, member: string) => Promise<number>;
-    private smembers: (key: string) => Promise<string[]>;
-    private multi: () => Multi;
-
-    constructor(globalNamespace: string, redis: RedisClient) {
+    constructor(globalNamespace: string, redis: RedisClientType) {
         this._globalNamespace = globalNamespace;
         this._redis = redis;
         this._currentGenerationKey = `${this._globalNamespace}/currentGeneration`;
-
-        this._redis.get('abc');
-        this.get = promisify(this._redis.get).bind(this._redis);
-        this.set = promisify(this._redis.set).bind(this._redis);
-        this.del = promisify(this._redis.del).bind(this._redis);
-        this.rpush = promisify(this._redis.rpush).bind(this._redis);
-        this.lrange = promisify(this._redis.lrange).bind(this._redis);
-        this.incr = promisify(this._redis.incr).bind(this._redis);
-        this.incrBy = promisify(this._redis.incrby).bind(this._redis);
-        this.llen = promisify(this._redis.llen.bind(this._redis));
-        this.lpop = promisify(this._redis.lpop.bind(this._redis));
-        this.sadd = promisify(this._redis.sadd.bind(this._redis));
-        this.smembers = promisify(this._redis.smembers.bind(this._redis));
-        this.multi = promisify(this._redis.multi.bind(this._redis));
     }
 
     async setDirtyBranchGeneration(generation: string): Promise<void> {
-        await this.set(this._currentGenerationKey, generation);
+        await this._redis.set(this._currentGenerationKey, generation);
     }
 
     async getDirtyBranchGeneration(): Promise<string> {
-        const generation = await this.get(this._currentGenerationKey);
+        const generation = await this._redis.get(this._currentGenerationKey);
         return generation ?? '0';
     }
 
     async markBranchAsDirty(branch: BranchName): Promise<void> {
         const generation = await this.getDirtyBranchGeneration();
         const key = this._generationKey(generation);
-        await this.sadd(key, JSON.stringify(branch));
+        await this._redis.sAdd(key, JSON.stringify(branch));
     }
 
     async listDirtyBranches(generation?: string): Promise<BranchName[]> {
@@ -72,13 +40,13 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             generation = await this.getDirtyBranchGeneration();
         }
         const key = this._generationKey(generation);
-        const branches = (await this.smembers(key)) ?? [];
+        const branches = (await this._redis.sMembers(key)) ?? [];
         return branches.map((b) => JSON.parse(b));
     }
 
     async clearDirtyBranches(generation: string): Promise<void> {
         const key = this._generationKey(generation);
-        await this.del(key);
+        await this._redis.del(key);
     }
 
     private _generationKey(generation: string) {
@@ -129,7 +97,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         branch: string
     ): Promise<TempBranchInfo & { branchSizeInBytes: number }> {
         const key = this._getBranchInfoKey(recordName, inst, branch);
-        const branchInfo = await this.get(key);
+        const branchInfo = await this._redis.get(key);
         if (!branchInfo) {
             return null;
         }
@@ -143,7 +111,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             branch.inst,
             branch.branch
         );
-        await this.set(key, JSON.stringify(branch));
+        await this._redis.set(key, JSON.stringify(branch));
     }
 
     async deleteAllInstBranchInfo(
@@ -151,33 +119,21 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         inst: string
     ): Promise<void> {
         const key = this._getInstBranchesKey(recordName, inst);
-        const branches = await this.smembers(key);
+        const branches = await this._redis.sMembers(key);
 
-        const multi = this.multi();
+        const multi = this._redis.multi();
         for (let updatesKey of branches) {
             let [recordName, inst, branch] = updatesKey
                 .slice(`${this._globalNamespace.length}/updates/`.length)
                 .split('/');
-            multi.del(
+            multi.del([
                 updatesKey,
                 this._getBranchSizeKey(recordName, inst, branch),
-                this._getBranchInfoKey(recordName, inst, branch)
-            );
+                this._getBranchInfoKey(recordName, inst, branch),
+            ]);
         }
-        multi.del(key, this._getInstSizeKey(recordName, inst));
-        await new Promise<void>((resolve, reject) => {
-            try {
-                multi.exec((err) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                });
-            } catch (err) {
-                reject(err);
-            }
-        });
+        multi.del([key, this._getInstSizeKey(recordName, inst)]);
+        await multi.exec();
     }
 
     async getUpdates(
@@ -188,7 +144,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         const key = this._getUpdatesKey(recordName, inst, branch);
 
         const [updates, instSize, branchSize] = await Promise.all([
-            this.lrange(key, 0, -1),
+            this._redis.lRange(key, 0, -1),
             this.getInstSize(recordName, inst),
             this.getBranchSize(recordName, inst, branch),
         ]);
@@ -228,16 +184,16 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         const finalUpdates = updates.map((u) => `${u}:${Date.now()}`);
 
         await Promise.all([
-            this.rpush([key, ...finalUpdates]),
+            this._redis.rPush(key, finalUpdates),
             this.addInstSize(recordName, inst, sizeInBytes),
             this.addBranchSize(recordName, inst, branch, sizeInBytes),
-            this.sadd(branchesKey, key),
+            this._redis.sAdd(branchesKey, key),
         ]);
     }
 
     async getInstSize(recordName: string, inst: string): Promise<number> {
         const key = this._getInstSizeKey(recordName, inst);
-        const size = await this.get(key);
+        const size = await this._redis.get(key);
         return size ? parseInt(size) : 0;
     }
 
@@ -247,7 +203,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         sizeInBytes: number
     ): Promise<void> {
         const key = this._getInstSizeKey(recordName, inst);
-        await this.set(key, sizeInBytes.toString());
+        await this._redis.set(key, sizeInBytes.toString());
     }
 
     async addInstSize(
@@ -256,12 +212,12 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         sizeInBytes: number
     ): Promise<void> {
         const key = this._getInstSizeKey(recordName, inst);
-        await this.incrBy([key, sizeInBytes]);
+        await this._redis.incrBy(key, sizeInBytes);
     }
 
     async deleteInstSize(recordName: string, inst: string): Promise<void> {
         const key = this._getInstSizeKey(recordName, inst);
-        await this.del(key);
+        await this._redis.del(key);
     }
 
     async getBranchSize(
@@ -270,7 +226,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         branch: string
     ): Promise<number> {
         const key = this._getBranchSizeKey(recordName, inst, branch);
-        const size = await this.get(key);
+        const size = await this._redis.get(key);
         return size ? parseInt(size) : 0;
     }
 
@@ -281,7 +237,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         sizeInBytes: number
     ): Promise<void> {
         const key = this._getBranchSizeKey(recordName, inst, branch);
-        await this.set(key, sizeInBytes.toString());
+        await this._redis.set(key, sizeInBytes.toString());
     }
 
     async addBranchSize(
@@ -291,7 +247,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         sizeInBytes: number
     ): Promise<void> {
         const key = this._getBranchSizeKey(recordName, inst, branch);
-        await this.incrBy([key, sizeInBytes]);
+        await this._redis.incrBy(key, sizeInBytes);
     }
 
     async deleteBranchSize(
@@ -300,7 +256,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         branch: string
     ): Promise<void> {
         const key = this._getBranchSizeKey(recordName, inst, branch);
-        await this.del(key);
+        await this._redis.del(key);
     }
 
     async trimUpdates(
@@ -310,7 +266,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         numToDelete: number
     ): Promise<void> {
         const key = this._getUpdatesKey(recordName, inst, branch);
-        await this.lpop(key, numToDelete);
+        await this._redis.lPopCount(key, numToDelete);
     }
 
     async countBranchUpdates(
@@ -319,7 +275,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         branch: string
     ): Promise<number> {
         const key = this._getUpdatesKey(recordName, inst, branch);
-        return await this.llen(key);
+        return await this._redis.lLen(key);
     }
 
     async deleteBranch(
@@ -330,7 +286,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         const key = this._getUpdatesKey(recordName, inst, branch);
         const branchSize = await this.getBranchSize(recordName, inst, branch);
         await Promise.all([
-            this.del(key),
+            this._redis.del(key),
             this.deleteBranchSize(recordName, inst, branch),
             this.addInstSize(recordName, inst, -branchSize),
         ]);

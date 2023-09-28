@@ -7,7 +7,11 @@ import {
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
+    InstWithSubscriptionInfo,
     ReplaceUpdatesResult,
+    SaveBranchFailure,
+    SaveBranchResult,
+    SaveInstResult,
     StoredUpdates,
 } from './InstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
@@ -38,7 +42,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     async getInstByName(
         recordName: string | null,
         inst: string
-    ): Promise<InstRecord> {
+    ): Promise<InstWithSubscriptionInfo> {
         return await this._permanent.getInstByName(recordName, inst);
     }
 
@@ -72,19 +76,29 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         return info;
     }
 
-    async saveInst(inst: InstWithBranches): Promise<void> {
+    async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
         if (inst.recordName) {
-            await this._permanent.saveInst(inst);
+            const result = await this._permanent.saveInst(inst);
+            if (!result.success) {
+                return result;
+            }
             await this._temp.deleteAllInstBranchInfo(
                 inst.recordName,
                 inst.inst
             );
         }
+
+        return {
+            success: true,
+        };
     }
 
-    async saveBranch(branch: BranchRecord): Promise<void> {
+    async saveBranch(branch: BranchRecord): Promise<SaveBranchResult> {
         if (branch.recordName) {
-            await this._permanent.saveBranch(branch);
+            const result = await this._permanent.saveBranch(branch);
+            if (!result.success) {
+                return result;
+            }
             const info = await this._permanent.getBranchByName(
                 branch.recordName,
                 branch.inst,
@@ -102,6 +116,10 @@ export class SplitInstRecordsStore implements InstRecordsStore {
                 temporary: branch.temporary,
             });
         }
+
+        return {
+            success: true,
+        };
     }
 
     async getCurrentUpdates(
@@ -127,7 +145,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
             inst,
             branch
         );
-        if (updates.updates.length > 0) {
+        if (updates && updates.updates.length > 0) {
             await this._temp.addUpdates(
                 recordName,
                 inst,

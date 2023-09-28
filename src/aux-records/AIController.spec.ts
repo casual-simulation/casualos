@@ -447,6 +447,7 @@ describe('AIController', () => {
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
+                subscriptionType: 'user',
                 currentPeriodStartMs: null,
                 currentPeriodEndMs: null,
                 totalTokensInCurrentPeriod: 123,
@@ -557,6 +558,7 @@ describe('AIController', () => {
                     ownerId: userId,
                     subscriptionStatus: 'active',
                     subscriptionId: 'sub1',
+                    subscriptionType: 'user',
                     totalTokensInCurrentPeriod: 75,
                 });
             });
@@ -625,6 +627,7 @@ describe('AIController', () => {
                     ownerId: userId,
                     subscriptionStatus: 'active',
                     subscriptionId: 'sub1',
+                    subscriptionType: 'user',
                     totalTokensInCurrentPeriod: 35,
                 });
             });
@@ -678,6 +681,7 @@ describe('AIController', () => {
                     ownerId: userId,
                     subscriptionStatus: 'active',
                     subscriptionId: 'sub1',
+                    subscriptionType: 'user',
                     totalTokensInCurrentPeriod: 100,
                 });
             });
@@ -777,6 +781,7 @@ describe('AIController', () => {
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
+                subscriptionType: 'user',
                 currentPeriodStartMs: null,
                 currentPeriodEndMs: null,
                 totalSkyboxesInCurrentPeriod: 1,
@@ -1201,6 +1206,7 @@ describe('AIController', () => {
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
+                subscriptionType: 'user',
                 currentPeriodStartMs: null,
                 currentPeriodEndMs: null,
                 totalSquarePixelsInCurrentPeriod: 512,

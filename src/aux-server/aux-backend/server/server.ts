@@ -177,6 +177,10 @@ export class Server {
             .useAllowedAccountOrigins(allowedRecordsOrigins)
             .useAllowedApiOrigins(allowedRecordsOrigins);
 
+        if (options.redis && options.redis.cacheNamespace) {
+            builder.useRedisCache();
+        }
+
         if (options.prisma && options.mongodb) {
             builder.usePrismaWithMongoDBFileStore();
         } else {
@@ -239,6 +243,9 @@ export class Server {
             websocketMessenger,
             websocketController,
         } = await builder.buildAsync();
+
+        await builder.ensureInitialized();
+
         const filesCollection =
             mongoDatabase.collection<any>('recordsFilesData');
 

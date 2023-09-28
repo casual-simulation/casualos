@@ -126,6 +126,46 @@ Resources:
             LogGroupName: !Sub '/aws/lambda/${handleRecords}'
             RetentionInDays: 14
 
+    # This is a Lambda function config associated with the source code: services.js
+    SavePermanentBranchesFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: Records.savePermanentBranches
+            CodeUri: dist/handlers
+            Runtime: nodejs18.x
+            MemorySize: 512
+            Timeout: 900
+            Description: A function that periodically saves all the permanent inst branches.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the Bucket
+                - S3CrudPolicy:
+                      BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                - !If [
+                      UseSESCrud,
+                      !Ref SESIdentityNameParameter,
+                      !Ref 'AWS::NoValue',
+                  ]
+            Environment:
+                Variables:
+                    REGION: !Ref 'AWS::Region'
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+            Events:
+                SaveBranches:
+                    Type: ScheduleV2
+                    Properties:
+                        Description: Schedule for saving permanent inst branches.
+                        ScheduleExpression: 'rate(1 minute)'
+    SavePermanentBranchesLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${SavePermanentBranchesFunction}'
+            RetentionInDays: 14
+
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
 

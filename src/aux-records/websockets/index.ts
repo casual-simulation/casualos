@@ -2,7 +2,6 @@ export * from './InstRecordsStore';
 export * from './TemporaryInstRecordsStore';
 export * from './SplitInstRecordsStore';
 
-export * from './MemoryInstRecordsStore';
 export * from './MemoryTempInstRecordsStore';
 export * from './MemoryWebsocketConnectionStore';
 export * from './MemoryWebsocketMessenger';

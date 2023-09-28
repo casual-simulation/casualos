@@ -27,8 +27,10 @@ import {
     InstRecordsStore,
     WebsocketMessenger,
     SplitInstRecordsStore,
-    MemoryInstRecordsStore,
     TemporaryInstRecordsStore,
+    MultiCache,
+    CachingPolicyStore,
+    CachingConfigStore,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -45,7 +47,11 @@ import {
 } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { SESv2 } from '@aws-sdk/client-sesv2';
-import { RedisClient, createClient as createRedisClient } from 'redis';
+import {
+    RedisClientOptions,
+    RedisClientType,
+    createClient as createRedisClient,
+} from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
@@ -100,20 +106,22 @@ import {
     AIGenerateImageConfiguration,
 } from '@casual-simulation/aux-records/AIController';
 import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
-import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
+import { PrismaMetricsStore } from '../prisma/PrismaMetricsStore';
 import { S3 } from '@aws-sdk/client-s3';
-import { RedisTempInstRecordsStore } from 'aux-backend/redis/RedisTempInstRecordsStore';
-import { RedisWebsocketConnectionStore } from 'aux-backend/redis/RedisWebsocketConnectionStore';
-import { ApiGatewayWebsocketMessenger } from 'aux-backend/serverless/aws/src/ApiGatewayWebsocketMessenger';
+import { RedisTempInstRecordsStore } from '../redis/RedisTempInstRecordsStore';
+import { RedisWebsocketConnectionStore } from '../redis/RedisWebsocketConnectionStore';
+import { ApiGatewayWebsocketMessenger } from '../serverless/aws/src/ApiGatewayWebsocketMessenger';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
-import { PrismaInstRecordsStore } from 'aux-backend/prisma/PrismaInstRecordsStore';
+import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
+import { RedisMultiCache } from '../redis/RedisMultiCache';
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
     private _mongoClient: MongoClient;
     private _prismaClient: PrismaClient;
     private _mongoDb: Db;
+    private _multiCache: MultiCache;
 
     private _configStore: ConfigurationStore;
     private _metricsStore: MetricsStore;
@@ -155,7 +163,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
-    private _redis: RedisClient | null = null;
+    private _redis: RedisClientType | null = null;
     private _s3: S3;
     private _rateLimitController: RateLimitController;
 
@@ -182,6 +190,15 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _subscription: Subscription;
 
+    /**
+     * The promise that resolves when the server has been fully initialized.
+     */
+    private _initPromise: Promise<void>;
+    private _initActions: {
+        priority: number;
+        action: () => Promise<void>;
+    }[] = [];
+
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
     }
@@ -197,6 +214,26 @@ export class ServerBuilder implements SubscriptionLike {
 
     get closed(): boolean {
         return this._subscription.closed;
+    }
+
+    useRedisCache(
+        options: Pick<BuilderOptions, 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Redis Cache.');
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+
+        if (!options.redis.cacheNamespace) {
+            throw new Error('Redis cache namespace must be provided.');
+        }
+
+        const redis = this._ensureRedis(options);
+        this._multiCache = new RedisMultiCache(
+            redis,
+            options.redis.cacheNamespace
+        );
+        return this;
     }
 
     useMongoDB(
@@ -299,16 +336,20 @@ export class ServerBuilder implements SubscriptionLike {
 
         const prismaClient = this._ensurePrisma(options);
         const s3Client = this._ensureS3(options);
-        this._configStore = new PrismaConfigurationStore(prismaClient, {
-            subscriptions: options.subscriptions as SubscriptionConfiguration,
-        });
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
         this._metricsStore = new PrismaMetricsStore(
             prismaClient,
             this._configStore
         );
         this._authStore = new PrismaAuthStore(prismaClient);
         this._recordsStore = new PrismaRecordsStore(prismaClient);
-        this._policyStore = new PrismaPolicyStore(prismaClient);
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
         this._dataStore = new PrismaDataRecordsStore(prismaClient);
         this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
@@ -350,17 +391,20 @@ export class ServerBuilder implements SubscriptionLike {
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
 
-                this._configStore = new PrismaConfigurationStore(prismaClient, {
-                    subscriptions:
-                        options.subscriptions as SubscriptionConfiguration,
-                });
+                this._configStore = this._ensurePrismaConfigurationStore(
+                    prismaClient,
+                    options
+                );
                 this._metricsStore = new PrismaMetricsStore(
                     prismaClient,
                     this._configStore
                 );
                 this._authStore = new PrismaAuthStore(prismaClient);
                 this._recordsStore = new PrismaRecordsStore(prismaClient);
-                this._policyStore = new PrismaPolicyStore(prismaClient);
+                this._policyStore = this._ensurePrismaPolicyStore(
+                    prismaClient,
+                    options
+                );
                 this._dataStore = new PrismaDataRecordsStore(prismaClient);
                 this._manualDataStore = new PrismaDataRecordsStore(
                     prismaClient,
@@ -395,7 +439,8 @@ export class ServerBuilder implements SubscriptionLike {
         const redis = this._ensureRedis(options);
         this._websocketConnectionStore = new RedisWebsocketConnectionStore(
             options.redis.websocketConnectionNamespace,
-            redis
+            redis,
+            options.redis.connectionAuthorizationCacheSeconds
         );
 
         return this;
@@ -501,14 +546,6 @@ export class ServerBuilder implements SubscriptionLike {
             new PrismaInstRecordsStore(prisma)
         );
 
-        this._websocketController = new WebsocketController(
-            this._websocketConnectionStore,
-            this._websocketMessenger,
-            this._instRecordsStore,
-            this._tempInstRecordsStore,
-            this._authController
-        );
-
         return this;
     }
 
@@ -595,15 +632,7 @@ export class ServerBuilder implements SubscriptionLike {
         const client = this._ensureRedis(options);
         const store = new RedisRateLimitStore({
             sendCommand: (command: string, ...args: (string | number)[]) => {
-                return new Promise((resolve, reject) => {
-                    this._redis.sendCommand(command, args, (err, result) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(result);
-                        }
-                    });
-                });
+                return this._redis.sendCommand([command, ...(args as any[])]);
             },
         });
         store.prefix = options.redis.rateLimitPrefix;
@@ -907,6 +936,24 @@ export class ServerBuilder implements SubscriptionLike {
             this._aiController = new AIController(this._aiConfiguration);
         }
 
+        if (
+            this._websocketConnectionStore &&
+            this._websocketMessenger &&
+            this._instRecordsStore &&
+            this._tempInstRecordsStore
+        ) {
+            this._websocketController = new WebsocketController(
+                this._websocketConnectionStore,
+                this._websocketMessenger,
+                this._instRecordsStore,
+                this._tempInstRecordsStore,
+                this._authController,
+                this._policyController,
+                this._configStore,
+                this._metricsStore
+            );
+        }
+
         const server = new RecordsServer(
             this._allowedAccountOrigins,
             this._allowedApiOrigins,
@@ -945,25 +992,62 @@ export class ServerBuilder implements SubscriptionLike {
         };
     }
 
-    private _ensureRedis(options: Pick<BuilderOptions, 'redis'>): RedisClient {
-        if (!this._redis) {
-            this._redis = createRedisClient({
-                host: options.redis.host,
-                port: options.redis.port,
-                password: options.redis.password,
-                tls: options.redis.tls,
+    /**
+     * Ensures that all the initialization actions have been performed.
+     * Returns a promise that resolves when the actions have been performed.
+     */
+    ensureInitialized() {
+        if (!this._initPromise) {
+            this._initPromise = this._initCore();
+        }
 
-                retry_strategy: function (options) {
-                    if (
-                        options.error &&
-                        options.error.code === 'ECONNREFUSED'
-                    ) {
-                        // End reconnecting on a specific error and flush all commands with
-                        // a individual error
-                        return new Error('The server refused the connection');
-                    }
-                    // reconnect after min(100ms per attempt, 3 seconds)
-                    return Math.min(options.attempt * 100, 3000);
+        return this._initPromise;
+    }
+
+    private async _initCore(): Promise<void> {
+        console.log('[ServerBuilder] Running initialization actions...');
+        let actions = sortBy(this._initActions, (a) => a.priority);
+        for (let action of actions) {
+            await action.action();
+        }
+        console.log('[ServerBuilder] Done.');
+    }
+
+    private _ensureRedis(
+        options: Pick<BuilderOptions, 'redis'>
+    ): RedisClientType {
+        if (!this._redis) {
+            let retryStrategy = (retries: number, error: Error) => {
+                // reconnect after min(100ms per attempt, 3 seconds)
+                return Math.min(retries * 100, 3000);
+            };
+            if (options.redis.url) {
+                this._redis = createRedisClient({
+                    url: options.redis.url,
+                    socket: {
+                        reconnectStrategy: retryStrategy,
+                    },
+                });
+            } else {
+                if (!options.redis.host) {
+                    throw new Error(
+                        'Redis host must be provided if a URL is not specified.'
+                    );
+                }
+                this._redis = createRedisClient({
+                    socket: {
+                        host: options.redis.host,
+                        port: options.redis.port,
+                        tls: options.redis.tls,
+                        reconnectStrategy: retryStrategy,
+                    },
+                    password: options.redis.password,
+                });
+            }
+            this._initActions.push({
+                priority: 10,
+                action: async () => {
+                    await this._redis.connect();
                 },
             });
             this._subscription.add(() => {
@@ -1014,6 +1098,42 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         return this._mongoClient;
+    }
+
+    private _ensurePrismaPolicyStore(
+        prismaClient: PrismaClient,
+        options: Pick<BuilderOptions, 'prisma'>
+    ): PolicyStore {
+        const policyStore = new PrismaPolicyStore(prismaClient);
+        if (this._multiCache) {
+            const cache = this._multiCache.getCache('policies');
+            return new CachingPolicyStore(
+                policyStore,
+                cache,
+                options.prisma.policiesCacheSeconds
+            );
+        } else {
+            return policyStore;
+        }
+    }
+
+    private _ensurePrismaConfigurationStore(
+        prismaClient: PrismaClient,
+        options: Pick<BuilderOptions, 'prisma' | 'subscriptions'>
+    ): ConfigurationStore {
+        const configStore = new PrismaConfigurationStore(prismaClient, {
+            subscriptions: options.subscriptions as SubscriptionConfiguration,
+        });
+        if (this._multiCache) {
+            const cache = this._multiCache.getCache('config');
+            return new CachingConfigStore(
+                configStore,
+                cache,
+                options.prisma.configurationCacheSeconds
+            );
+        } else {
+            return configStore;
+        }
     }
 }
 
@@ -1089,10 +1209,11 @@ const sesSchema = z.object({
 });
 
 const redisSchema = z.object({
-    host: z.string().nonempty(),
-    port: z.number(),
+    url: z.string().nonempty().optional(),
+    host: z.string().nonempty().optional(),
+    port: z.number().optional(),
     password: z.string().nonempty().optional(),
-    tls: z.boolean(),
+    tls: z.boolean().optional(),
 
     causalRepoNamespace: z.string().nonempty().optional(),
     rateLimitPrefix: z.string().nonempty().optional(),
@@ -1103,6 +1224,13 @@ const redisSchema = z.object({
     websocketConnectionNamespace: z.string().optional(),
     publicInstRecordsStoreNamespace: z.string().optional(),
     tempInstRecordsStoreNamespace: z.string().optional(),
+
+    // The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
+    // Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often.
+    // 5 minutes by default
+    connectionAuthorizationCacheSeconds: z.number().positive().default(300),
+
+    cacheNamespace: z.string().nonempty().default('/cache'),
 });
 
 const rateLimitSchema = z.object({
@@ -1125,6 +1253,9 @@ const mongodbSchema = z.object({
 
 const prismaSchema = z.object({
     options: z.object({}).passthrough().optional(),
+
+    policiesCacheSeconds: z.number().positive().optional().default(60),
+    configurationCacheSeconds: z.number().positive().optional().default(60),
 });
 
 const openAiSchema = z.object({
