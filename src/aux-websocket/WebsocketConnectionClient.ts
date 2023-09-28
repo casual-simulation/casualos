@@ -26,6 +26,7 @@ import {
     WebsocketEventTypes,
     ConnectionInfo,
     WebsocketEvent,
+    WebsocketErrorEvent,
 } from '@casual-simulation/aux-common';
 
 export class WebsocketConnectionClient implements ConnectionClient {
@@ -115,11 +116,22 @@ function socketEvents(
     return socket.onMessage.pipe(
         map((message) => safeParse(message.data)),
         filter((data) => !!data && Array.isArray(data) && data.length >= 3),
+        filter((message) => {
+            if (message[0] === WebsocketEventTypes.Error) {
+                console.log(
+                    `[WebsocketConnectionClient] Error: (${message[1]})`,
+                    message[2]
+                );
+                return false;
+            } else {
+                return true;
+            }
+        }),
         share()
-    );
+    ) as Observable<WebsocketMessageEvent>;
 }
 
-function safeParse(json: string): WebsocketMessageEvent {
+function safeParse(json: string): WebsocketMessageEvent | WebsocketErrorEvent {
     try {
         return JSON.parse(json);
     } catch (err) {

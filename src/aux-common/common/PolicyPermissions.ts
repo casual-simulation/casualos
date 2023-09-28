@@ -79,7 +79,8 @@ export type AvailableInstPermissions =
     | DeleteInstPermission
     | UpdateInstPermission
     | UpdateDataInstPermission
-    | ListInstPermission;
+    | ListInstPermission
+    | SendInstActionPermission;
 
 /**
  * Defines an interface that describes common options for all permissions.
@@ -761,7 +762,7 @@ type ZodReadInstPermissionAssertion = HasType<
 >;
 
 /**
- * Defines an interface that describes a permission to update an inst.
+ * Defines an interface that describes a permission to update information about an inst.
  */
 export interface UpdateInstPermission extends InstPermission {
     type: 'inst.update';
@@ -824,6 +825,24 @@ type ZodListInstPermissionAssertion = HasType<
     ListInstPermission
 >;
 
+/**
+ * Defines an interface that describes a permission to send actions in insts.
+ */
+export interface SendInstActionPermission extends InstPermission {
+    type: 'inst.sendAction';
+}
+
+export const SEND_INST_ACTION_PERMISSION_VALIDATION = INST_VALIDATION.extend({
+    type: z.literal('inst.sendAction'),
+});
+type ZodSendInstActionPermission = z.infer<
+    typeof SEND_INST_ACTION_PERMISSION_VALIDATION
+>;
+type ZodSendInstActionPermissionAssertion = HasType<
+    ZodSendInstActionPermission,
+    SendInstActionPermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     CREATE_DATA_VALIDATION,
     READ_DATA_VALIDATION,
@@ -854,6 +873,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     UPDATE_DATA_INST_VALIDATION,
     DELETE_INST_VALIDATION,
     LIST_INST_VALIDATION,
+    SEND_INST_ACTION_PERMISSION_VALIDATION,
 ]);
 
 // /**
@@ -935,6 +955,12 @@ export const PUBLIC_READ_MARKER = 'publicRead';
  * Used by default for public insts.
  */
 export const PUBLIC_WRITE_MARKER = 'publicWrite';
+
+/**
+ * The name of the "private" resource marker.
+ * Used by default for private insts.
+ */
+export const PRIVATE_MARKER = 'private';
 
 /**
  * The name of the "account" resource marker.
@@ -1102,6 +1128,11 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
             role: ADMIN_ROLE_NAME,
             insts: true,
         },
+        {
+            type: 'inst.sendAction',
+            role: ADMIN_ROLE_NAME,
+            insts: true,
+        },
 
         // Record Owner Permissions
         {
@@ -1138,6 +1169,81 @@ export const DEFAULT_PUBLIC_READ_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'inst.read',
+            role: true,
+            insts: true,
+        },
+    ],
+};
+
+/**
+ * Defines a policy document that applies only to resources marked with the "publicWrite" marker.
+ */
+export const DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT: PolicyDocument = {
+    permissions: [
+        {
+            type: 'data.create',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.delete',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.read',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.update',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'data.list',
+            role: true,
+            addresses: true,
+        },
+        {
+            type: 'file.read',
+            role: true,
+        },
+        {
+            type: 'file.create',
+            role: true,
+        },
+        {
+            type: 'file.delete',
+            role: true,
+        },
+        {
+            type: 'event.count',
+            role: true,
+            events: true,
+        },
+        {
+            type: 'event.increment',
+            role: true,
+            events: true,
+        },
+        {
+            type: 'inst.read',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.updateData',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.delete',
+            role: true,
+            insts: true,
+        },
+        {
+            type: 'inst.create',
             role: true,
             insts: true,
         },

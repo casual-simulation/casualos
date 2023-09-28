@@ -7,7 +7,11 @@ import {
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
+    InstWithSubscriptionInfo,
     ReplaceUpdatesResult,
+    SaveBranchFailure,
+    SaveBranchResult,
+    SaveInstResult,
     StoredUpdates,
 } from './InstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
@@ -18,6 +22,14 @@ import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 export class SplitInstRecordsStore implements InstRecordsStore {
     private _temp: TemporaryInstRecordsStore;
     private _permanent: InstRecordsStore;
+
+    get temp() {
+        return this._temp;
+    }
+
+    get perm() {
+        return this._permanent;
+    }
 
     constructor(
         temporary: TemporaryInstRecordsStore,
@@ -30,7 +42,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     async getInstByName(
         recordName: string | null,
         inst: string
-    ): Promise<InstRecord> {
+    ): Promise<InstWithSubscriptionInfo> {
         return await this._permanent.getInstByName(recordName, inst);
     }
 
@@ -64,19 +76,29 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         return info;
     }
 
-    async saveInst(inst: InstWithBranches): Promise<void> {
+    async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
         if (inst.recordName) {
-            await this._permanent.saveInst(inst);
+            const result = await this._permanent.saveInst(inst);
+            if (!result.success) {
+                return result;
+            }
             await this._temp.deleteAllInstBranchInfo(
                 inst.recordName,
                 inst.inst
             );
         }
+
+        return {
+            success: true,
+        };
     }
 
-    async saveBranch(branch: BranchRecord): Promise<void> {
+    async saveBranch(branch: BranchRecord): Promise<SaveBranchResult> {
         if (branch.recordName) {
-            await this._permanent.saveBranch(branch);
+            const result = await this._permanent.saveBranch(branch);
+            if (!result.success) {
+                return result;
+            }
             const info = await this._permanent.getBranchByName(
                 branch.recordName,
                 branch.inst,
@@ -94,6 +116,10 @@ export class SplitInstRecordsStore implements InstRecordsStore {
                 temporary: branch.temporary,
             });
         }
+
+        return {
+            success: true,
+        };
     }
 
     async getCurrentUpdates(
@@ -119,7 +145,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
             inst,
             branch
         );
-        if (updates.updates.length > 0) {
+        if (updates && updates.updates.length > 0) {
             await this._temp.addUpdates(
                 recordName,
                 inst,
@@ -244,6 +270,20 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         await Promise.all(promises);
     }
 
+    /**
+     * Replaces the current set of updates with a new update.
+     * Useful for when updates have been merged and the old ones should be replaced by the new one.
+     *
+     * Depending on the implementation, this function may or may not be concurrent safe.
+     * That is, if two clients call this function at the same time for the same branch, then it is possible that the branch will be put into an invalid state.
+     *
+     * @param recordName The name of the record. If null, then the updates will be added to a tempPublic inst.
+     * @param inst The name of the inst.
+     * @param branch The branch in the inst.
+     * @param updatesToRemove The updates that should be moved. Only valid if the result from getUpdates() is used.
+     * @param updateToAdd The update that should be added.
+     * @param sizeInBytes The size of the new update in bytes.
+     */
     async replaceCurrentUpdates(
         recordName: string,
         inst: string,

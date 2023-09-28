@@ -30,7 +30,11 @@ export class AuxBot3DDecoratorFactory {
     loadDecorators(bot3d: AuxBot3D): AuxBot3DDecorator[] {
         let decorators: AuxBot3DDecorator[] = [];
 
-        let botShapeDecorator = new BotShapeDecorator(bot3d, this.game);
+        let botShapeDecorator = new BotShapeDecorator(
+            bot3d,
+            this.game,
+            this.simulation
+        );
         let textureDecorator = new TextureDecorator(bot3d, botShapeDecorator);
 
         let progressBarDecorator = new ProgressBarDecorator(

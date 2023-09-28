@@ -72,6 +72,22 @@ export interface MetricsStore {
      * Saves the given AI Skybox metrics.
      */
     recordSkyboxMetrics(metrics: AISkyboxMetrics): Promise<void>;
+
+    /**
+     * Gets the inst metrics for the given user/studio.
+     * @param filter The filter.
+     */
+    getSubscriptionInstMetrics(
+        filter: SubscriptionFilter
+    ): Promise<InstSubscriptionMetrics>;
+
+    /**
+     * Gets the inst metrics for the given record.
+     * @param recordName The name of the record.
+     */
+    getSubscriptionInstMetricsByRecordName(
+        recordName: string
+    ): Promise<InstSubscriptionMetrics>;
 }
 
 export interface SubscriptionMetrics {
@@ -89,6 +105,11 @@ export interface SubscriptionMetrics {
      * The ID of the subscription.
      */
     subscriptionId: string;
+
+    /**
+     * The type of the subscription.
+     */
+    subscriptionType: 'user' | 'studio';
 
     /**
      * The unix time in miliseconds of the start of the current subscription period.
@@ -132,6 +153,13 @@ export interface RecordSubscriptionMetrics extends SubscriptionMetrics {
      * The total number of records stored in the subscription.
      */
     totalRecords: number;
+}
+
+export interface InstSubscriptionMetrics extends SubscriptionMetrics {
+    /**
+     * The total number of insts stored in the subscription.
+     */
+    totalInsts: number;
 }
 
 export interface SubscriptionFilter {

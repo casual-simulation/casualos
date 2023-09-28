@@ -1,4 +1,4 @@
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import {
     createCanonicalRequest,
     encodeHexUtf8,

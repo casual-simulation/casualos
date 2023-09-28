@@ -50,6 +50,7 @@ import { omitBy } from 'lodash';
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 const SESSION_KEY = 'sessionKey';
+const CONNECTION_KEY = 'connectionKey';
 
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 
@@ -178,6 +179,7 @@ export class AuthManager {
             this._userId = null;
             this._sessionId = null;
             this.savedSessionKey = null;
+            this.savedConnectionKey = null;
         } else {
             this._saveAcceptedTerms(true);
             if (this.email) {
@@ -218,6 +220,7 @@ export class AuthManager {
                 await this._revokeSessionKey(sessionKey);
             }
         }
+        this.savedConnectionKey = null;
         this._userId = null;
         this._sessionId = null;
         this._appMetadata = null;
@@ -700,6 +703,7 @@ export class AuthManager {
 
         if (result.success === true) {
             this.savedSessionKey = result.sessionKey;
+            this.savedConnectionKey = result.connectionKey;
             this._userId = result.userId;
         }
 
@@ -730,6 +734,7 @@ export class AuthManager {
             sessionId === this.sessionId
         ) {
             this.savedSessionKey = null;
+            this.savedConnectionKey = null;
             await this.logout();
         }
 
@@ -756,6 +761,7 @@ export class AuthManager {
 
         if (result.success && userId === this.userId) {
             this.savedSessionKey = null;
+            this.savedConnectionKey = null;
             await this.logout();
         }
 
@@ -776,6 +782,7 @@ export class AuthManager {
 
         if (result.success && result.userId === this.userId) {
             this.savedSessionKey = result.sessionKey;
+            this.savedConnectionKey = result.connectionKey;
         }
 
         return result;
@@ -840,6 +847,18 @@ export class AuthManager {
             localStorage.removeItem(SESSION_KEY);
         } else {
             localStorage.setItem(SESSION_KEY, value);
+        }
+    }
+
+    get savedConnectionKey(): string {
+        return localStorage.getItem(CONNECTION_KEY);
+    }
+
+    set savedConnectionKey(value: string) {
+        if (!value) {
+            localStorage.removeItem(CONNECTION_KEY);
+        } else {
+            localStorage.setItem(CONNECTION_KEY, value);
         }
     }
 

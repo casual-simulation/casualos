@@ -1675,10 +1675,20 @@ export function getBotScale(
                 1
             );
 
+            const x = scaleX * uniformScale;
+            const y = scaleY * uniformScale;
+            const z = scaleZ * uniformScale;
+
             return {
-                x: scaleX * uniformScale,
-                y: scaleY * uniformScale,
-                z: scaleZ * uniformScale,
+                x:
+                    Math.max(0.000000000000000001, Math.abs(x)) *
+                    Math.sign(x || 1),
+                y:
+                    Math.max(0.000000000000000001, Math.abs(y)) *
+                    Math.sign(y || 1),
+                z:
+                    Math.max(0.000000000000000001, Math.abs(z)) *
+                    Math.sign(z || 1),
             };
         },
         obj.id,
@@ -1713,7 +1723,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'keyboard' ||
         shape === 'codeButton' ||
         shape === 'codeHint' ||
-        shape === 'spherePortal'
+        shape === 'spherePortal' ||
+        shape === 'light'
     ) {
         return shape;
     }
@@ -1839,7 +1850,16 @@ export function getBotSubShape(
     bot: Bot
 ): BotSubShape {
     const shape: BotSubShape = calculateBotValue(calc, bot, 'auxFormSubtype');
-    if (shape === 'gltf' || shape === 'html' || shape === 'src') {
+    if (
+        shape === 'gltf' ||
+        shape === 'html' ||
+        shape === 'src' ||
+        shape === 'pointLight' ||
+        shape === 'ambientLight' ||
+        shape === 'directionalLight' ||
+        shape === 'spotLight' ||
+        shape === 'hemisphereLight'
+    ) {
         return shape;
     }
     return null;

@@ -26,7 +26,7 @@ import {
 import { ZodError, z } from 'zod';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
-import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
+import { AVAILABLE_PERMISSIONS_VALIDATION } from '@casual-simulation/aux-common';
 import { PolicyController } from './PolicyController';
 import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
@@ -941,9 +941,9 @@ export class RecordsServer {
         requestId: number | null,
         error: ZodError<any>
     ) {
-        await this._websocketController.sendError(connectionId, {
-            requestId: requestId,
-            errorCode: 'unnaceptable_request',
+        await this._websocketController.sendError(connectionId, requestId, {
+            success: false,
+            errorCode: 'unacceptable_request',
             errorMessage:
                 'The request was invalid. One or more fields were invalid.',
             issues: error.issues,
@@ -1042,16 +1042,20 @@ export class RecordsServer {
         );
 
         if (result.success === false) {
-            await this._websocketController.sendError(connectionId, result);
+            await this._websocketController.sendError(
+                connectionId,
+                requestId,
+                result
+            );
             return;
         }
 
         const parseResult = tryParseJson(result.message);
 
         if (!parseResult.success) {
-            await this._websocketController.sendError(connectionId, {
-                requestId: requestId,
-                errorCode: 'unnaceptable_request',
+            await this._websocketController.sendError(connectionId, requestId, {
+                success: false,
+                errorCode: 'unacceptable_request',
                 errorMessage:
                     'The request was invalid. The downloaded file must contain JSON.',
             });
@@ -4065,6 +4069,18 @@ export class RecordsServer {
     private async _getInstData(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        let userId: string = null;
+        const validation = await this._validateSessionKey(request);
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                userId = null;
+            } else {
+                return returnResult(validation);
+            }
+        } else {
+            userId = validation.userId;
+        }
+
         const schema = z.object({
             recordName: z.string().nonempty().nullable().optional(),
             inst: z.string().nonempty(),
@@ -4080,6 +4096,7 @@ export class RecordsServer {
         const { recordName, inst, branch } = parseResult.data;
 
         const data = await this._websocketController.getBranchData(
+            userId,
             recordName ?? null,
             inst,
             branch

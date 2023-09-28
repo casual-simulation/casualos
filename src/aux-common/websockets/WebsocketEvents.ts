@@ -1,3 +1,4 @@
+import { DenialReason } from '../common/DenialReason';
 import { NotSupportedError, ServerError } from '../Errors';
 import { ConnectionInfo, connectionInfoSchema } from '../common/ConnectionInfo';
 import {
@@ -88,13 +89,53 @@ export const websocketUploadResponseEventSchema = z.tuple([
 export type WebsocketErrorCode =
     | ServerError
     | NotSupportedError
+    | 'invalid_record_key'
     | 'unacceptable_connection_token'
     | 'invalid_token'
     | 'session_expired'
     | 'user_is_banned'
     | 'unacceptable_connection_id'
     | 'message_not_found'
-    | 'unnaceptable_request';
+    | 'unacceptable_request'
+    | 'record_not_found'
+    | 'not_authorized'
+    | 'action_not_supported'
+    | 'not_logged_in'
+    | 'subscription_limit_reached'
+    | 'inst_not_found';
+
+/**
+ * Defines an interface that contains information about an error that occurred.
+ */
+export interface WebsocketErrorInfo {
+    success: false;
+
+    /**
+     * The error code that occurred.
+     */
+    errorCode: WebsocketErrorCode;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+
+    /**
+     * The list of parsing issues that occurred.
+     */
+    issues?: ZodIssue[];
+
+    /**
+     * The authorization denial reason.
+     */
+    reason?: DenialReason;
+}
+export const websocketErrorInfoSchema = z.object({
+    errorCode: z.string(),
+    errorMessage: z.string(),
+    issues: z.array(z.any()).optional(),
+    reason: z.any().optional(),
+});
 
 /**
  * Defines a websocket event that contains a response to an upload request.
@@ -102,16 +143,12 @@ export type WebsocketErrorCode =
 export type WebsocketErrorEvent = [
     type: WebsocketEventTypes.Error,
     id: number,
-    errorCode: WebsocketErrorCode,
-    errorMessage: string,
-    issues: ZodIssue[]
+    info: WebsocketErrorInfo
 ];
 export const websocketErrorEventSchema = z.tuple([
     z.literal(WebsocketEventTypes.Error),
     z.number(),
-    z.string(),
-    z.string(),
-    z.array(z.any()),
+    websocketErrorInfoSchema,
 ]);
 
 /**

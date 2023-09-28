@@ -1,5 +1,6 @@
 import { CurrentUpdates, StoredUpdates } from './InstRecordsStore';
 import {
+    BranchName,
     BranchUpdates,
     TempBranchInfo,
     TemporaryInstRecordsStore,
@@ -13,6 +14,37 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _updates: Map<string, StoredUpdates> = new Map();
     private _sizes: Map<string, number> = new Map();
     private _counts: Map<string, number> = new Map();
+    private _generations: Map<string, BranchName[]> = new Map();
+    private _currentGeneration: string = '0';
+
+    async markBranchAsDirty(branch: BranchName): Promise<void> {
+        const generation = await this.getDirtyBranchGeneration();
+        let branches = this._generations.get(generation);
+        if (!branches) {
+            branches = [];
+            this._generations.set(generation, branches);
+        }
+
+        branches.push(branch);
+    }
+
+    async setDirtyBranchGeneration(generation: string): Promise<void> {
+        this._currentGeneration = generation;
+    }
+
+    async getDirtyBranchGeneration(): Promise<string> {
+        return this._currentGeneration;
+    }
+
+    async listDirtyBranches(generation?: string): Promise<BranchName[]> {
+        return (
+            this._generations.get(generation ?? this._currentGeneration) ?? []
+        );
+    }
+
+    async clearDirtyBranches(generation: string): Promise<void> {
+        this._generations.delete(generation);
+    }
 
     getBranchKey(recordName: string, inst: string, branch: string): string {
         return `/${recordName}/${inst}/${branch}`;

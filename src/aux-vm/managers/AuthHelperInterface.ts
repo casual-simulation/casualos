@@ -58,6 +58,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
     getAuthToken(): Promise<string>;
 
     /**
+     * Gets the connection key for the user.
+     * Returns null if the user is not authenticated.
+     */
+    getConnectionKey(): Promise<string>;
+
+    /**
      * Requests that an access key for a public record be created.
      * @param recordName The name of the record that the key should be created for.
      */

@@ -39,8 +39,9 @@ import { PolicyController } from './PolicyController';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
+    PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
-} from './PolicyPermissions';
+} from '@casual-simulation/aux-common';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
@@ -68,7 +69,6 @@ import { InstRecordsStore } from './websockets/InstRecordsStore';
 import { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
 import { SplitInstRecordsStore } from './websockets/SplitInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './websockets/MemoryTempInstRecordsStore';
-import { MemoryInstRecordsStore } from './websockets/MemoryInstRecordsStore';
 import {
     LoginMessage,
     WebsocketDownloadRequestEvent,
@@ -160,6 +160,8 @@ describe('RecordsServer', () => {
     let userId: string;
     let sessionId: string;
     let ownerId: string;
+    let ownerSessionId: string;
+    let ownerConnectionKey: string;
     let expireTimeMs: number;
     let sessionSecret: string;
     let recordKey: string;
@@ -209,7 +211,7 @@ describe('RecordsServer', () => {
             },
         });
         manualDataStore = new MemoryStore({
-            subscriptions: null,
+            subscriptions: null as any,
         });
 
         authMessenger = new MemoryAuthMessenger();
@@ -274,7 +276,7 @@ describe('RecordsServer', () => {
         websocketMessenger = new MemoryWebsocketMessenger();
         instStore = new SplitInstRecordsStore(
             new MemoryTempInstRecordsStore(),
-            new MemoryInstRecordsStore()
+            store
         );
         tempInstStore = new MemoryTempInstRecordsStore();
         websocketController = new WebsocketController(
@@ -282,7 +284,10 @@ describe('RecordsServer', () => {
             websocketMessenger,
             instStore,
             tempInstStore,
-            authController
+            authController,
+            policyController,
+            store,
+            store
         );
 
         stripe = stripeMock = {
@@ -447,6 +452,8 @@ describe('RecordsServer', () => {
         const owner = await createTestUser(services, 'owner@example.com');
 
         ownerId = owner.userId;
+        ownerConnectionKey = owner.connectionKey;
+        ownerSessionId = owner.sessionId;
 
         let [uid, sid, secret, expire] = parseSessionKey(sessionKey);
         sessionId = sid;
@@ -10722,14 +10729,83 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
-                    version: 1,
-                    state: {
-                        test: createBot('test', {
-                            test: true,
-                        }),
+                    data: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                test: true,
+                            }),
+                        },
                     },
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return the inst data for private insts', async () => {
+            store.policies[recordName] = {
+                [PRIVATE_MARKER]: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'inst.read',
+                                role: 'developer',
+                                insts: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            store.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await instStore.saveInst({
+                recordName,
+                inst: 'inst',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const update = constructInitializationUpdate({
+                type: 'create_initialization_update',
+                bots: [
+                    createBot('test', {
+                        test: true,
+                    }),
+                ],
+            });
+
+            await instStore.addUpdates(
+                recordName,
+                'inst',
+                'branch',
+                [update.update],
+                update.update.length
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/instData?recordName=${recordName}&inst=inst&branch=branch`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    data: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                test: true,
+                            }),
+                        },
+                    },
+                },
+                headers: accountCorsHeaders,
             });
         });
 
@@ -10790,9 +10866,12 @@ describe('RecordsServer', () => {
                     [
                         WebsocketEventTypes.Error,
                         1,
-                        'unacceptable_connection_id',
-                        'A connection ID must be specified when logging in without a connection token.',
-                        null,
+                        {
+                            success: false,
+                            errorCode: 'unacceptable_connection_id',
+                            errorMessage:
+                                'A connection ID must be specified when logging in without a connection token.',
+                        },
                     ],
                 ]);
             });
@@ -10808,17 +10887,21 @@ describe('RecordsServer', () => {
                     [
                         WebsocketEventTypes.Error,
                         1,
-                        'unnaceptable_request',
-                        'The request was invalid. One or more fields were invalid.',
-                        [
-                            {
-                                code: 'invalid_type',
-                                expected: 'object',
-                                message: 'Expected object, received number',
-                                path: [],
-                                received: 'number',
-                            },
-                        ],
+                        {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'The request was invalid. One or more fields were invalid.',
+                            issues: [
+                                {
+                                    code: 'invalid_type',
+                                    expected: 'object',
+                                    message: 'Expected object, received number',
+                                    path: [],
+                                    received: 'number',
+                                },
+                            ],
+                        },
                     ],
                 ]);
             });
@@ -10848,14 +10931,14 @@ describe('RecordsServer', () => {
                     token: null,
                 });
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
-                    messageEvent(-1, {
+                    {
                         type: 'login_result',
                         info: {
                             connectionId: 'clientConnectionId',
                             sessionId: null,
                             userId: null,
                         },
-                    }),
+                    },
                 ]);
             });
 
@@ -10901,6 +10984,11 @@ describe('RecordsServer', () => {
             const branch = 'shared';
             let connectionInfo: ConnectionInfo;
 
+            const connection2 = 'connection2';
+            const clientConnectionId2 = 'clientConnectionId2';
+            let connectionInfo2: ConnectionInfo;
+            let connectionToken2: string | null;
+
             beforeEach(async () => {
                 if (c === 'authenticated') {
                     recordName = 'testRecord';
@@ -10920,6 +11008,63 @@ describe('RecordsServer', () => {
                         sessionId,
                         userId,
                     };
+
+                    connectionToken2 = generateV1ConnectionToken(
+                        ownerConnectionKey,
+                        clientConnectionId2,
+                        recordName,
+                        inst
+                    );
+
+                    await websocketController.login(connection2, 99, {
+                        type: 'login',
+                        connectionToken: connectionToken2,
+                    });
+
+                    connectionInfo2 = {
+                        connectionId: clientConnectionId2,
+                        sessionId: ownerSessionId,
+                        userId: ownerId,
+                    };
+
+                    store.policies[recordName] = {
+                        [PRIVATE_MARKER]: {
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'inst.read',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                    {
+                                        type: 'inst.create',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                    {
+                                        type: 'policy.assign',
+                                        role: 'developer',
+                                        policies: true,
+                                    },
+                                    {
+                                        type: 'inst.updateData',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                    {
+                                        type: 'inst.sendAction',
+                                        role: 'developer',
+                                        insts: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    store.roles[recordName] = {
+                        [userId]: new Set(['developer']),
+                    };
                 } else {
                     recordName = null;
                     connectionToken = null;
@@ -10932,6 +11077,16 @@ describe('RecordsServer', () => {
                         sessionId: null,
                         userId: null,
                     };
+                    connectionInfo2 = {
+                        connectionId: clientConnectionId2,
+                        sessionId: null,
+                        userId: null,
+                    };
+
+                    await websocketController.login(connection2, 99, {
+                        type: 'login',
+                        connectionId: clientConnectionId2,
+                    });
                 }
 
                 websocketMessenger.reset();
@@ -11023,7 +11178,7 @@ describe('RecordsServer', () => {
 
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.addUpdates('connection2', {
+                    await websocketController.addUpdates(connection2, {
                         type: 'repo/add_updates',
                         recordName,
                         inst,
@@ -11031,7 +11186,7 @@ describe('RecordsServer', () => {
                         updates: ['abc'],
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -11118,7 +11273,12 @@ describe('RecordsServer', () => {
 
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.addUpdates('connection2', {
+                    // await websocketController.login(connection2, 1, {
+                    //     type: 'login',
+                    //     connectionId: clientConnectionId2,
+                    // });
+
+                    await websocketController.addUpdates(connection2, {
                         type: 'repo/add_updates',
                         recordName,
                         inst,
@@ -11126,7 +11286,7 @@ describe('RecordsServer', () => {
                         updates: ['abc'],
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -11142,7 +11302,7 @@ describe('RecordsServer', () => {
 
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.addUpdates('connection2', {
+                    await websocketController.addUpdates(connection2, {
                         type: 'repo/add_updates',
                         recordName,
                         inst,
@@ -11150,7 +11310,7 @@ describe('RecordsServer', () => {
                         updates: ['def'],
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -11177,18 +11337,14 @@ describe('RecordsServer', () => {
             describe('repo/send_action', () => {
                 it('should send an action to the specified device', async () => {
                     expectNoWebSocketErrors(connectionId);
-                    await websocketController.login('connection2', 99, {
-                        type: 'login',
-                        connectionId: 'clientConnectionId2',
-                    });
-                    await websocketController.watchBranch('connection2', {
+                    await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
                         recordName,
                         inst,
                         branch,
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -11199,7 +11355,7 @@ describe('RecordsServer', () => {
                                 inst,
                                 branch,
                                 action: remote(toast('hello!'), {
-                                    connectionId: 'clientConnectionId2',
+                                    connectionId: clientConnectionId2,
                                 }),
                             })
                         )
@@ -11208,7 +11364,7 @@ describe('RecordsServer', () => {
                     expectNoWebSocketErrors(connectionId);
 
                     expect(
-                        websocketMessenger.getMessages('connection2').slice(2)
+                        websocketMessenger.getMessages(connection2).slice(1)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -11222,18 +11378,14 @@ describe('RecordsServer', () => {
 
                 it('should do nothing if no devices are matched by the selector', async () => {
                     expectNoWebSocketErrors(connectionId);
-                    await websocketController.login('connection2', 99, {
-                        type: 'login',
-                        connectionId: 'clientConnectionId2',
-                    });
-                    await websocketController.watchBranch('connection2', {
+                    await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
                         recordName,
                         inst,
                         branch,
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -11253,7 +11405,7 @@ describe('RecordsServer', () => {
                     expectNoWebSocketErrors(connectionId);
 
                     expect(
-                        websocketMessenger.getMessages('connection2').slice(2)
+                        websocketMessenger.getMessages(connection2).slice(1)
                     ).toEqual([]);
                 });
             });
@@ -11276,18 +11428,14 @@ describe('RecordsServer', () => {
 
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.login('connection2', 99, {
-                        type: 'login',
-                        connectionId: 'clientConnectionId2',
-                    });
-                    await websocketController.watchBranch('connection2', {
+                    await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
                         recordName,
                         inst,
                         branch,
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -11301,11 +11449,7 @@ describe('RecordsServer', () => {
                                 inst,
                                 branch,
                             },
-                            connection: {
-                                connectionId: 'clientConnectionId2',
-                                sessionId: null,
-                                userId: null,
-                            },
+                            connection: connectionInfo2,
                         },
                     ]);
                 });
@@ -11327,27 +11471,23 @@ describe('RecordsServer', () => {
 
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.login('connection2', 99, {
-                        type: 'login',
-                        connectionId: 'clientConnectionId2',
-                    });
-                    await websocketController.watchBranch('connection2', {
+                    await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
                         recordName,
                         inst,
                         branch,
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     await websocketController.unwatchBranch(
-                        'connection2',
+                        connection2,
                         recordName,
                         inst,
                         branch
                     );
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -11361,11 +11501,7 @@ describe('RecordsServer', () => {
                                 inst,
                                 branch,
                             },
-                            connection: {
-                                connectionId: 'clientConnectionId2',
-                                sessionId: null,
-                                userId: null,
-                            },
+                            connection: connectionInfo2,
                         },
                         {
                             type: 'repo/disconnected_from_branch',
@@ -11373,11 +11509,7 @@ describe('RecordsServer', () => {
                             recordName,
                             inst,
                             branch,
-                            connection: {
-                                connectionId: 'clientConnectionId2',
-                                sessionId: null,
-                                userId: null,
-                            },
+                            connection: connectionInfo2,
                         },
                     ]);
                 });
@@ -11415,27 +11547,23 @@ describe('RecordsServer', () => {
 
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.login('connection2', 99, {
-                        type: 'login',
-                        connectionId: 'clientConnectionId2',
-                    });
-                    await websocketController.watchBranch('connection2', {
+                    await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
                         recordName,
                         inst,
                         branch,
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     await websocketController.unwatchBranch(
-                        'connection2',
+                        connection2,
                         recordName,
                         inst,
                         branch
                     );
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -11447,19 +11575,14 @@ describe('RecordsServer', () => {
                 it('should return the connection count for the given branch', async () => {
                     expectNoWebSocketErrors(connectionId);
 
-                    await websocketController.login('connection2', 99, {
-                        type: 'login',
-                        connectionId: 'clientConnectionId2',
-                    });
-
-                    await websocketController.watchBranch('connection2', {
+                    await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
                         recordName,
                         inst,
                         branch,
                     });
 
-                    expectNoWebSocketErrors('connection2');
+                    expectNoWebSocketErrors(connection2);
 
                     await server.handleWebsocketRequest(
                         wsMessage(

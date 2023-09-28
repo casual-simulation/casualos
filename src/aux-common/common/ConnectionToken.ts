@@ -124,7 +124,7 @@ export function parseV1ConnectionToken(
     );
     const instPlusHash = recordNamePlusExtra.slice(periodAfterRecordName + 1);
 
-    if (recordNameBase64.length <= 0 || instPlusHash.length <= 0) {
+    if (instPlusHash.length <= 0) {
         return null;
     }
 
@@ -145,7 +145,10 @@ export function parseV1ConnectionToken(
         const userId = fromBase64String(userIdBase64);
         const sessionId = fromBase64String(sessionIdBase64);
         const connectionId = fromBase64String(connectionIdBase64);
-        const recordName = fromBase64String(recordNameBase64);
+        const recordName =
+            recordNameBase64.length <= 0
+                ? null
+                : fromBase64String(recordNameBase64);
         const inst = fromBase64String(instBase64);
         const hash = fromBase64String(hashBase64);
 

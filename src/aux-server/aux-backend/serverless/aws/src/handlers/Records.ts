@@ -13,7 +13,7 @@ import { constructServerBuilder, FILES_BUCKET } from '../LoadServer';
 
 const builder = constructServerBuilder();
 
-const { server, filesStore } = builder.build();
+const { server, filesStore, websocketController } = builder.build();
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {
     console.log('[Records] Got EventBridge event:', event);
@@ -99,4 +99,9 @@ export async function handleRecords(
     } else {
         return handleS3Event(event);
     }
+}
+
+export async function savePermanentBranches() {
+    await builder.ensureInitialized();
+    await websocketController.savePermanentBranches();
 }

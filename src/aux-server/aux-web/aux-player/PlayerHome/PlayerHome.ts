@@ -64,8 +64,12 @@ export default class PlayerHome extends Vue {
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
         const inst = this.query['inst'] as string | string[];
+        let recordName = this.query['record'] ?? this.query['studio'] ?? null;
+        if (!hasValue(recordName) && appManager.defaultStudioId) {
+            recordName = appManager.defaultStudioId;
+        }
         if (hasValue(inst)) {
-            await this._setServer(inst);
+            await this._setServer(recordName, inst);
         }
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
@@ -110,9 +114,37 @@ export default class PlayerHome extends Vue {
         });
 
         if (this.query) {
-            // On first load check the inst and load a default
-            let inst = this.query['inst'] as string | string[];
             let update: Dictionary<string | string[]> = {};
+            let recordName = this.query['record'] ?? null;
+            let inst = this.query['inst'] as string | string[];
+            const preferPublic =
+                (appManager.config.preferredInstSource ?? 'private') ===
+                'public';
+
+            const hasQueryParam = Object.keys(this.query).length > 0;
+
+            if (hasValue(recordName)) {
+                update.recordName = recordName;
+            } else {
+                let studio = this.query['studio'] ?? null;
+                if (studio) {
+                    update.studio = studio;
+                    recordName = studio;
+                } else if (
+                    !preferPublic &&
+                    appManager.defaultStudioId &&
+                    !hasValue(hasQueryParam)
+                ) {
+                    // Only use the default studio if there are no other query params.
+                    // This prevents bad actors from giving the user a URL that auto-populates data into a private inst.
+                    update.studio = appManager.defaultStudioId;
+                    recordName = appManager.defaultStudioId;
+                } else if (preferPublic) {
+                    recordName = null;
+                }
+            }
+
+            // On first load check the inst and load a default
             if (!hasValue(inst)) {
                 // if there is no inst tag defined, check for the story tag and then the server tag
                 inst = this.query['story'] ?? this.query['server'];
@@ -146,7 +178,7 @@ export default class PlayerHome extends Vue {
             if (Object.keys(update).length > 0) {
                 this._updateQuery(update);
             }
-            this._setServer(inst);
+            this._setServer(recordName, inst);
         }
     }
 
@@ -172,8 +204,21 @@ export default class PlayerHome extends Vue {
                                 'inst',
                                 null
                             );
+                            const recordName =
+                                calculateStringTagValue(
+                                    calc,
+                                    update.bot,
+                                    'record',
+                                    null
+                                ) ??
+                                calculateStringTagValue(
+                                    calc,
+                                    update.bot,
+                                    'studio',
+                                    null
+                                );
                             if (hasValue(inst)) {
-                                this._setServer(inst);
+                                this._setServer(recordName, inst);
                             }
                         }
 
@@ -238,18 +283,22 @@ export default class PlayerHome extends Vue {
         }
     }
 
-    private async _setServer(newServer: string | string[]) {
+    private async _setServer(
+        recordName: string | string[],
+        newServer: string | string[]
+    ) {
+        const record = getFirst(recordName);
         if (typeof newServer === 'string') {
-            await this._loadPrimarySimulation(newServer);
+            await this._loadPrimarySimulation(record, newServer);
         } else {
             if (!appManager.simulationManager.primary) {
-                await this._loadPrimarySimulation(newServer[0]);
+                await this._loadPrimarySimulation(record, newServer[0]);
             }
             await appManager.simulationManager.updateSimulations(
                 newServer.map((s) => ({
-                    id: getSimulationId(null, s),
+                    id: getSimulationId(record, s),
                     options: {
-                        recordName: null,
+                        recordName: record,
                         inst: s,
                     },
                 }))
@@ -257,8 +306,14 @@ export default class PlayerHome extends Vue {
         }
     }
 
-    private async _loadPrimarySimulation(newServer: string) {
-        const sim = await appManager.setPrimarySimulation(null, newServer);
+    private async _loadPrimarySimulation(
+        recordName: string,
+        newServer: string
+    ) {
+        const sim = await appManager.setPrimarySimulation(
+            recordName,
+            newServer
+        );
         sim.connection.syncStateChanged
             .pipe(first((synced) => synced))
             .subscribe(() => {
@@ -380,5 +435,13 @@ export default class PlayerHome extends Vue {
                 }
             });
         }
+    }
+}
+
+function getFirst(list: string | string[]): string {
+    if (Array.isArray(list)) {
+        return list[0];
+    } else {
+        return list;
     }
 }

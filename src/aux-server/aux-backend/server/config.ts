@@ -49,62 +49,6 @@ export interface ClientConfig {
     web: WebConfig;
 }
 
-export interface MongoDbConfig {
-    url: string;
-    useNewUrlParser: boolean;
-    useUnifiedTopology?: boolean;
-}
-
-export interface RedisConfig {
-    options: redis.ClientOpts;
-    defaultExpireSeconds: number;
-}
-
-export interface CausalTreeServerConfig {
-    dbName: string;
-}
-
-export interface CausalReposServerConfig {
-    redis: RedisCausalReposConfig | null;
-
-    /**
-     * The config that should be used for MongoDB support of Causal Repos.
-     * A config must be specified for MongoDB.
-     */
-    mongodb: MongoDBCaualReposConfig;
-}
-
-export interface MongoDBCaualReposConfig {
-    dbName: string;
-
-    /**
-     * Whether to store the atom stage in MongoDB.
-     */
-    stage: boolean;
-}
-
-export interface RedisCausalReposConfig {
-    namespace: string;
-    maxBranchSizeInBytes: number;
-}
-
-/**
- * The config for where bots in the bots store should be kept.
- */
-export interface BotsServerConfig {
-    /**
-     * The name of the database that the bots should be stored in.
-     * Each instance gets its own collection.
-     */
-    dbName: string;
-
-    /**
-     * The number of seconds that the bots should live for.
-     * Negative numbers prevent bots from being collected.
-     */
-    timeToLive: number;
-}
-
 export interface DirectoryConfig {
     server: DirectoryServerConfig | null;
     client: DirectoryClientConfig | null;

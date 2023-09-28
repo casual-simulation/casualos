@@ -76,4 +76,13 @@ export interface WebConfig {
      * - "builder" indicates that the instance has been configured for building AUXes.
      */
     playerMode?: 'player' | 'builder' | null;
+
+    /**
+     * The preferred source for loading instances.
+     * - "public" means that public instances should be loaded by default.
+     * - "private" means that private instances should be loaded if possible.
+     *
+     * Defaults to "private".
+     */
+    preferredInstSource?: 'public' | 'private';
 }

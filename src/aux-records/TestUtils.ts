@@ -84,8 +84,8 @@ export async function createTestUser(
         ipAddress: '123.456.789',
     });
 
-    if (!loginResult.success) {
-        throw new Error('Unable to login!');
+    if (loginResult.success === false) {
+        throw new Error('Unable to login: ' + loginResult.errorMessage);
     }
 
     const userId = loginResult.userId;

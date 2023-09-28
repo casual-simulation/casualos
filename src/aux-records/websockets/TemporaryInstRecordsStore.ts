@@ -1,4 +1,8 @@
-import { BranchRecordWithInst, CurrentUpdates } from './InstRecordsStore';
+import {
+    BranchRecord,
+    BranchRecordWithInst,
+    CurrentUpdates,
+} from './InstRecordsStore';
 
 /**
  * Defines an interface for a store that keeps track of temporary inst records.
@@ -194,6 +198,35 @@ export interface TemporaryInstRecordsStore {
         inst: string,
         branch: string
     ): Promise<void>;
+
+    /**
+     * Sets the current generation that dirty branches should be recorded in.
+     * @param generation The generation of dirty branches.
+     */
+    setDirtyBranchGeneration(generation: string): Promise<void>;
+
+    /**
+     * Gets the current generation that dirty branches should be recorded in.
+     */
+    getDirtyBranchGeneration(): Promise<string>;
+
+    /**
+     * Marks the given branch as dirty in the current generation.
+     * @param branch The branch that should be marked.
+     */
+    markBranchAsDirty(branch: BranchName): Promise<void>;
+
+    /**
+     * Gets the list of branches that are dirty.
+     * @param generation The generation that the branches should be in.
+     */
+    listDirtyBranches(generation?: string): Promise<BranchName[]>;
+
+    /**
+     * Removes given generation of dirty branches.
+     * @param string The generation that should be removed.
+     */
+    clearDirtyBranches(generation: string): Promise<void>;
 }
 
 export interface BranchUpdates extends CurrentUpdates {
@@ -201,3 +234,20 @@ export interface BranchUpdates extends CurrentUpdates {
 }
 
 export interface TempBranchInfo extends BranchRecordWithInst {}
+
+export interface BranchName {
+    /**
+     * The name of the record that the branch is stored in.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the branch is stored in.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch.
+     */
+    branch: string;
+}

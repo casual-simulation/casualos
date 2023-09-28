@@ -2,7 +2,7 @@
 
 ## V3.2.7
 
-#### Date: 9/18/2023
+#### Date: 9/28/2023
 
 ### :boom: Breaking Changes
 
@@ -44,6 +44,19 @@
 ### :rocket: Improvements
 
 -   Improved `os.listUserStudios()` to include the subscription tier of each studio.
+-   Added `light` form.
+    -   Added `pointLight`, `ambientLight`, `directionalLight`, `spotLight`, and `hemisphereLight` subtypes.
+    -   Added `formLightIntensity` tag.
+    -   Added `formLightTarget` tag.
+    -   Added `formLightDistance` tag.
+    -   Added `formLightAngle` tag.
+    -   Added `formLightPenumbra` tag.
+    -   Added `formLightDecay` tag.
+    -   Added `formLightGroundColor` tag.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
 
 ## V3.2.6
 

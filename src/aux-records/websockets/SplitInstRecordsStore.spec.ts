@@ -1,22 +1,32 @@
-import { MemoryInstRecordsStore } from './MemoryInstRecordsStore';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
-import { PUBLIC_READ_MARKER } from '../PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { MemoryStore } from '../MemoryStore';
 
 describe('SplitInstRecordsStore', () => {
     let store: SplitInstRecordsStore;
     let temp: TemporaryInstRecordsStore;
-    let perm: MemoryInstRecordsStore;
+    let perm: MemoryStore;
 
     const recordName = 'recordName';
     const instName = 'instName';
     const branchName = 'branchName';
 
-    beforeEach(() => {
-        perm = new MemoryInstRecordsStore();
+    beforeEach(async () => {
+        perm = new MemoryStore({
+            subscriptions: null as any,
+        });
         temp = new MemoryTempInstRecordsStore();
         store = new SplitInstRecordsStore(temp, perm);
+
+        await perm.addRecord({
+            name: recordName,
+            ownerId: 'ownerId',
+            secretHashes: [],
+            secretSalt: '',
+            studioId: null,
+        });
     });
 
     describe('getBranchByName()', () => {
@@ -48,6 +58,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
             });
 
@@ -66,6 +78,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
                 branchSizeInBytes: 0,
             });
@@ -80,6 +94,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
                 temporary: false,
             });
@@ -99,6 +116,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
             });
         });
@@ -112,6 +132,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
                 temporary: false,
             });
@@ -131,6 +154,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
             });
         });
@@ -180,6 +206,8 @@ describe('SplitInstRecordsStore', () => {
                 recordName,
                 inst: instName,
                 markers: ['test'],
+                subscriptionId: null,
+                subscriptionStatus: null,
             });
         });
 
@@ -201,6 +229,8 @@ describe('SplitInstRecordsStore', () => {
                 recordName,
                 inst: instName,
                 markers: ['test'],
+                subscriptionId: null,
+                subscriptionStatus: null,
             });
         });
 
@@ -213,6 +243,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: ['wrong'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
                 temporary: false,
             });
@@ -253,6 +286,9 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: ['wrong'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
                 },
                 temporary: false,
             });
@@ -290,6 +326,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
             });
         });
@@ -334,6 +372,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: ['test'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
             });
 
@@ -352,6 +392,8 @@ describe('SplitInstRecordsStore', () => {
                     recordName,
                     inst: instName,
                     markers: ['test'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
                 },
                 branchSizeInBytes: 0,
             });
@@ -421,7 +463,7 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the inst', async () => {
-            perm.saveInst({
+            await perm.saveInst({
                 recordName,
                 inst: instName,
                 markers: [PUBLIC_READ_MARKER],
@@ -432,6 +474,8 @@ describe('SplitInstRecordsStore', () => {
                 recordName,
                 inst: instName,
                 markers: [PUBLIC_READ_MARKER],
+                subscriptionId: null,
+                subscriptionStatus: null,
             });
         });
     });
@@ -931,36 +975,6 @@ describe('SplitInstRecordsStore', () => {
                 timestamps: [expect.any(Number)],
                 instSizeInBytes: 3,
                 branchSizeInBytes: 3,
-            });
-        });
-
-        it('should not delete the branch from the permanent store if the record name is null', async () => {
-            await perm.saveInst({
-                recordName: null,
-                inst: instName,
-                markers: [PUBLIC_READ_MARKER],
-            });
-
-            await perm.saveBranch({
-                branch: branchName,
-                inst: instName,
-                recordName: null,
-                temporary: false,
-            });
-
-            await perm.addUpdates(null, instName, branchName, ['abc'], 3);
-
-            await store.deleteBranch(null, instName, branchName);
-
-            const result = await perm.getAllUpdates(
-                null as any,
-                instName,
-                branchName
-            );
-            expect(result).toEqual({
-                updates: ['abc'],
-                timestamps: [expect.any(Number)],
-                instSizeInBytes: 3,
             });
         });
     });
