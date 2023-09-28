@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as process from 'process';
-import { Config, MongoDbConfig, SandboxType } from './config';
+import { Config } from './config';
 import playerConfig from './player.config';
 import { loadConfig } from '../shared/ConfigUtils';
 

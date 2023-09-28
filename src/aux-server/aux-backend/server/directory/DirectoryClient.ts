@@ -26,7 +26,7 @@ import {
     repeatWhen,
     flatMap,
 } from 'rxjs/operators';
-import { WebSocketClient, TunnelClient } from '@casual-simulation/tunnel';
+import { TunnelClient } from '@casual-simulation/tunnel';
 
 /**
  * Defines a client for the directory.
