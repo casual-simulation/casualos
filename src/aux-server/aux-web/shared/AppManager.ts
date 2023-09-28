@@ -114,7 +114,8 @@ export class AppManager {
                 id,
                 origin,
                 indicator,
-                config
+                config,
+                this._config.causalRepoConnectionUrl
             );
             return new BotManager(
                 indicator,

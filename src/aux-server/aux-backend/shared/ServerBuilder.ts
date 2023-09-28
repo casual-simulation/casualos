@@ -637,6 +637,12 @@ export class ServerBuilder implements SubscriptionLike {
                 return this._redis.sendCommand([command, ...(args as any[])]);
             },
         });
+        this._initActions.push({
+            priority: 11,
+            action: async () => {
+                await store.setup();
+            },
+        });
         store.prefix = options.redis.rateLimitPrefix;
 
         this._rateLimitController = new RateLimitController(store, {
