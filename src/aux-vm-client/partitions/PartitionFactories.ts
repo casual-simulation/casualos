@@ -60,7 +60,15 @@ export function getAWSApiaryClientForHostAndProtocol(
 ): InstRecordsClient {
     let client = awsApiaryClientCache.get(host);
     if (!client) {
-        const manager = new WebSocketManager(host);
+        const url = new URL(host);
+
+        if (url.protocol === 'http:') {
+            url.protocol = 'ws:';
+        } else if (url.protocol === 'https:') {
+            url.protocol = 'wss:';
+        }
+
+        const manager = new WebSocketManager(url.href);
         manager.init();
 
         const awsConnection = new ApiGatewayWebsocketConnectionClient(

@@ -103,15 +103,20 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
             });
 
         const connected = this._socket.onOpen.pipe(
-            tap(() => console.log('[ApiaryConnectionClient] Connected.')),
+            tap(() =>
+                console.log('[ApiGatewayWebsocketConnectionClient] Connected.')
+            ),
             map(() => ({
-                connected: false,
+                connected: true,
                 info: null,
             }))
         );
         const disconnected = this._socket.onClose.pipe(
             tap((reason) =>
-                console.log('[SocketManger] Disconnected. Reason:', reason)
+                console.log(
+                    '[ApiGatewayWebsocketConnectionClient] Disconnected. Reason:',
+                    reason
+                )
             ),
             map(() => ({
                 connected: false,

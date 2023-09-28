@@ -43,7 +43,13 @@ class RedisStore implements RateLimiter {
         this.sendCommand = options.sendCommand;
         this.prefix = options.prefix ?? 'rl:';
         this.resetExpiryOnChange = options.resetExpiryOnChange ?? false;
+    }
 
+    /**
+     * Setup the RedisRateLimitStore.
+     * Must be called before first use.
+     */
+    async setup() {
         // So that the script loading can occur non-blocking, this will send
         // the script to be loaded, and will capture the value within the
         // promise return. This way, if increments start being called before
