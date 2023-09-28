@@ -226,7 +226,7 @@ export class Server {
         if (
             options.redis &&
             options.redis.tempInstRecordsStoreNamespace &&
-            options.redis.publicInstRecordsStoreNamespace &&
+            options.redis.instRecordsStoreNamespace &&
             options.prisma
         ) {
             builder.usePrismaAndRedisInstRecords();

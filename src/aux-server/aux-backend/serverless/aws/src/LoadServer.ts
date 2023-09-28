@@ -113,7 +113,7 @@ export function constructServerBuilder() {
     if (
         config.redis &&
         config.redis.tempInstRecordsStoreNamespace &&
-        config.redis.publicInstRecordsStoreNamespace &&
+        config.redis.instRecordsStoreNamespace &&
         config.prisma
     ) {
         builder.usePrismaAndRedisInstRecords();

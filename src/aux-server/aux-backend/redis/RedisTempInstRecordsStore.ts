@@ -14,18 +14,26 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _redis: RedisClientType;
     private _currentGenerationKey: string;
     private _instDataExpirationSeconds: number | null = null;
+    private _instDataExpirationMode: 'NX' | 'XX' | 'LT' | 'GT' | null = null;
 
     /**
      * Creates a new instance of the RedisTempInstRecordsStore class.
      * @param globalNamespace The namespace that should be used for all redis keys.
      * @param redis The client that should be used.
      * @param tempInstDataExpirationSeconds The number of seconds that recordless (temporary) inst data should be stored for. If null, then the data will not expire.
+     * @param tempInstDataExpirationMode The expiration mode that should be used for recordless (temporary) inst data.
      */
-    constructor(globalNamespace: string, redis: RedisClientType, tempInstDataExpirationSeconds: number | null = null) {
+    constructor(
+        globalNamespace: string,
+        redis: RedisClientType,
+        tempInstDataExpirationSeconds: number | null = null,
+        tempInstDataExpirationMode: 'NX' | 'XX' | 'LT' | 'GT' | null = null
+    ) {
         this._globalNamespace = globalNamespace;
         this._redis = redis;
         this._currentGenerationKey = `${this._globalNamespace}/currentGeneration`;
         this._instDataExpirationSeconds = tempInstDataExpirationSeconds;
+        this._instDataExpirationMode = tempInstDataExpirationMode;
     }
 
     async setDirtyBranchGeneration(generation: string): Promise<void> {
@@ -122,7 +130,11 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         await this._redis.set(key, JSON.stringify(branch));
 
         if (!branch.recordName && this._instDataExpirationSeconds) {
-            await this._redis.expire(key, this._instDataExpirationSeconds);
+            await this._redis.expire(
+                key,
+                this._instDataExpirationSeconds,
+                this._instDataExpirationMode ?? undefined
+            );
         }
     }
 
@@ -199,7 +211,11 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.rPush(key, finalUpdates);
-            multi.expire(key, this._instDataExpirationSeconds, 'LT');
+            multi.expire(
+                key,
+                this._instDataExpirationSeconds,
+                this._instDataExpirationMode ?? undefined
+            );
             promise = multi.exec();
         } else {
             promise = this._redis.rPush(key, finalUpdates);
@@ -229,7 +245,11 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.set(key, sizeInBytes.toString());
-            multi.expire(key, this._instDataExpirationSeconds, 'LT');
+            multi.expire(
+                key,
+                this._instDataExpirationSeconds,
+                this._instDataExpirationMode ?? undefined
+            );
             await multi.exec();
         } else {
             await this._redis.set(key, sizeInBytes.toString());
@@ -246,7 +266,11 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.incrBy(key, sizeInBytes);
-            multi.expire(key, this._instDataExpirationSeconds, 'LT');
+            multi.expire(
+                key,
+                this._instDataExpirationSeconds,
+                this._instDataExpirationMode ?? undefined
+            );
             await multi.exec();
         } else {
             await this._redis.incrBy(key, sizeInBytes);
@@ -278,7 +302,11 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.set(key, sizeInBytes.toString());
-            multi.expire(key, this._instDataExpirationSeconds, 'LT');
+            multi.expire(
+                key,
+                this._instDataExpirationSeconds,
+                this._instDataExpirationMode ?? undefined
+            );
             await multi.exec();
         } else {
             await this._redis.set(key, sizeInBytes.toString());
@@ -292,10 +320,14 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         sizeInBytes: number
     ): Promise<void> {
         const key = this._getBranchSizeKey(recordName, inst, branch);
-        if(!recordName && this._instDataExpirationSeconds) {
+        if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.incrBy(key, sizeInBytes);
-            multi.expire(key, this._instDataExpirationSeconds, 'LT');
+            multi.expire(
+                key,
+                this._instDataExpirationSeconds,
+                this._instDataExpirationMode ?? undefined
+            );
             await multi.exec();
         } else {
             await this._redis.incrBy(key, sizeInBytes);
