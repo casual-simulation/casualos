@@ -130,11 +130,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         await this._redis.set(key, JSON.stringify(branch));
 
         if (!branch.recordName && this._instDataExpirationSeconds) {
-            await this._redis.expire(
-                key,
-                this._instDataExpirationSeconds,
-                this._instDataExpirationMode ?? undefined
-            );
+            await this._expire(key);
         }
     }
 
@@ -211,11 +207,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.rPush(key, finalUpdates);
-            multi.expire(
-                key,
-                this._instDataExpirationSeconds,
-                this._instDataExpirationMode ?? undefined
-            );
+            this._expireMulti(multi, key);
             promise = multi.exec();
         } else {
             promise = this._redis.rPush(key, finalUpdates);
@@ -245,11 +237,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.set(key, sizeInBytes.toString());
-            multi.expire(
-                key,
-                this._instDataExpirationSeconds,
-                this._instDataExpirationMode ?? undefined
-            );
+            this._expireMulti(multi, key);
             await multi.exec();
         } else {
             await this._redis.set(key, sizeInBytes.toString());
@@ -266,11 +254,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.incrBy(key, sizeInBytes);
-            multi.expire(
-                key,
-                this._instDataExpirationSeconds,
-                this._instDataExpirationMode ?? undefined
-            );
+            this._expireMulti(multi, key);
             await multi.exec();
         } else {
             await this._redis.incrBy(key, sizeInBytes);
@@ -302,11 +286,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.set(key, sizeInBytes.toString());
-            multi.expire(
-                key,
-                this._instDataExpirationSeconds,
-                this._instDataExpirationMode ?? undefined
-            );
+            this._expireMulti(multi, key);
             await multi.exec();
         } else {
             await this._redis.set(key, sizeInBytes.toString());
@@ -323,11 +303,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (!recordName && this._instDataExpirationSeconds) {
             const multi = this._redis.multi();
             multi.incrBy(key, sizeInBytes);
-            multi.expire(
-                key,
-                this._instDataExpirationSeconds,
-                this._instDataExpirationMode ?? undefined
-            );
+            this._expireMulti(multi, key);
             await multi.exec();
         } else {
             await this._redis.incrBy(key, sizeInBytes);
@@ -374,5 +350,36 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             this.deleteBranchSize(recordName, inst, branch),
             this.addInstSize(recordName, inst, -branchSize),
         ]);
+    }
+
+    private async _expire(key: string) {
+        if (this._instDataExpirationSeconds) {
+            if (this._instDataExpirationMode) {
+                await this._redis.expire(
+                    key,
+                    this._instDataExpirationSeconds,
+                    this._instDataExpirationMode
+                );
+            } else {
+                await this._redis.expire(key, this._instDataExpirationSeconds);
+            }
+        }
+    }
+
+    private _expireMulti(
+        multi: ReturnType<RedisClientType['multi']>,
+        key: string
+    ) {
+        if (this._instDataExpirationSeconds) {
+            if (this._instDataExpirationMode) {
+                multi.expire(
+                    key,
+                    this._instDataExpirationSeconds,
+                    this._instDataExpirationMode
+                );
+            } else {
+                multi.expire(key, this._instDataExpirationSeconds);
+            }
+        }
     }
 }

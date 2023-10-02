@@ -1337,7 +1337,7 @@ const redisSchema = z.object({
             z.null().describe('The expiration will be updated every time.'),
         ])
         .describe(
-            'The Redis expire mode that should be used for public inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated.'
+            'The Redis expire mode that should be used for public inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
         )
         .optional()
         .default('NX'),
