@@ -65,9 +65,6 @@ export default class PlayerHome extends Vue {
     async onQueryChanged(newValue: any, oldQuery: any) {
         const inst = this.query['inst'] as string | string[];
         let recordName = this.query['record'] ?? this.query['studio'] ?? null;
-        if (!hasValue(recordName) && appManager.defaultStudioId) {
-            recordName = appManager.defaultStudioId;
-        }
         if (hasValue(inst)) {
             await this._setServer(recordName, inst);
         }
@@ -133,7 +130,7 @@ export default class PlayerHome extends Vue {
                 } else if (
                     !preferPublic &&
                     appManager.defaultStudioId &&
-                    !hasValue(hasQueryParam)
+                    !hasQueryParam
                 ) {
                     // Only use the default studio if there are no other query params.
                     // This prevents bad actors from giving the user a URL that auto-populates data into a private inst.
