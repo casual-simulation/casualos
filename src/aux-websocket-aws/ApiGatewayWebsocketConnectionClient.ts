@@ -5,6 +5,7 @@ import {
     Subject,
     merge,
     of,
+    NEVER,
 } from 'rxjs';
 import {
     map,
@@ -42,7 +43,7 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
     private _socket: ReconnectableSocketInterface;
     private _connectionStateChanged: BehaviorSubject<ClientConnectionState>;
     private _onMessage: Subject<WebsocketMessage> = new Subject();
-    private _requestCounter: number;
+    private _requestCounter: number = 0;
 
     /**
      * A map of upload IDs to the data that should be uploaded.
@@ -128,11 +129,20 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
 
         this._socket.onMessage
             .pipe(
-                concatMap((e) => {
+                concatMap((e: MessageEvent<any>) => {
                     const event: WebsocketEvent =
                         typeof e.data === 'string'
                             ? JSON.parse(e.data)
                             : e.data;
+
+                    if (!Array.isArray(event)) {
+                        console.error(
+                            '[ApiGatewayWebsocketConnectionClient] Not a valid message!',
+                            event
+                        );
+                        return NEVER;
+                    }
+
                     if (event[0] === WebsocketEventTypes.UploadResponse) {
                         return this._handleUploadResponse(event);
                     } else if (
@@ -189,7 +199,10 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
                 this._socket.send(JSON.stringify(downloadRequest));
             }
         } catch (err) {
-            console.error('[AwsSocket] Failed to upload message.', err);
+            console.error(
+                '[ApiGatewayWebsocketConnectionClient] Failed to upload message.',
+                err
+            );
         }
     }
 
@@ -206,11 +219,16 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
 
             this._emitMessage(response.data as WebsocketMessage);
         } catch (err) {
-            console.error('[AwsSocket] Failed to download message.', err);
+            console.error(
+                '[ApiGatewayWebsocketConnectionClient] Failed to download message.',
+                err
+            );
         }
     }
 
-    private _handleMessageData(message: WebsocketMessageEvent): any {
+    private async _handleMessageData(
+        message: WebsocketMessageEvent
+    ): Promise<void> {
         this._emitMessage(message[2]);
     }
 
