@@ -112,6 +112,7 @@ import {
     InstRecordsStore,
     InstWithBranches,
     InstWithSubscriptionInfo,
+    ListInstsStoreResult,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
@@ -2037,6 +2038,43 @@ export class MemoryStore
                 : metrics.ownerId
                 ? 'user'
                 : 'studio',
+        };
+    }
+
+    async listInstsByRecord(
+        recordName: string,
+        startingInst?: string
+    ): Promise<ListInstsStoreResult> {
+        if (!recordName) {
+            return {
+                success: true,
+                insts: [],
+                totalCount: 0,
+            };
+        }
+        const record = await this._getInstRecord(recordName);
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The record was not found.',
+            };
+        }
+
+        let insts = [...record.values()];
+        if (startingInst) {
+            insts = insts.filter((i) => i.inst > startingInst);
+        }
+
+        return {
+            success: true,
+            insts: insts.slice(0, 10).map((i) => ({
+                recordName: i.recordName,
+                inst: i.inst,
+                markers: i.markers,
+            })),
+            totalCount: insts.length,
         };
     }
 

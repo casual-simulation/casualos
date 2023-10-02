@@ -64,6 +64,7 @@ import { v4 as uuid } from 'uuid';
 import {
     AuthorizationContext,
     AuthorizeDenied,
+    ListedInstItem,
     PolicyController,
     returnAuthorizationResult,
 } from '../PolicyController';
@@ -1245,6 +1246,79 @@ export class WebsocketController {
         };
     }
 
+    async listInsts(
+        recordName: string | null,
+        userId: string,
+        startingInst: string | null
+    ): Promise<ListInstsResult> {
+        if (!recordName) {
+            return {
+                success: true,
+                insts: [],
+                totalCount: 0,
+            };
+        }
+
+        const instsResult = await this._instStore.listInstsByRecord(
+            recordName,
+            startingInst
+        );
+        if (!instsResult.success) {
+            return instsResult;
+        }
+
+        const contextResult =
+            await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: recordName,
+                userId,
+            });
+
+        if (contextResult.success === false) {
+            return contextResult;
+        }
+        const context = contextResult.context;
+        const authorizeResult =
+            await this._policies.authorizeRequestUsingContext(context, {
+                action: 'inst.list',
+                recordKeyOrRecordName: recordName,
+                userId,
+                insts: instsResult.insts.map((i) => ({
+                    inst: i.inst,
+                    markers: i.markers,
+                })),
+            });
+
+        if (authorizeResult.allowed === false) {
+            return returnAuthorizationResult(authorizeResult);
+        }
+
+        const metricsResult =
+            await this._metrics.getSubscriptionInstMetricsByRecordName(
+                recordName
+            );
+        const config = await this._config.getSubscriptionConfiguration();
+        const features = getSubscriptionFeatures(
+            config,
+            metricsResult.subscriptionStatus,
+            metricsResult.subscriptionId,
+            metricsResult.subscriptionType
+        );
+
+        if (!features.insts.allowed) {
+            return {
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Insts are not allowed.',
+            };
+        }
+
+        return {
+            success: true,
+            insts: authorizeResult.allowedInstItems,
+            totalCount: instsResult.totalCount,
+        };
+    }
+
     async getUpdates(
         connectionId: string,
         recordName: string | null,
@@ -2033,6 +2107,25 @@ export interface GetBranchDataFailure {
     errorCode:
         | ServerError
         | 'inst_not_found'
+        | AuthorizeDenied['errorCode']
+        | GetOrCreateInstFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
+}
+
+export type ListInstsResult = ListInstsSuccess | ListInstsFailure;
+
+export interface ListInstsSuccess {
+    success: true;
+    insts: ListedInstItem[];
+    totalCount: number;
+}
+
+export interface ListInstsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | 'record_not_found'
         | AuthorizeDenied['errorCode']
         | GetOrCreateInstFailure['errorCode'];
     errorMessage: string;

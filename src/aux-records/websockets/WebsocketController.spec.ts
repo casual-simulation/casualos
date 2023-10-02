@@ -6982,6 +6982,85 @@ describe('WebsocketController', () => {
         });
     });
 
+    describe('listInsts()', () => {
+        it('should return an empty list when given a null record name', async () => {
+            const result = await server.listInsts(null, userId, null);
+
+            expect(result).toEqual({
+                success: true,
+                insts: [],
+                totalCount: 0,
+            });
+        });
+
+        it('should return an record_not_found result if the record is missing', async () => {
+            const result = await server.listInsts('missing', userId, null);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The record was not found.',
+            });
+        });
+
+        it('should return the lists that the user has access to', async () => {
+            await services.records.createRecord({
+                userId,
+                recordName,
+                ownerId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst2',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst3',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await server.listInsts(recordName, userId, null);
+
+            expect(result).toEqual({
+                success: true,
+                insts: [
+                    {
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    },
+                    {
+                        inst: 'otherInst',
+                        markers: [PRIVATE_MARKER],
+                    },
+                    {
+                        inst: 'otherInst2',
+                        markers: [PRIVATE_MARKER],
+                    },
+                    {
+                        inst: 'otherInst3',
+                        markers: [PRIVATE_MARKER],
+                    },
+                ],
+                totalCount: 4,
+            });
+        });
+
+        // it('should ')
+    });
+
     describe('webhook()', () => {
         it('should return 200 if the webhook is handled', async () => {
             const originalRandom = Math.random;
