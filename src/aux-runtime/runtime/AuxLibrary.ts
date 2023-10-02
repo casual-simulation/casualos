@@ -14742,7 +14742,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): DeviceSelector {
         if (typeof selector === 'string') {
             return {
-                sessionId: selector,
+                connectionId: selector,
             };
         }
         return selector
