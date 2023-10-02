@@ -638,7 +638,7 @@ export class Text3D extends Object3D {
                 targetSize,
                 'y',
                 textAlign,
-                -1,
+                1,
                 new Vector3(
                     targetCenter.x +
                         targetSize.x * positionMultiplier +
@@ -659,7 +659,7 @@ export class Text3D extends Object3D {
                 targetSize,
                 'y',
                 textAlign,
-                1,
+                -1,
                 new Vector3(
                     targetCenter.x -
                         targetSize.x * positionMultiplier -
