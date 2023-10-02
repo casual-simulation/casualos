@@ -7868,7 +7868,7 @@ describe('AuxLibrary', () => {
                     'abc'
                 );
                 const expected = remote(toast('abc'), {
-                    sessionId: 'abc',
+                    connectionId: 'abc',
                 });
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -7896,7 +7896,7 @@ describe('AuxLibrary', () => {
                 ]);
                 const expected = [
                     remote(toast('abc'), {
-                        sessionId: 'abc',
+                        connectionId: 'abc',
                     }),
                     remote(toast('abc'), {
                         sessionId: 's',
@@ -7919,7 +7919,7 @@ describe('AuxLibrary', () => {
                 const expected = remote(
                     action('eventName', null, null, undefined),
                     {
-                        sessionId: 'playerId',
+                        connectionId: 'playerId',
                     }
                 );
                 expect(actions).toEqual(expected);
@@ -7934,10 +7934,10 @@ describe('AuxLibrary', () => {
 
                 const expected = [
                     remote(action('eventName', null, null, undefined), {
-                        sessionId: 'playerId1',
+                        connectionId: 'playerId1',
                     }),
                     remote(action('eventName', null, null, undefined), {
-                        sessionId: 'playerId2',
+                        connectionId: 'playerId2',
                     }),
                 ];
                 expect(actions).toEqual(expected);
@@ -7955,7 +7955,7 @@ describe('AuxLibrary', () => {
                 const expected = remote(
                     action('eventName', null, null, undefined),
                     {
-                        sessionId: 'playerId',
+                        connectionId: 'playerId',
                     }
                 );
                 expect(actions).toEqual(expected);
@@ -7970,10 +7970,10 @@ describe('AuxLibrary', () => {
 
                 const expected = [
                     remote(action('eventName', null, null, undefined), {
-                        sessionId: 'playerId1',
+                        connectionId: 'playerId1',
                     }),
                     remote(action('eventName', null, null, undefined), {
-                        sessionId: 'playerId2',
+                        connectionId: 'playerId2',
                     }),
                 ];
                 expect(actions).toEqual(expected);
