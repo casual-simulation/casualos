@@ -92,6 +92,7 @@ export async function handleApiEvent(
 export async function handleRecords(
     event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>
 ) {
+    await builder.ensureInitialized();
     if ('httpMethod' in event) {
         return handleApiEvent(event);
     } else if ('source' in event) {
