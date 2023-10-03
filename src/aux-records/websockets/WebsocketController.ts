@@ -1308,7 +1308,7 @@ export class WebsocketController {
             return {
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'Insts are not allowed.',
+                errorMessage: 'Insts are not allowed for this subscription.',
             };
         }
 

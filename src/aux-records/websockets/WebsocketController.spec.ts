@@ -7058,7 +7058,162 @@ describe('WebsocketController', () => {
             });
         });
 
-        // it('should ')
+        it('should omit insts that the user does not have access to', async () => {
+            const otherUserId: string = 'otherUserId';
+            await services.authStore.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                phoneNumber: null,
+            });
+
+            const user = await createTestUser(services, 'other@example.com');
+
+            services.policyStore.policies[recordName] = {
+                test: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'inst.list',
+                                insts: true,
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            services.policyStore.roles[recordName] = {
+                [user.userId]: new Set(['developer']),
+            };
+
+            await services.records.createRecord({
+                userId,
+                recordName,
+                ownerId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst,
+                markers: ['test'],
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst2',
+                markers: ['test'],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst3',
+                markers: ['test'],
+            });
+
+            const result = await server.listInsts(
+                recordName,
+                user.userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: true,
+                insts: [
+                    {
+                        inst,
+                        markers: ['test'],
+                    },
+                    {
+                        inst: 'otherInst2',
+                        markers: ['test'],
+                    },
+                    {
+                        inst: 'otherInst3',
+                        markers: ['test'],
+                    },
+                ],
+                totalCount: 4,
+            });
+        });
+
+        it('should return not_authorized when insts are disabled', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                insts: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: userId,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await services.records.createRecord({
+                userId,
+                recordName,
+                ownerId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst2',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst3',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await server.listInsts(recordName, userId, null);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Insts are not allowed for this subscription.',
+            });
+        });
     });
 
     describe('webhook()', () => {
