@@ -8717,6 +8717,177 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/insts/list', () => {
+        const inst1 = 'myInst';
+        const inst2 = 'myInst2';
+        const inst3 = 'myInst3';
+        beforeEach(async () => {
+            await store.saveInst({
+                recordName,
+                inst: inst1,
+                markers: [PRIVATE_MARKER],
+            });
+            await store.saveInst({
+                recordName,
+                inst: inst2,
+                markers: ['test'],
+            });
+            await store.saveInst({
+                recordName,
+                inst: inst3,
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should not_supported if the server has a null Websocket Controller', async () => {
+            server = new RecordsServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null,
+                null
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/insts/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Inst features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the list of insts for the given record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/insts/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    insts: [
+                        {
+                            inst: inst1,
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            inst: inst2,
+                            markers: ['test'],
+                        },
+                        {
+                            inst: inst3,
+                            markers: [PRIVATE_MARKER],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return an empty list if not given a record name', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/records/insts/list`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    insts: [],
+                    totalCount: 0,
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return only the insts that the user has access to', async () => {
+            store.policies[recordName] = {
+                test: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'inst.list',
+                                insts: true,
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+            store.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/insts/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    insts: [
+                        {
+                            inst: inst2,
+                            markers: ['test'],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/insts/list?recordName=${recordName}`
+        );
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/insts/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/insts/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+    });
+
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);
