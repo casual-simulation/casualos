@@ -121,7 +121,7 @@ export default class PlayerHome extends Vue {
             const hasQueryParam = Object.keys(this.query).length > 0;
 
             if (hasValue(recordName)) {
-                update.recordName = recordName;
+                update.record = recordName;
             } else {
                 let studio = this.query['studio'] ?? null;
                 if (studio) {
