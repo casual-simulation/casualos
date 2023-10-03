@@ -633,8 +633,8 @@ export class ServerBuilder implements SubscriptionLike {
         }
         const client = this._ensureRedis(options);
         const store = new RedisRateLimitStore({
-            sendCommand: (command: string, ...args: (string | number)[]) => {
-                return this._redis.sendCommand([command, ...(args as any[])]);
+            sendCommand: (command: string, ...args: string[]) => {
+                return this._redis.sendCommand([command, ...args]);
             },
         });
         this._initActions.push({
