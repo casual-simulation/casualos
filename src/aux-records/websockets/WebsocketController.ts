@@ -1251,72 +1251,81 @@ export class WebsocketController {
         userId: string,
         startingInst: string | null
     ): Promise<ListInstsResult> {
-        if (!recordName) {
+        try {
+            if (!recordName) {
+                return {
+                    success: true,
+                    insts: [],
+                    totalCount: 0,
+                };
+            }
+
+            const instsResult = await this._instStore.listInstsByRecord(
+                recordName,
+                startingInst
+            );
+            if (!instsResult.success) {
+                return instsResult;
+            }
+
+            const contextResult =
+                await this._policies.constructAuthorizationContext({
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                });
+
+            if (contextResult.success === false) {
+                return contextResult;
+            }
+            const context = contextResult.context;
+            const authorizeResult =
+                await this._policies.authorizeRequestUsingContext(context, {
+                    action: 'inst.list',
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    insts: instsResult.insts.map((i) => ({
+                        inst: i.inst,
+                        markers: i.markers,
+                    })),
+                });
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            const metricsResult =
+                await this._metrics.getSubscriptionInstMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.subscriptionType
+            );
+
+            if (!features.insts.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'Insts are not allowed for this subscription.',
+                };
+            }
+
             return {
                 success: true,
-                insts: [],
-                totalCount: 0,
+                insts: authorizeResult.allowedInstItems,
+                totalCount: instsResult.totalCount,
             };
-        }
-
-        const instsResult = await this._instStore.listInstsByRecord(
-            recordName,
-            startingInst
-        );
-        if (!instsResult.success) {
-            return instsResult;
-        }
-
-        const contextResult =
-            await this._policies.constructAuthorizationContext({
-                recordKeyOrRecordName: recordName,
-                userId,
-            });
-
-        if (contextResult.success === false) {
-            return contextResult;
-        }
-        const context = contextResult.context;
-        const authorizeResult =
-            await this._policies.authorizeRequestUsingContext(context, {
-                action: 'inst.list',
-                recordKeyOrRecordName: recordName,
-                userId,
-                insts: instsResult.insts.map((i) => ({
-                    inst: i.inst,
-                    markers: i.markers,
-                })),
-            });
-
-        if (authorizeResult.allowed === false) {
-            return returnAuthorizationResult(authorizeResult);
-        }
-
-        const metricsResult =
-            await this._metrics.getSubscriptionInstMetricsByRecordName(
-                recordName
-            );
-        const config = await this._config.getSubscriptionConfiguration();
-        const features = getSubscriptionFeatures(
-            config,
-            metricsResult.subscriptionStatus,
-            metricsResult.subscriptionId,
-            metricsResult.subscriptionType
-        );
-
-        if (!features.insts.allowed) {
+        } catch (err) {
             return {
                 success: false,
-                errorCode: 'not_authorized',
-                errorMessage: 'Insts are not allowed for this subscription.',
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
             };
         }
-
-        return {
-            success: true,
-            insts: authorizeResult.allowedInstItems,
-            totalCount: instsResult.totalCount,
-        };
     }
 
     async getUpdates(
