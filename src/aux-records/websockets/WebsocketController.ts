@@ -57,6 +57,7 @@ import {
     PUBLIC_WRITE_MARKER,
     DenialReason,
     ServerError,
+    NotSupportedError,
 } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
@@ -2136,6 +2137,7 @@ export interface ListInstsFailure {
     errorCode:
         | ServerError
         | 'record_not_found'
+        | NotSupportedError
         | AuthorizeDenied['errorCode']
         | GetOrCreateInstFailure['errorCode'];
     errorMessage: string;

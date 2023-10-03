@@ -4100,7 +4100,7 @@ export class RecordsServer {
 
         const schema = z.object({
             recordName: z.string().nonempty().optional(),
-            startingInst: z.string().optional(),
+            inst: z.string().optional(),
         });
 
         const parseResult = schema.safeParse(request.query || {});
@@ -4109,7 +4109,7 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, startingInst } = parseResult.data;
+        const { recordName, inst } = parseResult.data;
 
         const validation = await this._validateSessionKey(request);
 
@@ -4122,7 +4122,7 @@ export class RecordsServer {
         const result = await this._websocketController.listInsts(
             recordName,
             userId,
-            startingInst
+            inst
         );
         return returnResult(result);
     }

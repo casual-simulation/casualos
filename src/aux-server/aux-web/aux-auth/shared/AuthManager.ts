@@ -25,6 +25,7 @@ import type {
     RemoveStudioMemberResult,
     CreateRecordRequest,
     CreateRecordResult,
+    ListInstsResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -604,6 +605,31 @@ export class AuthManager {
         });
 
         const result = response.data as ListEventsResult;
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    async listInsts(recordName: string, startingInst?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/insts/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingInst) {
+            url.searchParams.set('inst', startingInst);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListInstsResult;
         if (result.success === true) {
             return result;
         } else {
