@@ -339,7 +339,7 @@ export const subscriptionConfigSchema = z.object({
                     days: 0,
                     months: 1,
                 }),
-            tempInsts: z
+            publicInsts: z
                 .object({
                     allowed: z
                         .boolean()
@@ -364,7 +364,7 @@ export const subscriptionConfigSchema = z.object({
                         .optional(),
                 })
                 .describe(
-                    'The feature limits for public (temp) insts. Defaults to an object that allows all features.'
+                    'The feature limits for public insts (insts that do not belong to a record and will expire after a preset time). Defaults to an object that allows all features.'
                 )
                 .optional(),
         })
@@ -537,7 +537,7 @@ export interface DefaultFeaturesConfiguration {
     /**
      * The configuration for temporary insts.
      */
-    tempInsts?: {
+    publicInsts?: {
         /**
          * Whether they are allowed to be created.
          */

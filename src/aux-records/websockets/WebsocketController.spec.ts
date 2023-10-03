@@ -412,7 +412,7 @@ describe('WebsocketController', () => {
                     createTestSubConfiguration(),
                     {
                         defaultFeatures: {
-                            tempInsts: {
+                            publicInsts: {
                                 allowed: false,
                             },
                         },
@@ -454,7 +454,7 @@ describe('WebsocketController', () => {
                     createTestSubConfiguration(),
                     {
                         defaultFeatures: {
-                            tempInsts: {
+                            publicInsts: {
                                 allowed: true,
                                 maxActiveConnectionsPerInst: 1,
                             },
@@ -2303,7 +2303,7 @@ describe('WebsocketController', () => {
                     createTestSubConfiguration(),
                     {
                         defaultFeatures: {
-                            tempInsts: {
+                            publicInsts: {
                                 allowed: false,
                             },
                         },
@@ -2347,7 +2347,7 @@ describe('WebsocketController', () => {
                     createTestSubConfiguration(),
                     {
                         defaultFeatures: {
-                            tempInsts: {
+                            publicInsts: {
                                 allowed: true,
                                 maxBytesPerInst: 1,
                             },

@@ -311,7 +311,7 @@ export class WebsocketController {
         const config = await this._config.getSubscriptionConfiguration();
 
         if (!event.recordName) {
-            if (config.defaultFeatures?.tempInsts?.allowed === false) {
+            if (config.defaultFeatures?.publicInsts?.allowed === false) {
                 await this.sendError(connectionId, -1, {
                     success: false,
                     errorCode: 'not_authorized',
@@ -344,11 +344,11 @@ export class WebsocketController {
             maxConnections = features.insts.maxActiveConnectionsPerInst;
         } else if (
             !event.recordName &&
-            typeof config.defaultFeatures?.tempInsts
+            typeof config.defaultFeatures?.publicInsts
                 ?.maxActiveConnectionsPerInst === 'number'
         ) {
             maxConnections =
-                config.defaultFeatures.tempInsts.maxActiveConnectionsPerInst;
+                config.defaultFeatures.publicInsts.maxActiveConnectionsPerInst;
         }
 
         if (maxConnections) {
@@ -582,7 +582,7 @@ export class WebsocketController {
             let features: FeaturesConfiguration = null;
 
             if (!event.recordName) {
-                if (config.defaultFeatures?.tempInsts?.allowed === false) {
+                if (config.defaultFeatures?.publicInsts?.allowed === false) {
                     await this.sendError(connectionId, -1, {
                         success: false,
                         errorCode: 'not_authorized',
@@ -749,10 +749,11 @@ export class WebsocketController {
                 maxInstSize = features.insts.maxBytesPerInst;
             } else if (
                 !event.recordName &&
-                typeof config.defaultFeatures?.tempInsts?.maxBytesPerInst ===
+                typeof config.defaultFeatures?.publicInsts?.maxBytesPerInst ===
                     'number'
             ) {
-                maxInstSize = config.defaultFeatures.tempInsts.maxBytesPerInst;
+                maxInstSize =
+                    config.defaultFeatures.publicInsts.maxBytesPerInst;
             }
 
             if (maxInstSize) {
