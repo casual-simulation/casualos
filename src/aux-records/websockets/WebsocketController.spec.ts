@@ -412,7 +412,7 @@ describe('WebsocketController', () => {
                     createTestSubConfiguration(),
                     {
                         defaultFeatures: {
-                            tempInsts: {
+                            publicInsts: {
                                 allowed: false,
                             },
                         },
@@ -454,7 +454,7 @@ describe('WebsocketController', () => {
                     createTestSubConfiguration(),
                     {
                         defaultFeatures: {
-                            tempInsts: {
+                            publicInsts: {
                                 allowed: true,
                                 maxActiveConnectionsPerInst: 1,
                             },
@@ -2303,7 +2303,7 @@ describe('WebsocketController', () => {
                     createTestSubConfiguration(),
                     {
                         defaultFeatures: {
-                            tempInsts: {
+                            publicInsts: {
                                 allowed: false,
                             },
                         },
@@ -2347,7 +2347,7 @@ describe('WebsocketController', () => {
                     createTestSubConfiguration(),
                     {
                         defaultFeatures: {
-                            tempInsts: {
+                            publicInsts: {
                                 allowed: true,
                                 maxBytesPerInst: 1,
                             },
@@ -6978,6 +6978,401 @@ describe('WebsocketController', () => {
                     errorMessage:
                         'Insts are not allowed for this subscription.',
                 });
+            });
+        });
+    });
+
+    describe('listInsts()', () => {
+        it('should return an empty list when given a null record name', async () => {
+            const result = await server.listInsts(null, userId, null);
+
+            expect(result).toEqual({
+                success: true,
+                insts: [],
+                totalCount: 0,
+            });
+        });
+
+        it('should return an record_not_found result if the record is missing', async () => {
+            const result = await server.listInsts('missing', userId, null);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The record was not found.',
+            });
+        });
+
+        it('should return the lists that the user has access to', async () => {
+            await services.records.createRecord({
+                userId,
+                recordName,
+                ownerId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst2',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst3',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await server.listInsts(recordName, userId, null);
+
+            expect(result).toEqual({
+                success: true,
+                insts: [
+                    {
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    },
+                    {
+                        inst: 'otherInst',
+                        markers: [PRIVATE_MARKER],
+                    },
+                    {
+                        inst: 'otherInst2',
+                        markers: [PRIVATE_MARKER],
+                    },
+                    {
+                        inst: 'otherInst3',
+                        markers: [PRIVATE_MARKER],
+                    },
+                ],
+                totalCount: 4,
+            });
+        });
+
+        it('should omit insts that the user does not have access to', async () => {
+            const otherUserId: string = 'otherUserId';
+            await services.authStore.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                phoneNumber: null,
+            });
+
+            const user = await createTestUser(services, 'other@example.com');
+
+            services.policyStore.policies[recordName] = {
+                test: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'inst.list',
+                                insts: true,
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            services.policyStore.roles[recordName] = {
+                [user.userId]: new Set(['developer']),
+            };
+
+            await services.records.createRecord({
+                userId,
+                recordName,
+                ownerId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst,
+                markers: ['test'],
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst2',
+                markers: ['test'],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst3',
+                markers: ['test'],
+            });
+
+            const result = await server.listInsts(
+                recordName,
+                user.userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: true,
+                insts: [
+                    {
+                        inst,
+                        markers: ['test'],
+                    },
+                    {
+                        inst: 'otherInst2',
+                        markers: ['test'],
+                    },
+                    {
+                        inst: 'otherInst3',
+                        markers: ['test'],
+                    },
+                ],
+                totalCount: 4,
+            });
+        });
+
+        it('should return not_authorized when insts are disabled', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                insts: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: userId,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await services.records.createRecord({
+                userId,
+                recordName,
+                ownerId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst2',
+                markers: [PRIVATE_MARKER],
+            });
+            await instStore.saveInst({
+                recordName,
+                inst: 'otherInst3',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await server.listInsts(recordName, userId, null);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Insts are not allowed for this subscription.',
+            });
+        });
+    });
+
+    describe('eraseInst()', () => {
+        beforeEach(async () => {
+            await services.records.createRecord({
+                userId,
+                recordName,
+                ownerId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst,
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should delete the given inst', async () => {
+            const result = await server.eraseInst(recordName, inst, userId);
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(await instStore.getInstByName(recordName, inst)).toEqual(
+                null
+            );
+        });
+
+        it('should be able to use a recordKey to delete the inst', async () => {
+            const key = await services.records.createPublicRecordKey(
+                recordName,
+                'subjectfull',
+                userId
+            );
+            if (key.success === false) {
+                throw new Error('Unable to create key: ' + key.errorCode);
+            }
+            const result = await server.eraseInst(key.recordKey, inst, userId);
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(await instStore.getInstByName(recordName, inst)).toEqual(
+                null
+            );
+        });
+
+        it('should return record_not_found if given a null recordName', async () => {
+            await instStore.saveInst({
+                recordName: null,
+                inst: inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await server.eraseInst(null, inst, userId);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'Record not found.',
+            });
+        });
+
+        it('should return a not_authorized error if the user does have access to the inst', async () => {
+            const otherUserId: string = 'otherUserId';
+            await services.authStore.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                phoneNumber: null,
+            });
+
+            const user = await createTestUser(services, 'other@example.com');
+
+            const result = await server.eraseInst(
+                recordName,
+                inst,
+                user.userId
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    id: 'otherUserId',
+                    kind: 'user',
+                    marker: PRIVATE_MARKER,
+                    permission: 'inst.delete',
+                    role: null,
+                    type: 'missing_permission',
+                },
+            });
+
+            expect(await instStore.getInstByName(recordName, inst)).toEqual({
+                recordName,
+                inst,
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should be able to delete insts if the user has been given permission', async () => {
+            const otherUserId: string = 'otherUserId';
+            await services.authStore.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                phoneNumber: null,
+            });
+
+            const user = await createTestUser(services, 'other@example.com');
+
+            services.policyStore.policies[recordName] = {
+                [PRIVATE_MARKER]: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'inst.delete',
+                                insts: true,
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            services.policyStore.roles[recordName] = {
+                [otherUserId]: new Set(['developer']),
+            };
+
+            const result = await server.eraseInst(
+                recordName,
+                inst,
+                user.userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(await instStore.getInstByName(recordName, inst)).toEqual(
+                null
+            );
+        });
+
+        it('should return success if the inst does not exist', async () => {
+            const result = await server.eraseInst(
+                recordName,
+                'missing',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
             });
         });
     });

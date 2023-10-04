@@ -7,12 +7,13 @@ import {
     InstRecordsStore,
     InstWithBranches,
     InstWithSubscriptionInfo,
+    ListInstsStoreResult,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
     StoredUpdates,
 } from '@casual-simulation/aux-records';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { v4 as uuid } from 'uuid';
 
@@ -24,6 +25,49 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
 
     constructor(prisma: PrismaClient) {
         this._prisma = prisma;
+    }
+
+    async listInstsByRecord(
+        recordName: string,
+        startingInst?: string
+    ): Promise<ListInstsStoreResult> {
+        let filter: Prisma.InstRecordWhereInput = {
+            recordName: recordName,
+        };
+
+        if (startingInst) {
+            filter.name = {
+                gt: startingInst,
+            };
+        }
+
+        const insts = await this._prisma.instRecord.findMany({
+            where: filter,
+            orderBy: {
+                name: 'asc',
+            },
+            take: 10,
+            select: {
+                name: true,
+                markers: true,
+            },
+        });
+
+        const totalCount = await this._prisma.instRecord.count({
+            where: {
+                recordName: recordName,
+            },
+        });
+
+        return {
+            success: true,
+            insts: insts.map((i) => ({
+                recordName: recordName,
+                inst: i.name,
+                markers: i.markers,
+            })),
+            totalCount,
+        };
     }
 
     async getInstByName(
@@ -82,6 +126,17 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 record.record.studio?.subscriptionStatus,
             subscriptionType: record.record.owner ? 'user' : 'studio',
         };
+    }
+
+    async deleteInst(recordName: string, inst: string): Promise<void> {
+        await this._prisma.instRecord.delete({
+            where: {
+                recordName_name: {
+                    recordName,
+                    name: inst,
+                },
+            },
+        });
     }
 
     async getBranchByName(

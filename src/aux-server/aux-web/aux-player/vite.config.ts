@@ -30,6 +30,14 @@ const casualOsPackages = fs
     .map((folder) => `@casual-simulation/${folder}`);
 
 export default defineConfig(({ command, mode }) => ({
+    cacheDir: path.resolve(
+        __dirname,
+        '..',
+        '..',
+        'node_modules',
+        '.vite',
+        '.aux-player'
+    ),
     build: {
         outDir: distDir,
         emptyOutDir: false,

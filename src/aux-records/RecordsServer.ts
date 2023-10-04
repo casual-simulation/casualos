@@ -199,6 +199,12 @@ const AI_NOT_SUPPORTED_RESULT = {
     errorMessage: 'AI features are not supported by this server.',
 };
 
+const INSTS_NOT_SUPPORTED_RESULT = {
+    success: false,
+    errorCode: 'not_supported',
+    errorMessage: 'Inst features are not supported by this server.',
+};
+
 /**
  * The Zod validation for record keys.
  */
@@ -809,6 +815,24 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._manageSubscriptionV2(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/insts/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listInsts(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'DELETE' &&
+            request.path === '/api/v2/records/insts'
+        ) {
+            return formatResponse(
+                request,
+                await this._deleteInst(request),
                 this._allowedAccountOrigins
             );
         } else if (request.method === 'GET' && request.path === '/instData') {
@@ -4064,6 +4088,107 @@ export class RecordsServer {
             success: true,
             url: result.url,
         });
+    }
+
+    private async _listInsts(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._websocketController) {
+            return returnResult(INSTS_NOT_SUPPORTED_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z.string().nonempty().optional(),
+            inst: z.string().optional(),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, inst } = parseResult.data;
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            return returnResult(validation);
+        }
+
+        const userId = validation.userId;
+
+        const result = await this._websocketController.listInsts(
+            recordName,
+            userId,
+            inst
+        );
+        return returnResult(result);
+    }
+
+    private async _deleteInst(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._websocketController) {
+            return returnResult(INSTS_NOT_SUPPORTED_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const schema = z.object({
+            recordKey: z.string().nonempty().optional(),
+            recordName: z.string().nonempty().optional(),
+            inst: z.string().optional(),
+        });
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, recordName, inst } = parseResult.data;
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            return returnResult(validation);
+        }
+
+        const result = await this._websocketController.eraseInst(
+            recordKey ?? recordName,
+            inst,
+            validation.userId
+        );
+        return returnResult(result);
     }
 
     private async _getInstData(

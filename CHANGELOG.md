@@ -2,7 +2,7 @@
 
 ## V3.2.7
 
-#### Date: 10/2/2023
+#### Date: 10/4/2023
 
 ### :boom: Breaking Changes
 

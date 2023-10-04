@@ -32,7 +32,28 @@ export default defineConfig(({ command, mode }) => {
     if (process.env.AUTH_API_ENDPOINT) {
         apiEndpoint = process.env.AUTH_API_ENDPOINT;
     }
+    let frontendOrigin: string | null = null;
+    if (process.env.FRONTEND_ORIGIN) {
+        frontendOrigin = process.env.FRONTEND_ORIGIN;
+        try {
+            new URL(frontendOrigin);
+        } catch (err) {
+            console.error(
+                `Invalid FRONTEND_ORIGIN. It must be a valid URL: ${frontendOrigin}`
+            );
+            throw err;
+        }
+    } else if (command === 'serve') {
+        frontendOrigin = 'http://localhost:3000';
+    }
     return {
+        cacheDir: path.resolve(
+            __dirname,
+            '..',
+            'node_modules',
+            '.vite',
+            '.aux-auth'
+        ),
         build: {
             outDir: distDir,
             emptyOutDir: false,
@@ -78,6 +99,7 @@ export default defineConfig(({ command, mode }) => {
             ),
             PRODUCTION: JSON.stringify(command === 'build'),
             API_ENDPOINT: JSON.stringify(apiEndpoint),
+            FRONTEND_ORIGIN: JSON.stringify(frontendOrigin),
             ENABLE_SMS_AUTHENTICATION: JSON.stringify(
                 process.env.ENABLE_SMS_AUTHENTICATION === 'true' ||
                     (typeof process.env.ENABLE_SMS_AUTHENTICATION ===

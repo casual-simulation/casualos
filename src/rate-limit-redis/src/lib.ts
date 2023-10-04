@@ -149,7 +149,11 @@ class RedisStore implements RateLimiter {
      * @param key {string} - The identifier for a client
      */
     async decrement(key: string, amount: number = 1): Promise<void> {
-        await this.sendCommand('DECRBY', this.prefixKey(key), amount);
+        await this.sendCommand(
+            'DECRBY',
+            this.prefixKey(key),
+            amount.toString()
+        );
     }
 
     /**
@@ -173,7 +177,7 @@ class RedisStore implements RateLimiter {
                 key,
                 this.resetExpiryOnChange ? '1' : '0',
                 this.windowMs.toString(),
-                amount
+                amount.toString()
             );
         } catch (e) {
             const errString = e.toString();
