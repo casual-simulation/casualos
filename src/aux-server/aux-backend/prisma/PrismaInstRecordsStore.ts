@@ -128,6 +128,17 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         };
     }
 
+    async deleteInst(recordName: string, inst: string): Promise<void> {
+        await this._prisma.instRecord.delete({
+            where: {
+                recordName_name: {
+                    recordName,
+                    name: inst,
+                },
+            },
+        });
+    }
+
     async getBranchByName(
         recordName: string,
         inst: string,
