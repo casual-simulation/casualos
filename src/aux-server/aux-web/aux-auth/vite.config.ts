@@ -47,6 +47,13 @@ export default defineConfig(({ command, mode }) => {
         frontendOrigin = 'http://localhost:3000';
     }
     return {
+        cacheDir: path.resolve(
+            __dirname,
+            '..',
+            'node_modules',
+            '.vite',
+            '.aux-auth'
+        ),
         build: {
             outDir: distDir,
             emptyOutDir: false,
