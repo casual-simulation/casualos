@@ -1413,13 +1413,13 @@ export class WebsocketController {
     }
 
     async eraseInst(
-        recordName: string | null,
+        recordKeyOrName: string | null,
         inst: string,
         userId: string
     ): Promise<EraseInstResult> {
         try {
             const context = await this._policies.constructAuthorizationContext({
-                recordKeyOrRecordName: recordName,
+                recordKeyOrRecordName: recordKeyOrName,
                 userId,
             });
 
@@ -1427,6 +1427,7 @@ export class WebsocketController {
                 return context;
             }
 
+            const recordName = context.context.recordName;
             const storedInst = await this._instStore.getInstByName(
                 recordName,
                 inst

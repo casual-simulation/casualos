@@ -7243,6 +7243,42 @@ describe('WebsocketController', () => {
             );
         });
 
+        it('should be able to use a recordKey to delete the inst', async () => {
+            const key = await services.records.createPublicRecordKey(
+                recordName,
+                'subjectfull',
+                userId
+            );
+            if (key.success === false) {
+                throw new Error('Unable to create key: ' + key.errorCode);
+            }
+            const result = await server.eraseInst(key.recordKey, inst, userId);
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(await instStore.getInstByName(recordName, inst)).toEqual(
+                null
+            );
+        });
+
+        it('should return record_not_found if given a null recordName', async () => {
+            await instStore.saveInst({
+                recordName: null,
+                inst: inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await server.eraseInst(null, inst, userId);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'Record not found.',
+            });
+        });
+
         it('should return a not_authorized error if the user does have access to the inst', async () => {
             const otherUserId: string = 'otherUserId';
             await services.authStore.saveUser({

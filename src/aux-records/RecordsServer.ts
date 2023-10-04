@@ -826,6 +826,15 @@ export class RecordsServer {
                 await this._listInsts(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'DELETE' &&
+            request.path === '/api/v2/records/insts'
+        ) {
+            return formatResponse(
+                request,
+                await this._deleteInst(request),
+                this._allowedAccountOrigins
+            );
         } else if (request.method === 'GET' && request.path === '/instData') {
             return formatResponse(
                 request,
@@ -4123,6 +4132,61 @@ export class RecordsServer {
             recordName,
             userId,
             inst
+        );
+        return returnResult(result);
+    }
+
+    private async _deleteInst(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._websocketController) {
+            return returnResult(INSTS_NOT_SUPPORTED_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const schema = z.object({
+            recordKey: z.string().nonempty().optional(),
+            recordName: z.string().nonempty().optional(),
+            inst: z.string().optional(),
+        });
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, recordName, inst } = parseResult.data;
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            return returnResult(validation);
+        }
+
+        const result = await this._websocketController.eraseInst(
+            recordKey ?? recordName,
+            inst,
+            validation.userId
         );
         return returnResult(result);
     }

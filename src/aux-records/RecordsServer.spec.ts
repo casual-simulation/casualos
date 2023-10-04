@@ -8888,6 +8888,108 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('DELETE /api/v2/records/insts', () => {
+        const inst = 'myInst';
+        beforeEach(async () => {
+            await store.saveInst({
+                recordName,
+                inst: inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should delete the specified inst', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    '/api/v2/records/insts',
+                    JSON.stringify({
+                        recordName,
+                        inst,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+            expect(await store.getInstByName(recordName, inst)).toBeNull();
+        });
+
+        it('should be able to use a recordKey to delete the inst', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    '/api/v2/records/insts',
+                    JSON.stringify({
+                        recordKey,
+                        inst,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(await store.getInstByName(recordName, inst)).toBeNull();
+        });
+
+        it('should return a 403 status code when the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    '/api/v2/records/insts',
+                    JSON.stringify({
+                        recordName,
+                        inst,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        permission: 'inst.delete',
+                        id: userId,
+                        kind: 'user',
+                        marker: PRIVATE_MARKER,
+                        role: null,
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+            expect(await store.getInstByName(recordName, inst)).not.toBeNull();
+        });
+
+        testUrl('DELETE', '/api/v2/records/insts', () =>
+            JSON.stringify({
+                recordName,
+                inst,
+            })
+        );
+    });
+
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);
