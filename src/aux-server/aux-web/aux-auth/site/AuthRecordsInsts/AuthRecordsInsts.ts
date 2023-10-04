@@ -106,11 +106,12 @@ export default class AuthRecordsInsts extends Vue {
         return true;
     }
 
-    // async deleteItem(item: ListDataSuccess['items'][0]) {
-    //     if (await authManager.eraseData(this.recordName, item.address)) {
-    //         this.items.mdData = this.items.mdData.filter(
-    //             (i) => i.address !== item.address
-    //         );
-    //     }
-    // }
+    async deleteInst(item: ListedInstItem) {
+        const result = await authManager.deleteInst(this.recordName, item.inst);
+        if (result.success === true) {
+            this.items.mdData = this.items.mdData.filter(
+                (i) => i.inst !== item.inst
+            );
+        }
+    }
 }

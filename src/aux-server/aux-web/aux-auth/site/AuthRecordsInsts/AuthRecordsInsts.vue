@@ -22,18 +22,18 @@
                         :marker="marker"
                     ></auth-marker>
                 </md-table-cell>
-                <!-- <md-table-cell md-label="Options">
+                <md-table-cell md-label="Options">
                     <md-menu md-align-trigger>
                         <md-button md-menu-trigger class="md-icon-button">
                             <md-icon>more_vert</md-icon>
-                            <span class="sr-only">Item Options</span>
-                            <md-tooltip>Item Options</md-tooltip>
+                            <span class="sr-only">Inst Options</span>
+                            <md-tooltip>Inst Options</md-tooltip>
                         </md-button>
                         <md-menu-content>
-                            <md-menu-item @click="deleteItem(item)">Delete Item</md-menu-item>
+                            <md-menu-item @click="deleteInst(item)">Delete Inst</md-menu-item>
                         </md-menu-content>
                     </md-menu>
-                </md-table-cell> -->
+                </md-table-cell>
             </md-table-row>
 
             <template v-slot:md-table-pagination v-if="items.mdData.length > 0">

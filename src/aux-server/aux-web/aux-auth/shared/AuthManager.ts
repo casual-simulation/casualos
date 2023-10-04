@@ -26,6 +26,7 @@ import type {
     CreateRecordRequest,
     CreateRecordResult,
     ListInstsResult,
+    EraseInstResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -614,6 +615,21 @@ export class AuthManager {
         }
 
         return null;
+    }
+
+    async deleteInst(recordName: string, inst: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/insts`);
+
+        const response = await axios.delete(url.href, {
+            headers: this._authenticationHeaders(),
+            data: {
+                recordName: recordName,
+                inst: inst,
+            },
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        return response.data as EraseInstResult;
     }
 
     async listInsts(recordName: string, startingInst?: string) {
