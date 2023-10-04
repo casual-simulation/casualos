@@ -18,6 +18,16 @@ export interface InstRecordsStore {
     ): Promise<InstWithSubscriptionInfo | null>;
 
     /**
+     * Gets the list of insts that are in the given record.
+     * @param recordName The name of the record. If null, then an empty list will be returned.
+     * @param startingInst The name of the inst to start listing at.
+     */
+    listInstsByRecord(
+        recordName: string | null,
+        startingInst?: string | null
+    ): Promise<ListInstsStoreResult>;
+
+    /**
      * Gets the info for the given branch. Returns null if the branch does not exist.
      * @param recordName The name of the record.
      * @param inst The name of the inst.
@@ -131,6 +141,13 @@ export interface InstRecordsStore {
         updateToAdd: string,
         sizeInBytes: number
     ): Promise<ReplaceUpdatesResult>;
+
+    /**
+     * Deletes the given inst.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
+     */
+    deleteInst(recordName: string | null, inst: string): Promise<void>;
 }
 
 export interface StoredUpdates {
@@ -293,5 +310,21 @@ export interface SaveBranchSuccess {
 export interface SaveBranchFailure {
     success: false;
     errorCode: ServerError | 'inst_not_found';
+    errorMessage: string;
+}
+
+export type ListInstsStoreResult =
+    | ListInstsStoreSuccess
+    | ListInstsStoreFailure;
+
+export interface ListInstsStoreSuccess {
+    success: true;
+    insts: InstRecord[];
+    totalCount: number;
+}
+
+export interface ListInstsStoreFailure {
+    success: false;
+    errorCode: ServerError | 'record_not_found';
     errorMessage: string;
 }

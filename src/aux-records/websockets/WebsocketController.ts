@@ -57,6 +57,7 @@ import {
     PUBLIC_WRITE_MARKER,
     DenialReason,
     ServerError,
+    NotSupportedError,
 } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
@@ -64,6 +65,7 @@ import { v4 as uuid } from 'uuid';
 import {
     AuthorizationContext,
     AuthorizeDenied,
+    ListedInstItem,
     PolicyController,
     returnAuthorizationResult,
 } from '../PolicyController';
@@ -310,7 +312,7 @@ export class WebsocketController {
         const config = await this._config.getSubscriptionConfiguration();
 
         if (!event.recordName) {
-            if (config.defaultFeatures?.tempInsts?.allowed === false) {
+            if (config.defaultFeatures?.publicInsts?.allowed === false) {
                 await this.sendError(connectionId, -1, {
                     success: false,
                     errorCode: 'not_authorized',
@@ -343,11 +345,11 @@ export class WebsocketController {
             maxConnections = features.insts.maxActiveConnectionsPerInst;
         } else if (
             !event.recordName &&
-            typeof config.defaultFeatures?.tempInsts
+            typeof config.defaultFeatures?.publicInsts
                 ?.maxActiveConnectionsPerInst === 'number'
         ) {
             maxConnections =
-                config.defaultFeatures.tempInsts.maxActiveConnectionsPerInst;
+                config.defaultFeatures.publicInsts.maxActiveConnectionsPerInst;
         }
 
         if (maxConnections) {
@@ -581,7 +583,7 @@ export class WebsocketController {
             let features: FeaturesConfiguration = null;
 
             if (!event.recordName) {
-                if (config.defaultFeatures?.tempInsts?.allowed === false) {
+                if (config.defaultFeatures?.publicInsts?.allowed === false) {
                     await this.sendError(connectionId, -1, {
                         success: false,
                         errorCode: 'not_authorized',
@@ -748,10 +750,11 @@ export class WebsocketController {
                 maxInstSize = features.insts.maxBytesPerInst;
             } else if (
                 !event.recordName &&
-                typeof config.defaultFeatures?.tempInsts?.maxBytesPerInst ===
+                typeof config.defaultFeatures?.publicInsts?.maxBytesPerInst ===
                     'number'
             ) {
-                maxInstSize = config.defaultFeatures.tempInsts.maxBytesPerInst;
+                maxInstSize =
+                    config.defaultFeatures.publicInsts.maxBytesPerInst;
             }
 
             if (maxInstSize) {
@@ -1245,6 +1248,88 @@ export class WebsocketController {
         };
     }
 
+    async listInsts(
+        recordName: string | null,
+        userId: string,
+        startingInst: string | null
+    ): Promise<ListInstsResult> {
+        try {
+            if (!recordName) {
+                return {
+                    success: true,
+                    insts: [],
+                    totalCount: 0,
+                };
+            }
+
+            const instsResult = await this._instStore.listInstsByRecord(
+                recordName,
+                startingInst
+            );
+            if (!instsResult.success) {
+                return instsResult;
+            }
+
+            const contextResult =
+                await this._policies.constructAuthorizationContext({
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                });
+
+            if (contextResult.success === false) {
+                return contextResult;
+            }
+            const context = contextResult.context;
+            const authorizeResult =
+                await this._policies.authorizeRequestUsingContext(context, {
+                    action: 'inst.list',
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    insts: instsResult.insts.map((i) => ({
+                        inst: i.inst,
+                        markers: i.markers,
+                    })),
+                });
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            const metricsResult =
+                await this._metrics.getSubscriptionInstMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.subscriptionType
+            );
+
+            if (!features.insts.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'Insts are not allowed for this subscription.',
+                };
+            }
+
+            return {
+                success: true,
+                insts: authorizeResult.allowedInstItems,
+                totalCount: instsResult.totalCount,
+            };
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     async getUpdates(
         connectionId: string,
         recordName: string | null,
@@ -1325,6 +1410,67 @@ export class WebsocketController {
             updates: updates.updates,
             timestamps: updates.timestamps,
         });
+    }
+
+    async eraseInst(
+        recordKeyOrName: string | null,
+        inst: string,
+        userId: string
+    ): Promise<EraseInstResult> {
+        try {
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: recordKeyOrName,
+                userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const recordName = context.context.recordName;
+            const storedInst = await this._instStore.getInstByName(
+                recordName,
+                inst
+            );
+
+            if (!storedInst) {
+                return {
+                    success: true,
+                };
+            }
+
+            const authResult =
+                await this._policies.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'inst.delete',
+                        recordKeyOrRecordName: recordName,
+                        inst: inst,
+                        userId,
+                        resourceMarkers: storedInst.markers,
+                    }
+                );
+
+            if (authResult.allowed === false) {
+                return returnAuthorizationResult(authResult);
+            }
+
+            await this._instStore.deleteInst(recordName, inst);
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[WebsocketController] [eraseInst] Error while erasing inst.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
     }
 
     /**
@@ -2033,6 +2179,44 @@ export interface GetBranchDataFailure {
     errorCode:
         | ServerError
         | 'inst_not_found'
+        | AuthorizeDenied['errorCode']
+        | GetOrCreateInstFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
+}
+
+export type ListInstsResult = ListInstsSuccess | ListInstsFailure;
+
+export interface ListInstsSuccess {
+    success: true;
+    insts: ListedInstItem[];
+    totalCount: number;
+}
+
+export interface ListInstsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | 'record_not_found'
+        | NotSupportedError
+        | AuthorizeDenied['errorCode']
+        | GetOrCreateInstFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
+}
+
+export type EraseInstResult = EraseInstSuccess | EraseInstFailure;
+
+export interface EraseInstSuccess {
+    success: true;
+}
+
+export interface EraseInstFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | 'inst_not_found'
+        | NotSupportedError
         | AuthorizeDenied['errorCode']
         | GetOrCreateInstFailure['errorCode'];
     errorMessage: string;
