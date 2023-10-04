@@ -2175,6 +2175,16 @@ export class MemoryStore
         };
     }
 
+    async deleteInst(recordName: string, inst: string): Promise<void> {
+        const r = await this._getInstRecord(recordName);
+
+        if (!r) {
+            return;
+        }
+
+        r.delete(inst);
+    }
+
     async saveBranch(branch: BranchRecord): Promise<SaveBranchResult> {
         let i = await this._getInst(branch.recordName, branch.inst);
 

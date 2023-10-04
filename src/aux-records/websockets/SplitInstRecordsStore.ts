@@ -101,6 +101,13 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         };
     }
 
+    async deleteInst(recordName: string, inst: string): Promise<void> {
+        await Promise.all([
+            this._permanent.deleteInst(recordName, inst),
+            this._temp.deleteAllInstBranchInfo(recordName, inst),
+        ]);
+    }
+
     async saveBranch(branch: BranchRecord): Promise<SaveBranchResult> {
         if (branch.recordName) {
             const result = await this._permanent.saveBranch(branch);

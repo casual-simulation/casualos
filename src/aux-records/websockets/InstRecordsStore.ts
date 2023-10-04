@@ -141,6 +141,13 @@ export interface InstRecordsStore {
         updateToAdd: string,
         sizeInBytes: number
     ): Promise<ReplaceUpdatesResult>;
+
+    /**
+     * Deletes the given inst.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
+     */
+    deleteInst(recordName: string | null, inst: string): Promise<void>;
 }
 
 export interface StoredUpdates {

@@ -1412,6 +1412,66 @@ export class WebsocketController {
         });
     }
 
+    async eraseInst(
+        recordName: string | null,
+        inst: string,
+        userId: string
+    ): Promise<EraseInstResult> {
+        try {
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: recordName,
+                userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const storedInst = await this._instStore.getInstByName(
+                recordName,
+                inst
+            );
+
+            if (!storedInst) {
+                return {
+                    success: true,
+                };
+            }
+
+            const authResult =
+                await this._policies.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'inst.delete',
+                        recordKeyOrRecordName: recordName,
+                        inst: inst,
+                        userId,
+                        resourceMarkers: storedInst.markers,
+                    }
+                );
+
+            if (authResult.allowed === false) {
+                return returnAuthorizationResult(authResult);
+            }
+
+            await this._instStore.deleteInst(recordName, inst);
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[WebsocketController] [eraseInst] Error while erasing inst.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     /**
      * Processes a webhook and returns the status code that should be returned.
      * @param branch The branch that the webhook is for.
@@ -2137,6 +2197,24 @@ export interface ListInstsFailure {
     errorCode:
         | ServerError
         | 'record_not_found'
+        | NotSupportedError
+        | AuthorizeDenied['errorCode']
+        | GetOrCreateInstFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
+}
+
+export type EraseInstResult = EraseInstSuccess | EraseInstFailure;
+
+export interface EraseInstSuccess {
+    success: true;
+}
+
+export interface EraseInstFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | 'inst_not_found'
         | NotSupportedError
         | AuthorizeDenied['errorCode']
         | GetOrCreateInstFailure['errorCode'];

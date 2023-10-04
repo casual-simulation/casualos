@@ -7216,6 +7216,131 @@ describe('WebsocketController', () => {
         });
     });
 
+    describe('eraseInst()', () => {
+        beforeEach(async () => {
+            await services.records.createRecord({
+                userId,
+                recordName,
+                ownerId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst,
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should delete the given inst', async () => {
+            const result = await server.eraseInst(recordName, inst, userId);
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(await instStore.getInstByName(recordName, inst)).toEqual(
+                null
+            );
+        });
+
+        it('should return a not_authorized error if the user does have access to the inst', async () => {
+            const otherUserId: string = 'otherUserId';
+            await services.authStore.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                phoneNumber: null,
+            });
+
+            const user = await createTestUser(services, 'other@example.com');
+
+            const result = await server.eraseInst(
+                recordName,
+                inst,
+                user.userId
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    id: 'otherUserId',
+                    kind: 'user',
+                    marker: PRIVATE_MARKER,
+                    permission: 'inst.delete',
+                    role: null,
+                    type: 'missing_permission',
+                },
+            });
+
+            expect(await instStore.getInstByName(recordName, inst)).toEqual({
+                recordName,
+                inst,
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should be able to delete insts if the user has been given permission', async () => {
+            const otherUserId: string = 'otherUserId';
+            await services.authStore.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                phoneNumber: null,
+            });
+
+            const user = await createTestUser(services, 'other@example.com');
+
+            services.policyStore.policies[recordName] = {
+                [PRIVATE_MARKER]: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'inst.delete',
+                                insts: true,
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            services.policyStore.roles[recordName] = {
+                [otherUserId]: new Set(['developer']),
+            };
+
+            const result = await server.eraseInst(
+                recordName,
+                inst,
+                user.userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(await instStore.getInstByName(recordName, inst)).toEqual(
+                null
+            );
+        });
+
+        it('should return success if the inst does not exist', async () => {
+            const result = await server.eraseInst(
+                recordName,
+                'missing',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+        });
+    });
+
     describe('webhook()', () => {
         it('should return 200 if the webhook is handled', async () => {
             const originalRandom = Math.random;
