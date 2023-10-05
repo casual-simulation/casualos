@@ -50,6 +50,7 @@ export default defineConfig(({ command, mode }) => {
         cacheDir: path.resolve(
             __dirname,
             '..',
+            '..',
             'node_modules',
             '.vite',
             '.aux-auth'
