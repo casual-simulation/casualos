@@ -438,6 +438,9 @@ describe('WebsocketController', () => {
                             success: false,
                             errorCode: 'not_authorized',
                             errorMessage: 'Temporary insts are not allowed.',
+                            recordName: null,
+                            inst,
+                            branch: 'doesNotExist',
                         },
                     ],
                 ]);
@@ -494,6 +497,9 @@ describe('WebsocketController', () => {
                             errorCode: 'not_authorized',
                             errorMessage:
                                 'The maximum number of active connections to this inst has been reached.',
+                            recordName: null,
+                            inst,
+                            branch: 'doesNotExist',
                         },
                     ],
                 ]);
@@ -637,6 +643,9 @@ describe('WebsocketController', () => {
                             success: false,
                             errorCode: 'record_not_found',
                             errorMessage: 'Record not found.',
+                            recordName,
+                            inst,
+                            branch: 'test',
                         },
                     ],
                 ]);
@@ -675,6 +684,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_logged_in',
                                         errorMessage:
                                             'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                     },
                                 ],
                             ]
@@ -710,6 +722,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_logged_in',
                                         errorMessage:
                                             'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                     },
                                 ],
                             ]
@@ -772,6 +787,9 @@ describe('WebsocketController', () => {
                                             permission: 'inst.create',
                                             role: null,
                                         },
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                     },
                                 ],
                             ]);
@@ -833,6 +851,9 @@ describe('WebsocketController', () => {
                                             permission: 'inst.read',
                                             role: null,
                                         },
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                     },
                                 ],
                             ]);
@@ -980,6 +1001,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'Insts are not allowed for this subscription.',
+                                        recordName,
+                                        inst,
+                                        branch: 'test',
                                     },
                                 ],
                             ]);
@@ -1053,6 +1077,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'subscription_limit_reached',
                                         errorMessage:
                                             'The maximum number of insts has been reached.',
+                                        recordName,
+                                        inst,
+                                        branch: 'test',
                                     },
                                 ],
                             ]);
@@ -1100,6 +1127,9 @@ describe('WebsocketController', () => {
                                             permission: 'inst.read',
                                             role: null,
                                         },
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                     },
                                 ],
                             ]);
@@ -1154,6 +1184,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to access this inst.',
+                                        recordName,
+                                        inst: 'otherInst',
+                                        branch: 'testBranch',
                                     },
                                 ],
                             ]);
@@ -1275,6 +1308,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'Insts are not allowed for this subscription.',
+                                        recordName,
+                                        inst,
+                                        branch: 'test',
                                     },
                                 ],
                             ]);
@@ -1375,6 +1411,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'subscription_limit_reached',
                                         errorMessage:
                                             'The maximum number of active connections to this inst has been reached.',
+                                        recordName,
+                                        inst,
+                                        branch: 'test',
                                     },
                                 ],
                             ]);
@@ -1645,6 +1684,9 @@ describe('WebsocketController', () => {
                             success: false,
                             errorCode: 'inst_not_found',
                             errorMessage: 'The inst was not found.',
+                            recordName,
+                            inst,
+                            branch: 'test',
                         },
                     ],
                 ]);
@@ -1680,6 +1722,9 @@ describe('WebsocketController', () => {
                                 success: false,
                                 errorCode: 'inst_not_found',
                                 errorMessage: 'The inst was not found.',
+                                recordName,
+                                inst,
+                                branch: 'test',
                             },
                         ],
                     ]);
@@ -1736,6 +1781,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to perform this action.',
+                                        recordName,
+                                        inst,
+                                        branch: 'test',
                                         reason: {
                                             type: 'missing_permission',
                                             kind: 'user',
@@ -1798,6 +1846,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to access this inst.',
+                                        recordName,
+                                        inst: 'otherInst',
+                                        branch: 'test',
                                     },
                                 ],
                             ]
@@ -1940,6 +1991,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'Insts are not allowed for this subscription.',
+                                        recordName,
+                                        inst,
+                                        branch: 'test',
                                     },
                                 ],
                             ]
@@ -2331,6 +2385,9 @@ describe('WebsocketController', () => {
                             success: false,
                             errorCode: 'not_authorized',
                             errorMessage: 'Temporary insts are not allowed.',
+                            recordName,
+                            inst,
+                            branch: 'doesNotExist',
                         },
                     ],
                 ]);
@@ -2377,6 +2434,9 @@ describe('WebsocketController', () => {
                             errorCode: 'not_authorized',
                             errorMessage:
                                 'The maximum number of bytes per inst has been reached.',
+                            recordName,
+                            inst,
+                            branch: 'doesNotExist',
                         },
                     ],
                 ]);
@@ -2421,6 +2481,9 @@ describe('WebsocketController', () => {
                             success: false,
                             errorCode: 'record_not_found',
                             errorMessage: 'Record not found.',
+                            recordName: 'otherRecord',
+                            inst,
+                            branch: 'testBranch',
                         },
                     ],
                 ]);
@@ -2925,6 +2988,9 @@ describe('WebsocketController', () => {
                                 errorCode: 'not_authorized',
                                 errorMessage:
                                     'Insts are not allowed for this subscription.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
                             },
                         ],
                     ]);
@@ -2998,6 +3064,9 @@ describe('WebsocketController', () => {
                                 errorCode: 'subscription_limit_reached',
                                 errorMessage:
                                     'The maximum number of insts has been reached.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
                             },
                         ],
                     ]);
@@ -3065,6 +3134,9 @@ describe('WebsocketController', () => {
                                 errorCode: 'subscription_limit_reached',
                                 errorMessage:
                                     'The maximum number of bytes per inst has been reached.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
                             },
                         ],
                     ]);
@@ -3153,6 +3225,9 @@ describe('WebsocketController', () => {
                                 errorCode: 'subscription_limit_reached',
                                 errorMessage:
                                     'The maximum number of bytes per inst has been reached.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
                             },
                         ],
                     ]);
@@ -3208,6 +3283,9 @@ describe('WebsocketController', () => {
                                 errorCode: 'not_authorized',
                                 errorMessage:
                                     'You are not authorized to perform this action.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
                                 reason: {
                                     type: 'missing_permission',
                                     kind: 'user',
@@ -3266,6 +3344,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to perform this action.',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
                                             kind: 'user',
@@ -3330,6 +3411,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to perform this action.',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
                                             kind: 'user',
@@ -3397,6 +3481,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to perform this action.',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
                                             kind: 'user',
@@ -3454,6 +3541,9 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to perform this action.',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
                                             kind: 'user',
@@ -3767,6 +3857,9 @@ describe('WebsocketController', () => {
                                 errorCode: 'not_authorized',
                                 errorMessage:
                                     'Insts are not allowed for this subscription.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
                             },
                         ],
                     ]);
@@ -3874,6 +3967,9 @@ describe('WebsocketController', () => {
                                 errorCode: 'subscription_limit_reached',
                                 errorMessage:
                                     'The maximum number of insts has been reached.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
                             },
                         ],
                     ]);

@@ -139,6 +139,13 @@ export interface AuxAuth {
     login(backgroundLogin?: boolean): Promise<AuthData>;
 
     /**
+     * Logs the user out.
+     * Returns a promise that resolves when the user is logged out.
+     * Only supported on protocol version 8 or more.
+     */
+    logout(): Promise<void>;
+
+    /**
      * Gets a record key for the given record.
      * @param recordName The name of the record.
      * @param policy The policy that the record should have. Only supported on protocol version 5 or more.

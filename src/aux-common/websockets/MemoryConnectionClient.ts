@@ -2,10 +2,11 @@ import { ConnectionClient, ClientConnectionState } from './ConnectionClient';
 import { Observable, Subject, never, BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { ConnectionInfo } from '../common/ConnectionInfo';
-import { WebsocketMessage } from './WebsocketEvents';
+import { WebsocketErrorInfo, WebsocketMessage } from './WebsocketEvents';
 
 export class MemoryConnectionClient implements ConnectionClient {
     private _connectionState: BehaviorSubject<ClientConnectionState>;
+    private _onError: Subject<WebsocketErrorInfo>;
     private _info: ConnectionInfo;
 
     get connectionState(): Observable<ClientConnectionState> {
@@ -21,6 +22,10 @@ export class MemoryConnectionClient implements ConnectionClient {
 
     get info() {
         return this._info;
+    }
+
+    get onError() {
+        return this._onError;
     }
 
     event<T>(name: WebsocketMessage['type']): Observable<T> {
@@ -48,6 +53,7 @@ export class MemoryConnectionClient implements ConnectionClient {
     constructor(device?: ConnectionInfo) {
         this._info = device;
         this.sentMessages = [];
+        this._onError = new Subject();
         this._connectionState = new BehaviorSubject<ClientConnectionState>({
             connected: false,
             info: null,

@@ -1,4 +1,7 @@
-import { WebsocketErrorCode } from '../websockets/WebsocketEvents';
+import {
+    WebsocketErrorCode,
+    WebsocketErrorInfo,
+} from '../websockets/WebsocketEvents';
 import { ConnectionInfo } from './ConnectionInfo';
 
 export type StatusUpdate =
@@ -39,8 +42,15 @@ export interface AuthenticationMessage {
 export interface AuthorizationMessage {
     type: 'authorization';
 
+    /**
+     * Whether the session is authorized.
+     */
     authorized: boolean;
-    reason?: WebsocketErrorCode;
+
+    /**
+     * The error that triggered this message.
+     */
+    error?: WebsocketErrorInfo;
 }
 
 export interface SyncMessage {

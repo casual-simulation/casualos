@@ -119,4 +119,9 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * @param recordKey The record key.
      */
     getRecordKeyPolicy(recordKey: string): Promise<PublicRecordKeyPolicy>;
+
+    /**
+     * Logs the user out.
+     */
+    logout(): Promise<void>;
 }

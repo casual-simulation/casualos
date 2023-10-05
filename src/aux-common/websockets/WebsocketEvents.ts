@@ -111,6 +111,21 @@ export interface WebsocketErrorInfo {
     success: false;
 
     /**
+     * The name of the record that the error is associated with.
+     */
+    recordName?: string | null;
+
+    /**
+     * The name of the inst that the error is associated with.
+     */
+    inst?: string;
+
+    /**
+     * The name of the branch that the error is associated with.
+     */
+    branch?: string;
+
+    /**
      * The error code that occurred.
      */
     errorCode: WebsocketErrorCode;

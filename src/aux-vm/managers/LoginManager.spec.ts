@@ -91,7 +91,11 @@ describe('LoginManager', () => {
             vm.connectionStateChanged.next({
                 type: 'authorization',
                 authorized: false,
-                reason: 'invalid_token',
+                error: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'Not Authorized',
+                },
             });
 
             const state = await subject.loginStateChanged
@@ -101,7 +105,11 @@ describe('LoginManager', () => {
             expect(state).toEqual({
                 authenticated: false,
                 authorized: false,
-                authorizationError: 'invalid_token',
+                error: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'Not Authorized',
+                },
             });
         });
     });
