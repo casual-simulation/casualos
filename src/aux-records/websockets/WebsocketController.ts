@@ -304,6 +304,9 @@ export class WebsocketController {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
+                    recordName: event.recordName,
+                    inst: event.inst,
+                    branch: event.branch,
                 });
                 return;
             }
@@ -317,6 +320,9 @@ export class WebsocketController {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'Temporary insts are not allowed.',
+                    recordName: event.recordName,
+                    inst: event.inst,
+                    branch: event.branch,
                 });
                 return;
             }
@@ -330,7 +336,12 @@ export class WebsocketController {
         );
 
         if (instResult.success === false) {
-            await this.sendError(connectionId, -1, instResult);
+            await this.sendError(connectionId, -1, {
+                ...instResult,
+                recordName: event.recordName,
+                inst: event.inst,
+                branch: event.branch,
+            });
             return;
         }
         const inst = instResult.inst;
@@ -367,6 +378,9 @@ export class WebsocketController {
                         : 'not_authorized',
                     errorMessage:
                         'The maximum number of active connections to this inst has been reached.',
+                    recordName: event.recordName,
+                    inst: event.inst,
+                    branch: event.branch,
                 });
                 return;
             }
@@ -567,6 +581,9 @@ export class WebsocketController {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
+                    recordName: event.recordName,
+                    inst: event.inst,
+                    branch: event.branch,
                 });
                 return;
             }
@@ -588,6 +605,9 @@ export class WebsocketController {
                         success: false,
                         errorCode: 'not_authorized',
                         errorMessage: 'Temporary insts are not allowed.',
+                        recordName: event.recordName,
+                        inst: event.inst,
+                        branch: event.branch,
                     });
                     return;
                 }
@@ -606,7 +626,12 @@ export class WebsocketController {
                 );
 
                 if (instResult.success === false) {
-                    await this.sendError(connectionId, -1, instResult);
+                    await this.sendError(connectionId, -1, {
+                        ...instResult,
+                        recordName: event.recordName,
+                        inst: event.inst,
+                        branch: event.branch,
+                    });
                     return;
                 } else if (event.recordName) {
                     const authorizeResult =
@@ -622,11 +647,12 @@ export class WebsocketController {
                         );
 
                     if (authorizeResult.allowed === false) {
-                        await this.sendError(
-                            connectionId,
-                            -1,
-                            returnAuthorizationResult(authorizeResult)
-                        );
+                        await this.sendError(connectionId, -1, {
+                            ...returnAuthorizationResult(authorizeResult),
+                            recordName: event.recordName,
+                            inst: event.inst,
+                            branch: event.branch,
+                        });
                         return;
                     }
                 }
@@ -641,7 +667,12 @@ export class WebsocketController {
                 });
 
                 if (branchResult.success === false) {
-                    await this.sendError(connectionId, -1, branchResult);
+                    await this.sendError(connectionId, -1, {
+                        ...branchResult,
+                        recordName: event.recordName,
+                        inst: event.inst,
+                        branch: event.branch,
+                    });
                     return;
                 }
                 branch = await this._instStore.getBranchByName(
@@ -666,6 +697,9 @@ export class WebsocketController {
                             success: false,
                             errorCode: 'inst_not_found',
                             errorMessage: 'The inst was not found.',
+                            recordName: event.recordName,
+                            inst: event.inst,
+                            branch: event.branch,
                         });
                         return;
                     }
@@ -677,7 +711,12 @@ export class WebsocketController {
                         });
 
                     if (contextResult.success === false) {
-                        await this.sendError(connectionId, -1, contextResult);
+                        await this.sendError(connectionId, -1, {
+                            ...contextResult,
+                            recordName: event.recordName,
+                            inst: event.inst,
+                            branch: event.branch,
+                        });
                         return;
                     }
 
@@ -694,11 +733,12 @@ export class WebsocketController {
                         );
 
                     if (authorizeReadResult.allowed === false) {
-                        await this.sendError(
-                            connectionId,
-                            -1,
-                            returnAuthorizationResult(authorizeReadResult)
-                        );
+                        await this.sendError(connectionId, -1, {
+                            ...returnAuthorizationResult(authorizeReadResult),
+                            recordName: event.recordName,
+                            inst: event.inst,
+                            branch: event.branch,
+                        });
                         return;
                     }
 
@@ -715,11 +755,12 @@ export class WebsocketController {
                         );
 
                     if (authorizeUpdateResult.allowed === false) {
-                        await this.sendError(
-                            connectionId,
-                            -1,
-                            returnAuthorizationResult(authorizeUpdateResult)
-                        );
+                        await this.sendError(connectionId, -1, {
+                            ...returnAuthorizationResult(authorizeUpdateResult),
+                            recordName: event.recordName,
+                            inst: event.inst,
+                            branch: event.branch,
+                        });
                         return;
                     }
 
@@ -775,6 +816,9 @@ export class WebsocketController {
                             : 'not_authorized',
                         errorMessage:
                             'The maximum number of bytes per inst has been reached.',
+                        recordName: event.recordName,
+                        inst: event.inst,
+                        branch: event.branch,
                     });
                     return;
                 }
@@ -1365,6 +1409,9 @@ export class WebsocketController {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
+                    recordName,
+                    inst,
+                    branch,
                 });
                 return;
             }
@@ -1382,13 +1429,21 @@ export class WebsocketController {
             config
         );
         if (instResult.success === false) {
-            await this.sendError(connectionId, -1, instResult);
+            await this.sendError(connectionId, -1, {
+                ...instResult,
+                recordName,
+                inst,
+                branch,
+            });
             return;
         } else if (recordName && !instResult.inst) {
             await this.sendError(connectionId, -1, {
                 success: false,
                 errorCode: 'inst_not_found',
                 errorMessage: 'The inst was not found.',
+                recordName,
+                inst,
+                branch,
             });
             return;
         }

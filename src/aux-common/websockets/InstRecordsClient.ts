@@ -15,6 +15,7 @@ import {
     ConnectedToBranchMessage,
     DisconnectedFromBranchMessage,
     WatchBranchMessage,
+    WebsocketErrorInfo,
 } from './WebsocketEvents';
 import {
     DeviceAction,
@@ -55,6 +56,10 @@ export class InstRecordsClient {
      */
     get connection() {
         return this._client;
+    }
+
+    get onError() {
+        return this._client.onError;
     }
 
     /**
@@ -221,7 +226,7 @@ export class InstRecordsClient {
                             if (event.errorCode === 'max_size_reached') {
                                 return {
                                     type: 'error',
-                                    errorCode: event.errorCode,
+                                    kind: event.errorCode,
                                     maxBranchSizeInBytes:
                                         event.maxBranchSizeInBytes,
                                     neededBranchSizeInBytes:
@@ -246,6 +251,22 @@ export class InstRecordsClient {
                                     type: 'event',
                                     action: event.action,
                                 } as ClientEvent)
+                        )
+                    ),
+                    this._client.onError.pipe(
+                        filter(
+                            (error) =>
+                                error.recordName === recordName &&
+                                error.inst === inst &&
+                                error.branch === branch
+                        ),
+                        map(
+                            (error) =>
+                                ({
+                                    type: 'error',
+                                    kind: 'error',
+                                    info: error,
+                                } as WebsocketClientError)
                         )
                     )
                 ).pipe(filter(isClientUpdatesOrEvents))
@@ -659,14 +680,19 @@ export interface ClientEvent {
 
 export interface BaseClientError {
     type: 'error';
-    errorCode: string;
+    kind: string;
 }
 
-export type ClientError = MaxInstSizeReachedClientError;
+export type ClientError = MaxInstSizeReachedClientError | WebsocketClientError;
 export interface MaxInstSizeReachedClientError extends BaseClientError {
-    errorCode: 'max_size_reached';
+    kind: 'max_size_reached';
     maxBranchSizeInBytes: number;
     neededBranchSizeInBytes: number;
+}
+
+export interface WebsocketClientError extends BaseClientError {
+    kind: 'error';
+    info: WebsocketErrorInfo;
 }
 
 export type ClientWatchBranchMessages = ClientAtomsReceived | ClientEvent;

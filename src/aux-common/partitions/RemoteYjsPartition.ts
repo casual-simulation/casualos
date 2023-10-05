@@ -136,6 +136,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _static: boolean;
     private _watchingBranch: any;
     private _synced: boolean;
+    private _authorized: boolean;
     private _recordName: string | null;
     private _inst: string;
     private _branch: string;
@@ -237,6 +238,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._inst = config.inst;
         this._branch = config.branch;
         this._temporary = config.temporary;
+        this._synced = false;
+        this._authorized = false;
 
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
@@ -498,10 +501,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         authenticated: true,
                         info: this._client.connection.info,
                     });
-                    this._onStatusUpdated.next({
-                        type: 'authorization',
-                        authorized: true,
-                    });
 
                     this._updateSynced(true);
                     this._applyUpdates(updates.updates);
@@ -533,10 +532,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                             type: 'authentication',
                             authenticated: true,
                             info: state.info,
-                        });
-                        this._onStatusUpdated.next({
-                            type: 'authorization',
-                            authorized: true,
                         });
                     } else {
                         this._updateSynced(false);
@@ -614,7 +609,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                 this._onEvents.next([event.action]);
                             }
                         } else if (event.type === 'error') {
-                            if (event.errorCode === 'max_size_reached') {
+                            if (event.kind === 'max_size_reached') {
                                 if (!this._emittedMaxSizeReached) {
                                     console.log(
                                         '[RemoteYjsPartition] Max size reached!',
@@ -635,6 +630,30 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                             }
                                         ),
                                     ]);
+                                }
+                            } else if (event.kind === 'error') {
+                                const errorCode = event.info.errorCode;
+                                if (
+                                    errorCode === 'not_authorized' ||
+                                    errorCode ===
+                                        'subscription_limit_reached' ||
+                                    errorCode === 'inst_not_found' ||
+                                    errorCode === 'record_not_found' ||
+                                    errorCode === 'invalid_record_key' ||
+                                    errorCode === 'invalid_token' ||
+                                    errorCode ===
+                                        'unacceptable_connection_id' ||
+                                    errorCode ===
+                                        'unacceptable_connection_token' ||
+                                    errorCode === 'user_is_banned' ||
+                                    errorCode === 'not_logged_in' ||
+                                    errorCode === 'session_expired'
+                                ) {
+                                    this._onStatusUpdated.next({
+                                        type: 'authorization',
+                                        authorized: false,
+                                        error: event.info,
+                                    });
                                 }
                             }
                         }
@@ -695,6 +714,13 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     }
 
     private _updateSynced(synced: boolean) {
+        if (synced && !this._authorized) {
+            this._authorized = true;
+            this._onStatusUpdated.next({
+                type: 'authorization',
+                authorized: true,
+            });
+        }
         this._synced = synced;
         this._onStatusUpdated.next({
             type: 'sync',

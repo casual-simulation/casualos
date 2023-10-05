@@ -417,10 +417,6 @@ describe('RemoteYjsPartition', () => {
                             type: 'authentication',
                             authenticated: true,
                         }),
-                        expect.objectContaining({
-                            type: 'authorization',
-                            authorized: true,
-                        }),
                     ]);
                 });
 
@@ -1588,6 +1584,54 @@ describe('RemoteYjsPartition', () => {
                                 maxSizeInBytes: 10,
                                 neededSizeInBytes: 11,
                             }),
+                        ]);
+                    });
+                });
+
+                describe('error', () => {
+                    it('should issue a authorization false shout when the error is unauthorized', async () => {
+                        let events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+                        partition.space = 'shared';
+
+                        let statuses: StatusUpdate[] = [];
+                        partition.onStatusUpdated.subscribe((s) =>
+                            statuses.push(s)
+                        );
+
+                        partition.connect();
+
+                        connection.onError.next({
+                            success: false,
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            errorCode: 'not_authorized',
+                            errorMessage: 'Not authorized',
+                        });
+                        await waitAsync();
+
+                        expect(statuses).toEqual([
+                            {
+                                type: 'connection',
+                                connected: true,
+                            },
+                            {
+                                type: 'authentication',
+                                authenticated: true,
+                            },
+                            {
+                                type: 'authorization',
+                                authorized: false,
+                                error: {
+                                    success: false,
+                                    recordName: recordName,
+                                    inst: 'inst',
+                                    branch: 'testBranch',
+                                    errorCode: 'not_authorized',
+                                    errorMessage: 'Not authorized',
+                                },
+                            },
                         ]);
                     });
                 });

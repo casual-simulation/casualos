@@ -26,6 +26,7 @@ import {
     ConnectionClient,
     ConnectionInfo,
     WebsocketDownloadRequestEvent,
+    WebsocketErrorInfo,
     WebsocketEvent,
     WebsocketEventTypes,
     WebsocketMessage,
@@ -43,6 +44,7 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
     private _socket: ReconnectableSocketInterface;
     private _connectionStateChanged: BehaviorSubject<ClientConnectionState>;
     private _onMessage: Subject<WebsocketMessage> = new Subject();
+    private _onError: Subject<WebsocketErrorInfo> = new Subject();
     private _requestCounter: number = 0;
 
     /**
@@ -52,6 +54,10 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
 
     get info(): ConnectionInfo {
         return this._connectionStateChanged.value.info;
+    }
+
+    get onError() {
+        return this._onError;
     }
 
     event<T>(name: string): Observable<T> {
@@ -156,6 +162,7 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
                             `[ApiGatewayWebsocketConnectionClient] Error (${event[1]}):`,
                             event[2]
                         );
+                        this._onError.next(event[2]);
                     }
                 })
             )

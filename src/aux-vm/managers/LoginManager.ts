@@ -2,6 +2,7 @@ import {
     StatusUpdate,
     ConnectionInfo,
     WebsocketErrorCode,
+    WebsocketErrorInfo,
 } from '@casual-simulation/aux-common';
 import { Observable, SubscriptionLike, Subscription } from 'rxjs';
 import { AuxVM } from '../vm/AuxVM';
@@ -52,7 +53,7 @@ export class LoginManager implements SubscriptionLike {
                         return {
                             ...acc,
                             authorized: update.authorized,
-                            authorizationError: update.reason,
+                            error: update.error,
                         };
                     }
                     return acc;
@@ -85,6 +86,6 @@ export interface LoginState {
     authenticated: boolean;
     authorized: boolean;
     info?: ConnectionInfo;
+    error?: WebsocketErrorInfo;
     authenticationError?: WebsocketErrorCode;
-    authorizationError?: WebsocketErrorCode;
 }

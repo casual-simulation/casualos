@@ -613,15 +613,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         await this._initBuilderBots();
 
-        if (!this._checkAccessAllowed()) {
-            this._onConnectionStateChanged.next({
-                type: 'authorization',
-                authorized: false,
-                reason: 'not_supported',
-            });
-            return;
-        }
-
         this._runtime.context.setLoadTime(
             'load',
             performance.now() - this._initStartTime
@@ -1075,17 +1066,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 );
             }
         }
-    }
-
-    /**
-     * Checks if the current user is allowed access to the simulation.
-     */
-    _checkAccessAllowed(): boolean {
-        if (!this._helper.userBot) {
-            return false;
-        }
-
-        return true;
     }
 
     unsubscribe(): void {

@@ -502,7 +502,7 @@ describe('InstRecordsClient', () => {
             expect(errors).toEqual([
                 {
                     type: 'error',
-                    errorCode: 'max_size_reached',
+                    kind: 'max_size_reached',
                     maxBranchSizeInBytes: 5,
                     neededBranchSizeInBytes: 6,
                 },
@@ -522,6 +522,67 @@ describe('InstRecordsClient', () => {
                     branch: DEFAULT_BRANCH_NAME,
                     updateId: 1,
                     updates: ['111', '222'],
+                },
+            ]);
+        });
+
+        it('should relay errors that are for the branch', async () => {
+            const addUpdates = new Subject<AddUpdatesMessage>();
+            connection.events.set('repo/add_updates', addUpdates);
+
+            let errors = [] as ClientError[];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(filter(isClientError))
+                .subscribe((a) => errors.push(a));
+
+            await waitAsync();
+
+            addUpdates.next({
+                type: 'repo/add_updates',
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+                updates: ['111', '222'],
+                initial: true,
+            });
+
+            addUpdates.next({
+                type: 'repo/add_updates',
+                recordName: null,
+                inst: 'other',
+                branch: DEFAULT_BRANCH_NAME,
+                updates: ['333', '444'],
+            });
+
+            await waitAsync();
+
+            expect(errors).toEqual([]);
+
+            connection.onError.next({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Not authorized',
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            await waitAsync();
+
+            expect(errors).toEqual([
+                {
+                    type: 'error',
+                    kind: 'error',
+                    info: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Not authorized',
+                        recordName: null,
+                        inst: 'abc',
+                        branch: DEFAULT_BRANCH_NAME,
+                    },
                 },
             ]);
         });

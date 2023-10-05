@@ -371,4 +371,17 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         }
         return await this._proxy.cancelLogin();
     }
+
+    async logout() {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 8) {
+            return;
+        }
+        return await this._proxy.logout();
+    }
 }

@@ -1,6 +1,11 @@
 import { Observable } from 'rxjs';
 import { ConnectionInfo } from '../common/ConnectionInfo';
-import { WebsocketMessage } from './WebsocketEvents';
+import {
+    WebsocketErrorCode,
+    WebsocketErrorInfo,
+    WebsocketMessage,
+} from './WebsocketEvents';
+import { DenialReason } from '../common';
 
 /**
  * Defines an interface that contains connection state info.
@@ -36,6 +41,11 @@ export interface ConnectionClient {
      * Gets an observable for the connection state.
      */
     connectionState: Observable<ClientConnectionState>;
+
+    /**
+     * Gets an observable for errors that the connection encounters.
+     */
+    onError: Observable<WebsocketErrorInfo>;
 
     /**
      * Whether the client is currently connected.

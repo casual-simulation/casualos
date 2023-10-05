@@ -105,6 +105,16 @@ export class AuthHandler implements AuxAuth {
         return this._loginData;
     }
 
+    async logout(): Promise<void> {
+        await authManager.logout();
+        this._loggedIn = false;
+        this._loginData = null;
+        this._loginStatus.next({});
+        this._loginUIStatus.next({
+            page: false,
+        });
+    }
+
     async createPublicRecordKey(
         recordName: string,
         policy?: PublicRecordKeyPolicy
@@ -163,7 +173,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 7;
+        return 8;
     }
 
     async getRecordsOrigin(): Promise<string> {

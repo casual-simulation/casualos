@@ -70,6 +70,10 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
         return this._connectionStateChanged;
     }
 
+    get onError() {
+        return this._inner.onError;
+    }
+
     get isConnected(): boolean {
         return this._inner.isConnected;
     }

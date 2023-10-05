@@ -27,7 +27,7 @@
                                 v-for="record in records"
                                 :key="record.name"
                                 class="md-inset record-item"
-                                :to="{ name: 'records-data', params: { recordName: record.name } }"
+                                :to="{ name: 'records-insts', params: { recordName: record.name } }"
                             >
                                 <md-icon>description</md-icon>
                                 <span v-if="record.name !== userId">{{ record.label }}</span>

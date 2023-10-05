@@ -148,6 +148,7 @@ export default class PlayerApp extends Vue {
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
     updateAvailable: boolean = false;
+    showNotAuthorized: boolean = false;
     snackbar: SnackbarOptions = {
         visible: false,
         message: '',
@@ -279,6 +280,9 @@ export default class PlayerApp extends Vue {
     private _recordingSub: Subscription;
     private _currentRecording: MediaRecording;
     private _currentQRMediaStream: MediaStream;
+    private _notAuthorizedSimulationId: string;
+    showChangeLogin: boolean = false;
+    private _isLoggingIn: boolean = false;
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -381,6 +385,8 @@ export default class PlayerApp extends Vue {
         this._audioRecorder = createDefaultAudioRecorder();
         this._recorder = new Recorder();
         this.supportedCameras = [];
+        this.showNotAuthorized = false;
+        this.showChangeLogin = false;
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(
                 (updateAvailable) => {
@@ -659,7 +665,7 @@ export default class PlayerApp extends Vue {
         let info: SimulationInfo = createSimulationInfo(simulation);
 
         subs.push(
-            simulation.login.loginStateChanged.subscribe((state) => {
+            simulation.login.loginStateChanged.subscribe(async (state) => {
                 this.loginState = state;
                 if (!state.authenticated) {
                     console.log(
@@ -681,11 +687,19 @@ export default class PlayerApp extends Vue {
                     this.authorized = true;
                     console.log('[PlayerApp] Authorized!');
                 } else if (state.authorized === false) {
-                    console.log('[PlayerApp] Not authorized.');
-                    this.snackbar = {
-                        message: 'You are not authorized to view this inst.',
-                        visible: true,
-                    };
+                    console.log('[PlayerApp] Not authorized.', state.error);
+                    if (!this._isLoggingIn) {
+                        const authenticated =
+                            await simulation.auth.primary.isAuthenticated();
+                        this.showNotAuthorized = true;
+                        this._notAuthorizedSimulationId = simulation.id;
+                        this.showChangeLogin = authenticated;
+                        this.snackbar = {
+                            message:
+                                'You are not authorized to view this inst.',
+                            visible: true,
+                        };
+                    }
                 }
             }),
             simulation.localEvents.subscribe(async (e) => {
@@ -1339,6 +1353,44 @@ export default class PlayerApp extends Vue {
         this.simulations.push(info);
 
         this.setTitleToID();
+    }
+
+    async logout() {
+        if (this._notAuthorizedSimulationId) {
+            const simulation = appManager.simulationManager.simulations.get(
+                this._notAuthorizedSimulationId
+            );
+
+            if (simulation) {
+                this.showNotAuthorized = false;
+                await simulation.auth.primary.logout();
+                const data = await simulation.auth.primary.authenticate();
+                if (data) {
+                    location.reload();
+                }
+            }
+        }
+    }
+
+    async login() {
+        if (this._notAuthorizedSimulationId) {
+            const simulation = appManager.simulationManager.simulations.get(
+                this._notAuthorizedSimulationId
+            );
+            if (simulation) {
+                this._isLoggingIn = true;
+                this.showNotAuthorized = false;
+                const data = await simulation.auth.primary.authenticate();
+                if (data) {
+                    location.reload();
+                }
+                this._isLoggingIn = false;
+            }
+        }
+    }
+
+    async newInst() {
+        location.href = location.origin;
     }
 
     private _showQRCode(code: string) {
