@@ -100,6 +100,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
                 connection.serverConnectionId
             ),
             connectionField(
+                connection.mode,
                 connection.recordName,
                 connection.inst,
                 connection.branch
@@ -127,7 +128,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         );
         await this._redis.hDel(
             connectionIdKey(this._globalNamespace, connectionId),
-            connectionField(recordName, inst, branch)
+            connectionField(mode, recordName, inst, branch)
         );
     }
 
@@ -136,12 +137,15 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
             connectionIdKey(this._globalNamespace, connectionId)
         );
         await Promise.all(
-            namespaces.map((n) =>
-                this._redis.hDel(
-                    `/${this._globalNamespace}/namespace_connections/${n}`,
+            namespaces.map((n) => {
+                const key = `/${this._globalNamespace}//namespace_connections/${n}`;
+                console.log(
+                    '[RedisWebsocketConnectionStore] Deleting',
+                    key,
                     connectionId
-                )
-            )
+                );
+                return this._redis.hDel(key, connectionId);
+            })
         );
         await this._redis.hDel(
             connectionsKey(this._globalNamespace),
@@ -339,8 +343,13 @@ function connectionIdKey(globalNamespace: string, connectionId: string) {
     return `/${globalNamespace}/connections/${connectionId}`;
 }
 
-function connectionField(recordName: string, inst: string, branch: string) {
-    return `${recordName ?? ''}/${inst}/${branch}`;
+function connectionField(
+    mode: string,
+    recordName: string,
+    inst: string,
+    branch: string
+) {
+    return `${mode}/${recordName ?? ''}/${inst}/${branch}`;
 }
 
 function connectionRateLimitKey(globalNamespace: string, connectionId: string) {
