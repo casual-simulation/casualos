@@ -1,3 +1,5 @@
+export * from './GenericHttpInterface';
+
 export * from './AuthController';
 export * from './AuthStore';
 

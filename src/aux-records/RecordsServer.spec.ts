@@ -1,15 +1,17 @@
 import {
-    GenericHttpHeaders,
-    GenericHttpRequest,
-    GenericPathParameters,
-    GenericQueryStringParameters,
     parseAuthorization,
     RecordsServer,
     validateOrigin,
     getSessionKey,
-    GenericHttpResponse,
-    GenericWebsocketRequest,
 } from './RecordsServer';
+import {
+    GenericHttpHeaders,
+    GenericHttpRequest,
+    GenericHttpResponse,
+    GenericPathParameters,
+    GenericQueryStringParameters,
+    GenericWebsocketRequest,
+} from './GenericHttpInterface';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
