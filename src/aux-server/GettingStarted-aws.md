@@ -76,6 +76,14 @@ Use the following environment variables to configure the inst collaboration feat
 -   `PREFERRED_INST_SOURCE`: The preferred source for loading instances. Possible options are `"public"` and `"private"`. `"public"` means that public instances will be loaded if not already specified in the URL. `"private"` means that private insts will be loaded if not already specified in the URL. Defaults to `"private"`.
 -   `FRONTEND_ORIGIN`: The HTTP Origin that the CasualOS frontend is available at.
 
+#### Privo Features
+
+Use the following environment variables to configure privo features.
+
+-   `REQUIRE_PRIVO_AGE_VERIFICATION` - Set to `true` to require that the Age Verification API run before collaboration features are enabled.
+-   `PRIVO_AGE_VERIFICATION_API_SCRIPT_URL` - Set to the URL that the private age verification API script is available at. (Different depending on integration or production)
+-   `PRIVO_AGE_VERIFICATION_SERVICE_ID` - The service ID that should be presented to the age verification API.
+
 #### mapPortal
 
 Use the following to configure the mapPortal and mapping-related features:

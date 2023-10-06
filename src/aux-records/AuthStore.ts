@@ -280,6 +280,11 @@ export interface AuthUser {
      * The reason for the ban.
      */
     banReason?: 'terms_of_service_violation' | null | undefined;
+
+    /**
+     * The OpenID login provider that should be required for this user to login with.
+     */
+    oidLoginProvider?: string | null | undefined;
 }
 
 /**
@@ -336,6 +341,30 @@ export interface AuthLoginRequest {
      * The IP Address that the request came from.
      */
     ipAddress: string;
+
+    /**
+     * The code that the Open ID authorization response should match.
+     * If null, then Open ID was not used for the login request.
+     */
+    oidCodeVerifier?: string | null;
+
+    /**
+     * The code challenge method that the Open ID authorization response should match.
+     * If null, then Open ID was not used for the login request.
+     */
+    oidCodeMethod?: string | null;
+
+    /**
+     * The name of the provider that was used for the Open ID login.
+     * If null, then Open ID was not used for the login request.
+     */
+    oidProvider?: string | null;
+
+    /**
+     * The URL that was used as the redirect URL in the Open ID authorization code flow.
+     * If null, then Open ID was not used for the login request.
+     */
+    oidRedirectUrl?: string | null;
 }
 
 /**
@@ -397,6 +426,54 @@ export interface AuthSession {
      * The IP Address that the session was granted to.
      */
     ipAddress: string;
+
+    /**
+     * The name of the Open ID provider that was used to obtain this session.
+     * If null, then Open ID was not used for the session.
+     */
+    oidProvider?: string | null;
+
+    /**
+     * The access token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidAccessToken?: string | null;
+
+    /**
+     * The type of the access token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidTokenType?: string | null;
+
+    /**
+     * The ID token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidIdToken?: string | null;
+
+    /**
+     * The refresh token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidRefreshToken?: string | null;
+
+    /**
+     * The Open ID scope that was granted to the session.
+     * If null, then Open ID was not used for the session.
+     */
+    oidScope?: string | null;
+
+    /**
+     * The unix timestamp in seconds that the oidAccessToken expires at.
+     * If null, then Open ID was not used for the session.
+     */
+    oidExpiresAtSeconds?: number | null;
+
+    /**
+     * The unix timestamp in seconds that the oidIdToken expires at.
+     * If null, then Open ID was not used for the session.
+     */
+    oidSessionState?: string | null;
 }
 
 export interface AuthSubscription {

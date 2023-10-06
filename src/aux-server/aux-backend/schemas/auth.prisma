@@ -25,6 +25,8 @@ model User {
     banTime DateTime?
     banReason String?
 
+    oidLoginProvider String?
+
     subscriptionInfoId String? @unique @db.Uuid
     subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
 
@@ -62,14 +64,23 @@ model LoginRequest {
     requestId String @id
     userId String
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "LoginRequest_userId_fkey1")
-    secretHash String
+    
+    secretHash String?
+
     requestTime DateTime
     expireTime DateTime
     completedTime DateTime?
+    
     attemptCount Int
     address String
     addressType String
     ipAddress String
+
+    oidCodeVerifier String?
+    oidCodeMethod String?
+    oidProvider String?
+    oidRedirectUrl String?
+    oidScope String?
     
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -85,6 +96,17 @@ model AuthSession {
 
     secretHash String
     connectionSecret String?
+
+    oidProvider String?
+    oidSub String?
+    oidAccessToken String?
+    oidTokenType String?
+    oidIdToken String?
+    oidRefreshToken String?
+    oidScope String?
+    oidExpiresAtSeconds Int?
+    oidSessionState String?
+
     grantedTime DateTime
     expireTime DateTime
     revokeTime DateTime?
@@ -502,4 +524,17 @@ model AiSkyboxMetrics {
 
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSkyboxMetrics_studioId_fkey1")
+}
+
+model PrivoClientCredentials {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+    expiresAt DateTime
+
+    accessToken String
+    refreshToken String
+    expiresAtSeconds Int
+    scope String
+
+    @@index([expiresAt])
 }

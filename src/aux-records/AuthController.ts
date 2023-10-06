@@ -1442,6 +1442,12 @@ export interface LoginRequestSuccess {
      * The unix timestamp in miliseconds that the login request will expire at.
      */
     expireTimeMs: number;
+
+    /**
+     * The URL that the user should be redirected to in order to complete the login.
+     * If null, then the user should be shown a code input.
+     */
+    redirectUrl?: string | null;
 }
 
 export interface LoginRequestFailure {

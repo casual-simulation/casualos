@@ -38,6 +38,15 @@ const config: ClientConfig = {
         preferredInstSource:
             (process.env.PREFERRED_INST_SOURCE as 'public' | 'private') ??
             'private',
+        requirePrivoAgeVerification:
+            process.env.REQUIRE_PRIVO_AGE_VERIFICATION === 'true',
+        privoAgeVerificationApiScriptUrl:
+            process.env.PRIVO_AGE_VERIFICATION_API_SCRIPT_URL ||
+            (DEVELOPMENT
+                ? 'https://age-int.privo.com/verification/privo.min.js'
+                : 'https://age.privo.com/verification/privo.min.js'),
+        privoAgeVerificationServiceId:
+            process.env.PRIVO_AGE_VERIFICATION_SERVICE_ID || null,
     },
 };
 

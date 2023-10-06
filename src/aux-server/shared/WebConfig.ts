@@ -85,4 +85,20 @@ export interface WebConfig {
      * Defaults to "private".
      */
     preferredInstSource?: 'public' | 'private';
+
+    /**
+     * Whether to require that age verification runs before the user can access collaboration features.
+     * Defaults to false.
+     */
+    requirePrivoAgeVerification?: boolean;
+
+    /**
+     * The URL that the Privo Age Verification API script should be loaded from.
+     */
+    privoAgeVerificationApiScriptUrl?: string;
+
+    /**
+     * The service identifier that should be used for the Privo Age Verification API.
+     */
+    privoAgeVerificationServiceId?: string;
 }
