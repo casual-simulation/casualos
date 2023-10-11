@@ -25,6 +25,7 @@ import {
     AuxConfig,
     parseVersionNumber,
     SimulationOrigin,
+    AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
 import {
     AuthHelper,
@@ -40,6 +41,7 @@ import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 import { merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
+import { PrivoAuthHelper } from './privo/PrivoAuthHelper';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -321,9 +323,34 @@ export class AppManager {
     }
 
     private async _initAuth() {
+        let factory: (
+            primaryAuthOrigin: string,
+            recordsAuthOrigin: string
+        ) => AuthHelperInterface;
+
+        const primaryAuthOrigin = this._config.authOrigin;
+        const recordsAuthOrigin = this._config.recordsOrigin;
+        if (this._config.requirePrivoAgeVerification) {
+            factory = (authOrigin, recordsOrigin) => {
+                if (
+                    primaryAuthOrigin !== authOrigin ||
+                    recordsOrigin !== recordsAuthOrigin
+                ) {
+                    return null;
+                }
+
+                return new PrivoAuthHelper(
+                    authOrigin,
+                    recordsOrigin,
+                    this._config
+                );
+            };
+        }
+
         this._auth = new AuthHelper(
             this.config.authOrigin,
-            this.config.recordsOrigin
+            this.config.recordsOrigin,
+            factory
         );
         console.log('[AppManager] Authenticating user in background...');
         const authData = await this._auth.primary.authenticateInBackground();
@@ -385,10 +412,17 @@ export class AppManager {
 
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
 
+        let disableCollaboration = this._config.disableCollaboration;
+        let requirePrivo = !!this._config.requirePrivoAgeVerification;
+
+        let isCollaborative = disableCollaboration ? false : !requirePrivo;
+        let allowCollaborationUpgrade = !disableCollaboration;
+
         this._deviceConfig = {
             supportsAR: arSupported,
             supportsVR: vrSupported,
-            isCollaborative: !this._config.disableCollaboration,
+            isCollaborative: isCollaborative,
+            allowCollaborationUpgrade: allowCollaborationUpgrade,
             ab1BootstrapUrl: ab1Bootstrap,
         };
     }

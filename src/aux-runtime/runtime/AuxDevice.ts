@@ -24,6 +24,11 @@ export interface AuxDevice {
     isCollaborative: boolean;
 
     /**
+     * Whether this device can enable collaboration features after the simulation has started.
+     */
+    allowCollaborationUpgrade: boolean;
+
+    /**
      * The URL that AB-1 should be bootstraped from.
      */
     ab1BootstrapUrl: string;
