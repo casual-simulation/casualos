@@ -37,6 +37,7 @@ import {
     RemoteActions,
     ConnectionIndicator,
     getConnectionId,
+    EnableCollaborationAction,
 } from '@casual-simulation/aux-common';
 import {
     realtimeStrategyToRealtimeEditMode,
@@ -696,12 +697,61 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._attachRuntime(event.runtime, event);
             } else if (event.type === 'detach_runtime') {
                 this._detachRuntime(event.runtime, event);
+            } else if (event.type === 'enable_collaboration') {
+                this._enableCollaboration(event);
             }
         }
         this._portalHelper.handleEvents(e);
 
         const copiableEvents = e.filter((e) => !(<any>e).uncopiable);
         this._onLocalEvents.next(copiableEvents);
+    }
+
+    private async _enableCollaboration(event: EnableCollaborationAction) {
+        try {
+            if (!this._runtime.context.device) {
+                if (hasValue(event.taskId)) {
+                    this.sendEvents([asyncResult(event.taskId, null)]);
+                }
+                return;
+            }
+            if (this._runtime.context.device.isCollaborative) {
+                if (hasValue(event.taskId)) {
+                    this.sendEvents([asyncResult(event.taskId, null)]);
+                }
+                return;
+            }
+            if (!this._runtime.context.device.allowCollaborationUpgrade) {
+                if (hasValue(event.taskId)) {
+                    this.sendEvents([
+                        asyncError(
+                            event.taskId,
+                            new Error('Collaboration upgrades are not allowed.')
+                        ),
+                    ]);
+                }
+                return;
+            }
+
+            let promises = [] as Promise<void>[];
+            for (let [_, partition] of iteratePartitions(this._partitions)) {
+                if (partition.enableCollaboration) {
+                    promises.push(partition.enableCollaboration());
+                }
+            }
+
+            await Promise.all(promises);
+            this._runtime.context.device.isCollaborative = true;
+            this._runtime.context.device.allowCollaborationUpgrade = false;
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncResult(event.taskId, null)]);
+            }
+        } catch (err) {
+            console.error('[BaseAuxChannel] Error enabling collaboration', err);
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncError(event.taskId, err)]);
+            }
+        }
     }
 
     protected _handleDeviceEvents(e: DeviceAction[]) {

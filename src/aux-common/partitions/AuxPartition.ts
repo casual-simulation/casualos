@@ -92,6 +92,11 @@ export interface AuxPartitionBase extends SubscriptionLike {
     connect(): void;
 
     /**
+     * Tells the partition to enable collaboration features that were disabled.
+     */
+    enableCollaboration?(): Promise<void>;
+
+    /**
      * Gets an observable list that resolves whenever
      * a bot is added to this partition.
      */

@@ -43,6 +43,7 @@ import {
     CurrentVersion,
     RemoteActions,
     StatusUpdate,
+    getConnectionId,
 } from '../common';
 
 export async function createOtherPlayersClientPartition(
@@ -239,10 +240,18 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             type: 'connection',
             connected: true,
         });
+        const indicator = this._client.connection.indicator;
+        const connectionId = indicator
+            ? getConnectionId(indicator)
+            : 'missing-connection-id';
         this._onStatusUpdated.next({
             type: 'authentication',
             authenticated: true,
-            info: this._client.connection.info,
+            info: this._client.connection.info ?? {
+                connectionId: connectionId,
+                sessionId: null,
+                userId: null,
+            },
         });
         this._onStatusUpdated.next({
             type: 'authorization',
