@@ -79,6 +79,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     private _inst: string;
     private _branch: string;
     private _state: BotsState;
+    private _skipInitialLoad: boolean;
 
     /**
      * The map of branch names to partitions.
@@ -204,6 +205,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         this._partitionSubs = new Map();
         this._devices = new Map();
         this._synced = false;
+        this._skipInitialLoad = config.skipInitialLoad;
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
@@ -225,6 +227,34 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     }
 
     connect(): void {
+        if (this._skipInitialLoad) {
+            this._loadWithoutConnecting();
+        } else {
+            this._watchDevices();
+        }
+    }
+
+    private _loadWithoutConnecting() {
+        this._onStatusUpdated.next({
+            type: 'connection',
+            connected: true,
+        });
+        this._onStatusUpdated.next({
+            type: 'authentication',
+            authenticated: true,
+            info: this._client.connection.info,
+        });
+        this._onStatusUpdated.next({
+            type: 'authorization',
+            authorized: true,
+        });
+        this._onStatusUpdated.next({
+            type: 'sync',
+            synced: true,
+        });
+    }
+
+    private _watchDevices() {
         this._sub.add(
             this._client.connection.connectionState.subscribe((state) => {
                 const connected = state.connected;

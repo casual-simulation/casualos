@@ -1913,6 +1913,55 @@ describe('OtherPlayersPartition', () => {
                         ]);
                     });
                 });
+
+                describe('skip initial load', () => {
+                    it('should not try to connect when loaded', async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                            childPartitionType: 'yjs_client',
+                            skipInitialLoad: true,
+                        });
+
+                        const promise = partition.onStatusUpdated
+                            .pipe(
+                                takeWhile(
+                                    (update) => update.type !== 'sync',
+                                    true
+                                ),
+                                bufferCount(4)
+                            )
+                            .toPromise();
+
+                        partition.connect();
+
+                        const update = await promise;
+
+                        expect(update).toEqual([
+                            {
+                                type: 'connection',
+                                connected: true,
+                            },
+                            expect.objectContaining({
+                                type: 'authentication',
+                                authenticated: true,
+                            }),
+                            expect.objectContaining({
+                                type: 'authorization',
+                                authorized: true,
+                            }),
+                            {
+                                type: 'sync',
+                                synced: true,
+                            },
+                        ]);
+
+                        expect(connection.sentMessages).toEqual([]);
+                    });
+                });
             });
 
             function setupPartition(config: OtherPlayersRepoPartitionConfig) {

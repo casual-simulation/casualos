@@ -134,6 +134,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _isLocalTransaction: boolean = true;
     private _isRemoteUpdate: boolean = false;
     private _static: boolean;
+    private _skipInitialLoad: boolean;
     private _watchingBranch: any;
     private _synced: boolean;
     private _authorized: boolean;
@@ -232,6 +233,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this.private = config.private || false;
         this._client = client;
         this._static = config.static;
+        this._skipInitialLoad = config.skipInitialLoad;
         this._remoteEvents =
             'remoteEvents' in config ? config.remoteEvents : true;
         this._recordName = config.recordName;
@@ -326,7 +328,9 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     async init(): Promise<void> {}
 
     connect(): void {
-        if (this._static) {
+        if (this._skipInitialLoad) {
+            this._initializePartitionWithoutLoading();
+        } else if (this._static) {
             this._requestBranch();
         } else {
             this._watchBranch();
@@ -485,6 +489,19 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 );
             }
         }
+    }
+
+    private async _initializePartitionWithoutLoading() {
+        this._onStatusUpdated.next({
+            type: 'connection',
+            connected: true,
+        });
+        this._onStatusUpdated.next({
+            type: 'authentication',
+            authenticated: true,
+            info: this._client.connection.info,
+        });
+        this._updateSynced(true);
     }
 
     private _requestBranch() {
