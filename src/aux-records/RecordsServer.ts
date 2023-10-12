@@ -920,6 +920,13 @@ export class RecordsServer {
                 request.connectionId,
                 data as AddUpdatesMessage
             );
+        } else if (data.type === 'repo/get_updates') {
+            await this._websocketController.getUpdates(
+                request.connectionId,
+                data.recordName,
+                data.inst,
+                data.branch
+            );
         } else if (data.type === 'repo/send_action') {
             await this._websocketController.sendAction(
                 request.connectionId,
