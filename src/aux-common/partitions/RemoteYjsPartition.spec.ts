@@ -1923,6 +1923,52 @@ describe('RemoteYjsPartition', () => {
                         },
                     ]);
                 });
+
+                it('should connect to the branch if enableCollaboration() is called', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        recordName: recordName,
+                        inst: 'inst',
+                        host: 'testHost',
+                        branch: 'testBranch',
+                        skipInitialLoad: true,
+                    });
+
+                    partition.connect();
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages).toEqual([]);
+
+                    let resolved: boolean = false;
+                    partition
+                        .enableCollaboration()
+                        .then(() => (resolved = true));
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            type: 'repo/watch_branch',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                        },
+                    ]);
+
+                    addAtoms.next({
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    expect(resolved).toBe(true);
+                });
             });
 
             describe('temporary', () => {

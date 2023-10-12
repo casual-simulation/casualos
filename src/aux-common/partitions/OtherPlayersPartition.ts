@@ -32,8 +32,14 @@ import {
     ON_REMOTE_JOINED_ACTION_NAME,
     ON_REMOTE_LEAVE_ACTION_NAME,
 } from '../bots';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import { skip, startWith } from 'rxjs/operators';
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    Subscription,
+    firstValueFrom,
+} from 'rxjs';
+import { filter, first, skip, startWith } from 'rxjs/operators';
 import { sortBy } from 'lodash';
 import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
 import { InstRecordsClient } from '../websockets';
@@ -233,6 +239,18 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         } else {
             this._watchDevices();
         }
+    }
+
+    async enableCollaboration(): Promise<void> {
+        this._skipInitialLoad = false;
+        this._synced = false;
+        const promise = firstValueFrom(
+            this._onStatusUpdated.pipe(
+                filter((u) => u.type === 'sync' && u.synced)
+            )
+        );
+        this._watchDevices();
+        await promise;
     }
 
     private _loadWithoutConnecting() {

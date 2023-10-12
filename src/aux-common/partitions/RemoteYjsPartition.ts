@@ -8,7 +8,13 @@ import {
     TagEdit,
     GetRemoteCountAction,
 } from '../bots';
-import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
+import {
+    Observable,
+    Subscription,
+    Subject,
+    BehaviorSubject,
+    firstValueFrom,
+} from 'rxjs';
 import {
     CausalRepoPartition,
     AuxPartitionRealtimeStrategy,
@@ -78,7 +84,7 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { startWith } from 'rxjs/operators';
+import { filter, startWith } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
 import { ensureTagIsSerializable } from './PartitionUtils';
 import {
@@ -490,6 +496,19 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 );
             }
         }
+    }
+
+    async enableCollaboration() {
+        this._static = false;
+        this._skipInitialLoad = false;
+        this._synced = false;
+        const promise = firstValueFrom(
+            this._onStatusUpdated.pipe(
+                filter((u) => u.type === 'sync' && u.synced)
+            )
+        );
+        this._watchBranch();
+        await promise;
     }
 
     private async _initializePartitionWithoutLoading() {
