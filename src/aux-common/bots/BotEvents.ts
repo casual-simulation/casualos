@@ -167,7 +167,8 @@ export type AsyncActions =
     | GetWakeLockConfigurationAction
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
-    | OpenPhotoCameraAction;
+    | OpenPhotoCameraAction
+    | EnableCollaborationAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1490,6 +1491,16 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
      * The config that should be used to load the space.
      */
     config: any;
+}
+
+/**
+ * An event that is used to enable collaboration features.
+ *
+ * @dochash types/os
+ * @docname EnableCollaborationAction
+ */
+export interface EnableCollaborationAction extends AsyncAction {
+    type: 'enable_collaboration';
 }
 
 /**
@@ -3839,6 +3850,19 @@ export function loadSpace(
         type: 'load_space',
         space,
         config,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EnableCollaborationAction.
+ * @param taskId The ID of the async task.
+ */
+export function enableCollaboration(
+    taskId?: number | string
+): EnableCollaborationAction {
+    return {
+        type: 'enable_collaboration',
         taskId,
     };
 }
