@@ -313,13 +313,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._partitionEditModeProvider =
             new AuxPartitionRealtimeEditModeProvider(this._partitions);
         let partitions: AuxPartition[] = [];
-        for (let key in this._config.partitions) {
+        for (let [key, partitionConfig] of iteratePartitions(
+            this._config.partitions
+        )) {
             if (!this._config.partitions.hasOwnProperty(key)) {
                 continue;
             }
-            const partition = await this._createPartition(
-                this._config.partitions[key]
-            );
+            const partition = await this._createPartition(partitionConfig);
             if (partition) {
                 partition.space = key;
                 this._partitions[key] = partition;
