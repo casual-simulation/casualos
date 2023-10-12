@@ -11530,6 +11530,54 @@ describe('RecordsServer', () => {
                 });
             });
 
+            describe('repo/get_updates', () => {
+                it('should get the updates for the branch', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    if (recordName) {
+                        await instStore.saveInst({
+                            recordName,
+                            inst,
+                            markers: [PRIVATE_MARKER],
+                        });
+                    }
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        branch,
+                        ['abc'],
+                        3
+                    );
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/get_updates',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: ['abc'],
+                            timestamps: [expect.any(Number)],
+                        },
+                    ]);
+                });
+            });
+
             describe('repo/unwatch_branch', () => {
                 it('should stop sending updates', async () => {
                     expectNoWebSocketErrors(connectionId);
