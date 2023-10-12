@@ -24,6 +24,7 @@ import {
 import {
     ClientConnectionState,
     ConnectionClient,
+    ConnectionIndicator,
     ConnectionInfo,
     WebsocketDownloadRequestEvent,
     WebsocketErrorInfo,
@@ -54,6 +55,10 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
 
     get info(): ConnectionInfo {
         return this._connectionStateChanged.value.info;
+    }
+
+    get indicator(): ConnectionIndicator | null {
+        return null;
     }
 
     get onError() {

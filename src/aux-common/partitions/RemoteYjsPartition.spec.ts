@@ -1784,6 +1784,12 @@ describe('RemoteYjsPartition', () => {
                         skipInitialLoad: true,
                     });
 
+                    connection.info = {
+                        connectionId: 'testConnectionId',
+                        sessionId: 'testSessionId',
+                        userId: 'testUserId',
+                    };
+
                     const promise = partition.onStatusUpdated
                         .pipe(
                             takeWhile((update) => update.type !== 'sync', true),
@@ -1803,6 +1809,109 @@ describe('RemoteYjsPartition', () => {
                         expect.objectContaining({
                             type: 'authentication',
                             authenticated: true,
+                            info: {
+                                connectionId: 'testConnectionId',
+                                sessionId: 'testSessionId',
+                                userId: 'testUserId',
+                            },
+                        }),
+                        expect.objectContaining({
+                            type: 'authorization',
+                            authorized: true,
+                        }),
+                        {
+                            type: 'sync',
+                            synced: true,
+                        },
+                    ]);
+                });
+
+                it('should use the connection indicator to infer the authentication info', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                        skipInitialLoad: true,
+                    });
+
+                    connection.indicator = {
+                        connectionId: 'testConnectionId',
+                    };
+
+                    const promise = partition.onStatusUpdated
+                        .pipe(
+                            takeWhile((update) => update.type !== 'sync', true),
+                            bufferCount(4)
+                        )
+                        .toPromise();
+
+                    partition.connect();
+
+                    const update = await promise;
+
+                    expect(update).toEqual([
+                        {
+                            type: 'connection',
+                            connected: true,
+                        },
+                        expect.objectContaining({
+                            type: 'authentication',
+                            authenticated: true,
+                            info: {
+                                connectionId: 'testConnectionId',
+                                sessionId: null,
+                                userId: null,
+                            },
+                        }),
+                        expect.objectContaining({
+                            type: 'authorization',
+                            authorized: true,
+                        }),
+                        {
+                            type: 'sync',
+                            synced: true,
+                        },
+                    ]);
+                });
+
+                it('should use a default connection ID if the connection has no indicator', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                        skipInitialLoad: true,
+                    });
+
+                    connection.indicator = null;
+
+                    const promise = partition.onStatusUpdated
+                        .pipe(
+                            takeWhile((update) => update.type !== 'sync', true),
+                            bufferCount(4)
+                        )
+                        .toPromise();
+
+                    partition.connect();
+
+                    const update = await promise;
+
+                    expect(update).toEqual([
+                        {
+                            type: 'connection',
+                            connected: true,
+                        },
+                        expect.objectContaining({
+                            type: 'authentication',
+                            authenticated: true,
+                            info: {
+                                connectionId: 'missing-connection-id',
+                                sessionId: null,
+                                userId: null,
+                            },
                         }),
                         expect.objectContaining({
                             type: 'authorization',

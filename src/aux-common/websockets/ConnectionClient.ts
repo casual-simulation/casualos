@@ -5,7 +5,7 @@ import {
     WebsocketErrorInfo,
     WebsocketMessage,
 } from './WebsocketEvents';
-import { DenialReason } from '../common';
+import { ConnectionIndicator, DenialReason } from '../common';
 
 /**
  * Defines an interface that contains connection state info.
@@ -56,6 +56,12 @@ export interface ConnectionClient {
      * Gets the current connection info.
      */
     get info(): ConnectionInfo | null;
+
+    /**
+     * The connection indicator that was used to create this connection.
+     * Null if the connection was not created with an indicator.
+     */
+    get indicator(): ConnectionIndicator | null;
 
     /**
      * Gets an observable for events with the given name.

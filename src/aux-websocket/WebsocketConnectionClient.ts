@@ -28,6 +28,7 @@ import {
     WebsocketEvent,
     WebsocketErrorEvent,
     WebsocketErrorInfo,
+    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 
 export class WebsocketConnectionClient implements ConnectionClient {
@@ -43,6 +44,10 @@ export class WebsocketConnectionClient implements ConnectionClient {
 
     get info(): ConnectionInfo {
         return this._connectionStateChanged.value.info;
+    }
+
+    get indicator(): ConnectionIndicator | null {
+        return null;
     }
 
     event<T>(name: string): Observable<T> {

@@ -41,7 +41,6 @@ export class InstRecordsClient {
     private _connectedDevices: Map<string, Map<string, ConnectionInfo>>;
     private _forcedOffline: boolean;
     private _timeSyncCounter: number = 0;
-    private _info: ConnectionInfo;
 
     constructor(connection: ConnectionClient) {
         this._client = connection;
