@@ -53,6 +53,7 @@
     -   Added `formLightPenumbra` tag.
     -   Added `formLightDecay` tag.
     -   Added `formLightGroundColor` tag.
+-   Added menu items `password` subtype.
 
 ### :bug: Bug Fixes
 

@@ -69,6 +69,7 @@ import {
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_PORTAL_DIFF,
     SHEET_PORTAL,
+    MenuBotSubtype,
 } from './Bot';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 
@@ -1806,6 +1807,26 @@ export function getMenuBotForm(
         return shape;
     }
     return DEFAULT_MENU_BOT_FORM;
+}
+/**
+ * Gets the formSubType of menu bot.
+ * @param calc The calculation context to use.
+ * @param bot The bot.
+ * @returns
+ */
+export function getMenuBotSubtype(
+    calc: BotCalculationContext,
+    bot: Bot
+): MenuBotSubtype {
+    const subShape: MenuBotSubtype = calculateBotValue(
+        calc,
+        bot,
+        'auxFormSubtype'
+    );
+    if (subShape === 'password') {
+        return subShape;
+    }
+    return 'input';
 }
 
 /**

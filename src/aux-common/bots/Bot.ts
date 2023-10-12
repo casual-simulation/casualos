@@ -1,3 +1,4 @@
+import { type } from 'os';
 import { TagEditOp } from './AuxStateHelpers';
 
 export type PartialBot = Partial<Bot>;
@@ -950,6 +951,11 @@ export type BotShape =
  * Defines the possible forms that a menu bot can appear as.
  */
 export type MenuBotForm = 'button' | 'input';
+
+/**
+ * Defines the possible subtype forms that a menu bot can appear as.
+ */
+export type MenuBotSubtype = 'input' | 'password';
 
 /**
  * Defines the possible hover styles that can be used for a menu bot.
