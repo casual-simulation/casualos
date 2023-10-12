@@ -1,4 +1,10 @@
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import {
+    BehaviorSubject,
+    Subject,
+    Subscription,
+    bufferCount,
+    takeWhile,
+} from 'rxjs';
 import {
     applyUpdate,
     Doc,
@@ -1717,6 +1723,96 @@ describe('RemoteYjsPartition', () => {
                             tag1: 'abc',
                         }),
                     });
+                });
+            });
+
+            describe('skip initial load', () => {
+                it('should not send a GET_UPDATES event', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                        skipInitialLoad: true,
+                    });
+
+                    expect(connection.sentMessages).toEqual([]);
+                    partition.connect();
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages).toEqual([]);
+                });
+
+                it('should apply updates to the causal tree', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                        skipInitialLoad: true,
+                    });
+
+                    expect(connection.sentMessages).toEqual([]);
+                    partition.connect();
+
+                    const ret = await partition.applyEvents([
+                        botAdded(
+                            createBot('test', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+
+                    expect(ret).toEqual([]);
+                    expect(partition.state).toEqual({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    });
+                });
+
+                it('should send the correct connection events', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                        skipInitialLoad: true,
+                    });
+
+                    const promise = partition.onStatusUpdated
+                        .pipe(
+                            takeWhile((update) => update.type !== 'sync', true),
+                            bufferCount(4)
+                        )
+                        .toPromise();
+
+                    partition.connect();
+
+                    const update = await promise;
+
+                    expect(update).toEqual([
+                        {
+                            type: 'connection',
+                            connected: true,
+                        },
+                        expect.objectContaining({
+                            type: 'authentication',
+                            authenticated: true,
+                        }),
+                        expect.objectContaining({
+                            type: 'authorization',
+                            authorized: true,
+                        }),
+                        {
+                            type: 'sync',
+                            synced: true,
+                        },
+                    ]);
                 });
             });
 

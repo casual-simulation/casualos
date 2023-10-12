@@ -146,14 +146,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         const upgradableCollaborative =
             !isCollaborative && allowCollaborationUpgrade;
 
-        if (!isCollaborative) {
-            console.log('[BotManager] Disabling Collaboration Features');
+        if (upgradableCollaborative) {
+            console.log(
+                '[BotManager] Disabling Collaboration Features but enabling upgrade.'
+            );
+        } else if (!isCollaborative) {
+            console.log('[BotManager] Disabling Collaboration Features.');
         } else {
             console.log('[BotManager] Using v2 shared partitions');
-        }
-
-        if (upgradableCollaborative) {
-            console.log('[BotManager] Enabling Collaboration Upgrade');
         }
 
         const defaultPartitions: Partial<AuxPartitionConfig> = {
@@ -162,7 +162,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 private: true,
                 initialState: {
                     [connectionId]: createBot(connectionId, {
-                        inst: id,
+                        inst: origin.inst ?? id,
                     }),
                 },
             },
@@ -196,7 +196,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     branch: DEFAULT_BRANCH_NAME,
                     host: host,
                     connectionProtocol: protocol,
-                    static: true,
                     skipInitialLoad: true,
                 },
                 [TEMPORARY_SHARED_PARTITION_ID]: {
@@ -208,7 +207,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     connectionProtocol: protocol,
                     temporary: true,
                     remoteEvents: false,
-                    static: true,
                     skipInitialLoad: true,
                 },
                 [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
@@ -219,7 +217,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     host: host,
                     connectionProtocol: protocol,
                     childPartitionType: 'yjs_client',
-                    static: true,
                     skipInitialLoad: true,
                 },
             };
