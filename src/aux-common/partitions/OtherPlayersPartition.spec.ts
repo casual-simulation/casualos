@@ -1961,6 +1961,54 @@ describe('OtherPlayersPartition', () => {
 
                         expect(connection.sentMessages).toEqual([]);
                     });
+
+                    it('should connect to the branch if enableCollaboration() is called', async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                            childPartitionType: 'yjs_client',
+                            skipInitialLoad: true,
+                        });
+
+                        partition.connect();
+
+                        await waitAsync();
+
+                        let resolved: boolean = false;
+                        partition
+                            .enableCollaboration()
+                            .then(() => (resolved = true));
+
+                        await waitAsync();
+
+                        expect(connection.sentMessages).toEqual([
+                            {
+                                type: 'repo/watch_branch_devices',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                            },
+                        ]);
+
+                        deviceConnected.next({
+                            type: 'repo/connected_to_branch',
+                            branch: {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                            },
+                            broadcast: false,
+                            connection: device1,
+                        });
+
+                        await waitAsync();
+
+                        expect(resolved).toBe(true);
+                    });
                 });
             });
 
