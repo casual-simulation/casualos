@@ -89,6 +89,7 @@ import {
     CurrentVersion,
     device,
     VersionVector,
+    getConnectionId,
 } from '../common';
 import { InstRecordsClient } from '../websockets';
 
@@ -496,10 +497,18 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             type: 'connection',
             connected: true,
         });
+        const indicator = this._client.connection.indicator;
+        const connectionId = indicator
+            ? getConnectionId(indicator)
+            : 'missing-connection-id';
         this._onStatusUpdated.next({
             type: 'authentication',
             authenticated: true,
-            info: this._client.connection.info,
+            info: this._client.connection.info ?? {
+                connectionId: connectionId,
+                sessionId: null,
+                userId: null,
+            },
         });
         this._updateSynced(true);
     }

@@ -35,7 +35,6 @@ import {
     WebsocketMessage,
 } from './WebsocketEvents';
 import { ConnectionIndicator } from '../common';
-import { state } from 'esri/widgets/TableList/TableListViewModel';
 
 /**
  * Defines a connection client that attempts to authenticate before bubbling a connection event.
@@ -64,6 +63,10 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
 
     get info() {
         return this._connectionStateChanged.value.info;
+    }
+
+    get indicator() {
+        return this._indicator;
     }
 
     get connectionState(): Observable<ClientConnectionState> {
