@@ -180,6 +180,7 @@ describe('AuxRuntime', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
             };
 
@@ -11367,6 +11368,7 @@ describe('AuxRuntime', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
             };
 
@@ -15833,6 +15835,7 @@ describe('original action tests', () => {
                 supportsAR: true,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
             });
 
@@ -15843,6 +15846,7 @@ describe('original action tests', () => {
                             supportsAR: true,
                             supportsVR: false,
                             isCollaborative: true,
+                            allowCollaborationUpgrade: true,
                             ab1BootstrapUrl: 'bootstrap',
                         },
                     },
@@ -15872,6 +15876,7 @@ describe('original action tests', () => {
                             supportsAR: null,
                             supportsVR: null,
                             isCollaborative: null,
+                            allowCollaborationUpgrade: null,
                             ab1BootstrapUrl: null,
                         },
                     },
