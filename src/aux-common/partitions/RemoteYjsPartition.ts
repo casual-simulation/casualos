@@ -142,6 +142,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _isRemoteUpdate: boolean = false;
     private _static: boolean;
     private _skipInitialLoad: boolean;
+    private _sendInitialUpdates: boolean = false;
     private _watchingBranch: any;
     private _synced: boolean;
     private _authorized: boolean;
@@ -501,6 +502,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     async enableCollaboration() {
         this._static = false;
         this._skipInitialLoad = false;
+        this._sendInitialUpdates = true;
         this._synced = false;
         const promise = firstValueFrom(
             this._onStatusUpdated.pipe(
@@ -599,6 +601,17 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         // The partition should become synced if it was not synced
                         // and it just got some new data.
                         if (!this._synced && event.type === 'updates') {
+                            if (this._sendInitialUpdates) {
+                                this._sendInitialUpdates = false;
+                                const update = encodeStateAsUpdate(this._doc);
+                                const updates = [fromByteArray(update)];
+                                this._client.addUpdates(
+                                    this._recordName,
+                                    this._inst,
+                                    this._branch,
+                                    updates
+                                );
+                            }
                             this._updateSynced(true);
                         }
                         if (event.type === 'updates') {

@@ -63,6 +63,7 @@ import {
     device,
     remote,
 } from '../common';
+import { getStateFromUpdates } from './PartitionUtils';
 
 console.log = jest.fn();
 
@@ -1938,6 +1939,15 @@ describe('RemoteYjsPartition', () => {
 
                     await waitAsync();
 
+                    const ret = await partition.applyEvents([
+                        botAdded(
+                            createBot('test', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+                    await waitAsync();
+
                     expect(connection.sentMessages).toEqual([]);
 
                     let resolved: boolean = false;
@@ -1968,6 +1978,37 @@ describe('RemoteYjsPartition', () => {
                     await waitAsync();
 
                     expect(resolved).toBe(true);
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        // Should send the current state to the server
+                        {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            updates: [expect.any(String)],
+                            updateId: 1,
+                        },
+                    ]);
+
+                    const update = (connection.sentMessages[1] as any)
+                        .updates[0];
+                    expect(
+                        getStateFromUpdates({
+                            type: 'get_inst_state_from_updates',
+                            updates: [
+                                {
+                                    id: 0,
+                                    timestamp: 0,
+                                    update: update,
+                                },
+                            ],
+                        })
+                    ).toEqual({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    });
                 });
             });
 
