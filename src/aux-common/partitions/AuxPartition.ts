@@ -268,7 +268,9 @@ export type DictionaryLike = {
  * Iterates the given partitions.
  * @param partitions The partitions to iterate.
  */
-export function* iteratePartitions<T extends DictionaryLike>(partitions: T) {
+export function* iteratePartitions<T extends DictionaryLike>(
+    partitions: T
+): Generator<readonly [keyof T, T[keyof T]]> {
     const keys = Object.keys(partitions);
     const sortedKeys = sortBy(keys, (k) =>
         k === 'shared'

@@ -94,6 +94,7 @@ describe('RuntimeBot', () => {
             supportsAR: true,
             supportsVR: false,
             isCollaborative: true,
+            allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'ab1Bootstrap',
         };
         realtimeEditMode = RealtimeEditMode.Immediate;
