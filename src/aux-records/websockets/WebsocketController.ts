@@ -466,6 +466,13 @@ export class WebsocketController {
                 updates: updates.updates,
                 initial: true,
             }),
+            this._messenger.sendMessage([connection.serverConnectionId], {
+                type: 'repo/watch_branch_result',
+                recordName: event.recordName,
+                inst: event.inst,
+                branch: event.branch,
+                success: true,
+            }),
         ];
         await Promise.all(promises);
     }
