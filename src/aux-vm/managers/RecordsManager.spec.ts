@@ -167,7 +167,7 @@ describe('RecordsManager', () => {
     });
 
     function createHelper() {
-        vm = new TestAuxVM(userId);
+        vm = new TestAuxVM('sim', userId);
         const helper = new BotHelper(vm);
         helper.userId = 'userId';
 

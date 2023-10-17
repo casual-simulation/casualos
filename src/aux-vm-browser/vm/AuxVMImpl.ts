@@ -65,19 +65,28 @@ export class AuxVMImpl implements AuxVM {
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
-    private _initialIndicator: ConnectionIndicator;
+    private _id: string;
+
     closed: boolean;
 
     /**
      * The ID of the simulation.
      */
-    id: string;
+    get id(): string {
+        return this._id;
+    }
+
+    get configBotId(): string {
+        return this._config.configBotId;
+    }
 
     /**
      * Creates a new Simulation VM.
+     * @param id The ID of the simulation.
+     * @param config The config that should be used.
      */
-    constructor(indicator: ConnectionIndicator, config: AuxConfig) {
-        this._initialIndicator = indicator;
+    constructor(id: string, config: AuxConfig) {
+        this._id = id;
         this._config = config;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -154,7 +163,6 @@ export class AuxVMImpl implements AuxVM {
         const wrapper = wrap<AuxStatic>(this._channel.port1);
         this._proxy = await new wrapper(
             location.origin,
-            this._initialIndicator,
             processPartitions(this._config)
         );
 
@@ -273,19 +281,22 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents = null;
     }
 
-    protected _createSubVM(channel: Remote<AuxChannel>): AuxVM {
-        return new RemoteAuxVM(channel);
+    protected _createSubVM(
+        id: string,
+        configBotId: string,
+        channel: Remote<AuxChannel>
+    ): AuxVM {
+        return new RemoteAuxVM(id, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, indicator } = await subChannel.getInfo();
+        const { id, configBotId } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id: id,
-            indicator: indicator,
-            vm: this._createSubVM(channel),
+            vm: this._createSubVM(id, configBotId, channel),
             channel,
         };
 

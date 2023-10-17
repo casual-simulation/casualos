@@ -179,17 +179,13 @@ export class PlaywrightSimulation
     }
 
     constructor(
-        indicator: ConnectionIndicator,
         origin: SimulationOrigin,
-        id: string,
         config: AuxConfig['config'],
         vm: AuxVM
     ) {
-        super(id, vm);
+        super(vm);
         this._origin = origin;
         this._config = config;
-        this.helper.userId = getConnectionId(indicator);
-
         this._authHelper = new AuthHelper(
             config.authOrigin,
             config.recordsOrigin
@@ -300,18 +296,12 @@ export class PlaywrightSimulation
         );
     }
 
-    protected _createSubSimulation(
-        indicator: ConnectionIndicator,
-        id: string,
-        vm: AuxVM
-    ) {
+    protected _createSubSimulation(vm: AuxVM) {
         return new PlaywrightSimulation(
-            indicator,
             {
                 recordName: null,
                 inst: null,
             },
-            id,
             {
                 version: this._config.version,
                 versionHash: this._config.versionHash,

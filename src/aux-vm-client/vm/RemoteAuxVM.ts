@@ -47,18 +47,28 @@ export class RemoteAuxVM implements AuxVM {
     private _onAuthMessage: Subject<PartitionAuthMessage>;
 
     private _proxy: Remote<AuxChannel>;
+    private _id: string;
+    private _configBotId: string;
 
     closed: boolean;
 
     /**
      * The ID of the simulation.
      */
-    id: string;
+    get id(): string {
+        return this._id;
+    }
+
+    get configBotId(): string {
+        return this._configBotId;
+    }
 
     /**
      * Creates a new Simulation VM.
      */
-    constructor(channel: Remote<AuxChannel>) {
+    constructor(id: string, configBotId: string, channel: Remote<AuxChannel>) {
+        this._id = id;
+        this._configBotId = configBotId;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
@@ -212,19 +222,22 @@ export class RemoteAuxVM implements AuxVM {
         this._localEvents = null;
     }
 
-    protected _createSubVM(channel: Remote<AuxChannel>): AuxVM {
-        return new RemoteAuxVM(channel);
+    protected _createSubVM(
+        id: string,
+        configBotId: string,
+        channel: Remote<AuxChannel>
+    ): AuxVM {
+        return new RemoteAuxVM(id, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, indicator } = await subChannel.getInfo();
+        const { id, configBotId } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            indicator,
-            vm: this._createSubVM(channel),
+            vm: this._createSubVM(id, configBotId, channel),
             channel,
         };
 

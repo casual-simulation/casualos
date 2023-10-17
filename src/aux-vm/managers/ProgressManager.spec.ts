@@ -7,7 +7,7 @@ describe('ProgressManager', () => {
     let vm: TestAuxVM;
 
     beforeEach(() => {
-        vm = new TestAuxVM('user');
+        vm = new TestAuxVM('sim', 'user');
         subject = new ProgressManager(vm);
     });
 

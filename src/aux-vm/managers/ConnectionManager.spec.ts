@@ -7,7 +7,7 @@ describe('ConnectionManager', () => {
     let subject: ConnectionManager;
 
     beforeEach(() => {
-        vm = new TestAuxVM('user');
+        vm = new TestAuxVM('sim', 'user');
         subject = new ConnectionManager(vm);
     });
 
@@ -28,7 +28,7 @@ describe('ConnectionManager', () => {
     describe('connectionStateChanged', () => {
         it('should be a direct pipe from the vm', () => {
             let values: boolean[] = [];
-            subject.connectionStateChanged.subscribe(status =>
+            subject.connectionStateChanged.subscribe((status) =>
                 values.push(status)
             );
 
@@ -55,7 +55,7 @@ describe('ConnectionManager', () => {
             });
 
             let values: boolean[] = [];
-            subject.connectionStateChanged.subscribe(status =>
+            subject.connectionStateChanged.subscribe((status) =>
                 values.push(status)
             );
 
@@ -66,7 +66,7 @@ describe('ConnectionManager', () => {
     describe('syncStateChanged', () => {
         it('should relay sync events', () => {
             let values: boolean[] = [];
-            subject.syncStateChanged.subscribe(status => values.push(status));
+            subject.syncStateChanged.subscribe((status) => values.push(status));
 
             vm.connectionStateChanged.next({
                 type: 'init',
@@ -97,14 +97,14 @@ describe('ConnectionManager', () => {
             });
 
             let values: boolean[] = [];
-            subject.syncStateChanged.subscribe(status => values.push(status));
+            subject.syncStateChanged.subscribe((status) => values.push(status));
 
             expect(values).toEqual([true]);
         });
 
         it('should remove duplicates', () => {
             let values: boolean[] = [];
-            subject.syncStateChanged.subscribe(status => values.push(status));
+            subject.syncStateChanged.subscribe((status) => values.push(status));
 
             vm.connectionStateChanged.next({
                 type: 'init',
@@ -127,7 +127,7 @@ describe('ConnectionManager', () => {
 
         it('should not emit events until the init event', () => {
             let values: boolean[] = [];
-            subject.syncStateChanged.subscribe(status => values.push(status));
+            subject.syncStateChanged.subscribe((status) => values.push(status));
 
             vm.connectionStateChanged.next({
                 type: 'sync',

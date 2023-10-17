@@ -8,7 +8,7 @@ export interface AuxPartitionServices {
     /**
      * The auth source that should be used for the partition, if needed.
      */
-    authSource?: PartitionAuthSource;
+    authSource: PartitionAuthSource;
 }
 
 export type AuxPartitionFactory = (

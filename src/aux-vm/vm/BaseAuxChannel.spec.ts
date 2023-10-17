@@ -1922,12 +1922,8 @@ class AuxChannelImpl extends BaseAuxChannel {
         return this._runtime;
     }
 
-    constructor(
-        indicator: ConnectionIndicator,
-        device: ConnectionInfo,
-        config: AuxConfig
-    ) {
-        super(indicator, config, {});
+    constructor(device: ConnectionInfo, config: AuxConfig) {
+        super(config, {});
         this._device = device;
         this.remoteEvents = [];
     }
@@ -1967,11 +1963,10 @@ class AuxChannelImpl extends BaseAuxChannel {
     }
 
     protected _createSubChannel(
-        indicator: ConnectionIndicator,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
-        const channel = new AuxChannelImpl(indicator, this._device, config);
+        const channel = new AuxChannelImpl(this._device, config);
         channel._runtime = runtime;
         return channel;
     }

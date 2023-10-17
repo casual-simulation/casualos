@@ -104,7 +104,7 @@ describe('SystemPortalCoordinator', () => {
         };
 
         simManager = new SimulationManager((id, options) => {
-            const vm = new TestAuxVM(connection.connectionId);
+            const vm = new TestAuxVM(id, connection.connectionId);
             vm.processEvents = true;
             vm.localEvents = new Subject();
             vms.set(id, vm);

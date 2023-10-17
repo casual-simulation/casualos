@@ -20,7 +20,7 @@ describe('BotPanelManager', () => {
     let userId = 'user';
 
     beforeEach(async () => {
-        vm = new TestAuxVM(userId);
+        vm = new TestAuxVM('sim', userId);
         vm.processEvents = true;
         helper = new BotHelper(vm);
         helper.userId = userId;

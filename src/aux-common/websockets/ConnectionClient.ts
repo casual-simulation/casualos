@@ -64,6 +64,11 @@ export interface ConnectionClient {
     get indicator(): ConnectionIndicator | null;
 
     /**
+     * Gets the HTTP origin that the connection is for.
+     */
+    get origin(): string;
+
+    /**
      * Gets an observable for events with the given name.
      * @param name The name of the events.
      */

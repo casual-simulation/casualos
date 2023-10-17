@@ -50,6 +50,10 @@ export class WebsocketConnectionClient implements ConnectionClient {
         return null;
     }
 
+    get origin() {
+        return this._socket.origin;
+    }
+
     event<T>(name: string): Observable<T> {
         return this._events.pipe(
             filter(([type, requestId, message]) => message.type === name),

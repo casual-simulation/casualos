@@ -39,13 +39,24 @@ export class ConnectableAuxVM implements AuxVM {
         }
     >;
     private _onAuthMessage: Subject<PartitionAuthMessage>;
+    private _id: string;
+    private _configBotId: string;
 
     private _proxy: Remote<AuxChannel>;
     private _port: MessagePort;
     private _sub: Subscription;
 
-    constructor(id: string, port: MessagePort) {
-        this.id = id;
+    get id() {
+        return this._id;
+    }
+
+    get configBotId() {
+        return this._configBotId;
+    }
+
+    constructor(id: string, configBotId: string, port: MessagePort) {
+        this._id = id;
+        this._configBotId = configBotId;
         this._proxy = wrap(port);
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -74,8 +85,6 @@ export class ConnectableAuxVM implements AuxVM {
     createEndpoint?(): Promise<MessagePort> {
         throw new Error('Method not implemented.');
     }
-
-    id: string;
 
     get connectionStateChanged(): Observable<StatusUpdate> {
         return this._connectionStateChanged;
@@ -187,19 +196,22 @@ export class ConnectableAuxVM implements AuxVM {
         return await this._proxy.getTags();
     }
 
-    protected _createSubVM(channel: Remote<AuxChannel>): AuxVM {
-        return new RemoteAuxVM(channel);
+    protected _createSubVM(
+        id: string,
+        configBotId: string,
+        channel: Remote<AuxChannel>
+    ): AuxVM {
+        return new RemoteAuxVM(id, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, indicator } = await subChannel.getInfo();
+        const { id, configBotId } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            indicator,
-            vm: this._createSubVM(channel),
+            vm: this._createSubVM(id, configBotId, channel),
             channel,
         };
 

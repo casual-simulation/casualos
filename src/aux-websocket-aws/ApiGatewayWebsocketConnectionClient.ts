@@ -65,6 +65,10 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
         return this._onError;
     }
 
+    get origin() {
+        return this._socket.origin;
+    }
+
     event<T>(name: string): Observable<T> {
         return this._onMessage.pipe(
             filter((message) => message.type === name)
