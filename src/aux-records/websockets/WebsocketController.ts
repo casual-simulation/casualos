@@ -303,7 +303,8 @@ export class WebsocketController {
             );
 
             if (!authorized) {
-                await this.sendError(connectionId, -1, {
+                await this.messenger.sendMessage([connectionId], {
+                    type: 'repo/watch_branch_result',
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
@@ -319,7 +320,8 @@ export class WebsocketController {
 
         if (!event.recordName) {
             if (config.defaultFeatures?.publicInsts?.allowed === false) {
-                await this.sendError(connectionId, -1, {
+                await this.messenger.sendMessage([connectionId], {
+                    type: 'repo/watch_branch_result',
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'Temporary insts are not allowed.',
@@ -339,8 +341,9 @@ export class WebsocketController {
         );
 
         if (instResult.success === false) {
-            await this.sendError(connectionId, -1, {
+            await this.messenger.sendMessage([connectionId], {
                 ...instResult,
+                type: 'repo/watch_branch_result',
                 recordName: event.recordName,
                 inst: event.inst,
                 branch: event.branch,
@@ -374,7 +377,8 @@ export class WebsocketController {
                 event.branch
             );
             if (count >= maxConnections) {
-                await this.sendError(connectionId, -1, {
+                await this.messenger.sendMessage([connectionId], {
+                    type: 'repo/watch_branch_result',
                     success: false,
                     errorCode: features
                         ? 'subscription_limit_reached'

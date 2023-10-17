@@ -186,6 +186,7 @@ export const websocketDownloadRequestEventSchema = z.tuple([
 
 export type WebsocketResponseMessage =
     | LoginResultMessage
+    | WatchBranchResultMessage
     | TimeSyncResponseMessage
     | UpdatesReceivedMessage
     | ReceiveDeviceActionMessage
@@ -321,6 +322,67 @@ type ZodWatchBranchMessageAssertion = HasType<
     ZodWatchBranchMessage,
     WatchBranchMessage
 >;
+
+export type WatchBranchResultMessage =
+    | WatchBranchResultSuccessMessage
+    | WatchBranchResultFailureMessage;
+
+export interface WatchBranchResultSuccessMessage {
+    type: 'repo/watch_branch_result';
+    success: true;
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch to watch.
+     */
+    branch: string;
+}
+
+export interface WatchBranchResultFailureMessage {
+    type: 'repo/watch_branch_result';
+    success: false;
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch to watch.
+     */
+    branch: string;
+
+    /**
+     * The error code that occurred.
+     */
+    errorCode: WebsocketErrorCode;
+
+    /**
+     * The error message that occurred.
+     */
+    errorMessage: string;
+
+    /**
+     * The authorization denial reason.
+     */
+    reason?: DenialReason;
+}
 
 /**
  * Defines an event which indicates that a branch should be unwatched.
