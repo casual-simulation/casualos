@@ -12,6 +12,7 @@ import {
     BotAction,
     StateUpdatedEvent,
     StoredAux,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
@@ -39,6 +40,7 @@ export class AuxVMNode implements AuxVM {
             channel: AuxChannel;
         }
     >;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
 
     id: string;
 
@@ -66,6 +68,10 @@ export class AuxVMNode implements AuxVM {
         return this._onError;
     }
 
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
+    }
+
     get subVMAdded(): Observable<AuxSubVM> {
         return this._subVMAdded;
     }
@@ -89,6 +95,7 @@ export class AuxVMNode implements AuxVM {
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
+        this._onAuthMessage = new Subject();
     }
 
     sendEvents(events: BotAction[]): Promise<void> {
@@ -132,7 +139,8 @@ export class AuxVMNode implements AuxVM {
             (connection) => this._connectionStateChanged.next(connection),
             (err) => this._onError.next(err),
             (channel) => this._handleAddedSubChannel(channel),
-            (id) => this._handleRemovedSubChannel(id)
+            (id) => this._handleRemovedSubChannel(id),
+            (message) => this._onAuthMessage.next(message)
         );
     }
 

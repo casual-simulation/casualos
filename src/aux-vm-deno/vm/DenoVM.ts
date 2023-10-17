@@ -1,6 +1,7 @@
 import {
     BotAction,
     ConnectionIndicator,
+    PartitionAuthMessage,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
@@ -54,6 +55,7 @@ export class DenoVM implements AuxVM {
             channel: Remote<AuxChannel>;
         }
     >;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
 
     private _config: AuxConfig;
     private _worker: DenoWorker;
@@ -81,6 +83,7 @@ export class DenoVM implements AuxVM {
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
+        this._onAuthMessage = new Subject();
     }
 
     get subVMAdded(): Observable<AuxSubVM> {
@@ -97,6 +100,10 @@ export class DenoVM implements AuxVM {
 
     get onError(): Observable<AuxChannelErrorType> {
         return this._onError;
+    }
+
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
     }
 
     /**
@@ -184,7 +191,8 @@ export class DenoVM implements AuxVM {
             ),
             proxy((err) => this._onError.next(err)),
             proxy((channel) => this._handleAddedSubChannel(channel)),
-            proxy((id) => this._handleRemovedSubChannel(id))
+            proxy((id) => this._handleRemovedSubChannel(id)),
+            proxy((message) => this._onAuthMessage.next(message))
         );
     }
 

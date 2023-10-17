@@ -4,6 +4,7 @@ import {
     ConnectionIndicator,
     createYjsPartition,
     createRemoteClientYjsPartition,
+    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
     PartitionConfig,
@@ -29,10 +30,12 @@ export class NodeAuxChannel extends BaseAuxChannel {
     }
 
     protected async _createPartition(
-        config: PartitionConfig
+        config: PartitionConfig,
+        services: AuxPartitionServices
     ): Promise<AuxPartition> {
         return await createAuxPartition(
             config,
+            services,
             createMemoryPartition,
             (config) => createYjsPartition(config),
             (config) => createRemoteYjsPartition(config, this.indicator),

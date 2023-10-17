@@ -8,6 +8,7 @@ import {
     CurrentVersion,
     StatusUpdate,
     ConnectionIndicator,
+    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
     createBot,
@@ -1935,9 +1936,13 @@ class AuxChannelImpl extends BaseAuxChannel {
         this.remoteEvents.push(...events);
     }
 
-    protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
+    protected _createPartition(
+        config: PartitionConfig,
+        services: AuxPartitionServices
+    ): Promise<AuxPartition> {
         return createAuxPartition(
             config,
+            services,
             (cfg) => createMemoryPartition(cfg),
             (config) => createTestPartition(config)
         );

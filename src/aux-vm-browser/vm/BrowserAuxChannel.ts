@@ -5,6 +5,7 @@ import {
     PartitionConfig,
     AuxPartition,
     ConnectionIndicator,
+    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
@@ -29,12 +30,14 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
     }
 
     protected async _createPartition(
-        config: PartitionConfig
+        config: PartitionConfig,
+        services: AuxPartitionServices
     ): Promise<AuxPartition> {
-        let partition = await super._createPartition(config);
+        let partition = await super._createPartition(config, services);
         if (!partition) {
             partition = await createAuxPartition(
                 config,
+                services,
                 createProxyClientPartition
             );
         }

@@ -8,3 +8,4 @@ export * from './OtherPlayersPartition';
 export * from './YjsPartition';
 export * from './RemoteYjsPartition';
 export * from './PartitionUtils';
+export * from './PartitionAuthSource';
