@@ -14,6 +14,7 @@ import {
     StateUpdatedEvent,
     StoredAux,
     ConnectionIndicator,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,
@@ -46,6 +47,7 @@ export class TestAuxVM implements AuxVM {
     onError: Subject<AuxChannelErrorType>;
     subVMAdded: Subject<AuxSubVM>;
     subVMRemoved: Subject<AuxSubVM>;
+    onAuthMessage: Subject<PartitionAuthMessage>;
 
     grant: string;
     indicator: ConnectionIndicator;

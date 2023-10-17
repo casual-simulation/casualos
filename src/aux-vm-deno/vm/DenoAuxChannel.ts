@@ -5,6 +5,7 @@ import {
     PartitionConfig,
     AuxPartition,
     ConnectionIndicator,
+    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
@@ -25,9 +26,10 @@ export class DenoAuxChannel extends RemoteAuxChannel {
     }
 
     protected async _createPartition(
-        config: PartitionConfig
+        config: PartitionConfig,
+        services: AuxPartitionServices
     ): Promise<AuxPartition> {
-        let partition = await super._createPartition(config);
+        let partition = await super._createPartition(config, services);
         return partition;
     }
 

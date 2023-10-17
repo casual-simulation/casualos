@@ -3,6 +3,7 @@ import {
     StateUpdatedEvent,
     BotAction,
     StoredAux,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import {
     AuxChannel,
@@ -43,6 +44,7 @@ export class RemoteAuxVM implements AuxVM {
             channel: Remote<AuxChannel>;
         }
     >;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
 
     private _proxy: Remote<AuxChannel>;
 
@@ -66,6 +68,7 @@ export class RemoteAuxVM implements AuxVM {
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
+        this._onAuthMessage = new Subject();
         this._proxy = channel;
     }
 
@@ -83,6 +86,10 @@ export class RemoteAuxVM implements AuxVM {
 
     get onError(): Observable<AuxChannelErrorType> {
         return this._onError;
+    }
+
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
     }
 
     /**
@@ -104,7 +111,8 @@ export class RemoteAuxVM implements AuxVM {
             ),
             proxy((err) => this._onError.next(err)),
             proxy((channel) => this._handleAddedSubChannel(channel)),
-            proxy((id) => this._handleRemovedSubChannel(id))
+            proxy((id) => this._handleRemovedSubChannel(id)),
+            proxy((message) => this._onAuthMessage.next(message))
         );
     }
 

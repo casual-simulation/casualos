@@ -5,6 +5,7 @@ import {
     ProxyBridgePartitionImpl,
     StoredAux,
     ConnectionIndicator,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
@@ -58,6 +59,7 @@ export class AuxVMImpl implements AuxVM {
             channel: Remote<AuxChannel>;
         }
     >;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
 
     private _config: AuxConfig;
     private _iframe: HTMLIFrameElement;
@@ -86,6 +88,7 @@ export class AuxVMImpl implements AuxVM {
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
+        this._onAuthMessage = new Subject();
     }
 
     get subVMAdded(): Observable<AuxSubVM> {
@@ -102,6 +105,10 @@ export class AuxVMImpl implements AuxVM {
 
     get onError(): Observable<AuxChannelErrorType> {
         return this._onError;
+    }
+
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
     }
 
     /**
@@ -162,7 +169,8 @@ export class AuxVMImpl implements AuxVM {
             ),
             proxy((err) => this._onError.next(err)),
             proxy((channel) => this._handleAddedSubChannel(channel)),
-            proxy((id) => this._handleRemovedSubChannel(id))
+            proxy((id) => this._handleRemovedSubChannel(id)),
+            proxy((message) => this._onAuthMessage.next(message))
         );
     }
 

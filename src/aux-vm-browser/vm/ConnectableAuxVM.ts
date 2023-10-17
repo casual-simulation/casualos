@@ -1,5 +1,6 @@
 import {
     BotAction,
+    PartitionAuthMessage,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
@@ -37,6 +38,7 @@ export class ConnectableAuxVM implements AuxVM {
             channel: Remote<AuxChannel>;
         }
     >;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
 
     private _proxy: Remote<AuxChannel>;
     private _port: MessagePort;
@@ -54,6 +56,7 @@ export class ConnectableAuxVM implements AuxVM {
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
+        this._onAuthMessage = new Subject();
 
         this._sub = new Subscription(() => {
             this._proxy[releaseProxy]();
@@ -82,6 +85,10 @@ export class ConnectableAuxVM implements AuxVM {
         return this._onError;
     }
 
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
+    }
+
     async init(): Promise<void> {
         await this._proxy.registerListeners(
             proxy((events) => this._localEvents.next(events)),
@@ -91,7 +98,8 @@ export class ConnectableAuxVM implements AuxVM {
             proxy((state) => this._connectionStateChanged.next(state)),
             proxy((err) => this._onError.next(err)),
             proxy((channel) => this._handleAddedSubChannel(channel)),
-            proxy((id) => this._handleRemovedSubChannel(id))
+            proxy((id) => this._handleRemovedSubChannel(id)),
+            proxy((message) => this._onAuthMessage.next(message))
         );
     }
 

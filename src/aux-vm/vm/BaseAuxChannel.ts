@@ -38,6 +38,9 @@ import {
     ConnectionIndicator,
     getConnectionId,
     EnableCollaborationAction,
+    PartitionAuthMessage,
+    AuxPartitionServices,
+    PartitionAuthSource,
 } from '@casual-simulation/aux-common';
 import {
     realtimeStrategyToRealtimeEditMode,
@@ -54,7 +57,14 @@ import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
-import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
+import {
+    flatMap,
+    mapKeys,
+    mapValues,
+    partition,
+    pick,
+    transform,
+} from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
 import { TimeSyncController } from '@casual-simulation/timesync';
@@ -72,6 +82,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _partitionEditModeProvider: AuxPartitionRealtimeEditModeProvider;
     protected _partitions: AuxPartitions;
     protected _portalHelper: CustomAppHelper;
+    private _services: AuxPartitionServices;
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
     private _eventBuffer: RuntimeActions[];
@@ -87,6 +98,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onVersionUpdated: Subject<RuntimeStateVersion>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
     private _onSubChannelAdded: Subject<AuxSubChannel>;
     private _onSubChannelRemoved: Subject<string>;
     private _onError: Subject<AuxChannelErrorType>;
@@ -118,6 +130,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     get onSubChannelRemoved(): Observable<string> {
         return this._onSubChannelRemoved;
+    }
+
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
     }
 
     get onError() {
@@ -198,7 +214,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void,
         onSubChannelAdded?: (channel: AuxSubChannel) => void,
-        onSubChannelRemoved?: (channelId: string) => void
+        onSubChannelRemoved?: (channelId: string) => void,
+        onAuthMessage?: (message: PartitionAuthMessage) => void
     ): Promise<void> {
         if (onLocalEvents) {
             this.onLocalEvents.subscribe((e) => onLocalEvents(e));
@@ -223,6 +240,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (onSubChannelRemoved) {
             this.onSubChannelRemoved.subscribe((s) => onSubChannelRemoved(s));
         }
+        if (onAuthMessage) {
+            this.onAuthMessage.subscribe((m) => onAuthMessage(m));
+        }
         // if (onError) {
         //     this.onError.subscribe(onError);
         // }
@@ -238,7 +258,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void,
         onSubChannelAdded?: (channel: AuxSubChannel) => void,
-        onSubChannelRemoved?: (channelId: string) => void
+        onSubChannelRemoved?: (channelId: string) => void,
+        onAuthMessage?: (message: PartitionAuthMessage) => void
     ) {
         const promise = this.onConnectionStateChanged
             .pipe(first((s) => s.type === 'init'))
@@ -251,7 +272,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             onConnectionStateChanged,
             onError,
             onSubChannelAdded,
-            onSubChannelRemoved
+            onSubChannelRemoved,
+            onAuthMessage
         );
         await promise;
     }
@@ -264,7 +286,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void,
         onSubChannelAdded?: (channel: AuxSubChannel) => void,
-        onSubChannelRemoved?: (channelId: string) => void
+        onSubChannelRemoved?: (channelId: string) => void,
+        onAuthMessage?: (message: PartitionAuthMessage) => void
     ): Promise<void> {
         if (onLocalEvents) {
             this.onLocalEvents.subscribe((e) => onLocalEvents(e));
@@ -300,6 +323,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (onSubChannelRemoved) {
             this.onSubChannelRemoved.subscribe((s) => onSubChannelRemoved(s));
         }
+        if (onAuthMessage) {
+            this.onAuthMessage.subscribe((m) => onAuthMessage(m));
+        }
     }
 
     private async _init(): Promise<void> {
@@ -313,6 +339,15 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._partitions = <any>{};
         this._partitionEditModeProvider =
             new AuxPartitionRealtimeEditModeProvider(this._partitions);
+
+        const partitionAuthSource = new PartitionAuthSource();
+        this._subs.push(
+            partitionAuthSource.onAuthMessage.subscribe(this._onAuthMessage)
+        );
+        this._services = {
+            authSource: partitionAuthSource,
+        };
+
         let partitions: AuxPartition[] = [];
         for (let [key, partitionConfig] of iteratePartitions(
             this._config.partitions
@@ -320,9 +355,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             if (!this._config.partitions.hasOwnProperty(key)) {
                 continue;
             }
-            const partition = await this._createPartition(partitionConfig);
+            const partition = await this._createPartition(
+                partitionConfig,
+                this._services
+            );
             if (partition) {
-                partition.space = key;
+                partition.space = key as string;
                 this._partitions[key] = partition;
                 partitions.push(partition);
             } else {
@@ -377,9 +415,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     /**
      * Creates a partition for the given config.
      * @param config The config.
+     * @param services The services that should be used by the partition.
      */
     protected abstract _createPartition(
-        config: PartitionConfig
+        config: PartitionConfig,
+        services: AuxPartitionServices
     ): Promise<AuxPartition>;
 
     async sendEvents(events: RuntimeActions[]): Promise<void> {
@@ -773,7 +813,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             return;
         }
 
-        let partition = await this._createPartition(config);
+        let partition = await this._createPartition(config, this._services);
         if (!partition) {
             return;
         }

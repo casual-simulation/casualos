@@ -4,6 +4,7 @@ import {
     StateUpdatedEvent,
     StoredAux,
     ConnectionIndicator,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
@@ -53,6 +54,11 @@ export interface AuxVM extends Initable {
      * Gets an observable that resolves whenever an error occurs inside the VM.
      */
     onError: Observable<AuxChannelErrorType>;
+
+    /**
+     * Gets an observable that resolves whenever an auth message is sent from a partition.
+     */
+    onAuthMessage: Observable<PartitionAuthMessage>;
 
     /**
      * Gets an observable that resolves whenever a VM is added.
