@@ -382,6 +382,13 @@ describe('WebsocketController', () => {
                         updates: ['123', '456'],
                         initial: true, // should include whether this event includes the initial data.
                     },
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                        recordName: null,
+                        inst,
+                        branch: 'testBranch',
+                    },
                 ]);
 
                 expect(
@@ -417,6 +424,13 @@ describe('WebsocketController', () => {
                         branch: 'doesNotExist',
                         updates: [] as string[],
                         initial: true,
+                    },
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                        recordName: null,
+                        inst,
+                        branch: 'doesNotExist',
                     },
                 ]);
 
@@ -564,6 +578,13 @@ describe('WebsocketController', () => {
                             updates: ['111', '222'],
                             initial: true,
                         },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName: null,
+                            inst,
+                            branch: 'testBranch',
+                        },
                     ]);
 
                     expect(
@@ -624,6 +645,13 @@ describe('WebsocketController', () => {
                             branch: 'testBranch',
                             updates: ['abc', 'def'],
                             initial: true,
+                        },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName: null,
+                            inst,
+                            branch: 'testBranch',
                         },
                     ]);
 
@@ -1523,6 +1551,13 @@ describe('WebsocketController', () => {
                         branch: 'testBranch',
                         updates: [],
                         initial: true,
+                    },
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                        recordName: null,
+                        inst,
+                        branch: 'testBranch',
                     },
                     {
                         type: 'repo/add_updates',
