@@ -42,7 +42,7 @@ import {
     PartitionAuthResponse,
     PartitionAuthResponseSuccess,
     PartitionAuthSource,
-} from 'partitions';
+} from '../partitions';
 
 /**
  * Defines a connection client that attempts to authenticate before bubbling a connection event.
@@ -158,7 +158,7 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
             tap(() => console.log('[AuthencatedConnectionClient] Logged in.')),
             map((result) => ({
                 connected: true,
-                info: result.info,
+                info: (result as any).info,
             })),
             first(),
             takeUntil(
