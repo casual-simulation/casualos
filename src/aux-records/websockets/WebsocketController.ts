@@ -138,7 +138,8 @@ export class WebsocketController {
             let clientConnectionId: string | null;
             if (!message.connectionToken) {
                 if (!message.connectionId) {
-                    this.sendError(connectionId, requestId, {
+                    await this._messenger.sendMessage([connectionId], {
+                        type: 'login_result',
                         success: false,
                         errorCode: 'unacceptable_connection_id',
                         errorMessage:
@@ -161,7 +162,8 @@ export class WebsocketController {
                         message.connectionToken
                     );
                 if (validationResult.success === false) {
-                    await this.sendError(connectionId, requestId, {
+                    await this._messenger.sendMessage([connectionId], {
+                        type: 'login_result',
                         success: false,
                         errorCode: validationResult.errorCode,
                         errorMessage: validationResult.errorMessage,
@@ -189,6 +191,7 @@ export class WebsocketController {
 
             await this._messenger.sendMessage([connectionId], {
                 type: 'login_result',
+                success: true,
                 info: {
                     userId,
                     sessionId,

@@ -177,6 +177,7 @@ describe('WebsocketController', () => {
             expect(messenger.getMessages(serverConnectionId)).toEqual([
                 {
                     type: 'login_result',
+                    success: true,
                     info: {
                         userId: userId,
                         sessionId: sessionId,
@@ -208,6 +209,7 @@ describe('WebsocketController', () => {
             expect(messenger.getMessages(serverConnectionId)).toEqual([
                 {
                     type: 'login_result',
+                    success: true,
                     info: {
                         userId: null,
                         sessionId: null,
@@ -217,25 +219,49 @@ describe('WebsocketController', () => {
             ]);
         });
 
+        it('should send a unacceptable_connection_id error if none is provided in the message', async () => {
+            await server.login(serverConnectionId, 1, {
+                type: 'login',
+            });
+
+            expect(messenger.getMessages(serverConnectionId)).toEqual([
+                {
+                    type: 'login_result',
+                    success: false,
+                    errorCode: 'unacceptable_connection_id',
+                    errorMessage:
+                        'A connection ID must be specified when logging in without a connection token.',
+                },
+            ]);
+
+            const events = messenger.getEvents(serverConnectionId);
+            expect(events).toEqual([]);
+
+            const connection = await connectionStore.getConnection(
+                serverConnectionId
+            );
+
+            expect(connection).toBeFalsy();
+        });
+
         it('should send a unacceptable_connection_token error if the token is wrong', async () => {
             await server.login(serverConnectionId, 1, {
                 type: 'login',
                 connectionToken: 'wrong token',
             });
 
-            const events = messenger.getEvents(serverConnectionId);
-            expect(events).toEqual([
-                [
-                    WebsocketEventTypes.Error,
-                    1,
-                    {
-                        success: false,
-                        errorCode: 'unacceptable_connection_token',
-                        errorMessage:
-                            'The given connection token is invalid. It must be a correctly formatted string.',
-                    },
-                ],
+            expect(messenger.getMessages(serverConnectionId)).toEqual([
+                {
+                    type: 'login_result',
+                    success: false,
+                    errorCode: 'unacceptable_connection_token',
+                    errorMessage:
+                        'The given connection token is invalid. It must be a correctly formatted string.',
+                },
             ]);
+
+            const events = messenger.getEvents(serverConnectionId);
+            expect(events).toEqual([]);
 
             const connection = await connectionStore.getConnection(
                 serverConnectionId
