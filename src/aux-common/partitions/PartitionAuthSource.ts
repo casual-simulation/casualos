@@ -1,6 +1,4 @@
-import { ConnectionIndicator } from 'common';
-import { initial } from 'lodash';
-import { resolve } from 'path';
+import { ConnectionIndicator } from '../common';
 import { Observable, Subject, filter, first, merge } from 'rxjs';
 
 /**
