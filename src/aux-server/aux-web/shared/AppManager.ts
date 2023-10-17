@@ -105,24 +105,25 @@ export class AppManager {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
         this._simulationFactory = async (id, origin, config) => {
-            const indicator = await this.getConnectionIndicator(
-                origin.recordName,
-                origin.inst,
-                origin.host
-            );
+            const configBotId = uuid();
+            // const indicator = await this.getConnectionIndicator(
+            //     configBotId,
+            //     origin.recordName,
+            //     origin.inst,
+            //     origin.host
+            // );
             const partitions = BotManager.createPartitions(
                 id,
+                configBotId,
                 origin,
-                indicator,
                 config,
                 this._config.causalRepoConnectionUrl
             );
             return new BotManager(
-                indicator,
                 origin,
-                id,
                 config,
-                new AuxVMImpl(indicator, {
+                new AuxVMImpl(id, {
+                    configBotId: configBotId,
                     config,
                     partitions,
                 }),
@@ -501,12 +502,12 @@ export class AppManager {
     }
 
     async getConnectionIndicator(
+        connectionId: string,
         recordName: string | null,
         inst: string,
         host: string
     ): Promise<ConnectionIndicator> {
         try {
-            const connectionId = uuid();
             const endpoint = !host
                 ? this._auth.primary
                 : this._auth.getEndpoint(host);

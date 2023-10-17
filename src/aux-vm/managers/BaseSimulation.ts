@@ -115,13 +115,11 @@ export class BaseSimulation implements Simulation {
 
     /**
      * Creates a new simulation for the given user and channel ID.
-     * @param id The ID of the channel.
      * @param vm The VM that should be used.
      */
-    constructor(id: string, vm: AuxVM) {
+    constructor(vm: AuxVM) {
         this._vm = vm;
-        this._vm.id = id;
-        this._id = id;
+        this._id = vm.id;
         this._onSubSimulationAdded = new Subject();
         this._onSubSimulationRemoved = new Subject();
         this._subSimulations = new Map();
@@ -223,11 +221,7 @@ export class BaseSimulation implements Simulation {
 
         this._subscriptions.push(
             this._vm.subVMAdded.subscribe(async (vm) => {
-                const sim = this._createSubSimulation(
-                    vm.indicator,
-                    vm.id,
-                    vm.vm
-                );
+                const sim = this._createSubSimulation(vm.vm);
                 if (sim) {
                     this._subSimulations.set(vm.id, sim);
                     this._onSubSimulationAdded.next(sim);
@@ -246,16 +240,10 @@ export class BaseSimulation implements Simulation {
 
     /**
      * Creates a sub simulation from the given VM.
-     * @param user The user that should be used by the sim.
-     * @param id The ID of the sim.
      * @param vm The VM that the simulation should use.
      */
-    protected _createSubSimulation(
-        indicator: ConnectionIndicator,
-        id: string,
-        vm: AuxVM
-    ) {
-        return new BaseSimulation(id, vm);
+    protected _createSubSimulation(vm: AuxVM) {
+        return new BaseSimulation(vm);
     }
 
     /**

@@ -37,6 +37,7 @@ export class TestAuxVM implements AuxVM {
     formulas: string[];
 
     id: string;
+    configBotId: string;
 
     processEvents: boolean;
     state: BotsState;
@@ -50,15 +51,16 @@ export class TestAuxVM implements AuxVM {
     onAuthMessage: Subject<PartitionAuthMessage>;
 
     grant: string;
-    indicator: ConnectionIndicator;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
     }
 
-    constructor(userId: string = 'user') {
+    constructor(id: string, configBotId: string = 'user') {
         this.events = [];
         this.formulas = [];
+        this.id = id;
+        this.configBotId = configBotId;
 
         this.processEvents = false;
         this.state = {};
@@ -80,7 +82,7 @@ export class TestAuxVM implements AuxVM {
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
-        this._runtime.userId = userId;
+        this._runtime.userId = configBotId;
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();

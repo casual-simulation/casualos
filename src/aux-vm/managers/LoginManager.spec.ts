@@ -9,7 +9,7 @@ describe('LoginManager', () => {
     let vm: TestAuxVM;
 
     beforeEach(() => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('sim');
         subject = new LoginManager(vm);
     });
 

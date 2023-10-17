@@ -40,7 +40,7 @@ describe('AuxVMNode', () => {
         };
 
         channel = new NodeAuxChannel(connection, config);
-        vm = new AuxVMNode(channel);
+        vm = new AuxVMNode('id', 'connectionId', channel);
     });
 
     it('should initialize the channel', async () => {

@@ -22,11 +22,7 @@ export interface AuxStatic {
     /**
      * Creates a new AUX using the given config.
      */
-    new (
-        defaultHost: string,
-        indicator: ConnectionIndicator,
-        config: AuxConfig
-    ): AuxChannel;
+    new (defaultHost: string, config: AuxConfig): AuxChannel;
 }
 
 /**
@@ -231,7 +227,7 @@ export interface AuxSubChannelInfo {
     id: string;
 
     /**
-     * The connection indicator to use for the sub channel.
+     * The ID of the config bot.
      */
-    indicator: ConnectionIndicator;
+    configBotId: string;
 }

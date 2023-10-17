@@ -23,7 +23,12 @@ export interface AuxVM extends Initable {
     /**
      * The ID of the simulation that the VM is running.
      */
-    id: string;
+    get id(): string;
+
+    /**
+     * The ID of the config bot that the VM will create.
+     */
+    get configBotId(): string;
 
     /**
      * Gets the observable list of local events from the simulation.
@@ -137,9 +142,4 @@ export interface AuxSubVM {
      * The ID of the sub vm.
      */
     id: string;
-
-    /**
-     * The connection indicator that should be used for the sub vm.
-     */
-    indicator: ConnectionIndicator;
 }

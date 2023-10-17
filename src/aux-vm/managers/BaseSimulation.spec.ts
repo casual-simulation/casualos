@@ -16,9 +16,9 @@ describe('BaseSimulation', () => {
     let localEvents: Subject<LocalActions[]>;
 
     beforeEach(() => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('sim');
         localEvents = vm.localEvents = new Subject();
-        sim = new BaseSimulation('sim', vm);
+        sim = new BaseSimulation(vm);
     });
 
     describe('init()', () => {

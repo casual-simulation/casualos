@@ -41,8 +41,16 @@ export class AuxVMNode implements AuxVM {
         }
     >;
     private _onAuthMessage: Subject<PartitionAuthMessage>;
+    private _id: string;
+    private _configBotId: string;
 
-    id: string;
+    get id(): string {
+        return this._id;
+    }
+
+    get configBotId(): string {
+        return this._configBotId;
+    }
 
     get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
@@ -84,7 +92,9 @@ export class AuxVMNode implements AuxVM {
         return this._channel;
     }
 
-    constructor(channel: AuxChannel) {
+    constructor(id: string, configBotId: string, channel: AuxChannel) {
+        this._id = id;
+        this._configBotId = configBotId;
         this._channel = channel;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -150,18 +160,21 @@ export class AuxVMNode implements AuxVM {
     }
     closed: boolean;
 
-    protected _createSubVM(channel: AuxChannel): AuxVM {
-        return new AuxVMNode(channel);
+    protected _createSubVM(
+        id: string,
+        configBotId: string,
+        channel: AuxChannel
+    ): AuxVM {
+        return new AuxVMNode(id, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, indicator } = await subChannel.getInfo();
+        const { id, configBotId } = await subChannel.getInfo();
         const channel = await subChannel.getChannel();
 
         const subVM = {
             id,
-            indicator,
-            vm: this._createSubVM(channel),
+            vm: this._createSubVM(id, configBotId, channel),
             channel,
         };
 

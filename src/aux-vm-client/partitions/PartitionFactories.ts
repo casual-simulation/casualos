@@ -3,6 +3,7 @@ import {
     ConnectionIndicator,
     InstRecordsClient,
     InstRecordsClientTimeSyncConnection,
+    PartitionAuthSource,
     connectionCountMessageSchema,
 } from '@casual-simulation/aux-common';
 import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
@@ -39,13 +40,13 @@ let websocketClientCache = new Map<string, InstRecordsClient>();
  */
 export function getClientForHostAndProtocol(
     host: string,
-    indicator: ConnectionIndicator,
+    authSource: PartitionAuthSource,
     protocol: RemoteCausalRepoProtocol
 ): InstRecordsClient {
     if (protocol === 'apiary-aws') {
-        return getAWSApiaryClientForHostAndProtocol(host, indicator);
+        return getAWSApiaryClientForHostAndProtocol(host, authSource);
     } else {
-        return getWebSocketClientForHost(host, indicator);
+        return getWebSocketClientForHost(host, authSource);
     }
 }
 
@@ -56,7 +57,7 @@ export function getClientForHostAndProtocol(
  */
 export function getAWSApiaryClientForHostAndProtocol(
     host: string,
-    indicator: ConnectionIndicator
+    authSource: PartitionAuthSource
 ): InstRecordsClient {
     let client = awsApiaryClientCache.get(host);
     if (!client) {
@@ -68,7 +69,7 @@ export function getAWSApiaryClientForHostAndProtocol(
             url.protocol = 'wss:';
         }
 
-        const manager = new WebSocketManager(url.href);
+        const manager = new WebSocketManager(url);
         manager.init();
 
         const awsConnection = new ApiGatewayWebsocketConnectionClient(
@@ -76,7 +77,7 @@ export function getAWSApiaryClientForHostAndProtocol(
         );
         const connection = new AuthenticatedConnectionClient(
             awsConnection,
-            indicator
+            authSource
         );
         client = new InstRecordsClient(connection);
         awsApiaryClientCache.set(host, client);
@@ -93,7 +94,7 @@ export function getAWSApiaryClientForHostAndProtocol(
  */
 export function getWebSocketClientForHost(
     host: string,
-    indicator: ConnectionIndicator
+    authSource: PartitionAuthSource
 ): InstRecordsClient {
     let client = websocketClientCache.get(host);
     if (!client) {
@@ -105,10 +106,10 @@ export function getWebSocketClientForHost(
             url.protocol = 'wss:';
         }
 
-        const manager = new WebSocketManager(url.href);
+        const manager = new WebSocketManager(url);
         manager.init();
         const inner = new WebsocketConnectionClient(manager.socket);
-        const connection = new AuthenticatedConnectionClient(inner, indicator);
+        const connection = new AuthenticatedConnectionClient(inner, authSource);
         client = new InstRecordsClient(connection);
         websocketClientCache.set(host, client);
 
@@ -124,13 +125,13 @@ export function getWebSocketClientForHost(
  */
 export async function createRemoteYjsPartition(
     config: PartitionConfig,
-    indicator: ConnectionIndicator,
+    authSource: PartitionAuthSource,
     useCache: boolean = true
 ): Promise<YjsPartition> {
     if (config.type === 'remote_yjs') {
         const client = getClientForHostAndProtocol(
             config.host,
-            indicator,
+            authSource,
             config.connectionProtocol
         );
         const partition = new RemoteYjsPartitionImpl(client, config);
@@ -146,13 +147,13 @@ export async function createRemoteYjsPartition(
  */
 export async function createOtherPlayersRepoPartition(
     config: PartitionConfig,
-    indicator: ConnectionIndicator,
+    authSource: PartitionAuthSource,
     useCache: boolean = true
 ): Promise<OtherPlayersPartition> {
     if (config.type === 'other_players_repo') {
         const client = getClientForHostAndProtocol(
             config.host,
-            indicator,
+            authSource,
             config.connectionProtocol
         );
         const partition = new OtherPlayersPartitionImpl(client, config);
@@ -163,12 +164,12 @@ export async function createOtherPlayersRepoPartition(
 
 export function createTimeSyncController(
     config: AuxTimeSyncConfiguration,
-    indicator: ConnectionIndicator
+    authSource: PartitionAuthSource
 ): TimeSyncController {
     if (config.host) {
         const client = getClientForHostAndProtocol(
             config.host,
-            indicator,
+            authSource,
             config.connectionProtocol
         );
         return new TimeSyncController(

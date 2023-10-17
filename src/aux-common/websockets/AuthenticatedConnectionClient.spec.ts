@@ -10,11 +10,13 @@ import { waitAsync } from '../test/TestHelpers';
 import { ClientConnectionState } from './ConnectionClient';
 import { Subject } from 'rxjs';
 import { LoginResultMessage } from './WebsocketEvents';
+import { PartitionAuthSource } from '../partitions';
 
 console.log = jest.fn();
 
 describe('AuthenticatedConnectionClient', () => {
     let subject: AuthenticatedConnectionClient;
+    let authSource: PartitionAuthSource;
     let inner: MemoryConnectionClient;
 
     const indicatorCases: [string, ConnectionIndicator][] = [
@@ -25,6 +27,10 @@ describe('AuthenticatedConnectionClient', () => {
     describe.each(indicatorCases)('%s', (name, indicator) => {
         beforeEach(() => {
             inner = new MemoryConnectionClient();
+            inner.origin = 'http://localhost';
+            authSource = new PartitionAuthSource(
+                new Map([['http://localhost', indicator]])
+            );
             subject = new AuthenticatedConnectionClient(inner, indicator);
         });
 

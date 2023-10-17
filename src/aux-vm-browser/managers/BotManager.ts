@@ -131,12 +131,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     static createPartitions(
         id: string,
+        configBotId: string,
         origin: SimulationOrigin,
-        indicator: ConnectionIndicator,
         config: AuxConfig['config'],
         defaultHost: string = location.origin
     ): AuxPartitionConfig {
-        const connectionId = getConnectionId(indicator);
         const host = origin.host ?? defaultHost;
         const protocol = config.causalRepoConnectionProtocol;
         const versions = config.sharedPartitionsVersion;
@@ -161,7 +160,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 type: 'memory',
                 private: true,
                 initialState: {
-                    [connectionId]: createBot(connectionId, {
+                    [configBotId]: createBot(configBotId, {
                         inst: origin.inst ?? id,
                     }),
                 },
@@ -195,7 +194,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'remote_yjs',
                     recordName: origin.recordName,
                     inst: origin.inst,
-                    branch: `${DEFAULT_BRANCH_NAME}-player-${connectionId}`,
+                    branch: `${DEFAULT_BRANCH_NAME}-player-${configBotId}`,
                     host: host,
                     connectionProtocol: protocol,
                     temporary: true,
@@ -228,7 +227,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'remote_yjs',
                     recordName: origin.recordName,
                     inst: origin.inst,
-                    branch: `${DEFAULT_BRANCH_NAME}-player-${connectionId}`,
+                    branch: `${DEFAULT_BRANCH_NAME}-player-${configBotId}`,
                     host: host,
                     connectionProtocol: protocol,
                     temporary: true,
@@ -267,17 +266,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     }
 
     constructor(
-        indicator: ConnectionIndicator,
         origin: SimulationOrigin,
-        id: string,
         config: AuxConfig['config'],
         vm: AuxVM,
         auth?: AuthHelper
     ) {
-        super(id, vm);
+        super(vm);
         this._origin = origin;
         this._config = config;
-        this.helper.userId = getConnectionId(indicator);
         this._authHelper =
             auth ?? new AuthHelper(config.authOrigin, config.recordsOrigin);
         this._login = new LoginManager(this._vm);
@@ -354,18 +350,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
     }
 
-    protected _createSubSimulation(
-        indicator: ConnectionIndicator,
-        id: string,
-        vm: AuxVM
-    ) {
+    protected _createSubSimulation(vm: AuxVM) {
         return new BotManager(
-            indicator,
             {
                 recordName: null,
                 inst: null,
             },
-            id,
             {
                 version: this._config.version,
                 versionHash: this._config.versionHash,

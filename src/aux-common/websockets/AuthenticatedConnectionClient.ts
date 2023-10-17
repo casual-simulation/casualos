@@ -3,9 +3,12 @@ import {
     Observable,
     concatMap,
     distinctUntilKeyChanged,
+    filter,
     first,
+    from,
     map,
     of,
+    switchMap,
     takeUntil,
     tap,
 } from 'rxjs';
@@ -35,18 +38,23 @@ import {
     WebsocketMessage,
 } from './WebsocketEvents';
 import { ConnectionIndicator } from '../common';
+import {
+    PartitionAuthResponse,
+    PartitionAuthResponseSuccess,
+    PartitionAuthSource,
+} from 'partitions';
 
 /**
  * Defines a connection client that attempts to authenticate before bubbling a connection event.
  */
 export class AuthenticatedConnectionClient implements ConnectionClient {
     private _inner: ConnectionClient;
-    private _indicator: ConnectionIndicator;
+    private _authSource: PartitionAuthSource;
     private _connectionStateChanged: BehaviorSubject<ClientConnectionState>;
 
-    constructor(inner: ConnectionClient, indicator: ConnectionIndicator) {
+    constructor(inner: ConnectionClient, authSource: PartitionAuthSource) {
         this._inner = inner;
-        this._indicator = indicator;
+        this._authSource = authSource;
         this._connectionStateChanged =
             new BehaviorSubject<ClientConnectionState>({
                 connected: false,
@@ -61,12 +69,16 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
             .subscribe(this._connectionStateChanged);
     }
 
+    get origin() {
+        return this._inner.origin;
+    }
+
     get info() {
         return this._connectionStateChanged.value.info;
     }
 
     get indicator() {
-        return this._indicator;
+        return this._authSource.getConnectionIndicatorForOrigin(this.origin);
     }
 
     get connectionState(): Observable<ClientConnectionState> {
@@ -106,32 +118,54 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
     private _login(connected: boolean): Observable<ClientConnectionState> {
         if (connected) {
             console.log('[AuthencatedConnectionClient] Logging in...');
-            const onLoginResult = this._inner.event('login_result');
-            this._inner.send({
-                type: 'login',
-                ...this._indicator,
-            });
+            const indicator = this.indicator;
 
-            return onLoginResult.pipe(
-                tap(() =>
-                    console.log('[AuthencatedConnectionClient] Logged in.')
-                ),
-                map((result) => ({
-                    connected: true,
-                    info: result.info,
-                })),
-                first(),
-                takeUntil(
-                    this._inner.connectionState.pipe(
-                        first((state) => !state.connected)
+            if (!indicator) {
+                const promise = this._authSource.sendAuthRequest({
+                    type: 'request',
+                    origin: this.origin,
+                });
+
+                return from(promise).pipe(
+                    filter(
+                        (r): r is PartitionAuthResponseSuccess =>
+                            r.success === true
+                    ),
+                    map((r) => r.indicator),
+                    switchMap((indicator) =>
+                        this._loginWithIndicator(indicator)
                     )
-                )
-            );
+                );
+            } else {
+                return this._loginWithIndicator(indicator);
+            }
         } else {
             return of({
                 connected: false,
                 info: null,
             });
         }
+    }
+
+    private _loginWithIndicator(indicator: ConnectionIndicator) {
+        const onLoginResult = this._inner.event('login_result');
+        this._inner.send({
+            type: 'login',
+            ...indicator,
+        });
+
+        return onLoginResult.pipe(
+            tap(() => console.log('[AuthencatedConnectionClient] Logged in.')),
+            map((result) => ({
+                connected: true,
+                info: result.info,
+            })),
+            first(),
+            takeUntil(
+                this._inner.connectionState.pipe(
+                    first((state) => !state.connected)
+                )
+            )
+        );
     }
 }

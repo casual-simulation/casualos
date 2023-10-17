@@ -20,12 +20,8 @@ import { AuxRuntime } from '@casual-simulation/aux-runtime';
 export class BrowserAuxChannel extends RemoteAuxChannel {
     static defaultHost: string;
 
-    constructor(
-        defaultHost: string,
-        indicator: ConnectionIndicator,
-        config: AuxConfig
-    ) {
-        super(indicator, config, {});
+    constructor(defaultHost: string, config: AuxConfig) {
+        super(config, {});
         BrowserAuxChannel.defaultHost = defaultHost;
     }
 
@@ -46,13 +42,11 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
     }
 
     protected _createSubChannel(
-        indicator: ConnectionIndicator,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
         const channel = new BrowserAuxChannel(
             BrowserAuxChannel.defaultHost,
-            indicator,
             config
         );
         channel._runtime = runtime;

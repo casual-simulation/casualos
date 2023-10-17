@@ -42,7 +42,7 @@ describe('BrowserSimulationCalculations', () => {
     let userId = 'user';
 
     beforeEach(() => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('sim');
         vm.processEvents = true;
         localEvents = vm.localEvents = new Subject();
         login = new LoginManager(vm);

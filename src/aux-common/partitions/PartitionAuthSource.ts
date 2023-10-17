@@ -1,6 +1,7 @@
 import { ConnectionIndicator } from 'common';
 import { initial } from 'lodash';
-import { Observable, Subject, filter, merge } from 'rxjs';
+import { resolve } from 'path';
+import { Observable, Subject, filter, first, merge } from 'rxjs';
 
 /**
  * Defines an interface that is able to provide events for when authentication information is requested or provided to partitions.
@@ -37,36 +38,48 @@ export class PartitionAuthSource {
         }
         this._onAuthResponse.subscribe((response) => {
             if (response.success) {
-                this._indicators.set(response.host, response.indicator);
+                this._indicators.set(response.origin, response.indicator);
             }
         });
     }
 
     /**
-     * Gets the connection indicator that is currently stored for the given host.
-     * @param host The host.
+     * Gets the connection indicator that is currently stored for the given origin.
+     * @param origin The origin.
      * @returns Returns the connection indicator or null if none is stored.
      */
-    getConnectionIndicatorForHost(host: string): ConnectionIndicator | null {
-        return this._indicators.get(host) ?? null;
+    getConnectionIndicatorForOrigin(
+        origin: string
+    ): ConnectionIndicator | null {
+        return this._indicators.get(origin) ?? null;
     }
 
     /**
-     * Gets an observable that resolves when there is an auth response for the given host.
-     * @param host The host.
+     * Gets an observable that resolves when there is an auth response for the given HTTP origin.
+     * @param origin The origin.
      */
-    onAuthResponseForHost(host: string): Observable<PartitionAuthResponse> {
+    onAuthResponseForOrigin(origin: string): Observable<PartitionAuthResponse> {
         return this._onAuthResponse.pipe(
-            filter((response) => response.host === host)
+            filter((response) => response.origin === origin)
         );
     }
 
     /**
-     * Sends a request for authentication information.
+     * Sends a request for authentication information. Returns an observable that resolves with the first response for the origin.
      * @param request The request that should be sent.
      */
-    sendAuthRequest(request: PartitionAuthRequest): void {
-        this._onAuthRequest.next(request);
+    sendAuthRequest(
+        request: PartitionAuthRequest
+    ): Promise<PartitionAuthResponse> {
+        return new Promise<PartitionAuthResponse>((resolve, reject) => {
+            this._onAuthResponse
+                .pipe(first((r) => r.origin === request.origin))
+                .subscribe({
+                    next: (r) => resolve(r),
+                    error: (err) => reject(err),
+                });
+            this._onAuthRequest.next(request);
+        });
     }
 
     /**
@@ -84,9 +97,9 @@ export interface PartitionAuthRequest {
     type: 'request';
 
     /**
-     * The host for the partition.
+     * The origin for the partition.
      */
-    host: string;
+    origin: string;
 }
 
 export type PartitionAuthResponse =
@@ -97,9 +110,9 @@ export interface PartitionAuthResponseBase {
     type: 'response';
 
     /**
-     * The host for the partition.
+     * The origin for the partition.
      */
-    host: string;
+    origin: string;
 }
 
 export interface PartitionAuthResponseSuccess
