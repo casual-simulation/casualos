@@ -455,21 +455,22 @@ describe('WebsocketController', () => {
                 });
 
                 expect(
-                    messenger.getEvents(device1Info.serverConnectionId)
+                    messenger.getMessages(device1Info.serverConnectionId)
                 ).toEqual([
-                    [
-                        WebsocketEventTypes.Error,
-                        -1,
-                        {
-                            success: false,
-                            errorCode: 'not_authorized',
-                            errorMessage: 'Temporary insts are not allowed.',
-                            recordName: null,
-                            inst,
-                            branch: 'doesNotExist',
-                        },
-                    ],
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: false,
+                        recordName: null,
+                        inst,
+                        branch: 'doesNotExist',
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Temporary insts are not allowed.',
+                    },
                 ]);
+
+                expect(
+                    messenger.getEvents(device1Info.serverConnectionId)
+                ).toEqual([]);
 
                 expect(
                     await instStore.getBranchByName(null, inst, 'doesNotExist')
@@ -513,22 +514,23 @@ describe('WebsocketController', () => {
                 });
 
                 expect(
-                    messenger.getEvents(device2Info.serverConnectionId)
+                    messenger.getMessages(device2Info.serverConnectionId)
                 ).toEqual([
-                    [
-                        WebsocketEventTypes.Error,
-                        -1,
-                        {
-                            success: false,
-                            errorCode: 'not_authorized',
-                            errorMessage:
-                                'The maximum number of active connections to this inst has been reached.',
-                            recordName: null,
-                            inst,
-                            branch: 'doesNotExist',
-                        },
-                    ],
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: false,
+                        recordName: null,
+                        inst,
+                        branch: 'doesNotExist',
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'The maximum number of active connections to this inst has been reached.',
+                    },
                 ]);
+
+                expect(
+                    messenger.getEvents(device2Info.serverConnectionId)
+                ).toEqual([]);
             });
 
             describe('temp', () => {
@@ -661,20 +663,21 @@ describe('WebsocketController', () => {
                     branch: 'test',
                 });
 
-                expect(messenger.getEvents(serverConnectionId)).toEqual([
-                    [
-                        WebsocketEventTypes.Error,
-                        -1,
-                        {
-                            success: false,
-                            errorCode: 'record_not_found',
-                            errorMessage: 'Record not found.',
-                            recordName,
-                            inst,
-                            branch: 'test',
-                        },
-                    ],
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(1)
+                ).toEqual([
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: false,
+                        recordName,
+                        inst,
+                        branch: 'test',
+                        errorCode: 'record_not_found',
+                        errorMessage: 'Record not found.',
+                    },
                 ]);
+
+                expect(messenger.getEvents(serverConnectionId)).toEqual([]);
             });
 
             describe('private', () => {
@@ -700,22 +703,22 @@ describe('WebsocketController', () => {
                             branch: 'testBranch',
                         });
 
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/watch_branch_result',
+                                success: false,
+                                errorCode: 'not_logged_in',
+                                errorMessage:
+                                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                            },
+                        ]);
                         expect(messenger.getEvents(serverConnectionId)).toEqual(
-                            [
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'not_logged_in',
-                                        errorMessage:
-                                            'The user must be logged in. Please provide a sessionKey or a recordKey.',
-                                        recordName,
-                                        inst,
-                                        branch: 'testBranch',
-                                    },
-                                ],
-                            ]
+                            []
                         );
                     });
 
@@ -738,22 +741,22 @@ describe('WebsocketController', () => {
                             branch: 'testBranch',
                         });
 
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/watch_branch_result',
+                                success: false,
+                                errorCode: 'not_logged_in',
+                                errorMessage:
+                                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                            },
+                        ]);
                         expect(messenger.getEvents(serverConnectionId)).toEqual(
-                            [
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'not_logged_in',
-                                        errorMessage:
-                                            'The user must be logged in. Please provide a sessionKey or a recordKey.',
-                                        recordName,
-                                        inst,
-                                        branch: 'testBranch',
-                                    },
-                                ],
-                            ]
+                            []
                         );
                     });
                 });
@@ -795,30 +798,33 @@ describe('WebsocketController', () => {
                             });
 
                             expect(
-                                messenger.getEvents(serverConnectionId)
+                                messenger
+                                    .getMessages(serverConnectionId)
+                                    .slice(1)
                             ).toEqual([
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'not_authorized',
-                                        errorMessage:
-                                            'You are not authorized to perform this action.',
-                                        reason: {
-                                            type: 'missing_permission',
-                                            kind: 'user',
-                                            id: otherUserId,
-                                            marker: 'private',
-                                            permission: 'inst.create',
-                                            role: null,
-                                        },
-                                        recordName,
-                                        inst,
-                                        branch: 'testBranch',
+                                {
+                                    type: 'repo/watch_branch_result',
+                                    success: false,
+                                    errorCode: 'not_authorized',
+                                    errorMessage:
+                                        'You are not authorized to perform this action.',
+                                    reason: {
+                                        type: 'missing_permission',
+                                        kind: 'user',
+                                        id: otherUserId,
+                                        marker: 'private',
+                                        permission: 'inst.create',
+                                        role: null,
                                     },
-                                ],
+                                    recordName,
+                                    inst,
+                                    branch: 'testBranch',
+                                },
                             ]);
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
                         });
 
                         it('should return a not_authorized error if the user is trying to create an inst in a record they do not have read access to', async () => {
@@ -859,30 +865,32 @@ describe('WebsocketController', () => {
                             });
 
                             expect(
-                                messenger.getEvents(serverConnectionId)
+                                messenger
+                                    .getMessages(serverConnectionId)
+                                    .slice(1)
                             ).toEqual([
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'not_authorized',
-                                        errorMessage:
-                                            'You are not authorized to perform this action.',
-                                        reason: {
-                                            type: 'missing_permission',
-                                            kind: 'user',
-                                            id: otherUserId,
-                                            marker: 'private',
-                                            permission: 'inst.read',
-                                            role: null,
-                                        },
-                                        recordName,
-                                        inst,
-                                        branch: 'testBranch',
+                                {
+                                    type: 'repo/watch_branch_result',
+                                    success: false,
+                                    errorCode: 'not_authorized',
+                                    errorMessage:
+                                        'You are not authorized to perform this action.',
+                                    reason: {
+                                        type: 'missing_permission',
+                                        kind: 'user',
+                                        id: otherUserId,
+                                        marker: 'private',
+                                        permission: 'inst.read',
+                                        role: null,
                                     },
-                                ],
+                                    recordName,
+                                    inst,
+                                    branch: 'testBranch',
+                                },
                             ]);
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
                         });
 
                         it('should create the inst if the user is the owner of the record', async () => {
@@ -1017,22 +1025,25 @@ describe('WebsocketController', () => {
                             });
 
                             expect(
-                                messenger.getEvents(serverConnectionId)
+                                messenger
+                                    .getMessages(serverConnectionId)
+                                    .slice(1)
                             ).toEqual([
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'not_authorized',
-                                        errorMessage:
-                                            'Insts are not allowed for this subscription.',
-                                        recordName,
-                                        inst,
-                                        branch: 'test',
-                                    },
-                                ],
+                                {
+                                    type: 'repo/watch_branch_result',
+                                    success: false,
+                                    errorCode: 'not_authorized',
+                                    errorMessage:
+                                        'Insts are not allowed for this subscription.',
+                                    recordName,
+                                    inst,
+                                    branch: 'test',
+                                },
                             ]);
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
                         });
 
                         it('should return a subscription_limit_reached error the subscription has reached the maximum number of insts', async () => {
@@ -1093,22 +1104,25 @@ describe('WebsocketController', () => {
                             });
 
                             expect(
-                                messenger.getEvents(serverConnectionId)
+                                messenger
+                                    .getMessages(serverConnectionId)
+                                    .slice(1)
                             ).toEqual([
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'subscription_limit_reached',
-                                        errorMessage:
-                                            'The maximum number of insts has been reached.',
-                                        recordName,
-                                        inst,
-                                        branch: 'test',
-                                    },
-                                ],
+                                {
+                                    type: 'repo/watch_branch_result',
+                                    success: false,
+                                    errorCode: 'subscription_limit_reached',
+                                    errorMessage:
+                                        'The maximum number of insts has been reached.',
+                                    recordName,
+                                    inst,
+                                    branch: 'test',
+                                },
                             ]);
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
                         });
                     });
 
@@ -1135,30 +1149,33 @@ describe('WebsocketController', () => {
                             });
 
                             expect(
-                                messenger.getEvents(serverConnectionId)
+                                messenger
+                                    .getMessages(serverConnectionId)
+                                    .slice(1)
                             ).toEqual([
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'not_authorized',
-                                        errorMessage:
-                                            'You are not authorized to perform this action.',
-                                        reason: {
-                                            type: 'missing_permission',
-                                            kind: 'user',
-                                            id: otherUserId,
-                                            marker: 'private',
-                                            permission: 'inst.read',
-                                            role: null,
-                                        },
-                                        recordName,
-                                        inst,
-                                        branch: 'testBranch',
+                                {
+                                    type: 'repo/watch_branch_result',
+                                    success: false,
+                                    errorCode: 'not_authorized',
+                                    errorMessage:
+                                        'You are not authorized to perform this action.',
+                                    reason: {
+                                        type: 'missing_permission',
+                                        kind: 'user',
+                                        id: otherUserId,
+                                        marker: 'private',
+                                        permission: 'inst.read',
+                                        role: null,
                                     },
-                                ],
+                                    recordName,
+                                    inst,
+                                    branch: 'testBranch',
+                                },
                             ]);
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
                         });
 
                         it('should return a not_authorized error if the user is trying to read an inst they have access to but their token does not grant', async () => {
@@ -1200,22 +1217,25 @@ describe('WebsocketController', () => {
                             });
 
                             expect(
-                                messenger.getEvents(serverConnectionId)
+                                messenger
+                                    .getMessages(serverConnectionId)
+                                    .slice(1)
                             ).toEqual([
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'not_authorized',
-                                        errorMessage:
-                                            'You are not authorized to access this inst.',
-                                        recordName,
-                                        inst: 'otherInst',
-                                        branch: 'testBranch',
-                                    },
-                                ],
+                                {
+                                    type: 'repo/watch_branch_result',
+                                    success: false,
+                                    errorCode: 'not_authorized',
+                                    errorMessage:
+                                        'You are not authorized to access this inst.',
+                                    recordName,
+                                    inst: 'otherInst',
+                                    branch: 'testBranch',
+                                },
                             ]);
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
                         });
 
                         it('should succeed if the user is the record owner', async () => {
@@ -1324,22 +1344,25 @@ describe('WebsocketController', () => {
                             });
 
                             expect(
-                                messenger.getEvents(serverConnectionId)
+                                messenger
+                                    .getMessages(serverConnectionId)
+                                    .slice(1)
                             ).toEqual([
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'not_authorized',
-                                        errorMessage:
-                                            'Insts are not allowed for this subscription.',
-                                        recordName,
-                                        inst,
-                                        branch: 'test',
-                                    },
-                                ],
+                                {
+                                    type: 'repo/watch_branch_result',
+                                    success: false,
+                                    errorCode: 'not_authorized',
+                                    errorMessage:
+                                        'Insts are not allowed for this subscription.',
+                                    recordName,
+                                    inst,
+                                    branch: 'test',
+                                },
                             ]);
+
+                            expect(
+                                messenger.getEvents(serverConnectionId)
+                            ).toEqual([]);
                         });
 
                         it('should return a subscription_limit_reached error the subscription has reached the maximum connections to a branch', async () => {
@@ -1427,22 +1450,25 @@ describe('WebsocketController', () => {
                             });
 
                             expect(
-                                messenger.getEvents(otherServerConnectionId)
+                                messenger
+                                    .getMessages(otherServerConnectionId)
+                                    .slice(1)
                             ).toEqual([
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'subscription_limit_reached',
-                                        errorMessage:
-                                            'The maximum number of active connections to this inst has been reached.',
-                                        recordName,
-                                        inst,
-                                        branch: 'test',
-                                    },
-                                ],
+                                {
+                                    type: 'repo/watch_branch_result',
+                                    success: false,
+                                    errorCode: 'subscription_limit_reached',
+                                    errorMessage:
+                                        'The maximum number of active connections to this inst has been reached.',
+                                    recordName,
+                                    inst,
+                                    branch: 'test',
+                                },
                             ]);
+
+                            expect(
+                                messenger.getEvents(otherServerConnectionId)
+                            ).toEqual([]);
                         });
                     });
                 });

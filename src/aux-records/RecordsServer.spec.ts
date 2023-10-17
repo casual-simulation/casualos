@@ -11135,20 +11135,18 @@ describe('RecordsServer', () => {
                     )
                 );
 
+                expect(websocketMessenger.getMessages(connectionId)).toEqual([
+                    {
+                        type: 'login_result',
+                        success: false,
+                        errorCode: 'unacceptable_connection_id',
+                        errorMessage:
+                            'A connection ID must be specified when logging in without a connection token.',
+                    },
+                ]);
                 const errors = getWebSockerErrors(connectionId);
 
-                expect(errors).toEqual([
-                    [
-                        WebsocketEventTypes.Error,
-                        1,
-                        {
-                            success: false,
-                            errorCode: 'unacceptable_connection_id',
-                            errorMessage:
-                                'A connection ID must be specified when logging in without a connection token.',
-                        },
-                    ],
-                ]);
+                expect(errors).toEqual([]);
             });
 
             it('should return an error if the login message is improperly formattted', async () => {
@@ -11208,6 +11206,7 @@ describe('RecordsServer', () => {
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
                     {
                         type: 'login_result',
+                        success: true,
                         info: {
                             connectionId: 'clientConnectionId',
                             sessionId: null,
