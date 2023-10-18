@@ -43,6 +43,11 @@ export interface Simulation extends Initable {
     id: string;
 
     /**
+     * Gets the config bot ID for the simulation.
+     */
+    get configBotId(): string;
+
+    /**
      * Gets whether the app is connected to the inst but may
      * or may not be synced to the inst.
      */

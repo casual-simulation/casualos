@@ -2,14 +2,29 @@ import { Subject, Subscription } from 'rxjs';
 import { AuthCoordinator } from './AuthCoordinator';
 import { BotManager } from './BotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
-import { SimulationManager } from '@casual-simulation/aux-vm/managers';
+import {
+    AuthHelperInterface,
+    SimulationManager,
+} from '@casual-simulation/aux-vm/managers';
 import {
     ConnectionInfo,
+    PartitionAuthMessage,
+    PartitionAuthResponse,
     botAdded,
     createBot,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { AuxConfigParameters } from '@casual-simulation/aux-vm/vm';
+import { AuthHelper } from './AuthHelper';
+import { randomBytes } from 'crypto';
+import { fromByteArray } from 'base64-js';
+import { SESSION_SECRET_BYTE_LENGTH } from '@casual-simulation/aux-records';
+import {
+    formatV1ConnectionKey,
+    generateV1ConnectionToken,
+} from '@casual-simulation/aux-records/AuthUtils';
+
+console.log = jest.fn();
 
 describe('AuthCoordinator', () => {
     let manager: AuthCoordinator<BotManager>;
@@ -17,8 +32,22 @@ describe('AuthCoordinator', () => {
     let sim: BotManager;
     let sub: Subscription;
     let vms: Map<string, TestAuxVM>;
+    let authHelper: AuthHelper;
+    let auth: AuthHelperInterface;
+    let authMock = {
+        isAuthenticated: jest.fn(),
+        authenticate: jest.fn(),
+        getAuthToken: jest.fn(),
+        createPublicRecordKey: jest.fn(),
+        provideSmsNumber: jest.fn(),
+        getRecordKeyPolicy: jest.fn(),
+        getConnectionKey: jest.fn(),
+    };
 
     let simManager: SimulationManager<BotManager>;
+
+    let responses: PartitionAuthResponse[];
+    const origin = 'http://localhost:3002';
 
     async function addSimulation(id: string) {
         const sim = await simManager.addSimulation(id, {
@@ -38,12 +67,43 @@ describe('AuthCoordinator', () => {
     beforeEach(async () => {
         sub = new Subscription();
         vms = new Map();
-
-        const connection: ConnectionInfo = {
-            connectionId: connectionId,
-            userId: 'userId',
-            sessionId: 'sessionId',
+        responses = [];
+        authMock = auth = {
+            isAuthenticated: jest.fn(),
+            authenticate: jest.fn(),
+            getAuthToken: jest.fn(),
+            createPublicRecordKey: jest.fn(),
+            unsubscribe: jest.fn(),
+            openAccountPage: jest.fn(),
+            cancelLogin: jest.fn(),
+            loginStatus: null,
+            loginUIStatus: new Subject(),
+            logout: jest.fn(),
+            getConnectionKey: jest.fn(),
+            provideEmailAddress: jest.fn(),
+            setUseCustomUI: jest.fn(),
+            provideSmsNumber: jest.fn(),
+            provideCode: jest.fn(),
+            authenticateInBackground: jest.fn(),
+            getRecordKeyPolicy: jest.fn(),
+            getRecordsOrigin: jest.fn().mockResolvedValue(origin),
+            get supportsAuthentication() {
+                return true;
+            },
+            get closed() {
+                return false;
+            },
+            get origin() {
+                return origin;
+            },
         };
+        authHelper = new AuthHelper(origin, origin, (authOrigin) => {
+            if (authOrigin === 'http://localhost:3002') {
+                return auth;
+            } else {
+                return null;
+            }
+        });
 
         const config: AuxConfigParameters = {
             version: 'v1.0.0',
@@ -51,11 +111,11 @@ describe('AuthCoordinator', () => {
         };
 
         simManager = new SimulationManager((id, options) => {
-            const vm = new TestAuxVM(id, connection.connectionId);
+            const vm = new TestAuxVM(id, connectionId);
             vm.processEvents = true;
             vm.localEvents = new Subject();
             vms.set(id, vm);
-            return new BotManager(options, config, vm);
+            return new BotManager(options, config, vm, authHelper);
         });
 
         await simManager.setPrimary('sim-1', {
@@ -66,41 +126,81 @@ describe('AuthCoordinator', () => {
 
         manager = new AuthCoordinator(simManager);
 
-        // sub.add(
-        //     manager.onItemsUpdated
-        //         .pipe(skip(1))
-        //         .subscribe((u) => updates.push(u))
-        // );
-        // sub.add(
-        //     manager.onSelectionUpdated
-        //         .pipe(skip(1))
-        //         .subscribe((u) => selectionUpdates.push(u))
-        // );
-        // sub.add(
-        //     manager.onRecentsUpdated
-        //         .pipe(skip(1))
-        //         .subscribe((u) => recentsUpdates.push(u))
-        // );
-        // sub.add(
-        //     manager.onSearchResultsUpdated
-        //         .pipe(skip(1))
-        //         .subscribe((u) => searchUpdates.push(u))
-        // );
-        // sub.add(
-        //     manager.onDiffUpdated
-        //         .pipe(skip(1))
-        //         .subscribe((u) => diffUpdates.push(u))
-        // );
-        // sub.add(
-        //     manager.onDiffSelectionUpdated
-        //         .pipe(skip(1))
-        //         .subscribe((u) => diffSelectionUpdates.push(u))
-        // );
+        sim.onAuthMessage.subscribe((msg) => {
+            if (msg.type === 'response') {
+                responses.push(msg);
+            }
+        });
     });
 
     afterEach(() => {
         sub.unsubscribe();
     });
 
-    describe('');
+    describe('need_indicator', () => {
+        it('should respond to auth requests with a connection ID if a key does not exist', async () => {
+            authMock.getConnectionKey.mockResolvedValueOnce(null);
+
+            await sim.sendAuthMessage({
+                type: 'request',
+                origin: origin,
+                kind: 'need_indicator',
+            });
+
+            await waitAsync();
+
+            expect(responses).toEqual([
+                {
+                    type: 'response',
+                    success: true,
+                    indicator: {
+                        connectionId: connectionId,
+                    },
+                    origin: origin,
+                },
+            ]);
+        });
+
+        it('should respond to auth requests with a connection token if a key exists', async () => {
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const key = formatV1ConnectionKey(
+                'userId',
+                'sessionId',
+                connectionSecret,
+                Date.now() + 10000000
+            );
+            const token = generateV1ConnectionToken(
+                key,
+                connectionId,
+                null,
+                'sim-1'
+            );
+            authMock.getConnectionKey.mockResolvedValueOnce(key);
+
+            await sim.sendAuthMessage({
+                type: 'request',
+                origin: origin,
+                kind: 'need_indicator',
+            });
+
+            await waitAsync();
+
+            expect(responses).toEqual([
+                {
+                    type: 'response',
+                    success: true,
+                    indicator: {
+                        connectionToken: token,
+                    },
+                    origin: origin,
+                },
+            ]);
+        });
+    });
+
+    // describe('invalid_indicator', () => {
+
+    // });
 });

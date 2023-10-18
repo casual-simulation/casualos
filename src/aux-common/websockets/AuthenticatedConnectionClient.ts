@@ -151,15 +151,8 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
                 this._authSource.sendAuthRequest({
                     type: 'request',
                     origin: this.origin,
+                    kind: 'need_indicator',
                 });
-                // responses = responses.pipe(
-                //     onSubscribe(() => {
-                //         this._authSource.sendAuthRequest({
-                //             type: 'request',
-                //             origin: this.origin,
-                //         });
-                //     })
-                // );
             }
 
             const loginStates = responses.pipe(

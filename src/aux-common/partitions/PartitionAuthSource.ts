@@ -1,4 +1,4 @@
-import { ConnectionIndicator } from '../common';
+import { ConnectionIndicator, DenialReason } from '../common';
 import { Observable, Subject, filter, first, merge } from 'rxjs';
 
 /**
@@ -95,9 +95,22 @@ export interface PartitionAuthRequest {
     type: 'request';
 
     /**
-     * The origin for the partition.
+     * The HTTP origin for the partition.
      */
     origin: string;
+
+    /**
+     * The kind of the request.
+     * - "need_indicator" means that the partition does not have an indicator and needs one in order to login.
+     * - "invalid_indicator" means that the partition has an indicator and tried to connect, but the indicator was rejected upon login.
+     * - "not_authorized" means that the partition has an indicator logged in, but was rejected when trying to access a resource.
+     */
+    kind: 'need_indicator' | 'invalid_indicator' | 'not_authorized';
+
+    /**
+     * The denial reason. Only present if the kind is "not_authorized".
+     */
+    reason?: DenialReason;
 }
 
 export type PartitionAuthResponse =

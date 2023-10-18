@@ -89,6 +89,7 @@ export class TestAuxVM implements AuxVM {
         this.versionUpdated = new Subject<RuntimeStateVersion>();
         this.subVMAdded = new Subject();
         this.subVMRemoved = new Subject();
+        this.onAuthMessage = new Subject();
     }
 
     async shout(
