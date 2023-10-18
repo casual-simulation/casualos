@@ -15,6 +15,7 @@ import {
     ConnectedToBranchMessage,
     DisconnectedFromBranchMessage,
     WatchBranchMessage,
+    WatchBranchResultMessage,
     WebsocketErrorInfo,
 } from './WebsocketEvents';
 import {
@@ -118,6 +119,16 @@ export class InstRecordsClient {
             }),
             switchMap((connected) =>
                 merge(
+                    this._client
+                        .event('repo/watch_branch_result')
+                        .pipe(
+                            filter(
+                                (event) =>
+                                    event.recordName === recordName &&
+                                    event.inst === inst &&
+                                    event.branch === branch
+                            )
+                        ),
                     this._client.event('repo/add_updates').pipe(
                         filter(
                             (event) =>
@@ -700,9 +711,14 @@ export type ClientWatchBranchUpdatesEvents =
     | ClientUpdates
     | ClientUpdatesReceived
     | ClientEvent
-    | ClientError;
+    | ClientError
+    | WatchBranchResultMessage;
 
-export type ClientUpdatesOrEvent = ClientUpdates | ClientEvent | ClientError;
+export type ClientUpdatesOrEvent =
+    | ClientUpdates
+    | ClientEvent
+    | ClientError
+    | WatchBranchResultMessage;
 
 export function isClientEvent(
     event: ClientWatchBranchMessages | ClientWatchBranchUpdatesEvents
@@ -722,7 +738,8 @@ export function isClientUpdatesOrEvents(
     return (
         event.type === 'updates' ||
         event.type === 'event' ||
-        event.type === 'error'
+        event.type === 'error' ||
+        event.type === 'repo/watch_branch_result'
     );
 }
 
@@ -730,6 +747,12 @@ export function isClientError(
     event: ClientWatchBranchUpdatesEvents
 ): event is ClientError {
     return event.type === 'error';
+}
+
+export function isWatchBranchResult(
+    event: ClientWatchBranchUpdatesEvents
+): event is WatchBranchResultMessage {
+    return event.type === 'repo/watch_branch_result';
 }
 
 function whenConnected(
