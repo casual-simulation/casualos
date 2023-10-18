@@ -2166,6 +2166,14 @@ describe('WebsocketController', () => {
                         updates: ['111', '222', '333'],
                         initial: true,
                     },
+
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                        inst,
+                        branch: 'testBranch',
+                        recordName: recordName,
+                    },
                 ]);
             });
 
@@ -2217,6 +2225,14 @@ describe('WebsocketController', () => {
                         branch: 'testBranch',
                         updates: ['111', '222', '333'],
                         initial: true,
+                    },
+
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                        inst,
+                        branch: 'testBranch',
+                        recordName: recordName,
                     },
                 ]);
 
@@ -2301,6 +2317,13 @@ describe('WebsocketController', () => {
                         initial: true,
                     },
                     {
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                        inst,
+                        branch: 'testBranch',
+                        recordName: recordName,
+                    },
+                    {
                         type: 'repo/add_updates',
                         recordName: recordName,
                         inst,
@@ -2320,6 +2343,14 @@ describe('WebsocketController', () => {
                         updates: ['111', '222'],
                         initial: true,
                     },
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                        inst,
+                        branch: 'testBranch',
+                        recordName: recordName,
+                    },
+
                     {
                         type: 'repo/add_updates',
                         recordName: recordName,
@@ -2368,6 +2399,13 @@ describe('WebsocketController', () => {
                         branch: 'testBranch',
                         updates: ['111', '222'],
                         initial: true,
+                    },
+                    {
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                        inst,
+                        branch: 'testBranch',
+                        recordName: recordName,
                     },
 
                     // Server should send a atoms received event
@@ -2649,6 +2687,14 @@ describe('WebsocketController', () => {
                             updates: ['111', '222', '333'],
                             initial: true,
                         },
+
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
+                        },
                     ]);
                     expect(messenger.getEvents(serverConnectionId)).toEqual([]);
                 });
@@ -2731,6 +2777,14 @@ describe('WebsocketController', () => {
                             updates: ['111', '222', '333'],
                             initial: true,
                         },
+
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
+                        },
                     ]);
                 });
 
@@ -2785,6 +2839,14 @@ describe('WebsocketController', () => {
                             branch: 'testBranch',
                             updates: ['111', '222', '333'],
                             initial: true,
+                        },
+
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
                         },
                     ]);
 
@@ -2929,6 +2991,14 @@ describe('WebsocketController', () => {
                             branch: 'testBranch',
                             updates: ['111', '222'],
                             initial: true,
+                        },
+
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
                         },
 
                         // Server should send a atoms received event
@@ -4286,28 +4356,15 @@ describe('WebsocketController', () => {
                 });
 
                 expect(
-                    messenger.getMessages(device2Info.serverConnectionId)
-                ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
-                ]);
+                    messenger
+                        .getMessages(device2Info.serverConnectionId)
+                        .slice(2)
+                ).toEqual([]);
                 expect(
-                    messenger.getMessages(device3Info.serverConnectionId)
+                    messenger
+                        .getMessages(device3Info.serverConnectionId)
+                        .slice(2)
                 ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
                     {
                         type: 'repo/receive_action',
                         recordName: null,
@@ -4355,28 +4412,15 @@ describe('WebsocketController', () => {
                     });
 
                     expect(
-                        messenger.getMessages(device2Info.serverConnectionId)
-                    ).toEqual([
-                        {
-                            type: 'repo/add_updates',
-                            recordName: null,
-                            inst,
-                            branch: 'testBranch',
-                            updates: [],
-                            initial: true,
-                        },
-                    ]);
+                        messenger
+                            .getMessages(device2Info.serverConnectionId)
+                            .slice(2)
+                    ).toEqual([]);
                     expect(
-                        messenger.getMessages(device3Info.serverConnectionId)
+                        messenger
+                            .getMessages(device3Info.serverConnectionId)
+                            .slice(2)
                     ).toEqual([
-                        {
-                            type: 'repo/add_updates',
-                            recordName: null,
-                            inst,
-                            branch: 'testBranch',
-                            updates: [],
-                            initial: true,
-                        },
                         {
                             type: 'repo/receive_action',
                             recordName: null,
@@ -4427,16 +4471,10 @@ describe('WebsocketController', () => {
                 });
 
                 expect(
-                    messenger.getMessages(device1Info.serverConnectionId)
+                    messenger
+                        .getMessages(device1Info.serverConnectionId)
+                        .slice(2)
                 ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
                     {
                         type: 'repo/receive_action',
                         recordName: null,
@@ -4451,16 +4489,10 @@ describe('WebsocketController', () => {
                     messenger.getMessages(device2Info.serverConnectionId)
                 ).toEqual([]);
                 expect(
-                    messenger.getMessages(device3Info.serverConnectionId)
+                    messenger
+                        .getMessages(device3Info.serverConnectionId)
+                        .slice(2)
                 ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
                     {
                         type: 'repo/receive_action',
                         recordName: null,
@@ -4510,29 +4542,16 @@ describe('WebsocketController', () => {
                 });
 
                 expect(
-                    messenger.getMessages(device2Info.serverConnectionId)
-                ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
-                ]);
+                    messenger
+                        .getMessages(device2Info.serverConnectionId)
+                        .slice(2)
+                ).toEqual([]);
 
                 expect(
-                    messenger.getMessages(device3Info.serverConnectionId)
+                    messenger
+                        .getMessages(device3Info.serverConnectionId)
+                        .slice(2)
                 ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
                     {
                         type: 'repo/receive_action',
                         recordName: null,
@@ -4583,28 +4602,15 @@ describe('WebsocketController', () => {
                 });
 
                 expect(
-                    messenger.getMessages(device2Info.serverConnectionId)
-                ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
-                ]);
+                    messenger
+                        .getMessages(device2Info.serverConnectionId)
+                        .slice(2)
+                ).toEqual([]);
                 expect(
-                    messenger.getMessages(device3Info.serverConnectionId)
+                    messenger
+                        .getMessages(device3Info.serverConnectionId)
+                        .slice(2)
                 ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
                     {
                         type: 'repo/receive_action',
                         recordName: null,
@@ -4653,28 +4659,15 @@ describe('WebsocketController', () => {
                 });
 
                 expect(
-                    messenger.getMessages(device2Info.serverConnectionId)
-                ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
-                ]);
+                    messenger
+                        .getMessages(device2Info.serverConnectionId)
+                        .slice(2)
+                ).toEqual([]);
                 expect(
-                    messenger.getMessages(device3Info.serverConnectionId)
+                    messenger
+                        .getMessages(device3Info.serverConnectionId)
+                        .slice(2)
                 ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
                     {
                         type: 'repo/receive_action',
                         recordName: null,
@@ -4984,7 +4977,7 @@ describe('WebsocketController', () => {
                     });
 
                     expect(
-                        messenger.getMessages(otherServerConnectionId).slice(2)
+                        messenger.getMessages(otherServerConnectionId).slice(3)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -4997,7 +4990,7 @@ describe('WebsocketController', () => {
                         },
                     ]);
                     expect(
-                        messenger.getMessages(otherServerConnectionId2).slice(2)
+                        messenger.getMessages(otherServerConnectionId2).slice(3)
                     ).toEqual([]);
                 });
 
@@ -5032,12 +5025,12 @@ describe('WebsocketController', () => {
                         });
 
                         expect(
-                            messenger.getMessages(serverConnectionId).slice(2)
+                            messenger.getMessages(serverConnectionId).slice(3)
                         ).toEqual([]);
                         expect(
                             messenger
                                 .getMessages(otherServerConnectionId2)
-                                .slice(2)
+                                .slice(3)
                         ).toEqual([
                             {
                                 type: 'repo/receive_action',
@@ -5085,7 +5078,7 @@ describe('WebsocketController', () => {
                     });
 
                     expect(
-                        messenger.getMessages(serverConnectionId).slice(2)
+                        messenger.getMessages(serverConnectionId).slice(3)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -5101,7 +5094,7 @@ describe('WebsocketController', () => {
                         messenger.getMessages(otherServerConnectionId).slice(1)
                     ).toEqual([]);
                     expect(
-                        messenger.getMessages(otherServerConnectionId2).slice(2)
+                        messenger.getMessages(otherServerConnectionId2).slice(3)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -5148,11 +5141,11 @@ describe('WebsocketController', () => {
                     });
 
                     expect(
-                        messenger.getMessages(otherServerConnectionId).slice(2)
+                        messenger.getMessages(otherServerConnectionId).slice(3)
                     ).toEqual([]);
 
                     expect(
-                        messenger.getMessages(otherServerConnectionId2).slice(2)
+                        messenger.getMessages(otherServerConnectionId2).slice(3)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -5204,10 +5197,10 @@ describe('WebsocketController', () => {
                     });
 
                     expect(
-                        messenger.getMessages(otherServerConnectionId).slice(2)
+                        messenger.getMessages(otherServerConnectionId).slice(3)
                     ).toEqual([]);
                     expect(
-                        messenger.getMessages(otherServerConnectionId2).slice(2)
+                        messenger.getMessages(otherServerConnectionId2).slice(3)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -5257,10 +5250,10 @@ describe('WebsocketController', () => {
                     });
 
                     expect(
-                        messenger.getMessages(otherServerConnectionId).slice(2)
+                        messenger.getMessages(otherServerConnectionId).slice(3)
                     ).toEqual([]);
                     expect(
-                        messenger.getMessages(otherServerConnectionId2).slice(2)
+                        messenger.getMessages(otherServerConnectionId2).slice(3)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -5339,7 +5332,7 @@ describe('WebsocketController', () => {
                         ],
                     ]);
                     expect(
-                        messenger.getMessages(serverConnectionId).slice(1)
+                        messenger.getMessages(serverConnectionId).slice(2)
                     ).toEqual([]);
                 });
             });
@@ -5462,7 +5455,7 @@ describe('WebsocketController', () => {
                         ],
                     ]);
                     expect(
-                        messenger.getMessages(serverConnectionId).slice(2)
+                        messenger.getMessages(serverConnectionId).slice(3)
                     ).toEqual([]);
                 });
 
@@ -5531,7 +5524,7 @@ describe('WebsocketController', () => {
                         ],
                     ]);
                     expect(
-                        messenger.getMessages(serverConnectionId).slice(2)
+                        messenger.getMessages(serverConnectionId).slice(3)
                     ).toEqual([]);
                 });
 
@@ -5586,7 +5579,7 @@ describe('WebsocketController', () => {
                         messenger.getEvents(otherServerConnectionId)
                     ).toEqual([]);
                     expect(
-                        messenger.getMessages(serverConnectionId).slice(2)
+                        messenger.getMessages(serverConnectionId).slice(3)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -5696,7 +5689,7 @@ describe('WebsocketController', () => {
                         ],
                     ]);
                     expect(
-                        messenger.getMessages(serverConnectionId).slice(1)
+                        messenger.getMessages(serverConnectionId).slice(2)
                     ).toEqual([]);
                 });
             });
@@ -7602,7 +7595,7 @@ describe('WebsocketController', () => {
                 expect(
                     messenger
                         .getMessages(device1Info.serverConnectionId)
-                        .slice(1)
+                        .slice(2)
                 ).toEqual([
                     {
                         type: 'repo/receive_action',
