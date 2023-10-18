@@ -35,6 +35,10 @@ export class AuthHelper {
         return this._loginUIStatus;
     }
 
+    getOrCreateEndpoint(endpoint: string) {
+        return this.getEndpoint(endpoint) ?? this.createEndpoint(endpoint);
+    }
+
     getEndpoint(endpoint: string): AuthHelperInterface {
         return this._auths.get(endpoint);
     }

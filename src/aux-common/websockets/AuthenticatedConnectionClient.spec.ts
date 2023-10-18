@@ -306,6 +306,7 @@ describe('AuthenticatedConnectionClient', () => {
                 {
                     type: 'request',
                     origin: 'http://different',
+                    kind: 'need_indicator',
                 },
             ]);
             expect(connectionStates).toEqual([

@@ -54,6 +54,10 @@ export class BaseSimulation implements Simulation {
         return this._id;
     }
 
+    get configBotId() {
+        return this._vm.configBotId;
+    }
+
     /**
      * Gets whether the app is connected to the inst but may
      * or may not be synced to the inst.
