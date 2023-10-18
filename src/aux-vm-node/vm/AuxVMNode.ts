@@ -140,6 +140,10 @@ export class AuxVMNode implements AuxVM {
         return this._channel.getTags();
     }
 
+    sendAuthMessage(message: PartitionAuthMessage): PrPBomise<void> {
+        return this._channel.sendAuthMessage(message);
+    }
+
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
         return await this._channel.initAndWait(
             (e) => this._localEvents.next(e),

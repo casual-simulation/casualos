@@ -127,6 +127,12 @@ export interface AuxVM extends Initable {
      * Creates a new MessagePort that can be used to connect to the internal aux channel.
      */
     createEndpoint?(): Promise<MessagePort>;
+
+    /**
+     * Sends the given auth message.
+     * @param message The message to send.
+     */
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void>;
 }
 
 /**

@@ -191,6 +191,12 @@ export interface AuxChannel extends SubscriptionLike {
      * Gets the list of tags that are in use.
      */
     getTags(): Promise<string[]>;
+
+    /**
+     * Sends the given auth message.
+     * @param message The message to send.
+     */
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void>;
 }
 
 export interface ChannelActionResult {

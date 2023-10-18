@@ -182,6 +182,10 @@ export class TestAuxVM implements AuxVM {
         return new MessagePort();
     }
 
+    async sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        this.onAuthMessage.next(message);
+    }
+
     unsubscribe(): void {}
     closed: boolean;
 }
