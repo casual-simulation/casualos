@@ -1,5 +1,5 @@
 import { Subject, Subscription } from 'rxjs';
-import { AuthCoordinator } from './AuthCoordinator';
+import { AuthCoordinator, MissingPermissionEvent } from './AuthCoordinator';
 import { BotManager } from './BotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import {
@@ -7,6 +7,7 @@ import {
     SimulationManager,
 } from '@casual-simulation/aux-vm/managers';
 import {
+    AuthData,
     ConnectionInfo,
     PartitionAuthMessage,
     PartitionAuthResponse,
@@ -42,6 +43,7 @@ describe('AuthCoordinator', () => {
         provideSmsNumber: jest.fn(),
         getRecordKeyPolicy: jest.fn(),
         getConnectionKey: jest.fn(),
+        logout: jest.fn(),
     };
 
     let simManager: SimulationManager<BotManager>;
@@ -200,7 +202,143 @@ describe('AuthCoordinator', () => {
         });
     });
 
-    // describe('invalid_indicator', () => {
+    describe('invalid_indicator', () => {
+        it('should attempt to login and then send the connection token', async () => {
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const key = formatV1ConnectionKey(
+                'userId',
+                'sessionId',
+                connectionSecret,
+                Date.now() + 10000000
+            );
+            const token = generateV1ConnectionToken(
+                key,
+                connectionId,
+                null,
+                'sim-1'
+            );
 
-    // });
+            authMock.getConnectionKey
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce(key);
+            authMock.authenticate.mockResolvedValueOnce({
+                userId: 'userId',
+                hasActiveSubscription: false,
+            } as AuthData);
+
+            await sim.sendAuthMessage({
+                type: 'request',
+                origin: origin,
+                kind: 'invalid_indicator',
+            });
+
+            await waitAsync();
+
+            expect(responses).toEqual([
+                {
+                    type: 'response',
+                    success: true,
+                    indicator: {
+                        connectionToken: token,
+                    },
+                    origin: origin,
+                },
+            ]);
+            expect(authMock.authenticate).toHaveBeenCalled();
+        });
+
+        it('should logout and login if the error code indicates that the connection token is invalid', async () => {
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const key = formatV1ConnectionKey(
+                'userId',
+                'sessionId',
+                connectionSecret,
+                Date.now() + 10000000
+            );
+            const token = generateV1ConnectionToken(
+                key,
+                connectionId,
+                null,
+                'sim-1'
+            );
+
+            authMock.isAuthenticated.mockResolvedValueOnce(true);
+            authMock.getConnectionKey.mockResolvedValueOnce(key);
+            authMock.authenticate.mockResolvedValueOnce({
+                userId: 'userId',
+                hasActiveSubscription: false,
+            } as AuthData);
+
+            authMock.logout.mockResolvedValueOnce(null);
+
+            await sim.sendAuthMessage({
+                type: 'request',
+                origin: origin,
+                kind: 'invalid_indicator',
+                errorCode: 'invalid_token',
+            });
+
+            await waitAsync();
+
+            expect(responses).toEqual([
+                {
+                    type: 'response',
+                    success: true,
+                    indicator: {
+                        connectionToken: token,
+                    },
+                    origin: origin,
+                },
+            ]);
+            expect(authMock.isAuthenticated).toHaveBeenCalled();
+            expect(authMock.logout).toHaveBeenCalled();
+            expect(authMock.authenticate).toHaveBeenCalled();
+        });
+    });
+
+    describe('not_authorized', () => {
+        describe('missing_permission', () => {
+            it('should send a onMissingPermission event', async () => {
+                let events: MissingPermissionEvent[] = [];
+                manager.onMissingPermission.subscribe((e) => events.push(e));
+
+                await sim.sendAuthMessage({
+                    type: 'request',
+                    origin: origin,
+                    kind: 'not_authorized',
+                    errorCode: 'not_authorized',
+                    errorMessage: 'Not authorized.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: 'userId',
+                        marker: 'marker',
+                        permission: 'inst.read',
+                    },
+                });
+
+                await waitAsync();
+
+                expect(responses).toEqual([]);
+                expect(events).toEqual([
+                    {
+                        simulationId: 'sim-1',
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Not authorized.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: 'userId',
+                            marker: 'marker',
+                            permission: 'inst.read',
+                        },
+                    },
+                ]);
+            });
+        });
+    });
 });
