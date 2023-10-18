@@ -7,6 +7,7 @@ import {
     LocalActions,
     StoredAux,
     ConnectionIndicator,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
@@ -99,6 +100,10 @@ export class BaseSimulation implements Simulation {
         return this._code;
     }
 
+    get onAuthMessage() {
+        return this._vm.onAuthMessage;
+    }
+
     get localEvents(): Observable<RuntimeActions> {
         return this._vm.localEvents.pipe(
             flatMap((e) => e)
@@ -169,6 +174,10 @@ export class BaseSimulation implements Simulation {
      */
     export(): Promise<StoredAux> {
         return this._vm.export();
+    }
+
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        return this._vm.sendAuthMessage(message);
     }
 
     private _getTreeName(id: string) {

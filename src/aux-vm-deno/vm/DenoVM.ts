@@ -275,6 +275,10 @@ export class DenoVM implements AuxVM {
         return await this._proxy.getTags();
     }
 
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        return this._proxy.sendAuthMessage(message);
+    }
+
     unsubscribe(): void {
         if (this.closed) {
             return;

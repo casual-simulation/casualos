@@ -3,6 +3,7 @@ import {
     LocalActions,
     BotIndex,
     StoredAux,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
@@ -99,6 +100,11 @@ export interface Simulation extends Initable {
     onError: Observable<AuxChannelErrorType>;
 
     /**
+     * Gets the observable list of auth messages to and from the simulation.
+     */
+    onAuthMessage: Observable<PartitionAuthMessage>;
+
+    /**
      * Gets the observable list of sub simulations that have been added.
      */
     onSubSimulationAdded: Observable<Simulation>;
@@ -124,4 +130,10 @@ export interface Simulation extends Initable {
      * Exports the causal tree for the simulation.
      */
     export(): Promise<StoredAux>;
+
+    /**
+     * Sends the given auth message to the simulation.
+     * @param message The message.
+     */
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void>;
 }

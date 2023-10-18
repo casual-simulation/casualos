@@ -506,6 +506,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._helper.getTags();
     }
 
+    async sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        if (message.type === 'response') {
+            this._authSource.sendAuthResponse(message);
+        } else {
+            this._authSource.sendAuthRequest(message);
+        }
+    }
+
     /**
      * Sends the given list of remote events to their destinations.
      * @param events The events.

@@ -204,6 +204,10 @@ export class ConnectableAuxVM implements AuxVM {
         return new RemoteAuxVM(id, configBotId, channel);
     }
 
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        return this._proxy.sendAuthMessage(message);
+    }
+
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
         const { id, configBotId } = await subChannel.getInfo();
         const channel =

@@ -210,6 +210,10 @@ export class RemoteAuxVM implements AuxVM {
         return this._proxy[createEndpoint]();
     }
 
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        return this._proxy.sendAuthMessage(message);
+    }
+
     unsubscribe(): void {
         if (this.closed) {
             return;
