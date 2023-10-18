@@ -1,13 +1,21 @@
 import {
     BehaviorSubject,
     Observable,
+    concat,
     concatMap,
+    defer,
+    distinctUntilChanged,
     distinctUntilKeyChanged,
     filter,
     first,
     from,
     map,
+    mergeWith,
     of,
+    share,
+    shareReplay,
+    skip,
+    startWith,
     switchMap,
     takeUntil,
     tap,
@@ -63,8 +71,14 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
 
         this._inner.connectionState
             .pipe(
-                concatMap((state) => this._login(state.connected)),
-                distinctUntilKeyChanged('connected')
+                switchMap((state) => this._login(state.connected)),
+
+                // Only deduplicate disconnected events
+                distinctUntilChanged(
+                    (previous, current) =>
+                        !current.connected &&
+                        current.connected === previous.connected
+                )
             )
             .subscribe(this._connectionStateChanged);
     }
@@ -120,25 +134,43 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
             console.log('[AuthencatedConnectionClient] Logging in...');
             const indicator = this.indicator;
 
-            if (!indicator) {
-                const promise = this._authSource.sendAuthRequest({
+            let responses = this._authSource.onAuthResponseForOrigin(
+                this.origin
+            );
+
+            if (indicator) {
+                responses = responses.pipe(
+                    startWith({
+                        type: 'response',
+                        success: true,
+                        indicator,
+                        origin: this.origin,
+                    } as PartitionAuthResponse)
+                );
+            } else {
+                this._authSource.sendAuthRequest({
                     type: 'request',
                     origin: this.origin,
                 });
-
-                return from(promise).pipe(
-                    filter(
-                        (r): r is PartitionAuthResponseSuccess =>
-                            r.success === true
-                    ),
-                    map((r) => r.indicator),
-                    switchMap((indicator) =>
-                        this._loginWithIndicator(indicator)
-                    )
-                );
-            } else {
-                return this._loginWithIndicator(indicator);
+                // responses = responses.pipe(
+                //     onSubscribe(() => {
+                //         this._authSource.sendAuthRequest({
+                //             type: 'request',
+                //             origin: this.origin,
+                //         });
+                //     })
+                // );
             }
+
+            const loginStates = responses.pipe(
+                filter(
+                    (r): r is PartitionAuthResponseSuccess => r.success === true
+                ),
+                map((r) => r.indicator),
+                switchMap((indicator) => this._loginWithIndicator(indicator))
+            );
+
+            return loginStates;
         } else {
             return of({
                 connected: false,
@@ -168,4 +200,16 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
             )
         );
     }
+}
+
+function onSubscribe<T>(
+    onSubscribe: () => void
+): (source: Observable<T>) => Observable<T> {
+    return function inner(source: Observable<T>): Observable<T> {
+        return new Observable((observer) => {
+            const sub = source.subscribe(observer);
+            onSubscribe();
+            return sub;
+        });
+    };
 }
