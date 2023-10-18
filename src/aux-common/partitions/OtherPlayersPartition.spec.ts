@@ -34,6 +34,7 @@ import {
     MemoryConnectionClient,
     ReceiveDeviceActionMessage,
 } from '../websockets';
+import { PartitionAuthSource } from './PartitionAuthSource';
 
 console.log = jest.fn();
 
@@ -49,6 +50,7 @@ describe('OtherPlayersPartition', () => {
     let updated: UpdatedBot[];
     let updates: StateUpdatedEvent[];
     let sub: Subscription;
+    let authSource: PartitionAuthSource;
 
     let testDevice = connectionInfo('test', 'test', 'test');
     let device1 = connectionInfo('device1', 'device1Id', 'device1SessionId');
@@ -87,6 +89,7 @@ describe('OtherPlayersPartition', () => {
                     client = new InstRecordsClient(connection);
                     connection.connect();
                     sub = new Subscription();
+                    authSource = new PartitionAuthSource();
 
                     added = [];
                     removed = [];
@@ -2013,7 +2016,11 @@ describe('OtherPlayersPartition', () => {
             });
 
             function setupPartition(config: OtherPlayersRepoPartitionConfig) {
-                partition = new OtherPlayersPartitionImpl(client, config);
+                partition = new OtherPlayersPartitionImpl(
+                    client,
+                    authSource,
+                    config
+                );
 
                 sub.add(partition);
                 sub.add(

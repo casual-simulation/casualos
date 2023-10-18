@@ -1,3 +1,4 @@
+import { WebsocketErrorCode } from '../websockets';
 import { ConnectionIndicator, DenialReason } from '../common';
 import { Observable, Subject, filter, first, merge } from 'rxjs';
 
@@ -108,9 +109,40 @@ export interface PartitionAuthRequest {
     kind: 'need_indicator' | 'invalid_indicator' | 'not_authorized';
 
     /**
+     * The error code that occurred.
+     */
+    errorCode?: WebsocketErrorCode;
+
+    /**
+     * The error message that ocurred.
+     */
+    errorMessage?: string;
+
+    /**
      * The denial reason. Only present if the kind is "not_authorized".
      */
     reason?: DenialReason;
+
+    /**
+     * The resource that the denial occurred for.
+     */
+    resource?: PartitionResource;
+}
+
+export type PartitionResource = PartitionInstResource;
+
+export interface PartitionInstResource {
+    type: 'inst';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
 }
 
 export type PartitionAuthResponse =

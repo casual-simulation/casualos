@@ -134,7 +134,11 @@ export async function createRemoteYjsPartition(
             authSource,
             config.connectionProtocol
         );
-        const partition = new RemoteYjsPartitionImpl(client, config);
+        const partition = new RemoteYjsPartitionImpl(
+            client,
+            authSource,
+            config
+        );
         await partition.init();
         return partition;
     }
@@ -156,7 +160,11 @@ export async function createOtherPlayersRepoPartition(
             authSource,
             config.connectionProtocol
         );
-        const partition = new OtherPlayersPartitionImpl(client, config);
+        const partition = new OtherPlayersPartitionImpl(
+            client,
+            authSource,
+            config
+        );
         return partition;
     }
     return undefined;

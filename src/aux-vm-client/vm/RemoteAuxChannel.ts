@@ -40,12 +40,14 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             config,
             services,
             createMemoryPartition,
-            (config) => createOtherPlayersClientPartition(config),
+            (config) =>
+                createOtherPlayersClientPartition(config, services.authSource),
             (config) =>
                 createOtherPlayersRepoPartition(config, services.authSource),
             (config) => createYjsPartition(config),
             (config) => createRemoteYjsPartition(config, services.authSource),
-            (config) => createRemoteClientYjsPartition(config)
+            (config) =>
+                createRemoteClientYjsPartition(config, services.authSource)
         );
     }
 
