@@ -5,6 +5,7 @@ import {
     isClientEvent,
     isClientUpdates,
     DEFAULT_BRANCH_NAME,
+    isWatchBranchResult,
 } from './InstRecordsClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -18,6 +19,7 @@ import {
     ReceiveDeviceActionMessage,
     TimeSyncResponseMessage,
     UpdatesReceivedMessage,
+    WatchBranchResultMessage,
 } from './WebsocketEvents';
 import { filter, map } from 'rxjs/operators';
 import {
@@ -522,6 +524,48 @@ describe('InstRecordsClient', () => {
                     branch: DEFAULT_BRANCH_NAME,
                     updateId: 1,
                     updates: ['111', '222'],
+                },
+            ]);
+        });
+
+        it('should relay watch_branch_result events that are for the branch', async () => {
+            const onResult = new Subject<WatchBranchResultMessage>();
+            connection.events.set('repo/watch_branch_result', onResult);
+
+            let results = [] as WatchBranchResultMessage[];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(filter(isWatchBranchResult))
+                .subscribe((a) => results.push(a));
+
+            await waitAsync();
+
+            onResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            onResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'other',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            await waitAsync();
+
+            expect(results).toEqual([
+                {
+                    type: 'repo/watch_branch_result',
+                    success: true,
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
         });
