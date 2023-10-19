@@ -9,6 +9,7 @@ export class PartitionAuthSource {
     private _onAuthRequest: Subject<PartitionAuthRequest> = new Subject();
     private _onAuthResponse: Subject<PartitionAuthResponse> = new Subject();
     private _indicators: Map<string, ConnectionIndicator> = new Map();
+    private _promises: Map<string, Promise<PartitionAuthResponse>> = new Map();
 
     /**
      * Gets an observable for when a partition requests or provides authentication information.
@@ -70,15 +71,31 @@ export class PartitionAuthSource {
     sendAuthRequest(
         request: PartitionAuthRequest
     ): Promise<PartitionAuthResponse> {
-        return new Promise<PartitionAuthResponse>((resolve, reject) => {
-            this._onAuthResponse
-                .pipe(first((r) => r.origin === request.origin))
-                .subscribe({
-                    next: (r) => resolve(r),
-                    error: (err) => reject(err),
-                });
-            this._onAuthRequest.next(request);
-        });
+        const key = `${request.origin}:${request.kind}:${request.errorCode}:${request.resource?.recordName}:${request.resource?.inst}}`;
+
+        if (this._promises.has(key)) {
+            return this._promises.get(key);
+        }
+
+        const promise = new Promise<PartitionAuthResponse>(
+            (resolve, reject) => {
+                this._onAuthResponse
+                    .pipe(first((r) => r.origin === request.origin))
+                    .subscribe({
+                        next: (r) => {
+                            this._promises.delete(key);
+                            resolve(r);
+                        },
+                        error: (err) => {
+                            this._promises.delete(key);
+                            reject(err);
+                        },
+                    });
+                this._onAuthRequest.next(request);
+            }
+        );
+        this._promises.set(key, promise);
+        return promise;
     }
 
     /**
