@@ -65,10 +65,12 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         sim: TSim,
         request: PartitionAuthRequest
     ) {
+        console.log(`[AuthCoordinator] [${sim.id}] Needs indicator`);
         const endpoint = sim.auth.primary;
         const key = await endpoint.getConnectionKey();
 
         if (!key) {
+            console.log(`[AuthCoordinator] [${sim.id}] Sending connectionId.`);
             sim.sendAuthMessage({
                 type: 'response',
                 success: true,
@@ -87,7 +89,9 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 recordName,
                 inst
             );
-
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Sending connectionToken.`
+            );
             sim.sendAuthMessage({
                 type: 'response',
                 success: true,
@@ -103,16 +107,23 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         sim: TSim,
         request: PartitionAuthRequest
     ) {
+        console.log(
+            `[AuthCoordinator] [${sim.id}] [${request.errorCode}] Invalid indicator.`
+        );
         const endpoint = sim.auth.primary;
         let key: string;
         if (request.errorCode === 'invalid_token') {
             if (await endpoint.isAuthenticated()) {
+                console.log(
+                    `[AuthCoordinator] [${sim.id}] Logging out and back in...`
+                );
                 await endpoint.logout();
                 await endpoint.authenticate();
             }
         } else {
             key = await endpoint.getConnectionKey();
             if (!key) {
+                console.log(`[AuthCoordinator] [${sim.id}] Logging in...`);
                 await endpoint.authenticate();
             }
         }
@@ -132,6 +143,10 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 inst
             );
 
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Sending connectionToken.`
+            );
+
             sim.sendAuthMessage({
                 type: 'response',
                 success: true,
@@ -147,8 +162,49 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         sim: TSim,
         request: PartitionAuthRequest
     ) {
-        if (request.reason?.type === 'missing_permission') {
+        if (request.errorCode === 'not_logged_in') {
+            await this._handleNotLoggedIn(sim, request);
+        } else if (request.reason?.type === 'missing_permission') {
             await this._handleMissingPermission(sim, request, request.reason);
+        }
+    }
+
+    private async _handleNotLoggedIn(sim: TSim, request: PartitionAuthRequest) {
+        console.log(`[AuthCoordinator] [${sim.id}] Not logged in`);
+        const endpoint = sim.auth.primary;
+        let key: string = await endpoint.getConnectionKey();
+
+        if (!key) {
+            if (!(await endpoint.isAuthenticated())) {
+                console.log(`[AuthCoordinator] [${sim.id}] Logging in...`);
+                await endpoint.authenticate();
+                key = await endpoint.getConnectionKey();
+            }
+        }
+
+        if (key) {
+            const connectionId = sim.configBotId;
+            const recordName = sim.origin.recordName;
+            const inst = sim.inst;
+            const token = generateV1ConnectionToken(
+                key,
+                connectionId,
+                recordName,
+                inst
+            );
+
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Sending connectionToken.`
+            );
+
+            sim.sendAuthMessage({
+                type: 'response',
+                success: true,
+                origin: request.origin,
+                indicator: {
+                    connectionToken: token,
+                },
+            });
         }
     }
 
@@ -157,6 +213,9 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         request: PartitionAuthRequest,
         reason: MissingPermissionDenialReason
     ) {
+        console.log(
+            `[AuthCoordinator] [${sim.id}] Missing permission ${reason.permission}.`
+        );
         this._onMissingPermission.next({
             simulationId: sim.id,
             errorCode: request.errorCode,
