@@ -101,6 +101,7 @@ export class AuxVMNode implements AuxVM {
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
+        this._onAuthMessage = new Subject();
         this._onError = new Subject<AuxChannelErrorType>();
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
@@ -140,7 +141,7 @@ export class AuxVMNode implements AuxVM {
         return this._channel.getTags();
     }
 
-    sendAuthMessage(message: PartitionAuthMessage): PrPBomise<void> {
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
         return this._channel.sendAuthMessage(message);
     }
 

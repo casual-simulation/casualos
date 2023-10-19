@@ -77,6 +77,7 @@ describe('BaseAuxChannel', () => {
         };
         memory = createMemoryPartition({ type: 'memory', initialState: {} });
         config = {
+            configBotId: 'userId',
             config: {
                 version: 'v1.0.0',
                 versionHash: 'hash',
@@ -89,7 +90,7 @@ describe('BaseAuxChannel', () => {
             },
         };
 
-        channel = new AuxChannelImpl(indicator, device, config);
+        channel = new AuxChannelImpl(device, config);
     });
 
     afterEach(() => {
@@ -115,7 +116,6 @@ describe('BaseAuxChannel', () => {
 
         it('should load the builder aux file', async () => {
             channel = new AuxChannelImpl(
-                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -143,7 +143,6 @@ describe('BaseAuxChannel', () => {
 
         it('should not load builder if bootstrap state was included', async () => {
             channel = new AuxChannelImpl(
-                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -174,7 +173,6 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -211,7 +209,6 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -249,7 +246,6 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -287,7 +283,6 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                indicator,
                 device,
                 merge({}, config, {
                     config: {
@@ -309,6 +304,7 @@ describe('BaseAuxChannel', () => {
 
         it('should error if unable to construct a partition', async () => {
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -322,7 +318,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(indicator, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             await expect(channel.initAndWait()).rejects.toEqual(
                 new Error('[BaseAuxChannel] Unable to build partition: shared')
@@ -335,6 +331,7 @@ describe('BaseAuxChannel', () => {
                 initialState: {},
             });
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -351,7 +348,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(indicator, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             uuidMock
                 .mockReturnValueOnce('authBot')
@@ -399,6 +396,7 @@ describe('BaseAuxChannel', () => {
                 initialState: {},
             });
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -414,7 +412,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(indicator, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             let versions = [] as RuntimeStateVersion[];
 
@@ -481,6 +479,7 @@ describe('BaseAuxChannel', () => {
                 initialState: {},
             });
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -492,7 +491,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(indicator, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             let statuses = [] as StatusUpdate[];
             channel.onConnectionStateChanged.subscribe((a) => statuses.push(a));
@@ -516,6 +515,7 @@ describe('BaseAuxChannel', () => {
 
         it('should create a sync controller if a sync configuration is provided', async () => {
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -529,7 +529,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(indicator, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             await channel.initAndWait();
 
@@ -545,6 +545,7 @@ describe('BaseAuxChannel', () => {
             try {
                 jest.useFakeTimers({});
                 config = {
+                    configBotId: 'userId',
                     config: {
                         version: 'v1.0.0',
                         versionHash: 'hash',
@@ -558,7 +559,7 @@ describe('BaseAuxChannel', () => {
                         },
                     },
                 };
-                channel = new AuxChannelImpl(indicator, device, config);
+                channel = new AuxChannelImpl(device, config);
 
                 await channel.initAndWait();
 
@@ -690,6 +691,7 @@ describe('BaseAuxChannel', () => {
             });
             // _memory.onBotsAdded = subject;
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -702,7 +704,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(indicator, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             let localEvents = [] as Action[];
             channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
@@ -747,6 +749,7 @@ describe('BaseAuxChannel', () => {
                 },
             });
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -759,7 +762,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(indicator, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             let localEvents = [] as Action[];
             channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
@@ -1000,6 +1003,7 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
+                    configBotId: 'newUserId',
                     indicator: {
                         connectionId: 'newUserId',
                     },
@@ -1059,6 +1063,7 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
+                    configBotId: 'newUserId',
                     indicator: {
                         connectionId: 'newUserId',
                     },
@@ -1157,6 +1162,7 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
+                    configBotId: 'newUserId',
                     indicator: {
                         connectionId: 'newUserId',
                     },
@@ -1261,6 +1267,7 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
+                    configBotId: 'newUserId',
                     indicator: {
                         connectionId: 'newUserId',
                     },
@@ -1374,6 +1381,7 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
+                    configBotId: 'newUserId',
                     indicator: {
                         connectionId: 'newUserId',
                     },
@@ -1553,6 +1561,7 @@ describe('BaseAuxChannel', () => {
                 tempEnableCollaboration = tempPartition.enableCollaboration =
                     jest.fn();
                 config = {
+                    configBotId: 'userId',
                     config: {
                         version: 'v1.0.0',
                         versionHash: 'hash',
@@ -1576,7 +1585,7 @@ describe('BaseAuxChannel', () => {
                     },
                 };
 
-                channel = new AuxChannelImpl(indicator, device, config);
+                channel = new AuxChannelImpl(device, config);
             });
 
             it('should enable collaboration on each partition', async () => {
@@ -1633,6 +1642,7 @@ describe('BaseAuxChannel', () => {
 
             it('should do nothing if collaboration is already enabled', async () => {
                 config = {
+                    configBotId: 'userId',
                     config: {
                         version: 'v1.0.0',
                         versionHash: 'hash',
@@ -1656,7 +1666,7 @@ describe('BaseAuxChannel', () => {
                     },
                 };
 
-                channel = new AuxChannelImpl(indicator, device, config);
+                channel = new AuxChannelImpl(device, config);
 
                 await channel.initAndWait();
 
@@ -1678,6 +1688,7 @@ describe('BaseAuxChannel', () => {
 
             it('should do nothing if no configuration device info is present', async () => {
                 config = {
+                    configBotId: 'userId',
                     config: {
                         version: 'v1.0.0',
                         versionHash: 'hash',
@@ -1694,7 +1705,7 @@ describe('BaseAuxChannel', () => {
                     },
                 };
 
-                channel = new AuxChannelImpl(indicator, device, config);
+                channel = new AuxChannelImpl(device, config);
 
                 await channel.initAndWait();
 
@@ -1716,6 +1727,7 @@ describe('BaseAuxChannel', () => {
 
             it('should reject with an error if collaboration is disabled and not able to be enabled', async () => {
                 config = {
+                    configBotId: 'userId',
                     config: {
                         version: 'v1.0.0',
                         versionHash: 'hash',
@@ -1739,7 +1751,7 @@ describe('BaseAuxChannel', () => {
                     },
                 };
 
-                channel = new AuxChannelImpl(indicator, device, config);
+                channel = new AuxChannelImpl(device, config);
 
                 await channel.initAndWait();
 
@@ -1839,6 +1851,7 @@ describe('BaseAuxChannel', () => {
     describe('export()', () => {
         beforeEach(async () => {
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -1864,7 +1877,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(indicator, device, config);
+            channel = new AuxChannelImpl(device, config);
         });
 
         it('should only export public bots', async () => {

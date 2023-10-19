@@ -157,6 +157,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onVersionUpdated = new Subject<RuntimeStateVersion>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
+        this._onAuthMessage = new Subject();
         this._onSubChannelAdded = new Subject();
         this._onSubChannelRemoved = new Subject();
         this._onError = new Subject<AuxChannelErrorType>();
