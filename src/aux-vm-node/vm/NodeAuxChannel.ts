@@ -39,7 +39,8 @@ export class NodeAuxChannel extends BaseAuxChannel {
             createMemoryPartition,
             (config) => createYjsPartition(config),
             (config) => createRemoteYjsPartition(config, services.authSource),
-            (config) => createRemoteClientYjsPartition(config)
+            (config) =>
+                createRemoteClientYjsPartition(config, services.authSource)
         );
     }
 

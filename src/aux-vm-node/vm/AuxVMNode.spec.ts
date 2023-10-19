@@ -22,6 +22,7 @@ describe('AuxVMNode', () => {
         });
 
         config = {
+            configBotId: 'connectionId',
             config: {
                 versionHash: 'abc',
                 version: 'v1.0.0',
@@ -39,7 +40,7 @@ describe('AuxVMNode', () => {
             userId: null,
         };
 
-        channel = new NodeAuxChannel(connection, config);
+        channel = new NodeAuxChannel(config);
         vm = new AuxVMNode('id', 'connectionId', channel);
     });
 

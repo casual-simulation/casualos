@@ -19,20 +19,16 @@ describe('NodeAuxChannel', () => {
     });
 
     function createChannel(id: string) {
-        return (channel = new NodeAuxChannel(
-            {
-                connectionId: 'connectionId',
+        return (channel = new NodeAuxChannel({
+            configBotId: 'connectionId',
+            config: {
+                versionHash: 'abc',
+                version: 'v1.0.0',
             },
-            {
-                config: {
-                    versionHash: 'abc',
-                    version: 'v1.0.0',
-                },
-                partitions: {
-                    shared: partition,
-                },
-            }
-        ));
+            partitions: {
+                shared: partition,
+            },
+        }));
     }
 
     it.skip('is a placeholder test', () => {});

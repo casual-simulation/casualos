@@ -7,6 +7,7 @@ import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
 import { MenuPortal } from './MenuPortal';
 
 console.log = jest.fn();
+console.warn = jest.fn();
 
 describe('MenuPortal', () => {
     let simulationManager: SimulationManager<RemoteSimulation>;
@@ -19,6 +20,7 @@ describe('MenuPortal', () => {
                 },
                 id,
                 {
+                    configBotId: 'user',
                     config: {
                         version: 'v1.0.0',
                         versionHash: 'hash',
