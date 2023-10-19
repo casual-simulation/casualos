@@ -301,6 +301,96 @@ describe('AuthCoordinator', () => {
     });
 
     describe('not_authorized', () => {
+        describe('not_logged_in', () => {
+            it('should generate a connection token if the user has a connection key', async () => {
+                const connectionSecret = fromByteArray(
+                    randomBytes(SESSION_SECRET_BYTE_LENGTH)
+                );
+                const key = formatV1ConnectionKey(
+                    'userId',
+                    'sessionId',
+                    connectionSecret,
+                    Date.now() + 10000000
+                );
+                const token = generateV1ConnectionToken(
+                    key,
+                    connectionId,
+                    null,
+                    'sim-1'
+                );
+                authMock.getConnectionKey.mockResolvedValueOnce(key);
+
+                await sim.sendAuthMessage({
+                    type: 'request',
+                    origin: origin,
+                    kind: 'not_authorized',
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'Not logged in.',
+                });
+
+                await waitAsync();
+
+                expect(responses).toEqual([
+                    {
+                        type: 'response',
+                        success: true,
+                        indicator: {
+                            connectionToken: token,
+                        },
+                        origin: origin,
+                    },
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+            });
+
+            it('should attempt to login and get the connection key', async () => {
+                const connectionSecret = fromByteArray(
+                    randomBytes(SESSION_SECRET_BYTE_LENGTH)
+                );
+                const key = formatV1ConnectionKey(
+                    'userId',
+                    'sessionId',
+                    connectionSecret,
+                    Date.now() + 10000000
+                );
+                const token = generateV1ConnectionToken(
+                    key,
+                    connectionId,
+                    null,
+                    'sim-1'
+                );
+                authMock.getConnectionKey
+                    .mockResolvedValueOnce(null)
+                    .mockResolvedValueOnce(key);
+                authMock.authenticate.mockResolvedValueOnce({
+                    userId: 'userId',
+                    hasActiveSubscription: false,
+                } as AuthData);
+
+                await sim.sendAuthMessage({
+                    type: 'request',
+                    origin: origin,
+                    kind: 'not_authorized',
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'Not logged in.',
+                });
+
+                await waitAsync();
+
+                expect(responses).toEqual([
+                    {
+                        type: 'response',
+                        success: true,
+                        indicator: {
+                            connectionToken: token,
+                        },
+                        origin: origin,
+                    },
+                ]);
+                expect(authMock.authenticate).toHaveBeenCalled();
+            });
+        });
+
         describe('missing_permission', () => {
             it('should send a onMissingPermission event', async () => {
                 let events: MissingPermissionEvent[] = [];

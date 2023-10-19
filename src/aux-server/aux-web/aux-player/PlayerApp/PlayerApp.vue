@@ -1,5 +1,6 @@
 <template>
     <div id="app">
+        <auth-ui></auth-ui>
         <load-app>
             <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <bot-portal>
@@ -130,7 +131,7 @@
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
 
-            <md-dialog
+            <!-- <md-dialog
                 :md-active.sync="showNotAuthorized"
                 class="not-authorized-dialog"
                 @md-closed="onBarcodeScannerClosed()"
@@ -144,7 +145,7 @@
                     <md-button v-else @click="login()">Login</md-button>
                     <md-button @click="newInst()">New Inst</md-button>
                 </md-dialog-actions>
-            </md-dialog>
+            </md-dialog> -->
 
             <md-snackbar
                 md-position="center"

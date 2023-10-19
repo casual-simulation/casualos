@@ -28,6 +28,7 @@ import {
     AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
 import {
+    AuthCoordinator,
     AuthHelper,
     AuxVMImpl,
     BotManager,
@@ -79,6 +80,10 @@ export class AppManager {
         return this._progress;
     }
 
+    get authCoordinator() {
+        return this._authCoordinator;
+    }
+
     private _auth: AuthHelper;
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
@@ -88,6 +93,7 @@ export class AppManager {
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
     private _systemPortal: SystemPortalCoordinator<BotManager>;
+    private _authCoordinator: AuthCoordinator<BotManager>;
     private _db: IDBDatabase;
     private _primarySimulationAvailableSubject: Subject<void> = new Subject();
     private _startLoadTime: number = Date.now();
@@ -149,6 +155,7 @@ export class AppManager {
         this._systemPortal = new SystemPortalCoordinator(
             this._simulationManager
         );
+        this._authCoordinator = new AuthCoordinator(this._simulationManager);
     }
 
     createSimulationConfig(options: {
