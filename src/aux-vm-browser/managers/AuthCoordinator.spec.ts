@@ -139,6 +139,87 @@ describe('AuthCoordinator', () => {
         sub.unsubscribe();
     });
 
+    describe('changeLogin()', () => {
+        it('should logout and login', async () => {
+            authMock.logout.mockResolvedValueOnce(null);
+            authMock.authenticate.mockResolvedValueOnce({
+                userId: 'userId',
+                hasActiveSubscription: false,
+            } as AuthData);
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const key = formatV1ConnectionKey(
+                'userId',
+                'sessionId',
+                connectionSecret,
+                Date.now() + 10000000
+            );
+            const token = generateV1ConnectionToken(
+                key,
+                connectionId,
+                null,
+                'sim-1'
+            );
+            authMock.getConnectionKey.mockResolvedValueOnce(key);
+
+            await manager.changeLogin('sim-1', 'other origin');
+
+            expect(responses).toEqual([
+                {
+                    type: 'response',
+                    success: true,
+                    indicator: {
+                        connectionToken: token,
+                    },
+                    origin: 'other origin',
+                },
+            ]);
+            expect(authMock.logout).toHaveBeenCalled();
+            expect(authMock.authenticate).toHaveBeenCalled();
+        });
+
+        it('should do nothing if the simulation doesnt exist', async () => {
+            authMock.logout.mockResolvedValueOnce(null);
+            authMock.authenticate.mockResolvedValueOnce({
+                userId: 'userId',
+                hasActiveSubscription: false,
+            } as AuthData);
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const key = formatV1ConnectionKey(
+                'userId',
+                'sessionId',
+                connectionSecret,
+                Date.now() + 10000000
+            );
+            authMock.getConnectionKey.mockResolvedValueOnce(key);
+
+            await manager.changeLogin('wrong sim', origin);
+
+            expect(responses).toEqual([]);
+            expect(authMock.logout).not.toHaveBeenCalled();
+            expect(authMock.authenticate).not.toHaveBeenCalled();
+        });
+
+        it('should do nothing if there is no connection key', async () => {
+            authMock.logout.mockResolvedValueOnce(null);
+            authMock.authenticate.mockResolvedValueOnce({
+                userId: 'userId',
+                hasActiveSubscription: false,
+            } as AuthData);
+            authMock.getConnectionKey.mockResolvedValueOnce(null);
+
+            await manager.changeLogin('sim-1', origin);
+
+            expect(responses).toEqual([]);
+            expect(authMock.logout).toHaveBeenCalled();
+            expect(authMock.authenticate).toHaveBeenCalled();
+            expect(authMock.getConnectionKey).toHaveBeenCalled();
+        });
+    });
+
     describe('need_indicator', () => {
         it('should respond to auth requests with a connection ID if a key does not exist', async () => {
             authMock.getConnectionKey.mockResolvedValueOnce(null);
@@ -419,6 +500,7 @@ describe('AuthCoordinator', () => {
                         simulationId: 'sim-1',
                         errorCode: 'not_authorized',
                         errorMessage: 'Not authorized.',
+                        origin: origin,
                         reason: {
                             type: 'missing_permission',
                             kind: 'user',

@@ -13,6 +13,9 @@ export default class AuthUI extends Vue {
 
     showNotAuthorized: boolean = false;
 
+    private _simId: string = null;
+    private _origin: string = null;
+
     constructor() {
         super();
     }
@@ -24,6 +27,8 @@ export default class AuthUI extends Vue {
         this._sub.add(
             appManager.authCoordinator.onMissingPermission.subscribe((e) => {
                 this.showNotAuthorized = true;
+                this._simId = e.simulationId;
+                this._origin = e.origin;
             })
         );
     }
@@ -33,5 +38,24 @@ export default class AuthUI extends Vue {
             this._sub.unsubscribe();
             this._sub = null;
         }
+    }
+
+    closeNotAuthorized() {
+        this.showNotAuthorized = false;
+        this._simId = null;
+        this._origin = null;
+    }
+
+    async changeLogin() {
+        if (this._simId && this._origin) {
+            const simId = this._simId;
+            const origin = this._origin;
+            this.closeNotAuthorized();
+            await appManager.authCoordinator.changeLogin(simId, origin);
+        }
+    }
+
+    async newInst() {
+        location.href = location.origin;
     }
 }
