@@ -11,6 +11,7 @@ import {
     MissingPermissionDenialReason,
     PartitionAuthRequest,
 } from '@casual-simulation/aux-common';
+import { LoginStatus } from '@casual-simulation/aux-vm/auth';
 
 /**
  * Defines a class that is able to coordinate authentication across multiple simulations.
@@ -21,10 +22,15 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private _simulationManager: SimulationManager<TSim>;
     private _onMissingPermission: Subject<MissingPermissionEvent> =
         new Subject();
+    private _onShowAccountInfo: Subject<ShowAccountInfoEvent> = new Subject();
     private _sub: Subscription;
 
     get onMissingPermission(): Observable<MissingPermissionEvent> {
         return this._onMissingPermission;
+    }
+
+    get onShowAccountInfo(): Observable<ShowAccountInfoEvent> {
+        return this._onShowAccountInfo;
     }
 
     constructor(manager: SimulationManager<TSim>) {
@@ -46,6 +52,35 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 return sub;
             })
         );
+    }
+
+    async openAccountDashboard(simId: string) {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            await sim.auth.primary.openAccountPage();
+        }
+    }
+
+    async logout(simId: string) {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            await sim.auth.primary.logout();
+        }
+    }
+
+    async showAccountInfo(simId: string) {
+        console.log(`[AuthCoordinator] [${simId}] Show account info`);
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            const endpoint = sim.auth.primary;
+            const status = endpoint.currentLoginStatus;
+            if (status) {
+                this._onShowAccountInfo.next({
+                    simulationId: sim.id,
+                    loginStatus: status,
+                });
+            }
+        }
     }
 
     async changeLogin(simId: string, origin: string) {
@@ -277,4 +312,9 @@ export interface MissingPermissionEvent {
     errorMessage: string;
     reason: MissingPermissionDenialReason;
     origin: string;
+}
+
+export interface ShowAccountInfoEvent {
+    simulationId: string;
+    loginStatus: LoginStatus;
 }

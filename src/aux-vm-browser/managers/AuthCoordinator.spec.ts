@@ -1,5 +1,9 @@
 import { Subject, Subscription } from 'rxjs';
-import { AuthCoordinator, MissingPermissionEvent } from './AuthCoordinator';
+import {
+    AuthCoordinator,
+    MissingPermissionEvent,
+    ShowAccountInfoEvent,
+} from './AuthCoordinator';
 import { BotManager } from './BotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import {
@@ -24,6 +28,7 @@ import {
     formatV1ConnectionKey,
     generateV1ConnectionToken,
 } from '@casual-simulation/aux-records/AuthUtils';
+import { LoginStatus } from '@casual-simulation/aux-vm/auth';
 
 console.log = jest.fn();
 
@@ -48,6 +53,7 @@ describe('AuthCoordinator', () => {
 
     let simManager: SimulationManager<BotManager>;
 
+    let loginStatus: LoginStatus;
     let responses: PartitionAuthResponse[];
     const origin = 'http://localhost:3002';
 
@@ -70,6 +76,7 @@ describe('AuthCoordinator', () => {
         sub = new Subscription();
         vms = new Map();
         responses = [];
+        loginStatus = null;
         authMock = auth = {
             isAuthenticated: jest.fn(),
             authenticate: jest.fn(),
@@ -97,6 +104,9 @@ describe('AuthCoordinator', () => {
             },
             get origin() {
                 return origin;
+            },
+            get currentLoginStatus() {
+                return loginStatus;
             },
         };
         authHelper = new AuthHelper(origin, origin, (authOrigin) => {
@@ -137,6 +147,56 @@ describe('AuthCoordinator', () => {
 
     afterEach(() => {
         sub.unsubscribe();
+    });
+
+    describe('showAccountInfo()', () => {
+        it('should emit an event with the current login status', async () => {
+            loginStatus = {
+                isLoading: false,
+                isLoggingIn: true,
+                authData: {
+                    userId: 'userId',
+                    name: 'name',
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                },
+            };
+
+            let events: ShowAccountInfoEvent[] = [];
+            manager.onShowAccountInfo.subscribe((e) => events.push(e));
+
+            await manager.showAccountInfo('sim-1');
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                {
+                    simulationId: 'sim-1',
+                    loginStatus: {
+                        isLoading: false,
+                        isLoggingIn: true,
+                        authData: {
+                            userId: 'userId',
+                            name: 'name',
+                            avatarUrl: null,
+                            avatarPortraitUrl: null,
+                            hasActiveSubscription: false,
+                            subscriptionTier: null,
+                        },
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('logout()', () => {
+        it('should log the user out', async () => {
+            await manager.logout('sim-1');
+
+            expect(authMock.logout).toHaveBeenCalled();
+        });
     });
 
     describe('changeLogin()', () => {
