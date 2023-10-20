@@ -48,6 +48,43 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         );
     }
 
+    async changeLogin(simId: string, origin: string) {
+        console.log(`[AuthCoordinator] [${simId}] Changing login...`);
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            const endpoint = sim.auth.primary;
+            await endpoint.logout();
+            await endpoint.authenticate();
+
+            const key: string = await endpoint.getConnectionKey();
+
+            if (key) {
+                const connectionId = sim.configBotId;
+                const recordName = sim.origin.recordName;
+                const inst = sim.inst;
+                const token = generateV1ConnectionToken(
+                    key,
+                    connectionId,
+                    recordName,
+                    inst
+                );
+
+                console.log(
+                    `[AuthCoordinator] [${sim.id}] Sending connectionToken.`
+                );
+
+                sim.sendAuthMessage({
+                    type: 'response',
+                    success: true,
+                    origin: origin,
+                    indicator: {
+                        connectionToken: token,
+                    },
+                });
+            }
+        }
+    }
+
     private async _handleAuthRequest(
         sim: TSim,
         request: PartitionAuthRequest
@@ -220,6 +257,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
             simulationId: sim.id,
             errorCode: request.errorCode,
             errorMessage: request.errorMessage,
+            origin: request.origin,
             reason,
         });
     }
@@ -238,4 +276,5 @@ export interface MissingPermissionEvent {
     errorCode: string;
     errorMessage: string;
     reason: MissingPermissionDenialReason;
+    origin: string;
 }
