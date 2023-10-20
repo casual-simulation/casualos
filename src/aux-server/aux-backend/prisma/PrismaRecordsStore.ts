@@ -46,14 +46,18 @@ export class PrismaRecordsStore implements RecordsStore {
     }
 
     async addRecord(record: Record): Promise<void> {
-        await this._client.record.create({
-            data: {
+        await this._client.record.upsert({
+            where: {
+                name: record.name,
+            },
+            create: {
                 name: record.name,
                 ownerId: record.ownerId,
                 studioId: record.studioId,
                 secretHashes: record.secretHashes,
                 secretSalt: record.secretSalt,
             },
+            update: {},
         });
     }
 
