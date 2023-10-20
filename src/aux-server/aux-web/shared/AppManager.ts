@@ -95,7 +95,8 @@ export class AppManager {
     private _systemPortal: SystemPortalCoordinator<BotManager>;
     private _authCoordinator: AuthCoordinator<BotManager>;
     private _db: IDBDatabase;
-    private _primarySimulationAvailableSubject: Subject<void> = new Subject();
+    private _primarySimulationAvailableSubject: Subject<boolean> =
+        new BehaviorSubject(false);
     private _startLoadTime: number = Date.now();
     private _defaultStudioId: string;
 
@@ -286,6 +287,7 @@ export class AppManager {
     ): SubscriptionLike {
         return this._primarySimulationAvailableSubject
             .pipe(
+                filter((available) => available),
                 scan((subs: SubscriptionLike[]) => {
                     if (subs) {
                         subs.forEach((s) => s.unsubscribe());
@@ -516,7 +518,7 @@ export class AppManager {
 
         this._initOffline();
         this._reportTime('Time to primary simulation');
-        this._primarySimulationAvailableSubject.next();
+        this._primarySimulationAvailableSubject.next(true);
 
         const sim = this.simulationManager.primary;
 

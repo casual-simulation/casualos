@@ -42,6 +42,15 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
 
+    get currentLoginStatus() {
+        const status = this._loginStatus.value;
+        if (status.authData || status.isLoading || status.isLoggingIn) {
+            return status;
+        } else {
+            return null;
+        }
+    }
+
     /**
      * Creates a new instance of the AuthHelper class.
      * @param iframeOrigin The URL that the auth iframe should be loaded from.
