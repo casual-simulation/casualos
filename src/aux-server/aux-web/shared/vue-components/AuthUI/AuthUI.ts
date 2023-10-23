@@ -4,6 +4,7 @@ import { Prop } from 'vue-property-decorator';
 import { Bot, toast } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
+import { LoginStatus } from '@casual-simulation/aux-vm';
 
 @Component({
     components: {},
