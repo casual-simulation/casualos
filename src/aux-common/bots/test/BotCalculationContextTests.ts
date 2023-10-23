@@ -77,6 +77,7 @@ import {
     getSystemPortalPane,
     getOpenSystemPortalPane,
     getBotTheme,
+    getMenuBotSubtype,
 } from '../BotCalculations';
 import {
     Bot,
@@ -944,6 +945,31 @@ export function botCalculationContextTests(
             const shape = getMenuBotForm(calc, bot);
 
             expect(shape).toBe('button');
+        });
+    });
+
+    describe('getMenuBotSubtype()', () => {
+        const cases = [['input'], ['password']];
+        const tagCases = ['auxFormSubtype', 'formSubtype'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (shape: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>shape,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getMenuBotSubtype(calc, bot)).toBe(shape);
+            });
+        });
+        it('should default to input', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = getMenuBotSubtype(calc, bot);
+
+            expect(shape).toBe('input');
         });
     });
 

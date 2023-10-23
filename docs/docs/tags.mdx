@@ -873,6 +873,7 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='input'>
     The bot will appear as an input box in the menu portal.
     You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
+    You can change the type of input using the <TagLink tag='formSubtype'/> tag.
   </PossibleValueCode>
   <PossibleValueCode value='light'>
     The bot will appear as a light.
@@ -900,19 +901,22 @@ The subtype that the form should use. Useful for specifying how a mesh should be
     The URL that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe.
   </PossibleValueCode>
   <PossibleValueCode value='pointLight'>
-    A bot with the <TagLink tag='form'/> set to `light` will appear as a pointlight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a pointlight.
   </PossibleValueCode>
   <PossibleValueCode value='ambientLight'>
-    A bot with the <TagLink tag='form'/> set to `light` will appear as an ambientLight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as an ambientLight.
   </PossibleValueCode>
   <PossibleValueCode value='directionalLight'>
-    A bot with the <TagLink tag='form'/> set to `light` will appear as a directionalLight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a directionalLight.
   </PossibleValueCode>
   <PossibleValueCode value='spotLight'>
-    A bot with the <TagLink tag='form'/> set to `light` will appear as a spotLight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a spotLight.
   </PossibleValueCode>
   <PossibleValueCode value='hemisphereLight'>
-    A bot with the <TagLink tag='form'/> set to `light` will appear as a hemisphereLight
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a hemisphereLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='password'>
+    A bot with the <TagLink tag='form'/> set to `input` will function as a password input. (Characters are masked)
   </PossibleValueCode>
 </PossibleValuesTable>
 
