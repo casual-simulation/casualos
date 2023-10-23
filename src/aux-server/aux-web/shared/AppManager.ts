@@ -28,6 +28,7 @@ import {
     AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
 import {
+    AuthCoordinator,
     AuthHelper,
     AuxVMImpl,
     BotManager,
@@ -79,6 +80,10 @@ export class AppManager {
         return this._progress;
     }
 
+    get authCoordinator() {
+        return this._authCoordinator;
+    }
+
     private _auth: AuthHelper;
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
@@ -88,8 +93,10 @@ export class AppManager {
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
     private _systemPortal: SystemPortalCoordinator<BotManager>;
+    private _authCoordinator: AuthCoordinator<BotManager>;
     private _db: IDBDatabase;
-    private _primarySimulationAvailableSubject: Subject<void> = new Subject();
+    private _primarySimulationAvailableSubject: Subject<boolean> =
+        new BehaviorSubject(false);
     private _startLoadTime: number = Date.now();
     private _defaultStudioId: string;
 
@@ -107,24 +114,25 @@ export class AppManager {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
         this._simulationFactory = async (id, origin, config) => {
-            const indicator = await this.getConnectionIndicator(
-                origin.recordName,
-                origin.inst,
-                origin.host
-            );
+            const configBotId = uuid();
+            // const indicator = await this.getConnectionIndicator(
+            //     configBotId,
+            //     origin.recordName,
+            //     origin.inst,
+            //     origin.host
+            // );
             const partitions = BotManager.createPartitions(
                 id,
+                configBotId,
                 origin,
-                indicator,
                 config,
                 this._config.causalRepoConnectionUrl
             );
             return new BotManager(
-                indicator,
                 origin,
-                id,
                 config,
-                new AuxVMImpl(indicator, {
+                new AuxVMImpl(id, {
+                    configBotId: configBotId,
                     config,
                     partitions,
                 }),
@@ -148,6 +156,7 @@ export class AppManager {
         this._systemPortal = new SystemPortalCoordinator(
             this._simulationManager
         );
+        this._authCoordinator = new AuthCoordinator(this._simulationManager);
     }
 
     createSimulationConfig(options: {
@@ -278,6 +287,7 @@ export class AppManager {
     ): SubscriptionLike {
         return this._primarySimulationAvailableSubject
             .pipe(
+                filter((available) => available),
                 scan((subs: SubscriptionLike[]) => {
                     if (subs) {
                         subs.forEach((s) => s.unsubscribe());
@@ -508,7 +518,7 @@ export class AppManager {
 
         this._initOffline();
         this._reportTime('Time to primary simulation');
-        this._primarySimulationAvailableSubject.next();
+        this._primarySimulationAvailableSubject.next(true);
 
         const sim = this.simulationManager.primary;
 
@@ -535,12 +545,12 @@ export class AppManager {
     }
 
     async getConnectionIndicator(
+        connectionId: string,
         recordName: string | null,
         inst: string,
         host: string
     ): Promise<ConnectionIndicator> {
         try {
-            const connectionId = uuid();
             const endpoint = !host
                 ? this._auth.primary
                 : this._auth.getEndpoint(host);

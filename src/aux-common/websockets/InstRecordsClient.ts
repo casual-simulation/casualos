@@ -15,6 +15,7 @@ import {
     ConnectedToBranchMessage,
     DisconnectedFromBranchMessage,
     WatchBranchMessage,
+    WatchBranchResultMessage,
     WebsocketErrorInfo,
 } from './WebsocketEvents';
 import {
@@ -38,7 +39,9 @@ export class InstRecordsClient {
     private _sentUpdates: Map<string, Map<number, string[]>>;
     private _updateCounter: number = 0;
     private _watchedBranches: Set<string>;
+    private _connectedBranches: Set<string>;
     private _connectedDevices: Map<string, Map<string, ConnectionInfo>>;
+    private _connectedDeviceBranches: Set<string>;
     private _forcedOffline: boolean;
     private _timeSyncCounter: number = 0;
 
@@ -48,6 +51,8 @@ export class InstRecordsClient {
         this._sentUpdates = new Map();
         this._connectedDevices = new Map();
         this._watchedBranches = new Set();
+        this._connectedBranches = new Set();
+        this._connectedDeviceBranches = new Set();
     }
 
     /**
@@ -108,6 +113,19 @@ export class InstRecordsClient {
         this._watchedBranches.add(watchedBranchKey);
         return this._whenConnected().pipe(
             tap((connected) => {
+                if (
+                    connected &&
+                    this._connectedBranches.has(watchedBranchKey)
+                ) {
+                    this._connectedBranches.delete(watchedBranchKey);
+                    this._client.send({
+                        type: 'repo/unwatch_branch',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+                }
+
                 this._client.send(branchEvent);
 
                 let list = this._getSentUpdates(recordName, inst, branch);
@@ -118,6 +136,17 @@ export class InstRecordsClient {
             }),
             switchMap((connected) =>
                 merge(
+                    this._client.event('repo/watch_branch_result').pipe(
+                        filter(
+                            (event) =>
+                                event.recordName === recordName &&
+                                event.inst === inst &&
+                                event.branch === branch
+                        ),
+                        tap(() => {
+                            this._connectedBranches.add(watchedBranchKey);
+                        })
+                    ),
                     this._client.event('repo/add_updates').pipe(
                         filter(
                             (event) =>
@@ -272,6 +301,7 @@ export class InstRecordsClient {
             ),
             finalize(() => {
                 this._watchedBranches.delete(watchedBranchKey);
+                this._connectedBranches.delete(watchedBranchKey);
 
                 if (this._client.isConnected) {
                     this._client.send({
@@ -377,8 +407,21 @@ export class InstRecordsClient {
         inst: string,
         branch: string
     ) {
+        const watchedBranchKey = branchKey(recordName, inst, branch);
         return of(true).pipe(
             tap((connected) => {
+                if (
+                    connected &&
+                    this._connectedDeviceBranches.has(watchedBranchKey)
+                ) {
+                    this._client.send({
+                        type: 'repo/unwatch_branch_devices',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+                }
+                this._connectedDeviceBranches.add(watchedBranchKey);
                 this._client.send({
                     type: 'repo/watch_branch_devices',
                     recordName,
@@ -454,6 +497,7 @@ export class InstRecordsClient {
                 )
             ),
             finalize(() => {
+                this._connectedDeviceBranches.delete(watchedBranchKey);
                 if (this._client.isConnected) {
                     this._client.send({
                         type: 'repo/unwatch_branch_devices',
@@ -700,9 +744,14 @@ export type ClientWatchBranchUpdatesEvents =
     | ClientUpdates
     | ClientUpdatesReceived
     | ClientEvent
-    | ClientError;
+    | ClientError
+    | WatchBranchResultMessage;
 
-export type ClientUpdatesOrEvent = ClientUpdates | ClientEvent | ClientError;
+export type ClientUpdatesOrEvent =
+    | ClientUpdates
+    | ClientEvent
+    | ClientError
+    | WatchBranchResultMessage;
 
 export function isClientEvent(
     event: ClientWatchBranchMessages | ClientWatchBranchUpdatesEvents
@@ -722,7 +771,8 @@ export function isClientUpdatesOrEvents(
     return (
         event.type === 'updates' ||
         event.type === 'event' ||
-        event.type === 'error'
+        event.type === 'error' ||
+        event.type === 'repo/watch_branch_result'
     );
 }
 
@@ -732,13 +782,18 @@ export function isClientError(
     return event.type === 'error';
 }
 
+export function isWatchBranchResult(
+    event: ClientWatchBranchUpdatesEvents
+): event is WatchBranchResultMessage {
+    return event.type === 'repo/watch_branch_result';
+}
+
 function whenConnected(
     observable: Observable<ClientConnectionState>,
     filterConnected: boolean = true
 ): Observable<boolean> {
     return observable.pipe(
         map((s) => s.connected),
-        distinctUntilChanged(),
         filterConnected ? filter((connected) => connected) : (a) => a
     );
 }

@@ -25,7 +25,7 @@ export class RemoteSimulationImpl
     }
 
     constructor(id: string, origin: SimulationOrigin, vm: AuxVM) {
-        super(id, vm);
+        super(vm);
         this._origin = origin;
         this._login = new LoginManager(this._vm);
     }

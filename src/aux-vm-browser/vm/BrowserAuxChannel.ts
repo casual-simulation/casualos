@@ -5,6 +5,7 @@ import {
     PartitionConfig,
     AuxPartition,
     ConnectionIndicator,
+    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
@@ -19,22 +20,20 @@ import { AuxRuntime } from '@casual-simulation/aux-runtime';
 export class BrowserAuxChannel extends RemoteAuxChannel {
     static defaultHost: string;
 
-    constructor(
-        defaultHost: string,
-        indicator: ConnectionIndicator,
-        config: AuxConfig
-    ) {
-        super(indicator, config, {});
+    constructor(defaultHost: string, config: AuxConfig) {
+        super(config, {});
         BrowserAuxChannel.defaultHost = defaultHost;
     }
 
     protected async _createPartition(
-        config: PartitionConfig
+        config: PartitionConfig,
+        services: AuxPartitionServices
     ): Promise<AuxPartition> {
-        let partition = await super._createPartition(config);
+        let partition = await super._createPartition(config, services);
         if (!partition) {
             partition = await createAuxPartition(
                 config,
+                services,
                 createProxyClientPartition
             );
         }
@@ -43,13 +42,11 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
     }
 
     protected _createSubChannel(
-        indicator: ConnectionIndicator,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
         const channel = new BrowserAuxChannel(
             BrowserAuxChannel.defaultHost,
-            indicator,
             config
         );
         channel._runtime = runtime;

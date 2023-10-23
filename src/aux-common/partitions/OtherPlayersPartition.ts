@@ -51,12 +51,18 @@ import {
     StatusUpdate,
     getConnectionId,
 } from '../common';
+import { PartitionAuthSource } from './PartitionAuthSource';
 
 export async function createOtherPlayersClientPartition(
-    config: PartitionConfig
+    config: PartitionConfig,
+    authSource: PartitionAuthSource
 ): Promise<OtherPlayersPartitionImpl> {
     if (config.type === 'other_players_client') {
-        const partition = new OtherPlayersPartitionImpl(config.client, config);
+        const partition = new OtherPlayersPartitionImpl(
+            config.client,
+            authSource,
+            config
+        );
         return partition;
     }
     return undefined;
@@ -87,6 +93,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     private _branch: string;
     private _state: BotsState;
     private _skipInitialLoad: boolean;
+    private _authSource: PartitionAuthSource;
 
     /**
      * The map of branch names to partitions.
@@ -197,6 +204,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
     constructor(
         client: InstRecordsClient,
+        authSource: PartitionAuthSource,
         config:
             | OtherPlayersClientPartitionConfig
             | OtherPlayersRepoPartitionConfig
@@ -205,6 +213,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         this._inst = config.inst;
         this._branch = config.branch;
         this._client = client;
+        this._authSource = authSource;
         this._childParitionType = config.childPartitionType ?? 'yjs_client';
         this._state = {};
         this._partitions = new Map();
@@ -406,24 +415,30 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         const sub = new Subscription();
         const promise =
             this._childParitionType === 'yjs_client'
-                ? createRemoteClientYjsPartition({
-                      type: 'yjs_client',
-                      recordName: this._recordName,
-                      inst: this._inst,
-                      branch: branch,
-                      client: this._client,
-                      temporary: true,
-                      readOnly: true,
-                  })
-                : createRemoteClientYjsPartition({
-                      type: 'yjs_client',
-                      recordName: this._recordName,
-                      inst: this._inst,
-                      branch: branch,
-                      client: this._client,
-                      temporary: true,
-                      readOnly: true,
-                  });
+                ? createRemoteClientYjsPartition(
+                      {
+                          type: 'yjs_client',
+                          recordName: this._recordName,
+                          inst: this._inst,
+                          branch: branch,
+                          client: this._client,
+                          temporary: true,
+                          readOnly: true,
+                      },
+                      this._authSource
+                  )
+                : createRemoteClientYjsPartition(
+                      {
+                          type: 'yjs_client',
+                          recordName: this._recordName,
+                          inst: this._inst,
+                          branch: branch,
+                          client: this._client,
+                          temporary: true,
+                          readOnly: true,
+                      },
+                      this._authSource
+                  );
         const partition = await promise;
         this._partitions.set(branch, partition);
         this._partitionSubs.set(branch, sub);

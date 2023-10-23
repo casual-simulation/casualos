@@ -104,11 +104,11 @@ describe('SystemPortalCoordinator', () => {
         };
 
         simManager = new SimulationManager((id, options) => {
-            const vm = new TestAuxVM(connection.connectionId);
+            const vm = new TestAuxVM(id, connection.connectionId);
             vm.processEvents = true;
             vm.localEvents = new Subject();
             vms.set(id, vm);
-            return new BotManager(connection, options, id, config, vm);
+            return new BotManager(options, config, vm);
         });
 
         await simManager.setPrimary('sim-1', {

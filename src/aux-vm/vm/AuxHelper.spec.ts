@@ -101,7 +101,7 @@ describe('AuxHelper', () => {
             }
         );
         subs.push(runtime);
-        const helper = new AuxHelper(partitions, runtime);
+        const helper = new AuxHelper('user', partitions, runtime);
 
         for (let [, partition] of iteratePartitions(partitions)) {
             subs.push(
@@ -1451,12 +1451,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createOrUpdateUserBot(
-                {
-                    connectionId: 'testUser',
-                },
-                null
-            );
+            await helper.createOrUpdateUserBot('testUser', null);
 
             expect(helper.botsState['testUser']).toMatchObject({
                 id: 'testUser',
@@ -1481,12 +1476,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createOrUpdateUserBot(
-                {
-                    connectionId: 'testUser',
-                },
-                null
-            );
+            await helper.createOrUpdateUserBot('testUser', null);
 
             expect(helper.botsState['testUser']).toEqual({
                 id: 'testUser',

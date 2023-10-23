@@ -54,6 +54,7 @@ import {
     RateLimitExceededMessage,
     ReceiveDeviceActionMessage,
     UpdatesReceivedMessage,
+    WatchBranchResultMessage,
 } from '../websockets';
 import {
     Action,
@@ -64,6 +65,10 @@ import {
     remote,
 } from '../common';
 import { getStateFromUpdates } from './PartitionUtils';
+import {
+    PartitionAuthRequest,
+    PartitionAuthSource,
+} from './PartitionAuthSource';
 
 console.log = jest.fn();
 
@@ -103,13 +108,17 @@ describe('RemoteYjsPartition', () => {
                 const client = new InstRecordsClient(connection);
                 connection.connect();
 
-                return new RemoteYjsPartitionImpl(client, {
-                    type: 'remote_yjs',
-                    recordName: recordName,
-                    inst: 'inst',
-                    branch: 'testBranch',
-                    host: 'testHost',
-                });
+                return new RemoteYjsPartitionImpl(
+                    client,
+                    new PartitionAuthSource(),
+                    {
+                        type: 'remote_yjs',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    }
+                );
             },
             true,
             true
@@ -122,6 +131,7 @@ describe('RemoteYjsPartition', () => {
             let receiveEvent: Subject<ReceiveDeviceActionMessage>;
             let addAtoms: Subject<AddUpdatesMessage>;
             let updatesReceived: Subject<UpdatesReceivedMessage>;
+            let watchBranchResult: Subject<WatchBranchResultMessage>;
             let added: Bot[];
             let removed: string[];
             let updated: UpdatedBot[];
@@ -129,18 +139,25 @@ describe('RemoteYjsPartition', () => {
             let errors: any[];
             let version: CurrentVersion;
             let sub: Subscription;
+            let authSource: PartitionAuthSource;
 
             beforeEach(async () => {
                 connection = new MemoryConnectionClient();
                 receiveEvent = new Subject<ReceiveDeviceActionMessage>();
                 addAtoms = new Subject<AddUpdatesMessage>();
                 updatesReceived = new Subject<UpdatesReceivedMessage>();
+                watchBranchResult = new Subject();
                 connection.events.set('repo/receive_action', receiveEvent);
                 connection.events.set('repo/add_updates', addAtoms);
                 connection.events.set('repo/updates_received', updatesReceived);
+                connection.events.set(
+                    'repo/watch_branch_result',
+                    watchBranchResult
+                );
                 client = new InstRecordsClient(connection);
                 connection.connect();
                 sub = new Subscription();
+                authSource = new PartitionAuthSource();
 
                 added = [];
                 removed = [];
@@ -1595,51 +1612,232 @@ describe('RemoteYjsPartition', () => {
                     });
                 });
 
-                describe('error', () => {
-                    it('should issue a authorization false shout when the error is unauthorized', async () => {
-                        let events = [] as Action[];
-                        partition.onEvents.subscribe((e) => events.push(...e));
-                        partition.space = 'shared';
+                const errorCodeCases = [
+                    ['not_authorized'] as const,
+                    ['subscription_limit_reached'] as const,
+                    ['inst_not_found'] as const,
+                    ['record_not_found'] as const,
+                    ['invalid_record_key'] as const,
+                    ['invalid_token'] as const,
+                    ['unacceptable_connection_id'] as const,
+                    ['unacceptable_connection_token'] as const,
+                    ['user_is_banned'] as const,
+                    ['not_logged_in'] as const,
+                    ['session_expired'] as const,
+                ];
+                describe.each(errorCodeCases)('%s', (errorCode) => {
+                    describe('error', () => {
+                        it('should issue a authorization false shout when the error is unauthorized', async () => {
+                            let events = [] as Action[];
+                            partition.onEvents.subscribe((e) =>
+                                events.push(...e)
+                            );
+                            partition.space = 'shared';
 
-                        let statuses: StatusUpdate[] = [];
-                        partition.onStatusUpdated.subscribe((s) =>
-                            statuses.push(s)
-                        );
+                            let statuses: StatusUpdate[] = [];
+                            partition.onStatusUpdated.subscribe((s) =>
+                                statuses.push(s)
+                            );
 
-                        partition.connect();
+                            partition.connect();
 
-                        connection.onError.next({
-                            success: false,
-                            recordName: recordName,
-                            inst: 'inst',
-                            branch: 'testBranch',
-                            errorCode: 'not_authorized',
-                            errorMessage: 'Not authorized',
-                        });
-                        await waitAsync();
+                            connection.onError.next({
+                                success: false,
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                errorCode: errorCode,
+                                errorMessage: 'Not authorized',
+                            });
+                            await waitAsync();
 
-                        expect(statuses).toEqual([
-                            {
-                                type: 'connection',
-                                connected: true,
-                            },
-                            {
-                                type: 'authentication',
-                                authenticated: true,
-                            },
-                            {
-                                type: 'authorization',
-                                authorized: false,
-                                error: {
-                                    success: false,
-                                    recordName: recordName,
-                                    inst: 'inst',
-                                    branch: 'testBranch',
-                                    errorCode: 'not_authorized',
-                                    errorMessage: 'Not authorized',
+                            expect(statuses).toEqual([
+                                {
+                                    type: 'connection',
+                                    connected: true,
                                 },
-                            },
-                        ]);
+                                {
+                                    type: 'authentication',
+                                    authenticated: true,
+                                },
+                                {
+                                    type: 'authorization',
+                                    authorized: false,
+                                    error: {
+                                        success: false,
+                                        recordName: recordName,
+                                        inst: 'inst',
+                                        branch: 'testBranch',
+                                        errorCode: errorCode,
+                                        errorMessage: 'Not authorized',
+                                    },
+                                },
+                            ]);
+                        });
+
+                        it('should issue a authorization request when the error is unauthorized', async () => {
+                            let authRequests = [] as PartitionAuthRequest[];
+                            authSource.onAuthRequest.subscribe((e) =>
+                                authRequests.push(e)
+                            );
+                            partition.space = 'shared';
+
+                            let statuses: StatusUpdate[] = [];
+                            partition.onStatusUpdated.subscribe((s) =>
+                                statuses.push(s)
+                            );
+
+                            partition.connect();
+
+                            connection.onError.next({
+                                success: false,
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                errorCode: errorCode,
+                                errorMessage: 'Not authorized',
+                                reason: {
+                                    id: 'testId',
+                                    kind: 'user',
+                                    marker: 'marker',
+                                    permission: 'inst.read',
+                                    type: 'missing_permission',
+                                    role: 'role',
+                                },
+                            });
+                            await waitAsync();
+
+                            expect(authRequests).toEqual([
+                                {
+                                    type: 'request',
+                                    origin: connection.origin,
+                                    kind: 'not_authorized',
+                                    errorCode: errorCode,
+                                    errorMessage: 'Not authorized',
+                                    resource: {
+                                        type: 'inst',
+                                        recordName: recordName,
+                                        inst: 'inst',
+                                    },
+                                    reason: {
+                                        id: 'testId',
+                                        kind: 'user',
+                                        marker: 'marker',
+                                        permission: 'inst.read',
+                                        type: 'missing_permission',
+                                        role: 'role',
+                                    },
+                                },
+                            ]);
+                        });
+                    });
+
+                    describe('repo/watch_branch_result', () => {
+                        it('should issue a authorization false shout when the error is unauthorized', async () => {
+                            let events = [] as Action[];
+                            partition.onEvents.subscribe((e) =>
+                                events.push(...e)
+                            );
+                            partition.space = 'shared';
+
+                            let statuses: StatusUpdate[] = [];
+                            partition.onStatusUpdated.subscribe((s) =>
+                                statuses.push(s)
+                            );
+
+                            partition.connect();
+
+                            watchBranchResult.next({
+                                type: 'repo/watch_branch_result',
+                                success: false,
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                errorCode: errorCode,
+                                errorMessage: 'Not authorized',
+                            });
+                            await waitAsync();
+
+                            expect(statuses).toEqual([
+                                {
+                                    type: 'connection',
+                                    connected: true,
+                                },
+                                {
+                                    type: 'authentication',
+                                    authenticated: true,
+                                },
+                                {
+                                    type: 'authorization',
+                                    authorized: false,
+                                    error: {
+                                        success: false,
+                                        recordName: recordName,
+                                        inst: 'inst',
+                                        branch: 'testBranch',
+                                        errorCode: errorCode,
+                                        errorMessage: 'Not authorized',
+                                    },
+                                },
+                            ]);
+                        });
+
+                        it('should issue a authorization request when the error is unauthorized', async () => {
+                            let authRequests = [] as PartitionAuthRequest[];
+                            authSource.onAuthRequest.subscribe((e) =>
+                                authRequests.push(e)
+                            );
+                            partition.space = 'shared';
+
+                            let statuses: StatusUpdate[] = [];
+                            partition.onStatusUpdated.subscribe((s) =>
+                                statuses.push(s)
+                            );
+
+                            partition.connect();
+
+                            watchBranchResult.next({
+                                type: 'repo/watch_branch_result',
+                                success: false,
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                errorCode: errorCode,
+                                errorMessage: 'Not authorized',
+                                reason: {
+                                    id: 'testId',
+                                    kind: 'user',
+                                    marker: 'marker',
+                                    permission: 'inst.read',
+                                    type: 'missing_permission',
+                                    role: 'role',
+                                },
+                            });
+                            await waitAsync();
+
+                            expect(authRequests).toEqual([
+                                {
+                                    type: 'request',
+                                    origin: connection.origin,
+                                    kind: 'not_authorized',
+                                    errorCode: errorCode,
+                                    errorMessage: 'Not authorized',
+                                    resource: {
+                                        type: 'inst',
+                                        recordName: recordName,
+                                        inst: 'inst',
+                                    },
+                                    reason: {
+                                        id: 'testId',
+                                        kind: 'user',
+                                        marker: 'marker',
+                                        permission: 'inst.read',
+                                        type: 'missing_permission',
+                                        role: 'role',
+                                    },
+                                },
+                            ]);
+                        });
                     });
                 });
             });
@@ -2040,7 +2238,11 @@ describe('RemoteYjsPartition', () => {
             });
 
             function setupPartition(config: RemoteYjsPartitionConfig) {
-                partition = new RemoteYjsPartitionImpl(client, config);
+                partition = new RemoteYjsPartitionImpl(
+                    client,
+                    authSource,
+                    config
+                );
 
                 sub.add(partition);
                 sub.add(

@@ -35,7 +35,6 @@ import {
     WebsocketType,
     WebsocketUploadRequestEvent,
     WebsocketUploadResponseEvent,
-    websocketMessageSchema,
 } from '@casual-simulation/aux-common';
 import axios, { Method } from 'axios';
 
@@ -63,6 +62,10 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
 
     get onError() {
         return this._onError;
+    }
+
+    get origin() {
+        return this._socket.origin;
     }
 
     event<T>(name: string): Observable<T> {

@@ -5,6 +5,7 @@ import {
     isClientEvent,
     isClientUpdates,
     DEFAULT_BRANCH_NAME,
+    isWatchBranchResult,
 } from './InstRecordsClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -18,6 +19,7 @@ import {
     ReceiveDeviceActionMessage,
     TimeSyncResponseMessage,
     UpdatesReceivedMessage,
+    WatchBranchResultMessage,
 } from './WebsocketEvents';
 import { filter, map } from 'rxjs/operators';
 import {
@@ -226,6 +228,57 @@ describe('InstRecordsClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+                {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should unwatch and then rewatch if a second connection event is sent', async () => {
+            const onResult = new Subject<WatchBranchResultMessage>();
+            connection.events.set('repo/watch_branch_result', onResult);
+
+            connection.connect();
+            client.watchBranchUpdates('abc').subscribe();
+
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+
+            onResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            await waitAsync();
+
+            connection.connect();
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+                {
+                    type: 'repo/unwatch_branch',
                     recordName: null,
                     inst: 'abc',
                     branch: DEFAULT_BRANCH_NAME,
@@ -522,6 +575,48 @@ describe('InstRecordsClient', () => {
                     branch: DEFAULT_BRANCH_NAME,
                     updateId: 1,
                     updates: ['111', '222'],
+                },
+            ]);
+        });
+
+        it('should relay watch_branch_result events that are for the branch', async () => {
+            const onResult = new Subject<WatchBranchResultMessage>();
+            connection.events.set('repo/watch_branch_result', onResult);
+
+            let results = [] as WatchBranchResultMessage[];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(filter(isWatchBranchResult))
+                .subscribe((a) => results.push(a));
+
+            await waitAsync();
+
+            onResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            onResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'other',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            await waitAsync();
+
+            expect(results).toEqual([
+                {
+                    type: 'repo/watch_branch_result',
+                    success: true,
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
         });
@@ -948,6 +1043,43 @@ describe('InstRecordsClient', () => {
             await waitAsync();
 
             expect(connection.sentMessages.slice(1)).toEqual([]);
+        });
+
+        it('should unwatch and rewatch when a second connection event is sent', async () => {
+            const sub = client
+                .watchBranchDevices('myRecord', 'inst', 'testBranch')
+                .subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/watch_branch_devices',
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                },
+            ]);
+
+            connection.connect();
+
+            await waitAsync();
+
+            expect(connection.sentMessages.slice(1)).toEqual([
+                {
+                    type: 'repo/unwatch_branch_devices',
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                },
+                {
+                    type: 'repo/watch_branch_devices',
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                },
+            ]);
         });
 
         it('should send device disconnected events for all connected devices when the connection is lost', async () => {

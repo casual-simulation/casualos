@@ -138,7 +138,9 @@ export default class BotChat extends Vue {
         if (!this.isLoggedIn) {
             appManager.simulationManager.primary.auth.primary.authenticate();
         } else {
-            appManager.simulationManager.primary.auth.primary.openAccountPage();
+            appManager.authCoordinator.showAccountInfo(
+                appManager.simulationManager.primary.id
+            );
         }
     }
 

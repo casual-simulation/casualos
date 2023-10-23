@@ -42,6 +42,8 @@ export class MemoryConnectionClient implements ConnectionClient {
         return this._onError;
     }
 
+    origin: string;
+
     event<T>(name: WebsocketMessage['type']): Observable<T> {
         return (this.events.get(name) as any) || never();
     }
@@ -65,6 +67,7 @@ export class MemoryConnectionClient implements ConnectionClient {
     }
 
     constructor(device?: ConnectionInfo) {
+        this.origin = 'http://localhost';
         this._info = device;
         this._indicator = null;
         this.sentMessages = [];

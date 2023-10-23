@@ -11135,20 +11135,18 @@ describe('RecordsServer', () => {
                     )
                 );
 
+                expect(websocketMessenger.getMessages(connectionId)).toEqual([
+                    {
+                        type: 'login_result',
+                        success: false,
+                        errorCode: 'unacceptable_connection_id',
+                        errorMessage:
+                            'A connection ID must be specified when logging in without a connection token.',
+                    },
+                ]);
                 const errors = getWebSockerErrors(connectionId);
 
-                expect(errors).toEqual([
-                    [
-                        WebsocketEventTypes.Error,
-                        1,
-                        {
-                            success: false,
-                            errorCode: 'unacceptable_connection_id',
-                            errorMessage:
-                                'A connection ID must be specified when logging in without a connection token.',
-                        },
-                    ],
-                ]);
+                expect(errors).toEqual([]);
             });
 
             it('should return an error if the login message is improperly formattted', async () => {
@@ -11208,6 +11206,7 @@ describe('RecordsServer', () => {
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
                     {
                         type: 'login_result',
+                        success: true,
                         info: {
                             connectionId: 'clientConnectionId',
                             sessionId: null,
@@ -11395,6 +11394,13 @@ describe('RecordsServer', () => {
                             updates: [],
                             initial: true,
                         },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName,
+                            inst,
+                            branch,
+                        },
                     ]);
                 });
 
@@ -11432,6 +11438,13 @@ describe('RecordsServer', () => {
                             branch,
                             updates: ['abc'],
                             initial: true,
+                        },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName,
+                            inst,
+                            branch,
                         },
                     ]);
                 });
@@ -11473,6 +11486,13 @@ describe('RecordsServer', () => {
                             branch,
                             updates: [],
                             initial: true,
+                        },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName,
+                            inst,
+                            branch,
                         },
                         {
                             type: 'repo/add_updates',
@@ -11647,6 +11667,13 @@ describe('RecordsServer', () => {
                             initial: true,
                         },
                         {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName,
+                            inst,
+                            branch,
+                        },
+                        {
                             type: 'repo/add_updates',
                             recordName,
                             inst,
@@ -11687,7 +11714,7 @@ describe('RecordsServer', () => {
                     expectNoWebSocketErrors(connectionId);
 
                     expect(
-                        websocketMessenger.getMessages(connection2).slice(1)
+                        websocketMessenger.getMessages(connection2).slice(2)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -11728,7 +11755,7 @@ describe('RecordsServer', () => {
                     expectNoWebSocketErrors(connectionId);
 
                     expect(
-                        websocketMessenger.getMessages(connection2).slice(1)
+                        websocketMessenger.getMessages(connection2).slice(2)
                     ).toEqual([]);
                 });
             });
@@ -11987,6 +12014,7 @@ describe('RecordsServer', () => {
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
                     {
                         type: 'login_result',
+                        success: true,
                         info: {
                             connectionId: 'clientConnectionId',
                             sessionId: null,

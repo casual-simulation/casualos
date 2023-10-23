@@ -17,6 +17,7 @@ import {
 } from '@casual-simulation/aux-common';
 
 export function nodeSimulationForBranch(
+    id: string,
     indicator: ConnectionIndicator,
     client: InstRecordsClient,
     branch: string,
@@ -54,6 +55,7 @@ export function nodeSimulationForBranch(
             client: client,
         },
     };
+    const configBotId = getConnectionId(indicator);
     return new RemoteSimulationImpl(
         branch,
         {
@@ -61,9 +63,11 @@ export function nodeSimulationForBranch(
             inst: null,
         },
         new AuxVMNode(
+            id,
+            configBotId,
             new RemoteAuxChannel(
-                indicator,
                 {
+                    configBotId: configBotId,
                     config: null,
                     partitions,
                 },
@@ -82,6 +86,7 @@ export function nodeSimulationForLocalRepo(
             type: 'yjs',
         },
     };
+    const configBotId = getConnectionId(indicator);
     return new RemoteSimulationImpl(
         id,
         {
@@ -89,9 +94,11 @@ export function nodeSimulationForLocalRepo(
             inst: null,
         },
         new AuxVMNode(
+            id,
+            configBotId,
             new RemoteAuxChannel(
-                indicator,
                 {
+                    configBotId,
                     config: null,
                     partitions,
                 },
@@ -106,12 +113,13 @@ export function nodeSimulationWithConfig(
     id: string,
     config: AuxConfig
 ) {
+    const configBotId = getConnectionId(indicator);
     return new RemoteSimulationImpl(
         id,
         {
             recordName: null,
             inst: null,
         },
-        new AuxVMNode(new RemoteAuxChannel(indicator, config, {}))
+        new AuxVMNode(id, configBotId, new RemoteAuxChannel(config, {}))
     );
 }

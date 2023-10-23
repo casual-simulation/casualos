@@ -1,6 +1,7 @@
 import {
     BotAction,
     ConnectionIndicator,
+    PartitionAuthMessage,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
@@ -54,23 +55,31 @@ export class DenoVM implements AuxVM {
             channel: Remote<AuxChannel>;
         }
     >;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
 
     private _config: AuxConfig;
     private _worker: DenoWorker;
     private _proxy: Remote<AuxChannel>;
-    private _initialIndicator: ConnectionIndicator;
+    private _id: string;
+
     closed: boolean;
 
     /**
      * The ID of the simulation.
      */
-    id: string;
+    get id(): string {
+        return this._id;
+    }
+
+    get configBotId(): string {
+        return this._config.configBotId;
+    }
 
     /**
      * Creates a new Simulation VM.
      */
-    constructor(indicator: ConnectionIndicator, config: AuxConfig) {
-        this._initialIndicator = indicator;
+    constructor(id: string, config: AuxConfig) {
+        this._id = id;
         this._config = config;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -81,6 +90,7 @@ export class DenoVM implements AuxVM {
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
+        this._onAuthMessage = new Subject();
     }
 
     get subVMAdded(): Observable<AuxSubVM> {
@@ -97,6 +107,10 @@ export class DenoVM implements AuxVM {
 
     get onError(): Observable<AuxChannelErrorType> {
         return this._onError;
+    }
+
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
     }
 
     /**
@@ -167,11 +181,7 @@ export class DenoVM implements AuxVM {
         }
 
         const wrapper = wrap<AuxStatic>(<Endpoint>(<any>this._worker));
-        this._proxy = await new wrapper(
-            null,
-            this._initialIndicator,
-            this._config
-        );
+        this._proxy = await new wrapper(null, this._config);
 
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.initAndWait(
@@ -184,7 +194,8 @@ export class DenoVM implements AuxVM {
             ),
             proxy((err) => this._onError.next(err)),
             proxy((channel) => this._handleAddedSubChannel(channel)),
-            proxy((id) => this._handleRemovedSubChannel(id))
+            proxy((id) => this._handleRemovedSubChannel(id)),
+            proxy((message) => this._onAuthMessage.next(message))
         );
     }
 
@@ -264,6 +275,10 @@ export class DenoVM implements AuxVM {
         return await this._proxy.getTags();
     }
 
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        return this._proxy.sendAuthMessage(message);
+    }
+
     unsubscribe(): void {
         if (this.closed) {
             return;
@@ -281,19 +296,22 @@ export class DenoVM implements AuxVM {
         this._localEvents = null;
     }
 
-    protected _createSubVM(channel: Remote<AuxChannel>): AuxVM {
-        return new RemoteAuxVM(channel);
+    protected _createSubVM(
+        id: string,
+        configBotId: string,
+        channel: Remote<AuxChannel>
+    ): AuxVM {
+        return new RemoteAuxVM(id, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, indicator } = await subChannel.getInfo();
+        const { id, configBotId } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            indicator,
-            vm: this._createSubVM(channel),
+            vm: this._createSubVM(id, configBotId, channel),
             channel,
         };
 

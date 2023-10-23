@@ -1,5 +1,4 @@
 import {
-    LoginManager,
     BotHelper,
     BotWatcher,
     UpdatedBotInfo,
@@ -31,21 +30,18 @@ import { Subject } from 'rxjs';
 console.log = jest.fn();
 
 describe('BrowserSimulationCalculations', () => {
-    let login: LoginManager;
     let watcher: BotWatcher;
     let helper: BotHelper;
     let portals: PortalManager;
     let index: BotIndex;
     let vm: TestAuxVM;
     let localEvents: Subject<LocalActions[]>;
-
     let userId = 'user';
 
     beforeEach(() => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('sim');
         vm.processEvents = true;
         localEvents = vm.localEvents = new Subject();
-        login = new LoginManager(vm);
         helper = new BotHelper(vm);
         helper.userId = userId;
         index = new BotIndex();
@@ -73,7 +69,7 @@ describe('BrowserSimulationCalculations', () => {
                 },
             });
 
-            const update = await userBotChangedCore(login, watcher)
+            const update = await userBotChangedCore(userId, watcher)
                 .pipe(first())
                 .toPromise();
 
@@ -87,7 +83,7 @@ describe('BrowserSimulationCalculations', () => {
 
         it('should resolve with the user once it is created', async () => {
             let update: UpdatedBotInfo = null;
-            userBotChangedCore(login, watcher)
+            userBotChangedCore(userId, watcher)
                 .pipe(first())
                 .subscribe((u) => (update = u));
 
@@ -116,7 +112,7 @@ describe('BrowserSimulationCalculations', () => {
 
         it('should resolve with the user once it is created', async () => {
             let update: UpdatedBotInfo = null;
-            userBotChangedCore(login, watcher)
+            userBotChangedCore(userId, watcher)
                 .pipe(first())
                 .subscribe((u) => (update = u));
 
