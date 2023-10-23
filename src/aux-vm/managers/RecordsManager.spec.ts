@@ -116,6 +116,9 @@ describe('RecordsManager', () => {
             get origin() {
                 return 'http://localhost:3002';
             },
+            get currentLoginStatus() {
+                return null;
+            },
         };
 
         customAuthMock = customAuth = {
