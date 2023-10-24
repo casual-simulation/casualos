@@ -48,6 +48,7 @@ import type {
     GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
+import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -730,6 +731,31 @@ export class AuthManager {
 
     async loginWithPhoneNumber(phoneNumber: string) {
         return this._login(phoneNumber, 'phone');
+    }
+
+    async signUpWithPrivoAdult(info: PrivoSignUpInfo) {
+        return await this._privoPegister(info, null);
+    }
+
+    async signUpWithPrivoChild(info: PrivoSignUpInfo, parentEmail: string) {
+        return await this._privoPegister(info, parentEmail);
+    }
+
+    private async _privoPegister(info: PrivoSignUpInfo, parentEmail: string) {
+        const response = await axios.post(
+            `${this.apiEndpoint}/api/v2/register`,
+            {
+                email: info.email,
+                name: info.name,
+                dateOfBirth: info.dateOfBirth.toJSON(),
+                parentEmail: parentEmail,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return response.data;
     }
 
     async completeLogin(
