@@ -257,6 +257,13 @@ export class PlayerGame extends Game {
         );
     }
 
+    getDefaultLighting(): boolean {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'defaultLighting'
+        );
+    }
+
     getPannable(): boolean {
         return this._getSimulationValue(this.playerSimulations, 'pannable');
     }

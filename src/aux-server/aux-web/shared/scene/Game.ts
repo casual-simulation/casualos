@@ -8,6 +8,8 @@ import {
     sRGBEncoding,
     VideoTexture,
     Object3D,
+    AmbientLight,
+    DirectionalLight,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -110,6 +112,8 @@ export abstract class Game {
     private _currentBackgroundAddress: string;
     private _backgroundVideoElement: HTMLVideoElement;
     private _backgroundVideoSubscription: Subscription;
+    private _ambientLight: AmbientLight;
+    private _directionalLight: DirectionalLight;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -279,6 +283,8 @@ export abstract class Game {
     }
 
     abstract getBackground(): Color | Texture;
+
+    abstract getDefaultLighting(): boolean;
 
     abstract getBackgroundAddress(): string;
 
@@ -863,13 +869,17 @@ export abstract class Game {
         // Main scene camera.
         this.setCameraType('orthographic');
 
+        const defaultLighting = true;
         // Main scene ambient light.
         const ambient = baseAuxAmbientLight();
         this.mainScene.add(ambient);
 
+        this._ambientLight = ambient;
+
         // Main scene directional light.
         const directional = baseAuxDirectionalLight();
         this.mainScene.add(directional);
+        this._directionalLight = directional;
 
         //
         // [Html Mixer Context]
@@ -981,6 +991,12 @@ export abstract class Game {
         if (renderBackground) {
             this.mainSceneBackgroundUpdate();
         }
+
+        const defaultLighting = this.getDefaultLighting();
+
+        this._ambientLight.visible = defaultLighting;
+        this._directionalLight.visible = defaultLighting;
+
         this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
 
         // Render debug object manager if it's enabled.
