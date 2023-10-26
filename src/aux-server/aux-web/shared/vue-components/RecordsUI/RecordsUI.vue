@@ -226,6 +226,169 @@
             </md-dialog-actions>
         </md-dialog>
 
+        <md-dialog
+            :md-active.sync="showEnterAccountInfo"
+            @md-closed="cancelLogin(true)"
+            :md-close-on-esc="true"
+            :md-click-outside-to-close="true"
+            :md-fullscreen="true"
+            class="input-dialog"
+        >
+            <md-dialog-title>Register with {{ loginSiteName }}</md-dialog-title>
+            <md-dialog-content class="input-dialog-content">
+                <div class="md-layout md-gutter">
+                    <div class="md-layout-item">
+                        <md-field :class="emailFieldClass">
+                            <label for="email">{{ emailFieldHint }}</label>
+                            <md-input
+                                name="email"
+                                id="email"
+                                autocomplete="email"
+                                v-model="email"
+                                :disabled="processing"
+                            />
+                            <span v-if="showEmailError" class="md-error"
+                                >This email is not allowed</span
+                            >
+                            <span v-if="showSmsError" class="md-error"
+                                >This phone number is not allowed</span
+                            >
+                            <span v-if="showInvalidAddressError" class="md-error"
+                                >This value is not recognized as a phone number or email
+                                address</span
+                            >
+                            <span v-if="showEnterAddressError" class="md-error">{{
+                                enterAddressErrorMessage
+                            }}</span>
+                            <span v-if="showBannedUserError" class="md-error"
+                                >This user has been banned.</span
+                            >
+                        </md-field>
+
+                        <md-field :class="nameFieldClass">
+                            <label for="name">Name</label>
+                            <md-input
+                                name="name"
+                                id="name"
+                                autocomplete="given-name"
+                                v-model="name"
+                                :disabled="processing"
+                            />
+                            <span v-if="showNameError" class="md-error"
+                                >This name is not allowed</span
+                            >
+                        </md-field>
+
+                        <md-datepicker
+                            v-model="dateOfBirth"
+                            :class="dateOfBirthFieldClass"
+                            md-model-type="Date"
+                            :md-disabled-dates="disabledDates"
+                        >
+                            <label>Date of Birth</label>
+
+                            <span v-if="showDateOfBirthError">
+                                This Date of Birth is not allowed.
+                            </span>
+                        </md-datepicker>
+
+                        <!-- <md-field :class="dateOfBirthFieldClass">
+                            <label for="name">Date of Birth</label>
+                            <md-input
+                                name="name"
+                                id="name"
+                                autocomplete="given-name"
+                                v-model="name"
+                                :disabled="processing"
+                            />
+                            <span v-if="showNameError" class="md-error"
+                                >This name is not allowed</span
+                            >
+                        </md-field> -->
+                    </div>
+                </div>
+                <div class="terms-of-service-container">
+                    <div v-show="showTermsOfServiceError" class="terms-of-service-error">
+                        Please accept the terms of service.
+                    </div>
+                    <div class="terms-of-service-wrapper">
+                        <md-checkbox v-model="acceptedTerms" id="terms-of-service"> </md-checkbox>
+                        <label for="terms-of-service">
+                            I accept the
+                            <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
+                        </label>
+                    </div>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button
+                    type="button"
+                    class="md-primary"
+                    @click="register()"
+                    :disabled="processing"
+                >
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Register</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog
+            :md-active.sync="showHasAccount"
+            @md-closed="cancelLogin(true)"
+            :md-close-on-esc="true"
+            :md-click-outside-to-close="true"
+            :md-fullscreen="true"
+            class="input-dialog"
+        >
+            <md-dialog-title>Do you have an account?</md-dialog-title>
+            <md-dialog-content class="input-dialog-content">
+                <div class="md-layout md-gutter">
+                    <div class="md-layout-item">
+                        <p>Do you have an account?</p>
+                    </div>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button
+                    type="button"
+                    class="md-primary"
+                    @click="hasAccount(true)"
+                    :disabled="processing"
+                >
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Yes</span>
+                </md-button>
+                <md-button
+                    type="button"
+                    class="md-primary"
+                    @click="hasAccount(false)"
+                    :disabled="processing"
+                >
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>No</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
         <div v-show="showIframe" class="md-overlay md-fixed md-dialog-overlay"></div>
     </div>
 </template>

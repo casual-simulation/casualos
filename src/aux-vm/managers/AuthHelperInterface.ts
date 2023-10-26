@@ -4,7 +4,7 @@ import {
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
-import { LoginStatus, LoginUIStatus } from '../auth/AuxAuth';
+import { LoginStatus, LoginUIStatus, PrivoSignUpInfo } from '../auth/AuxAuth';
 
 /**
  * Defines an interface for objects that are able to keep track of the user's authentication state.
@@ -107,6 +107,20 @@ export interface AuthHelperInterface extends SubscriptionLike {
         sms: string,
         acceptedTermsOfService: boolean
     ): Promise<void>;
+
+    /**
+     * Specifies the email address and whether the user accepted the terms of service during the Privo sign up process.
+     * Resolves with a validation result that indicates whether an error occurred and what should be shown to the user.
+     * @param info The info that was collected.
+     */
+    providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void>;
+
+    /**
+     * Specifies whether the user has an account or not.
+     * Only supported on protocol version 9 or more.
+     * @param hasAccount Whether the user has an account.
+     */
+    provideHasAccount(hasAccount: boolean): Promise<void>;
 
     /**
      * Provides the given login code to finish logging in.

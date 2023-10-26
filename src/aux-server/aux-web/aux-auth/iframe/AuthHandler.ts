@@ -634,7 +634,21 @@ export class AuthHandler implements AuxAuth {
                 .as('years');
             if (Math.floor(ageInYears) > 18) {
                 // Create adult account
-                // TODO:
+                const result = await authManager.signUpWithPrivoAdult({
+                    acceptedTermsOfService: info.acceptedTermsOfService,
+                    dateOfBirth: info.dateOfBirth,
+                    email: info.email,
+                    name: info.name,
+                });
+
+                if (result.success === false) {
+                    return null;
+                }
+
+                await authManager.loadUserInfo();
+                await this._loadUserInfo();
+
+                return authManager.userId;
             } else {
                 // Collect parent email
                 this._loginUIStatus.next({
@@ -651,7 +665,24 @@ export class AuthHandler implements AuxAuth {
                     )
                 );
 
-                // TODO:
+                const result = await authManager.signUpWithPrivoChild(
+                    {
+                        acceptedTermsOfService: info.acceptedTermsOfService,
+                        dateOfBirth: info.dateOfBirth,
+                        email: info.email,
+                        name: info.name,
+                    },
+                    parentEmail
+                );
+
+                if (result.success === false) {
+                    return null;
+                }
+
+                await authManager.loadUserInfo();
+                await this._loadUserInfo();
+
+                return authManager.userId;
             }
         }
     }

@@ -37,6 +37,7 @@ import type {
     RevokeAllSessionsResult,
     ListedSession,
     ReplaceSessionResult,
+    PrivoSignUpRequestResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -741,8 +742,11 @@ export class AuthManager {
         return await this._privoPegister(info, parentEmail);
     }
 
-    private async _privoPegister(info: PrivoSignUpInfo, parentEmail: string) {
-        const response = await axios.post(
+    private async _privoPegister(
+        info: PrivoSignUpInfo,
+        parentEmail: string
+    ): Promise<PrivoSignUpRequestResult> {
+        const response = await axios.post<PrivoSignUpRequestResult>(
             `${this.apiEndpoint}/api/v2/register`,
             {
                 email: info.email,
@@ -755,7 +759,15 @@ export class AuthManager {
             }
         );
 
-        return response.data;
+        const result = response.data;
+
+        if (result.success === true) {
+            this.savedSessionKey = result.sessionKey;
+            this.savedConnectionKey = result.connectionKey;
+            this._userId = result.userId;
+        }
+
+        return result;
     }
 
     async completeLogin(

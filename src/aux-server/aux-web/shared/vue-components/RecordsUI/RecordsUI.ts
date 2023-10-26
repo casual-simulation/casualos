@@ -57,9 +57,16 @@ export default class RecordsUI extends Vue {
     addressToCheck: string = '';
     addressTypeToCheck: AddressType = 'email';
     showCode: boolean = false;
+    name: string = '';
+    dateOfBirth: Date = new Date();
+
+    showEnterAccountInfo: boolean = false;
+    showHasAccount: boolean = false;
 
     showSmsError: boolean = false;
     showEmailError: boolean = false;
+    showNameError: boolean = false;
+    showDateOfBirthError: boolean = false;
     showEnterAddressError: boolean = false;
     showInvalidAddressError: boolean = false;
     showTermsOfServiceError: boolean = false;
@@ -112,6 +119,14 @@ export default class RecordsUI extends Vue {
         }`;
     }
 
+    get dateOfBirthFieldClass() {
+        return this.showDateOfBirthError ? 'md-invalid' : '';
+    }
+
+    get nameFieldClass() {
+        return this.showNameError ? 'md-invalid' : '';
+    }
+
     get codeFieldClass() {
         return this.showInvalidCodeError ? 'md-invalid' : '';
     }
@@ -162,6 +177,39 @@ export default class RecordsUI extends Vue {
                 }
             }
         }
+    }
+
+    async register() {
+        this.showInvalidAddressError = false;
+
+        if (!hasValue(this.email)) {
+            this.showEnterAddressError = true;
+            return;
+        } else if (!mightBeEmailAddress(this.email)) {
+            this.showInvalidAddressError = true;
+            return;
+        }
+
+        if (!hasValue(this.name)) {
+            this.showNameError = true;
+            return;
+        }
+
+        if (!hasValue(this.dateOfBirth)) {
+            this.showDateOfBirthError = true;
+            return;
+        }
+
+        await this._currentLoginAuth.providePrivoSignUpInfo({
+            acceptedTermsOfService: this.acceptedTerms,
+            email: this.email,
+            name: this.name,
+            dateOfBirth: this.dateOfBirth,
+        });
+    }
+
+    async hasAccount(hasAccount: boolean) {
+        await this._currentLoginAuth.provideHasAccount(hasAccount);
     }
 
     async sendCode() {
@@ -255,6 +303,21 @@ export default class RecordsUI extends Vue {
         this.completedGrantInstAdminPermission = false;
     }
 
+    private _resetUI() {
+        this.showAllowRecordData = false;
+        this.showEnterAddress = false;
+        this.showEnterAccountInfo = false;
+        this.showCheckAddress = false;
+        this.showIframe = false;
+        this.showEmailError = false;
+        this.showNameError = false;
+        this.showDateOfBirthError = false;
+        this.showSmsError = false;
+        this.showTermsOfServiceError = false;
+        this.showBannedUserError = false;
+        this.processing = false;
+    }
+
     private _simulationAdded(sim: BrowserSimulation): void {
         let sub = new Subscription();
         this._sub.add(sub);
@@ -322,9 +385,8 @@ export default class RecordsUI extends Vue {
                         this.email = '';
                         this.acceptedTerms = false;
                     }
+                    this._resetUI();
                     this.showEnterAddress = true;
-                    this.showCheckAddress = false;
-                    this.showIframe = false;
                     this.termsOfServiceUrl = e.termsOfServiceUrl;
                     this.loginSiteName = e.siteName;
                     this.showEmailError =
@@ -335,32 +397,50 @@ export default class RecordsUI extends Vue {
                         e.showAcceptTermsOfServiceError;
                     this.showBannedUserError = e.showBannedUserError;
                     this.supportsSms = e.supportsSms;
-                    this.processing = false;
                     this.$emit('visible');
                 } else if (
                     e.page === 'check_address' ||
                     e.page === 'check_email'
                 ) {
-                    this.showEnterAddress = false;
-                    this.showIframe = false;
+                    this._resetUI();
                     this.showCheckAddress = true;
                     this.showCode = !!e.enterCode;
                     this.addressToCheck = e.address ?? this.email;
                     this.addressTypeToCheck = e.addressType;
                     this.showInvalidCodeError = e.showInvalidCodeError;
-                    this.processing = false;
                     this.$emit('visible');
                 } else if (e.page === 'show_iframe') {
-                    this.showEnterAddress = false;
-                    this.showCheckAddress = false;
+                    this._resetUI();
                     this.showIframe = true;
-                    this.processing = false;
+                } else if (e.page === 'enter_privo_account_info') {
+                    this._loginSim = sim;
+                    if (!this.showEnterAddress) {
+                        this.email = '';
+                        this.acceptedTerms = false;
+                    }
+                    this._resetUI();
+                    this.showEnterAccountInfo = true;
+                    this.termsOfServiceUrl = e.termsOfServiceUrl;
+                    this.loginSiteName = e.siteName;
+                    this.showEmailError =
+                        e.showEnterEmailError || e.showInvalidEmailError;
+                    this.showNameError =
+                        e.showEnterNameError || e.showInvalidNameError;
+                    this.showDateOfBirthError =
+                        e.showEnterDateOfBirthError ||
+                        e.showInvalidDateOfBirthError;
+                    this.showTermsOfServiceError =
+                        e.showAcceptTermsOfServiceError;
+                    this.showBannedUserError = e.showBannedUserError;
+                    this.$emit('visible');
+                } else if (e.page === 'has_account') {
+                    this._loginSim = sim;
+                    this._resetUI();
+                    this.showHasAccount = true;
+                    this.$emit('visible');
                 } else {
                     this.$emit('hidden');
-                    this.showCheckAddress = false;
-                    this.showIframe = false;
-                    this.showEnterAddress = false;
-                    this.processing = false;
+                    this._resetUI();
                     if (this._loginSim === sim) {
                         this._loginSim = null;
                     }
@@ -403,6 +483,10 @@ export default class RecordsUI extends Vue {
             };
             sim.helper.transaction(asyncResult(taskId, result));
         }
+    }
+
+    disabledDates(date: Date) {
+        return date > new Date();
     }
 
     private _hideCreateRecordKey() {
