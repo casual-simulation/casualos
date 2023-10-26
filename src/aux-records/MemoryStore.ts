@@ -118,6 +118,7 @@ import {
     SaveInstResult,
     StoredUpdates,
 } from './websockets';
+import { PrivoConfiguration } from './PrivoConfiguration';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -163,6 +164,7 @@ export class MemoryStore
     private _instRecords: Map<string, Map<string, InstWithUpdates>> = new Map();
 
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
+    private _privoConfiguration: PrivoConfiguration | null = null;
 
     maxAllowedInstSize: number = Infinity;
 
@@ -234,6 +236,14 @@ export class MemoryStore
         this._subscriptionConfiguration = value;
     }
 
+    get privoConfiguration() {
+        return this._privoConfiguration;
+    }
+
+    set privoConfiguration(value: PrivoConfiguration | null) {
+        this._privoConfiguration = value;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this.policies = {};
@@ -243,6 +253,10 @@ export class MemoryStore
 
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null> {
         return this._subscriptionConfiguration;
+    }
+
+    async getPrivoConfiguration(): Promise<PrivoConfiguration | null> {
+        return this._privoConfiguration;
     }
 
     async getRecordByName(name: string): Promise<Record> {
@@ -579,6 +593,11 @@ export class MemoryStore
 
     async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
         const user = this._users.find((u) => u.stripeCustomerId === customerId);
+        return user;
+    }
+
+    async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        const user = this._users.find((u) => u.privoServiceId === serviceId);
         return user;
     }
 

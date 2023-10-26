@@ -40,6 +40,12 @@ export interface AuthStore {
     findUserByStripeCustomerId(customerId: string): Promise<AuthUser | null>;
 
     /**
+     * Finds the user that is associated with the given Privo Service ID.
+     * @param serviceId
+     */
+    findUserByPrivoServiceId(serviceId: string): Promise<AuthUser | null>;
+
+    /**
      * Finds a login request for the given user and request ID.
      * @param userId The ID of the user.
      * @param requestId The ID of the request.
@@ -285,6 +291,16 @@ export interface AuthUser {
      * The OpenID login provider that should be required for this user to login with.
      */
     oidLoginProvider?: string | null | undefined;
+
+    /**
+     * The Privo Service ID that this user is associated with.
+     */
+    privoServiceId?: string;
+
+    /**
+     * The Privo Service ID of the parent of this user.
+     */
+    privoParentServiceId?: string;
 }
 
 /**

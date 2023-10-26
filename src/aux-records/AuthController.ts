@@ -5,7 +5,10 @@ import {
     AuthStore,
     AuthUser,
 } from './AuthStore';
-import { ServerError } from '@casual-simulation/aux-common/Errors';
+import {
+    NotSupportedError,
+    ServerError,
+} from '@casual-simulation/aux-common/Errors';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import {
@@ -33,6 +36,8 @@ import {
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
 import { parseConnectionToken } from '@casual-simulation/aux-common';
+import { PrivoClientInterface } from './PrivoClient';
+import { DateTime } from 'luxon';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -102,18 +107,21 @@ export class AuthController {
     private _messenger: AuthMessenger;
     private _forceAllowSubscriptionFeatures: boolean;
     private _config: ConfigurationStore;
+    private _privoClient: PrivoClientInterface = null;
     // private _subscriptionConfig: SubscriptionConfiguration | null;
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
         configStore: ConfigurationStore,
-        forceAllowSubscriptionFeatures: boolean = false
+        forceAllowSubscriptionFeatures: boolean = false,
+        privoClient: PrivoClientInterface = null
     ) {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
+        this._privoClient = privoClient;
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -507,6 +515,174 @@ export class AuthController {
         } catch (err) {
             console.error(
                 '[AuthController] Error occurred while completing login request',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async requestPrivoSignUp(
+        request: PrivoSignUpRequest
+    ): Promise<PrivoSignUpRequestResult> {
+        try {
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const now = new Date(Date.now());
+            const years = -DateTime.fromJSDate(request.dateOfBirth)
+                .diff(DateTime.fromJSDate(now), 'years')
+                .as('years');
+            let updatePasswordUrl: string;
+            let serviceId: string;
+            let parentServiceId: string;
+            let email: string = null;
+            if (years < 0) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given date of birth cannot be in the future.',
+                };
+            }
+
+            if (years < 18) {
+                if (!request.parentEmail) {
+                    return {
+                        success: false,
+                        errorCode: 'parent_email_required',
+                        errorMessage:
+                            'A parent email is required to sign up a child.',
+                    };
+                }
+
+                const result = await this._privoClient.createChildAccount({
+                    childFirstName: request.name,
+                    childDateOfBirth: request.dateOfBirth,
+                    childUsername: request.email,
+                    parentEmail: request.parentEmail,
+                    featureIds: [
+                        config.featureIds.childPrivoSSO,
+                        config.featureIds.joinAndCollaborate,
+                        config.featureIds.publishProjects,
+                    ],
+                });
+
+                serviceId = result.childServiceId;
+                parentServiceId = result.parentServiceId;
+                updatePasswordUrl = result.updatePasswordLink;
+            } else {
+                const result = await this._privoClient.createAdultAccount({
+                    adultFirstName: request.name,
+                    adultEmail: request.email,
+                    adultUsername: request.email,
+                    adultDateOfBirth: request.dateOfBirth,
+                    featureIds: [
+                        config.featureIds.adultPrivoSSO,
+                        config.featureIds.joinAndCollaborate,
+                        config.featureIds.publishProjects,
+                    ],
+                });
+
+                serviceId = result.adultServiceId;
+                updatePasswordUrl = result.updatePasswordLink;
+                email = request.email;
+            }
+
+            const user: AuthUser = {
+                id: uuid(),
+                email: email,
+                phoneNumber: null,
+                name: request.name,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privoServiceId: serviceId,
+                privoParentServiceId: parentServiceId,
+            };
+
+            // TODO: Add user to DB
+            const saveUserResult = await this._store.saveNewUser(user);
+
+            if (saveUserResult.success === false) {
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            const userId = user.id;
+            const nowMs = Date.now();
+
+            const newSessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const newSessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const newConnectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+
+            const session: AuthSession = {
+                userId: userId,
+                sessionId: newSessionId,
+                requestId: null,
+                secretHash: hashPasswordWithSalt(
+                    newSessionSecret,
+                    newSessionId
+                ),
+                connectionSecret: newConnectionSecret,
+                grantedTimeMs: nowMs,
+                revokeTimeMs: null,
+                expireTimeMs: nowMs + SESSION_LIFETIME_MS,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+            };
+            await this._store.saveSession(session);
+
+            return {
+                success: true,
+                userId: user.id,
+                updatePasswordUrl,
+                sessionKey: formatV1SessionKey(
+                    user.id,
+                    newSessionId,
+                    newSessionSecret,
+                    session.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    user.id,
+                    newSessionId,
+                    newConnectionSecret,
+                    session.expireTimeMs
+                ),
+                expireTimeMs: session.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while requesting Privo sign up`,
                 err
             );
             return {
@@ -1394,6 +1570,87 @@ export class AuthController {
             };
         }
     }
+}
+
+export interface PrivoSignUpRequest {
+    /**
+     * The email address of the user.
+     */
+    email: string;
+
+    /**
+     * The name of the user.
+     */
+    name: string;
+
+    /**
+     * The date of birth of the user.
+     */
+    dateOfBirth: Date;
+
+    /**
+     * The email address of the user's parent.
+     * Null if none was provided in the request.
+     */
+    parentEmail: string | null;
+
+    /**
+     * The IP address that the sign up is from.
+     */
+    ipAddress: string;
+}
+
+export type PrivoSignUpRequestResult =
+    | PrivoSignUpRequestSuccess
+    | PrivoSignUpRequestFailure;
+
+export interface PrivoSignUpRequestSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that was created.
+     */
+    userId: string;
+
+    /**
+     * The URL that the user can be sent to in order to complete the sign up and set their password.
+     */
+    updatePasswordUrl: string;
+
+    /**
+     * The session key that was issued for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The connection key that was issued for the session.
+     */
+    connectionKey: string;
+
+    /**
+     * The expiration time of the session in miliseconds in Unix time.
+     */
+    expireTimeMs: number;
+}
+
+export interface PrivoSignUpRequestFailure {
+    success: false;
+
+    /**
+     * The code of the error.
+     */
+    errorCode:
+        | 'unacceptable_request'
+        | 'email_already_exists'
+        | 'parent_email_already_exists'
+        | 'parent_email_required'
+        | NotSupportedError
+        | ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
 }
 
 export interface LoginRequest {

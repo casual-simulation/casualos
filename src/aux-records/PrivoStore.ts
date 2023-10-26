@@ -34,7 +34,7 @@ export interface PrivoClientCredentials {
     /**
      * The refresh token.
      */
-    refreshToken: string;
+    refreshToken: string | null | undefined;
 
     /**
      * The scope that was granted.

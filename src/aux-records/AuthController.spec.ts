@@ -33,6 +33,8 @@ import {
     SubscriptionConfiguration,
 } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
+import { DateTime } from 'luxon';
+import { PrivoClientInterface } from './PrivoClient';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -58,6 +60,15 @@ describe('AuthController', () => {
     let store: MemoryStore;
     let messenger: MemoryAuthMessenger;
     let controller: AuthController;
+    let privoClient: PrivoClientInterface;
+    let privoClientMock: {
+        createChildAccount: jest.Mock<
+            ReturnType<PrivoClientInterface['createChildAccount']>
+        >;
+        createAdultAccount: jest.Mock<
+            ReturnType<PrivoClientInterface['createAdultAccount']>
+        >;
+    };
     let nowMock: jest.Mock<number>;
 
     beforeEach(() => {
@@ -96,7 +107,18 @@ describe('AuthController', () => {
         });
         messenger = new MemoryAuthMessenger();
 
-        controller = new AuthController(store, messenger, store);
+        privoClient = privoClientMock = {
+            createAdultAccount: jest.fn(),
+            createChildAccount: jest.fn(),
+        };
+
+        controller = new AuthController(
+            store,
+            messenger,
+            store,
+            undefined,
+            privoClient
+        );
 
         uuidMock.mockReset();
         randomBytesMock.mockReset();
@@ -1240,6 +1262,251 @@ describe('AuthController', () => {
                     expect(store.sessions).toEqual([]);
                 }
             );
+        });
+    });
+
+    describe('requestPrivoSignUp()', () => {
+        const sessionId = new Uint8Array([7, 8, 9]);
+        const sessionSecret = new Uint8Array([10, 11, 12]);
+        const connectionSecret = new Uint8Array([11, 12, 13]);
+
+        beforeEach(() => {
+            // Jan 1, 2023 in miliseconds
+            nowMock.mockReturnValue(
+                DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis()
+            );
+
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            store.privoConfiguration = {
+                apiEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                tokenScopes: 'scope1 scope2',
+                verificationIntegration: 'verificationIntegration',
+                verificationServiceId: 'verificationServiceId',
+                verificationSiteId: 'verificationSiteId',
+            };
+        });
+
+        it('should return not_supported when no privo client is configured', async () => {
+            controller = new AuthController(store, messenger, store);
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'test name',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Privo features are not supported on this server.',
+            });
+        });
+
+        it('should return not_supported when there is no privo configuration in the store', async () => {
+            controller = new AuthController(
+                store,
+                messenger,
+                store,
+                undefined,
+                privoClient
+            );
+            store.privoConfiguration = null;
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'test name',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Privo features are not supported on this server.',
+            });
+        });
+
+        it('should request that a child be signed up when given a child birth date and a parent email', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'test name',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'userId',
+                updatePasswordUrl: 'link',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+            });
+
+            expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
+                parentEmail: 'parent@example.com',
+                childUsername: 'test@example.com',
+                childFirstName: 'test name',
+                childDateOfBirth: new Date(2010, 1, 1),
+                featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
+            });
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+
+            expect(await store.findUser('userId')).toEqual({
+                id: 'userId',
+                name: 'test name',
+                email: null,
+                phoneNumber: null,
+                privoServiceId: 'childServiceId',
+                privoParentServiceId: 'parentServiceId',
+                currentLoginRequestId: null,
+                allSessionRevokeTimeMs: null,
+            });
+
+            expect(await store.listSessions('userId', Infinity)).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: 'userId',
+                        sessionId: fromByteArray(sessionId),
+                        secretHash: expect.any(String),
+                        connectionSecret: expect.any(String),
+                        grantedTimeMs: Date.now(),
+                        expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+                        requestId: null,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ],
+            });
+        });
+
+        it('should return a parent_email_required error code when given a child birth date and no parent email', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: null,
+                name: 'test name',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'parent_email_required',
+                errorMessage: 'A parent email is required to sign up a child.',
+            });
+
+            expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+        });
+
+        it('should request that an adult be signed up when given a adult birth date', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createAdultAccount.mockResolvedValueOnce({
+                adultServiceId: 'serviceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: null,
+                name: 'test name',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2000, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'userId',
+                updatePasswordUrl: 'link',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
+
+            expect(privoClientMock.createAdultAccount).toHaveBeenCalledWith({
+                adultEmail: 'test@example.com',
+                adultUsername: 'test@example.com',
+                adultFirstName: 'test name',
+                adultDateOfBirth: new Date(2000, 1, 1),
+                featureIds: ['adultAccount', 'joinAndCollaborate', 'publish'],
+            });
+            expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
+
+            expect(await store.findUser('userId')).toEqual({
+                id: 'userId',
+                name: 'test name',
+                email: 'test@example.com',
+                phoneNumber: null,
+                privoServiceId: 'serviceId',
+                currentLoginRequestId: null,
+                allSessionRevokeTimeMs: null,
+            });
+
+            expect(await store.listSessions('userId', Infinity)).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: 'userId',
+                        sessionId: fromByteArray(sessionId),
+                        secretHash: expect.any(String),
+                        connectionSecret: expect.any(String),
+                        grantedTimeMs: Date.now(),
+                        expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+                        requestId: null,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ],
+            });
         });
     });
 
