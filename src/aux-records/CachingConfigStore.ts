@@ -1,3 +1,4 @@
+import { PrivoConfiguration } from 'PrivoConfiguration';
 import { Cache } from './Cache';
 import { ConfigurationStore } from './ConfigurationStore';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
@@ -38,6 +39,21 @@ export class CachingConfigStore implements ConfigurationStore {
                 result,
                 this._cacheSeconds
             );
+        }
+
+        return result;
+    }
+
+    async getPrivoConfiguration(): Promise<PrivoConfiguration> {
+        const cached = await this._cache.retrieve<PrivoConfiguration>('privo');
+
+        if (cached) {
+            return cached;
+        }
+
+        const result = await this._store.getPrivoConfiguration();
+        if (result) {
+            await this._cache.store('privo', result, this._cacheSeconds);
         }
 
         return result;

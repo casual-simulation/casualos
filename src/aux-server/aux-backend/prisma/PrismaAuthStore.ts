@@ -71,6 +71,16 @@ export class PrismaAuthStore implements AuthStore {
         return this._convertToAuthUser(user);
     }
 
+    async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        const user = await this._client.user.findUnique({
+            where: {
+                privoServiceId: serviceId,
+            },
+        });
+
+        return this._convertToAuthUser(user);
+    }
+
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
@@ -132,6 +142,8 @@ export class PrismaAuthStore implements AuthStore {
             subscriptionId: user.subscriptionId as string,
             banTime: convertToDate(user.banTimeMs),
             banReason: user.banReason as string,
+            privoServiceId: user.privoServiceId as string,
+            privoParentServiceId: user.privoParentServiceId as string,
         };
 
         await this._client.user.upsert({
@@ -160,6 +172,8 @@ export class PrismaAuthStore implements AuthStore {
                 subscriptionId: user.subscriptionId as string,
                 banTime: convertToDate(user.banTimeMs),
                 banReason: user.banReason as string,
+                privoServiceId: user.privoServiceId as string,
+                privoParentServiceId: user.privoParentServiceId as string,
             };
 
             if (!!user.currentLoginRequestId) {

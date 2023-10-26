@@ -25,7 +25,10 @@ model User {
     banTime DateTime?
     banReason String?
 
-    oidLoginProvider String?
+    privoServiceId String? @unique
+    privoParentServiceId String?
+
+    // oidLoginProvider String?
 
     subscriptionInfoId String? @unique @db.Uuid
     subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
@@ -76,11 +79,11 @@ model LoginRequest {
     addressType String
     ipAddress String
 
-    oidCodeVerifier String?
-    oidCodeMethod String?
-    oidProvider String?
-    oidRedirectUrl String?
-    oidScope String?
+    // oidCodeVerifier String?
+    // oidCodeMethod String?
+    // oidProvider String?
+    // oidRedirectUrl String?
+    // oidScope String?
     
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -97,15 +100,15 @@ model AuthSession {
     secretHash String
     connectionSecret String?
 
-    oidProvider String?
-    oidSub String?
-    oidAccessToken String?
-    oidTokenType String?
-    oidIdToken String?
-    oidRefreshToken String?
-    oidScope String?
-    oidExpiresAtSeconds Int?
-    oidSessionState String?
+    // oidProvider String?
+    // oidSub String?
+    // oidAccessToken String?
+    // oidTokenType String?
+    // oidIdToken String?
+    // oidRefreshToken String?
+    // oidScope String?
+    // oidExpiresAtSeconds Int?
+    // oidSessionState String?
 
     grantedTime DateTime
     expireTime DateTime

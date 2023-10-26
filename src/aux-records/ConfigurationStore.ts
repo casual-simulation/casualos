@@ -3,6 +3,8 @@ import { PrivoConfiguration } from './PrivoConfiguration';
 
 export const SUBSCRIPTIONS_CONFIG_KEY = 'subscriptions';
 
+export const PRIVO_CONFIG_KEY = 'privo';
+
 /**
  * Defines an interface that is used for storing configuration data.
  */

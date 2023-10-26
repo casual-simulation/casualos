@@ -122,6 +122,7 @@ import { PrivoConfiguration } from './PrivoConfiguration';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
+    privo?: PrivoConfiguration;
 }
 
 export class MemoryStore
@@ -246,6 +247,7 @@ export class MemoryStore
 
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
+        this._privoConfiguration = config.privo ?? null;
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};

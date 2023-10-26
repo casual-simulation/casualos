@@ -115,6 +115,9 @@ import { Subscription, SubscriptionLike } from 'rxjs';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
 import { RedisMultiCache } from '../redis/RedisMultiCache';
+import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
+import { PrismaPrivoStore } from 'aux-backend/prisma/PrismaPrivoStore';
+import { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
@@ -122,6 +125,9 @@ export class ServerBuilder implements SubscriptionLike {
     private _prismaClient: PrismaClient;
     private _mongoDb: Db;
     private _multiCache: MultiCache;
+
+    private _privoClient: PrivoClient;
+    private _privoStore: PrismaPrivoStore;
 
     private _configStore: ConfigurationStore;
     private _metricsStore: MetricsStore;
@@ -345,6 +351,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._configStore
         );
         this._authStore = new PrismaAuthStore(prismaClient);
+        this._privoStore = new PrismaPrivoStore(prismaClient);
         this._recordsStore = new PrismaRecordsStore(prismaClient);
         this._policyStore = this._ensurePrismaPolicyStore(
             prismaClient,
@@ -400,6 +407,7 @@ export class ServerBuilder implements SubscriptionLike {
                     this._configStore
                 );
                 this._authStore = new PrismaAuthStore(prismaClient);
+                this._privoStore = new PrismaPrivoStore(prismaClient);
                 this._recordsStore = new PrismaRecordsStore(prismaClient);
                 this._policyStore = this._ensurePrismaPolicyStore(
                     prismaClient,
@@ -721,6 +729,34 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    usePrivo(options: Pick<BuilderOptions, 'privo'> = this._options): this {
+        console.log('[ServerBuilder] Using Privo.');
+        if (!options.privo) {
+            throw new Error('Privo options must be provided');
+        }
+
+        if (!this._configStore) {
+            throw new Error('A config store must be configured!');
+        }
+
+        if (!this._privoStore) {
+            throw new Error('A privo store must be configured!');
+        }
+        this._privoClient = new PrivoClient(
+            this._privoStore,
+            this._configStore
+        );
+
+        this._actions.push({
+            priority: 10,
+            action: async () => {
+                await this._privoClient.init();
+            },
+        });
+
+        return this;
+    }
+
     useAI(
         options: Pick<
             BuilderOptions,
@@ -892,7 +928,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._authStore,
             this._authMessenger,
             this._configStore,
-            this._forceAllowAllSubscriptionFeatures
+            this._forceAllowAllSubscriptionFeatures,
+            this._privoClient
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,
@@ -1127,10 +1164,11 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _ensurePrismaConfigurationStore(
         prismaClient: PrismaClient,
-        options: Pick<BuilderOptions, 'prisma' | 'subscriptions'>
+        options: Pick<BuilderOptions, 'prisma' | 'subscriptions' | 'privo'>
     ): ConfigurationStore {
         const configStore = new PrismaConfigurationStore(prismaClient, {
             subscriptions: options.subscriptions as SubscriptionConfiguration,
+            privo: options.privo as PrivoConfiguration,
         });
         if (this._multiCache && options.prisma.configurationCacheSeconds) {
             const cache = this._multiCache.getCache('config');
@@ -1669,13 +1707,13 @@ const privoSchema = z.object({
         ),
 });
 
-const authSchema = z.object({
-    requirePrivoLogin: z
-        .boolean()
-        .describe('Whether to require Privo login for all users.')
-        .optional()
-        .default(false),
-});
+// const authSchema = z.object({
+//     requirePrivoLogin: z
+//         .boolean()
+//         .describe('Whether to require Privo login for all users.')
+//         .optional()
+//         .default(false),
+// });
 
 export const optionsSchema = z.object({
     s3: s3Schema
@@ -1755,10 +1793,10 @@ export const optionsSchema = z.object({
         )
         .optional(),
 
-    auth: authSchema
-        .describe('Authentication configuration options.')
-        .optional()
-        .default({}),
+    // auth: authSchema
+    //     .describe('Authentication configuration options.')
+    //     .optional()
+    //     .default({}),
 
     subscriptions: subscriptionConfigSchema
         .describe(

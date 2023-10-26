@@ -550,9 +550,11 @@ export class AuthController {
             }
 
             const now = new Date(Date.now());
-            const years = -DateTime.fromJSDate(request.dateOfBirth)
-                .diff(DateTime.fromJSDate(now), 'years')
-                .as('years');
+            const years = Math.floor(
+                -DateTime.fromJSDate(request.dateOfBirth)
+                    .diff(DateTime.fromJSDate(now), 'years')
+                    .as('years')
+            );
             let updatePasswordUrl: string;
             let serviceId: string;
             let parentServiceId: string;
@@ -566,7 +568,7 @@ export class AuthController {
                 };
             }
 
-            if (years < 18) {
+            if (years < config.ageOfConsent) {
                 if (!request.parentEmail) {
                     return {
                         success: false,

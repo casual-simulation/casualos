@@ -141,6 +141,22 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         return null;
     }
 
+    async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        const user = await this._users.findOne({
+            privoServiceId: serviceId,
+        });
+
+        if (user) {
+            const { _id, ...rest } = user;
+            return {
+                id: _id,
+                ...rest,
+            };
+        }
+
+        return null;
+    }
+
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
@@ -213,6 +229,8 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     subscriptionId: user.subscriptionId,
                     banTimeMs: user.banTimeMs,
                     banReason: user.banReason,
+                    privoServiceId: user.privoServiceId,
+                    privoParentServiceId: user.privoParentServiceId,
                 },
             },
             {
@@ -254,6 +272,8 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             subscriptionId: user.subscriptionId,
             banTimeMs: user.banTimeMs,
             banReason: user.banReason,
+            privoServiceId: user.privoServiceId,
+            privoParentServiceId: user.privoParentServiceId,
         });
 
         return {
@@ -1101,6 +1121,9 @@ export interface MongoDBAuthUser {
     subscriptionPeriodEndMs?: number;
     banTimeMs?: number;
     banReason?: AuthUser['banReason'];
+
+    privoServiceId?: string;
+    privoParentServiceId?: string;
 }
 
 export interface MongoDBLoginRequest {

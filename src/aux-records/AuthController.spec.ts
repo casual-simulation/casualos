@@ -1282,7 +1282,7 @@ describe('AuthController', () => {
                 .mockReturnValueOnce(connectionSecret);
 
             store.privoConfiguration = {
-                apiEndpoint: 'endpoint',
+                gatewayEndpoint: 'endpoint',
                 featureIds: {
                     adultPrivoSSO: 'adultAccount',
                     childPrivoSSO: 'childAccount',
@@ -1301,6 +1301,8 @@ describe('AuthController', () => {
                 verificationIntegration: 'verificationIntegration',
                 verificationServiceId: 'verificationServiceId',
                 verificationSiteId: 'verificationSiteId',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
             };
         });
 
