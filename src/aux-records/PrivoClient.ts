@@ -45,7 +45,7 @@ export interface CreateChildAccountRequest {
     /**
      * The username that the child will use to log in.
      */
-    childUsername: string;
+    childEmail: string;
 
     /**
      * The list of feature IDs that are being requested.
@@ -102,11 +102,6 @@ export interface CreateAdultAccountRequest {
      * The birth date of the adult.
      */
     adultDateOfBirth: Date;
-
-    /**
-     * The username that the adult will use to log in.
-     */
-    adultUsername: string;
 
     /**
      * The list of feature IDs that the adult should have access to.

@@ -556,7 +556,7 @@ export class AuthController {
             let updatePasswordUrl: string;
             let serviceId: string;
             let parentServiceId: string;
-            let email: string = null;
+            const email: string = request.email;
             if (years < 0) {
                 return {
                     success: false,
@@ -579,7 +579,7 @@ export class AuthController {
                 const result = await this._privoClient.createChildAccount({
                     childFirstName: request.name,
                     childDateOfBirth: request.dateOfBirth,
-                    childUsername: request.email,
+                    childEmail: request.email,
                     parentEmail: request.parentEmail,
                     featureIds: [
                         config.featureIds.childPrivoSSO,
@@ -595,7 +595,6 @@ export class AuthController {
                 const result = await this._privoClient.createAdultAccount({
                     adultFirstName: request.name,
                     adultEmail: request.email,
-                    adultUsername: request.email,
                     adultDateOfBirth: request.dateOfBirth,
                     featureIds: [
                         config.featureIds.adultPrivoSSO,
@@ -606,7 +605,6 @@ export class AuthController {
 
                 serviceId = result.adultServiceId;
                 updatePasswordUrl = result.updatePasswordLink;
-                email = request.email;
             }
 
             const user: AuthUser = {

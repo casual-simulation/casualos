@@ -1378,7 +1378,7 @@ describe('AuthController', () => {
 
             expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
                 parentEmail: 'parent@example.com',
-                childUsername: 'test@example.com',
+                childEmail: 'test@example.com',
                 childFirstName: 'test name',
                 childDateOfBirth: new Date(2010, 1, 1),
                 featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
@@ -1388,7 +1388,7 @@ describe('AuthController', () => {
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
                 name: 'test name',
-                email: null,
+                email: 'test@example.com',
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
@@ -1472,7 +1472,6 @@ describe('AuthController', () => {
 
             expect(privoClientMock.createAdultAccount).toHaveBeenCalledWith({
                 adultEmail: 'test@example.com',
-                adultUsername: 'test@example.com',
                 adultFirstName: 'test name',
                 adultDateOfBirth: new Date(2000, 1, 1),
                 featureIds: ['adultAccount', 'joinAndCollaborate', 'publish'],
