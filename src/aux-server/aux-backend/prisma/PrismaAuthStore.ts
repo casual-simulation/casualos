@@ -732,6 +732,10 @@ export class PrismaAuthStore implements AuthStore {
                 banTimeMs: convertToMillis(user.banTime),
                 banReason: user.banReason as AuthUser['banReason'],
                 subscriptionId: user.subscriptionId as string | undefined,
+                privoServiceId: user.privoServiceId as string | undefined,
+                privoParentServiceId: user.privoParentServiceId as
+                    | string
+                    | undefined,
             };
         }
         return null;
