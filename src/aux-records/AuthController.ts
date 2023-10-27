@@ -1365,6 +1365,40 @@ export class AuthController {
             const { hasActiveSubscription, subscriptionTier: tier } =
                 await this._getSubscriptionInfo(result);
 
+            let features: GetUserInfoFeatures;
+            const privoConfig = await this._config.getPrivoConfiguration();
+            if (privoConfig && result.privoServiceId) {
+                const userInfo = await this._privoClient.getUserInfo(
+                    result.privoServiceId
+                );
+                features = {
+                    joinAndCollaborate: userInfo.permissions.some(
+                        (p) =>
+                            p.on &&
+                            p.featureIdentifier ===
+                                privoConfig.featureIds.joinAndCollaborate
+                    ),
+                    projectDevelopment: userInfo.permissions.some(
+                        (p) =>
+                            p.on &&
+                            p.featureIdentifier ===
+                                privoConfig.featureIds.projectDevelopment
+                    ),
+                    publishProjects: userInfo.permissions.some(
+                        (p) =>
+                            p.on &&
+                            p.featureIdentifier ===
+                                privoConfig.featureIds.publishProjects
+                    ),
+                };
+            } else {
+                features = {
+                    joinAndCollaborate: true,
+                    projectDevelopment: true,
+                    publishProjects: true,
+                };
+            }
+
             return {
                 success: true,
                 userId: result.id,
@@ -1375,6 +1409,7 @@ export class AuthController {
                 avatarUrl: result.avatarUrl,
                 hasActiveSubscription: hasActiveSubscription,
                 subscriptionTier: hasActiveSubscription ? tier : null,
+                features,
             };
         } catch (err) {
             console.error(
@@ -2161,6 +2196,28 @@ export interface GetUserInfoSuccess {
      * The subscription tier that the user is subscribed to.
      */
     subscriptionTier: string;
+
+    /**
+     * The features that the user has enabled.
+     */
+    features: GetUserInfoFeatures;
+}
+
+export interface GetUserInfoFeatures {
+    /**
+     * Whether the user has the ability to publish app bundles.
+     */
+    publishProjects: boolean;
+
+    /**
+     * Whether the user has the ability to develop on insts.
+     */
+    projectDevelopment: boolean;
+
+    /**
+     * Whether the user has the ability to share access to their inst.
+     */
+    joinAndCollaborate: boolean;
 }
 
 export interface GetUserInfoFailure {

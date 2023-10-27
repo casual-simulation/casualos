@@ -68,6 +68,7 @@ describe('AuthController', () => {
         createAdultAccount: jest.Mock<
             ReturnType<PrivoClientInterface['createAdultAccount']>
         >;
+        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
     };
     let nowMock: jest.Mock<number>;
 
@@ -110,6 +111,7 @@ describe('AuthController', () => {
         privoClient = privoClientMock = {
             createAdultAccount: jest.fn(),
             createChildAccount: jest.fn(),
+            getUserInfo: jest.fn(),
         };
 
         controller = new AuthController(
@@ -1288,6 +1290,7 @@ describe('AuthController', () => {
                     childPrivoSSO: 'childAccount',
                     joinAndCollaborate: 'joinAndCollaborate',
                     publishProjects: 'publish',
+                    projectDevelopment: 'dev',
                 },
                 clientId: 'clientId',
                 clientSecret: 'clientSecret',
@@ -3533,6 +3536,11 @@ describe('AuthController', () => {
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
                 subscriptionTier: null,
+                features: {
+                    joinAndCollaborate: true,
+                    publishProjects: true,
+                    projectDevelopment: true,
+                },
             });
         });
 
@@ -3554,6 +3562,11 @@ describe('AuthController', () => {
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
                 subscriptionTier: null,
+                features: {
+                    joinAndCollaborate: true,
+                    publishProjects: true,
+                    projectDevelopment: true,
+                },
             });
         });
 
@@ -3586,6 +3599,11 @@ describe('AuthController', () => {
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: true,
                 subscriptionTier: 'alpha',
+                features: {
+                    joinAndCollaborate: true,
+                    publishProjects: true,
+                    projectDevelopment: true,
+                },
             });
         });
 
@@ -3664,6 +3682,106 @@ describe('AuthController', () => {
                     });
                 }
             );
+        });
+
+        describe('privo', () => {
+            beforeEach(async () => {
+                store.privoConfiguration = {
+                    gatewayEndpoint: 'endpoint',
+                    featureIds: {
+                        adultPrivoSSO: 'adultAccount',
+                        childPrivoSSO: 'childAccount',
+                        joinAndCollaborate: 'joinAndCollaborate',
+                        publishProjects: 'publish',
+                        projectDevelopment: 'dev',
+                    },
+                    clientId: 'clientId',
+                    clientSecret: 'clientSecret',
+                    publicEndpoint: 'publicEndpoint',
+                    roleIds: {
+                        child: 'childRole',
+                        adult: 'adultRole',
+                        parent: 'parentRole',
+                    },
+                    tokenScopes: 'scope1 scope2',
+                    // verificationIntegration: 'verificationIntegration',
+                    // verificationServiceId: 'verificationServiceId',
+                    // verificationSiteId: 'verificationSiteId',
+                    redirectUri: 'redirectUri',
+                    ageOfConsent: 18,
+                };
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    privoServiceId: 'serviceId',
+                });
+            });
+
+            it('should get the features for the user and return them', async () => {
+                privoClientMock.getUserInfo.mockResolvedValue({
+                    serviceId: 'serviceId',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    roleIdentifier: 'ab1Child',
+                    permissions: [
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureIdentifier: 'joinAndCollaborate',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureIdentifier: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: false,
+                            consentDateSeconds: 1234567890,
+                            featureIdentifier: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                    ],
+                });
+
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    features: {
+                        joinAndCollaborate: true,
+                        publishProjects: true,
+                        projectDevelopment: false,
+                    },
+                });
+
+                expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
+                    'serviceId'
+                );
+            });
         });
     });
 

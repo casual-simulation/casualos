@@ -57,6 +57,10 @@ export const privoSchema = z.object({
             .string()
             .describe('The ID of the "Publish Projects" feature')
             .nonempty(),
+        projectDevelopment: z
+            .string()
+            .describe('The ID of the "Project Development" feature')
+            .nonempty(),
     }),
 
     tokenScopes: z

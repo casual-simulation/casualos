@@ -194,6 +194,7 @@ describe('RecordsServer', () => {
         createAdultAccount: jest.Mock<
             ReturnType<PrivoClientInterface['createAdultAccount']>
         >;
+        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
     };
 
     beforeEach(async () => {
@@ -231,6 +232,7 @@ describe('RecordsServer', () => {
         privoClient = privoClientMock = {
             createAdultAccount: jest.fn(),
             createChildAccount: jest.fn(),
+            getUserInfo: jest.fn(),
         };
         authController = new AuthController(
             store,
@@ -1954,7 +1956,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('POST /api/v2/register/privo', () => {
+    describe('POST /api/v2/register/privo', () => {
         let tenYearsAgo: DateTime;
 
         beforeEach(() => {
@@ -1967,6 +1969,7 @@ describe('RecordsServer', () => {
                     childPrivoSSO: 'childAccount',
                     joinAndCollaborate: 'joinAndCollaborate',
                     publishProjects: 'publish',
+                    projectDevelopment: 'dev',
                 },
                 clientId: 'clientId',
                 clientSecret: 'clientSecret',

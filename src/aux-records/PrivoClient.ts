@@ -5,6 +5,7 @@ import { Client, Issuer, TokenSet } from 'openid-client';
 import { v4 as uuid } from 'uuid';
 import axios, { AxiosRequestHeaders } from 'axios';
 import { DateTime } from 'luxon';
+import { z } from 'zod';
 
 /**
  * Defines an interface for objects that can interface with the Privo API.
@@ -30,6 +31,12 @@ export interface PrivoClientInterface {
     createAdultAccount(
         request: CreateAdultAccountRequest
     ): Promise<CreateAdultAccountResponse>;
+
+    /**
+     * Gets the user info for the given service ID.
+     * @param serviceId The ID of the service.
+     */
+    getUserInfo(serviceId: string): Promise<PrivoGetUserInfoResponse>;
 }
 
 /**
@@ -67,7 +74,7 @@ export class PrivoClient implements PrivoClientInterface {
         }
 
         const headers = await this._getRequestHeaders(config);
-        const url = `${config.publicEndpoint}/api/v1.0/account/parent`;
+        const url = `${config.gatewayEndpoint}/api/v1.0/account/parent`;
         const result = await axios.post(
             url,
             {
@@ -96,17 +103,42 @@ export class PrivoClient implements PrivoClientInterface {
 
         const data = result.data;
 
+        const schema = z.object({
+            to: z.object({
+                service_id: z.string(),
+                connected_profiles: z
+                    .array(
+                        z.object({
+                            service_id: z.string(),
+                            update_password_link: z.string(),
+                            features: z.array(
+                                z.object({
+                                    feature_identifier: z.string(),
+                                    on: z.boolean(),
+                                })
+                            ),
+                        })
+                    )
+                    .min(1),
+            }),
+        });
+
+        const validated = schema.parse(data);
+
         console.log('privo data', data);
+        console.log('connected profiles', data.to.connected_profiles);
 
         return {
-            parentServiceId: data.to.service_id,
-            childServiceId: data.to.connected_profiles[0].service_id,
+            parentServiceId: validated.to.service_id,
+            childServiceId: validated.to.connected_profiles[0].service_id,
             updatePasswordLink:
-                data.to.connected_profiles[0].update_password_link,
-            features: data.to.connected_profiles[0].features.map((f: any) => ({
-                featureId: f.feature_identifier,
-                on: f.on === true || f.on === 'true',
-            })),
+                validated.to.connected_profiles[0].update_password_link,
+            features: validated.to.connected_profiles[0].features.map(
+                (f: any) => ({
+                    featureId: f.feature_identifier,
+                    on: f.on === true || f.on === 'true',
+                })
+            ),
         };
     }
 
@@ -114,6 +146,62 @@ export class PrivoClient implements PrivoClientInterface {
         request: CreateAdultAccountRequest
     ): Promise<CreateAdultAccountResponse> {
         throw new Error('Method not implemented.');
+    }
+
+    async getUserInfo(serviceId: string): Promise<PrivoGetUserInfoResponse> {
+        const config = await this._config.getPrivoConfiguration();
+
+        if (!config) {
+            throw new Error('No Privo configuration found.');
+        }
+
+        const headers = await this._getRequestHeaders(config);
+        const url = `${config.gatewayEndpoint}/userinfo`;
+        const result = await axios.get(url, {
+            params: {
+                service_id: serviceId,
+            },
+            headers,
+        });
+
+        const data = result.data;
+
+        const schema = z.object({
+            sub: z.string(),
+            locale: z.string(),
+            given_name: z.string(),
+            email_verified: z.boolean(),
+            role_identifier: z.string(),
+            permissions: z.array(
+                z.object({
+                    on: z.boolean(),
+                    consent_date: z.number(),
+                    feature_identifier: z.string(),
+                    category: z.string(),
+                    active: z.boolean(),
+                })
+            ),
+        });
+
+        const validated = schema.parse(data);
+
+        console.log('privo data', data);
+        console.log('connected profiles', data.to.connected_profiles);
+
+        return {
+            serviceId: validated.sub,
+            locale: validated.locale,
+            givenName: validated.given_name,
+            emailVerified: validated.email_verified,
+            roleIdentifier: validated.role_identifier,
+            permissions: validated.permissions.map((p) => ({
+                on: p.on,
+                consentDateSeconds: p.consent_date,
+                featureIdentifier: p.feature_identifier,
+                category: p.category,
+                active: p.active,
+            })),
+        };
     }
 
     private async _getRequestHeaders(
@@ -266,4 +354,40 @@ export interface CreateAdultAccountResponse {
      * The list of features and statuses for the child account.
      */
     features: PrivoFeatureStatus[];
+}
+
+export interface PrivoGetUserInfoResponse {
+    serviceId: string;
+    locale: string;
+    givenName: string;
+    emailVerified: boolean;
+    roleIdentifier: string;
+    permissions: PrivoPermission[];
+}
+
+export interface PrivoPermission {
+    /**
+     * Whether the feature has been granted or not.
+     */
+    on: boolean;
+
+    /**
+     * The number of seconds since the Unix Epoch that consent for this permission was given on.
+     */
+    consentDateSeconds: number;
+
+    /**
+     * The ID of the feature.
+     */
+    featureIdentifier: string;
+
+    /**
+     * The category that this feature exists in.
+     */
+    category: string;
+
+    /**
+     * Whether the feature is active and available in the system.
+     */
+    active: boolean;
 }
