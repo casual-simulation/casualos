@@ -735,19 +735,19 @@ export class AuthManager {
     }
 
     async signUpWithPrivoAdult(info: PrivoSignUpInfo) {
-        return await this._privoPegister(info, null);
+        return await this._privoRegister(info, null);
     }
 
     async signUpWithPrivoChild(info: PrivoSignUpInfo, parentEmail: string) {
-        return await this._privoPegister(info, parentEmail);
+        return await this._privoRegister(info, parentEmail);
     }
 
-    private async _privoPegister(
+    private async _privoRegister(
         info: PrivoSignUpInfo,
         parentEmail: string
     ): Promise<PrivoSignUpRequestResult> {
         const response = await axios.post<PrivoSignUpRequestResult>(
-            `${this.apiEndpoint}/api/v2/register`,
+            `${this.apiEndpoint}/api/v2/register/privo`,
             {
                 email: info.email,
                 name: info.name,
