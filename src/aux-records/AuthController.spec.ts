@@ -1298,9 +1298,9 @@ describe('AuthController', () => {
                     parent: 'parentRole',
                 },
                 tokenScopes: 'scope1 scope2',
-                verificationIntegration: 'verificationIntegration',
-                verificationServiceId: 'verificationServiceId',
-                verificationSiteId: 'verificationSiteId',
+                // verificationIntegration: 'verificationIntegration',
+                // verificationServiceId: 'verificationServiceId',
+                // verificationSiteId: 'verificationSiteId',
                 redirectUri: 'redirectUri',
                 ageOfConsent: 18,
             };

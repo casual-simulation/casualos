@@ -1,4 +1,5 @@
 import {
+    KnownErrorCodes,
     getStatusCode,
     parseInstancesList,
     tryDecodeUriComponent,
@@ -62,52 +63,52 @@ const NOT_LOGGED_IN_RESULT = {
 
 const UNACCEPTABLE_SESSION_KEY = {
     success: false,
-    errorCode: 'unacceptable_session_key',
+    errorCode: 'unacceptable_session_key' as const,
     errorMessage:
         'The given session key is invalid. It must be a correctly formatted string.',
 };
 
 const UNACCEPTABLE_USER_ID = {
     success: false,
-    errorCode: 'unacceptable_user_id',
+    errorCode: 'unacceptable_user_id' as const,
     errorMessage:
         'The given user ID is invalid. It must be a correctly formatted string.',
 };
 
 const INVALID_ORIGIN_RESULT = {
     success: false,
-    errorCode: 'invalid_origin',
+    errorCode: 'invalid_origin' as const,
     errorMessage: 'The request must be made from an authorized origin.',
 };
 
 const OPERATION_NOT_FOUND_RESULT = {
     success: false,
-    errorCode: 'operation_not_found',
+    errorCode: 'operation_not_found' as const,
     errorMessage: 'An operation could not be found for the given request.',
 };
 
 const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
     success: false,
-    errorCode: 'unacceptable_request',
+    errorCode: 'unacceptable_request' as const,
     errorMessage:
         'The request body was not properly formatted. It should be valid JSON.',
 };
 
 const SUBSCRIPTIONS_NOT_SUPPORTED_RESULT = {
     success: false,
-    errorCode: 'not_supported',
+    errorCode: 'not_supported' as const,
     errorMessage: 'Subscriptions are not supported by this server.',
 };
 
 const AI_NOT_SUPPORTED_RESULT = {
     success: false,
-    errorCode: 'not_supported',
+    errorCode: 'not_supported' as const,
     errorMessage: 'AI features are not supported by this server.',
 };
 
 const INSTS_NOT_SUPPORTED_RESULT = {
     success: false,
-    errorCode: 'not_supported',
+    errorCode: 'not_supported' as const,
     errorMessage: 'Inst features are not supported by this server.',
 };
 
@@ -360,6 +361,15 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._postLogin(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/register/privo'
+        ) {
+            return formatResponse(
+                request,
+                await this._registerPrivo(request),
                 this._allowedAccountOrigins
             );
         } else if (
@@ -3508,6 +3518,49 @@ export class RecordsServer {
         return returnResult(result);
     }
 
+    private async _registerPrivo(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            email: z.string().nonempty().email(),
+            parentEmail: z.string().nonempty().email().optional(),
+            name: z.string().nonempty(),
+            dateOfBirth: z.coerce.date(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { email, parentEmail, name, dateOfBirth } = parseResult.data;
+
+        const result = await this._auth.requestPrivoSignUp({
+            email,
+            parentEmail,
+            name,
+            dateOfBirth,
+            ipAddress: request.ipAddress,
+        });
+
+        return returnResult(result);
+    }
+
     private async _postCompleteLogin(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
@@ -4289,7 +4342,7 @@ export class RecordsServer {
 }
 
 export function returnResult<
-    T extends { success: false; errorCode: string } | { success: true }
+    T extends { success: false; errorCode: KnownErrorCodes } | { success: true }
 >(result: T): GenericHttpResponse {
     return {
         statusCode: getStatusCode(result),

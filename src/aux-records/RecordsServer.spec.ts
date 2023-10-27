@@ -89,6 +89,8 @@ import {
     YjsPartitionImpl,
     constructInitializationUpdate,
 } from '@casual-simulation/aux-common';
+import { PrivoClientInterface } from './PrivoClient';
+import { DateTime } from 'luxon';
 
 console.log = jest.fn();
 
@@ -184,6 +186,15 @@ describe('RecordsServer', () => {
     const accountOrigin = 'https://account-origin.com';
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
+    let privoClient: PrivoClientInterface;
+    let privoClientMock: {
+        createChildAccount: jest.Mock<
+            ReturnType<PrivoClientInterface['createChildAccount']>
+        >;
+        createAdultAccount: jest.Mock<
+            ReturnType<PrivoClientInterface['createAdultAccount']>
+        >;
+    };
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -217,7 +228,17 @@ describe('RecordsServer', () => {
         });
 
         authMessenger = new MemoryAuthMessenger();
-        authController = new AuthController(store, authMessenger, store);
+        privoClient = privoClientMock = {
+            createAdultAccount: jest.fn(),
+            createChildAccount: jest.fn(),
+        };
+        authController = new AuthController(
+            store,
+            authMessenger,
+            store,
+            undefined,
+            privoClient
+        );
         livekitController = new LivekitController(
             livekitApiKey,
             livekitSecretKey,
@@ -1929,6 +1950,96 @@ describe('RecordsServer', () => {
             JSON.stringify({
                 address: 'test@example.com',
                 addressType: 'email',
+            })
+        );
+    });
+
+    describe.only('POST /api/v2/register/privo', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                tokenScopes: 'scope1 scope2',
+                // verificationIntegration: 'verificationIntegration',
+                // verificationServiceId: 'verificationServiceId',
+                // verificationSiteId: 'verificationSiteId',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return a 200 status code with the registration results', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: 'Test',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    updatePasswordUrl: 'link',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/register/privo', () =>
+            JSON.stringify({
+                name: 'Test',
+                email: 'child@example.com',
+                dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                parentEmail: 'parent@example.com',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/register/privo', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/register/privo`, () =>
+            JSON.stringify({
+                name: 'Test',
+                email: 'child@example.com',
+                dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                parentEmail: 'parent@example.com',
             })
         );
     });

@@ -21,18 +21,18 @@ export const privoSchema = z.object({
         )
         .nonempty(),
 
-    verificationIntegration: z
-        .string()
-        .describe('The verification integration that should be used.')
-        .nonempty(),
-    verificationServiceId: z
-        .string()
-        .describe('The service ID that should be used.')
-        .nonempty(),
-    verificationSiteId: z
-        .string()
-        .describe('The site ID that should be used.')
-        .nonempty(),
+    // verificationIntegration: z
+    //     .string()
+    //     .describe('The verification integration that should be used.')
+    //     .nonempty(),
+    // verificationServiceId: z
+    //     .string()
+    //     .describe('The service ID that should be used.')
+    //     .nonempty(),
+    // verificationSiteId: z
+    //     .string()
+    //     .describe('The site ID that should be used.')
+    //     .nonempty(),
 
     roleIds: z.object({
         child: z.string().describe('The ID of the child role.').nonempty(),

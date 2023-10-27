@@ -624,6 +624,10 @@ export class AuthController {
             const saveUserResult = await this._store.saveNewUser(user);
 
             if (saveUserResult.success === false) {
+                console.error(
+                    '[AuthController] Error saving new user',
+                    saveUserResult
+                );
                 return {
                     success: false,
                     errorCode: 'server_error',

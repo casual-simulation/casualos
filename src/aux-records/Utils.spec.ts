@@ -484,13 +484,34 @@ describe('getStatusCode()', () => {
         ['studio_not_found', 404] as const,
         ['user_not_found', 404] as const,
         ['record_already_exists', 403] as const,
+        ['subscription_limit_reached', 403] as const,
+        ['unacceptable_update', 400] as const,
+        ['inst_not_found', 404] as const,
+        ['no_session_key', 400] as const,
+        ['action_not_supported', 500] as const,
+        ['unacceptable_studio_id', 400] as const,
+        ['email_already_exists', 400] as const,
+        ['parent_email_already_exists', 400] as const,
+        ['parent_email_required', 400] as const,
+        ['invalid_room_name', 400] as const,
+        ['invalid_username', 400] as const,
+        ['invalid_update_policy', 400] as const,
+        ['invalid_delete_policy', 400] as const,
+        ['unacceptable_url', 400] as const,
+        ['file_already_exists', 400] as const,
+        ['invalid_file_data', 400] as const,
+        ['invalid_model', 400] as const,
+        ['roles_too_large', 400] as const,
+        ['policy_not_found', 404] as const,
+        ['policy_too_large', 400] as const,
+        ['invalid_policy', 400] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
         expect(
             getStatusCode({
                 success: false,
-                errorCode: code,
+                errorCode: code as any,
             })
         ).toBe(expectedStatus);
     });
