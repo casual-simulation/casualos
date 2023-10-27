@@ -4,6 +4,7 @@ import {
     AuxAuth,
     LoginStatus,
     LoginUIStatus,
+    PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
@@ -393,6 +394,32 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             return;
         }
         return await this._proxy.provideCode(code);
+    }
+
+    async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return;
+        }
+        return await this._proxy.providePrivoSignUpInfo(info);
+    }
+
+    async provideHasAccount(hasAccount: boolean): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return;
+        }
+        return await this._proxy.provideHasAccount(hasAccount);
     }
 
     async cancelLogin() {

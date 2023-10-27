@@ -58,7 +58,7 @@ export default class RecordsUI extends Vue {
     addressTypeToCheck: AddressType = 'email';
     showCode: boolean = false;
     name: string = '';
-    dateOfBirth: Date = new Date();
+    dateOfBirth: Date = null;
 
     showEnterAccountInfo: boolean = false;
     showHasAccount: boolean = false;
@@ -222,8 +222,24 @@ export default class RecordsUI extends Vue {
     cancelLogin(automaticCancel: boolean) {
         if (this._loginSim) {
             if (
-                (!this.showIframe && !this.showCheckAddress) ||
+                (!this.showIframe &&
+                    !this.showCheckAddress &&
+                    !this.showHasAccount &&
+                    !this.showEnterAccountInfo &&
+                    !this.showHasAccount) ||
                 !automaticCancel
+            ) {
+                this._currentLoginAuth.cancelLogin();
+            }
+        }
+    }
+
+    cancelRegistration() {
+        if (this._currentLoginAuth) {
+            if (
+                !this.showEnterAccountInfo &&
+                !this.showHasAccount &&
+                !this.showEnterAddress
             ) {
                 this._currentLoginAuth.cancelLogin();
             }
@@ -308,6 +324,7 @@ export default class RecordsUI extends Vue {
         this.showEnterAddress = false;
         this.showEnterAccountInfo = false;
         this.showCheckAddress = false;
+        this.showHasAccount = false;
         this.showIframe = false;
         this.showEmailError = false;
         this.showNameError = false;
@@ -315,6 +332,10 @@ export default class RecordsUI extends Vue {
         this.showSmsError = false;
         this.showTermsOfServiceError = false;
         this.showBannedUserError = false;
+        this.name = '';
+        this.email = '';
+        this.acceptedTerms = false;
+        this.dateOfBirth = null;
         this.processing = false;
     }
 
@@ -378,6 +399,7 @@ export default class RecordsUI extends Vue {
 
         sub.add(
             sim.auth.loginUIStatus.subscribe((e) => {
+                console.log('show page:', e.page);
                 this._currentLoginAuth = sim.auth.getEndpoint(e.endpoint);
                 if (e.page === 'enter_address' || e.page === 'enter_email') {
                     this._loginSim = sim;

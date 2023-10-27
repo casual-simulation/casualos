@@ -189,7 +189,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 8;
+        return 9;
     }
 
     async getRecordsOrigin(): Promise<string> {

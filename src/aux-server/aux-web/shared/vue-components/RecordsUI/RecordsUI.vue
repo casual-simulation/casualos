@@ -228,7 +228,7 @@
 
         <md-dialog
             :md-active.sync="showEnterAccountInfo"
-            @md-closed="cancelLogin(true)"
+            @md-closed="cancelRegistration()"
             :md-close-on-esc="true"
             :md-click-outside-to-close="true"
             :md-fullscreen="true"
@@ -282,7 +282,7 @@
                         <md-datepicker
                             v-model="dateOfBirth"
                             :class="dateOfBirthFieldClass"
-                            md-model-type="Date"
+                            :md-model-type="Date"
                             :md-disabled-dates="disabledDates"
                         >
                             <label>Date of Birth</label>
@@ -341,7 +341,7 @@
 
         <md-dialog
             :md-active.sync="showHasAccount"
-            @md-closed="cancelLogin(true)"
+            @md-closed="cancelRegistration()"
             :md-close-on-esc="true"
             :md-click-outside-to-close="true"
             :md-fullscreen="true"

@@ -117,7 +117,10 @@ import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
 import { RedisMultiCache } from '../redis/RedisMultiCache';
 import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
 import { PrismaPrivoStore } from 'aux-backend/prisma/PrismaPrivoStore';
-import { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import {
+    PrivoConfiguration,
+    privoSchema,
+} from '@casual-simulation/aux-records/PrivoConfiguration';
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
@@ -390,40 +393,38 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         const mongodb = options.mongodb;
+        const prismaClient = this._ensurePrisma(options);
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
+        this._metricsStore = new PrismaMetricsStore(
+            prismaClient,
+            this._configStore
+        );
+        this._authStore = new PrismaAuthStore(prismaClient);
+        this._privoStore = new PrismaPrivoStore(prismaClient);
+        this._recordsStore = new PrismaRecordsStore(prismaClient);
+
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
+        this._dataStore = new PrismaDataRecordsStore(prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
+        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+
         this._actions.push({
             priority: 0,
             action: async () => {
-                const prismaClient = this._ensurePrisma(options);
                 const mongo = await this._ensureMongoDB(options);
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
-
-                this._configStore = this._ensurePrismaConfigurationStore(
-                    prismaClient,
-                    options
-                );
-                this._metricsStore = new PrismaMetricsStore(
-                    prismaClient,
-                    this._configStore
-                );
-                this._authStore = new PrismaAuthStore(prismaClient);
-                this._privoStore = new PrismaPrivoStore(prismaClient);
-                this._recordsStore = new PrismaRecordsStore(prismaClient);
-                this._policyStore = this._ensurePrismaPolicyStore(
-                    prismaClient,
-                    options
-                );
-                this._dataStore = new PrismaDataRecordsStore(prismaClient);
-                this._manualDataStore = new PrismaDataRecordsStore(
-                    prismaClient,
-                    true
-                );
-                const filesLookup = new PrismaFileRecordsLookup(prismaClient);
                 this._filesStore = new MongoDBFileRecordsStore(
                     filesLookup,
                     mongodb.fileUploadUrl as string
                 );
-                this._eventsStore = new PrismaEventRecordsStore(prismaClient);
             },
         });
 
@@ -747,8 +748,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._configStore
         );
 
-        this._actions.push({
-            priority: 10,
+        this._initActions.push({
+            priority: 20,
             action: async () => {
                 await this._privoClient.init();
             },
@@ -1643,77 +1644,6 @@ const apiGatewaySchema = z.object({
 });
 
 const wsSchema = z.object({});
-
-const privoSchema = z.object({
-    apiEndpoint: z
-        .string()
-        .describe('The Privo API (aslo called the Gateway) URL.')
-        .nonempty(),
-    publicEndpoint: z.string().describe('The Privo Public API URL.').nonempty(),
-    clientId: z
-        .string()
-        .describe('The Client ID that should be used.')
-        .nonempty(),
-    clientSecret: z
-        .string()
-        .describe('The client secret that should be used.')
-        .nonempty(),
-
-    verificationIntegration: z
-        .string()
-        .describe('The verification integration that should be used.')
-        .nonempty(),
-    verificationServiceId: z
-        .string()
-        .describe('The service ID that should be used.')
-        .nonempty(),
-    verificationSiteId: z
-        .string()
-        .describe('The site ID that should be used.')
-        .nonempty(),
-
-    roleIds: z.object({
-        child: z.string().describe('The ID of the child role.').nonempty(),
-        parent: z.string().describe('The ID of the parent role.').nonempty(),
-        adult: z.string().describe('The ID of the adult role.').nonempty(),
-    }),
-
-    featureIds: z.object({
-        childPrivoSSO: z
-            .string()
-            .describe('The ID of the child Privo ID Single Sign-On feature')
-            .nonempty(),
-        adultPrivoSSO: z
-            .string()
-            .describe('The ID of the adult Privo ID Single Sign-On feature')
-            .nonempty(),
-        joinAndCollaborate: z
-            .string()
-            .describe('The ID of the "Join & Collaborate" feature')
-            .nonempty(),
-        publishProjects: z
-            .string()
-            .describe('The ID of the "Publish Projects" feature')
-            .nonempty(),
-    }),
-
-    tokenScopes: z
-        .string()
-        .describe('The scopes that should be requested.')
-        .nonempty()
-        .optional()
-        .default(
-            'openid profile email user_profile offline_access address additional_info'
-        ),
-});
-
-// const authSchema = z.object({
-//     requirePrivoLogin: z
-//         .boolean()
-//         .describe('Whether to require Privo login for all users.')
-//         .optional()
-//         .default(false),
-// });
 
 export const optionsSchema = z.object({
     s3: s3Schema
