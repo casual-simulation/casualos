@@ -531,6 +531,11 @@ describe('RecordsServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
+                    features: {
+                        joinAndCollaborate: true,
+                        projectDevelopment: true,
+                        publishProjects: true,
+                    },
                 },
                 headers: accountCorsHeaders,
             });
@@ -596,6 +601,11 @@ describe('RecordsServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
+                    features: {
+                        joinAndCollaborate: true,
+                        projectDevelopment: true,
+                        publishProjects: true,
+                    },
                 },
                 headers: accountCorsHeaders,
             });

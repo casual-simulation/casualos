@@ -1,4 +1,4 @@
-import { PrivoConfiguration } from 'PrivoConfiguration';
+import { PrivoConfiguration } from './PrivoConfiguration';
 import { Cache } from './Cache';
 import { ConfigurationStore } from './ConfigurationStore';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';

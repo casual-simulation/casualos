@@ -9,6 +9,7 @@ import {
 } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { parseSessionKey } from './AuthUtils';
+import { PrivoConfiguration } from './PrivoConfiguration';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -24,6 +25,33 @@ export function createTestSubConfiguration(): SubscriptionConfiguration {
             studio: allowAllFeatures(),
             user: allowAllFeatures(),
         },
+    };
+}
+
+export function createTestPrivoConfiguration(): PrivoConfiguration {
+    return {
+        gatewayEndpoint: 'endpoint',
+        featureIds: {
+            adultPrivoSSO: 'adultAccount',
+            childPrivoSSO: 'childAccount',
+            joinAndCollaborate: 'joinAndCollaborate',
+            publishProjects: 'publish',
+            projectDevelopment: 'dev',
+        },
+        clientId: 'clientId',
+        clientSecret: 'clientSecret',
+        publicEndpoint: 'publicEndpoint',
+        roleIds: {
+            child: 'childRole',
+            adult: 'adultRole',
+            parent: 'parentRole',
+        },
+        tokenScopes: 'scope1 scope2',
+        // verificationIntegration: 'verificationIntegration',
+        // verificationServiceId: 'verificationServiceId',
+        // verificationSiteId: 'verificationSiteId',
+        redirectUri: 'redirectUri',
+        ageOfConsent: 18,
     };
 }
 
