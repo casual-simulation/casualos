@@ -62,6 +62,13 @@ export class MiniSimulation3D extends PlayerSimulation3D {
     }
 
     /**
+     * Gets the default lighting that the simulation defines.
+     */
+    get defaultLighting() {
+        return this.miniConfig.defaultLighting;
+    }
+
+    /**
      * Gets the pannability of the mini camera that the simulation defines.
      */
     get pannable() {
