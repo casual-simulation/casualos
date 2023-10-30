@@ -869,11 +869,9 @@ export abstract class Game {
         // Main scene camera.
         this.setCameraType('orthographic');
 
-        const defaultLighting = true;
         // Main scene ambient light.
         const ambient = baseAuxAmbientLight();
         this.mainScene.add(ambient);
-
         this._ambientLight = ambient;
 
         // Main scene directional light.
