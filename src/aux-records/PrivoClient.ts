@@ -40,8 +40,15 @@ export interface PrivoClientInterface {
 
     /**
      * Generates a URL that can be used to authorize a user.
+     * @param state The state that should be included in the request.
      */
-    generateAuthorizationUrl(): Promise<GeneratedAuthorizationUrl>;
+    generateAuthorizationUrl(
+        state?: string
+    ): Promise<GeneratedAuthorizationUrl>;
+
+    processAuthorizationCallback(
+        request: ProcessAuthorizationCallbackRequest
+    ): Promise<ProcessAuthorizationCallbackResponse>;
 }
 
 export interface GeneratedAuthorizationUrl {
@@ -69,6 +76,60 @@ export interface GeneratedAuthorizationUrl {
      * The scope that was requested.
      */
     scope: string;
+}
+
+export interface ProcessAuthorizationCallbackRequest {
+    /**
+     * The code that was provided.
+     */
+    code: string;
+
+    /**
+     * The state that was provided.
+     */
+    state: string;
+
+    /**
+     * The code verifier that was stored for the request.
+     */
+    codeVerifier: string;
+
+    /**
+     * The URL that the user should be redirected to after a successful login.
+     */
+    redirectUrl: string;
+}
+
+export interface ProcessAuthorizationCallbackResponse {
+    /**
+     * The access token that was generated.
+     */
+    accessToken: string;
+
+    /**
+     * The refresh token that was generated.
+     */
+    refreshToken: string;
+
+    /**
+     * The ID token that was generated.
+     */
+    idToken: string;
+
+    /**
+     * The number of seconds until the access token expires.
+     */
+    expiresIn: number;
+
+    /**
+     * The type of the token.
+     */
+    tokenType: string;
+
+    /**
+     * The user info that was returned.
+     */
+    userInfo: PrivoGetUserInfoResponse;
 }
 
 /**
@@ -204,6 +265,7 @@ export class PrivoClient implements PrivoClientInterface {
             sub: z.string(),
             locale: z.string(),
             given_name: z.string(),
+            email: z.string(),
             email_verified: z.boolean(),
             role_identifier: z.string(),
             permissions: z.array(
@@ -226,6 +288,7 @@ export class PrivoClient implements PrivoClientInterface {
             serviceId: validated.sub,
             locale: validated.locale,
             givenName: validated.given_name,
+            email: validated.email,
             emailVerified: validated.email_verified,
             roleIdentifier: validated.role_identifier,
             permissions: validated.permissions.map((p) => ({
@@ -238,7 +301,9 @@ export class PrivoClient implements PrivoClientInterface {
         };
     }
 
-    async generateAuthorizationUrl(): Promise<GeneratedAuthorizationUrl> {
+    async generateAuthorizationUrl(
+        state?: string
+    ): Promise<GeneratedAuthorizationUrl> {
         const codeVerifier = generators.codeVerifier();
         const codeChallenge = generators.codeChallenge(codeVerifier);
         const codeMethod = 'S256';
@@ -249,6 +314,7 @@ export class PrivoClient implements PrivoClientInterface {
             scope: scope,
             code_challenge: codeChallenge,
             code_challenge_method: codeMethod,
+            state,
         });
 
         return {
@@ -257,6 +323,66 @@ export class PrivoClient implements PrivoClientInterface {
             codeMethod,
             codeVerifier: codeVerifier,
             scope: scope,
+        };
+    }
+
+    async processAuthorizationCallback(
+        request: ProcessAuthorizationCallbackRequest
+    ): Promise<ProcessAuthorizationCallbackResponse> {
+        const tokens = await this._openid.callback(
+            request.redirectUrl,
+            {
+                code: request.code,
+                state: request.state,
+            },
+            {
+                code_verifier: request.codeVerifier,
+            }
+        );
+
+        const data: any = await this._openid.userinfo(tokens.access_token);
+
+        const schema = z.object({
+            sub: z.string(),
+            locale: z.string(),
+            given_name: z.string(),
+            email: z.string(),
+            email_verified: z.boolean(),
+            role_identifier: z.string(),
+            permissions: z.array(
+                z.object({
+                    on: z.boolean(),
+                    consent_date: z.number(),
+                    feature_identifier: z.string(),
+                    category: z.string(),
+                    active: z.boolean(),
+                })
+            ),
+        });
+
+        const validated = schema.parse(data);
+
+        return {
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token,
+            idToken: tokens.id_token,
+            expiresIn: tokens.expires_in,
+            tokenType: tokens.token_type,
+            userInfo: {
+                serviceId: validated.sub,
+                locale: validated.locale,
+                givenName: validated.given_name,
+                email: validated.email,
+                emailVerified: validated.email_verified,
+                roleIdentifier: validated.role_identifier,
+                permissions: validated.permissions.map((p) => ({
+                    on: p.on,
+                    consentDateSeconds: p.consent_date,
+                    featureIdentifier: p.feature_identifier,
+                    category: p.category,
+                    active: p.active,
+                })),
+            },
         };
     }
 
@@ -417,6 +543,7 @@ export interface PrivoGetUserInfoResponse {
     locale: string;
     givenName: string;
     emailVerified: boolean;
+    email: string;
     roleIdentifier: string;
     permissions: PrivoPermission[];
 }

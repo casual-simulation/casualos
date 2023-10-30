@@ -514,7 +514,7 @@ export interface AuthSession {
      * The unix timestamp in seconds that the oidAccessToken expires at.
      * If null, then Open ID was not used for the session.
      */
-    oidExpiresAtSeconds?: number | null;
+    oidExpiresAtMs?: number | null;
 }
 
 /**

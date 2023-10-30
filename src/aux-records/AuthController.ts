@@ -568,10 +568,13 @@ export class AuthController {
                 };
             }
 
-            const result = await this._privoClient.generateAuthorizationUrl();
+            const requestId = uuid();
+            const result = await this._privoClient.generateAuthorizationUrl(
+                requestId
+            );
 
             const loginRequest: AuthOpenIDLoginRequest = {
-                requestId: uuid(),
+                requestId: requestId,
                 provider: PRIVO_OPEN_ID_PROVIDER,
                 codeMethod: result.codeMethod,
                 codeVerifier: result.codeVerifier,
@@ -593,6 +596,200 @@ export class AuthController {
         } catch (err) {
             console.error(
                 '[AuthController] Error occurred while requesting Privo login',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async completeOpenIDLogin(
+        request: CompleteOpenIDLoginRequest
+    ): Promise<CompleteOpenIDLoginResult> {
+        try {
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const requestId = request.state;
+            const loginRequest = await this._store.findOpenIDLoginRequest(
+                requestId
+            );
+
+            if (!loginRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            let validRequest = true;
+            if (Date.now() >= loginRequest.expireTimeMs) {
+                validRequest = false;
+            } else if (loginRequest.completedTimeMs > 0) {
+                validRequest = false;
+            } else if (loginRequest.ipAddress !== request.ipAddress) {
+                validRequest = false;
+            }
+
+            if (!validRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (loginRequest.provider !== PRIVO_OPEN_ID_PROVIDER) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            const result = await this._privoClient.processAuthorizationCallback(
+                {
+                    code: request.code,
+                    state: request.state,
+                    codeVerifier: loginRequest.codeVerifier,
+                    redirectUrl: loginRequest.redirectUrl,
+                }
+            );
+
+            const serviceId = result.userInfo.serviceId;
+            const email = result.userInfo.email;
+
+            let user: AuthUser;
+            if (serviceId) {
+                user = await this._store.findUserByPrivoServiceId(
+                    result.userInfo.serviceId
+                );
+            }
+
+            if (!user && email) {
+                user = await this._store.findUserByAddress(email, 'email');
+            }
+
+            if (!user) {
+                console.log(
+                    '[AuthController] [completeOpenIDLogin] Could not find user.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (!user.privoServiceId) {
+                console.log(
+                    `[AuthController] [completeOpenIDLogin] Updating user service ID.`
+                );
+                await this._store.saveUser({
+                    ...user,
+                    privoServiceId: serviceId,
+                });
+            } else if (user.privoServiceId !== serviceId) {
+                console.log(
+                    `[AuthController] [completeOpenIDLogin] User\'s service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            const sessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const sessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const now = Date.now();
+            const userId = user.id;
+
+            const expiry = now + result.expiresIn * 1000;
+
+            const session: AuthSession = {
+                userId: user.id,
+                sessionId: sessionId,
+
+                requestId: null,
+                oidRequestId: loginRequest.requestId,
+
+                // sessionSecret and sessionId are high-entropy (128 bits of random data)
+                // so we should use a hash that is optimized for high-entropy inputs.
+                secretHash: hashHighEntropyPasswordWithSalt(
+                    sessionSecret,
+                    sessionId
+                ),
+                connectionSecret: connectionSecret,
+                grantedTimeMs: now,
+                revokeTimeMs: null,
+                expireTimeMs: now + SESSION_LIFETIME_MS,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+
+                oidAccessToken: result.accessToken,
+                oidRefreshToken: result.refreshToken,
+                oidIdToken: result.idToken,
+                oidScope: loginRequest.scope,
+                oidTokenType: result.tokenType,
+                oidExpiresAtMs: expiry,
+                oidProvider: loginRequest.provider,
+            };
+            await this._store.markOpenIDLoginRequestComplete(
+                loginRequest.requestId,
+                now
+            );
+            await this._store.saveSession(session);
+
+            return {
+                success: true,
+                userId: session.userId,
+                sessionKey: formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    sessionSecret,
+                    session.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    connectionSecret,
+                    session.expireTimeMs
+                ),
+                expireTimeMs: session.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error occurred while completing Privo login',
                 err
             );
             return {
@@ -1745,6 +1942,57 @@ export interface OpenIDLoginRequestSuccess {
 export interface OpenIDLoginRequestFailure {
     success: false;
     errorCode: ServerError | 'not_supported';
+    errorMessage: string;
+}
+
+export interface CompleteOpenIDLoginRequest {
+    /**
+     * The IP address that the request is from.
+     */
+    ipAddress: string;
+
+    /**
+     * The authorization code.
+     */
+    code: string;
+
+    /**
+     * The state that was included in the response.
+     */
+    state: string;
+}
+
+export type CompleteOpenIDLoginResult =
+    | CompleteOpenIDLoginSuccess
+    | CompleteOpenIDLoginFailure;
+
+export interface CompleteOpenIDLoginSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that the session is for.
+     */
+    userId: string;
+
+    /**
+     * The secret key that provides access for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The connection key that provides websocket access for the session.
+     */
+    connectionKey: string;
+
+    /**
+     * The unix timestamp in miliseconds that the session will expire at.
+     */
+    expireTimeMs: number;
+}
+
+export interface CompleteOpenIDLoginFailure {
+    success: false;
+    errorCode: ServerError | 'not_supported' | 'invalid_request';
     errorMessage: string;
 }
 

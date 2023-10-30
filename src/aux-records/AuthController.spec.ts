@@ -55,6 +55,7 @@ const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
 
 console.log = jest.fn();
+console.error = jest.fn();
 
 const randomBytesMock: jest.Mock<Uint8Array, [number]> = <any>randomBytes;
 
@@ -73,6 +74,9 @@ describe('AuthController', () => {
         getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
         generateAuthorizationUrl: jest.Mock<
             ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
+        >;
+        processAuthorizationCallback: jest.Mock<
+            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
         >;
     };
     let nowMock: jest.Mock<number>;
@@ -118,6 +122,7 @@ describe('AuthController', () => {
             createChildAccount: jest.fn(),
             getUserInfo: jest.fn(),
             generateAuthorizationUrl: jest.fn(),
+            processAuthorizationCallback: jest.fn(),
         };
 
         controller = new AuthController(
@@ -1619,6 +1624,10 @@ describe('AuthController', () => {
                         ipAddress: '127.0.0.1',
                     },
                 ]);
+
+                expect(
+                    privoClientMock.generateAuthorizationUrl
+                ).toHaveBeenCalledWith('uuid');
             });
 
             it('should return an error if the privo client throws an error', async () => {
@@ -1648,6 +1657,553 @@ describe('AuthController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'The given provider is not supported.',
+            });
+        });
+    });
+
+    describe('completeOpenIDLogin()', () => {
+        const sessionId = new Uint8Array([7, 8, 9]);
+        const sessionSecret = new Uint8Array([10, 11, 12]);
+        const connectionSecret = new Uint8Array([11, 12, 13]);
+
+        describe('privo', () => {
+            beforeEach(() => {
+                // Jan 1, 2023 in miliseconds
+                nowMock.mockReturnValue(
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis()
+                );
+
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
+
+                store.privoConfiguration = {
+                    gatewayEndpoint: 'endpoint',
+                    featureIds: {
+                        adultPrivoSSO: 'adultAccount',
+                        childPrivoSSO: 'childAccount',
+                        joinAndCollaborate: 'joinAndCollaborate',
+                        publishProjects: 'publish',
+                        projectDevelopment: 'dev',
+                    },
+                    clientId: 'clientId',
+                    clientSecret: 'clientSecret',
+                    publicEndpoint: 'publicEndpoint',
+                    roleIds: {
+                        child: 'childRole',
+                        adult: 'adultRole',
+                        parent: 'parentRole',
+                    },
+                    tokenScopes: 'scope1 scope2',
+                    redirectUri: 'redirectUri',
+                    ageOfConsent: 18,
+                };
+            });
+
+            it('should return the login info for the user', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                    expireTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    code: 'code',
+                    state: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: 'userId',
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                });
+
+                expect(await store.findOpenIDLoginRequest('requestId')).toEqual(
+                    {
+                        requestId: 'requestId',
+                        authorizationUrl: 'https://mock_authorization_url',
+                        redirectUrl: 'https://redirect_url',
+                        codeVerifier: 'verifier',
+                        codeMethod: 'method',
+                        requestTimeMs:
+                            DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                        expireTimeMs:
+                            DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                        completedTimeMs: Date.now(),
+                        ipAddress: '127.0.0.1',
+                        provider: PRIVO_OPEN_ID_PROVIDER,
+                        scope: 'scope1 scope2',
+                    }
+                );
+
+                expect(store.sessions).toEqual([
+                    {
+                        userId: 'userId',
+                        sessionId: fromByteArray(sessionId),
+                        requestId: null,
+                        oidRequestId: 'requestId',
+                        oidProvider: 'privo',
+                        oidAccessToken: 'accessToken',
+                        oidRefreshToken: 'refreshToken',
+                        oidIdToken: 'idToken',
+                        oidTokenType: 'Bearer',
+                        oidExpiresAtMs: Date.now() + 1000 * 1000,
+                        oidScope: 'scope1 scope2',
+                        secretHash: expect.any(String),
+                        connectionSecret: expect.any(String),
+
+                        grantedTimeMs: Date.now(),
+                        expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+
+                expect(await store.findUser('userId')).toEqual({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+                });
+            });
+
+            it('should return invalid_request if it has expired', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
+                    expireTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    code: 'code',
+                    state: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return invalid_request if it has already been completed', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
+                    expireTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    completedTimeMs: 1,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    code: 'code',
+                    state: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return invalid_request if the request is from a different IP address', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
+                    expireTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: 'wrong',
+                    code: 'code',
+                    state: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return invalid_request if the request is for a non-privo provider', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
+                    expireTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: 'wrong',
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    code: 'code',
+                    state: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return invalid_request if a user cannot be found', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
+                    expireTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    code: 'code',
+                    state: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return invalid_request if the user has a different service ID', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'DIFFERENT',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
+                    expireTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    code: 'code',
+                    state: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return invalid_request if the login request doesnt exist', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    code: 'code',
+                    state: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
             });
         });
     });
@@ -3866,6 +4422,7 @@ describe('AuthController', () => {
                 privoClientMock.getUserInfo.mockResolvedValue({
                     serviceId: 'serviceId',
                     emailVerified: true,
+                    email: 'email',
                     givenName: 'name',
                     locale: 'en-US',
                     roleIdentifier: 'ab1Child',
