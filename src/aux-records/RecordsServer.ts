@@ -375,6 +375,15 @@ export class RecordsServer {
             );
         } else if (
             request.method === 'POST' &&
+            request.path === '/api/v2/completeLogin/oauth'
+        ) {
+            return formatResponse(
+                request,
+                await this._oauthCompleteLogin(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
             request.path === '/api/v2/register/privo'
         ) {
             return formatResponse(
@@ -3548,6 +3557,45 @@ export class RecordsServer {
         const result = await this._auth.requestOpenIDLogin({
             provider: PRIVO_OPEN_ID_PROVIDER,
             ipAddress: request.ipAddress,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _oauthCompleteLogin(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            code: z.string(),
+            state: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { code, state } = parseResult.data;
+
+        const result = await this._auth.completeOpenIDLogin({
+            ipAddress: request.ipAddress,
+            code,
+            state,
         });
 
         return returnResult(result);

@@ -2046,6 +2046,111 @@ describe('RecordsServer', () => {
         );
         testRateLimit('POST', `/api/v2/login/privo`, () => JSON.stringify({}));
     });
+
+    describe('POST /api/v2/completeLogin/oauth', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                tokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return the session key', async () => {
+            privoClientMock.processAuthorizationCallback.mockResolvedValueOnce({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+                tokenType: 'Bearer',
+                idToken: 'idToken',
+                expiresIn: 1000,
+                userInfo: {
+                    roleIdentifier: 'roleIdentifier',
+                    serviceId: 'serviceId',
+                    email: 'test@example.com',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    permissions: [],
+                },
+            });
+
+            await store.saveOpenIDLoginRequest({
+                requestId: 'requestId',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: Date.now() + 10000000,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/completeLogin/oauth`,
+                    JSON.stringify({
+                        code: 'code',
+                        state: 'requestId',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId,
+                    sessionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    connectionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/completeLogin/oauth', () =>
+            JSON.stringify({
+                code: 'code',
+                state: 'requestId',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/completeLogin/oauth', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/completeLogin/oauth`, () =>
+            JSON.stringify({
+                code: 'code',
+                state: 'requestId',
+            })
+        );
     });
 
     describe('POST /api/v2/register/privo', () => {
