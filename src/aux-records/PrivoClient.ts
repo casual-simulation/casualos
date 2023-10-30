@@ -1,7 +1,7 @@
 import { ConfigurationStore } from 'ConfigurationStore';
 import { PrivoConfiguration } from './PrivoConfiguration';
 import { PrivoClientCredentials, PrivoStore } from './PrivoStore';
-import { Client, Issuer, TokenSet } from 'openid-client';
+import { Client, Issuer, TokenSet, generators } from 'openid-client';
 import { v4 as uuid } from 'uuid';
 import axios, { AxiosRequestHeaders } from 'axios';
 import { DateTime } from 'luxon';
@@ -37,6 +37,38 @@ export interface PrivoClientInterface {
      * @param serviceId The ID of the service.
      */
     getUserInfo(serviceId: string): Promise<PrivoGetUserInfoResponse>;
+
+    /**
+     * Generates a URL that can be used to authorize a user.
+     */
+    generateAuthorizationUrl(): Promise<GeneratedAuthorizationUrl>;
+}
+
+export interface GeneratedAuthorizationUrl {
+    /**
+     * The code verifier that was generated.
+     */
+    codeVerifier: string;
+
+    /**
+     * The method that was used for the code challenge.
+     */
+    codeMethod: string;
+
+    /**
+     * The URL that was generated.
+     */
+    authorizationUrl: string;
+
+    /**
+     * The URL that the user should be redirected to after a successful login.
+     */
+    redirectUrl: string;
+
+    /**
+     * The scope that was requested.
+     */
+    scope: string;
 }
 
 /**
@@ -47,6 +79,7 @@ export class PrivoClient implements PrivoClientInterface {
     private _config: ConfigurationStore;
     private _issuer: Issuer<Client>;
     private _openid: Client;
+    private _redirectUri: string;
 
     constructor(store: PrivoStore, configStore: ConfigurationStore) {
         this._store = store;
@@ -56,10 +89,11 @@ export class PrivoClient implements PrivoClientInterface {
     async init(): Promise<void> {
         const config = await this._config.getPrivoConfiguration();
         this._issuer = await Issuer.discover(config.publicEndpoint);
+        this._redirectUri = config.redirectUri;
         this._openid = new this._issuer.Client({
             client_id: config.clientId,
             client_secret: config.clientSecret,
-            redirect_uris: [config.redirectUri],
+            redirect_uris: [this._redirectUri],
             response_types: ['code'],
         });
     }
@@ -185,8 +219,8 @@ export class PrivoClient implements PrivoClientInterface {
 
         const validated = schema.parse(data);
 
-        console.log('privo data', data);
-        console.log('connected profiles', data.to.connected_profiles);
+        console.log('user data', data);
+        // console.log('connected profiles', data.to.connected_profiles);
 
         return {
             serviceId: validated.sub,
@@ -201,6 +235,28 @@ export class PrivoClient implements PrivoClientInterface {
                 category: p.category,
                 active: p.active,
             })),
+        };
+    }
+
+    async generateAuthorizationUrl(): Promise<GeneratedAuthorizationUrl> {
+        const codeVerifier = generators.codeVerifier();
+        const codeChallenge = generators.codeChallenge(codeVerifier);
+        const codeMethod = 'S256';
+        const config = await this._config.getPrivoConfiguration();
+
+        const scope = config.tokenScopes;
+        const url = this._openid.authorizationUrl({
+            scope: scope,
+            code_challenge: codeChallenge,
+            code_challenge_method: codeMethod,
+        });
+
+        return {
+            authorizationUrl: url,
+            redirectUrl: this._redirectUri,
+            codeMethod,
+            codeVerifier: codeVerifier,
+            scope: scope,
         };
     }
 

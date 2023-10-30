@@ -6,6 +6,8 @@ import {
     ListSessionsSuccess,
     LOGIN_REQUEST_ID_BYTE_LENGTH,
     LOGIN_REQUEST_LIFETIME_MS,
+    OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
+    PRIVO_OPEN_ID_PROVIDER,
     SESSION_LIFETIME_MS,
 } from './AuthController';
 import {
@@ -69,6 +71,9 @@ describe('AuthController', () => {
             ReturnType<PrivoClientInterface['createAdultAccount']>
         >;
         getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
+        generateAuthorizationUrl: jest.Mock<
+            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
+        >;
     };
     let nowMock: jest.Mock<number>;
 
@@ -112,6 +117,7 @@ describe('AuthController', () => {
             createAdultAccount: jest.fn(),
             createChildAccount: jest.fn(),
             getUserInfo: jest.fn(),
+            generateAuthorizationUrl: jest.fn(),
         };
 
         controller = new AuthController(
@@ -1510,6 +1516,138 @@ describe('AuthController', () => {
                         ipAddress: '127.0.0.1',
                     },
                 ],
+            });
+        });
+    });
+
+    describe('requestOpenIDLogin()', () => {
+        const sessionId = new Uint8Array([7, 8, 9]);
+        const sessionSecret = new Uint8Array([10, 11, 12]);
+        const connectionSecret = new Uint8Array([11, 12, 13]);
+
+        describe('privo', () => {
+            beforeEach(() => {
+                // Jan 1, 2023 in miliseconds
+                nowMock.mockReturnValue(
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis()
+                );
+
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
+
+                store.privoConfiguration = {
+                    gatewayEndpoint: 'endpoint',
+                    featureIds: {
+                        adultPrivoSSO: 'adultAccount',
+                        childPrivoSSO: 'childAccount',
+                        joinAndCollaborate: 'joinAndCollaborate',
+                        publishProjects: 'publish',
+                        projectDevelopment: 'dev',
+                    },
+                    clientId: 'clientId',
+                    clientSecret: 'clientSecret',
+                    publicEndpoint: 'publicEndpoint',
+                    roleIds: {
+                        child: 'childRole',
+                        adult: 'adultRole',
+                        parent: 'parentRole',
+                    },
+                    tokenScopes: 'scope1 scope2',
+                    redirectUri: 'redirectUri',
+                    ageOfConsent: 18,
+                };
+            });
+
+            it('should return not_supported when no privo client is configured', async () => {
+                store.privoConfiguration = null;
+
+                const result = await controller.requestOpenIDLogin({
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                });
+            });
+
+            it('should return the redirect URL', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.generateAuthorizationUrl.mockResolvedValueOnce({
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    scope: 'scope',
+                });
+                const result = await controller.requestOpenIDLogin({
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    authorizationUrl: 'https://mock_authorization_url',
+                });
+
+                expect(store.openIdLoginRequests).toEqual([
+                    {
+                        requestId: 'uuid',
+                        provider: 'privo',
+                        codeVerifier: 'verifier',
+                        codeMethod: 'method',
+                        authorizationUrl: 'https://mock_authorization_url',
+                        redirectUrl: 'https://redirect_url',
+                        scope: 'scope',
+                        requestTimeMs: DateTime.utc(
+                            2023,
+                            1,
+                            1,
+                            0,
+                            0,
+                            0
+                        ).toMillis(),
+                        expireTimeMs:
+                            DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() +
+                            OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
+                        completedTimeMs: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+            });
+
+            it('should return an error if the privo client throws an error', async () => {
+                privoClientMock.generateAuthorizationUrl.mockRejectedValueOnce(
+                    new Error('mock error')
+                );
+                const result = await controller.requestOpenIDLogin({
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                });
+            });
+        });
+
+        it('should return an not_supported error if given an unsupported provider', async () => {
+            const result = await controller.requestOpenIDLogin({
+                provider: 'unsupported',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'The given provider is not supported.',
             });
         });
     });

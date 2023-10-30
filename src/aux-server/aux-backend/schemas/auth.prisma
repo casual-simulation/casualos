@@ -100,15 +100,13 @@ model AuthSession {
     secretHash String
     connectionSecret String?
 
-    // oidProvider String?
-    // oidSub String?
-    // oidAccessToken String?
-    // oidTokenType String?
-    // oidIdToken String?
-    // oidRefreshToken String?
-    // oidScope String?
-    // oidExpiresAtSeconds Int?
-    // oidSessionState String?
+    oidProvider String?
+    oidAccessToken String?
+    oidTokenType String?
+    oidIdToken String?
+    oidRefreshToken String?
+    oidScope String?
+    oidExpiresAtSeconds Int?
 
     grantedTime DateTime
     expireTime DateTime
@@ -116,6 +114,9 @@ model AuthSession {
 
     requestId String?
     request LoginRequest? @relation(fields: [requestId], references: [requestId])
+
+    oidRequestId String?
+    oidRequest OpenIDLoginRequest? @relation(fields: [oidRequestId], references: [requestId], map: "AuthSession_oidRequestId_fkey1")
 
     previousSessionId String? @unique
     previousSession AuthSession? @relation("PreviousSession", fields: [previousSessionId], references: [sessionId])
@@ -129,6 +130,26 @@ model AuthSession {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model OpenIDLoginRequest {
+    requestId String @id @db.Uuid
+
+    provider String
+    codeVerifier String
+    codeMethod String
+    authorizationUrl String
+    scope String
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    ipAddress String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    authSessions AuthSession[]
 }
 
 model EmailRule {

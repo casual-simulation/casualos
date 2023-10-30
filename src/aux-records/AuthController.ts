@@ -1,6 +1,7 @@
 import {
     AddressType,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthUser,
@@ -43,6 +44,11 @@ import { DateTime } from 'luxon';
  * The number of miliseconds that a login request should be valid for before expiration.
  */
 export const LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 5; // 5 minutes
+
+/**
+ * The number of miliseconds that an Open ID login request should be valid for before expiration.
+ */
+export const OPEN_ID_LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 20; // 20 minutes
 
 /**
  * The number of bytes that should be used for login request IDs.
@@ -98,6 +104,11 @@ export const MAX_SMS_ADDRESS_LENGTH = 30;
  * The maximum allowed length for an OpenAI API key.
  */
 export const MAX_OPEN_AI_API_KEY_LENGTH = 100;
+
+/**
+ * The name of the Privo Open ID provider.
+ */
+export const PRIVO_OPEN_ID_PROVIDER = 'privo';
 
 /**
  * Defines a class that is able to authenticate users.
@@ -515,6 +526,73 @@ export class AuthController {
         } catch (err) {
             console.error(
                 '[AuthController] Error occurred while completing login request',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async requestOpenIDLogin(
+        request: OpenIDLoginRequest
+    ): Promise<OpenIDLoginRequestResult> {
+        try {
+            if (request.provider !== PRIVO_OPEN_ID_PROVIDER) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given provider is not supported.',
+                };
+            }
+
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const result = await this._privoClient.generateAuthorizationUrl();
+
+            const loginRequest: AuthOpenIDLoginRequest = {
+                requestId: uuid(),
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                codeMethod: result.codeMethod,
+                codeVerifier: result.codeVerifier,
+                authorizationUrl: result.authorizationUrl,
+                redirectUrl: result.redirectUrl,
+                completedTimeMs: null,
+                ipAddress: request.ipAddress,
+                scope: result.scope,
+                requestTimeMs: Date.now(),
+                expireTimeMs: Date.now() + OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
+            };
+
+            await this._store.saveOpenIDLoginRequest(loginRequest);
+
+            return {
+                success: true,
+                authorizationUrl: result.authorizationUrl,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error occurred while requesting Privo login',
                 err
             );
             return {
@@ -1637,6 +1715,37 @@ export interface PrivoSignUpRequest {
      * The IP address that the sign up is from.
      */
     ipAddress: string;
+}
+
+export interface OpenIDLoginRequest {
+    /**
+     * The Open ID provider that the login request is for.
+     */
+    provider: string;
+
+    /**
+     * The IP address that the request is from.
+     */
+    ipAddress: string;
+}
+
+export type OpenIDLoginRequestResult =
+    | OpenIDLoginRequestSuccess
+    | OpenIDLoginRequestFailure;
+
+export interface OpenIDLoginRequestSuccess {
+    success: true;
+
+    /**
+     * The URL that should be presented to the user in order for them to login.
+     */
+    authorizationUrl: string;
+}
+
+export interface OpenIDLoginRequestFailure {
+    success: false;
+    errorCode: ServerError | 'not_supported';
+    errorMessage: string;
 }
 
 export type PrivoSignUpRequestResult =

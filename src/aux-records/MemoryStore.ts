@@ -4,6 +4,7 @@ import {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthSubscription,
@@ -139,6 +140,7 @@ export class MemoryStore
 {
     private _users: AuthUser[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
+    private _oidLoginRequests: AuthOpenIDLoginRequest[] = [];
     private _sessions: AuthSession[] = [];
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
@@ -199,6 +201,10 @@ export class MemoryStore
 
     get loginRequests() {
         return this._loginRequests;
+    }
+
+    get openIdLoginRequests() {
+        return this._oidLoginRequests;
     }
 
     get sessions() {
@@ -612,6 +618,12 @@ export class MemoryStore
         );
     }
 
+    async findOpenIDLoginRequest(
+        requestId: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        return this._oidLoginRequests.find((lr) => lr.requestId === requestId);
+    }
+
     async findSession(userId: string, sessionId: string): Promise<AuthSession> {
         return this._sessions.find(
             (s) => s.userId === userId && s.sessionId === sessionId
@@ -630,6 +642,21 @@ export class MemoryStore
             this._loginRequests[index] = request;
         } else {
             this._loginRequests.push(request);
+        }
+
+        return request;
+    }
+
+    async saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === request.requestId
+        );
+        if (index >= 0) {
+            this._oidLoginRequests[index] = request;
+        } else {
+            this._oidLoginRequests.push(request);
         }
 
         return request;
@@ -660,6 +687,21 @@ export class MemoryStore
 
         if (index >= 0) {
             this._loginRequests[index].completedTimeMs = completedTimeMs;
+        } else {
+            throw new Error('Request not found.');
+        }
+    }
+
+    async markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === requestId
+        );
+
+        if (index >= 0) {
+            this._oidLoginRequests[index].completedTimeMs = completedTimeMs;
         } else {
             throw new Error('Request not found.');
         }

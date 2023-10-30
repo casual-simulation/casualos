@@ -56,6 +56,14 @@ export interface AuthStore {
     ): Promise<AuthLoginRequest | null>;
 
     /**
+     * Finds the login request for the given request ID.
+     * @param requestId The ID of the Open ID login request.
+     */
+    findOpenIDLoginRequest(
+        requestId: string
+    ): Promise<AuthOpenIDLoginRequest | null>;
+
+    /**
      * Finds a login session for the given user and session ID.
      * @param userId The ID of the user.
      * @param sessionId The ID of the session.
@@ -69,6 +77,14 @@ export interface AuthStore {
     saveLoginRequest(request: AuthLoginRequest): Promise<AuthLoginRequest>;
 
     /**
+     * Saves the given login request.
+     * @param request The request that should be saved.
+     */
+    saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest>;
+
+    /**
      * Marks the login request as completed.
      * @param userId The ID oof the user.
      * @param requestId The ID of the request.
@@ -76,6 +92,16 @@ export interface AuthStore {
      */
     markLoginRequestComplete(
         userId: string,
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void>;
+
+    /**
+     * Marks the login request as completed.
+     * @param requestId The ID of the request.
+     * @param completedTimeMs The time that the request was completed.
+     */
+    markOpenIDLoginRequestComplete(
         requestId: string,
         completedTimeMs: number
     ): Promise<void>;
@@ -429,6 +455,11 @@ export interface AuthSession {
     requestId: string | null;
 
     /**
+     * The ID of the OpenID login request that aws used to obtain this session.
+     */
+    oidRequestId?: string | null;
+
+    /**
      * The ID of the previous session that was used to obtain this session.
      */
     previousSessionId: string | null;
@@ -443,53 +474,108 @@ export interface AuthSession {
      */
     ipAddress: string;
 
-    // /**
-    //  * The name of the Open ID provider that was used to obtain this session.
-    //  * If null, then Open ID was not used for the session.
-    //  */
-    // oidProvider?: string | null;
+    /**
+     * The name of the Open ID provider that was used to obtain this session.
+     * If null, then Open ID was not used for the session.
+     */
+    oidProvider?: string | null;
 
-    // /**
-    //  * The access token that was granted to the session by the Open ID provider.
-    //  * If null, then Open ID was not used for the session.
-    //  */
-    // oidAccessToken?: string | null;
+    /**
+     * The access token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidAccessToken?: string | null;
 
-    // /**
-    //  * The type of the access token that was granted to the session by the Open ID provider.
-    //  * If null, then Open ID was not used for the session.
-    //  */
-    // oidTokenType?: string | null;
+    /**
+     * The type of the access token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidTokenType?: string | null;
 
-    // /**
-    //  * The ID token that was granted to the session by the Open ID provider.
-    //  * If null, then Open ID was not used for the session.
-    //  */
-    // oidIdToken?: string | null;
+    /**
+     * The ID token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidIdToken?: string | null;
 
-    // /**
-    //  * The refresh token that was granted to the session by the Open ID provider.
-    //  * If null, then Open ID was not used for the session.
-    //  */
-    // oidRefreshToken?: string | null;
+    /**
+     * The refresh token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidRefreshToken?: string | null;
 
-    // /**
-    //  * The Open ID scope that was granted to the session.
-    //  * If null, then Open ID was not used for the session.
-    //  */
-    // oidScope?: string | null;
+    /**
+     * The Open ID scope that was granted to the session.
+     * If null, then Open ID was not used for the session.
+     */
+    oidScope?: string | null;
 
-    // /**
-    //  * The unix timestamp in seconds that the oidAccessToken expires at.
-    //  * If null, then Open ID was not used for the session.
-    //  */
-    // oidExpiresAtSeconds?: number | null;
+    /**
+     * The unix timestamp in seconds that the oidAccessToken expires at.
+     * If null, then Open ID was not used for the session.
+     */
+    oidExpiresAtSeconds?: number | null;
+}
 
-    // /**
-    //  * The unix timestamp in seconds that the oidIdToken expires at.
-    //  * If null, then Open ID was not used for the session.
-    //  */
-    // oidSessionState?: string | null;
+/**
+ * Defines an interface that represents a login request for an Open ID login.
+ */
+export interface AuthOpenIDLoginRequest {
+    /**
+     * The ID of the request.
+     */
+    requestId: string;
+
+    /**
+     * The name of the provider that was used for the Open ID login.
+     */
+    provider: string;
+
+    /**
+     * The code that the Open ID authorization response should match.
+     */
+    codeVerifier: string;
+
+    /**
+     * The code challenge method that the Open ID authorization response should match.
+     */
+    codeMethod: string;
+
+    /**
+     * The URL that was used as the authorization URL in the Open ID authorization code flow.
+     */
+    authorizationUrl: string;
+
+    /**
+     * The URL that was used as the redirect URL in the Open ID authorization code flow.
+     */
+    redirectUrl: string;
+
+    /**
+     * The scope that was requested.
+     */
+    scope: string;
+
+    /**
+     * The unix timestamp in miliseconds that the request was made at.
+     */
+    requestTimeMs: number;
+
+    /**
+     * The unix timestamp in miliseconds that the request will expire at.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The unix timestamp in miliseconds that the request was completed at.
+     * If null, then the request has not been completed.
+     */
+    completedTimeMs: number | null;
+
+    /**
+     * The IP Address that the request came from.
+     */
+    ipAddress: string;
 }
 
 export interface AuthSubscription {
