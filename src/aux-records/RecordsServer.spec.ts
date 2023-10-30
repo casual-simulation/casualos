@@ -12,7 +12,11 @@ import {
     GenericQueryStringParameters,
     GenericWebsocketRequest,
 } from './GenericHttpInterface';
-import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
+import {
+    AuthController,
+    INVALID_KEY_ERROR_MESSAGE,
+    PRIVO_OPEN_ID_PROVIDER,
+} from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
     formatV1OpenAiKey,
@@ -195,6 +199,12 @@ describe('RecordsServer', () => {
             ReturnType<PrivoClientInterface['createAdultAccount']>
         >;
         getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
+        generateAuthorizationUrl: jest.Mock<
+            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
+        >;
+        processAuthorizationCallback: jest.Mock<
+            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
+        >;
     };
 
     beforeEach(async () => {
@@ -233,6 +243,8 @@ describe('RecordsServer', () => {
             createAdultAccount: jest.fn(),
             createChildAccount: jest.fn(),
             getUserInfo: jest.fn(),
+            generateAuthorizationUrl: jest.fn(),
+            processAuthorizationCallback: jest.fn(),
         };
         authController = new AuthController(
             store,
@@ -1964,6 +1976,76 @@ describe('RecordsServer', () => {
                 addressType: 'email',
             })
         );
+    });
+
+    describe('POST /api/v2/login/privo', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                tokenScopes: 'scope1 scope2',
+                // verificationIntegration: 'verificationIntegration',
+                // verificationServiceId: 'verificationServiceId',
+                // verificationSiteId: 'verificationSiteId',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return a login request with the authorization URL', async () => {
+            privoClientMock.generateAuthorizationUrl.mockResolvedValueOnce({
+                authorizationUrl: 'https://authorization_url',
+                codeMethod: 'method',
+                codeVerifier: 'verifier',
+                redirectUrl: 'https://redirect_url',
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/privo`,
+                    JSON.stringify({}),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/login/privo', () => JSON.stringify({}));
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/login/privo', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/login/privo`, () => JSON.stringify({}));
+    });
     });
 
     describe('POST /api/v2/register/privo', () => {

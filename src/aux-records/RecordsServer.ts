@@ -12,6 +12,7 @@ import {
     MAX_EMAIL_ADDRESS_LENGTH,
     MAX_OPEN_AI_API_KEY_LENGTH,
     MAX_SMS_ADDRESS_LENGTH,
+    PRIVO_OPEN_ID_PROVIDER,
     ValidateSessionKeyResult,
 } from './AuthController';
 import { parseSessionKey } from './AuthUtils';
@@ -361,6 +362,15 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._postLogin(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/login/privo'
+        ) {
+            return formatResponse(
+                request,
+                await this._privoLogin(request),
                 this._allowedAccountOrigins
             );
         } else if (
@@ -3512,6 +3522,31 @@ export class RecordsServer {
         const result = await this._auth.requestLogin({
             address,
             addressType,
+            ipAddress: request.ipAddress,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _privoLogin(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const result = await this._auth.requestOpenIDLogin({
+            provider: PRIVO_OPEN_ID_PROVIDER,
             ipAddress: request.ipAddress,
         });
 
