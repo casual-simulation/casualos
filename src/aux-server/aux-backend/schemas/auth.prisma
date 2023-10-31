@@ -115,7 +115,7 @@ model AuthSession {
     requestId String?
     request LoginRequest? @relation(fields: [requestId], references: [requestId])
 
-    oidRequestId String?
+    oidRequestId String? @db.Uuid
     oidRequest OpenIDLoginRequest? @relation(fields: [oidRequestId], references: [requestId], map: "AuthSession_oidRequestId_fkey1")
 
     previousSessionId String? @unique
@@ -139,6 +139,7 @@ model OpenIDLoginRequest {
     codeVerifier String
     codeMethod String
     authorizationUrl String
+    redirectUrl String
     scope String
 
     requestTime DateTime

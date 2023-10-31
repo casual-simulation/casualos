@@ -614,76 +614,135 @@ export class AuthHandler implements AuxAuth {
 
         if (hasAccount) {
             // redirect to privo login
+            return await this._loginWithPrivo(cancelSignal);
         } else {
-            // ask for registration info
-            this._loginUIStatus.next({
-                page: 'enter_privo_account_info',
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                siteName: this.siteName,
-            });
+            return await this._registerWithPrivo(cancelSignal);
+        }
+    }
 
-            const info = await firstValueFrom(
-                this._providedPrivoSignUpInfo.pipe(
-                    filter(() => !cancelSignal.canceled)
-                )
+    private async _loginWithPrivo(cancelSignal: {
+        canceled: boolean;
+    }): Promise<string> {
+        const result = await authManager.loginWithPrivo();
+        if (result.success) {
+            const thisOrigin = location.origin;
+            const newTab = window.open(result.authorizationUrl, '_blank');
+
+            const codes = await new Promise<{ code: string; state: string }>(
+                (resolve, reject) => {
+                    const getOrigin = () => {
+                        try {
+                            return newTab.origin;
+                        } catch (err) {
+                            return null;
+                        }
+                    };
+
+                    let intervalId: number | NodeJS.Timer;
+                    const handleClose = () => {
+                        if (intervalId) {
+                            clearInterval(intervalId);
+                        }
+
+                        const origin = getOrigin();
+
+                        if (origin === thisOrigin) {
+                            // redirected back to here:
+                            const url = new URL(newTab.location.href);
+                            const state = url.searchParams.get('state');
+                            const code = url.searchParams.get('code');
+                            resolve({
+                                code,
+                                state,
+                            });
+                        } else {
+                            reject(new Error('Login canceled.'));
+                        }
+                    };
+
+                    intervalId = setInterval(() => {
+                        if (newTab.closed) {
+                            console.error('Closed!');
+                            handleClose();
+                        }
+                    }, 500);
+                }
             );
 
-            // Check Age of Consent
-            const ageInYears = DateTime.fromJSDate(info.dateOfBirth)
-                .diffNow('years')
-                .as('years');
-            if (Math.floor(ageInYears) > 18) {
-                // Create adult account
-                const result = await authManager.signUpWithPrivoAdult({
+            console.log('Got login info!', codes);
+        }
+        return null;
+    }
+
+    private async _registerWithPrivo(cancelSignal: {
+        canceled: boolean;
+    }): Promise<string> {
+        // ask for registration info
+        this._loginUIStatus.next({
+            page: 'enter_privo_account_info',
+            termsOfServiceUrl: this.termsOfServiceUrl,
+            siteName: this.siteName,
+        });
+
+        const info = await firstValueFrom(
+            this._providedPrivoSignUpInfo.pipe(
+                filter(() => !cancelSignal.canceled)
+            )
+        );
+
+        // Check Age of Consent
+        const ageInYears = DateTime.fromJSDate(info.dateOfBirth)
+            .diffNow('years')
+            .as('years');
+        if (Math.floor(ageInYears) > 18) {
+            // Create adult account
+            const result = await authManager.signUpWithPrivoAdult({
+                acceptedTermsOfService: info.acceptedTermsOfService,
+                dateOfBirth: info.dateOfBirth,
+                email: info.email,
+                name: info.name,
+            });
+
+            if (result.success === false) {
+                return null;
+            }
+
+            await authManager.loadUserInfo();
+            await this._loadUserInfo();
+
+            return authManager.userId;
+        } else {
+            // Collect parent email
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                siteName: this.siteName,
+                collectionReason: 'collect_parent_email',
+                supportsSms: false,
+            });
+
+            const parentEmail = await firstValueFrom(
+                this._providedEmails.pipe(filter(() => !cancelSignal.canceled))
+            );
+
+            const result = await authManager.signUpWithPrivoChild(
+                {
                     acceptedTermsOfService: info.acceptedTermsOfService,
                     dateOfBirth: info.dateOfBirth,
                     email: info.email,
                     name: info.name,
-                });
+                },
+                parentEmail
+            );
 
-                if (result.success === false) {
-                    return null;
-                }
-
-                await authManager.loadUserInfo();
-                await this._loadUserInfo();
-
-                return authManager.userId;
-            } else {
-                // Collect parent email
-                this._loginUIStatus.next({
-                    page: 'enter_email',
-                    termsOfServiceUrl: this.termsOfServiceUrl,
-                    siteName: this.siteName,
-                    collectionReason: 'collect_parent_email',
-                    supportsSms: false,
-                });
-
-                const parentEmail = await firstValueFrom(
-                    this._providedEmails.pipe(
-                        filter(() => !cancelSignal.canceled)
-                    )
-                );
-
-                const result = await authManager.signUpWithPrivoChild(
-                    {
-                        acceptedTermsOfService: info.acceptedTermsOfService,
-                        dateOfBirth: info.dateOfBirth,
-                        email: info.email,
-                        name: info.name,
-                    },
-                    parentEmail
-                );
-
-                if (result.success === false) {
-                    return null;
-                }
-
-                await authManager.loadUserInfo();
-                await this._loadUserInfo();
-
-                return authManager.userId;
+            if (result.success === false) {
+                return null;
             }
+
+            await authManager.loadUserInfo();
+            await this._loadUserInfo();
+
+            return authManager.userId;
         }
     }
 

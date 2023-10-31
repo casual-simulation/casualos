@@ -38,6 +38,7 @@ import type {
     ListedSession,
     ReplaceSessionResult,
     PrivoSignUpRequestResult,
+    OpenIDLoginRequestResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -732,6 +733,25 @@ export class AuthManager {
 
     async loginWithPhoneNumber(phoneNumber: string) {
         return this._login(phoneNumber, 'phone');
+    }
+
+    async loginWithPrivo() {
+        const response = await axios.post<OpenIDLoginRequestResult>(
+            `${this.apiEndpoint}/api/v2/login/privo`,
+            {},
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        const result = response.data;
+        // if (result.success === true) {
+        //     this.savedSessionKey = result.sessionKey;
+        //     this.savedConnectionKey = result.connectionKey;
+        //     this._userId = result.userId;
+        // }
+
+        return result;
     }
 
     async signUpWithPrivoAdult(info: PrivoSignUpInfo) {

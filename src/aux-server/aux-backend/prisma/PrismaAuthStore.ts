@@ -3,6 +3,7 @@ import {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthSubscription,
@@ -231,6 +232,85 @@ export class PrismaAuthStore implements AuthStore {
             ipAddress: request.ipAddress,
             secretHash: request.secretHash,
         };
+    }
+
+    async findOpenIDLoginRequest(
+        requestId: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        const request = await this._client.openIDLoginRequest.findUnique({
+            where: {
+                requestId: requestId,
+            },
+        });
+
+        if (!request) {
+            return null;
+        }
+
+        return {
+            requestId: request.requestId,
+            authorizationUrl: request.authorizationUrl,
+            redirectUrl: request.redirectUrl,
+            codeMethod: request.codeMethod,
+            codeVerifier: request.codeVerifier,
+            provider: request.provider,
+            scope: request.scope,
+            requestTimeMs: convertToMillis(request.requestTime) as number,
+            expireTimeMs: convertToMillis(request.expireTime) as number,
+            completedTimeMs: convertToMillis(request.completedTime),
+            ipAddress: request.ipAddress,
+        };
+    }
+
+    async saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest> {
+        await this._client.openIDLoginRequest.upsert({
+            where: {
+                requestId: request.requestId,
+            },
+            create: {
+                requestId: request.requestId,
+                authorizationUrl: request.authorizationUrl,
+                redirectUrl: request.redirectUrl,
+                codeMethod: request.codeMethod,
+                codeVerifier: request.codeVerifier,
+                provider: request.provider,
+                scope: request.scope,
+                requestTime: convertToDate(request.requestTimeMs),
+                expireTime: convertToDate(request.expireTimeMs),
+                completedTime: convertToDate(request.completedTimeMs),
+                ipAddress: request.ipAddress,
+            },
+            update: {
+                authorizationUrl: request.authorizationUrl,
+                redirectUrl: request.redirectUrl,
+                codeMethod: request.codeMethod,
+                codeVerifier: request.codeVerifier,
+                provider: request.provider,
+                scope: request.scope,
+                requestTime: convertToDate(request.requestTimeMs),
+                expireTime: convertToDate(request.expireTimeMs),
+                completedTime: convertToDate(request.completedTimeMs),
+                ipAddress: request.ipAddress,
+            },
+        });
+
+        return request;
+    }
+
+    async markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        await this._client.openIDLoginRequest.update({
+            where: {
+                requestId: requestId,
+            },
+            data: {
+                completedTime: convertToDate(completedTimeMs),
+            },
+        });
     }
 
     async findSession(
