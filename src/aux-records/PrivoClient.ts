@@ -182,7 +182,7 @@ export class PrivoClient implements PrivoClientInterface {
                         role_identifier: config.roleIds.child,
                         first_name: request.childFirstName,
                         email: request.childEmail,
-                        birth_date_yyymmdd: DateTime.fromJSDate(
+                        birth_date_yyyymmdd: DateTime.fromJSDate(
                             request.childDateOfBirth
                         ).toFormat('yyyyMMdd'),
                         features: request.featureIds.map((f) => ({
