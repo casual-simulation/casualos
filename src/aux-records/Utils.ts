@@ -362,7 +362,8 @@ export type KnownErrorCodes =
     | 'roles_too_large'
     | 'policy_not_found'
     | 'policy_too_large'
-    | 'invalid_policy';
+    | 'invalid_policy'
+    | 'not_completed';
 
 /**
  * Gets the status code that should be used for the given response.

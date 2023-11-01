@@ -505,6 +505,7 @@ describe('getStatusCode()', () => {
         ['policy_not_found', 404] as const,
         ['policy_too_large', 400] as const,
         ['invalid_policy', 400] as const,
+        ['not_completed', 400] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {

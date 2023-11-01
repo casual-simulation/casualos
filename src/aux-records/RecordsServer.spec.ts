@@ -2035,6 +2035,7 @@ describe('RecordsServer', () => {
                 body: {
                     success: true,
                     authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
                 },
                 headers: accountCorsHeaders,
             });
@@ -2047,7 +2048,127 @@ describe('RecordsServer', () => {
         testRateLimit('POST', `/api/v2/login/privo`, () => JSON.stringify({}));
     });
 
-    describe('POST /api/v2/completeLogin/oauth', () => {
+    describe('POST /api/v2/oauth/code', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                tokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should save the authorization code', async () => {
+            privoClientMock.processAuthorizationCallback.mockResolvedValueOnce({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+                tokenType: 'Bearer',
+                idToken: 'idToken',
+                expiresIn: 1000,
+                userInfo: {
+                    roleIdentifier: 'roleIdentifier',
+                    serviceId: 'serviceId',
+                    email: 'test@example.com',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    permissions: [],
+                },
+            });
+            const expireTime = Date.now() + 10000000;
+
+            await store.saveOpenIDLoginRequest({
+                requestId: 'requestId',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/oauth/code`,
+                    JSON.stringify({
+                        code: 'code',
+                        state: 'requestId',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(await store.findOpenIDLoginRequest('requestId')).toEqual({
+                requestId: 'requestId',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                authorizationCode: 'code',
+                authorizationTimeMs: expect.any(Number),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+        });
+
+        testOrigin('POST', '/api/v2/oauth/code', () =>
+            JSON.stringify({
+                code: 'code',
+                state: 'requestId',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/oauth/code', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/oauth/code`, () =>
+            JSON.stringify({
+                code: 'code',
+                state: 'requestId',
+            })
+        );
+    });
+
+    describe('POST /api/v2/oauth/complete', () => {
         let tenYearsAgo: DateTime;
 
         beforeEach(() => {
@@ -2094,6 +2215,7 @@ describe('RecordsServer', () => {
                 },
             });
 
+            const expireTime = Date.now() + 10000000;
             await store.saveOpenIDLoginRequest({
                 requestId: 'requestId',
                 authorizationUrl: 'https://mock_authorization_url',
@@ -2102,7 +2224,16 @@ describe('RecordsServer', () => {
                 codeMethod: 'method',
                 requestTimeMs:
                     DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
-                expireTimeMs: Date.now() + 10000000,
+                expireTimeMs: expireTime,
+                authorizationCode: 'code',
+                authorizationTimeMs: DateTime.utc(
+                    2023,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0
+                ).toMillis(),
                 completedTimeMs: null,
                 ipAddress: '123.456.789',
                 provider: PRIVO_OPEN_ID_PROVIDER,
@@ -2111,10 +2242,9 @@ describe('RecordsServer', () => {
 
             const result = await server.handleHttpRequest(
                 httpPost(
-                    `/api/v2/completeLogin/oauth`,
+                    `/api/v2/oauth/complete`,
                     JSON.stringify({
-                        code: 'code',
-                        state: 'requestId',
+                        requestId: 'requestId',
                     }),
                     {
                         origin: 'https://account-origin.com',
@@ -2136,19 +2266,17 @@ describe('RecordsServer', () => {
             });
         });
 
-        testOrigin('POST', '/api/v2/completeLogin/oauth', () =>
+        testOrigin('POST', '/api/v2/oauth/complete', () =>
             JSON.stringify({
-                code: 'code',
-                state: 'requestId',
+                requestId: 'requestId',
             })
         );
         testBodyIsJson((body) =>
-            httpPost('/api/v2/completeLogin/oauth', body, authenticatedHeaders)
+            httpPost('/api/v2/oauth/complete', body, authenticatedHeaders)
         );
-        testRateLimit('POST', `/api/v2/completeLogin/oauth`, () =>
+        testRateLimit('POST', `/api/v2/oauth/complete`, () =>
             JSON.stringify({
-                code: 'code',
-                state: 'requestId',
+                requestId: 'requestId',
             })
         );
     });
