@@ -309,7 +309,7 @@ export class PrivoClient implements PrivoClientInterface {
         const codeMethod = 'S256';
         const config = await this._config.getPrivoConfiguration();
 
-        const scope = config.tokenScopes;
+        const scope = config.userTokenScopes;
         const url = this._openid.authorizationUrl({
             scope: scope,
             code_challenge: codeChallenge,
@@ -415,7 +415,7 @@ export class PrivoClient implements PrivoClientInterface {
         } else {
             const tokens = await this._openid.grant({
                 grant_type: 'client_credentials',
-                scope: config.tokenScopes,
+                scope: config.clientTokenScopes,
             });
             return this._saveTokenSet(tokens);
         }

@@ -63,13 +63,22 @@ export const privoSchema = z.object({
             .nonempty(),
     }),
 
-    tokenScopes: z
+    clientTokenScopes: z
         .string()
-        .describe('The scopes that should be requested.')
+        .describe('The scopes that should be requested for client tokens.')
         .nonempty()
         .optional()
         .default(
             'openid profile email user_profile offline_access address additional_info TRUST delete_account service_profile connected_profiles manage_consent consent_url update_password_link'
+        ),
+
+    userTokenScopes: z
+        .string()
+        .describe('The scopes that should be requested for user tokens.')
+        .nonempty()
+        .optional()
+        .default(
+            'TRUST openid profile user_profile address service_profile connected_profiles manage_consent email additional_info offline_access delete_account consent_url update_password_link'
         ),
 
     ageOfConsent: z
