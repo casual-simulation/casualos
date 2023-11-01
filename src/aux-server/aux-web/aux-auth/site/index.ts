@@ -86,6 +86,8 @@ import AuthRecordsRoles from './AuthRecordsRoles/AuthRecordsRoles';
 import AuthStudio from './AuthStudio/AuthStudio';
 import AuthRecordsInsts from './AuthRecordsInsts/AuthRecordsInsts';
 import './global.css';
+import { appManager } from 'aux-web/shared/AppManager';
+import OAuthRedirect from './OAuthRedirect/OAuthRedirect';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -219,6 +221,11 @@ const routes: RouteConfig[] = [
         }),
         component: AuthStudio,
     },
+    {
+        path: '/oauth/redirect',
+        name: 'oauth-redirect',
+        component: OAuthRedirect,
+    },
 ];
 
 const router = new VueRouter({
@@ -278,6 +285,7 @@ const publicPages = new Set([
     'privacy-policy',
     'acceptable-use-policy',
     'olx-terms-of-service',
+    'oauth-redirect',
 ]);
 
 router.beforeEach(async (to, from, next) => {

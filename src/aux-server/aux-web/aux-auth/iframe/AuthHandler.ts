@@ -14,6 +14,7 @@ import {
 } from '../../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/index';
 import {
+    CompleteOpenIDLoginSuccess,
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
@@ -625,38 +626,28 @@ export class AuthHandler implements AuxAuth {
     }): Promise<string> {
         const result = await authManager.loginWithPrivo();
         if (result.success) {
-            const thisOrigin = location.origin;
+            const requestId = result.requestId;
             const newTab = window.open(result.authorizationUrl, '_blank');
 
-            const codes = await new Promise<{ code: string; state: string }>(
+            const codes = await new Promise<CompleteOpenIDLoginSuccess>(
                 (resolve, reject) => {
-                    const getOrigin = () => {
-                        try {
-                            return newTab.origin;
-                        } catch (err) {
-                            return null;
-                        }
-                    };
-
                     let intervalId: number | NodeJS.Timer;
-                    const handleClose = () => {
+                    const handleClose = async () => {
                         if (intervalId) {
                             clearInterval(intervalId);
                         }
 
-                        const origin = getOrigin();
+                        const loginResult =
+                            await authManager.completeOAuthLogin(requestId);
 
-                        if (origin === thisOrigin) {
-                            // redirected back to here:
-                            const url = new URL(newTab.location.href);
-                            const state = url.searchParams.get('state');
-                            const code = url.searchParams.get('code');
-                            resolve({
-                                code,
-                                state,
-                            });
+                        if (loginResult.success === true) {
+                            resolve(loginResult);
                         } else {
-                            reject(new Error('Login canceled.'));
+                            if (loginResult.errorCode === 'not_completed') {
+                                reject(new Error('Login canceled.'));
+                            } else {
+                                reject(new Error('Login failed.'));
+                            }
                         }
                     };
 

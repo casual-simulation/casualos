@@ -39,6 +39,9 @@ import type {
     ReplaceSessionResult,
     PrivoSignUpRequestResult,
     OpenIDLoginRequestResult,
+    ProcessOpenIDAuthorizationCodeRequest,
+    ProcessOpenIDAuthorizationCodeResult,
+    CompleteOpenIDLoginResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -760,6 +763,46 @@ export class AuthManager {
 
     async signUpWithPrivoChild(info: PrivoSignUpInfo, parentEmail: string) {
         return await this._privoRegister(info, parentEmail);
+    }
+
+    async processAuthCode(
+        params: object
+    ): Promise<ProcessOpenIDAuthorizationCodeResult> {
+        const response = await axios.post<ProcessOpenIDAuthorizationCodeResult>(
+            `${this.apiEndpoint}/api/v2/oauth/code`,
+            {
+                ...params,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return response.data;
+    }
+
+    async completeOAuthLogin(
+        requestId: string
+    ): Promise<CompleteOpenIDLoginResult> {
+        const response = await axios.post<CompleteOpenIDLoginResult>(
+            `${this.apiEndpoint}/api/v2/oauth/complete`,
+            {
+                requestId,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        const result = response.data;
+
+        if (result.success === true) {
+            this.savedSessionKey = result.sessionKey;
+            this.savedConnectionKey = result.connectionKey;
+            this._userId = result.userId;
+        }
+
+        return result;
     }
 
     private async _privoRegister(
