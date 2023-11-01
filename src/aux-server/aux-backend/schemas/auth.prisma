@@ -147,6 +147,9 @@ model OpenIDLoginRequest {
     completedTime DateTime?
     ipAddress String
 
+    authorizationCode String?
+    authorizationTime DateTime?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 

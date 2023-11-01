@@ -336,6 +336,7 @@ export class PrivoClient implements PrivoClientInterface {
                 state: request.state,
             },
             {
+                state: request.state,
                 code_verifier: request.codeVerifier,
             }
         );
@@ -352,10 +353,11 @@ export class PrivoClient implements PrivoClientInterface {
             permissions: z.array(
                 z.object({
                     on: z.boolean(),
-                    consent_date: z.number(),
+                    consent_time: z.number(),
+                    request_time: z.number(),
                     feature_identifier: z.string(),
-                    category: z.string(),
-                    active: z.boolean(),
+                    feature_category: z.string(),
+                    feature_active: z.boolean(),
                 })
             ),
         });
@@ -377,10 +379,10 @@ export class PrivoClient implements PrivoClientInterface {
                 roleIdentifier: validated.role_identifier,
                 permissions: validated.permissions.map((p) => ({
                     on: p.on,
-                    consentDateSeconds: p.consent_date,
+                    consentDateSeconds: p.consent_time,
                     featureIdentifier: p.feature_identifier,
-                    category: p.category,
-                    active: p.active,
+                    category: p.feature_category,
+                    active: p.feature_active,
                 })),
             },
         };

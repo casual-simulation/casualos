@@ -16,8 +16,11 @@ export default class OAuthRedirect extends Vue {
         }
 
         if (params.code && params.state) {
-            await authManager.processAuthCode(params);
+            const result = await authManager.processAuthCode(params);
+            // TODO: handle errors
+            window.close();
+        } else if (params.error) {
+            // TODO: handle errors
         }
-        // window.close();
     }
 }

@@ -258,6 +258,8 @@ export class PrismaAuthStore implements AuthStore {
             requestTimeMs: convertToMillis(request.requestTime) as number,
             expireTimeMs: convertToMillis(request.expireTime) as number,
             completedTimeMs: convertToMillis(request.completedTime),
+            authorizationTimeMs: convertToMillis(request.authorizationTime),
+            authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
         };
     }
@@ -280,6 +282,8 @@ export class PrismaAuthStore implements AuthStore {
                 requestTime: convertToDate(request.requestTimeMs),
                 expireTime: convertToDate(request.expireTimeMs),
                 completedTime: convertToDate(request.completedTimeMs),
+                authorizationTime: convertToDate(request.authorizationTimeMs),
+                authorizationCode: request.authorizationCode,
                 ipAddress: request.ipAddress,
             },
             update: {
@@ -292,6 +296,8 @@ export class PrismaAuthStore implements AuthStore {
                 requestTime: convertToDate(request.requestTimeMs),
                 expireTime: convertToDate(request.expireTimeMs),
                 completedTime: convertToDate(request.completedTimeMs),
+                authorizationTime: convertToDate(request.authorizationTimeMs),
+                authorizationCode: request.authorizationCode,
                 ipAddress: request.ipAddress,
             },
         });
@@ -309,6 +315,22 @@ export class PrismaAuthStore implements AuthStore {
             },
             data: {
                 completedTime: convertToDate(completedTimeMs),
+            },
+        });
+    }
+
+    async saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void> {
+        await this._client.openIDLoginRequest.update({
+            where: {
+                requestId: requestId,
+            },
+            data: {
+                authorizationCode: authorizationCode,
+                authorizationTime: convertToDate(authorizationTimeMs),
             },
         });
     }
