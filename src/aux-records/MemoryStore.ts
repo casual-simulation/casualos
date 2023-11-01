@@ -707,6 +707,24 @@ export class MemoryStore
         }
     }
 
+    async saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === requestId
+        );
+
+        if (index >= 0) {
+            const lr = this._oidLoginRequests[index];
+            lr.authorizationCode = authorizationCode;
+            lr.authorizationTimeMs = authorizationTimeMs;
+        } else {
+            throw new Error('Request not found.');
+        }
+    }
+
     async incrementLoginRequestAttemptCount(
         userId: string,
         requestId: string

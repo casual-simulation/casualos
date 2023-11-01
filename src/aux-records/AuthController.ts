@@ -76,6 +76,12 @@ export const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24 * 14; // 2 weeks
 export const INVALID_REQUEST_ERROR_MESSAGE = 'The login request is invalid.';
 
 /**
+ * The error message that should be used for invalid_request error messages.
+ */
+export const INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE =
+    'The authorization request is invalid.';
+
+/**
  * The maximum allowed number of attempts for completing a login request.
  */
 export const MAX_LOGIN_REQUEST_ATTEMPTS = 5;
@@ -592,10 +598,97 @@ export class AuthController {
             return {
                 success: true,
                 authorizationUrl: result.authorizationUrl,
+                requestId: requestId,
             };
         } catch (err) {
             console.error(
                 '[AuthController] Error occurred while requesting Privo login',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async processOpenIDAuthorizationCode(
+        request: ProcessOpenIDAuthorizationCodeRequest
+    ): Promise<ProcessOpenIDAuthorizationCodeResult> {
+        try {
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const requestId = request.state;
+            const loginRequest = await this._store.findOpenIDLoginRequest(
+                requestId
+            );
+
+            if (!loginRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            let validRequest = true;
+            if (Date.now() >= loginRequest.expireTimeMs) {
+                validRequest = false;
+            } else if (loginRequest.completedTimeMs > 0) {
+                validRequest = false;
+            } else if (loginRequest.authorizationTimeMs > 0) {
+                validRequest = false;
+            } else if (loginRequest.ipAddress !== request.ipAddress) {
+                validRequest = false;
+            }
+
+            if (!validRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (loginRequest.provider !== PRIVO_OPEN_ID_PROVIDER) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            await this._store.saveOpenIDLoginRequestAuthorizationCode(
+                requestId,
+                request.authorizationCode,
+                Date.now()
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error occurred while processing Privo authorization code',
                 err
             );
             return {
@@ -630,7 +723,7 @@ export class AuthController {
                 };
             }
 
-            const requestId = request.state;
+            const requestId = request.requestId;
             const loginRequest = await this._store.findOpenIDLoginRequest(
                 requestId
             );
@@ -668,10 +761,21 @@ export class AuthController {
                 };
             }
 
+            if (
+                !loginRequest.authorizationTimeMs ||
+                !loginRequest.authorizationCode
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'not_completed',
+                    errorMessage: 'The login request has not been completed.',
+                };
+            }
+
             const result = await this._privoClient.processAuthorizationCallback(
                 {
-                    code: request.code,
-                    state: request.state,
+                    code: loginRequest.authorizationCode,
+                    state: loginRequest.requestId,
                     codeVerifier: loginRequest.codeVerifier,
                     redirectUrl: loginRequest.redirectUrl,
                 }
@@ -1937,6 +2041,11 @@ export interface OpenIDLoginRequestSuccess {
      * The URL that should be presented to the user in order for them to login.
      */
     authorizationUrl: string;
+
+    /**
+     * The ID of the request that was made.
+     */
+    requestId: string;
 }
 
 export interface OpenIDLoginRequestFailure {
@@ -1945,21 +2054,47 @@ export interface OpenIDLoginRequestFailure {
     errorMessage: string;
 }
 
-export interface CompleteOpenIDLoginRequest {
+export interface ProcessOpenIDAuthorizationCodeRequest {
+    /**
+     * The state that was included in the callback.
+     */
+    state: string;
+
+    /**
+     * The authorization code that was included in the callback.
+     */
+    authorizationCode: string;
+
     /**
      * The IP address that the request is from.
      */
     ipAddress: string;
+}
+
+export type ProcessOpenIDAuthorizationCodeResult =
+    | ProcessOpenIDAuthorizationCodeSuccess
+    | ProcessOpenIDAuthorizationCodeFailure;
+
+export interface ProcessOpenIDAuthorizationCodeSuccess {
+    success: true;
+}
+
+export interface ProcessOpenIDAuthorizationCodeFailure {
+    success: false;
+    errorCode: ServerError | 'not_supported' | 'invalid_request';
+    errorMessage: string;
+}
+
+export interface CompleteOpenIDLoginRequest {
+    /**
+     * The ID of the login request.
+     */
+    requestId: string;
 
     /**
-     * The authorization code.
+     * The IP address that the request is from.
      */
-    code: string;
-
-    /**
-     * The state that was included in the response.
-     */
-    state: string;
+    ipAddress: string;
 }
 
 export type CompleteOpenIDLoginResult =
@@ -1992,7 +2127,11 @@ export interface CompleteOpenIDLoginSuccess {
 
 export interface CompleteOpenIDLoginFailure {
     success: false;
-    errorCode: ServerError | 'not_supported' | 'invalid_request';
+    errorCode:
+        | ServerError
+        | 'not_supported'
+        | 'invalid_request'
+        | 'not_completed';
     errorMessage: string;
 }
 

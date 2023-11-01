@@ -1598,6 +1598,7 @@ describe('AuthController', () => {
                 expect(result).toEqual({
                     success: true,
                     authorizationUrl: 'https://mock_authorization_url',
+                    requestId: 'uuid',
                 });
 
                 expect(store.openIdLoginRequests).toEqual([
@@ -1657,6 +1658,200 @@ describe('AuthController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'The given provider is not supported.',
+            });
+        });
+    });
+
+    describe('processOpenIDAuthorizationCode()', () => {
+        describe('privo', () => {
+            beforeEach(() => {
+                // Jan 1, 2023 in miliseconds
+                nowMock.mockReturnValue(
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis()
+                );
+
+                store.privoConfiguration = {
+                    gatewayEndpoint: 'endpoint',
+                    featureIds: {
+                        adultPrivoSSO: 'adultAccount',
+                        childPrivoSSO: 'childAccount',
+                        joinAndCollaborate: 'joinAndCollaborate',
+                        publishProjects: 'publish',
+                        projectDevelopment: 'dev',
+                    },
+                    clientId: 'clientId',
+                    clientSecret: 'clientSecret',
+                    publicEndpoint: 'publicEndpoint',
+                    roleIds: {
+                        child: 'childRole',
+                        adult: 'adultRole',
+                        parent: 'parentRole',
+                    },
+                    tokenScopes: 'scope1 scope2',
+                    redirectUri: 'redirectUri',
+                    ageOfConsent: 18,
+                };
+            });
+
+            it('should return not_supported when no privo client is configured', async () => {
+                store.privoConfiguration = null;
+
+                const result = await controller.processOpenIDAuthorizationCode({
+                    state: 'requestId',
+                    authorizationCode: 'code',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                });
+            });
+
+            it('should save the info to the request', async () => {
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    redirectUrl: 'https://redirect_url',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    completedTimeMs: null,
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                    ipAddress: '127.0.0.1',
+                });
+
+                const result = await controller.processOpenIDAuthorizationCode({
+                    state: 'requestId',
+                    authorizationCode: 'code',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(store.openIdLoginRequests).toEqual([
+                    {
+                        requestId: 'requestId',
+                        redirectUrl: 'https://redirect_url',
+                        authorizationUrl: 'https://mock_authorization_url',
+                        codeMethod: 'method',
+                        codeVerifier: 'verifier',
+                        requestTimeMs: Date.now() - 100,
+                        expireTimeMs: Date.now() + 100,
+                        completedTimeMs: null,
+                        provider: PRIVO_OPEN_ID_PROVIDER,
+                        scope: 'scope1 scope2',
+                        ipAddress: '127.0.0.1',
+                        authorizationCode: 'code',
+                        authorizationTimeMs: Date.now(),
+                    },
+                ]);
+            });
+
+            it('should return an error if the request already is authorized', async () => {
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    redirectUrl: 'https://redirect_url',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    completedTimeMs: null,
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                    ipAddress: '127.0.0.1',
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                });
+
+                const result = await controller.processOpenIDAuthorizationCode({
+                    state: 'requestId',
+                    authorizationCode: 'code',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The authorization request is invalid.',
+                });
+            });
+
+            it('should return an error if the request already is complete', async () => {
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    redirectUrl: 'https://redirect_url',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                    ipAddress: '127.0.0.1',
+                    completedTimeMs: Date.now(),
+                });
+
+                const result = await controller.processOpenIDAuthorizationCode({
+                    state: 'requestId',
+                    authorizationCode: 'code',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The authorization request is invalid.',
+                });
+            });
+
+            it('should return an error if the request expired', async () => {
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    redirectUrl: 'https://redirect_url',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    requestTimeMs: Date.now() - 200,
+                    expireTimeMs: Date.now() - 100,
+                    completedTimeMs: null,
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                    ipAddress: '127.0.0.1',
+                });
+
+                const result = await controller.processOpenIDAuthorizationCode({
+                    state: 'requestId',
+                    authorizationCode: 'code',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The authorization request is invalid.',
+                });
+            });
+
+            it('should return an error if the request is missing', async () => {
+                const result = await controller.processOpenIDAuthorizationCode({
+                    state: 'requestId',
+                    authorizationCode: 'code',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The authorization request is invalid.',
+                });
             });
         });
     });
@@ -1737,10 +1932,10 @@ describe('AuthController', () => {
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
                     codeMethod: 'method',
-                    requestTimeMs:
-                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
-                    expireTimeMs:
-                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
                     completedTimeMs: null,
                     ipAddress: '127.0.0.1',
                     provider: PRIVO_OPEN_ID_PROVIDER,
@@ -1749,8 +1944,7 @@ describe('AuthController', () => {
 
                 const result = await controller.completeOpenIDLogin({
                     ipAddress: '127.0.0.1',
-                    code: 'code',
-                    state: 'requestId',
+                    requestId: 'requestId',
                 });
 
                 expect(result).toEqual({
@@ -1772,6 +1966,8 @@ describe('AuthController', () => {
                             DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
                         expireTimeMs:
                             DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                        authorizationCode: 'code',
+                        authorizationTimeMs: Date.now(),
                         completedTimeMs: Date.now(),
                         ipAddress: '127.0.0.1',
                         provider: PRIVO_OPEN_ID_PROVIDER,
@@ -1812,6 +2008,15 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: null,
                     currentLoginRequestId: null,
                     privoServiceId: 'serviceId',
+                });
+
+                expect(
+                    privoClientMock.processAuthorizationCallback
+                ).toHaveBeenCalledWith({
+                    code: 'code',
+                    state: 'requestId',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
                 });
             });
 
@@ -1855,6 +2060,8 @@ describe('AuthController', () => {
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
                     expireTimeMs:
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
                     completedTimeMs: null,
                     ipAddress: '127.0.0.1',
                     provider: PRIVO_OPEN_ID_PROVIDER,
@@ -1862,15 +2069,72 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.completeOpenIDLogin({
+                    requestId: 'requestId',
                     ipAddress: '127.0.0.1',
-                    code: 'code',
-                    state: 'requestId',
                 });
 
                 expect(result).toEqual({
                     success: false,
                     errorCode: 'invalid_request',
                     errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return not_completed if no authorization code has been saved', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                    expireTimeMs:
+                        DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    requestId: 'requestId',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_completed',
+                    errorMessage: 'The login request has not been completed.',
                 });
             });
 
@@ -1914,6 +2178,8 @@ describe('AuthController', () => {
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
                     expireTimeMs:
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
                     completedTimeMs: 1,
                     ipAddress: '127.0.0.1',
                     provider: PRIVO_OPEN_ID_PROVIDER,
@@ -1922,8 +2188,7 @@ describe('AuthController', () => {
 
                 const result = await controller.completeOpenIDLogin({
                     ipAddress: '127.0.0.1',
-                    code: 'code',
-                    state: 'requestId',
+                    requestId: 'requestId',
                 });
 
                 expect(result).toEqual({
@@ -1973,6 +2238,8 @@ describe('AuthController', () => {
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
                     expireTimeMs:
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
                     completedTimeMs: null,
                     ipAddress: '127.0.0.1',
                     provider: PRIVO_OPEN_ID_PROVIDER,
@@ -1981,8 +2248,7 @@ describe('AuthController', () => {
 
                 const result = await controller.completeOpenIDLogin({
                     ipAddress: 'wrong',
-                    code: 'code',
-                    state: 'requestId',
+                    requestId: 'requestId',
                 });
 
                 expect(result).toEqual({
@@ -2032,6 +2298,8 @@ describe('AuthController', () => {
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
                     expireTimeMs:
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
                     completedTimeMs: null,
                     ipAddress: '127.0.0.1',
                     provider: 'wrong',
@@ -2040,8 +2308,7 @@ describe('AuthController', () => {
 
                 const result = await controller.completeOpenIDLogin({
                     ipAddress: '127.0.0.1',
-                    code: 'code',
-                    state: 'requestId',
+                    requestId: 'requestId',
                 });
 
                 expect(result).toEqual({
@@ -2083,6 +2350,8 @@ describe('AuthController', () => {
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
                     expireTimeMs:
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
                     completedTimeMs: null,
                     ipAddress: '127.0.0.1',
                     provider: PRIVO_OPEN_ID_PROVIDER,
@@ -2091,8 +2360,7 @@ describe('AuthController', () => {
 
                 const result = await controller.completeOpenIDLogin({
                     ipAddress: '127.0.0.1',
-                    code: 'code',
-                    state: 'requestId',
+                    requestId: 'requestId',
                 });
 
                 expect(result).toEqual({
@@ -2143,6 +2411,8 @@ describe('AuthController', () => {
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 200,
                     expireTimeMs:
                         DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
                     completedTimeMs: null,
                     ipAddress: '127.0.0.1',
                     provider: PRIVO_OPEN_ID_PROVIDER,
@@ -2151,8 +2421,7 @@ describe('AuthController', () => {
 
                 const result = await controller.completeOpenIDLogin({
                     ipAddress: '127.0.0.1',
-                    code: 'code',
-                    state: 'requestId',
+                    requestId: 'requestId',
                 });
 
                 expect(result).toEqual({
@@ -2195,8 +2464,7 @@ describe('AuthController', () => {
 
                 const result = await controller.completeOpenIDLogin({
                     ipAddress: '127.0.0.1',
-                    code: 'code',
-                    state: 'requestId',
+                    requestId: 'requestId',
                 });
 
                 expect(result).toEqual({

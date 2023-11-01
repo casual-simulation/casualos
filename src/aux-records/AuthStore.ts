@@ -107,6 +107,18 @@ export interface AuthStore {
     ): Promise<void>;
 
     /**
+     * Saves the given authorization code for the given login request.
+     * @param requestId The ID of the request.
+     * @param authorizationCode The authorization code that should be saved.
+     * @param authorizationTimeMs The time of the authorization.
+     */
+    saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void>;
+
+    /**
      * Increments the attempt count for the given login request.
      * @param userId The ID of the user.
      * @param requestId The ID of the login request.
@@ -571,6 +583,17 @@ export interface AuthOpenIDLoginRequest {
      * If null, then the request has not been completed.
      */
     completedTimeMs: number | null;
+
+    /**
+     * The unix timestamp that the authorization code was registered for the login request.
+     * Null/undefined if the request has not been authorized yet.
+     */
+    authorizationTimeMs?: number | null;
+
+    /**
+     * The authorization code that was recieved for the request.
+     */
+    authorizationCode?: string;
 
     /**
      * The IP Address that the request came from.
