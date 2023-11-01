@@ -19,6 +19,7 @@ import {
     getPortalCursor,
     getTagPosition,
     getTagRotation,
+    DEFAULT_GRID_PORTAL_LIGHTING,
 } from '@casual-simulation/aux-common';
 import { Color, Texture } from '@casual-simulation/three';
 import {
@@ -48,6 +49,7 @@ export class PortalConfig implements SubscriptionLike {
     private _zoomMin: number = null;
     private _zoomMax: number = null;
     private _rotatable: boolean = null;
+    private _gridPortalDefaultLighting: boolean = null;
     private _playerZoom: number = null;
     private _playerRotationX: number = null;
     private _playerRotationY: number = null;
@@ -144,6 +146,14 @@ export class PortalConfig implements SubscriptionLike {
             return this._rotatable;
         } else {
             return DEFAULT_PORTAL_ROTATABLE;
+        }
+    }
+
+    get defaultLighting() {
+        if (this._gridPortalDefaultLighting != null) {
+            return this._gridPortalDefaultLighting;
+        } else {
+            return DEFAULT_GRID_PORTAL_LIGHTING;
         }
     }
 
@@ -431,6 +441,13 @@ export class PortalConfig implements SubscriptionLike {
         this._cameraType = getCameraType(calc, bot);
         this._cursor = getPortalCursor(calc, bot);
         this.gridScale = this._calculateGridScale(calc, bot);
+
+        this._gridPortalDefaultLighting = calculateBooleanTagValue(
+            calc,
+            bot,
+            `defaultLighting`,
+            DEFAULT_GRID_PORTAL_LIGHTING
+        );
 
         // TODO:
         // const dimensionLocked = isDimensionLocked(calc, bot);
