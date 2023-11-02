@@ -757,12 +757,8 @@ export class AuthManager {
         return result;
     }
 
-    async signUpWithPrivoAdult(info: PrivoSignUpInfo) {
-        return await this._privoRegister(info, null);
-    }
-
-    async signUpWithPrivoChild(info: PrivoSignUpInfo, parentEmail: string) {
-        return await this._privoRegister(info, parentEmail);
+    async signUpWithPrivo(info: PrivoSignUpInfo) {
+        return await this._privoRegister(info);
     }
 
     async processAuthCode(
@@ -806,16 +802,16 @@ export class AuthManager {
     }
 
     private async _privoRegister(
-        info: PrivoSignUpInfo,
-        parentEmail: string
+        info: PrivoSignUpInfo
     ): Promise<PrivoSignUpRequestResult> {
         const response = await axios.post<PrivoSignUpRequestResult>(
             `${this.apiEndpoint}/api/v2/register/privo`,
             {
                 email: info.email,
+                displayName: info.displayName,
                 name: info.name,
                 dateOfBirth: info.dateOfBirth.toJSON(),
-                parentEmail: parentEmail,
+                parentEmail: info.parentEmail || undefined,
             },
             {
                 validateStatus: (status) => status < 500,

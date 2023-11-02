@@ -250,18 +250,27 @@
                             <span v-if="showEmailError" class="md-error"
                                 >This email is not allowed</span
                             >
-                            <span v-if="showSmsError" class="md-error"
-                                >This phone number is not allowed</span
+                            <span v-else-if="showInvalidAddressError" class="md-error"
+                                >This value is not recognized as an email address</span
                             >
-                            <span v-if="showInvalidAddressError" class="md-error"
-                                >This value is not recognized as a phone number or email
-                                address</span
+                            <span v-else-if="showEnterAddressError" class="md-error"
+                                >Please enter an email address</span
                             >
-                            <span v-if="showEnterAddressError" class="md-error">{{
-                                enterAddressErrorMessage
-                            }}</span>
-                            <span v-if="showBannedUserError" class="md-error"
-                                >This user has been banned.</span
+                            <span v-else-if="showBannedUserError" class="md-error"
+                                >This user has been banned</span
+                            >
+                        </md-field>
+
+                        <md-field :class="displayNameFieldClass">
+                            <label for="name">Display Name</label>
+                            <md-input
+                                name="displayName"
+                                id="displayName"
+                                v-model="displayName"
+                                :disabled="processing"
+                            />
+                            <span v-if="showDisplayNameError" class="md-error"
+                                >This display name is not allowed</span
                             >
                         </md-field>
 
@@ -287,27 +296,33 @@
                         >
                             <label>Date of Birth</label>
 
-                            <span v-if="showDateOfBirthError">
-                                This Date of Birth is not allowed.
+                            <span v-if="showDateOfBirthError" class="md-error">
+                                This Date of Birth is not allowed
                             </span>
                         </md-datepicker>
 
-                        <!-- <md-field :class="dateOfBirthFieldClass">
-                            <label for="name">Date of Birth</label>
+                        <md-field v-if="requireParentEmail" :class="parentEmailFieldClass">
+                            <label for="parentEmail">Enter Parent Email</label>
                             <md-input
-                                name="name"
-                                id="name"
-                                autocomplete="given-name"
-                                v-model="name"
+                                name="parentEmail"
+                                id="parentEmail"
+                                autocomplete="email"
+                                v-model="parentEmail"
                                 :disabled="processing"
                             />
-                            <span v-if="showNameError" class="md-error"
-                                >This name is not allowed</span
+                            <span v-if="showParentEmailError" class="md-error"
+                                >This email is not allowed</span
                             >
-                        </md-field> -->
+                            <span v-else-if="showEnterParentEmailError" class="md-error">
+                                Please enter an email address
+                            </span>
+                            <span v-else-if="showInvalidParentEmailError" class="md-error"
+                                >This value is not recognized as an email address</span
+                            >
+                        </md-field>
                     </div>
                 </div>
-                <div class="terms-of-service-container">
+                <div class="terms-of-service-container" v-if="requireTermsOfService">
                     <div v-show="showTermsOfServiceError" class="terms-of-service-error">
                         Please accept the terms of service.
                     </div>
@@ -386,6 +401,36 @@
                     >
                     <span v-else>No</span>
                 </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog
+            :md-active.sync="showUpdatePassword"
+            :md-close-on-esc="true"
+            :md-click-outside-to-close="true"
+            :md-fullscreen="true"
+            class="input-dialog"
+        >
+            <md-dialog-title>Account Created</md-dialog-title>
+            <md-dialog-content class="input-dialog-content">
+                <div class="md-layout md-gutter">
+                    <div class="md-layout-item">
+                        <p>
+                            Your account has been created. Do you want to set your account password?
+                        </p>
+                    </div>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button
+                    :href="updatePasswordUrl"
+                    target="_blank"
+                    class="md-primary"
+                    @click="showUpdatePassword = false"
+                >
+                    Set Password
+                </md-button>
+                <md-button type="button" @click="showUpdatePassword = false">Close</md-button>
             </md-dialog-actions>
         </md-dialog>
 

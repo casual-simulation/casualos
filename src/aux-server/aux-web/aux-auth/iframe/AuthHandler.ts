@@ -336,17 +336,6 @@ export class AuthHandler implements AuxAuth {
     }
 
     async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {
-        if (!info.acceptedTermsOfService) {
-            this._loginUIStatus.next({
-                page: 'enter_privo_account_info',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                showAcceptTermsOfServiceError: true,
-                errorCode: 'terms_not_accepted',
-                errorMessage: 'You must accept the terms of service.',
-            });
-            return;
-        }
         if (!info.email) {
             this._loginUIStatus.next({
                 page: 'enter_privo_account_info',
@@ -355,6 +344,30 @@ export class AuthHandler implements AuxAuth {
                 showEnterEmailError: true,
                 errorCode: 'email_not_provided',
                 errorMessage: 'You must provide an email address.',
+            });
+            return;
+        }
+        if (!(await authManager.validateEmail(info.email))) {
+            this._loginUIStatus.next({
+                page: 'enter_address',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showInvalidEmailError: true,
+                errorCode: 'invalid_email',
+                errorMessage: 'The provided email is not accepted.',
+                supportsSms: this._supportsSms,
+            });
+            return;
+        }
+
+        if (!info.displayName) {
+            this._loginUIStatus.next({
+                page: 'enter_privo_account_info',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showEnterDisplayNameError: true,
+                errorCode: 'display_name_not_provided',
+                errorMessage: 'You must provide a display name.',
             });
             return;
         }
@@ -392,17 +405,45 @@ export class AuthHandler implements AuxAuth {
             });
             return;
         }
-        if (!(await authManager.validateEmail(info.email))) {
-            this._loginUIStatus.next({
-                page: 'enter_address',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                showInvalidEmailError: true,
-                errorCode: 'invalid_email',
-                errorMessage: 'The provided email is not accepted.',
-                supportsSms: this._supportsSms,
-            });
-            return;
+
+        if (Math.abs(dob.diffNow('years').as('years')) < 18) {
+            if (!info.parentEmail) {
+                this._loginUIStatus.next({
+                    page: 'enter_privo_account_info',
+                    siteName: this.siteName,
+                    termsOfServiceUrl: this.termsOfServiceUrl,
+                    showEnterParentEmailError: true,
+                    errorCode: 'parent_email_required',
+                    errorMessage: 'You must enter a parent email address.',
+                });
+                return;
+            }
+        } else {
+            if (!info.acceptedTermsOfService) {
+                this._loginUIStatus.next({
+                    page: 'enter_privo_account_info',
+                    siteName: this.siteName,
+                    termsOfServiceUrl: this.termsOfServiceUrl,
+                    showAcceptTermsOfServiceError: true,
+                    errorCode: 'terms_not_accepted',
+                    errorMessage: 'You must accept the terms of service.',
+                });
+                return;
+            }
+        }
+
+        if (info.parentEmail) {
+            if (!(await authManager.validateEmail(info.parentEmail))) {
+                this._loginUIStatus.next({
+                    page: 'enter_privo_account_info',
+                    siteName: this.siteName,
+                    termsOfServiceUrl: this.termsOfServiceUrl,
+                    showInvalidParentEmailError: true,
+                    errorCode: 'invalid_parent_email',
+                    errorMessage: 'The provided email is not accepted.',
+                });
+                return;
+            }
         }
 
         console.log('[AuthHandler] Got Privo sign up info.');
@@ -676,63 +717,33 @@ export class AuthHandler implements AuxAuth {
             siteName: this.siteName,
         });
 
-        const info = await firstValueFrom(
-            this._providedPrivoSignUpInfo.pipe(
-                filter(() => !cancelSignal.canceled)
-            )
-        );
+        while (!cancelSignal.canceled) {
+            const info = await firstValueFrom(
+                this._providedPrivoSignUpInfo.pipe(
+                    filter(() => !cancelSignal.canceled)
+                )
+            );
 
-        // Check Age of Consent
-        const ageInYears = DateTime.fromJSDate(info.dateOfBirth)
-            .diffNow('years')
-            .as('years');
-        if (Math.floor(ageInYears) > 18) {
-            // Create adult account
-            const result = await authManager.signUpWithPrivoAdult({
+            const result = await authManager.signUpWithPrivo({
                 acceptedTermsOfService: info.acceptedTermsOfService,
-                dateOfBirth: info.dateOfBirth,
+                displayName: info.displayName,
                 email: info.email,
                 name: info.name,
+                dateOfBirth: info.dateOfBirth,
+                parentEmail: info.parentEmail,
             });
 
             if (result.success === false) {
-                return null;
+                continue;
             }
 
             await authManager.loadUserInfo();
             await this._loadUserInfo();
 
-            return authManager.userId;
-        } else {
-            // Collect parent email
             this._loginUIStatus.next({
-                page: 'enter_email',
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                siteName: this.siteName,
-                collectionReason: 'collect_parent_email',
-                supportsSms: false,
+                page: 'show_update_password_link',
+                updatePasswordUrl: result.updatePasswordUrl,
             });
-
-            const parentEmail = await firstValueFrom(
-                this._providedEmails.pipe(filter(() => !cancelSignal.canceled))
-            );
-
-            const result = await authManager.signUpWithPrivoChild(
-                {
-                    acceptedTermsOfService: info.acceptedTermsOfService,
-                    dateOfBirth: info.dateOfBirth,
-                    email: info.email,
-                    name: info.name,
-                },
-                parentEmail
-            );
-
-            if (result.success === false) {
-                return null;
-            }
-
-            await authManager.loadUserInfo();
-            await this._loadUserInfo();
 
             return authManager.userId;
         }

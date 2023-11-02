@@ -3669,6 +3669,7 @@ export class RecordsServer {
             parentEmail: z.string().nonempty().email().optional(),
             name: z.string().nonempty(),
             dateOfBirth: z.coerce.date(),
+            displayName: z.string().nonempty(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -3677,13 +3678,15 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { email, parentEmail, name, dateOfBirth } = parseResult.data;
+        const { email, parentEmail, name, dateOfBirth, displayName } =
+            parseResult.data;
 
         const result = await this._auth.requestPrivoSignUp({
             email,
             parentEmail,
             name,
             dateOfBirth,
+            displayName,
             ipAddress: request.ipAddress,
         });
 
@@ -4376,6 +4379,7 @@ export class RecordsServer {
             hasActiveSubscription: result.hasActiveSubscription,
             subscriptionTier: result.subscriptionTier,
             features: result.features,
+            displayName: result.displayName,
         });
     }
 

@@ -31,7 +31,8 @@ export type LoginUIStatus =
     | LoginUICheckAddressStatus
     | LoginUIShowIframe
     | LoginUIHasAccount
-    | LoginUIPrivoSignUp;
+    | LoginUIPrivoSignUp
+    | LoginUIUpdatePasswordLink;
 
 export interface LoginUINoStatus {
     page: false;
@@ -185,6 +186,21 @@ export interface LoginUIPrivoSignUp {
     showInvalidDateOfBirthError?: boolean;
 
     /**
+     * Whether to show an error message that indicates that the parent email field must be provided.
+     */
+    showEnterParentEmailError?: boolean;
+
+    /**
+     * Whether to show an error message that indicates that the parent email field is invalid.
+     */
+    showInvalidParentEmailError?: boolean;
+
+    /**
+     * Whether to show an error message that indicates that the display name field must be provided.
+     */
+    showEnterDisplayNameError?: boolean;
+
+    /**
      * Whether to show an error message that the user was banned.
      */
     showBannedUserError?: boolean;
@@ -200,6 +216,15 @@ export interface LoginUIPrivoSignUp {
     errorMessage?: string;
 }
 
+export interface LoginUIUpdatePasswordLink {
+    page: 'show_update_password_link';
+
+    /**
+     * The link used to update the user's password.
+     */
+    updatePasswordUrl: string;
+}
+
 export interface PrivoSignUpInfo {
     /**
      * The email address that the user entered.
@@ -207,9 +232,15 @@ export interface PrivoSignUpInfo {
     email: string;
 
     /**
-     * Whether the user accepted the terms of service.
+     * The display name that was collected.
      */
-    acceptedTermsOfService: boolean;
+    displayName: string;
+
+    /**
+     * Whether the user accepted the terms of service.
+     * Null if the user does not need to accept the terms.
+     */
+    acceptedTermsOfService?: boolean;
 
     /**
      * The name of the user.
@@ -220,6 +251,12 @@ export interface PrivoSignUpInfo {
      * The date of birth of the user.
      */
     dateOfBirth: Date;
+
+    /**
+     * The email address of the user's parent.
+     * Null if the user is over the age of consent.
+     */
+    parentEmail?: string;
 }
 
 /**

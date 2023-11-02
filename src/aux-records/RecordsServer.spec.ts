@@ -548,6 +548,7 @@ describe('RecordsServer', () => {
                         projectDevelopment: true,
                         publishProjects: true,
                     },
+                    displayName: null,
                 },
                 headers: accountCorsHeaders,
             });
@@ -618,6 +619,7 @@ describe('RecordsServer', () => {
                         projectDevelopment: true,
                         publishProjects: true,
                     },
+                    displayName: null,
                 },
                 headers: accountCorsHeaders,
             });
@@ -2091,6 +2093,7 @@ describe('RecordsServer', () => {
                     givenName: 'name',
                     locale: 'en-US',
                     permissions: [],
+                    displayName: 'displayName',
                 },
             });
             const expireTime = Date.now() + 10000000;
@@ -2212,6 +2215,7 @@ describe('RecordsServer', () => {
                     givenName: 'name',
                     locale: 'en-US',
                     permissions: [],
+                    displayName: 'displayName',
                 },
             });
 
@@ -2330,6 +2334,7 @@ describe('RecordsServer', () => {
                         email: 'child@example.com',
                         dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
                         parentEmail: 'parent@example.com',
+                        displayName: 'displayName',
                     }),
                     {
                         origin: 'https://account-origin.com',
@@ -2358,6 +2363,7 @@ describe('RecordsServer', () => {
                 email: 'child@example.com',
                 dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
                 parentEmail: 'parent@example.com',
+                displayName: 'displayName',
             })
         );
         testBodyIsJson((body) =>
@@ -2369,6 +2375,7 @@ describe('RecordsServer', () => {
                 email: 'child@example.com',
                 dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
                 parentEmail: 'parent@example.com',
+                displayName: 'displayName',
             })
         );
     });

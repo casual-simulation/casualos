@@ -1327,6 +1327,7 @@ describe('AuthController', () => {
             const result = await controller.requestPrivoSignUp({
                 parentEmail: 'parent@example.com',
                 name: 'test name',
+                displayName: 'displayName',
                 email: 'test@example.com',
                 dateOfBirth: new Date(2010, 1, 1),
                 ipAddress: '127.0.0.1',
@@ -1353,6 +1354,7 @@ describe('AuthController', () => {
             const result = await controller.requestPrivoSignUp({
                 parentEmail: 'parent@example.com',
                 name: 'test name',
+                displayName: 'displayName',
                 email: 'test@example.com',
                 dateOfBirth: new Date(2010, 1, 1),
                 ipAddress: '127.0.0.1',
@@ -1379,6 +1381,7 @@ describe('AuthController', () => {
             const result = await controller.requestPrivoSignUp({
                 parentEmail: 'parent@example.com',
                 name: 'test name',
+                displayName: 'displayName',
                 email: 'test@example.com',
                 dateOfBirth: new Date(2010, 1, 1),
                 ipAddress: '127.0.0.1',
@@ -1397,6 +1400,7 @@ describe('AuthController', () => {
                 parentEmail: 'parent@example.com',
                 childEmail: 'test@example.com',
                 childFirstName: 'test name',
+                childDisplayName: 'displayName',
                 childDateOfBirth: new Date(2010, 1, 1),
                 featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
             });
@@ -1446,6 +1450,7 @@ describe('AuthController', () => {
             const result = await controller.requestPrivoSignUp({
                 parentEmail: null,
                 name: 'test name',
+                displayName: 'displayName',
                 email: 'test@example.com',
                 dateOfBirth: new Date(2010, 1, 1),
                 ipAddress: '127.0.0.1',
@@ -1473,6 +1478,7 @@ describe('AuthController', () => {
             const result = await controller.requestPrivoSignUp({
                 parentEmail: null,
                 name: 'test name',
+                displayName: 'displayName',
                 email: 'test@example.com',
                 dateOfBirth: new Date(2000, 1, 1),
                 ipAddress: '127.0.0.1',
@@ -1489,6 +1495,7 @@ describe('AuthController', () => {
 
             expect(privoClientMock.createAdultAccount).toHaveBeenCalledWith({
                 adultEmail: 'test@example.com',
+                adultDisplayName: 'displayName',
                 adultFirstName: 'test name',
                 adultDateOfBirth: new Date(2000, 1, 1),
                 featureIds: ['adultAccount', 'joinAndCollaborate', 'publish'],
@@ -1918,6 +1925,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -2042,6 +2050,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -2102,6 +2111,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -2160,6 +2170,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -2220,6 +2231,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -2280,6 +2292,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -2340,6 +2353,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -2392,6 +2406,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -2453,6 +2468,7 @@ describe('AuthController', () => {
                             givenName: 'name',
                             locale: 'en-US',
                             permissions: [],
+                            displayName: 'displayName',
                         },
                     }
                 );
@@ -4502,6 +4518,7 @@ describe('AuthController', () => {
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
                 subscriptionTier: null,
+                displayName: null,
                 features: {
                     joinAndCollaborate: true,
                     publishProjects: true,
@@ -4528,6 +4545,7 @@ describe('AuthController', () => {
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
                 subscriptionTier: null,
+                displayName: null,
                 features: {
                     joinAndCollaborate: true,
                     publishProjects: true,
@@ -4565,6 +4583,7 @@ describe('AuthController', () => {
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: true,
                 subscriptionTier: 'alpha',
+                displayName: null,
                 features: {
                     joinAndCollaborate: true,
                     publishProjects: true,
@@ -4669,7 +4688,8 @@ describe('AuthController', () => {
                         adult: 'adultRole',
                         parent: 'parentRole',
                     },
-                    tokenScopes: 'scope1 scope2',
+                    clientTokenScopes: 'scope1 scope2',
+                    userTokenScopes: 'scope1 scope2',
                     // verificationIntegration: 'verificationIntegration',
                     // verificationServiceId: 'verificationServiceId',
                     // verificationSiteId: 'verificationSiteId',
@@ -4698,6 +4718,7 @@ describe('AuthController', () => {
                     givenName: 'name',
                     locale: 'en-US',
                     roleIdentifier: 'ab1Child',
+                    displayName: 'displayName',
                     permissions: [
                         {
                             on: true,
@@ -4738,6 +4759,7 @@ describe('AuthController', () => {
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
                     subscriptionTier: null,
+                    displayName: 'displayName',
                     features: {
                         joinAndCollaborate: true,
                         publishProjects: true,

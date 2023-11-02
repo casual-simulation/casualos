@@ -961,6 +961,7 @@ export class AuthController {
                     childFirstName: request.name,
                     childDateOfBirth: request.dateOfBirth,
                     childEmail: request.email,
+                    childDisplayName: request.displayName,
                     parentEmail: request.parentEmail,
                     featureIds: [
                         config.featureIds.childPrivoSSO,
@@ -977,6 +978,7 @@ export class AuthController {
                     adultFirstName: request.name,
                     adultEmail: request.email,
                     adultDateOfBirth: request.dateOfBirth,
+                    adultDisplayName: request.displayName,
                     featureIds: [
                         config.featureIds.adultPrivoSSO,
                         config.featureIds.joinAndCollaborate,
@@ -1745,6 +1747,7 @@ export class AuthController {
                 await this._getSubscriptionInfo(result);
 
             let features: GetUserInfoFeatures;
+            let displayName: string = null;
             const privoConfig = await this._config.getPrivoConfiguration();
             if (privoConfig && result.privoServiceId) {
                 const userInfo = await this._privoClient.getUserInfo(
@@ -1770,6 +1773,7 @@ export class AuthController {
                                 privoConfig.featureIds.publishProjects
                     ),
                 };
+                displayName = userInfo.displayName;
             } else {
                 features = {
                     joinAndCollaborate: true,
@@ -1782,6 +1786,7 @@ export class AuthController {
                 success: true,
                 userId: result.id,
                 name: result.name,
+                displayName,
                 email: result.email,
                 phoneNumber: result.phoneNumber,
                 avatarPortraitUrl: result.avatarPortraitUrl,
@@ -1995,6 +2000,11 @@ export interface PrivoSignUpRequest {
      * The email address of the user.
      */
     email: string;
+
+    /**
+     * The display name of the user.
+     */
+    displayName: string;
 
     /**
      * The name of the user.
@@ -2672,6 +2682,11 @@ export interface GetUserInfoSuccess {
      * The URL of the avatar portrait for the user.
      */
     avatarPortraitUrl: string;
+
+    /**
+     * The public display name of the user.
+     */
+    displayName: string;
 
     /**
      * The email address of the user.

@@ -188,6 +188,12 @@ export class PrivoClient implements PrivoClientInterface {
                         features: request.featureIds.map((f) => ({
                             feature_identifier: f,
                         })),
+                        attributes: [
+                            {
+                                name: 'displayName',
+                                value: request.childDisplayName,
+                            },
+                        ],
                     },
                 ],
             },
@@ -240,7 +246,68 @@ export class PrivoClient implements PrivoClientInterface {
     async createAdultAccount(
         request: CreateAdultAccountRequest
     ): Promise<CreateAdultAccountResponse> {
-        throw new Error('Method not implemented.');
+        const config = await this._config.getPrivoConfiguration();
+
+        if (!config) {
+            throw new Error('No Privo configuration found.');
+        }
+
+        const headers = await this._getRequestHeaders(config);
+        const url = `${config.gatewayEndpoint}/api/v1.0/account`;
+        const result = await axios.post(
+            url,
+            {
+                role_identifier: config.roleIds.adult,
+                email: request.adultEmail,
+                send_registration_email: true,
+                send_congratulations_email: true,
+                birth_date_yyyymmdd: DateTime.fromJSDate(
+                    request.adultDateOfBirth
+                ).toFormat('yyyyMMdd'),
+                first_name: request.adultFirstName,
+                features: request.featureIds.map((f) => ({
+                    feature_identifier: f,
+                })),
+                attributes: [
+                    {
+                        name: 'displayName',
+                        value: request.adultDisplayName,
+                    },
+                ],
+            },
+            {
+                headers,
+            }
+        );
+
+        const data = result.data;
+
+        const schema = z.object({
+            to: z.object({
+                service_id: z.string(),
+                features: z.array(
+                    z.object({
+                        feature_identifier: z.string(),
+                        on: z.boolean(),
+                    })
+                ),
+                update_password_link: z.string(),
+            }),
+        });
+
+        const validated = schema.parse(data);
+
+        console.log('privo data', data);
+        console.log('connected profiles', data.to.connected_profiles);
+
+        return {
+            adultServiceId: validated.to.service_id,
+            updatePasswordLink: validated.to.update_password_link,
+            features: validated.to.features.map((f: any) => ({
+                featureId: f.feature_identifier,
+                on: f.on === true || f.on === 'true',
+            })),
+        };
     }
 
     async getUserInfo(serviceId: string): Promise<PrivoGetUserInfoResponse> {
@@ -268,6 +335,7 @@ export class PrivoClient implements PrivoClientInterface {
             email: z.string(),
             email_verified: z.boolean(),
             role_identifier: z.string(),
+            display_name: z.string(),
             permissions: z.array(
                 z.object({
                     on: z.boolean(),
@@ -291,6 +359,7 @@ export class PrivoClient implements PrivoClientInterface {
             email: validated.email,
             emailVerified: validated.email_verified,
             roleIdentifier: validated.role_identifier,
+            displayName: validated.display_name,
             permissions: validated.permissions.map((p) => ({
                 on: p.on,
                 consentDateSeconds: p.consent_date,
@@ -343,6 +412,8 @@ export class PrivoClient implements PrivoClientInterface {
 
         const data: any = await this._openid.userinfo(tokens.access_token);
 
+        console.log('privo data', data);
+
         const schema = z.object({
             sub: z.string(),
             locale: z.string(),
@@ -350,6 +421,7 @@ export class PrivoClient implements PrivoClientInterface {
             email: z.string(),
             email_verified: z.boolean(),
             role_identifier: z.string(),
+            preferred_username: z.string(),
             permissions: z.array(
                 z.object({
                     on: z.boolean(),
@@ -377,6 +449,7 @@ export class PrivoClient implements PrivoClientInterface {
                 email: validated.email,
                 emailVerified: validated.email_verified,
                 roleIdentifier: validated.role_identifier,
+                displayName: validated.preferred_username,
                 permissions: validated.permissions.map((p) => ({
                     on: p.on,
                     consentDateSeconds: p.consent_time,
@@ -462,6 +535,11 @@ export interface CreateChildAccountRequest {
     childEmail: string;
 
     /**
+     * The display name that the child can use to log in.
+     */
+    childDisplayName: string;
+
+    /**
      * The list of feature IDs that are being requested.
      */
     featureIds: string[];
@@ -513,6 +591,11 @@ export interface CreateAdultAccountRequest {
     adultFirstName: string;
 
     /**
+     * The name that the user can use to sign in.
+     */
+    adultDisplayName: string;
+
+    /**
      * The birth date of the adult.
      */
     adultDateOfBirth: Date;
@@ -547,6 +630,7 @@ export interface PrivoGetUserInfoResponse {
     emailVerified: boolean;
     email: string;
     roleIdentifier: string;
+    displayName: string;
     permissions: PrivoPermission[];
 }
 

@@ -27,6 +27,7 @@ import {
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import { DateTime } from 'luxon';
 
 @Component({
     components: {},
@@ -58,10 +59,14 @@ export default class RecordsUI extends Vue {
     addressTypeToCheck: AddressType = 'email';
     showCode: boolean = false;
     name: string = '';
+    displayName: string = '';
     dateOfBirth: Date = null;
+    parentEmail: string = null;
 
     showEnterAccountInfo: boolean = false;
     showHasAccount: boolean = false;
+    showUpdatePassword: boolean = false;
+    updatePasswordUrl: string = '';
 
     showSmsError: boolean = false;
     showEmailError: boolean = false;
@@ -72,6 +77,11 @@ export default class RecordsUI extends Vue {
     showTermsOfServiceError: boolean = false;
     showInvalidCodeError: boolean = false;
     showBannedUserError: boolean = false;
+    showDisplayNameError: boolean = false;
+    showParentEmailError: boolean = false;
+    showInvalidParentEmailError: boolean = false;
+    showEnterParentEmailError: boolean = false;
+
     processing: boolean = false;
 
     showGrantInstAdminPermission: boolean = false;
@@ -127,8 +137,36 @@ export default class RecordsUI extends Vue {
         return this.showNameError ? 'md-invalid' : '';
     }
 
+    get displayNameFieldClass() {
+        return this.showDisplayNameError ? 'md-invalid' : '';
+    }
+
+    get parentEmailFieldClass() {
+        return this.showParentEmailError ||
+            this.showEnterParentEmailError ||
+            this.showInvalidParentEmailError
+            ? 'md-invalid'
+            : '';
+    }
+
     get codeFieldClass() {
         return this.showInvalidCodeError ? 'md-invalid' : '';
+    }
+
+    get requireParentEmail() {
+        if (this.dateOfBirth) {
+            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            return Math.abs(dob.diffNow('years').years) < 18;
+        }
+        return false;
+    }
+
+    get requireTermsOfService() {
+        if (this.dateOfBirth) {
+            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            return Math.abs(dob.diffNow('years').years) >= 18;
+        }
+        return false;
     }
 
     created() {
@@ -181,12 +219,22 @@ export default class RecordsUI extends Vue {
 
     async register() {
         this.showInvalidAddressError = false;
+        this.showEnterParentEmailError = false;
+        this.showNameError = false;
+        this.showDisplayNameError = false;
+        this.showDateOfBirthError = false;
+        this.showEnterAddressError = false;
 
         if (!hasValue(this.email)) {
             this.showEnterAddressError = true;
             return;
         } else if (!mightBeEmailAddress(this.email)) {
             this.showInvalidAddressError = true;
+            return;
+        }
+
+        if (!hasValue(this.displayName)) {
+            this.showDisplayNameError = true;
             return;
         }
 
@@ -200,11 +248,19 @@ export default class RecordsUI extends Vue {
             return;
         }
 
+        if (this.requireParentEmail && !hasValue(this.parentEmail)) {
+            this.showEnterParentEmailError = true;
+            return;
+        }
+
+        this.processing = true;
         await this._currentLoginAuth.providePrivoSignUpInfo({
             acceptedTermsOfService: this.acceptedTerms,
             email: this.email,
             name: this.name,
             dateOfBirth: this.dateOfBirth,
+            displayName: this.displayName,
+            parentEmail: this.parentEmail,
         });
     }
 
@@ -239,7 +295,8 @@ export default class RecordsUI extends Vue {
             if (
                 !this.showEnterAccountInfo &&
                 !this.showHasAccount &&
-                !this.showEnterAddress
+                !this.showEnterAddress &&
+                !this.showUpdatePassword
             ) {
                 this._currentLoginAuth.cancelLogin();
             }
@@ -325,6 +382,7 @@ export default class RecordsUI extends Vue {
         this.showEnterAccountInfo = false;
         this.showCheckAddress = false;
         this.showHasAccount = false;
+        this.showUpdatePassword = false;
         this.showIframe = false;
         this.showEmailError = false;
         this.showNameError = false;
@@ -332,11 +390,19 @@ export default class RecordsUI extends Vue {
         this.showSmsError = false;
         this.showTermsOfServiceError = false;
         this.showBannedUserError = false;
+        this.showEnterParentEmailError = false;
+        this.showInvalidParentEmailError = false;
+        this.showDisplayNameError = false;
+        this.processing = false;
+    }
+
+    private _resetFields() {
         this.name = '';
         this.email = '';
+        this.displayName = '';
+        this.parentEmail = '';
         this.acceptedTerms = false;
         this.dateOfBirth = null;
-        this.processing = false;
     }
 
     private _simulationAdded(sim: BrowserSimulation): void {
@@ -404,8 +470,7 @@ export default class RecordsUI extends Vue {
                 if (e.page === 'enter_address' || e.page === 'enter_email') {
                     this._loginSim = sim;
                     if (!this.showEnterAddress) {
-                        this.email = '';
-                        this.acceptedTerms = false;
+                        this._resetFields();
                     }
                     this._resetUI();
                     this.showEnterAddress = true;
@@ -424,6 +489,7 @@ export default class RecordsUI extends Vue {
                     e.page === 'check_address' ||
                     e.page === 'check_email'
                 ) {
+                    this._resetFields();
                     this._resetUI();
                     this.showCheckAddress = true;
                     this.showCode = !!e.enterCode;
@@ -436,9 +502,8 @@ export default class RecordsUI extends Vue {
                     this.showIframe = true;
                 } else if (e.page === 'enter_privo_account_info') {
                     this._loginSim = sim;
-                    if (!this.showEnterAddress) {
-                        this.email = '';
-                        this.acceptedTerms = false;
+                    if (!this.showEnterAccountInfo) {
+                        this._resetFields();
                     }
                     this._resetUI();
                     this.showEnterAccountInfo = true;
@@ -454,13 +519,23 @@ export default class RecordsUI extends Vue {
                     this.showTermsOfServiceError =
                         e.showAcceptTermsOfServiceError;
                     this.showBannedUserError = e.showBannedUserError;
+                    this.showDisplayNameError = e.showEnterDisplayNameError;
+                    this.showInvalidParentEmailError =
+                        e.showInvalidParentEmailError;
+                    this.showEnterParentEmailError =
+                        e.showEnterParentEmailError;
                     this.$emit('visible');
                 } else if (e.page === 'has_account') {
                     this._loginSim = sim;
                     this._resetUI();
                     this.showHasAccount = true;
                     this.$emit('visible');
-                } else {
+                } else if (e.page === 'show_update_password_link') {
+                    this._resetUI();
+                    this.showUpdatePassword = true;
+                    this.updatePasswordUrl = e.updatePasswordUrl;
+                    this.$emit('visible');
+                } else if (!this.showUpdatePassword) {
                     this.$emit('hidden');
                     this._resetUI();
                     if (this._loginSim === sim) {

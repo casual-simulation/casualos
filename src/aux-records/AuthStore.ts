@@ -263,10 +263,28 @@ export interface AuthStore {
 export type AddressType = 'email' | 'phone';
 
 export interface AuthUser {
+    /**
+     * The ID of the user.
+     */
     id: string;
+
+    /**
+     * The name of the user.
+     */
     name?: string | null;
+
+    /**
+     * The email address of the user.
+     * Possible to use for login.
+     */
     email: string | null;
+
+    /**
+     * The SMS phone number of the user.
+     * Possible to use for login.
+     */
     phoneNumber: string | null;
+
     avatarUrl?: string | null;
     avatarPortraitUrl?: string | null;
 
