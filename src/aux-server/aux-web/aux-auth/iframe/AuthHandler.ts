@@ -671,38 +671,46 @@ export class AuthHandler implements AuxAuth {
             const requestId = result.requestId;
             const newTab = window.open(result.authorizationUrl, '_blank');
 
-            const codes = await new Promise<CompleteOpenIDLoginSuccess>(
-                (resolve, reject) => {
-                    let intervalId: number | NodeJS.Timer;
-                    const handleClose = async () => {
-                        if (intervalId) {
-                            clearInterval(intervalId);
-                        }
-
-                        const loginResult =
-                            await authManager.completeOAuthLogin(requestId);
-
-                        if (loginResult.success === true) {
-                            resolve(loginResult);
-                        } else {
-                            if (loginResult.errorCode === 'not_completed') {
-                                reject(new Error('Login canceled.'));
-                            } else {
-                                reject(new Error('Login failed.'));
+            const codes: CompleteOpenIDLoginSuccess =
+                await new Promise<CompleteOpenIDLoginSuccess>(
+                    (resolve, reject) => {
+                        let intervalId: number | NodeJS.Timer;
+                        const handleClose = async () => {
+                            if (intervalId) {
+                                clearInterval(intervalId);
                             }
-                        }
-                    };
 
-                    intervalId = setInterval(() => {
-                        if (newTab.closed) {
-                            console.error('Closed!');
-                            handleClose();
-                        }
-                    }, 500);
-                }
-            );
+                            const loginResult =
+                                await authManager.completeOAuthLogin(requestId);
 
-            console.log('Got login info!', codes);
+                            if (loginResult.success === true) {
+                                resolve(loginResult);
+                            } else {
+                                if (loginResult.errorCode === 'not_completed') {
+                                    reject(new Error('Login canceled.'));
+                                } else {
+                                    reject(new Error('Login failed.'));
+                                }
+                            }
+                        };
+
+                        intervalId = setInterval(() => {
+                            if (newTab.closed) {
+                                console.error('Closed!');
+                                handleClose();
+                            }
+                        }, 500);
+                    }
+                );
+
+            if (codes.success === false) {
+                return null;
+            }
+
+            await authManager.loadUserInfo();
+            await this._loadUserInfo();
+
+            return authManager.userId;
         }
         return null;
     }
@@ -734,6 +742,10 @@ export class AuthHandler implements AuxAuth {
             });
 
             if (result.success === false) {
+                console.log(
+                    '[AuthHandler] Failed to sign up with Privo.',
+                    result
+                );
                 continue;
             }
 
