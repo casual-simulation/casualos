@@ -47,6 +47,11 @@ export interface LoginUIAddressStatus {
     termsOfServiceUrl: string;
 
     /**
+     * The page that should be linked to as the privacy policy.
+     */
+    privacyPolicyUrl: string;
+
+    /**
      * The name of the site that is being logged into.
      */
     siteName: string;
@@ -144,6 +149,11 @@ export interface LoginUIPrivoSignUp {
      * The page that should be linked to as the terms of service.
      */
     termsOfServiceUrl: string;
+
+    /**
+     * The page that should be linked to as the privacy policy.
+     */
+    privacyPolicyUrl: string;
 
     /**
      * The name of the site that is being logged into.

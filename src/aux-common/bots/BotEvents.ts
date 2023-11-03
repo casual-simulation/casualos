@@ -2640,6 +2640,11 @@ export interface AuthData {
     name: string;
 
     /**
+     * The display name of the user.
+     */
+    displayName: string;
+
+    /**
      * The URL of the user's avatar.
      * Null if the user does not have an avatar.
      */

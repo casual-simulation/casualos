@@ -48,6 +48,7 @@ export default class RecordsUI extends Vue {
 
     showEnterAddress: boolean = false;
     termsOfServiceUrl: string = '';
+    privacyPolicyUrl: string = '';
     loginSiteName: string = '';
     email: string = '';
     acceptedTerms: boolean = false;
@@ -479,6 +480,7 @@ export default class RecordsUI extends Vue {
                     this._resetUI();
                     this.showEnterAddress = true;
                     this.termsOfServiceUrl = e.termsOfServiceUrl;
+                    this.privacyPolicyUrl = e.privacyPolicyUrl;
                     this.loginSiteName = e.siteName;
                     this.showEmailError =
                         e.showEnterEmailError || e.showInvalidEmailError;
@@ -512,6 +514,7 @@ export default class RecordsUI extends Vue {
                     this._resetUI();
                     this.showEnterAccountInfo = true;
                     this.termsOfServiceUrl = e.termsOfServiceUrl;
+                    this.privacyPolicyUrl = e.privacyPolicyUrl;
                     this.loginSiteName = e.siteName;
                     this.showEmailError =
                         e.showEnterEmailError || e.showInvalidEmailError;

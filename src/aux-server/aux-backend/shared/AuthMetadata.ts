@@ -10,6 +10,7 @@ export interface AppMetadata {
     avatarUrl: string;
     avatarPortraitUrl: string;
     name: string;
+    displayName: string;
     email: string;
     phoneNumber: string;
     hasActiveSubscription: boolean;

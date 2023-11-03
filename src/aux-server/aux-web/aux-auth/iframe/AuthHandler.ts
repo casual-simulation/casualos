@@ -226,6 +226,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showAcceptTermsOfServiceError: true,
                 errorCode: 'terms_not_accepted',
                 errorMessage: 'You must accept the terms of service.',
@@ -239,6 +240,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showEnterEmailError: true,
                 errorCode: 'email_not_provided',
                 errorMessage: 'You must provide an email address.',
@@ -252,6 +254,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showInvalidEmailError: true,
                 errorCode: 'invalid_email',
                 errorMessage: 'The provided email is not accepted.',
@@ -274,6 +277,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showAcceptTermsOfServiceError: true,
                 errorCode: 'terms_not_accepted',
                 errorMessage: 'You must accept the terms of service.',
@@ -286,6 +290,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showEnterSmsError: true,
                 errorCode: 'sms_not_provided',
                 errorMessage: 'You must provide an SMS number.',
@@ -300,6 +305,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showInvalidSmsError: true,
                 errorCode: 'invalid_sms',
                 errorMessage: 'The phone number must include the country code.',
@@ -313,6 +319,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showInvalidSmsError: true,
                 errorCode: 'invalid_sms',
                 errorMessage: 'The provided phone number is not accepted.',
@@ -341,6 +348,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_privo_account_info',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showEnterEmailError: true,
                 errorCode: 'email_not_provided',
                 errorMessage: 'You must provide an email address.',
@@ -349,9 +357,10 @@ export class AuthHandler implements AuxAuth {
         }
         if (!(await authManager.validateEmail(info.email))) {
             this._loginUIStatus.next({
-                page: 'enter_address',
+                page: 'enter_privo_account_info',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showInvalidEmailError: true,
                 errorCode: 'invalid_email',
                 errorMessage: 'The provided email is not accepted.',
@@ -365,6 +374,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_privo_account_info',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showEnterDisplayNameError: true,
                 errorCode: 'display_name_not_provided',
                 errorMessage: 'You must provide a display name.',
@@ -376,6 +386,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_privo_account_info',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showEnterNameError: true,
                 errorCode: 'name_not_provided',
                 errorMessage: 'You must provide a name.',
@@ -387,6 +398,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_privo_account_info',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showEnterDateOfBirthError: true,
                 errorCode: 'date_of_birth_not_provided',
                 errorMessage: 'You must provide a Birth Date.',
@@ -399,6 +411,7 @@ export class AuthHandler implements AuxAuth {
                 page: 'enter_privo_account_info',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 showInvalidDateOfBirthError: true,
                 errorCode: 'invalid_date_of_birth',
                 errorMessage: 'Your Birth Date cannot be in the future.',
@@ -412,6 +425,7 @@ export class AuthHandler implements AuxAuth {
                     page: 'enter_privo_account_info',
                     siteName: this.siteName,
                     termsOfServiceUrl: this.termsOfServiceUrl,
+                    privacyPolicyUrl: this.privacyPolicyUrl,
                     showEnterParentEmailError: true,
                     errorCode: 'parent_email_required',
                     errorMessage: 'You must enter a parent email address.',
@@ -424,6 +438,7 @@ export class AuthHandler implements AuxAuth {
                     page: 'enter_privo_account_info',
                     siteName: this.siteName,
                     termsOfServiceUrl: this.termsOfServiceUrl,
+                    privacyPolicyUrl: this.privacyPolicyUrl,
                     showAcceptTermsOfServiceError: true,
                     errorCode: 'terms_not_accepted',
                     errorMessage: 'You must accept the terms of service.',
@@ -438,6 +453,7 @@ export class AuthHandler implements AuxAuth {
                     page: 'enter_privo_account_info',
                     siteName: this.siteName,
                     termsOfServiceUrl: this.termsOfServiceUrl,
+                    privacyPolicyUrl: this.privacyPolicyUrl,
                     showInvalidParentEmailError: true,
                     errorCode: 'invalid_parent_email',
                     errorMessage: 'The provided email is not accepted.',
@@ -486,6 +502,7 @@ export class AuthHandler implements AuxAuth {
             avatarUrl: authManager.avatarUrl,
             avatarPortraitUrl: authManager.avatarPortraitUrl,
             name: authManager.name,
+            displayName: authManager.displayName,
             hasActiveSubscription: authManager.hasActiveSubscription,
             subscriptionTier: authManager.subscriptionTier,
         };
@@ -539,6 +556,7 @@ export class AuthHandler implements AuxAuth {
         this._loginUIStatus.next({
             page: 'enter_address',
             termsOfServiceUrl: this.termsOfServiceUrl,
+            privacyPolicyUrl: this.privacyPolicyUrl,
             siteName: this.siteName,
             supportsSms: this._supportsSms,
         });
@@ -596,6 +614,7 @@ export class AuthHandler implements AuxAuth {
                             page: 'enter_address',
                             siteName: this.siteName,
                             termsOfServiceUrl: this.termsOfServiceUrl,
+                            privacyPolicyUrl: this.privacyPolicyUrl,
                             showInvalidEmailError: true,
                             errorCode: 'invalid_email',
                             errorMessage:
@@ -609,6 +628,7 @@ export class AuthHandler implements AuxAuth {
                             page: 'enter_address',
                             siteName: this.siteName,
                             termsOfServiceUrl: this.termsOfServiceUrl,
+                            privacyPolicyUrl: this.privacyPolicyUrl,
                             showInvalidEmailError: true,
                             errorCode: 'invalid_email',
                             errorMessage: 'Email addresses are not supported',
@@ -619,6 +639,7 @@ export class AuthHandler implements AuxAuth {
                             page: 'enter_address',
                             siteName: this.siteName,
                             termsOfServiceUrl: this.termsOfServiceUrl,
+                            privacyPolicyUrl: this.privacyPolicyUrl,
                             showBannedUserError: true,
                             errorCode: 'user_is_banned',
                             errorMessage: result.errorMessage,
@@ -703,10 +724,6 @@ export class AuthHandler implements AuxAuth {
                     }
                 );
 
-            if (codes.success === false) {
-                return null;
-            }
-
             await authManager.loadUserInfo();
             await this._loadUserInfo();
 
@@ -722,6 +739,7 @@ export class AuthHandler implements AuxAuth {
         this._loginUIStatus.next({
             page: 'enter_privo_account_info',
             termsOfServiceUrl: this.termsOfServiceUrl,
+            privacyPolicyUrl: this.privacyPolicyUrl,
             siteName: this.siteName,
         });
 
@@ -843,6 +861,10 @@ export class AuthHandler implements AuxAuth {
 
     private get termsOfServiceUrl() {
         return new URL('/terms', location.origin).href;
+    }
+
+    private get privacyPolicyUrl() {
+        return new URL('/privacy-policy', location.origin).href;
     }
 
     private get _supportsSms() {
