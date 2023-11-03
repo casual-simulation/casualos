@@ -378,7 +378,7 @@
                     :disabled="processing"
                 >
                     <md-progress-spinner
-                        v-if="processing"
+                        v-if="processing && hasAccountValue === true"
                         md-mode="indeterminate"
                         :md-diameter="20"
                         :md-stroke="2"
@@ -393,7 +393,7 @@
                     :disabled="processing"
                 >
                     <md-progress-spinner
-                        v-if="processing"
+                        v-if="processing && hasAccountValue === false"
                         md-mode="indeterminate"
                         :md-diameter="20"
                         :md-stroke="2"

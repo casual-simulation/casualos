@@ -81,6 +81,7 @@ export default class RecordsUI extends Vue {
     showParentEmailError: boolean = false;
     showInvalidParentEmailError: boolean = false;
     showEnterParentEmailError: boolean = false;
+    hasAccountValue: boolean = null;
 
     processing: boolean = false;
 
@@ -265,6 +266,8 @@ export default class RecordsUI extends Vue {
     }
 
     async hasAccount(hasAccount: boolean) {
+        this.processing = true;
+        this.hasAccountValue = hasAccount;
         await this._currentLoginAuth.provideHasAccount(hasAccount);
     }
 
@@ -394,6 +397,7 @@ export default class RecordsUI extends Vue {
         this.showInvalidParentEmailError = false;
         this.showDisplayNameError = false;
         this.processing = false;
+        this.hasAccountValue = null;
     }
 
     private _resetFields() {
