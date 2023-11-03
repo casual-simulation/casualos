@@ -546,8 +546,11 @@ export class AuthHandler implements AuxAuth {
     private async _tryLoginWithCustomUI(cancelSignal: {
         canceled: boolean;
     }): Promise<string> {
-        // return this._regularLoginWithCustomUI(cancelSignal);
-        return this._privoLoginWithCustomUI(cancelSignal);
+        if (authManager.usePrivoLogin) {
+            return this._privoLoginWithCustomUI(cancelSignal);
+        } else {
+            return this._regularLoginWithCustomUI(cancelSignal);
+        }
     }
 
     private async _regularLoginWithCustomUI(cancelSignal: {

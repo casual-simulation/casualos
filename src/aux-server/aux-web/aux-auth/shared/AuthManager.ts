@@ -66,11 +66,27 @@ if (typeof (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED === 'undefined') {
     (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED = false;
 }
 
+console.log(
+    `[AppManager] Assume subscriptions supported: ${ASSUME_SUBSCRIPTIONS_SUPPORTED}`
+);
+
 declare const ASSUME_STUDIOS_SUPPORTED: boolean;
 
 if (typeof (globalThis as any).ASSUME_STUDIOS_SUPPORTED === 'undefined') {
     (globalThis as any).ASSUME_STUDIOS_SUPPORTED = false;
 }
+
+console.log(
+    `[AppManager] Assume studios supported: ${ASSUME_STUDIOS_SUPPORTED}`
+);
+
+declare const USE_PRIVO_LOGIN: boolean;
+
+if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
+    (globalThis as any).USE_PRIVO_LOGIN = false;
+}
+
+console.log(`[AppManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
 
 export class AuthManager {
     private _userId: string;
@@ -78,6 +94,7 @@ export class AuthManager {
     private _appMetadata: AppMetadata;
     private _subscriptionsSupported: boolean;
     private _studiosSupported: boolean;
+    private _usePrivoLogin: boolean;
 
     private _loginState: Subject<boolean>;
     private _apiEndpoint: string;
@@ -89,6 +106,7 @@ export class AuthManager {
         this._loginState = new BehaviorSubject<boolean>(false);
         this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
         this._studiosSupported = ASSUME_STUDIOS_SUPPORTED;
+        this._usePrivoLogin = USE_PRIVO_LOGIN;
     }
 
     get userId() {
@@ -119,6 +137,10 @@ export class AuthManager {
         return this._appMetadata?.name;
     }
 
+    get displayName() {
+        return this._appMetadata?.displayName;
+    }
+
     get subscriptionsSupported() {
         return this._subscriptionsSupported;
     }
@@ -133,6 +155,10 @@ export class AuthManager {
 
     get studiosSupported() {
         return this._studiosSupported;
+    }
+
+    get usePrivoLogin() {
+        return this._usePrivoLogin;
     }
 
     get userInfoLoaded() {
@@ -1014,6 +1040,7 @@ export class AuthManager {
         await this._putAppMetadata({
             avatarUrl: this.avatarUrl,
             avatarPortraitUrl: this.avatarPortraitUrl,
+            displayName: this.displayName,
             name: this.name,
             email: this.email,
             phoneNumber: this.phone,
