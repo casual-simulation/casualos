@@ -20,10 +20,12 @@ import {
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
+    BotAction,
+    ConnectionIndicator,
+    getConnectionId,
 } from '@casual-simulation/aux-common';
 
 import {
-    AuxUser,
     AuxVM,
     BaseSimulation,
     LoginManager,
@@ -43,10 +45,13 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, tap } from 'rxjs/operators';
-import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { ConsoleMessages } from '@casual-simulation/aux-common';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
-import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
+import {
+    AuthHelperInterface,
+    SimulationOrigin,
+} from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -65,6 +70,19 @@ export class PlaywrightSimulation
     private _recordsManager: RecordsManager;
     private _livekitManager: LivekitManager;
     private _config: AuxConfig['config'];
+    private _origin: SimulationOrigin;
+
+    get origin() {
+        return this._origin;
+    }
+
+    get inst() {
+        return this._origin.inst ?? this.id;
+    }
+
+    get recordName() {
+        return this._origin.recordName;
+    }
 
     /**
      * Gets the bots panel manager.
@@ -114,8 +132,12 @@ export class PlaywrightSimulation
         return this._portals;
     }
 
-    static createPartitions(id: string, user: AuxUser): AuxPartitionConfig {
+    static createPartitions(
+        id: string,
+        indicator: ConnectionIndicator
+    ): AuxPartitionConfig {
         const parsedId = parseSimulationId(id);
+        const connectionId = getConnectionId(indicator);
 
         let partitions: AuxPartitionConfig = {
             // Use a memory partition instead of a shared partition
@@ -136,7 +158,7 @@ export class PlaywrightSimulation
                 type: 'memory',
                 private: true,
                 initialState: {
-                    [user.id]: createBot(user.id, {
+                    [connectionId]: createBot(connectionId, {
                         inst: id,
                     }),
                 },
@@ -157,15 +179,13 @@ export class PlaywrightSimulation
     }
 
     constructor(
-        user: AuxUser,
-        id: string,
+        origin: SimulationOrigin,
         config: AuxConfig['config'],
         vm: AuxVM
     ) {
-        super(id, vm);
+        super(vm);
+        this._origin = origin;
         this._config = config;
-        this.helper.userId = user ? user.id : null;
-
         this._authHelper = new AuthHelper(
             config.authOrigin,
             config.recordsOrigin
@@ -245,7 +265,11 @@ export class PlaywrightSimulation
         this._subscriptions.push(this._idePortal);
         this._subscriptions.push(
             this._vm.localEvents
-                .pipe(tap((e) => this._recordsManager.handleEvents(e)))
+                .pipe(
+                    tap((e) =>
+                        this._recordsManager.handleEvents(e as BotAction[])
+                    )
+                )
                 .subscribe()
         );
         this._subscriptions.push(
@@ -263,15 +287,21 @@ export class PlaywrightSimulation
                 this._livekitManager.getRoomOptions(set)
             ),
             this._vm.localEvents
-                .pipe(tap((e) => this._livekitManager.handleEvents(e)))
+                .pipe(
+                    tap((e) =>
+                        this._livekitManager.handleEvents(e as BotAction[])
+                    )
+                )
                 .subscribe()
         );
     }
 
-    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
+    protected _createSubSimulation(vm: AuxVM) {
         return new PlaywrightSimulation(
-            user,
-            id,
+            {
+                recordName: null,
+                inst: null,
+            },
             {
                 version: this._config.version,
                 versionHash: this._config.versionHash,

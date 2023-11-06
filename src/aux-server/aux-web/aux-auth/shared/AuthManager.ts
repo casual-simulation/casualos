@@ -25,6 +25,8 @@ import type {
     RemoveStudioMemberResult,
     CreateRecordRequest,
     CreateRecordResult,
+    ListInstsResult,
+    EraseInstResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -50,6 +52,7 @@ import { omitBy } from 'lodash';
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 const SESSION_KEY = 'sessionKey';
+const CONNECTION_KEY = 'connectionKey';
 
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 
@@ -178,6 +181,7 @@ export class AuthManager {
             this._userId = null;
             this._sessionId = null;
             this.savedSessionKey = null;
+            this.savedConnectionKey = null;
         } else {
             this._saveAcceptedTerms(true);
             if (this.email) {
@@ -218,6 +222,7 @@ export class AuthManager {
                 await this._revokeSessionKey(sessionKey);
             }
         }
+        this.savedConnectionKey = null;
         this._userId = null;
         this._sessionId = null;
         this._appMetadata = null;
@@ -612,6 +617,46 @@ export class AuthManager {
         return null;
     }
 
+    async deleteInst(recordName: string, inst: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/insts`);
+
+        const response = await axios.delete(url.href, {
+            headers: this._authenticationHeaders(),
+            data: {
+                recordName: recordName,
+                inst: inst,
+            },
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        return response.data as EraseInstResult;
+    }
+
+    async listInsts(recordName: string, startingInst?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/insts/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingInst) {
+            url.searchParams.set('inst', startingInst);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListInstsResult;
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     async manageSubscriptions(
         options?: Pick<
             CreateManageSubscriptionRequest,
@@ -700,6 +745,7 @@ export class AuthManager {
 
         if (result.success === true) {
             this.savedSessionKey = result.sessionKey;
+            this.savedConnectionKey = result.connectionKey;
             this._userId = result.userId;
         }
 
@@ -730,6 +776,7 @@ export class AuthManager {
             sessionId === this.sessionId
         ) {
             this.savedSessionKey = null;
+            this.savedConnectionKey = null;
             await this.logout();
         }
 
@@ -756,6 +803,7 @@ export class AuthManager {
 
         if (result.success && userId === this.userId) {
             this.savedSessionKey = null;
+            this.savedConnectionKey = null;
             await this.logout();
         }
 
@@ -776,6 +824,7 @@ export class AuthManager {
 
         if (result.success && result.userId === this.userId) {
             this.savedSessionKey = result.sessionKey;
+            this.savedConnectionKey = result.connectionKey;
         }
 
         return result;
@@ -840,6 +889,18 @@ export class AuthManager {
             localStorage.removeItem(SESSION_KEY);
         } else {
             localStorage.setItem(SESSION_KEY, value);
+        }
+    }
+
+    get savedConnectionKey(): string {
+        return localStorage.getItem(CONNECTION_KEY);
+    }
+
+    set savedConnectionKey(value: string) {
+        if (!value) {
+            localStorage.removeItem(CONNECTION_KEY);
+        } else {
+            localStorage.setItem(CONNECTION_KEY, value);
         }
     }
 

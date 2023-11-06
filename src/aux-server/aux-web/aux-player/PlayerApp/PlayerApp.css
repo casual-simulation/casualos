@@ -201,3 +201,11 @@
     width: 1px;
     height: 1px;
 }
+
+.md-dialog.not-authorized-dialog {
+    z-index: 19;
+}
+
+.md-dialog.not-authorized-dialog ~ .md-overlay.md-fixed.md-dialog-overlay {
+    z-index: 18;
+}

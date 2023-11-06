@@ -1,5 +1,70 @@
 # CasualOS Changelog
 
+## V3.2.7
+
+#### Date: 11/6/2023
+
+### :boom: Breaking Changes
+
+-   The `SessionSelector` parameter for `remote(action, selector?)` has changed.
+    -   Before, `session`, `username`, and `device` were valid properties.
+    -   Now they are `sessionId`, `userId`, and `connectionId`.
+-   The following obsolete functions have been removed:
+    -   `os.checkout()`
+    -   `os.finishCheckout()`
+    -   `os.instances()`
+    -   `os.instStatuses()`
+    -   `server.setupServer()`
+    -   `os.setupInst()`
+    -   `server.backupToGithub()`
+    -   `server.backupAsDownload()`
+    -   `server.finishCheckout()`
+    -   `server.markHistory()`
+    -   `server.browseHistory()`
+    -   `server.restoreHistoryMark()`
+    -   `server.restoreHistoryMarkToServer()`
+    -   `server.restoreHistoryMarkToInst()`
+    -   `server.serverStatuses()`
+    -   `server.servers()`
+    -   `server.stories()`
+    -   `server.loadFile()`
+    -   `server.saveFile()`
+    -   `crypto.createCertificate()`
+    -   `crypto.signTag()`
+    -   `crypto.verifyTag()`
+    -   `crypto.revokeCertificate()`
+    -   All the `server.rpioXYZ` functions.
+    -   All the `server.serialXYZ` functions.
+    -   All the `adminSpace` functions.
+-   `SHARED_PARTITIONS_VERSION` is now always `v2`.
+-   Removed all the `causal-tree` packages.
+    -   They are no longer needed since YJS does such a good job.
+-   Merged all the websocket and data synchronization code into `aux-common`, `aux-records`, and `aux-server`.
+-   Changed `SERVER_CONFIG.subscriptions.subscriptions.defaultSubscription` to be used to indicate that the subscription should be automatically given to users who do not have an active subscription.
+
+### :rocket: Improvements
+
+-   Improved `os.listUserStudios()` to include the subscription tier of each studio.
+-   Added `light` form.
+    -   Added `pointLight`, `ambientLight`, `directionalLight`, `spotLight`, and `hemisphereLight` subtypes.
+    -   Added `formLightIntensity` tag.
+    -   Added `formLightTarget` tag.
+    -   Added `formLightDistance` tag.
+    -   Added `formLightAngle` tag.
+    -   Added `formLightPenumbra` tag.
+    -   Added `formLightDecay` tag.
+    -   Added `formLightGroundColor` tag.
+-   Added menu items `password` subtype.
+-   Added the `os.requestAuthBotInBackground()` function.
+    -   Works just like `os.requestAuthBot()` except that the user will not be prompted to login.
+    -   Returns the user's auth bot if they are signed in.
+    -   Returns `null` if the user is not signed in.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
+-   Fixed an issue where labels were broken when setting labelPosition and labelAlignment to left or right
+
 ## V3.2.6
 
 #### Date: 9/1/2023

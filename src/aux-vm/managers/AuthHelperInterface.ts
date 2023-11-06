@@ -21,6 +21,11 @@ export interface AuthHelperInterface extends SubscriptionLike {
     supportsAuthentication: boolean;
 
     /**
+     * Gets the current login status.
+     */
+    currentLoginStatus: LoginStatus | null;
+
+    /**
      * Gets an observable that resolves whenever a login status is available.
      */
     loginStatus: Observable<LoginStatus>;
@@ -56,6 +61,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Gets the auth token for the user.
      */
     getAuthToken(): Promise<string>;
+
+    /**
+     * Gets the connection key for the user.
+     * Returns null if the user is not authenticated.
+     */
+    getConnectionKey(): Promise<string>;
 
     /**
      * Requests that an access key for a public record be created.
@@ -113,4 +124,9 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * @param recordKey The record key.
      */
     getRecordKeyPolicy(recordKey: string): Promise<PublicRecordKeyPolicy>;
+
+    /**
+     * Logs the user out.
+     */
+    logout(): Promise<void>;
 }

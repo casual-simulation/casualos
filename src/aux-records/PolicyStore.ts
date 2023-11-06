@@ -1,5 +1,5 @@
-import { ServerError } from './Errors';
-import { PolicyDocument } from './PolicyPermissions';
+import { ServerError } from '@casual-simulation/aux-common/Errors';
+import { PolicyDocument } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.

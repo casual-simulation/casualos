@@ -154,6 +154,8 @@ export class PlayerGame extends Game {
     private miniScene: Scene;
     private mapScene: Scene;
     private miniMapScene: Scene;
+    private _miniAmbientLight: AmbientLight;
+    private _miniDirectionalLight: DirectionalLight;
 
     // /**
     //  * A scene that is used to allow the main scene to render
@@ -254,6 +256,13 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.playerSimulations,
             'backgroundAddress'
+        );
+    }
+
+    getDefaultLighting(): boolean {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'defaultLighting'
         );
     }
 
@@ -419,6 +428,13 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.miniSimulations,
             'playerRotationY'
+        );
+    }
+
+    getMiniDefaultLighting(): boolean {
+        return this._getSimulationValue(
+            this.miniSimulations,
+            'defaultLighting'
         );
     }
 
@@ -1236,6 +1252,11 @@ export class PlayerGame extends Game {
         // }
         this.miniSceneBackgroundUpdate();
 
+        const defaultLighting = this.getMiniDefaultLighting();
+
+        this._miniAmbientLight.visible = defaultLighting;
+        this._miniDirectionalLight.visible = defaultLighting;
+
         this.renderer.setViewport(
             this.miniViewport.x,
             this.miniViewport.y,
@@ -1392,10 +1413,12 @@ export class PlayerGame extends Game {
         // miniGridPortal ambient light.
         const invAmbient = baseAuxAmbientLight();
         this.miniScene.add(invAmbient);
+        this._miniAmbientLight = invAmbient;
 
         // miniGridPortal direction light.
         const invDirectional = baseAuxDirectionalLight();
         this.miniScene.add(invDirectional);
+        this._miniDirectionalLight = invDirectional;
     }
 
     private _createGlobeMask() {

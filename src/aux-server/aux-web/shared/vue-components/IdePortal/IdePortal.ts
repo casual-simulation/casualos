@@ -91,7 +91,7 @@ export default class IdePortal extends Vue {
     created() {
         this._subs = [];
         this.search = debounce(this.search.bind(this), 300);
-        appManager.whileLoggedIn((user, botManager) => {
+        appManager.whileLoggedIn((botManager) => {
             let subs: SubscriptionLike[] = [];
             this._simulation = appManager.simulationManager.primary;
             this.items = [];

@@ -12,7 +12,7 @@ import {
     RateLimitController,
     RecordKey,
     RecordsController,
-    RecordsHttpServer,
+    RecordsServer,
     RecordsStore,
     SubscriptionController,
     Record,
@@ -22,6 +22,15 @@ import {
     OpenAIImageInterface,
     StabilityAIImageInterface,
     MetricsStore,
+    WebsocketController,
+    WebsocketConnectionStore,
+    InstRecordsStore,
+    WebsocketMessenger,
+    SplitInstRecordsStore,
+    TemporaryInstRecordsStore,
+    MultiCache,
+    CachingPolicyStore,
+    CachingConfigStore,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -38,7 +47,11 @@ import {
 } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { SESv2 } from '@aws-sdk/client-sesv2';
-import { createClient as createRedisClient } from 'redis';
+import {
+    RedisClientOptions,
+    RedisClientType,
+    createClient as createRedisClient,
+} from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
@@ -93,14 +106,22 @@ import {
     AIGenerateImageConfiguration,
 } from '@casual-simulation/aux-records/AIController';
 import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
-import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
+import { PrismaMetricsStore } from '../prisma/PrismaMetricsStore';
 import { S3 } from '@aws-sdk/client-s3';
+import { RedisTempInstRecordsStore } from '../redis/RedisTempInstRecordsStore';
+import { RedisWebsocketConnectionStore } from '../redis/RedisWebsocketConnectionStore';
+import { ApiGatewayWebsocketMessenger } from '../serverless/aws/src/ApiGatewayWebsocketMessenger';
+import { Subscription, SubscriptionLike } from 'rxjs';
+import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
+import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
+import { RedisMultiCache } from '../redis/RedisMultiCache';
 
-export class ServerBuilder {
+export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
     private _mongoClient: MongoClient;
     private _prismaClient: PrismaClient;
     private _mongoDb: Db;
+    private _multiCache: MultiCache;
 
     private _configStore: ConfigurationStore;
     private _metricsStore: MetricsStore;
@@ -128,6 +149,12 @@ export class ServerBuilder {
 
     private _livekitController: LivekitController;
 
+    private _websocketConnectionStore: WebsocketConnectionStore;
+    private _websocketMessenger: WebsocketMessenger;
+    private _tempInstRecordsStore: TemporaryInstRecordsStore;
+    private _instRecordsStore: InstRecordsStore;
+    private _websocketController: WebsocketController;
+
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
@@ -136,6 +163,8 @@ export class ServerBuilder {
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
+    private _redis: RedisClientType | null = null;
+    private _s3: S3;
     private _rateLimitController: RateLimitController;
 
     private _allowedAccountOrigins: Set<string> = new Set([
@@ -159,12 +188,52 @@ export class ServerBuilder {
     private _generateSkyboxInterface: BlockadeLabsGenerateSkyboxInterface;
     private _imagesInterfaces: AIGenerateImageConfiguration['interfaces'];
 
+    private _subscription: Subscription;
+
+    /**
+     * The promise that resolves when the server has been fully initialized.
+     */
+    private _initPromise: Promise<void>;
+    private _initActions: {
+        priority: number;
+        action: () => Promise<void>;
+    }[] = [];
+
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
     }
 
     constructor(options?: BuilderOptions) {
         this._options = options ?? {};
+        this._subscription = new Subscription();
+    }
+
+    unsubscribe(): void {
+        this._subscription.unsubscribe();
+    }
+
+    get closed(): boolean {
+        return this._subscription.closed;
+    }
+
+    useRedisCache(
+        options: Pick<BuilderOptions, 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Redis Cache.');
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+
+        if (!options.redis.cacheNamespace) {
+            throw new Error('Redis cache namespace must be provided.');
+        }
+
+        const redis = this._ensureRedis(options);
+        this._multiCache = new RedisMultiCache(
+            redis,
+            options.redis.cacheNamespace
+        );
+        return this;
     }
 
     useMongoDB(
@@ -181,11 +250,7 @@ export class ServerBuilder {
         this._actions.push({
             priority: 0,
             action: async () => {
-                const connect = pify(MongoClient.connect);
-                const mongo: MongoClient = await connect(mongodb.url, {
-                    useNewUrlParser: mongodb.useNewUrlParser,
-                });
-                this._mongoClient = mongo;
+                const mongo = await this._ensureMongoDB(options);
                 const db = mongo.db(mongodb.database);
 
                 this._mongoDb = db;
@@ -269,33 +334,35 @@ export class ServerBuilder {
         const prisma = options.prisma;
         const s3 = options.s3;
 
-        this._prismaClient = new PrismaClient(prisma.options as any);
-        this._configStore = new PrismaConfigurationStore(this._prismaClient, {
-            subscriptions: options.subscriptions as SubscriptionConfiguration,
-        });
+        const prismaClient = this._ensurePrisma(options);
+        const s3Client = this._ensureS3(options);
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
         this._metricsStore = new PrismaMetricsStore(
-            this._prismaClient,
+            prismaClient,
             this._configStore
         );
-        this._authStore = new PrismaAuthStore(this._prismaClient);
-        this._recordsStore = new PrismaRecordsStore(this._prismaClient);
-        this._policyStore = new PrismaPolicyStore(this._prismaClient);
-        this._dataStore = new PrismaDataRecordsStore(this._prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(
-            this._prismaClient,
-            true
+        this._authStore = new PrismaAuthStore(prismaClient);
+        this._recordsStore = new PrismaRecordsStore(prismaClient);
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
         );
-        const filesLookup = new PrismaFileRecordsLookup(this._prismaClient);
+        this._dataStore = new PrismaDataRecordsStore(prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
+        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
         this._filesStore = new S3FileRecordsStore(
             s3.region,
             s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
-            new S3(),
+            s3Client,
             s3.host,
             undefined
         );
-        this._eventsStore = new PrismaEventRecordsStore(this._prismaClient);
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
 
         return this;
     }
@@ -315,54 +382,171 @@ export class ServerBuilder {
             throw new Error('MongoDB options must be provided.');
         }
 
-        const prisma = options.prisma;
         const mongodb = options.mongodb;
-
         this._actions.push({
             priority: 0,
             action: async () => {
-                this._prismaClient = new PrismaClient(prisma.options as any);
-                const connect = pify(MongoClient.connect);
-                const mongo: MongoClient = await connect(mongodb.url, {
-                    useNewUrlParser: mongodb.useNewUrlParser,
-                });
-                this._mongoClient = mongo;
+                const prismaClient = this._ensurePrisma(options);
+                const mongo = await this._ensureMongoDB(options);
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
 
-                this._configStore = new PrismaConfigurationStore(
-                    this._prismaClient,
-                    {
-                        subscriptions:
-                            options.subscriptions as SubscriptionConfiguration,
-                    }
+                this._configStore = this._ensurePrismaConfigurationStore(
+                    prismaClient,
+                    options
                 );
                 this._metricsStore = new PrismaMetricsStore(
-                    this._prismaClient,
+                    prismaClient,
                     this._configStore
                 );
-                this._authStore = new PrismaAuthStore(this._prismaClient);
-                this._recordsStore = new PrismaRecordsStore(this._prismaClient);
-                this._policyStore = new PrismaPolicyStore(this._prismaClient);
-                this._dataStore = new PrismaDataRecordsStore(
-                    this._prismaClient
+                this._authStore = new PrismaAuthStore(prismaClient);
+                this._recordsStore = new PrismaRecordsStore(prismaClient);
+                this._policyStore = this._ensurePrismaPolicyStore(
+                    prismaClient,
+                    options
                 );
+                this._dataStore = new PrismaDataRecordsStore(prismaClient);
                 this._manualDataStore = new PrismaDataRecordsStore(
-                    this._prismaClient,
+                    prismaClient,
                     true
                 );
-                const filesLookup = new PrismaFileRecordsLookup(
-                    this._prismaClient
-                );
+                const filesLookup = new PrismaFileRecordsLookup(prismaClient);
                 this._filesStore = new MongoDBFileRecordsStore(
                     filesLookup,
                     mongodb.fileUploadUrl as string
                 );
-                this._eventsStore = new PrismaEventRecordsStore(
-                    this._prismaClient
-                );
+                this._eventsStore = new PrismaEventRecordsStore(prismaClient);
             },
         });
+
+        return this;
+    }
+
+    useRedisWebsocketConnectionStore(
+        options: Pick<BuilderOptions, 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Redis Websocket Connection Store.');
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+
+        if (!options.redis.websocketConnectionNamespace) {
+            throw new Error(
+                'Redis websocket connection namespace must be provided.'
+            );
+        }
+
+        const redis = this._ensureRedis(options);
+        this._websocketConnectionStore = new RedisWebsocketConnectionStore(
+            options.redis.websocketConnectionNamespace,
+            redis,
+            options.redis.connectionAuthorizationCacheSeconds
+        );
+
+        return this;
+    }
+
+    useApiGatewayWebsocketMessenger(
+        options: Pick<BuilderOptions, 'apiGateway' | 's3'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using API Gateway Websocket Messenger.');
+
+        if (!options.apiGateway) {
+            throw new Error('API Gateway options must be provided.');
+        }
+
+        if (!options.s3) {
+            throw new Error('S3 options must be provided.');
+        }
+
+        if (!options.s3.messagesBucket) {
+            throw new Error('S3 messages bucket must be configured.');
+        }
+
+        if (!this._websocketConnectionStore) {
+            throw new Error(
+                'A websocket connection store must be configured before using API Gateway Websocket Messenger.'
+            );
+        }
+
+        const s3 = this._ensureS3(options);
+        this._websocketMessenger = new ApiGatewayWebsocketMessenger(
+            options.apiGateway.endpoint,
+            options.s3.messagesBucket,
+            s3,
+            this._websocketConnectionStore
+        );
+
+        return this;
+    }
+
+    useWSWebsocketMessenger(
+        options: Pick<BuilderOptions, 'ws'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using WS Websocket Messenger.');
+
+        if (!options.ws) {
+            throw new Error('WS options must be provided.');
+        }
+
+        this._websocketMessenger = new WSWebsocketMessenger();
+
+        return this;
+    }
+
+    usePrismaAndRedisInstRecords(
+        options: Pick<BuilderOptions, 'prisma' | 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Prisma and Redis Inst Records.');
+
+        if (!options.prisma) {
+            throw new Error('Prisma options must be provided.');
+        }
+
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+
+        if (!this._websocketConnectionStore) {
+            throw new Error(
+                'A websocket connection store must be configured before using Inst Records.'
+            );
+        }
+
+        if (!this._websocketMessenger) {
+            throw new Error(
+                'A websocket messenger must be configured before using Inst Records.'
+            );
+        }
+
+        if (!options.redis.tempInstRecordsStoreNamespace) {
+            throw new Error(
+                'Redis temp inst records store namespace must be provided.'
+            );
+        }
+
+        if (!options.redis.instRecordsStoreNamespace) {
+            throw new Error(
+                'Redis inst records store namespace must be provided.'
+            );
+        }
+
+        const redis = this._ensureRedis(options);
+        const prisma = this._ensurePrisma(options);
+
+        this._tempInstRecordsStore = new RedisTempInstRecordsStore(
+            options.redis.tempInstRecordsStoreNamespace,
+            redis
+        );
+        this._instRecordsStore = new SplitInstRecordsStore(
+            new RedisTempInstRecordsStore(
+                options.redis.instRecordsStoreNamespace,
+                redis,
+                options.redis.publicInstRecordsLifetimeSeconds,
+                options.redis.publicInstRecordsLifetimeExpireMode
+            ),
+            new PrismaInstRecordsStore(prisma)
+        );
 
         return this;
     }
@@ -418,10 +602,16 @@ export class ServerBuilder {
         if (!options.ses) {
             throw new Error('SES options must be provided.');
         }
+        let ses = new SESv2();
         this._authMessenger = new SimpleEmailServiceAuthMessenger(
-            new SESv2(),
+            ses,
             options.ses as SimpleEmailServiceAuthMessengerOptions
         );
+
+        this._subscription.add(() => {
+            ses.destroy();
+        });
+
         return this;
     }
 
@@ -441,33 +631,16 @@ export class ServerBuilder {
         if (!options.rateLimit) {
             throw new Error('Rate limit options must be provided.');
         }
-        const client = createRedisClient({
-            host: options.redis.host,
-            port: options.redis.port,
-            password: options.redis.password,
-            tls: options.redis.tls,
-
-            retry_strategy: function (options) {
-                if (options.error && options.error.code === 'ECONNREFUSED') {
-                    // End reconnecting on a specific error and flush all commands with
-                    // a individual error
-                    return new Error('The server refused the connection');
-                }
-                // reconnect after min(100ms per attempt, 3 seconds)
-                return Math.min(options.attempt * 100, 3000);
+        const client = this._ensureRedis(options);
+        const store = new RedisRateLimitStore({
+            sendCommand: (command: string, ...args: string[]) => {
+                return this._redis.sendCommand([command, ...args]);
             },
         });
-        const store = new RedisRateLimitStore({
-            sendCommand: (command: string, ...args: (string | number)[]) => {
-                return new Promise((resolve, reject) => {
-                    client.sendCommand(command, args, (err, result) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(result);
-                        }
-                    });
-                });
+        this._initActions.push({
+            priority: 11,
+            action: async () => {
+                await store.setup();
             },
         });
         store.prefix = options.redis.rateLimitPrefix;
@@ -771,7 +944,25 @@ export class ServerBuilder {
             this._aiController = new AIController(this._aiConfiguration);
         }
 
-        const server = new RecordsHttpServer(
+        if (
+            this._websocketConnectionStore &&
+            this._websocketMessenger &&
+            this._instRecordsStore &&
+            this._tempInstRecordsStore
+        ) {
+            this._websocketController = new WebsocketController(
+                this._websocketConnectionStore,
+                this._websocketMessenger,
+                this._instRecordsStore,
+                this._tempInstRecordsStore,
+                this._authController,
+                this._policyController,
+                this._configStore,
+                this._metricsStore
+            );
+        }
+
+        const server = new RecordsServer(
             this._allowedAccountOrigins,
             this._allowedApiOrigins,
             this._authController,
@@ -784,7 +975,8 @@ export class ServerBuilder {
             this._subscriptionController,
             this._rateLimitController,
             this._policyController,
-            this._aiController
+            this._aiController,
+            this._websocketController
         );
 
         return {
@@ -799,191 +991,704 @@ export class ServerBuilder {
             subscriptionController: this._subscriptionController,
             rateLimitController: this._rateLimitController,
             policyController: this._policyController,
+            websocketController: this._websocketController,
 
             dynamodbClient: this._docClient,
             mongoClient: this._mongoClient,
             mongoDatabase: this._mongoDb,
+            websocketMessenger: this._websocketMessenger,
         };
     }
+
+    /**
+     * Ensures that all the initialization actions have been performed.
+     * Returns a promise that resolves when the actions have been performed.
+     */
+    ensureInitialized() {
+        if (!this._initPromise) {
+            this._initPromise = this._initCore();
+        }
+
+        return this._initPromise;
+    }
+
+    private async _initCore(): Promise<void> {
+        console.log('[ServerBuilder] Running initialization actions...');
+        let actions = sortBy(this._initActions, (a) => a.priority);
+        for (let action of actions) {
+            await action.action();
+        }
+        console.log('[ServerBuilder] Done.');
+    }
+
+    private _ensureRedis(
+        options: Pick<BuilderOptions, 'redis'>
+    ): RedisClientType {
+        if (!this._redis) {
+            let retryStrategy = (retries: number, error: Error) => {
+                // reconnect after min(100ms per attempt, 3 seconds)
+                return Math.min(retries * 100, 3000);
+            };
+            if (options.redis.url) {
+                this._redis = createRedisClient({
+                    url: options.redis.url,
+                    socket: {
+                        reconnectStrategy: retryStrategy,
+                    },
+                });
+            } else {
+                if (!options.redis.host) {
+                    throw new Error(
+                        'Redis host must be provided if a URL is not specified.'
+                    );
+                }
+                this._redis = createRedisClient({
+                    socket: {
+                        host: options.redis.host,
+                        port: options.redis.port,
+                        tls: options.redis.tls,
+                        reconnectStrategy: retryStrategy,
+                    },
+                    password: options.redis.password,
+                });
+            }
+            this._initActions.push({
+                priority: 10,
+                action: async () => {
+                    await this._redis.connect();
+                },
+            });
+            this._subscription.add(() => {
+                this._redis.quit();
+            });
+        }
+
+        return this._redis;
+    }
+
+    private _ensurePrisma(
+        options: Pick<BuilderOptions, 'prisma'>
+    ): PrismaClient {
+        if (!this._prismaClient) {
+            this._prismaClient = new PrismaClient(
+                options.prisma.options as any
+            );
+            this._subscription.add(() => {
+                this._prismaClient.$disconnect();
+            });
+        }
+
+        return this._prismaClient;
+    }
+
+    private _ensureS3(options: Pick<BuilderOptions, 's3'>): S3 {
+        if (!this._s3) {
+            this._s3 = new S3();
+            this._subscription.add(() => {
+                this._s3.destroy();
+            });
+        }
+        return this._s3;
+    }
+
+    private async _ensureMongoDB(
+        options: Pick<BuilderOptions, 'mongodb'>
+    ): Promise<MongoClient> {
+        if (!this._mongoClient) {
+            const connect = pify(MongoClient.connect);
+            const mongo: MongoClient = await connect(options.mongodb.url, {
+                useNewUrlParser: options.mongodb.useNewUrlParser,
+            });
+            this._mongoClient = mongo;
+            this._subscription.add(() => {
+                mongo.close();
+            });
+        }
+
+        return this._mongoClient;
+    }
+
+    private _ensurePrismaPolicyStore(
+        prismaClient: PrismaClient,
+        options: Pick<BuilderOptions, 'prisma'>
+    ): PolicyStore {
+        const policyStore = new PrismaPolicyStore(prismaClient);
+        if (this._multiCache && options.prisma.policiesCacheSeconds) {
+            const cache = this._multiCache.getCache('policies');
+            return new CachingPolicyStore(
+                policyStore,
+                cache,
+                options.prisma.policiesCacheSeconds
+            );
+        } else {
+            return policyStore;
+        }
+    }
+
+    private _ensurePrismaConfigurationStore(
+        prismaClient: PrismaClient,
+        options: Pick<BuilderOptions, 'prisma' | 'subscriptions'>
+    ): ConfigurationStore {
+        const configStore = new PrismaConfigurationStore(prismaClient, {
+            subscriptions: options.subscriptions as SubscriptionConfiguration,
+        });
+        if (this._multiCache && options.prisma.configurationCacheSeconds) {
+            const cache = this._multiCache.getCache('config');
+            return new CachingConfigStore(
+                configStore,
+                cache,
+                options.prisma.configurationCacheSeconds
+            );
+        } else {
+            return configStore;
+        }
+    }
 }
-
-/**
- * The schema for the DynamoDB configuration.
- */
-const dynamoDbSchema = z.object({
-    usersTable: z.string().nonempty(),
-    userAddressesTable: z.string().nonempty(),
-    loginRequestsTable: z.string().nonempty(),
-    sessionsTable: z.string().nonempty(),
-    emailTable: z.string().nonempty(),
-    smsTable: z.string().nonempty(),
-    policiesTable: z.string().nonempty(),
-    rolesTable: z.string().nonempty(),
-    subjectRolesTable: z.string().nonempty(),
-    roleSubjectsTable: z.string().nonempty(),
-    stripeCustomerIdsIndexName: z.string().nonempty(),
-    publicRecordsTable: z.string().nonempty(),
-    publicRecordsKeysTable: z.string().nonempty(),
-    dataTable: z.string().nonempty(),
-    manualDataTable: z.string().nonempty(),
-    filesTable: z.string().nonempty(),
-    eventsTable: z.string().nonempty(),
-
-    endpoint: z.string().nonempty().optional(),
-});
 
 /**
  * The schema for the S3 configuration.
  */
 const s3Schema = z.object({
-    region: z.string().nonempty(),
-    filesBucket: z.string().nonempty(),
-    filesStorageClass: z.string().nonempty(),
+    region: z
+        .string()
+        .describe(
+            'The region of the file records and websocket message buckets.'
+        )
+        .nonempty(),
+    filesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that file records should be placed in.'
+        )
+        .nonempty(),
+    filesStorageClass: z
+        .string()
+        .describe(
+            'The S3 File Storage Class that should be used for file records.'
+        )
+        .nonempty(),
 
-    options: z.object({
-        endpoint: z.string().nonempty().optional(),
-        s3ForcePathStyle: z.boolean().optional(),
-    }),
+    messagesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that large websocket messages should be placed in.'
+        )
+        .nonempty()
+        .optional(),
 
-    host: z.string().nonempty().optional(),
+    options: z
+        .object({
+            endpoint: z
+                .string()
+                .describe('The endpoint of the S3 API.')
+                .nonempty()
+                .optional(),
+            s3ForcePathStyle: z
+                .boolean()
+                .describe(
+                    'Wether to force the S3 client to use the path style API. Defaults to false.'
+                )
+                .optional(),
+        })
+        .describe('Options for the S3 client.'),
+
+    host: z
+        .string()
+        .describe(
+            'The S3 host that should be used for file record storage. If omitted, then the default S3 host will be used.'
+        )
+        .nonempty()
+        .optional(),
 });
 
 const livekitSchema = z.object({
-    apiKey: z.string().nonempty().nullable(),
-    secretKey: z.string().nonempty().nullable(),
-    endpoint: z.string().nonempty().nullable(),
+    apiKey: z
+        .string()
+        .describe('The API Key for Livekit.')
+        .nonempty()
+        .nullable(),
+    secretKey: z
+        .string()
+        .describe('The secret key for Livekit.')
+        .nonempty()
+        .nullable(),
+    endpoint: z
+        .string()
+        .describe('The URL that the Livekit server is publicly available at.')
+        .nonempty()
+        .nullable(),
 });
 
 const textItSchema = z.object({
-    apiKey: z.string().nonempty().nullable(),
-    flowId: z.string().nonempty().nullable(),
+    apiKey: z
+        .string()
+        .describe('The API Key for TextIt.')
+        .nonempty()
+        .nullable(),
+    flowId: z
+        .string()
+        .describe(
+            'The ID of the flow that should be triggered for sending login codes.'
+        )
+        .nonempty()
+        .nullable(),
 });
 
 const sesContentSchema = z.discriminatedUnion('type', [
     z.object({
         type: z.literal('template'),
-        templateArn: z.string().nonempty(),
+        templateArn: z
+            .string()
+            .describe('The ARN of the SES email template that should be used.')
+            .nonempty(),
     }),
     z.object({
         type: z.literal('plain'),
-        subject: z.string().nonempty(),
-        body: z.string().nonempty(),
+        subject: z.string().describe('The subject of the email.').nonempty(),
+        body: z
+            .string()
+            .describe(
+                'The body of the email. Use double curly-braces {{variable}} to insert variables.'
+            )
+            .nonempty(),
     }),
 ]);
 
 const sesSchema = z.object({
-    fromAddress: z.string().nonempty(),
-    content: sesContentSchema,
+    fromAddress: z
+        .string()
+        .describe('The email address that SES messages should be sent from.')
+        .nonempty(),
+    content: sesContentSchema.describe(
+        'The content that should be sent in login codes in emails.'
+    ),
 });
 
 const redisSchema = z.object({
-    host: z.string().nonempty(),
-    port: z.number(),
-    password: z.string().nonempty().optional(),
-    tls: z.boolean(),
+    url: z
+        .string()
+        .describe(
+            'The Redis connection URL that should be used. If omitted, then host, port, and password must be provided.'
+        )
+        .nonempty()
+        .optional(),
+    host: z
+        .string()
+        .describe(
+            'The host that the redis client should connect to. Ignored if url is provided.'
+        )
+        .nonempty()
+        .optional(),
+    port: z
+        .number()
+        .describe(
+            'The port that the redis client should connect to. Ignored if url is provided.'
+        )
+        .optional(),
+    password: z
+        .string()
+        .describe(
+            'The password that the redis client should use. Ignored if url is provided.'
+        )
+        .nonempty()
+        .optional(),
+    tls: z
+        .boolean()
+        .describe(
+            'Whether to use TLS for connecting to the Redis server. Ignored if url is provided.'
+        )
+        .optional(),
 
-    causalRepoNamespace: z.string().nonempty().optional(),
-    rateLimitPrefix: z.string().nonempty().optional(),
+    rateLimitPrefix: z
+        .string()
+        .describe(
+            'The namespace that rate limit counters are stored under. If omitted, then redis rate limiting is not possible.'
+        )
+        .nonempty()
+        .optional(),
 
-    maxBranchSizeBytes: z.number().optional(),
-    mergeUpdatesOnMaxSizeExceeded: z.boolean().optional(),
+    websocketConnectionNamespace: z
+        .string()
+        .describe(
+            'The namespace that websocket connections are stored under. If omitted, then redis inst records are not possible.'
+        )
+        .optional(),
+    instRecordsStoreNamespace: z
+        .string()
+        .describe(
+            'The namespace that inst records are stored under. If omitted, then redis inst records are not possible.'
+        )
+        .optional(),
+    publicInstRecordsLifetimeSeconds: z
+        .number()
+        .describe(
+            'The lifetime of public inst records in seconds. If null, then public inst records never expire. Defaults to 1 day in seconds (86,400)'
+        )
+        .positive()
+        .nullable()
+        .optional()
+        .default(60 * 60 * 24),
+    publicInstRecordsLifetimeExpireMode: z
+        .union([
+            z.literal('NX').describe('The Redis NX expire mode.'),
+            z.literal('XX').describe('The Redis XX expire mode.'),
+            z.literal('GT').describe('The Redis GT expire mode.'),
+            z.literal('LT').describe('The Redis LT expire mode.'),
+            z.null().describe('The expiration will be updated every time.'),
+        ])
+        .describe(
+            'The Redis expire mode that should be used for public inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
+        )
+        .optional()
+        .default('NX'),
+
+    tempInstRecordsStoreNamespace: z
+        .string()
+        .describe(
+            'The namespace that temporary inst records are stored under. If omitted, then redis inst records are not possible.'
+        )
+        .optional(),
+
+    // The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
+    // Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often.
+    // 5 minutes by default
+    connectionAuthorizationCacheSeconds: z
+        .number()
+        .describe(
+            `The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
+Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often. Defaults to 5 minutes.`
+        )
+        .positive()
+        .default(300),
+
+    cacheNamespace: z
+        .string()
+        .describe(
+            'The namespace for cached items. (policies & configuration) Defaults to "/cache". Set to null to disable caching of policies and configuration.'
+        )
+        .nonempty()
+        .nullable()
+        .optional()
+        .default('/cache'),
 });
 
 const rateLimitSchema = z.object({
-    maxHits: z.number().positive(),
-    windowMs: z.number().positive(),
+    maxHits: z
+        .number()
+        .describe(
+            'The maximum number of hits allowed from a single IP Address within the window.'
+        )
+        .positive(),
+    windowMs: z
+        .number()
+        .describe('The size of the window in miliseconds.')
+        .positive(),
 });
 
 const stripeSchema = z.object({
-    secretKey: z.string().nonempty(),
-    publishableKey: z.string().nonempty(),
-    testClock: z.string().nonempty().optional(),
+    secretKey: z
+        .string()
+        .describe('The Stripe secret key that should be used.')
+        .nonempty(),
+    publishableKey: z
+        .string()
+        .describe('The Stripe publishable key that should be used.')
+        .nonempty(),
+    testClock: z
+        .string()
+        .describe('The stripe test clock that should be used.')
+        .nonempty()
+        .optional(),
 });
 
 const mongodbSchema = z.object({
-    url: z.string().nonempty(),
-    useNewUrlParser: z.boolean().optional().default(false),
-    database: z.string().nonempty(),
-    fileUploadUrl: z.string().nonempty().optional(),
+    url: z
+        .string()
+        .describe('The MongoDB URL that should be used to connect to MongoDB.')
+        .nonempty(),
+    useNewUrlParser: z
+        .boolean()
+        .describe('Whether to use the new URL parser. Defaults to false.')
+        .optional()
+        .default(false),
+    database: z
+        .string()
+        .describe('The database that should be used.')
+        .nonempty(),
+    fileUploadUrl: z
+        .string()
+        .describe('The URL that files records need to be uploaded to.')
+        .nonempty()
+        .optional(),
 });
 
 const prismaSchema = z.object({
-    options: z.object({}).passthrough().optional(),
+    options: z
+        .object({})
+        .describe(
+            'Generic options that should be passed to the Prisma client constructor.'
+        )
+        .passthrough()
+        .optional(),
+
+    policiesCacheSeconds: z
+        .number()
+        .describe(
+            'The number of seconds that policies are cached for. Defaults to 60 seconds. Set to null to disable caching of policies.'
+        )
+        .positive()
+        .nullable()
+        .optional()
+        .default(60),
+    configurationCacheSeconds: z
+        .number()
+        .describe(
+            'The number of seconds that configuration items are cached for. Defaults to 60 seconds. Set to null to disable caching of configuration items.'
+        )
+        .positive()
+        .nullable()
+        .optional()
+        .default(60),
 });
 
 const openAiSchema = z.object({
-    apiKey: z.string().nonempty(),
+    apiKey: z
+        .string()
+        .describe('The OpenAI API Key that should be used.')
+        .nonempty(),
 });
 
 const blockadeLabsSchema = z.object({
-    apiKey: z.string().nonempty(),
+    apiKey: z
+        .string()
+        .describe('The Blockade Labs API Key that should be used.')
+        .nonempty(),
 });
 
 const stabilityAiSchema = z.object({
-    apiKey: z.string().nonempty(),
+    apiKey: z
+        .string()
+        .describe('The StabilityAI API Key that should be used.')
+        .nonempty(),
 });
 
 const aiSchema = z.object({
     chat: z
         .object({
-            provider: z.literal('openai'),
-            defaultModel: z.string().nonempty(),
-            allowedModels: z.array(z.string().nonempty()),
-            allowedSubscriptionTiers: z.union([
-                z.literal(true),
-                z.array(z.string().nonempty()),
-            ]),
+            provider: z
+                .literal('openai')
+                .describe(
+                    'The provider that should be used for Chat AI requests.'
+                ),
+            defaultModel: z
+                .string()
+                .describe(
+                    'The model that should be used for Chat AI requests when one is not specified.'
+                )
+                .nonempty(),
+            allowedModels: z
+                .array(z.string().nonempty())
+                .describe(
+                    'The list of models that are allowed to be used for Chat AI requets.'
+                ),
+            allowedSubscriptionTiers: z
+                .union([z.literal(true), z.array(z.string().nonempty())])
+                .describe(
+                    'The subscription tiers that are allowed to use Chat AI. If true, then all tiers are allowed.'
+                ),
         })
+        .describe('Options for Chat AI. If omitted, then chat AI is disabled.')
         .optional(),
     generateSkybox: z
         .object({
-            provider: z.literal('blockadeLabs'),
-            allowedSubscriptionTiers: z.union([
-                z.literal(true),
-                z.array(z.string().nonempty()),
-            ]),
+            provider: z
+                .literal('blockadeLabs')
+                .describe(
+                    'The provider that should be used for Skybox Generation AI requests.'
+                ),
+            allowedSubscriptionTiers: z
+                .union([z.literal(true), z.array(z.string().nonempty())])
+                .describe(
+                    'The subscription tiers that are allowed to use Skybox AI. If true, then all tiers are allowed.'
+                ),
         })
+        .describe(
+            'Options for Skybox Generation AI. If omitted, then Skybox AI is disabled.'
+        )
         .optional(),
     images: z
         .object({
-            defaultModel: z.string(),
-            defaultWidth: z.number().int().positive(),
-            defaultHeight: z.number().int().positive(),
-            maxWidth: z.number().int().positive().optional(),
-            maxHeight: z.number().int().positive().optional(),
-            maxSteps: z.number().int().positive().optional(),
-            maxImages: z.number().int().positive().optional(),
-            allowedModels: z.object({
-                openai: z.array(z.string().nonempty()).optional(),
-                stabilityai: z.array(z.string().nonempty()).optional(),
-            }),
-            allowedSubscriptionTiers: z.union([
-                z.literal(true),
-                z.array(z.string().nonempty()),
-            ]),
+            defaultModel: z
+                .string()
+                .describe(
+                    'The model that should be used for Image AI requests when one is not specified.'
+                )
+                .nonempty(),
+            defaultWidth: z
+                .number()
+                .describe('The default width of generated images.')
+                .int()
+                .positive(),
+            defaultHeight: z
+                .number()
+                .describe('The default height of generated images.')
+                .int()
+                .positive(),
+            maxWidth: z
+                .number()
+                .describe(
+                    'The maximum width of generated images. If omitted, then the max width is controlled by the model.'
+                )
+                .int()
+                .positive()
+                .optional(),
+            maxHeight: z
+                .number()
+                .describe(
+                    'The maximum height of generated images. If omitted, then the max height is controlled by the model.'
+                )
+                .int()
+                .positive()
+                .optional(),
+            maxSteps: z
+                .number()
+                .describe(
+                    'The maximum number of steps that can be used to generate an image. If omitted, then the max steps is controlled by the model.'
+                )
+                .int()
+                .positive()
+                .optional(),
+            maxImages: z
+                .number()
+                .describe(
+                    'The maximum number of images that can be generated in a single request. If omitted, then the max images is controlled by the model.'
+                )
+                .int()
+                .positive()
+                .optional(),
+            allowedModels: z
+                .object({
+                    openai: z
+                        .array(z.string().nonempty())
+                        .describe(
+                            'The list of OpenAI DALL-E models that are allowed to be used. If omitted, then no OpenAI models are allowed.'
+                        )
+                        .optional(),
+                    stabilityai: z
+                        .array(z.string().nonempty())
+                        .describe(
+                            'The list of StabilityAI models that are allowed to be used. If omitted, then no StabilityAI models are allowed.'
+                        )
+                        .optional(),
+                })
+                .describe(
+                    'The models that are allowed to be used from each provider.'
+                ),
+            allowedSubscriptionTiers: z
+                .union([z.literal(true), z.array(z.string().nonempty())])
+                .describe(
+                    'The subscription tiers that are allowed to use Image AI. If true, then all tiers are allowed.'
+                ),
         })
+        .describe(
+            'Options for Image AI. If omitted, then Image AI is disabled.'
+        )
         .optional(),
 });
 
-export const optionsSchema = z.object({
-    dynamodb: dynamoDbSchema.optional(),
-    s3: s3Schema.optional(),
-    mongodb: mongodbSchema.optional(),
-    prisma: prismaSchema.optional(),
-    livekit: livekitSchema.optional(),
-    textIt: textItSchema.optional(),
-    ses: sesSchema.optional(),
-    redis: redisSchema.optional(),
-    rateLimit: rateLimitSchema.optional(),
-    openai: openAiSchema.optional(),
-    blockadeLabs: blockadeLabsSchema.optional(),
-    stabilityai: stabilityAiSchema.optional(),
-    ai: aiSchema.optional(),
-
-    subscriptions: subscriptionConfigSchema.optional(),
-    stripe: stripeSchema.optional(),
+const apiGatewaySchema = z.object({
+    endpoint: z
+        .string()
+        .describe(
+            'The API Gateway endpoint that should be used for sending messages to connected clients.'
+        ),
 });
 
-export type DynamoDBConfig = z.infer<typeof dynamoDbSchema>;
+const wsSchema = z.object({});
+
+export const optionsSchema = z.object({
+    s3: s3Schema
+        .describe(
+            'S3 Configuration Options. If omitted, then S3 cannot be used for file storage.'
+        )
+        .optional(),
+    apiGateway: apiGatewaySchema
+        .describe(
+            'AWS API Gateway configuration options. If omitted, then inst records cannot be used on AWS Lambda.'
+        )
+        .optional(),
+    mongodb: mongodbSchema
+        .describe(
+            'MongoDB configuration options. If omitted, then MongoDB cannot be used.'
+        )
+        .optional(),
+    prisma: prismaSchema
+        .describe(
+            'Prisma configuration options. If omitted, then Prisma (CockroachDB) cannot be used.'
+        )
+        .optional(),
+    livekit: livekitSchema
+        .describe(
+            'Livekit configuration options. If omitted, then Livekit features will be disabled.'
+        )
+        .optional(),
+    textIt: textItSchema
+        .describe(
+            'TextIt configuration options. If omitted, then SMS login will be disabled.'
+        )
+        .optional(),
+    ses: sesSchema
+        .describe(
+            'AWS SES configuration options. If omitted, then sending login codes via SES is not possible.'
+        )
+        .optional(),
+    redis: redisSchema
+        .describe(
+            'Redis configuration options. If omitted, then using Redis is not possible.'
+        )
+        .optional(),
+    rateLimit: rateLimitSchema
+        .describe(
+            'Rate limit options. If omitted, then rate limiting will be disabled.'
+        )
+        .optional(),
+    openai: openAiSchema
+        .describe(
+            'OpenAI options. If omitted, then it will not be possible to use GPT or DALL-E.'
+        )
+        .optional(),
+    blockadeLabs: blockadeLabsSchema
+        .describe(
+            'Blockade Labs options. If omitted, then it will not be possible to generate skyboxes.'
+        )
+        .optional(),
+    stabilityai: stabilityAiSchema
+        .describe(
+            'Stability AI options. If omitted, then it will not be possible to use Stable Diffusion.'
+        )
+        .optional(),
+    ai: aiSchema
+        .describe(
+            'AI configuration options. If omitted, then all AI features will be disabled.'
+        )
+        .optional(),
+    ws: wsSchema
+        .describe(
+            'WebSocket Server configuration options. If omitted, then inst records cannot be used in standalone deployments.'
+        )
+        .optional(),
+
+    subscriptions: subscriptionConfigSchema
+        .describe(
+            'The default subscription configuration. If omitted, then subscription features will be disabled.'
+        )
+        .optional(),
+    stripe: stripeSchema
+        .describe(
+            'Stripe options. If omitted, then Stripe features will be disabled.'
+        )
+        .optional(),
+});
+
 export type S3Config = z.infer<typeof s3Schema>;
 export type BuilderOptions = z.infer<typeof optionsSchema>;

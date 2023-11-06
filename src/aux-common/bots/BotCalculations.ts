@@ -69,7 +69,9 @@ import {
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_PORTAL_DIFF,
     SHEET_PORTAL,
+    MenuBotSubtype,
 } from './Bot';
+import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
 
@@ -89,7 +91,7 @@ import {
 } from 'lodash';
 
 /// <reference path="../typings/global.d.ts" />
-import { PartialBot } from '../bots';
+import { EaseMode, EaseType, Easing, PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
 import { BotObjectsContext } from './BotObjectsContext';
 import { DateTime, SystemZone } from 'luxon';
@@ -1674,10 +1676,20 @@ export function getBotScale(
                 1
             );
 
+            const x = scaleX * uniformScale;
+            const y = scaleY * uniformScale;
+            const z = scaleZ * uniformScale;
+
             return {
-                x: scaleX * uniformScale,
-                y: scaleY * uniformScale,
-                z: scaleZ * uniformScale,
+                x:
+                    Math.max(0.000000000000000001, Math.abs(x)) *
+                    Math.sign(x || 1),
+                y:
+                    Math.max(0.000000000000000001, Math.abs(y)) *
+                    Math.sign(y || 1),
+                z:
+                    Math.max(0.000000000000000001, Math.abs(z)) *
+                    Math.sign(z || 1),
             };
         },
         obj.id,
@@ -1712,11 +1724,83 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'keyboard' ||
         shape === 'codeButton' ||
         shape === 'codeHint' ||
-        shape === 'spherePortal'
+        shape === 'spherePortal' ||
+        shape === 'light'
     ) {
         return shape;
     }
     return DEFAULT_BOT_SHAPE;
+}
+
+export function getDefaultEasing(
+    easing: Easing | EaseType | ((progress: number) => number)
+): Easing {
+    return hasValue(easing)
+        ? typeof easing === 'function'
+            ? { mode: 'inout', type: 'linear' }
+            : typeof easing === 'string'
+            ? {
+                  mode: 'inout',
+                  type: easing,
+              }
+            : easing
+        : {
+              mode: 'inout',
+              type: 'linear',
+          };
+}
+
+export function getEasing(
+    easing: Easing | EaseType | ((progress: number) => number)
+) {
+    if (typeof easing === 'function') {
+        return easing;
+    }
+    const value = getDefaultEasing(easing);
+    return getTweenEasing(value as Easing);
+}
+
+export function getTweenEasing(easing: Easing): any {
+    switch (easing.type) {
+        case 'linear':
+        default:
+            return TWEEN.Easing.Linear.None;
+        case 'circular':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Circular);
+        case 'cubic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Cubic);
+        case 'exponential':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Exponential);
+        case 'elastic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Elastic);
+        case 'quadratic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quadratic);
+        case 'quartic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quartic);
+        case 'quintic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quintic);
+        case 'sinusoidal':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Sinusoidal);
+    }
+}
+
+function resolveEaseType(
+    mode: EaseMode,
+    val: typeof TweenEasing.Circular | typeof TweenEasing.Linear
+): any {
+    if ('None' in val) {
+        return val.None;
+    } else {
+        switch (mode) {
+            case 'in':
+                return val.In;
+            case 'out':
+                return val.Out;
+            case 'inout':
+            default:
+                return val.InOut;
+        }
+    }
 }
 
 /**
@@ -1733,6 +1817,26 @@ export function getMenuBotForm(
         return shape;
     }
     return DEFAULT_MENU_BOT_FORM;
+}
+/**
+ * Gets the formSubType of menu bot.
+ * @param calc The calculation context to use.
+ * @param bot The bot.
+ * @returns
+ */
+export function getMenuBotSubtype(
+    calc: BotCalculationContext,
+    bot: Bot
+): MenuBotSubtype {
+    const subShape: MenuBotSubtype = calculateBotValue(
+        calc,
+        bot,
+        'auxFormSubtype'
+    );
+    if (subShape === 'password') {
+        return subShape;
+    }
+    return 'input';
 }
 
 /**
@@ -1767,7 +1871,16 @@ export function getBotSubShape(
     bot: Bot
 ): BotSubShape {
     const shape: BotSubShape = calculateBotValue(calc, bot, 'auxFormSubtype');
-    if (shape === 'gltf' || shape === 'html' || shape === 'src') {
+    if (
+        shape === 'gltf' ||
+        shape === 'html' ||
+        shape === 'src' ||
+        shape === 'pointLight' ||
+        shape === 'ambientLight' ||
+        shape === 'directionalLight' ||
+        shape === 'spotLight' ||
+        shape === 'hemisphereLight'
+    ) {
         return shape;
     }
     return null;

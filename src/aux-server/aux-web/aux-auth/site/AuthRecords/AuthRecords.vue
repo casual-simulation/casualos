@@ -2,6 +2,9 @@
     <div>
         <h2>{{ recordName }}</h2>
         <md-tabs md-sync-route>
+            <md-tab md-label="Insts" :to="{ name: 'records-insts', params: { recordName } }">
+                <records-insts :recordName="recordName"></records-insts>
+            </md-tab>
             <md-tab md-label="Data" :to="{ name: 'records-data', params: { recordName } }">
                 <records-data :recordName="recordName"></records-data>
             </md-tab>

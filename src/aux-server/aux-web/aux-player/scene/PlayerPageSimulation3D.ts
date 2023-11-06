@@ -193,6 +193,13 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 
     /**
+     * Gets the default lighting of the simulation.
+     */
+    get defaultLighting() {
+        return this.pageConfig.defaultLighting;
+    }
+
+    /**
      * Gets if zooming is allowed in the miniGridPortal that the simulation defines.
      */
     get zoomable() {

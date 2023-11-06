@@ -32,7 +32,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
     private _protocolVersion: number = 1;
-    private _sub: Subscription = new Subscription();
+    protected _sub: Subscription = new Subscription();
     private _loginStatus: BehaviorSubject<LoginStatus> =
         new BehaviorSubject<LoginStatus>({});
     private _loginUIStatus: BehaviorSubject<LoginUIStatus> =
@@ -41,6 +41,15 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
+
+    get currentLoginStatus() {
+        const status = this._loginStatus.value;
+        if (status.authData || status.isLoading || status.isLoggingIn) {
+            return status;
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Creates a new instance of the AuthHelper class.
@@ -99,7 +108,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return this._initPromise;
     }
 
-    private async _initCore() {
+    protected async _initCore() {
         if (!hasValue(this._origin)) {
             throw new Error(
                 'Cannot initialize AuthHelper because no iframe origin is set.'
@@ -177,6 +186,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._isAuthenticatedCore();
+    }
+
+    protected async _isAuthenticatedCore() {
         return await this._proxy.isLoggedIn();
     }
 
@@ -190,6 +203,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._authenticateCore();
+    }
+
+    protected async _authenticateCore() {
         const result = await this._proxy.login();
 
         if (this._protocolVersion < 2) {
@@ -214,6 +231,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._authenticateInBackgroundCore();
+    }
+
+    protected async _authenticateInBackgroundCore() {
         const result = await this._proxy.login(true);
         if (this._protocolVersion < 2) {
             this._loginStatus.next({
@@ -238,6 +259,13 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._createPublicRecordKeyCore(recordName, policy);
+    }
+
+    protected async _createPublicRecordKeyCore(
+        recordName: string,
+        policy: PublicRecordKeyPolicy
+    ): Promise<CreatePublicRecordKeyResult> {
         return await this._proxy.createPublicRecordKey(recordName, policy);
     }
 
@@ -271,7 +299,29 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._getAuthTokenCore();
+    }
+
+    protected async _getAuthTokenCore(): Promise<string> {
         return await this._proxy.getAuthToken();
+    }
+
+    async getConnectionKey(): Promise<string> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 6) {
+            return null;
+        }
+        return await this._getConnectionKeyCore();
+    }
+
+    protected async _getConnectionKeyCore(): Promise<string> {
+        return await this._proxy.getConnectionKey();
     }
 
     async openAccountPage(): Promise<void> {
@@ -356,5 +406,22 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             return;
         }
         return await this._proxy.cancelLogin();
+    }
+
+    async logout() {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 8) {
+            return;
+        }
+        return await this._logoutCore();
+    }
+
+    protected async _logoutCore() {
+        return await this._proxy.logout();
     }
 }

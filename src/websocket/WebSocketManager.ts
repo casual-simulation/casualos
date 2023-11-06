@@ -12,7 +12,7 @@ export class SocketManager {
 
     // Whether this manager has forced the user to be offline or not.
     private _forcedOffline: boolean = false;
-    private _url: string;
+    private _url: string | URL;
 
     private _connectionStateChanged: BehaviorSubject<boolean>;
 
@@ -51,7 +51,7 @@ export class SocketManager {
      * @param user The user account to use for connecting.
      * @param url The URL to connect to.
      */
-    constructor(url?: string) {
+    constructor(url?: string | URL) {
         this._connectionStateChanged = new BehaviorSubject<boolean>(false);
         this._url = url;
     }

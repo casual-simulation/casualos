@@ -72,6 +72,8 @@ Resources:
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
             Events:
                 HandleApiV2:
                     Type: Api
@@ -108,10 +110,60 @@ Resources:
                     Properties:
                         Path: /api/stripeWebhook
                         Method: POST
+                Webhook:
+                    Type: Api
+                    Properties:
+                        Path: /webhook
+                        Method: ANY
+                DataPortal:
+                    Type: Api
+                    Properties:
+                        Path: /instData
+                        Method: GET
     HandleRecordsLogGroup:
         Type: AWS::Logs::LogGroup
         Properties:
             LogGroupName: !Sub '/aws/lambda/${handleRecords}'
+            RetentionInDays: 14
+
+    # This is a Lambda function config associated with the source code: services.js
+    SavePermanentBranchesFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: Records.savePermanentBranches
+            CodeUri: dist/handlers
+            Runtime: nodejs18.x
+            MemorySize: 512
+            Timeout: 900
+            Description: A function that periodically saves all the permanent inst branches.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the Bucket
+                - S3CrudPolicy:
+                      BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                - !If [
+                      UseSESCrud,
+                      !Ref SESIdentityNameParameter,
+                      !Ref 'AWS::NoValue',
+                  ]
+            Environment:
+                Variables:
+                    REGION: !Ref 'AWS::Region'
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+            Events:
+                SaveBranches:
+                    Type: ScheduleV2
+                    Properties:
+                        Description: Schedule for saving permanent inst branches.
+                        ScheduleExpression: 'rate(1 minute)'
+    SavePermanentBranchesLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${SavePermanentBranchesFunction}'
             RetentionInDays: 14
 
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
@@ -367,64 +419,6 @@ Resources:
         DeletionPolicy: Delete
         Properties:
             LogGroupName: !Sub '/aws/lambda/${HandleMessageFunction}'
-            RetentionInDays: 14
-
-    HandleWebhooksFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: websockets.webhook
-            CodeUri: dist/handlers
-            Runtime: nodejs18.x
-            MemorySize: 256
-            Timeout: 100
-            Description: A function handle webhook requests.
-            Role: !GetAtt
-                - ExecutionRole
-                - Arn
-            Environment:
-                Variables:
-                    MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
-            Events:
-                Webhook:
-                    Type: Api
-                    Properties:
-                        Path: /webhook
-                        Method: ANY
-    HandleWebhooksLogGroup:
-        Type: AWS::Logs::LogGroup
-        DeletionPolicy: Delete
-        Properties:
-            LogGroupName: !Sub '/aws/lambda/${HandleWebhooksFunction}'
-            RetentionInDays: 14
-
-    HandleInstDataFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: websockets.instData
-            CodeUri: dist/handlers
-            Runtime: nodejs18.x
-            MemorySize: 256
-            Timeout: 100
-            Description: A function handle inst data requests.
-            Role: !GetAtt
-                - ExecutionRole
-                - Arn
-            Environment:
-                Variables:
-                    MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
-            Events:
-                DataPortal:
-                    Type: Api
-                    Properties:
-                        Path: /instData
-                        Method: GET
-    HandleInstDataLogGroup:
-        Type: AWS::Logs::LogGroup
-        DeletionPolicy: Delete
-        Properties:
-            LogGroupName: !Sub '/aws/lambda/${HandleInstDataFunction}'
             RetentionInDays: 14
 
     # S3 Bucket to large messages

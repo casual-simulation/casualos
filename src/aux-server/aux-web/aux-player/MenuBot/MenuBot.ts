@@ -44,10 +44,12 @@ import {
     asyncResult,
     asyncError,
     calculateBooleanTagValue,
+    getMenuBotSubtype,
+    MenuBotSubtype,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
-import { first } from '@casual-simulation/causal-trees';
+import { first } from '@casual-simulation/aux-common';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
 import { Input } from '../../shared/scene/Input';
@@ -84,6 +86,7 @@ export default class MenuBot extends Vue {
     progressBarBackground: string = null;
     text: string = null;
     form: MenuBotForm = 'button';
+    subType: MenuBotSubtype = 'input';
     hoverStyle: MenuBotResolvedHoverStyle = 'hover';
     cursor: string = null;
     alwaysShowSubmit: boolean = false;
@@ -143,6 +146,7 @@ export default class MenuBot extends Vue {
             this._updateIcon(calc, item.bot);
             this._updateProgress(calc, item.bot);
             this._updateForm(calc, item.bot);
+            this._updateFormSubtype(calc, item.bot);
             this._updateText(calc, item.bot);
             this._updateCursor(calc, item.bot);
             this._updateAlwaysShowSubmit(calc, item.bot);
@@ -158,6 +162,7 @@ export default class MenuBot extends Vue {
             this.iconIsURL = false;
             this.progress = null;
             this.form = 'button';
+            this.subType = 'input';
             this.text = '';
             this.cursor = null;
             this.alwaysShowSubmit = false;
@@ -472,6 +477,11 @@ export default class MenuBot extends Vue {
     private _updateForm(calc: BotCalculationContext, bot: Bot) {
         const form = getMenuBotForm(calc, bot);
         this.form = form;
+    }
+
+    private _updateFormSubtype(calc: BotCalculationContext, bot: Bot) {
+        const subtype = getMenuBotSubtype(calc, bot);
+        this.subType = subtype;
     }
 
     private _updateText(calc: BotCalculationContext, bot: Bot) {

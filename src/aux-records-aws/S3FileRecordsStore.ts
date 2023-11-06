@@ -17,7 +17,7 @@ import {
     FileRecordsLookup,
     UpdateFileResult,
 } from '@casual-simulation/aux-records';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
 import {
     AwsCredentialIdentityProvider,

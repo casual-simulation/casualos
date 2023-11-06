@@ -35,6 +35,7 @@ export class AuthHandler implements AuxAuth {
     private _loginData: AuthData;
     private _userId: string;
     private _token: string;
+    private _connectionKey: string;
     private _refreshTimeout: any;
     private _loginStatus: BehaviorSubject<LoginStatus> = new BehaviorSubject(
         {}
@@ -104,6 +105,16 @@ export class AuthHandler implements AuxAuth {
         return this._loginData;
     }
 
+    async logout(): Promise<void> {
+        await authManager.logout();
+        this._loggedIn = false;
+        this._loginData = null;
+        this._loginStatus.next({});
+        this._loginUIStatus.next({
+            page: false,
+        });
+    }
+
     async createPublicRecordKey(
         recordName: string,
         policy?: PublicRecordKeyPolicy
@@ -153,8 +164,16 @@ export class AuthHandler implements AuxAuth {
         return null;
     }
 
+    async getConnectionKey(): Promise<string> {
+        if (await this.isLoggedIn()) {
+            return this._connectionKey;
+        }
+
+        return null;
+    }
+
     async getProtocolVersion() {
-        return 6;
+        return 8;
     }
 
     async getRecordsOrigin(): Promise<string> {
@@ -318,6 +337,7 @@ export class AuthHandler implements AuxAuth {
             await authManager.loadUserInfo();
         }
         this._token = authManager.savedSessionKey;
+        this._connectionKey = authManager.savedConnectionKey;
         this._loginData = {
             userId: this._userId ?? authManager.userId,
             avatarUrl: authManager.avatarUrl,

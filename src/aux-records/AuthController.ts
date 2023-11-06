@@ -5,7 +5,7 @@ import {
     AuthStore,
     AuthUser,
 } from './AuthStore';
-import { ServerError } from './Errors';
+import { ServerError } from '@casual-simulation/aux-common/Errors';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import {
@@ -18,20 +18,21 @@ import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
 import {
     cleanupObject,
-    fromBase64String,
     isActiveSubscription,
     isStringValid,
     RegexRule,
-    toBase64String,
 } from './Utils';
 import {
+    formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
     parseSessionKey,
     randomCode,
+    verifyConnectionToken,
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
+import { parseConnectionToken } from '@casual-simulation/aux-common';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -72,6 +73,11 @@ export const MAX_LOGIN_REQUEST_ATTEMPTS = 5;
  * The error message that should be used for invalid_key error messages.
  */
 export const INVALID_KEY_ERROR_MESSAGE = 'The session key is invalid.';
+
+/**
+ * The error message that should be used for invalid_token error messages.
+ */
+export const INVALID_TOKEN_ERROR_MESSAGE = 'The connection token is invalid.';
 
 /**
  * The maximum allowed length for an email address.
@@ -451,6 +457,9 @@ export class AuthController {
             const sessionSecret = fromByteArray(
                 randomBytes(SESSION_SECRET_BYTE_LENGTH)
             );
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
             const now = Date.now();
 
             const session: AuthSession = {
@@ -463,6 +472,7 @@ export class AuthController {
                     sessionSecret,
                     sessionId
                 ),
+                connectionSecret: connectionSecret,
                 grantedTimeMs: now,
                 revokeTimeMs: null,
                 expireTimeMs: now + SESSION_LIFETIME_MS,
@@ -484,6 +494,12 @@ export class AuthController {
                     loginRequest.userId,
                     sessionId,
                     sessionSecret,
+                    session.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    loginRequest.userId,
+                    sessionId,
+                    connectionSecret,
                     session.expireTimeMs
                 ),
                 expireTimeMs: session.expireTimeMs,
@@ -625,6 +641,142 @@ export class AuthController {
         } catch (err) {
             console.error(
                 '[AuthController] Error ocurred while validating a session key',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async validateConnectionToken(
+        token: string
+    ): Promise<ValidateConnectionTokenResult> {
+        if (typeof token !== 'string' || token === '') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_connection_token',
+                errorMessage:
+                    'The given connection token is invalid. It must be a correctly formatted string.',
+            };
+        }
+
+        try {
+            const tokenValues = parseConnectionToken(token);
+            if (!tokenValues) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Could not parse token.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_connection_token',
+                    errorMessage:
+                        'The given connection token is invalid. It must be a correctly formatted string.',
+                };
+            }
+
+            const [userId, sessionId, connectionId, recordName, inst, hash] =
+                tokenValues;
+            const session = await this._store.findSession(userId, sessionId);
+
+            if (!session) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Could not find session.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                };
+            }
+
+            if (!verifyConnectionToken(token, session.connectionSecret)) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Connection token was invalid.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                };
+            }
+
+            const now = Date.now();
+            if (session.revokeTimeMs && now >= session.revokeTimeMs) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Session has been revoked.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                };
+            }
+
+            if (now >= session.expireTimeMs) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Session has expired.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'session_expired',
+                    errorMessage: 'The session has expired.',
+                };
+            }
+
+            const userInfo = await this._store.findUser(userId);
+
+            if (!userInfo) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Unable to find user!'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                };
+            } else {
+                if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
+                    if (
+                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                    ) {
+                        return {
+                            success: false,
+                            errorCode: 'invalid_token',
+                            errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                        };
+                    }
+                }
+
+                if (userInfo.banTimeMs > 0) {
+                    return {
+                        success: false,
+                        errorCode: 'user_is_banned',
+                        errorMessage: 'The user has been banned.',
+                        banReason: userInfo.banReason,
+                    };
+                }
+            }
+
+            const { subscriptionId, subscriptionTier } =
+                await this._getSubscriptionInfo(userInfo);
+
+            return {
+                success: true,
+                userId: session.userId,
+                sessionId: session.sessionId,
+                connectionId: connectionId,
+                recordName: recordName,
+                inst: inst,
+                allSessionsRevokedTimeMs: userInfo.allSessionRevokeTimeMs,
+                subscriptionId: subscriptionId ?? undefined,
+                subscriptionTier: subscriptionTier ?? undefined,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while validating a connection token',
                 err
             );
             return {
@@ -825,6 +977,9 @@ export class AuthController {
             const newSessionSecret = fromByteArray(
                 randomBytes(SESSION_SECRET_BYTE_LENGTH)
             );
+            const newConnectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
 
             const newSession: AuthSession = {
                 userId: userId,
@@ -834,6 +989,7 @@ export class AuthController {
                     newSessionSecret,
                     newSessionId
                 ),
+                connectionSecret: newConnectionSecret,
                 grantedTimeMs: now,
                 revokeTimeMs: null,
                 expireTimeMs: now + SESSION_LIFETIME_MS,
@@ -867,6 +1023,12 @@ export class AuthController {
                     userId,
                     newSessionId,
                     newSessionSecret,
+                    newSession.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    userId,
+                    newSessionId,
+                    newConnectionSecret,
                     newSession.expireTimeMs
                 ),
                 expireTimeMs: newSession.expireTimeMs,
@@ -1032,7 +1194,7 @@ export class AuthController {
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
                 hasActiveSubscription: hasActiveSubscription,
-                subscriptionTier: hasActiveSubscription ? tier : null,
+                subscriptionTier: tier ?? null,
             };
         } catch (err) {
             console.error(
@@ -1054,23 +1216,13 @@ export class AuthController {
 
         let tier: string = null;
         let sub: SubscriptionConfiguration['subscriptions'][0] = null;
+        const subscriptionConfig: SubscriptionConfiguration =
+            await this._config.getSubscriptionConfiguration();
         if (hasActiveSubscription) {
-            const subscriptionConfig =
-                await this._config.getSubscriptionConfiguration();
             if (user.subscriptionId) {
                 sub = subscriptionConfig?.subscriptions.find(
                     (s) => s.id === user.subscriptionId
                 );
-            }
-            if (!sub) {
-                sub = subscriptionConfig?.subscriptions.find(
-                    (s) => s.defaultSubscription
-                );
-                if (sub) {
-                    console.log(
-                        '[AuthController] [getUserInfo] Using default subscription for user.'
-                    );
-                }
             }
 
             if (!sub) {
@@ -1083,9 +1235,21 @@ export class AuthController {
             }
 
             tier = 'beta';
-            if (sub && sub.tier) {
-                tier = sub.tier;
+        }
+
+        if (!sub) {
+            sub = subscriptionConfig?.subscriptions.find(
+                (s) => s.defaultSubscription
+            );
+            if (sub) {
+                console.log(
+                    '[AuthController] [getUserInfo] Using default subscription for user.'
+                );
             }
+        }
+
+        if (sub) {
+            tier = sub.tier || 'beta';
         }
 
         return {
@@ -1345,6 +1509,11 @@ export interface CompleteLoginSuccess {
     sessionKey: string;
 
     /**
+     * The connection key that provides websocket access for the session.
+     */
+    connectionKey: string;
+
+    /**
      * The unix timestamp in miliseconds that the session will expire at.
      */
     expireTimeMs: number;
@@ -1398,6 +1567,63 @@ export interface ValidateSessionKeyFailure {
     errorCode:
         | 'unacceptable_session_key'
         | 'invalid_key'
+        | 'session_expired'
+        | 'user_is_banned'
+        | ServerError;
+    errorMessage: string;
+
+    banReason?: AuthUser['banReason'];
+}
+
+export type ValidateConnectionTokenResult =
+    | ValidateConnectionTokenSuccess
+    | ValidateConnectionTokenFailure;
+
+export interface ValidateConnectionTokenSuccess {
+    success: true;
+    /**
+     * The ID of the user that owns the connection token.
+     */
+    userId: string;
+
+    /**
+     * The ID of the session that the connection token is for.
+     */
+    sessionId: string;
+
+    /**
+     * The ID that the client wants for the connection.
+     */
+    connectionId: string;
+
+    /**
+     * The name of the record that the connection token was generated for.
+     */
+    recordName: string;
+
+    /**
+     * The instance that the connection token was generated for.
+     */
+    inst: string;
+
+    allSessionsRevokedTimeMs?: number;
+
+    /**
+     * The subscription ID for the user.
+     */
+    subscriptionTier?: string;
+
+    /**
+     * The ID of the subscription that the user is subscribed to.
+     */
+    subscriptionId?: string;
+}
+
+export interface ValidateConnectionTokenFailure {
+    success: false;
+    errorCode:
+        | 'unacceptable_connection_token'
+        | 'invalid_token'
         | 'session_expired'
         | 'user_is_banned'
         | ServerError;
@@ -1590,6 +1816,11 @@ export interface ReplaceSessionSuccess {
      * The secret key that provides access for the session.
      */
     sessionKey: string;
+
+    /**
+     * The connection key that provides websocket access for the session.
+     */
+    connectionKey: string;
 
     /**
      * The unix timestamp in miliseconds that the session will expire at.

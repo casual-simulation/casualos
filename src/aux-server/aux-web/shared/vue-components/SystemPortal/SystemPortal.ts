@@ -41,7 +41,6 @@ import {
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     SYSTEM_PORTAL_DIFF,
     getPortalTag,
-    calculateIndexFromLocation,
     getTag,
     getTagValueForSpace,
     SystemPortalPane,
@@ -94,6 +93,7 @@ import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 import { getActiveTheme } from '../utils';
 import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
+import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime';
 
 @Component({
     components: {

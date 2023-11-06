@@ -3,7 +3,7 @@ import {
     NotLoggedInError,
     ServerError,
     SubscriptionLimitReached,
-} from './Errors';
+} from '@casual-simulation/aux-common/Errors';
 import {
     DataRecordsStore,
     EraseDataStoreResult,
@@ -29,7 +29,7 @@ import {
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { without } from 'lodash';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';

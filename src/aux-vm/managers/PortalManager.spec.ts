@@ -29,7 +29,7 @@ describe('PortalManager', () => {
 
     beforeEach(() => {
         sub = new Subscription();
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('sim');
         localEvents = vm.localEvents = new Subject();
         manager = new PortalManager(vm);
     });

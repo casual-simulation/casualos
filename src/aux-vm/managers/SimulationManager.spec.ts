@@ -22,7 +22,10 @@ describe('SimulationManager', () => {
         it('should make a new simulation and add it to the simulations map', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            const added = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
 
             expect(manager.simulations.has('test')).toBe(true);
             expect(added).toBe(manager.simulations.get('test'));
@@ -34,8 +37,14 @@ describe('SimulationManager', () => {
 
             const val = new TestInitable();
             manager.simulations.set('test', val);
-            const first = manager.addSimulation('test');
-            const second = manager.addSimulation('test');
+            const first = manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
+            const second = manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
 
             expect(await first).toBe(await second);
         });
@@ -45,7 +54,10 @@ describe('SimulationManager', () => {
             const manager = new SimulationManager((id) => new TestInitable());
             manager.simulationAdded.subscribe((sim) => sims.push(sim));
 
-            const added = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
 
             expect(sims.length).toBe(1);
         });
@@ -61,7 +73,10 @@ describe('SimulationManager', () => {
         it('should remove the given simulation from the map', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            const val = await manager.addSimulation('test');
+            const val = await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
 
             await manager.removeSimulation('test');
 
@@ -72,7 +87,10 @@ describe('SimulationManager', () => {
         it('should clear the primary sim if the removed is the primary', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            const val = await manager.setPrimary('test');
+            const val = await manager.setPrimary('test', {
+                recordName: null,
+                inst: 'test',
+            });
 
             await manager.removeSimulation('test');
 
@@ -84,7 +102,10 @@ describe('SimulationManager', () => {
             const manager = new SimulationManager((id) => new TestInitable());
             manager.simulationRemoved.subscribe((sim) => sims.push(sim));
 
-            const added = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
             await manager.removeSimulation('test');
 
             expect(sims).toEqual([added]);
@@ -97,7 +118,10 @@ describe('SimulationManager', () => {
 
             expect(manager.primary).toBeFalsy();
 
-            await manager.setPrimary('test');
+            await manager.setPrimary('test', {
+                recordName: null,
+                inst: 'test',
+            });
 
             expect(manager.primary).toBeInstanceOf(TestInitable);
             expect(manager.primary.initialized).toBe(true);
@@ -108,9 +132,18 @@ describe('SimulationManager', () => {
         it('should dispose and remove all the simulations', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            await manager.addSimulation('test');
-            await manager.addSimulation('test2');
-            await manager.setPrimary('test3');
+            await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
+            await manager.addSimulation('test2', {
+                recordName: null,
+                inst: 'test2',
+            });
+            await manager.setPrimary('test3', {
+                recordName: null,
+                inst: 'test3',
+            });
 
             await manager.clear();
 
@@ -123,7 +156,10 @@ describe('SimulationManager', () => {
         it('should replay all the simulationAdded events on subscription', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            const added = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
             let sims: TestInitable[] = [];
             manager.simulationAdded.subscribe((sim) => sims.push(sim));
 
@@ -134,7 +170,10 @@ describe('SimulationManager', () => {
         it('should not include simulations that have been removed in the replay', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            await manager.addSimulation('test');
+            await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
             await manager.removeSimulation('test');
 
             let sims: TestInitable[] = [];
@@ -148,7 +187,10 @@ describe('SimulationManager', () => {
         it('should not replay all the simulationRemoved events on subscription', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            await manager.addSimulation('test');
+            await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
             await manager.removeSimulation('test');
 
             let sims: TestInitable[] = [];
@@ -162,7 +204,10 @@ describe('SimulationManager', () => {
         it('should call the given function with all the current simulations', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            const added = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
             let sims: TestInitable[] = [];
             manager.watchSimulations((sim) => {
                 sims.push(sim);
@@ -176,7 +221,10 @@ describe('SimulationManager', () => {
         it('should return a subscription that disposes all the simulation-specific subscriptions', async () => {
             const manager = new SimulationManager((id) => new TestInitable());
 
-            const added = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test', {
+                recordName: null,
+                inst: 'test',
+            });
             let sims: TestInitable[] = [];
             let called = false;
             let sub = manager.watchSimulations((sim) => {
@@ -204,7 +252,10 @@ describe('SimulationManager', () => {
         });
 
         it('should add new sub simulations to its list of simulations', async () => {
-            const sim = await manager.addSimulation('mySim');
+            const sim = await manager.addSimulation('mySim', {
+                recordName: null,
+                inst: 'mySim',
+            });
 
             const newSim = new TestSubSimulation();
             newSim.id = 'new-sim';
@@ -221,7 +272,10 @@ describe('SimulationManager', () => {
         });
 
         it('should remove sub simulations from the list of simulations', async () => {
-            const sim = await manager.addSimulation('mySim');
+            const sim = await manager.addSimulation('mySim', {
+                recordName: null,
+                inst: 'mySim',
+            });
 
             const newSim = new TestSubSimulation();
             newSim.id = 'new-sim';

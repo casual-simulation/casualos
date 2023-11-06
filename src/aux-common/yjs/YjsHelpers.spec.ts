@@ -1,4 +1,4 @@
-import { first } from '@casual-simulation/causal-trees';
+import { first } from '../common';
 import {
     applyUpdate,
     createRelativePositionFromTypeIndex,

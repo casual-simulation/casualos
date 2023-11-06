@@ -1,17 +1,24 @@
 import {
     AuxPartitionConfig,
-    AuxDevice,
-    BotsState,
     hasValue,
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
+import { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines the possible configuration options for a simulation.
  */
 export interface AuxConfig {
+    /**
+     * The ID of the config bot.
+     */
+    configBotId: string;
+
+    /**
+     * The configuration parameters for the simulation.
+     */
     config: AuxConfigParameters;
 
     /**

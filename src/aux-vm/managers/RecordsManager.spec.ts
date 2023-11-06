@@ -1,20 +1,14 @@
 import {
     asyncResult,
-    AuxPartitions,
-    AuxRuntime,
     BotAction,
-    botAdded,
-    createBot,
-    createMemoryPartition,
-    eraseRecordData,
-    getRecordData,
-    iteratePartitions,
-    LocalActions,
-    MemoryPartition,
-    recordData,
-    recordFile,
-    eraseFile,
     approveAction,
+    asyncError,
+} from '@casual-simulation/aux-common';
+import {
+    aiChat,
+    aiGenerateSkybox,
+    aiGenerateImage,
+    listUserStudios,
     listDataRecord,
     recordEvent,
     getEventCount,
@@ -30,12 +24,13 @@ import {
     revokeUserRole,
     revokeInstRole,
     getFile,
-    asyncError,
-    aiChat,
-    aiGenerateSkybox,
-    aiGenerateImage,
-    listUserStudios,
-} from '@casual-simulation/aux-common';
+    recordData,
+    recordFile,
+    eraseFile,
+    eraseRecordData,
+    getRecordData,
+    AuxRuntime,
+} from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
@@ -101,6 +96,8 @@ describe('RecordsManager', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: null,
+            logout: jest.fn(),
+            getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
             provideSmsNumber: jest.fn(),
@@ -119,6 +116,9 @@ describe('RecordsManager', () => {
             get origin() {
                 return 'http://localhost:3002';
             },
+            get currentLoginStatus(): any {
+                return null;
+            },
         };
 
         customAuthMock = customAuth = {
@@ -131,6 +131,8 @@ describe('RecordsManager', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: null,
+            logout: jest.fn(),
+            getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
             provideSmsNumber: jest.fn(),
@@ -148,6 +150,9 @@ describe('RecordsManager', () => {
             },
             get origin() {
                 return 'http://localhost:9999';
+            },
+            get currentLoginStatus(): any {
+                return null;
             },
         };
 
@@ -168,7 +173,7 @@ describe('RecordsManager', () => {
     });
 
     function createHelper() {
-        vm = new TestAuxVM(userId);
+        vm = new TestAuxVM(null, userId);
         const helper = new BotHelper(vm);
         helper.userId = 'userId';
 
@@ -6448,6 +6453,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     },
@@ -6480,6 +6486,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     }),
@@ -6496,6 +6503,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     },
@@ -6530,6 +6538,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     }),
@@ -6570,6 +6579,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     },
@@ -6603,6 +6613,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     }),
@@ -6619,6 +6630,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     },
@@ -6653,6 +6665,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     }),

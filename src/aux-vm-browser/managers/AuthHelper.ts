@@ -9,16 +9,31 @@ export class AuthHelper {
     private _loginUIStatus: Subject<LoginUIStatus & { endpoint: string }>;
     private _auths: Map<string, AuthHelperInterface>;
     private _useCustomUI: boolean = false;
+    private _factory: (
+        primaryAuthOrigin: string,
+        primaryRecordsOrigin: string
+    ) => AuthHelperInterface;
 
     get primaryAuthOrigin() {
         return this._primary.origin;
     }
 
-    constructor(primaryAuthOrigin: string, primaryRecordsOrigin: string) {
-        this._primary = new AuthEndpointHelper(
-            primaryAuthOrigin,
-            primaryRecordsOrigin
-        );
+    constructor(
+        primaryAuthOrigin: string,
+        primaryRecordsOrigin: string,
+        factory?: (
+            primaryAuthOrigin: string,
+            primaryRecordsOrigin: string
+        ) => AuthHelperInterface
+    ) {
+        this._factory =
+            factory ??
+            ((primaryAuthOrigin, primaryRecordsOrigin) =>
+                new AuthEndpointHelper(
+                    primaryAuthOrigin,
+                    primaryRecordsOrigin
+                ));
+        this._primary = this._factory(primaryAuthOrigin, primaryRecordsOrigin);
         this._auths = new Map();
         this._loginUIStatus = new Subject();
         this._primary.loginUIStatus
@@ -33,6 +48,10 @@ export class AuthHelper {
 
     get loginUIStatus(): Observable<LoginUIStatus & { endpoint: string }> {
         return this._loginUIStatus;
+    }
+
+    getOrCreateEndpoint(endpoint: string) {
+        return this.getEndpoint(endpoint) ?? this.createEndpoint(endpoint);
     }
 
     getEndpoint(endpoint: string): AuthHelperInterface {

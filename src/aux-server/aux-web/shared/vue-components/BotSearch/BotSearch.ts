@@ -93,7 +93,7 @@ export default class BotSearch extends Vue {
     }
 
     mounted() {
-        appManager.whileLoggedIn((user, botManager) => {
+        appManager.whileLoggedIn((botManager) => {
             let subs: SubscriptionLike[] = [];
             subs.push(
                 botManager.botPanel.botsUpdated.subscribe((e) => {

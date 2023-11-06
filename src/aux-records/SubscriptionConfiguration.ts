@@ -4,92 +4,385 @@ import { isActiveSubscription } from './Utils';
 export const subscriptionFeaturesSchema = z.object({
     records: z
         .object({
-            allowed: z.boolean(),
-            maxRecords: z.number().int().positive().optional(),
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether records are allowed for the subscription. If false, then every request to create or update a record will be rejected.'
+                ),
+            maxRecords: z
+                .number()
+                .describe(
+                    'The maximum number of records allowed for the subscription.'
+                )
+                .int()
+                .positive()
+                .optional(),
         })
+        .describe('The configuration for record features.')
         .optional(),
     data: z.object({
-        allowed: z.boolean(),
-        maxItems: z.number({}).int().positive().optional(),
-        maxReadsPerPeriod: z.number().int().positive().optional(),
-        maxWritesPerPeriod: z.number().int().positive().optional(),
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether data resources are allowed for the subscription. If false, then every request to create or update a data resource will be rejected.'
+            ),
+        maxItems: z
+            .number({})
+            .describe(
+                'The maximum number of data resource items allowed for the subscription. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxReadsPerPeriod: z
+            .number()
+            .describe(
+                'The maximum number of data item reads allowed per subscription period. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxWritesPerPeriod: z
+            .number()
+            .describe(
+                'The maximum number of data item writes allowed per subscription period. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
     }),
     files: z.object({
-        allowed: z.boolean(),
-        maxFiles: z.number().int().positive().optional(),
-        maxBytesPerFile: z.number().int().positive().optional(),
-        maxBytesTotal: z.number().int().positive().optional(),
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.'
+            ),
+        maxFiles: z
+            .number()
+            .describe(
+                'The maximum number of files allowed for the subscription. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxBytesPerFile: z
+            .number()
+            .describe(
+                'The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxBytesTotal: z
+            .number()
+            .describe(
+                'The maximum number of file bytes that can be stored for the subscription. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
     }),
     events: z.object({
-        allowed: z.boolean(),
-        maxEvents: z.number().int().positive().optional(),
-        maxUpdatesPerPeriod: z.number().int().positive().optional(),
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether event resources are allowed for the subscription. If false, then every request to increment or count events will be rejected.'
+            ),
+        maxEvents: z
+            .number()
+            .describe(
+                'The maximum number of distinct event names that are allowed for the subscription. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxUpdatesPerPeriod: z
+            .number()
+            .describe('Not currently implemented.')
+            .int()
+            .positive()
+            .optional(),
     }),
     policies: z.object({
-        allowed: z.boolean(),
-        maxPolicies: z.number().int().positive().optional(),
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether policy resources are allowed for the subscription. If false, then every request to create or update a policy will be rejected.'
+            ),
+        maxPolicies: z
+            .number()
+            .describe('Not currently implemented.')
+            .int()
+            .positive()
+            .optional(),
     }),
     ai: z.object({
         chat: z.object({
-            allowed: z.boolean(),
-            maxTokensPerPeriod: z.number().int().positive().optional(),
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether AI chat requests are allowed for the subscription. If false, then every request to generate AI chat will be rejected.'
+                ),
+            maxTokensPerPeriod: z
+                .number()
+                .describe(
+                    'The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
         }),
         images: z.object({
-            allowed: z.boolean(),
-            maxSquarePixelsPerPeriod: z.number().int().positive().optional(),
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether AI image requests are allowed for the subscription. If false, then every request to generate AI images will be rejected.'
+                ),
+            maxSquarePixelsPerPeriod: z
+                .number()
+                .describe(
+                    'The maximum number of square pixels (pixels squared) that are allowed to be generated per subscription period. If omitted, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
         }),
         skyboxes: z.object({
-            allowed: z.boolean(),
-            maxSquarePixelsPerPeriod: z.number().int().positive().optional(),
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether AI Skybox requests are allowed for the subscription. If false, then every request to generate AI skyboxes will be rejected.'
+                ),
+            maxSkyboxesPerPeriod: z
+                .number()
+                .describe(
+                    'The maximum number of skyboxes that are allowed to be generated per subscription period. If omitted, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
         }),
     }),
+    insts: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.'
+                ),
+            maxInsts: z
+                .number()
+                .describe(
+                    'The maximum number of private insts that are allowed for the subscription. If omitted, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+            maxBytesPerInst: z
+                .number()
+                .describe(
+                    'The maximum number of bytes that can be stored in an inst. If omitted, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+            maxActiveConnectionsPerInst: z
+                .number()
+                .describe(
+                    'The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .optional(),
 });
 
 export const subscriptionConfigSchema = z.object({
-    webhookSecret: z.string().nonempty(),
-    successUrl: z.string().nonempty(),
-    cancelUrl: z.string().nonempty(),
-    returnUrl: z.string().nonempty(),
+    webhookSecret: z
+        .string()
+        .describe(
+            'The Stripe Webhook secret. Used to validate that webhooks are actually coming from Stripe.'
+        )
+        .nonempty(),
+    successUrl: z
+        .string()
+        .describe(
+            'The URL that successful Stripe checkout sessions should be redirected to.'
+        )
+        .nonempty(),
+    cancelUrl: z
+        .string()
+        .describe(
+            'The URL that canceled Stripe checkout sessions should be redirected to.'
+        )
+        .nonempty(),
+    returnUrl: z
+        .string()
+        .describe(
+            'The URL that users should be redirected to when exiting the Stripe subscription management customer portal.'
+        )
+        .nonempty(),
 
-    portalConfig: z.object({}).passthrough().optional().nullable(),
-    checkoutConfig: z.object({}).passthrough().optional().nullable(),
+    portalConfig: z
+        .object({})
+        .describe(
+            'Additional options that should be passed to stripe.billingPortal.sessions.create().'
+        )
+        .passthrough()
+        .optional()
+        .nullable(),
+    checkoutConfig: z
+        .object({})
+        .describe(
+            'Additional options that should be passed to stripe.checkout.sessions.create().'
+        )
+        .passthrough()
+        .optional()
+        .nullable(),
 
-    subscriptions: z.array(
-        z.object({
-            id: z.string().nonempty(),
-            product: z.string().nonempty(),
-            featureList: z.array(z.string().nonempty()),
-            eligibleProducts: z.array(z.string().nonempty()),
-            defaultSubscription: z.boolean().optional(),
-            purchasable: z.boolean().optional(),
-            tier: z.string().nonempty().optional(),
-            userOnly: z.boolean().optional(),
-            studioOnly: z.boolean().optional(),
-        })
-    ),
+    subscriptions: z
+        .array(
+            z.object({
+                id: z
+                    .string()
+                    .describe(
+                        'The ID of the subscription. Can be anything, but it must be unique to each subscription and never change.'
+                    )
+                    .nonempty(),
+                product: z
+                    .string()
+                    .describe(
+                        'The ID of the Stripe product that is being offered by this subscription. If omitted, then this subscription will be shown but not able to be purchased.'
+                    )
+                    .nonempty()
+                    .optional(),
+                featureList: z
+                    .array(z.string().nonempty())
+                    .describe(
+                        'The list of features that should be shown for this subscription tier.'
+                    ),
+                eligibleProducts: z
+                    .array(z.string().nonempty())
+                    .describe(
+                        'The list of Stripe product IDs that count as eligible for this subscription. Useful if you want to change the product of this subscription, but grandfather in existing users.'
+                    )
+                    .optional(),
+                defaultSubscription: z
+                    .boolean()
+                    .describe(
+                        "Whether this subscription should be granted to users if they don't already have a subscription. The first in the list of subscriptions that is marked as the default will be used. Defaults to false"
+                    )
+                    .optional(),
+                purchasable: z
+                    .boolean()
+                    .describe(
+                        'Whether this subscription is purchasable and should be offered to users who do not already have a subscription. If false, then this subscription will not be shown to users unless they already have an active subscription for it. Defaults to true.'
+                    )
+                    .optional(),
+                name: z
+                    .string()
+                    .describe(
+                        'The name of the subscription. Ignored if a Stripe product is specified.'
+                    )
+                    .nonempty()
+                    .optional(),
+                description: z
+                    .string()
+                    .describe(
+                        'The description of the subscription. Ignored if a Stripe product is specified.'
+                    )
+                    .nonempty()
+                    .optional(),
+                tier: z
+                    .string()
+                    .describe(
+                        'The tier of this subscription. Useful for grouping multiple subscriptions into the same set of features. Defaults to "beta"'
+                    )
+                    .nonempty()
+                    .optional(),
+                userOnly: z
+                    .boolean()
+                    .describe(
+                        'Whether this subscription can only be purchased by individual users. Defaults to false.'
+                    )
+                    .optional(),
+                studioOnly: z
+                    .boolean()
+                    .describe(
+                        'Whether this subscription can only be purchased by studios. Defaults to false.'
+                    )
+                    .optional(),
+            })
+        )
+        .describe('The list of subscriptions that are in use.'),
 
     tiers: z
         .object({})
+        .describe(
+            'The configuration for the subscription tiers. Each key should be a tier.'
+        )
         .catchall(
-            z.object({
-                features: subscriptionFeaturesSchema.optional(),
-            })
+            z
+                .object({
+                    features: subscriptionFeaturesSchema.optional(),
+                })
+                .describe('The configuration for an individual tier.')
         )
         .optional(),
 
     defaultFeatures: z
         .object({
-            user: subscriptionFeaturesSchema.optional(),
-            studio: subscriptionFeaturesSchema.optional(),
+            user: subscriptionFeaturesSchema
+                .describe(
+                    'The features that are available for users who either dont have a subscription for have a subscription for a tier that is not listed in the tiers configuration. Defaults to an object that allows all features.'
+                )
+                .optional(),
+            studio: subscriptionFeaturesSchema
+                .describe(
+                    'The features that are available for studios who either dont have a subscription for have a subscription for a tier that is not listed in the tiers configuration. Defaults to an object that allows all features.'
+                )
+                .optional(),
             defaultPeriodLength: z
                 .object({
                     days: z.number().int().positive().optional(),
                     months: z.number().int().positive().optional(),
                 })
+                .describe(
+                    'The length of the period for users that do not have a subscription. Defaults to 1 month and 0 days.'
+                )
                 .default({
                     days: 0,
                     months: 1,
                 }),
+            publicInsts: z
+                .object({
+                    allowed: z
+                        .boolean()
+                        .describe(
+                            'Whether public (temp) insts are allowed. If false, then every request to create or update a public inst will be rejected.'
+                        ),
+                    maxBytesPerInst: z
+                        .number()
+                        .describe(
+                            'The maximum number of bytes that can be stored for a public inst. If omitted, then there is no limit.'
+                        )
+                        .int()
+                        .positive()
+                        .optional(),
+                    maxActiveConnectionsPerInst: z
+                        .number()
+                        .describe(
+                            'The maximum number of active connections that are allowed for a public inst. If omitted, then there is no limit.'
+                        )
+                        .int()
+                        .positive()
+                        .optional(),
+                })
+                .describe(
+                    'The feature limits for public insts (insts that do not belong to a record and will expire after a preset time). Defaults to an object that allows all features.'
+                )
+                .optional(),
         })
         .optional(),
 });
@@ -173,8 +466,9 @@ export interface APISubscription {
 
     /**
      * The ID of the product that needs to be purchased for the subscription.
+     * If omitted, then this subscription will be shown but not able to be purchased.
      */
-    product: string;
+    product?: string;
 
     /**
      * The list of features that should be shown for this subscription tier.
@@ -184,12 +478,24 @@ export interface APISubscription {
     /**
      * The list of products that are eligible for this subscription tier.
      */
-    eligibleProducts: string[];
+    eligibleProducts?: string[];
 
     /**
      * Whether this subscription should be the default.
      */
     defaultSubscription?: boolean;
+
+    /**
+     * The name of the subscription.
+     * Ignored if a Stripe product is specified.
+     */
+    name?: string;
+
+    /**
+     * The description of the subscription.
+     * Ignored if a Stripe product is specified.
+     */
+    description?: string;
 
     /**
      * Whether the subscription should be offered for purchase.
@@ -256,6 +562,26 @@ export interface DefaultFeaturesConfiguration {
          */
         months?: number;
     };
+
+    /**
+     * The configuration for temporary insts.
+     */
+    publicInsts?: {
+        /**
+         * Whether they are allowed to be created.
+         */
+        allowed: boolean;
+
+        /**
+         * The maximum number of bytes that each inst can store.
+         */
+        maxBytesPerInst?: number;
+
+        /**
+         * The maximum number of active connections that each inst can have.
+         */
+        maxActiveConnectionsPerInst?: number;
+    };
 }
 
 /**
@@ -283,6 +609,11 @@ export interface FeaturesConfiguration {
      * The configuration for AI features.
      */
     ai: AIFeaturesConfiguration;
+
+    /**
+     * The configuration for inst features.
+     */
+    insts: InstsFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -427,6 +758,28 @@ export interface AISkyboxFeaturesConfiguration {
     maxSkyboxesPerPeriod?: number;
 }
 
+export interface InstsFeaturesConfiguration {
+    /**
+     * Whether inst features are allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of insts that a subscription can have.
+     */
+    maxInsts?: number;
+
+    /**
+     * The maximum number of bytes that an inst can store.
+     */
+    maxBytesPerInst?: number;
+
+    /**
+     * The maximum number of concurrent connections allowed per inst.
+     */
+    maxActiveConnectionsPerInst?: number;
+}
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -452,9 +805,20 @@ export function allowAllFeatures(): FeaturesConfiguration {
         files: {
             allowed: true,
         },
+        insts: {
+            allowed: true,
+        },
     };
 }
 
+/**
+ * Gets the features that are available for the given subscription.
+ * Useful for determining which features a user/studio should have access to based on the ID of their subscription.
+ * @param config The configuration. If null, then all  features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
 export function getSubscriptionFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
@@ -464,8 +828,19 @@ export function getSubscriptionFeatures(
     if (!config) {
         return allowAllFeatures();
     }
+    const roleSubscriptions = config.subscriptions.filter((s) =>
+        subscriptionMatchesRole(s, type)
+    );
     if (isActiveSubscription(subscriptionStatus)) {
-        const sub = config.subscriptions.find((s) => s.id === subscriptionId);
+        const sub = roleSubscriptions.find((s) => s.id === subscriptionId);
+        const tier = sub?.tier;
+        const features = tier ? config.tiers[tier]?.features : null;
+
+        if (features) {
+            return features;
+        }
+    } else {
+        const sub = roleSubscriptions.find((s) => s.defaultSubscription);
         const tier = sub?.tier;
         const features = tier ? config.tiers[tier]?.features : null;
 
@@ -475,6 +850,41 @@ export function getSubscriptionFeatures(
     }
 
     return config.defaultFeatures?.[type] ?? allowAllFeatures();
+}
+
+export function getSubscriptionTier(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subId: string
+): string | null {
+    if (!config) {
+        return null;
+    }
+
+    if (!isActiveSubscription(subscriptionStatus)) {
+        return null;
+    }
+
+    const sub = config.subscriptions.find((s) => s.id === subId);
+    return sub?.tier ?? null;
+}
+
+/**
+ * Determines if the subscription is allowed to be used for the given role.
+ * @param subscription The subscription.
+ * @param role The role.
+ */
+export function subscriptionMatchesRole(
+    subscription: APISubscription,
+    role: 'user' | 'studio'
+) {
+    const isUserOnly = subscription.userOnly ?? false;
+    const isStudioOnly = subscription.studioOnly ?? false;
+    const matchesRole =
+        (isUserOnly && role === 'user') ||
+        (isStudioOnly && role === 'studio') ||
+        (!isUserOnly && !isStudioOnly);
+    return matchesRole;
 }
 
 type HasType<T, Q extends T> = Q;
