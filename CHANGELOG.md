@@ -40,6 +40,7 @@
 -   Removed all the `causal-tree` packages.
     -   They are no longer needed since YJS does such a good job.
 -   Merged all the websocket and data synchronization code into `aux-common`, `aux-records`, and `aux-server`.
+-   Changed `SERVER_CONFIG.subscriptions.subscriptions.defaultSubscription` to be used to indicate that the subscription should be automatically given to users who do not have an active subscription.
 
 ### :rocket: Improvements
 
