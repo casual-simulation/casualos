@@ -138,7 +138,8 @@ export class WebsocketController {
             let clientConnectionId: string | null;
             if (!message.connectionToken) {
                 if (!message.connectionId) {
-                    this.sendError(connectionId, requestId, {
+                    await this._messenger.sendMessage([connectionId], {
+                        type: 'login_result',
                         success: false,
                         errorCode: 'unacceptable_connection_id',
                         errorMessage:
@@ -161,7 +162,8 @@ export class WebsocketController {
                         message.connectionToken
                     );
                 if (validationResult.success === false) {
-                    await this.sendError(connectionId, requestId, {
+                    await this._messenger.sendMessage([connectionId], {
+                        type: 'login_result',
                         success: false,
                         errorCode: validationResult.errorCode,
                         errorMessage: validationResult.errorMessage,
@@ -189,6 +191,7 @@ export class WebsocketController {
 
             await this._messenger.sendMessage([connectionId], {
                 type: 'login_result',
+                success: true,
                 info: {
                     userId,
                     sessionId,
@@ -300,7 +303,8 @@ export class WebsocketController {
             );
 
             if (!authorized) {
-                await this.sendError(connectionId, -1, {
+                await this.messenger.sendMessage([connectionId], {
+                    type: 'repo/watch_branch_result',
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
@@ -315,8 +319,9 @@ export class WebsocketController {
         const config = await this._config.getSubscriptionConfiguration();
 
         if (!event.recordName) {
-            if (config.defaultFeatures?.publicInsts?.allowed === false) {
-                await this.sendError(connectionId, -1, {
+            if (config?.defaultFeatures?.publicInsts?.allowed === false) {
+                await this.messenger.sendMessage([connectionId], {
+                    type: 'repo/watch_branch_result',
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'Temporary insts are not allowed.',
@@ -336,8 +341,9 @@ export class WebsocketController {
         );
 
         if (instResult.success === false) {
-            await this.sendError(connectionId, -1, {
+            await this.messenger.sendMessage([connectionId], {
                 ...instResult,
+                type: 'repo/watch_branch_result',
                 recordName: event.recordName,
                 inst: event.inst,
                 branch: event.branch,
@@ -356,7 +362,7 @@ export class WebsocketController {
             maxConnections = features.insts.maxActiveConnectionsPerInst;
         } else if (
             !event.recordName &&
-            typeof config.defaultFeatures?.publicInsts
+            typeof config?.defaultFeatures?.publicInsts
                 ?.maxActiveConnectionsPerInst === 'number'
         ) {
             maxConnections =
@@ -371,7 +377,8 @@ export class WebsocketController {
                 event.branch
             );
             if (count >= maxConnections) {
-                await this.sendError(connectionId, -1, {
+                await this.messenger.sendMessage([connectionId], {
+                    type: 'repo/watch_branch_result',
                     success: false,
                     errorCode: features
                         ? 'subscription_limit_reached'
@@ -458,6 +465,13 @@ export class WebsocketController {
                 branch: event.branch,
                 updates: updates.updates,
                 initial: true,
+            }),
+            this._messenger.sendMessage([connection.serverConnectionId], {
+                type: 'repo/watch_branch_result',
+                recordName: event.recordName,
+                inst: event.inst,
+                branch: event.branch,
+                success: true,
             }),
         ];
         await Promise.all(promises);
@@ -600,7 +614,7 @@ export class WebsocketController {
             let features: FeaturesConfiguration = null;
 
             if (!event.recordName) {
-                if (config.defaultFeatures?.publicInsts?.allowed === false) {
+                if (config?.defaultFeatures?.publicInsts?.allowed === false) {
                     await this.sendError(connectionId, -1, {
                         success: false,
                         errorCode: 'not_authorized',
@@ -791,7 +805,7 @@ export class WebsocketController {
                 maxInstSize = features.insts.maxBytesPerInst;
             } else if (
                 !event.recordName &&
-                typeof config.defaultFeatures?.publicInsts?.maxBytesPerInst ===
+                typeof config?.defaultFeatures?.publicInsts?.maxBytesPerInst ===
                     'number'
             ) {
                 maxInstSize =

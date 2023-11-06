@@ -9,15 +9,13 @@ export class NodeSimulation extends BaseSimulation {
         return vm.channel;
     }
 
-    constructor(id: string, channel: AuxVM | AuxChannel) {
-        super(id, 'id' in channel ? channel : new AuxVMNode(channel));
+    constructor(id: string, configBotId: string, channel: AuxVM | AuxChannel) {
+        super(
+            'id' in channel ? channel : new AuxVMNode(id, configBotId, channel)
+        );
     }
 
-    protected _createSubSimulation(
-        indicator: ConnectionIndicator,
-        id: string,
-        vm: AuxVM
-    ) {
-        return new NodeSimulation(id, vm);
+    protected _createSubSimulation(vm: AuxVM) {
+        return new NodeSimulation(vm.id, vm.configBotId, vm);
     }
 }

@@ -114,7 +114,7 @@ export class DenoSimulationImpl
         id: string,
         vm: DenoVM
     ) {
-        super(id, vm);
+        super(vm);
         this._origin = origin;
         this.helper.userId = getConnectionId(indicator);
 

@@ -232,6 +232,7 @@ import {
     OpenPhotoCameraOptions,
     Photo,
     getEasing,
+    enableCollaboration as calcEnableCollaboration,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3033,6 +3034,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 version,
                 device,
                 isCollaborative,
+                enableCollaboration,
                 getAB1BootstrapURL,
                 enableAR,
                 disableAR,
@@ -5618,6 +5620,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
             isCollaborative: null as boolean,
+            allowCollaborationUpgrade: null as boolean,
             ab1BootstrapUrl: null as string,
         };
     }
@@ -5642,6 +5645,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return true;
+    }
+
+    /**
+     * Attempts to enable collaboration features on the device.
+     *
+     * @example Enable collaboration on this device.
+     * await os.enableCollaboration();
+     *
+     * @dochash actions/os
+     * @docname os.enableCollaboration
+     * @docgroup 10-os-info
+     */
+    function enableCollaboration(): Promise<void> {
+        if (context.device) {
+            if (!context.device.isCollaborative) {
+                if (!context.device.allowCollaborationUpgrade) {
+                    return Promise.reject(
+                        new Error(
+                            'Collaboration cannot be enabled on this device'
+                        )
+                    );
+                }
+                const task = context.createTask();
+                const event = calcEnableCollaboration(task.taskId);
+                return addAsyncAction(task, event);
+            }
+        }
+
+        return Promise.resolve();
     }
 
     /**

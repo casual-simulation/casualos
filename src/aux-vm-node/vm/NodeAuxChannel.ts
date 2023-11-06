@@ -4,6 +4,7 @@ import {
     ConnectionIndicator,
     createYjsPartition,
     createRemoteClientYjsPartition,
+    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
     PartitionConfig,
@@ -23,20 +24,23 @@ export class NodeAuxChannel extends BaseAuxChannel {
         return this._remoteEvents;
     }
 
-    constructor(indicator: ConnectionIndicator, config: AuxConfig) {
-        super(indicator, config, {});
+    constructor(config: AuxConfig) {
+        super(config, {});
         this._remoteEvents = new Subject<RemoteAction[]>();
     }
 
     protected async _createPartition(
-        config: PartitionConfig
+        config: PartitionConfig,
+        services: AuxPartitionServices
     ): Promise<AuxPartition> {
         return await createAuxPartition(
             config,
+            services,
             createMemoryPartition,
             (config) => createYjsPartition(config),
-            (config) => createRemoteYjsPartition(config, this.indicator),
-            (config) => createRemoteClientYjsPartition(config)
+            (config) => createRemoteYjsPartition(config, services.authSource),
+            (config) =>
+                createRemoteClientYjsPartition(config, services.authSource)
         );
     }
 
@@ -52,11 +56,10 @@ export class NodeAuxChannel extends BaseAuxChannel {
     }
 
     protected _createSubChannel(
-        indicator: ConnectionIndicator,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
-        const channel = new NodeAuxChannel(indicator, config);
+        const channel = new NodeAuxChannel(config);
         channel._runtime = runtime;
         return channel;
     }

@@ -139,6 +139,7 @@ import {
     InstUpdate,
     getCurrentInstUpdate,
     openPhotoCamera,
+    enableCollaboration,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -267,6 +268,7 @@ describe('AuxLibrary', () => {
             supportsAR: true,
             supportsVR: false,
             isCollaborative: true,
+            allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'bootstrapURL',
         };
         notifier = {
@@ -3271,6 +3273,7 @@ describe('AuxLibrary', () => {
                     supportsVR: null,
                     isCollaborative: null,
                     ab1BootstrapUrl: null,
+                    allowCollaborationUpgrade: null,
                 });
             });
         });
@@ -3317,6 +3320,63 @@ describe('AuxLibrary', () => {
 
                 const d = library.api.os.isCollaborative();
                 expect(d).toEqual(true);
+            });
+        });
+
+        describe('os.enableCollaboration()', () => {
+            it('should emit a EnableCollaborationAction', () => {
+                context.device = {
+                    isCollaborative: false,
+                    allowCollaborationUpgrade: true,
+                    ab1BootstrapUrl: 'bootstrap',
+                    supportsAR: true,
+                    supportsVR: true,
+                };
+                const promise: any = library.api.os.enableCollaboration();
+                const expected = enableCollaboration(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return a rejected promise if collaboration cannot be enabled', async () => {
+                context.device = {
+                    isCollaborative: false,
+                    allowCollaborationUpgrade: false,
+                    ab1BootstrapUrl: 'bootstrap',
+                    supportsAR: true,
+                    supportsVR: true,
+                };
+                const promise: any = library.api.os.enableCollaboration();
+                expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                await expect(promise).rejects.toEqual(
+                    new Error('Collaboration cannot be enabled on this device')
+                );
+            });
+
+            it('should return a resolved promise if collaboration is already enabled', async () => {
+                context.device = {
+                    isCollaborative: true,
+                    allowCollaborationUpgrade: false,
+                    ab1BootstrapUrl: 'bootstrap',
+                    supportsAR: true,
+                    supportsVR: true,
+                };
+                const promise: any = library.api.os.enableCollaboration();
+                expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                await expect(promise).resolves.toBeUndefined();
+            });
+
+            it('should return a resolved promise if there is no device', async () => {
+                context.device = null;
+                const promise: any = library.api.os.enableCollaboration();
+                expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                await expect(promise).resolves.toBeUndefined();
             });
         });
 
@@ -8127,6 +8187,7 @@ describe('AuxLibrary', () => {
                         supportsAR: true,
                         supportsVR: false,
                         isCollaborative: true,
+                        allowCollaborationUpgrade: true,
                         ab1BootstrapUrl: 'bootstrapURL',
                     };
                     notifier = {

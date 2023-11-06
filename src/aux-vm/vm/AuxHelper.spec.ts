@@ -14,6 +14,7 @@ import {
     createMemoryPartition,
     AuxPartitions,
     iteratePartitions,
+    AuxPartition,
 } from '@casual-simulation/aux-common';
 import {
     AuxRuntime,
@@ -36,7 +37,6 @@ import {
 } from '@casual-simulation/aux-common/test/TestHelpers';
 import { SubscriptionLike, Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { keypair } from '@casual-simulation/aux-common/node_modules/@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -96,11 +96,12 @@ describe('AuxHelper', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
         subs.push(runtime);
-        const helper = new AuxHelper(partitions, runtime);
+        const helper = new AuxHelper('user', partitions, runtime);
 
         for (let [, partition] of iteratePartitions(partitions)) {
             subs.push(
@@ -637,7 +638,6 @@ describe('AuxHelper', () => {
                     tags: {
                         correct: true,
                     },
-                    masks: {},
                 },
             });
             expect(Object.keys(helper.botsState)).toEqual(['test']);
@@ -692,11 +692,6 @@ describe('AuxHelper', () => {
                     id: 'test',
                     tags: {
                         test: 123,
-                    },
-                    masks: {
-                        abc: {
-                            other: true,
-                        },
                     },
                 },
             });
@@ -1456,12 +1451,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createOrUpdateUserBot(
-                {
-                    connectionId: 'testUser',
-                },
-                null
-            );
+            await helper.createOrUpdateUserBot('testUser', null);
 
             expect(helper.botsState['testUser']).toMatchObject({
                 id: 'testUser',
@@ -1486,12 +1476,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createOrUpdateUserBot(
-                {
-                    connectionId: 'testUser',
-                },
-                null
-            );
+            await helper.createOrUpdateUserBot('testUser', null);
 
             expect(helper.botsState['testUser']).toEqual({
                 id: 'testUser',

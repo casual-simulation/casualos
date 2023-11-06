@@ -27,9 +27,11 @@ export function createTestSubConfiguration(): SubscriptionConfiguration {
     };
 }
 
-export function createTestControllers(config?: SubscriptionConfiguration) {
-    const subConfig: SubscriptionConfiguration =
-        config ?? createTestSubConfiguration();
+export function createTestControllers(
+    config?: SubscriptionConfiguration | null
+) {
+    const subConfig: SubscriptionConfiguration | null =
+        typeof config === 'undefined' ? createTestSubConfiguration() : null;
 
     const store = new MemoryStore({
         subscriptions: subConfig,

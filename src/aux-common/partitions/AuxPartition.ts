@@ -6,8 +6,14 @@ import {
     UpdatedBot,
     PartialBotsState,
     StateUpdatedEvent,
+    TEMPORARY_BOT_PARTITION_ID,
+    COOKIE_BOT_PARTITION_ID,
+    BOOTSTRAP_PARTITION_ID,
+    TEMPORARY_SHARED_PARTITION_ID,
+    REMOTE_TEMPORARY_SHARED_PARTITION_ID,
 } from '../bots';
 import { Observable, SubscriptionLike } from 'rxjs';
+import { sortBy } from 'lodash';
 
 /**
  * Defines an interface that maps Bot IDs to their corresponding partitions.
@@ -84,6 +90,11 @@ export interface AuxPartitionBase extends SubscriptionLike {
      * Tells the partition to connect to it's backing store.
      */
     connect(): void;
+
+    /**
+     * Tells the partition to enable collaboration features that were disabled.
+     */
+    enableCollaboration?(): Promise<void>;
 
     /**
      * Gets an observable list that resolves whenever
@@ -249,12 +260,35 @@ export function getPartitionState(partition: AuxPartition): BotsState {
     return partition.state;
 }
 
+export type DictionaryLike = {
+    [key: string]: any;
+};
+
 /**
  * Iterates the given partitions.
  * @param partitions The partitions to iterate.
  */
-export function* iteratePartitions(partitions: AuxPartitions) {
-    for (let key in partitions) {
+export function* iteratePartitions<T extends DictionaryLike>(
+    partitions: T
+): Generator<readonly [keyof T, T[keyof T]]> {
+    const keys = Object.keys(partitions);
+    const sortedKeys = sortBy(keys, (k) =>
+        k === 'shared'
+            ? 0
+            : k === TEMPORARY_BOT_PARTITION_ID
+            ? 1
+            : k === COOKIE_BOT_PARTITION_ID
+            ? 2
+            : k === TEMPORARY_SHARED_PARTITION_ID
+            ? 3
+            : k === REMOTE_TEMPORARY_SHARED_PARTITION_ID
+            ? 4
+            : k === BOOTSTRAP_PARTITION_ID
+            ? 5
+            : 6
+    );
+
+    for (let key of sortedKeys) {
         if (!partitions.hasOwnProperty(key)) {
             continue;
         }

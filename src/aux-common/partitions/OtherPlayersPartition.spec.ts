@@ -34,6 +34,7 @@ import {
     MemoryConnectionClient,
     ReceiveDeviceActionMessage,
 } from '../websockets';
+import { PartitionAuthSource } from './PartitionAuthSource';
 
 console.log = jest.fn();
 
@@ -49,6 +50,7 @@ describe('OtherPlayersPartition', () => {
     let updated: UpdatedBot[];
     let updates: StateUpdatedEvent[];
     let sub: Subscription;
+    let authSource: PartitionAuthSource;
 
     let testDevice = connectionInfo('test', 'test', 'test');
     let device1 = connectionInfo('device1', 'device1Id', 'device1SessionId');
@@ -87,6 +89,7 @@ describe('OtherPlayersPartition', () => {
                     client = new InstRecordsClient(connection);
                     connection.connect();
                     sub = new Subscription();
+                    authSource = new PartitionAuthSource();
 
                     added = [];
                     removed = [];
@@ -1913,10 +1916,111 @@ describe('OtherPlayersPartition', () => {
                         ]);
                     });
                 });
+
+                describe('skip initial load', () => {
+                    it('should not try to connect when loaded', async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                            childPartitionType: 'yjs_client',
+                            skipInitialLoad: true,
+                        });
+
+                        const promise = partition.onStatusUpdated
+                            .pipe(
+                                takeWhile(
+                                    (update) => update.type !== 'sync',
+                                    true
+                                ),
+                                bufferCount(4)
+                            )
+                            .toPromise();
+
+                        partition.connect();
+
+                        const update = await promise;
+
+                        expect(update).toEqual([
+                            {
+                                type: 'connection',
+                                connected: true,
+                            },
+                            expect.objectContaining({
+                                type: 'authentication',
+                                authenticated: true,
+                            }),
+                            expect.objectContaining({
+                                type: 'authorization',
+                                authorized: true,
+                            }),
+                            {
+                                type: 'sync',
+                                synced: true,
+                            },
+                        ]);
+
+                        expect(connection.sentMessages).toEqual([]);
+                    });
+
+                    it('should connect to the branch if enableCollaboration() is called', async () => {
+                        setupPartition({
+                            type: 'other_players_repo',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                            childPartitionType: 'yjs_client',
+                            skipInitialLoad: true,
+                        });
+
+                        partition.connect();
+
+                        await waitAsync();
+
+                        let resolved: boolean = false;
+                        partition
+                            .enableCollaboration()
+                            .then(() => (resolved = true));
+
+                        await waitAsync();
+
+                        expect(connection.sentMessages).toEqual([
+                            {
+                                type: 'repo/watch_branch_devices',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                            },
+                        ]);
+
+                        deviceConnected.next({
+                            type: 'repo/connected_to_branch',
+                            branch: {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                            },
+                            broadcast: false,
+                            connection: device1,
+                        });
+
+                        await waitAsync();
+
+                        expect(resolved).toBe(true);
+                    });
+                });
             });
 
             function setupPartition(config: OtherPlayersRepoPartitionConfig) {
-                partition = new OtherPlayersPartitionImpl(client, config);
+                partition = new OtherPlayersPartitionImpl(
+                    client,
+                    authSource,
+                    config
+                );
 
                 sub.add(partition);
                 sub.add(

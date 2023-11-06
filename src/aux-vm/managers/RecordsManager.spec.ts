@@ -96,6 +96,7 @@ describe('RecordsManager', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: null,
+            logout: jest.fn(),
             getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
@@ -115,6 +116,9 @@ describe('RecordsManager', () => {
             get origin() {
                 return 'http://localhost:3002';
             },
+            get currentLoginStatus() {
+                return null;
+            },
         };
 
         customAuthMock = customAuth = {
@@ -127,6 +131,7 @@ describe('RecordsManager', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: null,
+            logout: jest.fn(),
             getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
@@ -165,7 +170,7 @@ describe('RecordsManager', () => {
     });
 
     function createHelper() {
-        vm = new TestAuxVM(userId);
+        vm = new TestAuxVM(null, userId);
         const helper = new BotHelper(vm);
         helper.userId = 'userId';
 

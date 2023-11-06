@@ -24,6 +24,7 @@ import {
 import {
     ClientConnectionState,
     ConnectionClient,
+    ConnectionIndicator,
     ConnectionInfo,
     WebsocketDownloadRequestEvent,
     WebsocketErrorInfo,
@@ -34,7 +35,6 @@ import {
     WebsocketType,
     WebsocketUploadRequestEvent,
     WebsocketUploadResponseEvent,
-    websocketMessageSchema,
 } from '@casual-simulation/aux-common';
 import axios, { Method } from 'axios';
 
@@ -56,8 +56,16 @@ export class ApiGatewayWebsocketConnectionClient implements ConnectionClient {
         return this._connectionStateChanged.value.info;
     }
 
+    get indicator(): ConnectionIndicator | null {
+        return null;
+    }
+
     get onError() {
         return this._onError;
+    }
+
+    get origin() {
+        return this._socket.origin;
     }
 
     event<T>(name: string): Observable<T> {

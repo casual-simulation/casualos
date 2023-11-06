@@ -8,7 +8,13 @@ import {
     TagEdit,
     GetRemoteCountAction,
 } from '../bots';
-import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
+import {
+    Observable,
+    Subscription,
+    Subject,
+    BehaviorSubject,
+    firstValueFrom,
+} from 'rxjs';
 import {
     CausalRepoPartition,
     AuxPartitionRealtimeStrategy,
@@ -78,7 +84,7 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { startWith } from 'rxjs/operators';
+import { filter, startWith } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
 import { ensureTagIsSerializable } from './PartitionUtils';
 import {
@@ -89,19 +95,22 @@ import {
     CurrentVersion,
     device,
     VersionVector,
+    getConnectionId,
 } from '../common';
 import { InstRecordsClient } from '../websockets';
+import { PartitionAuthSource } from './PartitionAuthSource';
 
 /**
  * Attempts to create a YjsPartition from the given config.
- * @param indicator The connection indicator.
  * @param config The config.
+ * @param authSource The auth source.
  */
 export function createRemoteClientYjsPartition(
-    config: PartitionConfig
+    config: PartitionConfig,
+    authSource: PartitionAuthSource
 ): YjsPartition {
     if (config.type === 'yjs_client') {
-        return new RemoteYjsPartitionImpl(config.client, config);
+        return new RemoteYjsPartitionImpl(config.client, authSource, config);
     }
     return undefined;
 }
@@ -134,6 +143,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _isLocalTransaction: boolean = true;
     private _isRemoteUpdate: boolean = false;
     private _static: boolean;
+    private _skipInitialLoad: boolean;
+    private _sendInitialUpdates: boolean = false;
     private _watchingBranch: any;
     private _synced: boolean;
     private _authorized: boolean;
@@ -143,6 +154,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _temporary: boolean;
     private _readOnly: boolean;
     private _remoteEvents: boolean;
+    private _authSource: PartitionAuthSource;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -227,11 +239,13 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
 
     constructor(
         client: InstRecordsClient,
+        authSource: PartitionAuthSource,
         config: YjsClientPartitionConfig | RemoteYjsPartitionConfig
     ) {
         this.private = config.private || false;
         this._client = client;
         this._static = config.static;
+        this._skipInitialLoad = config.skipInitialLoad;
         this._remoteEvents =
             'remoteEvents' in config ? config.remoteEvents : true;
         this._recordName = config.recordName;
@@ -240,6 +254,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._temporary = config.temporary;
         this._synced = false;
         this._authorized = false;
+        this._authSource = authSource;
 
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
@@ -326,7 +341,9 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     async init(): Promise<void> {}
 
     connect(): void {
-        if (this._static) {
+        if (this._skipInitialLoad) {
+            this._initializePartitionWithoutLoading();
+        } else if (this._static) {
             this._requestBranch();
         } else {
             this._watchBranch();
@@ -487,6 +504,41 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         }
     }
 
+    async enableCollaboration() {
+        this._static = false;
+        this._skipInitialLoad = false;
+        this._sendInitialUpdates = true;
+        this._synced = false;
+        const promise = firstValueFrom(
+            this._onStatusUpdated.pipe(
+                filter((u) => u.type === 'sync' && u.synced)
+            )
+        );
+        this._watchBranch();
+        await promise;
+    }
+
+    private async _initializePartitionWithoutLoading() {
+        this._onStatusUpdated.next({
+            type: 'connection',
+            connected: true,
+        });
+        const indicator = this._client.connection.indicator;
+        const connectionId = indicator
+            ? getConnectionId(indicator)
+            : 'missing-connection-id';
+        this._onStatusUpdated.next({
+            type: 'authentication',
+            authenticated: true,
+            info: this._client.connection.info ?? {
+                connectionId: connectionId,
+                sessionId: null,
+                userId: null,
+            },
+        });
+        this._updateSynced(true);
+    }
+
     private _requestBranch() {
         this._client
             .getBranchUpdates(this._recordName, this._inst, this._branch)
@@ -554,6 +606,17 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         // The partition should become synced if it was not synced
                         // and it just got some new data.
                         if (!this._synced && event.type === 'updates') {
+                            if (this._sendInitialUpdates) {
+                                this._sendInitialUpdates = false;
+                                const update = encodeStateAsUpdate(this._doc);
+                                const updates = [fromByteArray(update)];
+                                this._client.addUpdates(
+                                    this._recordName,
+                                    this._inst,
+                                    this._branch,
+                                    updates
+                                );
+                            }
                             this._updateSynced(true);
                         }
                         if (event.type === 'updates') {
@@ -653,6 +716,59 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                         type: 'authorization',
                                         authorized: false,
                                         error: event.info,
+                                    });
+                                    this._authSource.sendAuthRequest({
+                                        type: 'request',
+                                        kind: 'not_authorized',
+                                        errorCode: event.info.errorCode,
+                                        errorMessage: event.info.errorMessage,
+                                        origin: this._client.connection.origin,
+                                        reason: event.info.reason,
+                                        resource: {
+                                            type: 'inst',
+                                            recordName: this._recordName,
+                                            inst: this._inst,
+                                        },
+                                    });
+                                }
+                            }
+                        } else if (event.type === 'repo/watch_branch_result') {
+                            if (event.success === false) {
+                                const errorCode = event.errorCode;
+                                if (
+                                    errorCode === 'not_authorized' ||
+                                    errorCode ===
+                                        'subscription_limit_reached' ||
+                                    errorCode === 'inst_not_found' ||
+                                    errorCode === 'record_not_found' ||
+                                    errorCode === 'invalid_record_key' ||
+                                    errorCode === 'invalid_token' ||
+                                    errorCode ===
+                                        'unacceptable_connection_id' ||
+                                    errorCode ===
+                                        'unacceptable_connection_token' ||
+                                    errorCode === 'user_is_banned' ||
+                                    errorCode === 'not_logged_in' ||
+                                    errorCode === 'session_expired'
+                                ) {
+                                    const { type, ...error } = event;
+                                    this._onStatusUpdated.next({
+                                        type: 'authorization',
+                                        authorized: false,
+                                        error: error,
+                                    });
+                                    this._authSource.sendAuthRequest({
+                                        type: 'request',
+                                        kind: 'not_authorized',
+                                        errorCode: event.errorCode,
+                                        errorMessage: event.errorMessage,
+                                        origin: this._client.connection.origin,
+                                        reason: event.reason,
+                                        resource: {
+                                            type: 'inst',
+                                            recordName: this._recordName,
+                                            inst: this._inst,
+                                        },
                                     });
                                 }
                             }

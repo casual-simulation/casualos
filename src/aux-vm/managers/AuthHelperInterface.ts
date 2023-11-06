@@ -21,6 +21,11 @@ export interface AuthHelperInterface extends SubscriptionLike {
     supportsAuthentication: boolean;
 
     /**
+     * Gets the current login status.
+     */
+    currentLoginStatus: LoginStatus | null;
+
+    /**
      * Gets an observable that resolves whenever a login status is available.
      */
     loginStatus: Observable<LoginStatus>;
