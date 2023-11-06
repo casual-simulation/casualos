@@ -175,6 +175,13 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     private: true,
                 }),
             },
+            [BOOTSTRAP_PARTITION_ID]: {
+                type: 'memory',
+                initialState: config.bootstrapState
+                    ? getBotsStateFromStoredAux(config.bootstrapState)
+                    : {},
+                private: true,
+            },
         };
 
         let partitions: AuxPartitionConfig;
