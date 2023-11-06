@@ -34,12 +34,17 @@
                             <md-icon class="md-size-2x" v-else>perm_identity</md-icon>
                         </div>
                     </div>
-                    <h3 class="text-center">{{ loginStatus.authData.name }}</h3>
+                    <h3 class="text-center">
+                        {{ loginStatus.authData.name }}
+                        <span v-show="loginStatus.authData.displayName"
+                            >({{ loginStatus.authData.displayName }})</span
+                        >
+                    </h3>
                 </div>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="openAccountDashboard()"
-                    >Open Account Dashboard</md-button
+                    >Manage Account</md-button
                 >
                 <md-button @click="logout()">Logout</md-button>
             </md-dialog-actions>
