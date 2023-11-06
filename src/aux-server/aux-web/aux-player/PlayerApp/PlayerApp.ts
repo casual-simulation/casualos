@@ -1125,7 +1125,9 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'request_auth_data') {
                     try {
-                        const id = await simulation.auth.primary.authenticate();
+                        const id = e.requestInBackground
+                            ? await simulation.auth.primary.authenticateInBackground()
+                            : await simulation.auth.primary.authenticate();
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, id, false)

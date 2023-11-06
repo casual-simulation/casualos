@@ -2622,6 +2622,12 @@ export interface GoToTagAction {
  */
 export interface RequestAuthDataAction extends AsyncAction {
     type: 'request_auth_data';
+
+    /**
+     * Whether the request should be limited to the background.
+     * Defaults to false.
+     */
+    requestInBackground?: boolean;
 }
 
 /**
@@ -4602,12 +4608,15 @@ export function htmlAppMethod(
 
 /**
  * Creates a RequestAuthDataAction.
+ * @param requestInBackground Whether the request should be made in the background.
  */
 export function requestAuthData(
+    requestInBackground?: boolean,
     taskId?: string | number
 ): RequestAuthDataAction {
     return {
         type: 'request_auth_data',
+        requestInBackground,
         taskId,
     };
 }
