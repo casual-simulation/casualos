@@ -25,6 +25,7 @@ import {
     AuxConfig,
     parseVersionNumber,
     SimulationOrigin,
+    AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
 import {
     AuthCoordinator,
@@ -331,9 +332,18 @@ export class AppManager {
     }
 
     private async _initAuth() {
+        let factory: (
+            primaryAuthOrigin: string,
+            recordsAuthOrigin: string
+        ) => AuthHelperInterface;
+
+        const primaryAuthOrigin = this._config.authOrigin;
+        const recordsAuthOrigin = this._config.recordsOrigin;
+
         this._auth = new AuthHelper(
             this.config.authOrigin,
-            this.config.recordsOrigin
+            this.config.recordsOrigin,
+            factory
         );
         console.log('[AppManager] Authenticating user in background...');
         const authData = await this._auth.primary.authenticateInBackground();
@@ -395,10 +405,15 @@ export class AppManager {
 
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
 
+        let disableCollaboration = this._config.disableCollaboration;
+        let isCollaborative = disableCollaboration ? false : true;
+        let allowCollaborationUpgrade = !disableCollaboration;
+
         this._deviceConfig = {
             supportsAR: arSupported,
             supportsVR: vrSupported,
-            isCollaborative: !this._config.disableCollaboration,
+            isCollaborative: isCollaborative,
+            allowCollaborationUpgrade: allowCollaborationUpgrade,
             ab1BootstrapUrl: ab1Bootstrap,
         };
     }
