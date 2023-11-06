@@ -140,7 +140,7 @@
                             <div class="subscription-hook">
                                 {{ subscription.description }}
                             </div>
-                            <div class="subscription-price">
+                            <div class="subscription-price" v-if="subscription.prices.length > 0">
                                 <span class="price">{{
                                     formatPrice(
                                         subscription.prices[0].cost,
@@ -167,9 +167,16 @@
 
                     <md-card-actions>
                         <md-button
+                            v-if="subscription.prices.length > 0"
                             @click="subscribe(subscription.id, subscription.prices[0])"
                             class="md-primary"
                             >Subscribe</md-button
+                        >
+                        <md-button
+                            v-else-if="subscription.defaultSubscription"
+                            class="md-primary"
+                            disabled
+                            >Active</md-button
                         >
                     </md-card-actions>
                 </md-card>
