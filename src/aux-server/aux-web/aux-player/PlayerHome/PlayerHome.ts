@@ -64,7 +64,7 @@ export default class PlayerHome extends Vue {
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
         const inst = this.query['inst'] as string | string[];
-        let recordName = this.query['record'] ?? this.query['studio'] ?? null;
+        let recordName = this.query['record'] ?? this.query['player'] ?? null;
         if (hasValue(inst)) {
             await this._setServer(recordName, inst);
         }
@@ -123,19 +123,19 @@ export default class PlayerHome extends Vue {
             if (hasValue(recordName)) {
                 update.record = recordName;
             } else {
-                let studio = this.query['studio'] ?? null;
-                if (studio) {
-                    update.studio = studio;
-                    recordName = studio;
+                let player = this.query['player'] ?? null;
+                if (player) {
+                    update.player = player;
+                    recordName = player;
                 } else if (
                     !preferPublic &&
-                    appManager.defaultStudioId &&
+                    appManager.defaultPlayerId &&
                     !hasQueryParam
                 ) {
-                    // Only use the default studio if there are no other query params.
+                    // Only use the default player if there are no other query params.
                     // This prevents bad actors from giving the user a URL that auto-populates data into a private inst.
-                    update.studio = appManager.defaultStudioId;
-                    recordName = appManager.defaultStudioId;
+                    update.player = appManager.defaultPlayerId;
+                    recordName = appManager.defaultPlayerId;
                 } else if (preferPublic) {
                     recordName = null;
                 }
@@ -211,7 +211,7 @@ export default class PlayerHome extends Vue {
                                 calculateStringTagValue(
                                     calc,
                                     update.bot,
-                                    'studio',
+                                    'player',
                                     null
                                 );
                             if (hasValue(inst)) {
