@@ -2658,12 +2658,15 @@ export interface AuthData {
     avatarPortraitUrl: string;
 
     /**
-     * Whether the user has an active subscription to the beta program.
+     * Whether the user has an active subscription that they are paying for.
+     * If false, then the user either has no subscription or has a default subscription.
      */
     hasActiveSubscription: boolean;
 
     /**
      * The subscription tier that is currently active for the user.
+     * If null, then the user has no subscription tier.
+     * Otherwise, then the user is paying for a subscription for has a default subscription.
      */
     subscriptionTier: string | null;
 }

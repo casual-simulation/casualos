@@ -191,8 +191,11 @@ export class SubscriptionController {
                     const item = s.items[0];
                     const subscriptionInfo = config.subscriptions.find(
                         (sub) => {
-                            return sub.eligibleProducts.some(
-                                (p) => p === item.price.product.id
+                            return (
+                                sub.eligibleProducts &&
+                                sub.eligibleProducts.some(
+                                    (p) => p === item.price.product.id
+                                )
                             );
                         }
                     );
@@ -545,10 +548,12 @@ export class SubscriptionController {
                     return false;
                 }
 
-                const hasManagableProduct = config.subscriptions.some((sub) =>
-                    sub.eligibleProducts.some((p) =>
-                        s.items.some((i) => i.price.product.id === p)
-                    )
+                const hasManagableProduct = config.subscriptions.some(
+                    (sub) =>
+                        sub.eligibleProducts &&
+                        sub.eligibleProducts.some((p) =>
+                            s.items.some((i) => i.price.product.id === p)
+                        )
                 );
 
                 return hasManagableProduct;
@@ -622,20 +627,12 @@ export class SubscriptionController {
             }
         }
 
-        if (!sub) {
-            sub = purchasableSubscriptions.find((s) => s.defaultSubscription);
-            if (sub) {
-                console.log(
-                    `[SubscriptionController] [createManageSubscriptionLink] Using default subscription.`
-                );
-            }
-        }
-
-        if (!sub) {
-            sub = purchasableSubscriptions[0];
-            console.log(
-                `[SubscriptionController] [createManageSubscriptionLink] Using first subscription.`
-            );
+        if (!sub || !sub.product || sub.purchasable === false) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The given subscription is not purchasable.',
+            };
         }
 
         const productInfo = await this._stripe.getProductAndPriceInfo(
@@ -771,6 +768,7 @@ export class SubscriptionController {
                 items_loop: for (let i of items) {
                     for (let s of config.subscriptions) {
                         if (
+                            s.eligibleProducts &&
                             s.eligibleProducts.some(
                                 (p) => p === i.price.product
                             )
@@ -948,6 +946,7 @@ export class SubscriptionController {
                     items_loop: for (let i of lineItems) {
                         for (let s of config.subscriptions) {
                             if (
+                                s.eligibleProducts &&
                                 s.eligibleProducts.some(
                                     (p) => p === i.price.product
                                 )
@@ -978,49 +977,6 @@ export class SubscriptionController {
             };
         }
     }
-}
-
-/**
- * Attempts to parse the given JSON into a valid SubscriptionConfiguration object.
- * @param config The JSON to parse.
- */
-export function tryParseSubscriptionConfig(
-    config: string
-): SubscriptionConfiguration | null {
-    let subscriptionParseResult: JsonParseResult = tryParseJson(config);
-    let subscriptionConfig: SubscriptionConfiguration;
-
-    if (subscriptionParseResult.success && subscriptionParseResult.value) {
-        subscriptionConfig = subscriptionParseResult.value;
-        if (
-            typeof subscriptionConfig !== 'object' ||
-            typeof subscriptionConfig.cancelUrl !== 'string' ||
-            typeof subscriptionConfig.returnUrl !== 'string' ||
-            typeof subscriptionConfig.successUrl !== 'string' ||
-            typeof subscriptionConfig.subscriptions !== 'object' ||
-            !Array.isArray(subscriptionConfig.subscriptions) ||
-            subscriptionConfig.subscriptions.some(
-                (s) => !isValidSubscription(s)
-            )
-        ) {
-            subscriptionConfig = null;
-        }
-    }
-
-    return subscriptionConfig;
-}
-
-function isValidSubscription(
-    sub: SubscriptionConfiguration['subscriptions'][0]
-) {
-    return (
-        sub &&
-        typeof sub.id === 'string' &&
-        Array.isArray(sub.featureList) &&
-        Array.isArray(sub.eligibleProducts) &&
-        typeof sub.product === 'string' &&
-        typeof sub.defaultSubscription === 'boolean'
-    );
 }
 
 function returnRoute(basePath: string, user: AuthUser, studio: Studio) {

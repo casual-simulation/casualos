@@ -253,9 +253,10 @@ export const subscriptionConfigSchema = z.object({
                 product: z
                     .string()
                     .describe(
-                        'The ID of the Stripe product that is being offered by this subscription.'
+                        'The ID of the Stripe product that is being offered by this subscription. If omitted, then this subscription will be shown but not able to be purchased.'
                     )
-                    .nonempty(),
+                    .nonempty()
+                    .optional(),
                 featureList: z
                     .array(z.string().nonempty())
                     .describe(
@@ -265,17 +266,18 @@ export const subscriptionConfigSchema = z.object({
                     .array(z.string().nonempty())
                     .describe(
                         'The list of Stripe product IDs that count as eligible for this subscription. Useful if you want to change the product of this subscription, but grandfather in existing users.'
-                    ),
+                    )
+                    .optional(),
                 defaultSubscription: z
                     .boolean()
                     .describe(
-                        'Whether this subscription is the subscription that should be purchased if the user attempts to purchase something without specifying a subscription. Mostly inconsequential.'
+                        "Whether this subscription should be granted to users if they don't already have a subscription. The first in the list of subscriptions that is marked as the default will be used. Defaults to false"
                     )
                     .optional(),
                 purchasable: z
                     .boolean()
                     .describe(
-                        'Whether this subscription is purchasable and should be offered to users who do not already have a subscription. Defaults to true.'
+                        'Whether this subscription is purchasable and should be offered to users who do not already have a subscription. If false, then this subscription will not be shown to users unless they already have an active subscription for it. Defaults to true.'
                     )
                     .optional(),
                 tier: z
@@ -450,8 +452,9 @@ export interface APISubscription {
 
     /**
      * The ID of the product that needs to be purchased for the subscription.
+     * If omitted, then this subscription will be shown but not able to be purchased.
      */
-    product: string;
+    product?: string;
 
     /**
      * The list of features that should be shown for this subscription tier.
@@ -461,7 +464,7 @@ export interface APISubscription {
     /**
      * The list of products that are eligible for this subscription tier.
      */
-    eligibleProducts: string[];
+    eligibleProducts?: string[];
 
     /**
      * Whether this subscription should be the default.

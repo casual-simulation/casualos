@@ -198,7 +198,6 @@ describe('RecordsServer', () => {
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
-                        defaultSubscription: true,
                     },
                 ],
                 webhookSecret: 'webhook_secret',
@@ -1174,7 +1173,7 @@ describe('RecordsServer', () => {
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     JSON.stringify({
-                        subscriptionId: 'sub-1',
+                        subscriptionId: 'sub_id',
                         expectedPrice: {
                             currency: 'usd',
                             cost: 100,
@@ -1217,7 +1216,7 @@ describe('RecordsServer', () => {
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     JSON.stringify({
-                        subscriptionId: 'sub-1',
+                        subscriptionId: 'sub_id',
                         expectedPrice: {
                             currency: 'usd',
                             cost: 1000,
@@ -10473,7 +10472,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             userId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 100,
@@ -10517,7 +10516,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             userId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 1000,
@@ -10773,7 +10772,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             studioId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 100,
@@ -10817,7 +10816,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             studioId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 1000,

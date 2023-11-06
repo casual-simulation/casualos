@@ -1020,6 +1020,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1112,7 +1113,6 @@ describe('SubscriptionController', () => {
                                     'Feature 2',
                                     'Feature 3',
                                 ],
-                                defaultSubscription: true,
                             },
                             {
                                 id: 'sub_2',
@@ -1198,6 +1198,68 @@ describe('SubscriptionController', () => {
                     });
                 });
 
+                it('should return a unacceptable_request if given a subscription that does not have a product', async () => {
+                    store.subscriptionConfiguration.subscriptions[1].product =
+                        null;
+                    const result =
+                        await controller.createManageSubscriptionLink({
+                            sessionKey,
+                            userId,
+                            subscriptionId: 'sub_2',
+                        });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The given subscription is not purchasable.',
+                    });
+                    expect(stripeMock.createCustomer).toHaveBeenCalledTimes(1);
+                    expect(stripeMock.createCustomer).toHaveBeenCalledWith({
+                        name: 'test name',
+                        email: 'test@example.com',
+                        phone: null,
+                        metadata: {
+                            role: 'user',
+                            userId,
+                        },
+                    });
+                    expect(
+                        stripeMock.createCheckoutSession
+                    ).not.toHaveBeenCalled();
+                });
+
+                it('should return a unacceptable_request if given a subscription that is not purchasable', async () => {
+                    store.subscriptionConfiguration.subscriptions[1].purchasable =
+                        false;
+                    const result =
+                        await controller.createManageSubscriptionLink({
+                            sessionKey,
+                            userId,
+                            subscriptionId: 'sub_2',
+                        });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The given subscription is not purchasable.',
+                    });
+                    expect(stripeMock.createCustomer).toHaveBeenCalledTimes(1);
+                    expect(stripeMock.createCustomer).toHaveBeenCalledWith({
+                        name: 'test name',
+                        email: 'test@example.com',
+                        phone: null,
+                        metadata: {
+                            role: 'user',
+                            userId,
+                        },
+                    });
+                    expect(
+                        stripeMock.createCheckoutSession
+                    ).not.toHaveBeenCalled();
+                });
+
                 it('should return a price_does_not_match if the expected price does not match the subscription', async () => {
                     const result =
                         await controller.createManageSubscriptionLink({
@@ -1209,6 +1271,7 @@ describe('SubscriptionController', () => {
                                 interval: 'month',
                                 intervalLength: 1,
                             },
+                            subscriptionId: 'sub_1',
                         });
 
                     expect(result).toEqual({
@@ -1337,6 +1400,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1420,6 +1484,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1503,6 +1568,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1586,6 +1652,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1672,6 +1739,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2255,6 +2323,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2353,7 +2422,6 @@ describe('SubscriptionController', () => {
                                     'Feature 2',
                                     'Feature 3',
                                 ],
-                                defaultSubscription: true,
                             },
                             {
                                 id: 'sub_2',
@@ -2451,6 +2519,7 @@ describe('SubscriptionController', () => {
                                 interval: 'month',
                                 intervalLength: 1,
                             },
+                            subscriptionId: 'sub_1',
                         });
 
                     expect(result).toEqual({
@@ -2579,6 +2648,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2666,6 +2736,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2753,6 +2824,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2840,6 +2912,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2926,6 +2999,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
