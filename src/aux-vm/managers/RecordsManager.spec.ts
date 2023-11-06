@@ -116,7 +116,7 @@ describe('RecordsManager', () => {
             get origin() {
                 return 'http://localhost:3002';
             },
-            get currentLoginStatus() {
+            get currentLoginStatus(): any {
                 return null;
             },
         };
@@ -150,6 +150,9 @@ describe('RecordsManager', () => {
             },
             get origin() {
                 return 'http://localhost:9999';
+            },
+            get currentLoginStatus(): any {
+                return null;
             },
         };
 

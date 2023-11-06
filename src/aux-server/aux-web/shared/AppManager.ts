@@ -225,7 +225,7 @@ export class AppManager {
         this._simulationFactory = factory;
     }
 
-    get defaultStudioId() {
+    get defaultPlayerId() {
         return this._defaultStudioId;
     }
 
@@ -371,7 +371,7 @@ export class AppManager {
             console.log('[AppManager] User is not authenticated.');
             this._defaultStudioId = null;
         }
-        console.log(`[AppManager] defaultStudioId: ${this._defaultStudioId}`);
+        console.log(`[AppManager] defaultPlayerId: ${this._defaultStudioId}`);
     }
 
     private async _initIndexedDB() {

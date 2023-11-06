@@ -1792,7 +1792,7 @@ export class AuthController {
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
                 hasActiveSubscription: hasActiveSubscription,
-                subscriptionTier: hasActiveSubscription ? tier : null,
+                subscriptionTier: tier ?? null,
                 features,
             };
         } catch (err) {
@@ -1815,23 +1815,13 @@ export class AuthController {
 
         let tier: string = null;
         let sub: SubscriptionConfiguration['subscriptions'][0] = null;
+        const subscriptionConfig: SubscriptionConfiguration =
+            await this._config.getSubscriptionConfiguration();
         if (hasActiveSubscription) {
-            const subscriptionConfig =
-                await this._config.getSubscriptionConfiguration();
             if (user.subscriptionId) {
                 sub = subscriptionConfig?.subscriptions.find(
                     (s) => s.id === user.subscriptionId
                 );
-            }
-            if (!sub) {
-                sub = subscriptionConfig?.subscriptions.find(
-                    (s) => s.defaultSubscription
-                );
-                if (sub) {
-                    console.log(
-                        '[AuthController] [getUserInfo] Using default subscription for user.'
-                    );
-                }
             }
 
             if (!sub) {
@@ -1844,9 +1834,21 @@ export class AuthController {
             }
 
             tier = 'beta';
-            if (sub && sub.tier) {
-                tier = sub.tier;
+        }
+
+        if (!sub) {
+            sub = subscriptionConfig?.subscriptions.find(
+                (s) => s.defaultSubscription
+            );
+            if (sub) {
+                console.log(
+                    '[AuthController] [getUserInfo] Using default subscription for user.'
+                );
             }
+        }
+
+        if (sub) {
+            tier = sub.tier || 'beta';
         }
 
         return {

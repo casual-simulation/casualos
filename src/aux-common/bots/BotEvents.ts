@@ -2622,6 +2622,12 @@ export interface GoToTagAction {
  */
 export interface RequestAuthDataAction extends AsyncAction {
     type: 'request_auth_data';
+
+    /**
+     * Whether the request should be limited to the background.
+     * Defaults to false.
+     */
+    requestInBackground?: boolean;
 }
 
 /**
@@ -2657,12 +2663,15 @@ export interface AuthData {
     avatarPortraitUrl: string;
 
     /**
-     * Whether the user has an active subscription to the beta program.
+     * Whether the user has an active subscription that they are paying for.
+     * If false, then the user either has no subscription or has a default subscription.
      */
     hasActiveSubscription: boolean;
 
     /**
      * The subscription tier that is currently active for the user.
+     * If null, then the user has no subscription tier.
+     * Otherwise, then the user is paying for a subscription for has a default subscription.
      */
     subscriptionTier: string | null;
 }
@@ -4607,12 +4616,15 @@ export function htmlAppMethod(
 
 /**
  * Creates a RequestAuthDataAction.
+ * @param requestInBackground Whether the request should be made in the background.
  */
 export function requestAuthData(
+    requestInBackground?: boolean,
     taskId?: string | number
 ): RequestAuthDataAction {
     return {
         type: 'request_auth_data',
+        requestInBackground,
         taskId,
     };
 }

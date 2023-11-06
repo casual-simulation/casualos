@@ -1361,6 +1361,8 @@ export const DEFAULT_PORTAL_PANNABLE = true;
  */
 export const DEFAULT_PORTAL_ROTATABLE = true;
 
+export const DEFAULT_GRID_PORTAL_LIGHTING = true;
+
 /**
  * Whether portals are zoomable by default.
  */
@@ -2535,6 +2537,7 @@ export const KNOWN_TAGS: string[] = [
     'pixelHeight',
     'pixelRatio',
     'defaultPixelRatio',
+    'defaultLighting',
     'pageTitle',
     'pointerPixelX',
     'pointerPixelY',

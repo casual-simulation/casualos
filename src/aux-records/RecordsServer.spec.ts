@@ -220,7 +220,6 @@ describe('RecordsServer', () => {
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
-                        defaultSubscription: true,
                     },
                 ],
                 webhookSecret: 'webhook_secret',
@@ -1221,7 +1220,7 @@ describe('RecordsServer', () => {
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     JSON.stringify({
-                        subscriptionId: 'sub-1',
+                        subscriptionId: 'sub_id',
                         expectedPrice: {
                             currency: 'usd',
                             cost: 100,
@@ -1264,7 +1263,7 @@ describe('RecordsServer', () => {
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     JSON.stringify({
-                        subscriptionId: 'sub-1',
+                        subscriptionId: 'sub_id',
                         expectedPrice: {
                             currency: 'usd',
                             cost: 1000,
@@ -10511,6 +10510,71 @@ describe('RecordsServer', () => {
                 });
             });
 
+            it('should include default subscriptions in the list of purchasable subscriptions', async () => {
+                (store.subscriptionConfiguration.subscriptions = [
+                    {
+                        id: 'sub_id',
+                        eligibleProducts: ['product_id'],
+                        featureList: ['Feature 1', 'Feature 2'],
+                        product: 'product_id',
+                    },
+                    {
+                        id: 'default',
+                        name: 'name',
+                        description: 'description',
+                        defaultSubscription: true,
+                        featureList: ['default feature 1'],
+                    },
+                ]),
+                    stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                        {
+                            subscriptions: [],
+                        }
+                    );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [],
+                        purchasableSubscriptions: [
+                            {
+                                id: 'sub_id',
+                                name: 'Product Name',
+                                description: 'Product Description',
+                                featureList: ['Feature 1', 'Feature 2'],
+                                prices: [
+                                    {
+                                        id: 'default',
+                                        cost: 100,
+                                        currency: 'usd',
+                                        interval: 'month',
+                                        intervalLength: 1,
+                                    },
+                                ],
+                            },
+                            {
+                                id: 'default',
+                                name: 'name',
+                                description: 'description',
+                                featureList: ['default feature 1'],
+                                prices: [],
+                                defaultSubscription: true,
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
             it('should return a 403 status code if the origin is invalid', async () => {
                 authenticatedHeaders['origin'] = 'https://wrong.origin.com';
                 const result = await server.handleHttpRequest(
@@ -10736,6 +10800,71 @@ describe('RecordsServer', () => {
                 });
             });
 
+            it('should include default subscriptions in the list of purchasable subscriptions', async () => {
+                (store.subscriptionConfiguration.subscriptions = [
+                    {
+                        id: 'sub_id',
+                        eligibleProducts: ['product_id'],
+                        featureList: ['Feature 1', 'Feature 2'],
+                        product: 'product_id',
+                    },
+                    {
+                        id: 'default',
+                        name: 'name',
+                        description: 'description',
+                        defaultSubscription: true,
+                        featureList: ['default feature 1'],
+                    },
+                ]),
+                    stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                        {
+                            subscriptions: [],
+                        }
+                    );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [],
+                        purchasableSubscriptions: [
+                            {
+                                id: 'sub_id',
+                                name: 'Product Name',
+                                description: 'Product Description',
+                                featureList: ['Feature 1', 'Feature 2'],
+                                prices: [
+                                    {
+                                        id: 'default',
+                                        cost: 100,
+                                        currency: 'usd',
+                                        interval: 'month',
+                                        intervalLength: 1,
+                                    },
+                                ],
+                            },
+                            {
+                                id: 'default',
+                                name: 'name',
+                                description: 'description',
+                                featureList: ['default feature 1'],
+                                prices: [],
+                                defaultSubscription: true,
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
             it('should return a 403 status code if the origin is invalid', async () => {
                 authenticatedHeaders['origin'] = 'https://wrong.origin.com';
                 const result = await server.handleHttpRequest(
@@ -10920,7 +11049,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             userId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 100,
@@ -10964,7 +11093,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             userId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 1000,
@@ -11220,7 +11349,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             studioId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 100,
@@ -11264,7 +11393,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             studioId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 1000,

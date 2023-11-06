@@ -40,6 +40,7 @@
 -   Removed all the `causal-tree` packages.
     -   They are no longer needed since YJS does such a good job.
 -   Merged all the websocket and data synchronization code into `aux-common`, `aux-records`, and `aux-server`.
+-   Changed `SERVER_CONFIG.subscriptions.subscriptions.defaultSubscription` to be used to indicate that the subscription should be automatically given to users who do not have an active subscription.
 
 ### :rocket: Improvements
 
@@ -54,6 +55,10 @@
     -   Added `formLightDecay` tag.
     -   Added `formLightGroundColor` tag.
 -   Added menu items `password` subtype.
+-   Added the `os.requestAuthBotInBackground()` function.
+    -   Works just like `os.requestAuthBot()` except that the user will not be prompted to login.
+    -   Returns the user's auth bot if they are signed in.
+    -   Returns `null` if the user is not signed in.
 
 ### :bug: Bug Fixes
 
