@@ -271,6 +271,89 @@ describe('SubscriptionController', () => {
                 });
             });
 
+            it('should list the default subscription even though it may not be purchasable', async () => {
+                store.subscriptionConfiguration.subscriptions = [
+                    ...store.subscriptionConfiguration.subscriptions,
+                    {
+                        id: 'sub_3',
+                        eligibleProducts: ['product_99_id'],
+                        product: 'product_99_id',
+                        studioOnly: true,
+                        featureList: ['Feature 1'],
+                    },
+                    {
+                        id: 'sub_4',
+                        eligibleProducts: ['product_1000_id'],
+                        product: 'product_1000_id',
+                        userOnly: true,
+                        featureList: ['Feature 1'],
+                    },
+                    {
+                        id: 'sub_5',
+                        name: 'Default Product',
+                        description: 'A default product.',
+                        featureList: ['Feature 1'],
+                        defaultSubscription: true,
+                    },
+                ];
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                        {
+                            id: 'sub_4',
+                            name: 'Product 1000',
+                            description: 'A product named 1000.',
+                            featureList: ['Feature 1'],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 9999,
+                                },
+                            ],
+                        },
+                        {
+                            id: 'sub_5',
+                            name: 'Default Product',
+                            description: 'A default product.',
+                            featureList: ['Feature 1'],
+                            prices: [],
+                            defaultSubscription: true,
+                        },
+                    ],
+                });
+            });
+
             it('should be able list subscriptions when the user has a customer ID', async () => {
                 await store.saveUser({
                     ...user,

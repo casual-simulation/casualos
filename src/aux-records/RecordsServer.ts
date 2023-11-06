@@ -3760,6 +3760,7 @@ export class RecordsServer {
                     description: s.description,
                     featureList: s.featureList,
                     prices: s.prices,
+                    defaultSubscription: s.defaultSubscription,
                 })
             ),
         });
@@ -3843,6 +3844,7 @@ export class RecordsServer {
                     description: s.description,
                     featureList: s.featureList,
                     prices: s.prices,
+                    defaultSubscription: s.defaultSubscription,
                 })
             ),
         });

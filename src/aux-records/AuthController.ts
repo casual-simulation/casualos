@@ -1248,8 +1248,8 @@ export class AuthController {
             }
         }
 
-        if (sub && sub.tier) {
-            tier = sub.tier;
+        if (sub) {
+            tier = sub.tier || 'beta';
         }
 
         return {

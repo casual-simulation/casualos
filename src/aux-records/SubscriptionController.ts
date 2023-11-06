@@ -269,30 +269,54 @@ export class SubscriptionController {
         const promises = this._getPurchasableSubscriptionsForRole(
             role,
             config
-        ).map(async (s) => ({
-            sub: s,
-            info: await this._stripe.getProductAndPriceInfo(s.product),
-        }));
+        ).map(async (s) => {
+            if (s.product) {
+                return {
+                    sub: s,
+                    info: await this._stripe.getProductAndPriceInfo(s.product),
+                };
+            } else {
+                return {
+                    sub: s,
+                    info: {
+                        description: s.description,
+                        name: s.name,
+                        default_price: null,
+                        id: null,
+                    },
+                };
+            }
+        });
         const productInfo = await Promise.all(promises);
 
         return productInfo
             .filter((i) => !!i.info)
-            .map((i) => ({
-                id: i.sub.id,
-                name: i.info.name,
-                description: i.info.description,
-                featureList: i.sub.featureList,
-                prices: [
-                    {
+            .map((i) => {
+                let prices: PurchasableSubscription['prices'] = [];
+                if (i.info.default_price) {
+                    prices.push({
                         id: 'default',
                         currency: i.info.default_price.currency,
                         cost: i.info.default_price.unit_amount,
                         interval: i.info.default_price.recurring.interval,
                         intervalLength:
                             i.info.default_price.recurring.interval_count,
-                    },
-                ],
-            }));
+                    });
+                }
+                let result: PurchasableSubscription = {
+                    id: i.sub.id,
+                    name: i.info.name,
+                    description: i.info.description,
+                    featureList: i.sub.featureList,
+                    prices,
+                };
+
+                if ('defaultSubscription' in i.sub) {
+                    result.defaultSubscription = i.sub.defaultSubscription;
+                }
+
+                return result;
+            });
     }
 
     /**
@@ -1255,6 +1279,11 @@ export interface PurchasableSubscription {
          */
         cost: number;
     }[];
+
+    /**
+     * Whether the subscription is the default subscription.
+     */
+    defaultSubscription?: boolean;
 }
 
 export interface GetSubscriptionStatusFailure {

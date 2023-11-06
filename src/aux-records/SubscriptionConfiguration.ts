@@ -280,6 +280,20 @@ export const subscriptionConfigSchema = z.object({
                         'Whether this subscription is purchasable and should be offered to users who do not already have a subscription. If false, then this subscription will not be shown to users unless they already have an active subscription for it. Defaults to true.'
                     )
                     .optional(),
+                name: z
+                    .string()
+                    .describe(
+                        'The name of the subscription. Ignored if a Stripe product is specified.'
+                    )
+                    .nonempty()
+                    .optional(),
+                description: z
+                    .string()
+                    .describe(
+                        'The description of the subscription. Ignored if a Stripe product is specified.'
+                    )
+                    .nonempty()
+                    .optional(),
                 tier: z
                     .string()
                     .describe(
@@ -470,6 +484,18 @@ export interface APISubscription {
      * Whether this subscription should be the default.
      */
     defaultSubscription?: boolean;
+
+    /**
+     * The name of the subscription.
+     * Ignored if a Stripe product is specified.
+     */
+    name?: string;
+
+    /**
+     * The description of the subscription.
+     * Ignored if a Stripe product is specified.
+     */
+    description?: string;
 
     /**
      * Whether the subscription should be offered for purchase.
@@ -785,6 +811,14 @@ export function allowAllFeatures(): FeaturesConfiguration {
     };
 }
 
+/**
+ * Gets the features that are available for the given subscription.
+ * Useful for determining which features a user/studio should have access to based on the ID of their subscription.
+ * @param config The configuration. If null, then all  features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
 export function getSubscriptionFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
@@ -794,8 +828,19 @@ export function getSubscriptionFeatures(
     if (!config) {
         return allowAllFeatures();
     }
+    const roleSubscriptions = config.subscriptions.filter((s) =>
+        subscriptionMatchesRole(s, type)
+    );
     if (isActiveSubscription(subscriptionStatus)) {
-        const sub = config.subscriptions.find((s) => s.id === subscriptionId);
+        const sub = roleSubscriptions.find((s) => s.id === subscriptionId);
+        const tier = sub?.tier;
+        const features = tier ? config.tiers[tier]?.features : null;
+
+        if (features) {
+            return features;
+        }
+    } else {
+        const sub = roleSubscriptions.find((s) => s.defaultSubscription);
         const tier = sub?.tier;
         const features = tier ? config.tiers[tier]?.features : null;
 
@@ -822,6 +867,24 @@ export function getSubscriptionTier(
 
     const sub = config.subscriptions.find((s) => s.id === subId);
     return sub?.tier ?? null;
+}
+
+/**
+ * Determines if the subscription is allowed to be used for the given role.
+ * @param subscription The subscription.
+ * @param role The role.
+ */
+export function subscriptionMatchesRole(
+    subscription: APISubscription,
+    role: 'user' | 'studio'
+) {
+    const isUserOnly = subscription.userOnly ?? false;
+    const isStudioOnly = subscription.studioOnly ?? false;
+    const matchesRole =
+        (isUserOnly && role === 'user') ||
+        (isStudioOnly && role === 'studio') ||
+        (!isUserOnly && !isStudioOnly);
+    return matchesRole;
 }
 
 type HasType<T, Q extends T> = Q;
