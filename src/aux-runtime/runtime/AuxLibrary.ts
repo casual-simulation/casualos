@@ -7860,8 +7860,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docgroup 01-records
      * @docname os.requestAuthBot
      */
-    async function requestAuthBot(): Promise<Bot> {
-        return await _requestAuthBot(false);
+    function requestAuthBot(): Promise<Bot> {
+        return _requestAuthBot(false);
     }
 
     /**
@@ -7894,8 +7894,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docgroup 01-records
      * @docname os.requestAuthBotInBackground
      */
-    async function requestAuthBotInBackground(): Promise<Bot> {
-        return await _requestAuthBot(true);
+    function requestAuthBotInBackground(): Promise<Bot> {
+        return _requestAuthBot(true);
     }
 
     async function _requestAuthBot(background: boolean) {
