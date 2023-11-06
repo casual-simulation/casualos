@@ -275,6 +275,11 @@ export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
     static?: boolean;
 
     /**
+     * Whether the partition should skip the initial load until the partition is upgraded to a realtime connection.
+     */
+    skipInitialLoad?: boolean;
+
+    /**
      * Whether the partition should be temporary.
      */
     temporary?: boolean;
@@ -288,11 +293,6 @@ export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
      * Whether to use websocket or the apiary protocol to connect. (Default is websocket)
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
-
-    /**
-     * Whether the partition should skip the initial load until the partition is upgraded to a realtime connection.
-     */
-    skipInitialLoad?: boolean;
 }
 
 /**
