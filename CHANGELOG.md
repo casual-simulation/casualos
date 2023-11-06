@@ -54,6 +54,10 @@
     -   Added `formLightDecay` tag.
     -   Added `formLightGroundColor` tag.
 -   Added menu items `password` subtype.
+-   Added the `os.requestAuthBotInBackground()` function.
+    -   Works just like `os.requestAuthBot()` except that the user will not be prompted to login.
+    -   Returns the user's auth bot if they are signed in.
+    -   Returns `null` if the user is not signed in.
 
 ### :bug: Bug Fixes
 
