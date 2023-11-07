@@ -20,7 +20,7 @@
                         @click="onExpandRecords"
                     >
                         <md-icon>description</md-icon>
-                        <span class="md-list-item-text">My AUXStudio</span>
+                        <span class="md-list-item-text">My Studio</span>
 
                         <md-list slot="md-expand">
                             <md-list-item
@@ -48,7 +48,7 @@
                                 <strong class="md-list-item-text">No Records</strong>
                             </md-list-item>
                             <md-button class="md-raised md-primary" @click="startCreateRecord()"
-                                >Create Record</md-button
+                                >Add Record</md-button
                             >
                         </md-list>
                     </md-list-item>
@@ -108,7 +108,7 @@
                             <md-button
                                 class="md-raised md-primary"
                                 @click="startCreateRecord(studio.studioId)"
-                                >Create Record</md-button
+                                >Add Record</md-button
                             >
                         </md-list>
                     </md-list-item>
@@ -117,7 +117,7 @@
                             v-if="allowCreateStudio"
                             class="md-raised md-primary"
                             @click="startCreateStudio()"
-                            >Create Shared AUXStudio</md-button
+                            >Add Studio</md-button
                         >
                     </md-list-item>
                 </md-list>
@@ -128,11 +128,11 @@
         </md-app>
 
         <md-dialog :md-active.sync="showCreateStudio">
-            <md-dialog-title>Create Shared AUXStudio</md-dialog-title>
+            <md-dialog-title>Add Studio</md-dialog-title>
 
             <md-dialog-content>
                 <md-field>
-                    <label>AUXStudio Name</label>
+                    <label>Studio Name</label>
                     <md-input v-model="studioName"></md-input>
                 </md-field>
             </md-dialog-content>
@@ -143,7 +143,7 @@
         </md-dialog>
 
         <md-dialog :md-active.sync="showCreateRecord">
-            <md-dialog-title>Create Record</md-dialog-title>
+            <md-dialog-title>Add Record</md-dialog-title>
             <md-dialog-content>
                 <form @submit.prevent="createRecord()">
                     <md-field>
@@ -152,7 +152,7 @@
                     </md-field>
 
                     <md-field>
-                        <label>AUXStudio</label>
+                        <label>Studio</label>
                         <md-select v-model="createRecordStudioId">
                             <md-option :value="''"> My Studio </md-option>
                             <md-option
