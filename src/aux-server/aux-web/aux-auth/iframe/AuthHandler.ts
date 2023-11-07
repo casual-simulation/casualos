@@ -364,7 +364,6 @@ export class AuthHandler implements AuxAuth {
                 showInvalidEmailError: true,
                 errorCode: 'invalid_email',
                 errorMessage: 'The provided email is not accepted.',
-                supportsSms: this._supportsSms,
             });
             return;
         }

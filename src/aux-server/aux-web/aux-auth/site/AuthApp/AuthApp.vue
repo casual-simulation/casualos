@@ -6,7 +6,7 @@
                     <svg-icon name="PersonPinCircle" class="title-img"></svg-icon>
                     <strong>{{ title }}</strong>
                 </a>
-                <md-button v-if="showLogout" @click="logout">Logout</md-button>
+                <md-button v-if="showLogout" @click="logout">Sign Out</md-button>
             </md-app-toolbar>
             <md-app-drawer v-if="showLogout" md-permanent="clipped">
                 <md-list>

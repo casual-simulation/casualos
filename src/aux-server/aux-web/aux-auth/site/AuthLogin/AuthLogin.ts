@@ -6,11 +6,15 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
+import { CompleteOpenIDLoginSuccess } from '@casual-simulation/aux-records';
+import HasAccountDialog from '../HasAccountDialog/HasAccountDialog';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
 @Component({
-    components: {},
+    components: {
+        'has-account-dialog': HasAccountDialog,
+    },
 })
 export default class AuthLogin extends Vue {
     address: string = '';
@@ -50,6 +54,10 @@ export default class AuthLogin extends Vue {
         }
     }
 
+    get usePrivoLogin() {
+        return authManager.usePrivoLogin;
+    }
+
     async created() {
         this.address = authManager.savedEmail || '';
         this.acceptedTerms = authManager.hasAcceptedTerms;
@@ -66,6 +74,61 @@ export default class AuthLogin extends Vue {
         await this._loadInfoAndNavigate();
     }
 
+    hasAccount(hasAccount: boolean) {
+        if (hasAccount) {
+            this._loginWithPrivo();
+        } else {
+            this.$router.push({
+                name: 'sign-up',
+            });
+        }
+    }
+
+    private async _loginWithPrivo() {
+        const result = await authManager.loginWithPrivo();
+        if (result.success) {
+            const requestId = result.requestId;
+            const newTab = window.open(result.authorizationUrl, '_blank');
+
+            const codes: CompleteOpenIDLoginSuccess =
+                await new Promise<CompleteOpenIDLoginSuccess>(
+                    (resolve, reject) => {
+                        let intervalId: number | NodeJS.Timer;
+                        const handleClose = async () => {
+                            if (intervalId) {
+                                clearInterval(intervalId);
+                            }
+
+                            const loginResult =
+                                await authManager.completeOAuthLogin(requestId);
+
+                            if (loginResult.success === true) {
+                                resolve(loginResult);
+                            } else {
+                                if (loginResult.errorCode === 'not_completed') {
+                                    reject(new Error('Login canceled.'));
+                                } else {
+                                    reject(new Error('Login failed.'));
+                                }
+                            }
+                        };
+
+                        intervalId = setInterval(() => {
+                            if (newTab.closed) {
+                                console.error('Closed!');
+                                handleClose();
+                            }
+                        }, 500);
+                    }
+                );
+
+            await authManager.loadUserInfo();
+
+            return authManager.userId;
+        }
+        return null;
+    }
+
     private async _loadInfoAndNavigate() {
         if (this._loggedIn) {
             await authManager.loadUserInfo();
@@ -75,6 +138,7 @@ export default class AuthLogin extends Vue {
             } else {
                 this.$router.push({ name: 'home' });
             }
+        } else if (authManager.usePrivoLogin) {
         }
     }
 
