@@ -16,6 +16,8 @@ import { authManager } from '../shared/index';
 import {
     CompleteOpenIDLoginSuccess,
     CreatePublicRecordKeyResult,
+    IsValidDisplayNameResult,
+    IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
@@ -330,6 +332,18 @@ export class AuthHandler implements AuxAuth {
 
         console.log('[AuthHandler] Got SMS number.');
         this._providedSms.next(sms);
+    }
+
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
+        return await authManager.isValidEmailAddress(email);
+    }
+
+    async isValidDisplayName(
+        displayName: string
+    ): Promise<IsValidDisplayNameResult> {
+        return await authManager.isValidDisplayName(displayName);
     }
 
     async provideCode(code: string): Promise<void> {

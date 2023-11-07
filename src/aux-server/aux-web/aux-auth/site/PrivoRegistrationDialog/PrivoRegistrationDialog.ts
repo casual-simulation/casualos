@@ -77,12 +77,31 @@ export default class PrivoRegistrationDialog extends Vue {
         return false;
     }
 
+    created() {
+        this.resetFields();
+        this.resetErrors();
+    }
+
     disabledDates(date: Date) {
         return date > new Date();
     }
 
     goHome() {
         this.$router.push({ name: 'home' });
+    }
+
+    async checkEmail() {
+        if (this.email) {
+            let isValid = await authManager.validateEmail(this.email);
+            this.showEmailError = !isValid;
+        }
+    }
+
+    async checkDisplayName() {
+        if (this.displayName) {
+            let result = await authManager.isValidDisplayName(this.displayName);
+            this.showDisplayNameError = !result.success || !result.allowed;
+        }
     }
 
     resetErrors() {
@@ -113,6 +132,7 @@ export default class PrivoRegistrationDialog extends Vue {
             this.processing = true;
             this.resetErrors();
 
+            this.email = this.email.trim();
             if (!this.email) {
                 this.showEnterAddressError = true;
                 return;
@@ -122,10 +142,19 @@ export default class PrivoRegistrationDialog extends Vue {
                 return;
             }
 
+            this.displayName = this.displayName.trim();
             if (!this.displayName) {
                 this.showDisplayNameError = true;
                 return;
             }
+            const displayNameResult = await authManager.isValidDisplayName(
+                this.displayName
+            );
+            if (!displayNameResult.success || displayNameResult.allowed) {
+                this.showDisplayNameError = true;
+                return;
+            }
+            this.name = this.name.trim();
             if (!this.name) {
                 this.showNameError = true;
                 return;
@@ -152,6 +181,7 @@ export default class PrivoRegistrationDialog extends Vue {
                 }
             }
 
+            this.parentEmail = this.parentEmail?.trim();
             if (this.parentEmail) {
                 if (!(await authManager.validateEmail(this.parentEmail))) {
                     this.showInvalidParentEmailError = true;

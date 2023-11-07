@@ -227,6 +227,7 @@ export default class RecordsUI extends Vue {
         this.showDateOfBirthError = false;
         this.showEnterAddressError = false;
 
+        this.email = this.email.trim();
         if (!hasValue(this.email)) {
             this.showEnterAddressError = true;
             return;
@@ -235,11 +236,13 @@ export default class RecordsUI extends Vue {
             return;
         }
 
+        this.displayName = this.displayName.trim();
         if (!hasValue(this.displayName)) {
             this.showDisplayNameError = true;
             return;
         }
 
+        this.name = this.name.trim();
         if (!hasValue(this.name)) {
             this.showNameError = true;
             return;
@@ -250,6 +253,7 @@ export default class RecordsUI extends Vue {
             return;
         }
 
+        this.parentEmail = this.parentEmail?.trim();
         if (this.requireParentEmail && !hasValue(this.parentEmail)) {
             this.showEnterParentEmailError = true;
             return;
@@ -553,6 +557,24 @@ export default class RecordsUI extends Vue {
         );
 
         sim.auth.setUseCustomUI(true);
+    }
+
+    async checkEmail() {
+        if (this.email) {
+            const result = await this._currentLoginAuth.isValidEmailAddress(
+                this.email
+            );
+            this.showEmailError = !result.success || !result.allowed;
+        }
+    }
+
+    async checkDisplayName() {
+        if (this.displayName) {
+            const result = await this._currentLoginAuth.isValidDisplayName(
+                this.displayName
+            );
+            this.showDisplayNameError = !result.success || !result.allowed;
+        }
     }
 
     async createRecordKey(recordName: string) {

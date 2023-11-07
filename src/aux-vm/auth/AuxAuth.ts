@@ -1,6 +1,8 @@
 import { AuthData } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
+    IsValidDisplayNameResult,
+    IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
@@ -357,6 +359,20 @@ export interface AuxAuth {
         acceptedTermsOfService: boolean,
         collectionReason?: LoginUIAddressStatus['collectionReason']
     ): Promise<void>;
+
+    /**
+     * Determines whether the given email address is valid.
+     * Only supported on protocol version 9 or more.
+     * @param email The email address to check.
+     */
+    isValidEmailAddress(email: string): Promise<IsValidEmailAddressResult>;
+
+    /**
+     * Determines whether the given display name is valid.
+     * Only supported on protocol version 9 or more.
+     * @param displayName The display name to check.
+     */
+    isValidDisplayName(displayName: string): Promise<IsValidDisplayNameResult>;
 
     /**
      * Specifies the SMS phone number and whether the user accepted the terms of service during the login process.

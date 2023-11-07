@@ -42,6 +42,8 @@ import type {
     ProcessOpenIDAuthorizationCodeRequest,
     ProcessOpenIDAuthorizationCodeResult,
     CompleteOpenIDLoginResult,
+    IsValidEmailAddressResult,
+    IsValidDisplayNameResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -170,13 +172,55 @@ export class AuthManager {
     }
 
     async validateEmail(email: string): Promise<boolean> {
+        const result = await this.isValidEmailAddress(email);
+
+        if (result.success) {
+            return result.allowed;
+        } else {
+            // Return true so that the server can validate when we get a server error.
+            return true;
+        }
+    }
+
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
         // Validation is handled on the server
         const indexOfAt = email.indexOf('@');
         if (indexOfAt < 0 || indexOfAt >= email.length) {
-            return false;
+            return {
+                success: true,
+                allowed: false,
+            };
         }
 
-        return true;
+        const result = await axios.post<IsValidEmailAddressResult>(
+            `${this.apiEndpoint}/api/v2/email/valid`,
+            {
+                email,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return result.data;
+    }
+
+    async isValidDisplayName(
+        displayName: string
+    ): Promise<IsValidDisplayNameResult> {
+        const result = await axios.post<IsValidDisplayNameResult>(
+            `${this.apiEndpoint}/api/v2/displayName/valid`,
+            {
+                displayName,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return result.data;
     }
 
     async validateSmsNumber(sms: string): Promise<boolean> {

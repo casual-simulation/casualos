@@ -11,6 +11,8 @@ import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { AuthData, hasValue } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
+    IsValidDisplayNameResult,
+    IsValidEmailAddressResult,
     parseRecordKey,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
@@ -365,6 +367,42 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             email,
             acceptedTermsOfService
         );
+    }
+
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                success: true,
+                allowed: true,
+            };
+        }
+        return await this._proxy.isValidEmailAddress(email);
+    }
+
+    async isValidDisplayName(
+        displayName: string
+    ): Promise<IsValidDisplayNameResult> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                success: true,
+                allowed: true,
+            };
+        }
+        return await this._proxy.isValidDisplayName(displayName);
     }
 
     async provideSmsNumber(

@@ -249,6 +249,7 @@
                                 autocomplete="email"
                                 v-model="email"
                                 :disabled="processing"
+                                @blur="checkEmail()"
                             />
                             <span v-if="showEmailError" class="md-error"
                                 >This email is not allowed</span
@@ -271,6 +272,7 @@
                                 id="displayName"
                                 v-model="displayName"
                                 :disabled="processing"
+                                @blur="checkDisplayName()"
                             />
                             <span v-if="showDisplayNameError" class="md-error"
                                 >This display name is not allowed</span

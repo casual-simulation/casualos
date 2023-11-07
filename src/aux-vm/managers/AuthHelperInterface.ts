@@ -1,6 +1,8 @@
 import { AuthData } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
+    IsValidDisplayNameResult,
+    IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
@@ -97,6 +99,20 @@ export interface AuthHelperInterface extends SubscriptionLike {
         email: string,
         acceptedTermsOfService: boolean
     ): Promise<void>;
+
+    /**
+     * Determines whether the given email address is valid.
+     * Only supported on protocol version 9 or more.
+     * @param email The email address to check.
+     */
+    isValidEmailAddress(email: string): Promise<IsValidEmailAddressResult>;
+
+    /**
+     * Determines whether the given display name is valid.
+     * Only supported on protocol version 9 or more.
+     * @param displayName The display name to check.
+     */
+    isValidDisplayName(displayName: string): Promise<IsValidDisplayNameResult>;
 
     /**
      * Provides the given email address and whether the user accepted the terms of service for the login flow.
