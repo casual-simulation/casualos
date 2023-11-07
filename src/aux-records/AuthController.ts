@@ -2039,6 +2039,44 @@ export class AuthController {
             };
         }
     }
+
+    async isValidDisplayName(
+        displayName: string
+    ): Promise<IsValidDisplayNameResult> {
+        try {
+            if (this._privoClient) {
+                const config = await this._config.getPrivoConfiguration();
+                if (config) {
+                    const result = await this._privoClient.checkDisplayName(
+                        displayName
+                    );
+                    const allowed = result.available && !result.profanity;
+
+                    return {
+                        success: true,
+                        allowed,
+                        suggestions: result.suggestions,
+                        profanity: result.profanity,
+                    };
+                }
+            }
+
+            return {
+                success: true,
+                allowed: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while checking if display name is valid',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 export interface PrivoSignUpRequest {
@@ -2884,6 +2922,34 @@ export interface IsValidEmailAddressSuccess {
 }
 
 export interface IsValidEmailAddressFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type IsValidDisplayNameResult =
+    | IsValidDisplayNameSuccess
+    | IsValidDisplayNameFailure;
+
+export interface IsValidDisplayNameSuccess {
+    success: true;
+    /**
+     * Whether the email address can be used.
+     */
+    allowed: boolean;
+
+    /**
+     * The suggestions for alternate email addresses.
+     */
+    suggestions?: string[];
+
+    /**
+     * Whether the email contains profanity.
+     */
+    profanity?: boolean;
+}
+
+export interface IsValidDisplayNameFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;

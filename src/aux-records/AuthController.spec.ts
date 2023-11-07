@@ -5390,6 +5390,90 @@ describe('AuthController', () => {
             });
         });
     });
+
+    describe('isValidDisplayName()', () => {
+        it('should return true if there is no privo configuration', async () => {
+            const result = await controller.isValidDisplayName('no rules');
+
+            expect(result).toEqual({
+                success: true,
+                allowed: true,
+            });
+        });
+
+        describe('privo', () => {
+            beforeEach(() => {
+                store.privoConfiguration = {
+                    gatewayEndpoint: 'endpoint',
+                    featureIds: {
+                        adultPrivoSSO: 'adultAccount',
+                        childPrivoSSO: 'childAccount',
+                        joinAndCollaborate: 'joinAndCollaborate',
+                        publishProjects: 'publish',
+                        projectDevelopment: 'dev',
+                    },
+                    clientId: 'clientId',
+                    clientSecret: 'clientSecret',
+                    publicEndpoint: 'publicEndpoint',
+                    roleIds: {
+                        child: 'childRole',
+                        adult: 'adultRole',
+                        parent: 'parentRole',
+                    },
+                    clientTokenScopes: 'scope1 scope2',
+                    userTokenScopes: 'scope1 scope2',
+                    // verificationIntegration: 'verificationIntegration',
+                    // verificationServiceId: 'verificationServiceId',
+                    // verificationSiteId: 'verificationSiteId',
+                    redirectUri: 'redirectUri',
+                    ageOfConsent: 18,
+                };
+            });
+
+            it('should check the privo client if the display name is valid', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: true,
+                });
+
+                const result = await controller.isValidDisplayName('abc');
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: true,
+                });
+            });
+
+            it('should return the suggestions', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: false,
+                    suggestions: ['suggestion1', 'suggestion2'],
+                });
+
+                const result = await controller.isValidDisplayName('abc');
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: false,
+                    suggestions: ['suggestion1', 'suggestion2'],
+                });
+            });
+
+            it('should return false if the check says the display name contains profanity', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: true,
+                    profanity: true,
+                });
+
+                const result = await controller.isValidDisplayName('abc');
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: false,
+                    profanity: true,
+                });
+            });
+        });
+    });
 });
 
 function codeNumber(code: Uint8Array): string {
