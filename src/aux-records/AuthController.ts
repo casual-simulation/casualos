@@ -125,7 +125,6 @@ export class AuthController {
     private _forceAllowSubscriptionFeatures: boolean;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
-    // private _subscriptionConfig: SubscriptionConfiguration | null;
 
     constructor(
         authStore: AuthStore,
@@ -1995,6 +1994,51 @@ export class AuthController {
             };
         }
     }
+
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
+        try {
+            const valid = await this._validateAddress(email, 'email');
+
+            if (!valid) {
+                return {
+                    success: true,
+                    allowed: false,
+                };
+            }
+
+            if (this._privoClient) {
+                const config = await this._config.getPrivoConfiguration();
+                if (config) {
+                    const result = await this._privoClient.checkEmail(email);
+                    const allowed = result.available && !result.profanity;
+
+                    return {
+                        success: true,
+                        allowed,
+                        suggestions: result.suggestions,
+                        profanity: result.profanity,
+                    };
+                }
+            }
+
+            return {
+                success: true,
+                allowed: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while checking if email address is valid',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 export interface PrivoSignUpRequest {
@@ -2812,6 +2856,34 @@ export interface ListSmsRulesSuccess {
 }
 
 export interface ListSmsRulesFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type IsValidEmailAddressResult =
+    | IsValidEmailAddressSuccess
+    | IsValidEmailAddressFailure;
+
+export interface IsValidEmailAddressSuccess {
+    success: true;
+    /**
+     * Whether the email address can be used.
+     */
+    allowed: boolean;
+
+    /**
+     * The suggestions for alternate email addresses.
+     */
+    suggestions?: string[];
+
+    /**
+     * Whether the email contains profanity.
+     */
+    profanity?: boolean;
+}
+
+export interface IsValidEmailAddressFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;

@@ -49,6 +49,52 @@ export interface PrivoClientInterface {
     processAuthorizationCallback(
         request: ProcessAuthorizationCallbackRequest
     ): Promise<ProcessAuthorizationCallbackResponse>;
+
+    /**
+     * Checks whether the given email address is available and allowed.
+     * @param email The email.
+     */
+    checkEmail(email: string): Promise<CheckEmailResult>;
+
+    /**
+     * Checks whether the given display name is available and allowed.
+     * @param displayName The display name.
+     */
+    checkDisplayName(displayName: string): Promise<CheckDisplayNameResult>;
+}
+
+export interface CheckEmailResult {
+    /**
+     * Whether the email is available to be used.
+     */
+    available: boolean;
+
+    /**
+     * Suggested alternate email addresses.
+     */
+    suggestions?: string[];
+
+    /**
+     * Whether the email contains profanity.
+     */
+    profanity?: boolean;
+}
+
+export interface CheckDisplayNameResult {
+    /**
+     * Whether the display name is allowed.
+     */
+    available: boolean;
+
+    /**
+     * Suggested alternate display names.
+     */
+    suggestions?: string[];
+
+    /**
+     * Whether the display name contains profanity.
+     */
+    profanity?: boolean;
 }
 
 export interface GeneratedAuthorizationUrl {
@@ -458,6 +504,71 @@ export class PrivoClient implements PrivoClientInterface {
                     active: p.feature_active,
                 })),
             },
+        };
+    }
+
+    async checkEmail(email: string): Promise<CheckEmailResult> {
+        const config = await this._config.getPrivoConfiguration();
+
+        if (!config) {
+            throw new Error('No Privo configuration found.');
+        }
+        const headers = await this._getRequestHeaders(config);
+        const url = `${config.gatewayEndpoint}/api/v1.0/account/check/email`;
+
+        const result = await axios.post(url, { email }, { headers });
+
+        const data = result.data;
+
+        const schema = z.object({
+            available: z.boolean(),
+            suggestions: z.array(z.string()).optional(),
+            profanity: z.boolean().optional(),
+        });
+
+        const validated = schema.parse(data);
+
+        return {
+            available: validated.available,
+            profanity: validated.profanity,
+            suggestions: validated.suggestions,
+        };
+    }
+
+    async checkDisplayName(
+        displayName: string
+    ): Promise<CheckDisplayNameResult> {
+        const config = await this._config.getPrivoConfiguration();
+
+        if (!config) {
+            throw new Error('No Privo configuration found.');
+        }
+        const headers = await this._getRequestHeaders(config);
+        const url = `${config.gatewayEndpoint}/api/v1.0/account/check/display-name`;
+
+        const result = await axios.post(
+            url,
+            {
+                display_name: displayName,
+                suggest: true,
+            },
+            { headers }
+        );
+
+        const data = result.data;
+
+        const schema = z.object({
+            available: z.boolean(),
+            suggestions: z.array(z.string()).optional(),
+            profanity: z.boolean().optional(),
+        });
+
+        const validated = schema.parse(data);
+
+        return {
+            available: validated.available,
+            profanity: validated.profanity,
+            suggestions: validated.suggestions,
         };
     }
 

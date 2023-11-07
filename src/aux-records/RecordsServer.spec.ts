@@ -205,6 +205,10 @@ describe('RecordsServer', () => {
         processAuthorizationCallback: jest.Mock<
             ReturnType<PrivoClientInterface['processAuthorizationCallback']>
         >;
+        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
+        checkDisplayName: jest.Mock<
+            ReturnType<PrivoClientInterface['checkDisplayName']>
+        >;
     };
 
     beforeEach(async () => {
@@ -244,6 +248,8 @@ describe('RecordsServer', () => {
             getUserInfo: jest.fn(),
             generateAuthorizationUrl: jest.fn(),
             processAuthorizationCallback: jest.fn(),
+            checkEmail: jest.fn(),
+            checkDisplayName: jest.fn(),
         };
         authController = new AuthController(
             store,

@@ -78,6 +78,10 @@ describe('AuthController', () => {
         processAuthorizationCallback: jest.Mock<
             ReturnType<PrivoClientInterface['processAuthorizationCallback']>
         >;
+        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
+        checkDisplayName: jest.Mock<
+            ReturnType<PrivoClientInterface['checkDisplayName']>
+        >;
     };
     let nowMock: jest.Mock<number>;
 
@@ -122,6 +126,8 @@ describe('AuthController', () => {
             getUserInfo: jest.fn(),
             generateAuthorizationUrl: jest.fn(),
             processAuthorizationCallback: jest.fn(),
+            checkEmail: jest.fn(),
+            checkDisplayName: jest.fn(),
         };
 
         controller = new AuthController(
@@ -5283,6 +5289,104 @@ describe('AuthController', () => {
                         pattern: 'abc',
                     },
                 ],
+            });
+        });
+    });
+
+    describe('isValidEmailAddress()', () => {
+        it('should return true if the email address matches the email rules', async () => {
+            store.emailRules.push({
+                type: 'allow',
+                pattern: 'abc',
+            });
+
+            const result = await controller.isValidEmailAddress('abc');
+
+            expect(result).toEqual({
+                success: true,
+                allowed: true,
+            });
+        });
+
+        it('should return true if there are no email rules', async () => {
+            const result = await controller.isValidEmailAddress('no rules');
+
+            expect(result).toEqual({
+                success: true,
+                allowed: true,
+            });
+        });
+
+        describe('privo', () => {
+            beforeEach(() => {
+                store.privoConfiguration = {
+                    gatewayEndpoint: 'endpoint',
+                    featureIds: {
+                        adultPrivoSSO: 'adultAccount',
+                        childPrivoSSO: 'childAccount',
+                        joinAndCollaborate: 'joinAndCollaborate',
+                        publishProjects: 'publish',
+                        projectDevelopment: 'dev',
+                    },
+                    clientId: 'clientId',
+                    clientSecret: 'clientSecret',
+                    publicEndpoint: 'publicEndpoint',
+                    roleIds: {
+                        child: 'childRole',
+                        adult: 'adultRole',
+                        parent: 'parentRole',
+                    },
+                    clientTokenScopes: 'scope1 scope2',
+                    userTokenScopes: 'scope1 scope2',
+                    // verificationIntegration: 'verificationIntegration',
+                    // verificationServiceId: 'verificationServiceId',
+                    // verificationSiteId: 'verificationSiteId',
+                    redirectUri: 'redirectUri',
+                    ageOfConsent: 18,
+                };
+            });
+
+            it('should check the privo client if the email is valid', async () => {
+                privoClientMock.checkEmail.mockResolvedValueOnce({
+                    available: true,
+                });
+
+                const result = await controller.isValidEmailAddress('abc');
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: true,
+                });
+            });
+
+            it('should return the suggestions', async () => {
+                privoClientMock.checkEmail.mockResolvedValueOnce({
+                    available: false,
+                    suggestions: ['suggestion1', 'suggestion2'],
+                });
+
+                const result = await controller.isValidEmailAddress('abc');
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: false,
+                    suggestions: ['suggestion1', 'suggestion2'],
+                });
+            });
+
+            it('should return false if the check says the email contains profanity', async () => {
+                privoClientMock.checkEmail.mockResolvedValueOnce({
+                    available: true,
+                    profanity: true,
+                });
+
+                const result = await controller.isValidEmailAddress('abc');
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: false,
+                    profanity: true,
+                });
             });
         });
     });
