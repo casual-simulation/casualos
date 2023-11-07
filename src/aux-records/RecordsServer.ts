@@ -320,6 +320,15 @@ export class RecordsServer {
                 this._allowedAccountOrigins
             );
         } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/displayName/valid'
+        ) {
+            return formatResponse(
+                request,
+                await this._isDisplayNameValid(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'GET' &&
             request.path === '/api/v2/sessions'
         ) {
@@ -1127,6 +1136,38 @@ export class RecordsServer {
 
         const { email } = parseResult.data;
         const result = await this._auth.isValidEmailAddress(email);
+        return returnResult(result);
+    }
+
+    private async _isDisplayNameValid(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            displayName: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { displayName } = parseResult.data;
+        const result = await this._auth.isValidDisplayName(displayName);
         return returnResult(result);
     }
 
