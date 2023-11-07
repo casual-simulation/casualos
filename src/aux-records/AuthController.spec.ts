@@ -4752,7 +4752,7 @@ describe('AuthController', () => {
             });
         });
 
-        it('should include use the default subscription if configured', async () => {
+        it('should use the default subscription if configured', async () => {
             store.subscriptionConfiguration.subscriptions[1].defaultSubscription =
                 true;
             await store.saveUser({
@@ -4781,10 +4781,16 @@ describe('AuthController', () => {
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
                 subscriptionTier: 'beta',
+                displayName: null,
+                features: {
+                    joinAndCollaborate: true,
+                    publishProjects: true,
+                    projectDevelopment: true,
+                },
             });
         });
 
-        it('should include use the default subscription if the user has an inactive subscription', async () => {
+        it('should use the default subscription if the user has an inactive subscription', async () => {
             store.subscriptionConfiguration.subscriptions[1].defaultSubscription =
                 true;
             await store.saveUser({
@@ -4815,6 +4821,12 @@ describe('AuthController', () => {
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
                 subscriptionTier: 'beta',
+                displayName: null,
+                features: {
+                    joinAndCollaborate: true,
+                    publishProjects: true,
+                    projectDevelopment: true,
+                },
             });
         });
 
