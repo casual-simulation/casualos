@@ -311,6 +311,15 @@ export class RecordsServer {
                 true
             );
         } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/email/valid'
+        ) {
+            return formatResponse(
+                request,
+                await this._isEmailValid(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'GET' &&
             request.path === '/api/v2/sessions'
         ) {
@@ -1086,6 +1095,38 @@ export class RecordsServer {
             signature,
         });
 
+        return returnResult(result);
+    }
+
+    private async _isEmailValid(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            email: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { email } = parseResult.data;
+        const result = await this._auth.isValidEmailAddress(email);
         return returnResult(result);
     }
 

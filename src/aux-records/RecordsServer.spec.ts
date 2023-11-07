@@ -1572,6 +1572,50 @@ describe('RecordsServer', () => {
         });
     });
 
+    describe('POST /api/v2/email/valid', () => {
+        let accountHeaders: GenericHttpHeaders;
+        beforeEach(() => {
+            accountHeaders = {
+                origin: accountOrigin,
+            };
+        });
+
+        it('should return whether the email is valid', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/email/valid',
+                    JSON.stringify({
+                        email: 'test@example.com',
+                    }),
+                    accountHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    allowed: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/email/valid', () =>
+            JSON.stringify({
+                email: 'test@example.com',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/email/valid', body, accountHeaders)
+        );
+        testRateLimit('POST', `/api/v2/email/valid`, () =>
+            JSON.stringify({
+                email: 'test@example.com',
+            })
+        );
+    });
+
     describe('GET /api/v2/sessions', () => {
         it('should return the list of sessions for the user', async () => {
             const result = await server.handleHttpRequest(
