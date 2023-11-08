@@ -11,6 +11,7 @@ import {
     AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
+    PrivacyFeatures,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
@@ -66,6 +67,7 @@ import {
 import {
     AssignedRole,
     GetUserPolicyResult,
+    ListMarkerPoliciesResult,
     ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
@@ -1540,10 +1542,11 @@ export class MemoryStore
         };
     }
 
-    async listPoliciesForMarker(
+    async listPoliciesForMarkerAndUser(
         recordName: string,
+        userId: string,
         marker: string
-    ): Promise<PolicyDocument[]> {
+    ): Promise<ListMarkerPoliciesResult> {
         const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
@@ -1554,7 +1557,44 @@ export class MemoryStore
         if (policy) {
             policies.push(policy.document);
         }
-        return policies;
+
+        return {
+            policies,
+            recordOwnerPrivacyFeatures:
+                await this._getRecordOwnerPrivacyFeatures(recordName),
+            userPrivacyFeatures: await this._getUserPrivacyFeatures(userId),
+        };
+    }
+
+    private async _getRecordOwnerPrivacyFeatures(
+        recordName: string
+    ): Promise<PrivacyFeatures> {
+        let record = await this.getRecordByName(recordName);
+
+        if (record?.ownerId) {
+            const owner = await this.findUser(record.ownerId);
+            if (owner?.privacyFeatures) {
+                return owner.privacyFeatures;
+            }
+        }
+        return {
+            publishData: true,
+            allowPublicData: true,
+        };
+    }
+
+    private async _getUserPrivacyFeatures(
+        userId: string
+    ): Promise<PrivacyFeatures> {
+        const user = await this.findUser(userId);
+        if (user?.privacyFeatures) {
+            return user.privacyFeatures;
+        }
+
+        return {
+            publishData: true,
+            allowPublicData: true,
+        };
     }
 
     async listRolesForUser(

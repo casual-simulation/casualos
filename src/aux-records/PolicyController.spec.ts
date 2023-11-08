@@ -166,6 +166,74 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    action: 'data.create',
+                    address: 'myAddress',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.create',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    action: 'data.create',
+                    address: 'myAddress',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.create',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'data.create',
@@ -1232,6 +1300,140 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.read',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'data.read',
@@ -1842,6 +2044,140 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    existingMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.update',
+                    },
                 });
             });
 
@@ -3124,6 +3460,140 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.delete',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'data.delete',
@@ -3968,6 +4438,192 @@ describe('PolicyController', () => {
                             markers: ['secret'],
                         },
                     ],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.list',
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: undefined,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.list',
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: undefined,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.list',
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.list',
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
                 });
             });
 
@@ -5418,6 +6074,144 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.create',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.create',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.create',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.create',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.create',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.create',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.create',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.create',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'file.create',
@@ -6690,6 +7484,144 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.read',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.read',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.read',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.read',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.read',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'file.read',
@@ -7744,6 +8676,208 @@ describe('PolicyController', () => {
                             markers: ['secret'],
                         },
                     ],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.list',
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: undefined,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.list',
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: undefined,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.list',
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.list',
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
                 });
             });
 
@@ -9334,6 +10468,144 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.delete',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.delete',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.delete',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.delete',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.delete',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'file.delete',
@@ -10293,6 +11565,148 @@ describe('PolicyController', () => {
                         'You are not authorized to perform this action.',
                     reason: {
                         type: 'no_markers',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.update',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['another'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.update',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    addedMarkers: ['another'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.update',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['another'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.update',
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    addedMarkers: ['another'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.update',
                     },
                 });
             });
@@ -11459,6 +12873,140 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.count',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'event.count',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.count',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'event.count',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'event.count',
@@ -12062,6 +13610,140 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'event.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    existingMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'event.update',
+                    },
                 });
             });
 
@@ -13391,6 +15073,192 @@ describe('PolicyController', () => {
                             markers: ['secret'],
                         },
                     ],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.list',
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: undefined,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.list',
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: undefined,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.list',
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.list',
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
                 });
             });
 
@@ -14818,6 +16686,140 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.increment',
+                    eventName: 'myEvent',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.increment',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.increment',
+                    eventName: 'myEvent',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'event.increment',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.increment',
+                    eventName: 'myEvent',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.increment',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.increment',
+                    eventName: 'myEvent',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'event.increment',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'event.increment',
@@ -15623,6 +17625,136 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.grantPermission',
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.grantPermission',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.grantPermission',
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.grantPermission',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.grantPermission',
+                    policy: 'myPolicy',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.grantPermission',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.grantPermission',
+                    policy: 'myPolicy',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.grantPermission',
+                    },
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -16261,6 +18393,136 @@ describe('PolicyController', () => {
                         marker: ACCOUNT_MARKER,
                         permission: 'policy.revokePermission',
                         role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.revokePermission',
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.revokePermission',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.revokePermission',
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.revokePermission',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.revokePermission',
+                    policy: 'myPolicy',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.revokePermission',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.revokePermission',
+                    policy: 'myPolicy',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.revokePermission',
                     },
                 });
             });
@@ -16907,6 +19169,136 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.read',
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.read',
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.read',
+                    policy: 'myPolicy',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.read',
+                    policy: 'myPolicy',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.read',
+                    },
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -17548,6 +19940,132 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.list',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.list',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.list',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.list',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.list',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.list',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'policy.list',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.list',
+                    },
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -18172,6 +20690,132 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'role.list',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.list',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'role.list',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.list',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'role.list',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.list',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'role.list',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.list',
+                    },
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -18788,6 +21432,136 @@ describe('PolicyController', () => {
                         marker: ACCOUNT_MARKER,
                         permission: 'role.read',
                         role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'role.read',
+                    role: 'myRole',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'role.read',
+                    role: 'myRole',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'role.read',
+                    role: 'myRole',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'role.read',
+                    role: 'myRole',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.read',
                     },
                 });
             });
@@ -19432,6 +22206,140 @@ describe('PolicyController', () => {
                             marker: ACCOUNT_MARKER,
                             permission: 'role.grant',
                             role: null,
+                        },
+                    });
+                });
+
+                it('should deny the request if the record owner is not allowed to publish data', async () => {
+                    const user = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            publishData: false,
+                            allowPublicData: false,
+                        },
+                    });
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.grant',
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: undefined,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.grant',
+                        },
+                    });
+                });
+
+                it('should deny the request if the record owner is not allowed to access public data', async () => {
+                    const user = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            publishData: true,
+                            allowPublicData: false,
+                        },
+                    });
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.grant',
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: undefined,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.grant',
+                        },
+                    });
+                });
+
+                it('should deny the request if the user is not allowed to publish data', async () => {
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            publishData: false,
+                            allowPublicData: false,
+                        },
+                    });
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.grant',
+                        role: 'myRole',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.grant',
+                        },
+                    });
+                });
+
+                it('should deny the request if the user is not allowed to access public data', async () => {
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            publishData: true,
+                            allowPublicData: false,
+                        },
+                    });
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.grant',
+                        role: 'myRole',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.grant',
                         },
                     });
                 });
@@ -20276,6 +23184,140 @@ describe('PolicyController', () => {
                     });
                 });
 
+                it('should deny the request if the record owner is not allowed to publish data', async () => {
+                    const user = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            publishData: false,
+                            allowPublicData: false,
+                        },
+                    });
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: undefined,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                        },
+                    });
+                });
+
+                it('should deny the request if the record owner is not allowed to access public data', async () => {
+                    const user = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            publishData: true,
+                            allowPublicData: false,
+                        },
+                    });
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: undefined,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                        },
+                    });
+                });
+
+                it('should deny the request if the user is not allowed to publish data', async () => {
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            publishData: false,
+                            allowPublicData: false,
+                        },
+                    });
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                        },
+                    });
+                });
+
+                it('should deny the request if the user is not allowed to access public data', async () => {
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            publishData: true,
+                            allowPublicData: false,
+                        },
+                    });
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                        },
+                    });
+                });
+
                 it('should allow the request if the user has the admin role assigned', async () => {
                     store.roles[recordName] = {
                         [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -21082,6 +24124,140 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.create',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.create',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.create',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.create',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.create',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.create',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.create',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.create',
+                    },
                 });
             });
 
@@ -22151,6 +25327,140 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.read',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.read',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.read',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.read',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.read',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'inst.read',
@@ -22761,6 +26071,140 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.update',
+                    inst: 'myInst',
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.update',
+                    inst: 'myInst',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.update',
+                    inst: 'myInst',
+                    existingMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.update',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.update',
+                    inst: 'myInst',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.update',
+                    },
                 });
             });
 
@@ -24043,6 +27487,140 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.updateData',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.updateData',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.updateData',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.updateData',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.updateData',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.updateData',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.updateData',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.updateData',
+                    },
+                });
+            });
+
             it('should deny the request if no markers are provided', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'inst.updateData',
@@ -24829,6 +28407,140 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.delete',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.delete',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.delete',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.delete',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.delete',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.delete',
+                    },
                 });
             });
 
@@ -25676,6 +29388,192 @@ describe('PolicyController', () => {
                             markers: ['secret'],
                         },
                     ],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.list',
+                    insts: [
+                        {
+                            inst: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            inst: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: undefined,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedInstItems: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.list',
+                    insts: [
+                        {
+                            inst: 'testAddress',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            inst: 'testAddress2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: undefined,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedInstItems: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.list',
+                    insts: [
+                        {
+                            inst: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            inst: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedInstItems: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.list',
+                    insts: [
+                        {
+                            inst: 'testAddress',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            inst: 'testAddress2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedInstItems: [],
                 });
             });
 
@@ -27062,6 +30960,140 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to publish data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.sendAction',
+                    },
+                });
+            });
+
+            it('should deny the request if the record owner is not allowed to access public data', async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: undefined,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.sendAction',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to publish data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: false,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    resourceMarkers: ['secret'],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'inst.sendAction',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not allowed to access public data', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: false,
+                    },
+                });
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'inst.sendAction',
+                    inst: 'myInst',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'inst.sendAction',
+                    },
                 });
             });
 

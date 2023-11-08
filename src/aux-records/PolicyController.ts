@@ -4476,6 +4476,7 @@ export class PolicyController {
 
         const markers = await this._listPermissionsForMarkers(
             context.recordName,
+            request.userId,
             resourceMarkers
         );
 
@@ -4636,37 +4637,67 @@ export class PolicyController {
 
     private async _listPermissionsForMarkers(
         recordName: string,
+        userId: string,
         resourceMarkers: string[]
     ): Promise<MarkerPermission[]> {
         const promises = resourceMarkers.map(async (m) => {
-            const policies = await this._policies.listPoliciesForMarker(
+            const result = await this._policies.listPoliciesForMarkerAndUser(
                 recordName,
+                userId,
                 m
             );
 
             return {
                 marker: m,
-                policies,
+                result,
             };
         });
 
         const markerPolicies = await Promise.all(promises);
 
         const markers: MarkerPermission[] = [];
-        for (let { marker, policies } of markerPolicies) {
+        markers_loop: for (let { marker, result } of markerPolicies) {
             let permissions: PossiblePermission[] = [];
-            for (let policy of policies) {
+            let valid = true;
+            for (let policy of result.policies) {
+                if (
+                    !result.recordOwnerPrivacyFeatures.allowPublicData ||
+                    !result.userPrivacyFeatures.allowPublicData
+                ) {
+                    if (policy.permissions.some((p) => p.role === true)) {
+                        // policy contains a permission that allows everyone to access the data, but the user should not be able to publish public data.
+                        // skip all the policies for this marker.
+                        valid = false;
+                        break;
+                    }
+                }
+
                 for (let permission of policy.permissions) {
+                    if (
+                        !result.recordOwnerPrivacyFeatures.publishData ||
+                        !result.userPrivacyFeatures.allowPublicData
+                    ) {
+                        continue;
+                    }
+
                     permissions.push({
                         policy,
                         permission,
                     });
                 }
             }
-            markers.push({
-                marker,
-                permissions,
-            });
+
+            if (valid) {
+                markers.push({
+                    marker,
+                    permissions,
+                });
+            } else {
+                markers.push({
+                    marker,
+                    permissions: [],
+                });
+            }
         }
 
         return markers;
