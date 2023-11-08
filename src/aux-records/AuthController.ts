@@ -5,6 +5,7 @@ import {
     AuthSession,
     AuthStore,
     AuthUser,
+    PrivacyFeatures,
 } from './AuthStore';
 import {
     NotSupportedError,
@@ -37,8 +38,13 @@ import {
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
 import { parseConnectionToken } from '@casual-simulation/aux-common';
-import { PrivoClientInterface } from './PrivoClient';
+import {
+    PrivoClientInterface,
+    PrivoFeatureStatus,
+    PrivoPermission,
+} from './PrivoClient';
 import { DateTime } from 'luxon';
+import { PrivoConfiguration } from './PrivoConfiguration';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -809,9 +815,12 @@ export class AuthController {
                 console.log(
                     `[AuthController] [completeOpenIDLogin] Updating user service ID.`
                 );
-                await this._store.saveUser({
+                user = {
                     ...user,
                     privoServiceId: serviceId,
+                };
+                await this._store.saveUser({
+                    ...user,
                 });
             } else if (user.privoServiceId !== serviceId) {
                 console.log(
@@ -822,6 +831,30 @@ export class AuthController {
                     errorCode: 'invalid_request',
                     errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
                 };
+            }
+
+            const privacyFeatures = getPrivacyFeaturesFromPermissions(
+                config.featureIds,
+                result.userInfo.permissions
+            );
+
+            if (
+                user.privacyFeatures?.publishData !==
+                    privacyFeatures.publishData ||
+                user.privacyFeatures?.publishPublicData !==
+                    privacyFeatures.publishPublicData
+            ) {
+                console.log(
+                    `[AuthController] [completeOpenIDLogin] Updating user privacy features.`
+                );
+
+                user = {
+                    ...user,
+                    privacyFeatures,
+                };
+                await this._store.saveUser({
+                    ...user,
+                });
             }
 
             const sessionId = fromByteArray(
@@ -946,6 +979,7 @@ export class AuthController {
                 };
             }
 
+            let privacyFeatures: PrivacyFeatures;
             if (years < config.ageOfConsent) {
                 if (!request.parentEmail) {
                     return {
@@ -972,6 +1006,10 @@ export class AuthController {
                 serviceId = result.childServiceId;
                 parentServiceId = result.parentServiceId;
                 updatePasswordUrl = result.updatePasswordLink;
+                privacyFeatures = getPrivacyFeaturesFromPermissions(
+                    config.featureIds,
+                    result.features
+                );
             } else {
                 const result = await this._privoClient.createAdultAccount({
                     adultFirstName: request.name,
@@ -987,6 +1025,10 @@ export class AuthController {
 
                 serviceId = result.adultServiceId;
                 updatePasswordUrl = result.updatePasswordLink;
+                privacyFeatures = getPrivacyFeaturesFromPermissions(
+                    config.featureIds,
+                    result.features
+                );
             }
 
             const user: AuthUser = {
@@ -998,6 +1040,7 @@ export class AuthController {
                 currentLoginRequestId: null,
                 privoServiceId: serviceId,
                 privoParentServiceId: parentServiceId,
+                privacyFeatures,
             };
 
             // TODO: Add user to DB
@@ -1197,6 +1240,7 @@ export class AuthController {
 
                 subscriptionId: subscriptionId ?? undefined,
                 subscriptionTier: subscriptionTier ?? undefined,
+                privacyFeatures: userInfo.privacyFeatures,
             };
         } catch (err) {
             console.error(
@@ -1333,6 +1377,7 @@ export class AuthController {
                 allSessionsRevokedTimeMs: userInfo.allSessionRevokeTimeMs,
                 subscriptionId: subscriptionId ?? undefined,
                 subscriptionTier: subscriptionTier ?? undefined,
+                privacyFeatures: userInfo.privacyFeatures,
             };
         } catch (err) {
             console.error(
@@ -1745,39 +1790,52 @@ export class AuthController {
             const { hasActiveSubscription, subscriptionTier: tier } =
                 await this._getSubscriptionInfo(result);
 
-            let features: GetUserInfoFeatures;
+            let privacyFeatures: PrivacyFeatures;
             let displayName: string = null;
             const privoConfig = await this._config.getPrivoConfiguration();
             if (privoConfig && result.privoServiceId) {
                 const userInfo = await this._privoClient.getUserInfo(
                     result.privoServiceId
                 );
-                features = {
-                    joinAndCollaborate: userInfo.permissions.some(
+                const publishData = userInfo.permissions.some(
+                    (p) =>
+                        p.on &&
+                        p.featureId === privoConfig.featureIds.publishProjects
+                );
+                const publishPublicData =
+                    publishData &&
+                    userInfo.permissions.some(
                         (p) =>
                             p.on &&
-                            p.featureIdentifier ===
+                            p.featureId ===
                                 privoConfig.featureIds.joinAndCollaborate
-                    ),
-                    projectDevelopment: userInfo.permissions.some(
-                        (p) =>
-                            p.on &&
-                            p.featureIdentifier ===
-                                privoConfig.featureIds.projectDevelopment
-                    ),
-                    publishProjects: userInfo.permissions.some(
-                        (p) =>
-                            p.on &&
-                            p.featureIdentifier ===
-                                privoConfig.featureIds.publishProjects
-                    ),
-                };
+                    );
+                privacyFeatures = getPrivacyFeaturesFromPermissions(
+                    privoConfig.featureIds,
+                    userInfo.permissions
+                );
                 displayName = userInfo.displayName;
+
+                if (
+                    result.privacyFeatures?.publishData !== publishData ||
+                    result.privacyFeatures?.publishPublicData !==
+                        publishPublicData
+                ) {
+                    await this._store.saveUser({
+                        ...result,
+                        privacyFeatures: {
+                            ...privacyFeatures,
+                        },
+                    });
+                }
+            } else if (result.privacyFeatures) {
+                privacyFeatures = {
+                    ...result.privacyFeatures,
+                };
             } else {
-                features = {
-                    joinAndCollaborate: true,
-                    projectDevelopment: true,
-                    publishProjects: true,
+                privacyFeatures = {
+                    publishData: true,
+                    publishPublicData: true,
                 };
             }
 
@@ -1792,7 +1850,7 @@ export class AuthController {
                 avatarUrl: result.avatarUrl,
                 hasActiveSubscription: hasActiveSubscription,
                 subscriptionTier: tier ?? null,
-                features,
+                privacyFeatures: privacyFeatures,
             };
         } catch (err) {
             console.error(
@@ -2450,6 +2508,12 @@ export interface ValidateSessionKeySuccess {
      * The ID of the subscription that the user is subscribed to.
      */
     subscriptionId?: string;
+
+    /**
+     * The privacy features that the user has specified.
+     * If null or omitted, then all features are enabled.
+     */
+    privacyFeatures?: PrivacyFeatures;
 }
 
 export interface ValidateSessionKeyFailure {
@@ -2507,6 +2571,12 @@ export interface ValidateConnectionTokenSuccess {
      * The ID of the subscription that the user is subscribed to.
      */
     subscriptionId?: string;
+
+    /**
+     * The privacy features that the user has specified.
+     * If null or omitted, then all features are enabled.
+     */
+    privacyFeatures?: PrivacyFeatures;
 }
 
 export interface ValidateConnectionTokenFailure {
@@ -2793,26 +2863,9 @@ export interface GetUserInfoSuccess {
     subscriptionTier: string;
 
     /**
-     * The features that the user has enabled.
+     * The privacy-related features that the user has enabled.
      */
-    features: GetUserInfoFeatures;
-}
-
-export interface GetUserInfoFeatures {
-    /**
-     * Whether the user has the ability to publish app bundles.
-     */
-    publishProjects: boolean;
-
-    /**
-     * Whether the user has the ability to develop on insts.
-     */
-    projectDevelopment: boolean;
-
-    /**
-     * Whether the user has the ability to share access to their inst.
-     */
-    joinAndCollaborate: boolean;
+    privacyFeatures: PrivacyFeatures;
 }
 
 export interface GetUserInfoFailure {
@@ -2953,4 +3006,22 @@ export interface IsValidDisplayNameFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;
+}
+
+export function getPrivacyFeaturesFromPermissions(
+    featureIds: PrivoConfiguration['featureIds'],
+    permissions: (PrivoPermission | PrivoFeatureStatus)[]
+): PrivacyFeatures {
+    const publishData = permissions.some(
+        (p) => p.on && p.featureId === featureIds.publishProjects
+    );
+    const publishPublicData =
+        publishData &&
+        permissions.some(
+            (p) => p.on && p.featureId === featureIds.joinAndCollaborate
+        );
+    return {
+        publishData,
+        publishPublicData,
+    };
 }

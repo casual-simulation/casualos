@@ -409,7 +409,7 @@ export class PrivoClient implements PrivoClientInterface {
             permissions: validated.permissions.map((p) => ({
                 on: p.on,
                 consentDateSeconds: p.consent_date,
-                featureIdentifier: p.feature_identifier,
+                featureId: p.feature_identifier,
                 category: p.category,
                 active: p.active,
             })),
@@ -499,7 +499,7 @@ export class PrivoClient implements PrivoClientInterface {
                 permissions: validated.permissions.map((p) => ({
                     on: p.on,
                     consentDateSeconds: p.consent_time,
-                    featureIdentifier: p.feature_identifier,
+                    featureId: p.feature_identifier,
                     category: p.feature_category,
                     active: p.feature_active,
                 })),
@@ -759,7 +759,7 @@ export interface PrivoPermission {
     /**
      * The ID of the feature.
      */
-    featureIdentifier: string;
+    featureId: string;
 
     /**
      * The category that this feature exists in.

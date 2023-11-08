@@ -357,6 +357,27 @@ export interface AuthUser {
      * The Privo Service ID of the parent of this user.
      */
     privoParentServiceId?: string;
+
+    /**
+     * The privacy-related features that the user has access to.
+     * If null or omitted, then the user has access to all features.
+     */
+    privacyFeatures?: PrivacyFeatures | null;
+}
+
+/**
+ * The privacy-related features that a user can have access to.
+ */
+export interface PrivacyFeatures {
+    /**
+     * Whether the user is allowed to publish data.
+     */
+    publishData: boolean;
+
+    /**
+     * Whether the user is allowed to publish public data.
+     */
+    publishPublicData: boolean;
 }
 
 /**

@@ -1,6 +1,7 @@
 import {
     AuthController,
     CompleteLoginSuccess,
+    getPrivacyFeaturesFromPermissions,
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_TOKEN_ERROR_MESSAGE,
     ListSessionsSuccess,
@@ -1420,6 +1421,96 @@ describe('AuthController', () => {
                 privoParentServiceId: 'parentServiceId',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
+                privacyFeatures: {
+                    publishData: false,
+                    publishPublicData: false,
+                },
+            });
+
+            expect(await store.listSessions('userId', Infinity)).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: 'userId',
+                        sessionId: fromByteArray(sessionId),
+                        secretHash: expect.any(String),
+                        connectionSecret: expect.any(String),
+                        grantedTimeMs: Date.now(),
+                        expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+                        requestId: null,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ],
+            });
+        });
+
+        it('should save the privacy features to the child account', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [
+                    {
+                        on: true,
+                        featureId: 'joinAndCollaborate',
+                    },
+                    {
+                        on: true,
+                        featureId: 'publish',
+                    },
+                    {
+                        on: true,
+                        featureId: 'dev',
+                    },
+                ],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'test name',
+                displayName: 'displayName',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'userId',
+                updatePasswordUrl: 'link',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+            });
+
+            expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
+                parentEmail: 'parent@example.com',
+                childEmail: 'test@example.com',
+                childFirstName: 'test name',
+                childDisplayName: 'displayName',
+                childDateOfBirth: new Date(2010, 1, 1),
+                featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
+            });
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+
+            expect(await store.findUser('userId')).toEqual({
+                id: 'userId',
+                name: 'test name',
+                email: 'test@example.com',
+                phoneNumber: null,
+                privoServiceId: 'childServiceId',
+                privoParentServiceId: 'parentServiceId',
+                currentLoginRequestId: null,
+                allSessionRevokeTimeMs: null,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: true,
+                },
             });
 
             expect(await store.listSessions('userId', Infinity)).toEqual({
@@ -1515,6 +1606,93 @@ describe('AuthController', () => {
                 privoServiceId: 'serviceId',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
+                privacyFeatures: {
+                    publishData: false,
+                    publishPublicData: false,
+                },
+            });
+
+            expect(await store.listSessions('userId', Infinity)).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: 'userId',
+                        sessionId: fromByteArray(sessionId),
+                        secretHash: expect.any(String),
+                        connectionSecret: expect.any(String),
+                        grantedTimeMs: Date.now(),
+                        expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+                        requestId: null,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ],
+            });
+        });
+
+        it('should save the privacy features to the adult account', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createAdultAccount.mockResolvedValueOnce({
+                adultServiceId: 'serviceId',
+                features: [
+                    {
+                        on: true,
+                        featureId: 'joinAndCollaborate',
+                    },
+                    {
+                        on: true,
+                        featureId: 'publish',
+                    },
+                    {
+                        on: true,
+                        featureId: 'dev',
+                    },
+                ],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: null,
+                name: 'test name',
+                displayName: 'displayName',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2000, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'userId',
+                updatePasswordUrl: 'link',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
+
+            expect(privoClientMock.createAdultAccount).toHaveBeenCalledWith({
+                adultEmail: 'test@example.com',
+                adultDisplayName: 'displayName',
+                adultFirstName: 'test name',
+                adultDateOfBirth: new Date(2000, 1, 1),
+                featureIds: ['adultAccount', 'joinAndCollaborate', 'publish'],
+            });
+            expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
+
+            expect(await store.findUser('userId')).toEqual({
+                id: 'userId',
+                name: 'test name',
+                email: 'test@example.com',
+                phoneNumber: null,
+                privoServiceId: 'serviceId',
+                currentLoginRequestId: null,
+                allSessionRevokeTimeMs: null,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: true,
+                },
             });
 
             expect(await store.listSessions('userId', Infinity)).toEqual({
@@ -2025,6 +2203,119 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: null,
                     currentLoginRequestId: null,
                     privoServiceId: 'serviceId',
+
+                    // Should save the privacy features
+                    privacyFeatures: {
+                        publishData: false,
+                        publishPublicData: false,
+                    },
+                });
+
+                expect(
+                    privoClientMock.processAuthorizationCallback
+                ).toHaveBeenCalledWith({
+                    code: 'code',
+                    state: 'requestId',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                });
+            });
+
+            it('should save the privacy features for the user', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'roleIdentifier',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'joinAndCollaborate',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'publish',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'dev',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                            ],
+                            displayName: 'displayName',
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: 'userId',
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                });
+
+                expect(await store.findUser('userId')).toEqual({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+
+                    // Should save the privacy features
+                    privacyFeatures: {
+                        publishData: true,
+                        publishPublicData: true,
+                    },
                 });
 
                 expect(
@@ -3098,6 +3389,76 @@ describe('AuthController', () => {
             });
         });
 
+        it('should return the privacy features that the user has enabled', async () => {
+            const address = 'myAddress';
+            const addressType = 'email';
+            const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+            const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([13, 14, 15]);
+
+            await store.saveUser({
+                id: 'myid',
+                email: address,
+                phoneNumber: address,
+                currentLoginRequestId: requestId,
+                allSessionRevokeTimeMs: undefined,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: false,
+                },
+            });
+
+            await store.saveLoginRequest({
+                userId: 'myid',
+                requestId: requestId,
+                secretHash: hashPasswordWithSalt(code, requestId),
+                expireTimeMs: 200,
+                requestTimeMs: 100,
+                completedTimeMs: null,
+                attemptCount: 0,
+                address,
+                addressType,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            const response = (await controller.completeLogin({
+                userId: 'myid',
+                requestId: requestId,
+                code: code,
+                ipAddress: '127.0.0.1',
+            })) as CompleteLoginSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
+
+            const validateResponse = await controller.validateSessionKey(
+                response.sessionKey
+            );
+
+            expect(validateResponse).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionId: fromByteArray(sessionId),
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: false,
+                },
+            });
+        });
+
         it('should reject users who are banned', async () => {
             const address = 'myAddress';
             const addressType = 'email';
@@ -3712,6 +4073,86 @@ describe('AuthController', () => {
                 connectionId: 'connectionId',
                 recordName: 'recordName',
                 inst: 'inst',
+            });
+        });
+
+        it('should return the privacy features that the user has enabled', async () => {
+            const address = 'myAddress';
+            const addressType = 'email';
+            const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+            const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([13, 14, 15]);
+
+            await store.saveUser({
+                id: 'myid',
+                email: address,
+                phoneNumber: address,
+                currentLoginRequestId: requestId,
+                allSessionRevokeTimeMs: undefined,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: false,
+                },
+            });
+
+            await store.saveLoginRequest({
+                userId: 'myid',
+                requestId: requestId,
+                secretHash: hashPasswordWithSalt(code, requestId),
+                expireTimeMs: 200,
+                requestTimeMs: 100,
+                completedTimeMs: null,
+                attemptCount: 0,
+                address,
+                addressType,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            const response = (await controller.completeLogin({
+                userId: 'myid',
+                requestId: requestId,
+                code: code,
+                ipAddress: '127.0.0.1',
+            })) as CompleteLoginSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
+
+            const token = generateV1ConnectionToken(
+                response.connectionKey,
+                'connectionId',
+                'recordName',
+                'inst'
+            );
+
+            const validateResponse = await controller.validateConnectionToken(
+                token
+            );
+
+            expect(validateResponse).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionId: fromByteArray(sessionId),
+                connectionId: 'connectionId',
+                recordName: 'recordName',
+                inst: 'inst',
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: false,
+                },
             });
         });
 
@@ -4679,10 +5120,48 @@ describe('AuthController', () => {
                 hasActiveSubscription: false,
                 subscriptionTier: null,
                 displayName: null,
-                features: {
-                    joinAndCollaborate: true,
-                    publishProjects: true,
-                    projectDevelopment: true,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: true,
+                },
+            });
+        });
+
+        it('should include the privacy features that are stored for the user', async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: false,
+                },
+            });
+
+            const result = await controller.getUserInfo({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: false,
+                subscriptionTier: null,
+                displayName: null,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: false,
                 },
             });
         });
@@ -4706,10 +5185,9 @@ describe('AuthController', () => {
                 hasActiveSubscription: false,
                 subscriptionTier: null,
                 displayName: null,
-                features: {
-                    joinAndCollaborate: true,
-                    publishProjects: true,
-                    projectDevelopment: true,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: true,
                 },
             });
         });
@@ -4744,10 +5222,9 @@ describe('AuthController', () => {
                 hasActiveSubscription: true,
                 subscriptionTier: 'alpha',
                 displayName: null,
-                features: {
-                    joinAndCollaborate: true,
-                    publishProjects: true,
-                    projectDevelopment: true,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: true,
                 },
             });
         });
@@ -4782,10 +5259,9 @@ describe('AuthController', () => {
                 hasActiveSubscription: false,
                 subscriptionTier: 'beta',
                 displayName: null,
-                features: {
-                    joinAndCollaborate: true,
-                    publishProjects: true,
-                    projectDevelopment: true,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: true,
                 },
             });
         });
@@ -4822,10 +5298,9 @@ describe('AuthController', () => {
                 hasActiveSubscription: false,
                 subscriptionTier: 'beta',
                 displayName: null,
-                features: {
-                    joinAndCollaborate: true,
-                    publishProjects: true,
-                    projectDevelopment: true,
+                privacyFeatures: {
+                    publishData: true,
+                    publishPublicData: true,
                 },
             });
         });
@@ -4961,21 +5436,21 @@ describe('AuthController', () => {
                         {
                             on: true,
                             consentDateSeconds: 1234567890,
-                            featureIdentifier: 'joinAndCollaborate',
-                            active: true,
-                            category: 'Standard',
-                        },
-                        {
-                            on: true,
-                            consentDateSeconds: 1234567890,
-                            featureIdentifier: 'publish',
+                            featureId: 'joinAndCollaborate',
                             active: true,
                             category: 'Standard',
                         },
                         {
                             on: false,
                             consentDateSeconds: 1234567890,
-                            featureIdentifier: 'dev',
+                            featureId: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: false,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'dev',
                             active: true,
                             category: 'Standard',
                         },
@@ -4998,16 +5473,92 @@ describe('AuthController', () => {
                     hasActiveSubscription: false,
                     subscriptionTier: null,
                     displayName: 'displayName',
-                    features: {
-                        joinAndCollaborate: true,
-                        publishProjects: true,
-                        projectDevelopment: false,
+                    privacyFeatures: {
+                        publishData: false,
+                        publishPublicData: false,
                     },
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
                     'serviceId'
                 );
+            });
+
+            it('should update the users features if the privo ones dont match the stored ones', async () => {
+                privoClientMock.getUserInfo.mockResolvedValue({
+                    serviceId: 'serviceId',
+                    emailVerified: true,
+                    email: 'email',
+                    givenName: 'name',
+                    locale: 'en-US',
+                    roleIdentifier: 'ab1Child',
+                    displayName: 'displayName',
+                    permissions: [
+                        {
+                            on: false,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'joinAndCollaborate',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: false,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                    ],
+                });
+
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: 'displayName',
+                    privacyFeatures: {
+                        publishData: true,
+                        publishPublicData: false,
+                    },
+                });
+
+                expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
+                    'serviceId'
+                );
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    privoServiceId: 'serviceId',
+                    privacyFeatures: {
+                        publishData: true,
+                        publishPublicData: false,
+                    },
+                });
             });
         });
     });
@@ -5484,6 +6035,88 @@ describe('AuthController', () => {
                     profanity: true,
                 });
             });
+        });
+    });
+});
+
+describe('getPrivacyFeaturesFromPermissions()', () => {
+    it('should disable all the features if no features are provided', () => {
+        const result = getPrivacyFeaturesFromPermissions(
+            {
+                adultPrivoSSO: 'aSSO',
+                childPrivoSSO: 'cSSO',
+                joinAndCollaborate: 'joinAndCollaborate',
+                projectDevelopment: 'projectDevelopment',
+                publishProjects: 'publishProjects',
+            },
+            []
+        );
+
+        expect(result).toEqual({
+            publishData: false,
+            publishPublicData: false,
+        });
+    });
+
+    it('should disable the publishData feature if the publishProjects feature is disabled', () => {
+        const result = getPrivacyFeaturesFromPermissions(
+            {
+                adultPrivoSSO: 'aSSO',
+                childPrivoSSO: 'cSSO',
+                joinAndCollaborate: 'joinAndCollaborate',
+                projectDevelopment: 'projectDevelopment',
+                publishProjects: 'publishProjects',
+            },
+            [
+                {
+                    featureId: 'projectDevelopment',
+                    on: true,
+                },
+                {
+                    featureId: 'joinAndCollaborate',
+                    on: true,
+                },
+                {
+                    featureId: 'publishProjects',
+                    on: false,
+                },
+            ]
+        );
+
+        expect(result).toEqual({
+            publishData: false,
+            publishPublicData: false,
+        });
+    });
+
+    it('should disable the publishPublicData feature if the joinAndCollaborate feature is disabled', () => {
+        const result = getPrivacyFeaturesFromPermissions(
+            {
+                adultPrivoSSO: 'aSSO',
+                childPrivoSSO: 'cSSO',
+                joinAndCollaborate: 'joinAndCollaborate',
+                projectDevelopment: 'projectDevelopment',
+                publishProjects: 'publishProjects',
+            },
+            [
+                {
+                    featureId: 'projectDevelopment',
+                    on: true,
+                },
+                {
+                    featureId: 'joinAndCollaborate',
+                    on: false,
+                },
+                {
+                    featureId: 'publishProjects',
+                    on: true,
+                },
+            ]
+        );
+
+        expect(result).toEqual({
+            publishData: true,
+            publishPublicData: false,
         });
     });
 });
