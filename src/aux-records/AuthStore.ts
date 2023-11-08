@@ -375,9 +375,9 @@ export interface PrivacyFeatures {
     publishData: boolean;
 
     /**
-     * Whether the user is allowed to publish public data.
+     * Whether the user is allowed to publish or access public data.
      */
-    publishPublicData: boolean;
+    allowPublicData: boolean;
 }
 
 /**

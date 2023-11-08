@@ -841,8 +841,8 @@ export class AuthController {
             if (
                 user.privacyFeatures?.publishData !==
                     privacyFeatures.publishData ||
-                user.privacyFeatures?.publishPublicData !==
-                    privacyFeatures.publishPublicData
+                user.privacyFeatures?.allowPublicData !==
+                    privacyFeatures.allowPublicData
             ) {
                 console.log(
                     `[AuthController] [completeOpenIDLogin] Updating user privacy features.`
@@ -1802,7 +1802,7 @@ export class AuthController {
                         p.on &&
                         p.featureId === privoConfig.featureIds.publishProjects
                 );
-                const publishPublicData =
+                const allowPublicData =
                     publishData &&
                     userInfo.permissions.some(
                         (p) =>
@@ -1818,8 +1818,7 @@ export class AuthController {
 
                 if (
                     result.privacyFeatures?.publishData !== publishData ||
-                    result.privacyFeatures?.publishPublicData !==
-                        publishPublicData
+                    result.privacyFeatures?.allowPublicData !== allowPublicData
                 ) {
                     await this._store.saveUser({
                         ...result,
@@ -1835,7 +1834,7 @@ export class AuthController {
             } else {
                 privacyFeatures = {
                     publishData: true,
-                    publishPublicData: true,
+                    allowPublicData: true,
                 };
             }
 
@@ -3015,13 +3014,13 @@ export function getPrivacyFeaturesFromPermissions(
     const publishData = permissions.some(
         (p) => p.on && p.featureId === featureIds.publishProjects
     );
-    const publishPublicData =
+    const allowPublicData =
         publishData &&
         permissions.some(
             (p) => p.on && p.featureId === featureIds.joinAndCollaborate
         );
     return {
         publishData,
-        publishPublicData,
+        allowPublicData,
     };
 }

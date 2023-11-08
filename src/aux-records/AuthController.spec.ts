@@ -1423,7 +1423,7 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
                     publishData: false,
-                    publishPublicData: false,
+                    allowPublicData: false,
                 },
             });
 
@@ -1509,7 +1509,7 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: true,
+                    allowPublicData: true,
                 },
             });
 
@@ -1608,7 +1608,7 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
                     publishData: false,
-                    publishPublicData: false,
+                    allowPublicData: false,
                 },
             });
 
@@ -1691,7 +1691,7 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: true,
+                    allowPublicData: true,
                 },
             });
 
@@ -2207,7 +2207,7 @@ describe('AuthController', () => {
                     // Should save the privacy features
                     privacyFeatures: {
                         publishData: false,
-                        publishPublicData: false,
+                        allowPublicData: false,
                     },
                 });
 
@@ -2314,7 +2314,7 @@ describe('AuthController', () => {
                     // Should save the privacy features
                     privacyFeatures: {
                         publishData: true,
-                        publishPublicData: true,
+                        allowPublicData: true,
                     },
                 });
 
@@ -3406,7 +3406,7 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: undefined,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: false,
+                    allowPublicData: false,
                 },
             });
 
@@ -3454,7 +3454,7 @@ describe('AuthController', () => {
                 sessionId: fromByteArray(sessionId),
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: false,
+                    allowPublicData: false,
                 },
             });
         });
@@ -4093,7 +4093,7 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: undefined,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: false,
+                    allowPublicData: false,
                 },
             });
 
@@ -4151,7 +4151,7 @@ describe('AuthController', () => {
                 inst: 'inst',
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: false,
+                    allowPublicData: false,
                 },
             });
         });
@@ -5122,7 +5122,7 @@ describe('AuthController', () => {
                 displayName: null,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: true,
+                    allowPublicData: true,
                 },
             });
         });
@@ -5139,7 +5139,7 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: false,
+                    allowPublicData: false,
                 },
             });
 
@@ -5161,7 +5161,7 @@ describe('AuthController', () => {
                 displayName: null,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: false,
+                    allowPublicData: false,
                 },
             });
         });
@@ -5187,7 +5187,7 @@ describe('AuthController', () => {
                 displayName: null,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: true,
+                    allowPublicData: true,
                 },
             });
         });
@@ -5224,7 +5224,7 @@ describe('AuthController', () => {
                 displayName: null,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: true,
+                    allowPublicData: true,
                 },
             });
         });
@@ -5261,7 +5261,7 @@ describe('AuthController', () => {
                 displayName: null,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: true,
+                    allowPublicData: true,
                 },
             });
         });
@@ -5300,7 +5300,7 @@ describe('AuthController', () => {
                 displayName: null,
                 privacyFeatures: {
                     publishData: true,
-                    publishPublicData: true,
+                    allowPublicData: true,
                 },
             });
         });
@@ -5475,7 +5475,7 @@ describe('AuthController', () => {
                     displayName: 'displayName',
                     privacyFeatures: {
                         publishData: false,
-                        publishPublicData: false,
+                        allowPublicData: false,
                     },
                 });
 
@@ -5536,7 +5536,7 @@ describe('AuthController', () => {
                     displayName: 'displayName',
                     privacyFeatures: {
                         publishData: true,
-                        publishPublicData: false,
+                        allowPublicData: false,
                     },
                 });
 
@@ -5556,7 +5556,7 @@ describe('AuthController', () => {
                     privoServiceId: 'serviceId',
                     privacyFeatures: {
                         publishData: true,
-                        publishPublicData: false,
+                        allowPublicData: false,
                     },
                 });
             });
@@ -6054,7 +6054,7 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
 
         expect(result).toEqual({
             publishData: false,
-            publishPublicData: false,
+            allowPublicData: false,
         });
     });
 
@@ -6085,11 +6085,11 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
 
         expect(result).toEqual({
             publishData: false,
-            publishPublicData: false,
+            allowPublicData: false,
         });
     });
 
-    it('should disable the publishPublicData feature if the joinAndCollaborate feature is disabled', () => {
+    it('should disable the allowPublicData feature if the joinAndCollaborate feature is disabled', () => {
         const result = getPrivacyFeaturesFromPermissions(
             {
                 adultPrivoSSO: 'aSSO',
@@ -6116,7 +6116,7 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
 
         expect(result).toEqual({
             publishData: true,
-            publishPublicData: false,
+            allowPublicData: false,
         });
     });
 });
