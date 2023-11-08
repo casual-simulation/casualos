@@ -39,6 +39,9 @@ model User {
     subscriptionPeriodStart DateTime?
     subscriptionPeriodEnd DateTime?
 
+    allowPublishData Boolean?
+    allowPublicData Boolean?
+
     loginRequests LoginRequest[]
     sessions AuthSession[]
     records Record[]

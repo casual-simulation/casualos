@@ -5,6 +5,7 @@ import {
     ListedRoleAssignments,
     ListedUserPolicy,
     PolicyStore,
+    PrivacyFeatures,
     RoleAssignment,
     UpdateRolesUpdate,
     UpdateUserPolicyResult,
@@ -43,7 +44,6 @@ export class PrismaPolicyStore implements PolicyStore {
         } else if (marker === PUBLIC_WRITE_MARKER) {
             policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
         }
-        // const id = policyId(recordName, marker);
         const policy = await this._client.policy.findUnique({
             where: {
                 recordName_marker: {

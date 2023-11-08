@@ -129,7 +129,7 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async saveUser(user: AuthUser): Promise<void> {
-        const userData = {
+        const userData: Prisma.UserUncheckedCreateInput = {
             id: user.id,
             name: user.name as string,
             email: user.email,
@@ -145,6 +145,9 @@ export class PrismaAuthStore implements AuthStore {
             banReason: user.banReason as string,
             privoServiceId: user.privoServiceId as string,
             privoParentServiceId: user.privoParentServiceId as string,
+            allowPublishData: user.privacyFeatures?.publishData ?? true,
+            allowPublishPublicData:
+                user.privacyFeatures?.allowPublicData ?? true,
         };
 
         await this._client.user.upsert({
@@ -175,6 +178,9 @@ export class PrismaAuthStore implements AuthStore {
                 banReason: user.banReason as string,
                 privoServiceId: user.privoServiceId as string,
                 privoParentServiceId: user.privoParentServiceId as string,
+                allowPublishData: user.privacyFeatures?.publishData ?? true,
+                allowPublishPublicData:
+                    user.privacyFeatures?.allowPublicData ?? true,
             };
 
             if (!!user.currentLoginRequestId) {
@@ -838,6 +844,10 @@ export class PrismaAuthStore implements AuthStore {
                 privoParentServiceId: user.privoParentServiceId as
                     | string
                     | undefined,
+                privacyFeatures: {
+                    publishData: user.allowPublishData ?? true,
+                    allowPublicData: user.allowPublicData ?? true,
+                },
             };
         }
         return null;
