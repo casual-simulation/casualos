@@ -474,7 +474,6 @@ export default class RecordsUI extends Vue {
 
         sub.add(
             sim.auth.loginUIStatus.subscribe((e) => {
-                console.log('show page:', e.page);
                 this._currentLoginAuth = sim.auth.getEndpoint(e.endpoint);
                 if (e.page === 'enter_address' || e.page === 'enter_email') {
                     this._loginSim = sim;
