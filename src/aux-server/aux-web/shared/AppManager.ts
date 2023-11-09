@@ -39,11 +39,12 @@ import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
-import { merge } from 'lodash';
+import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import { PrivoAuthHelper } from './privo/PrivoAuthHelper';
 import { PrivacyFeatures } from '@casual-simulation/aux-records';
+import { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -401,6 +402,21 @@ export class AppManager {
             `[AppManager] defaultPrivacyFeatures: `,
             this._defaultPrivacyFeatures
         );
+
+        this._auth.primary.loginStatus.subscribe((status) => {
+            if (status.authData.privacyFeatures) {
+                this._defaultPrivacyFeatures = status.authData.privacyFeatures;
+
+                const newDevice = this._calculateDeviceConfig();
+                if (!isEqual(newDevice, this._deviceConfig)) {
+                    console.log(`[AppManager] New device config: `, newDevice);
+                    this._deviceConfig = newDevice;
+                    for (let sim of this._simulationManager.simulations.values()) {
+                        sim.helper.updateDevice(newDevice);
+                    }
+                }
+            }
+        });
     }
 
     private async _initIndexedDB() {
@@ -457,6 +473,10 @@ export class AppManager {
     }
 
     private _initDeviceConfig() {
+        this._deviceConfig = this._calculateDeviceConfig();
+    }
+
+    private _calculateDeviceConfig(): AuxDevice {
         const disableCollaboration = this._config.disableCollaboration;
         const privoAllowsCollaboration =
             this._defaultPrivacyFeatures.publishData;
@@ -470,7 +490,7 @@ export class AppManager {
 
         const allowCollaborationUpgrade = !disableCollaboration;
 
-        this._deviceConfig = {
+        return {
             supportsAR: this._arSupported,
             supportsVR: this._vrSupported,
             isCollaborative: isCollaborative,

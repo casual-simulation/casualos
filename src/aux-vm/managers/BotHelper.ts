@@ -32,6 +32,7 @@ import {
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
 import { ChannelActionResult } from '../vm';
+import { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -87,6 +88,10 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     // get localEvents(): Observable<LocalActions> {
     //     return this._localEvents;
     // }
+
+    async updateDevice(device: AuxDevice): Promise<void> {
+        await this._vm.updateDevice(device);
+    }
 
     /**
      * Creates a BotCalculationContext.
