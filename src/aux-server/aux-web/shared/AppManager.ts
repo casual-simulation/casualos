@@ -76,6 +76,9 @@ const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 export class AppManager {
     public appType: AppType;
     private _updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
+    private _arSupported: boolean;
+    private _vrSupported: boolean;
+    private _ab1BootstrapUrl: string;
 
     get loadingProgress(): Observable<ProgressMessage> {
         return this._progress;
@@ -324,13 +327,14 @@ export class AppManager {
         await this._initConfig();
         this._reportTime('Time to config');
         await Promise.all([
-            this._initDeviceConfig().then(() => {
-                this._reportTime('Time to device config');
+            this._loadDeviceInfo().then(() => {
+                this._reportTime('Time to device info');
             }),
             this._initAuth().then(() => {
                 this._reportTime('Time to auth');
             }),
         ]);
+        this._initDeviceConfig();
         this._reportTime('Time to init');
         this._sendProgress('Initialized.', 1, true);
     }
@@ -376,6 +380,7 @@ export class AppManager {
         if (authData) {
             console.log('[AppManager] User is authenticated.');
             this._defaultStudioId = authData.userId;
+            this._defaultPrivacyFeatures = authData.privacyFeatures;
         } else {
             console.log('[AppManager] User is not authenticated.');
             this._defaultStudioId = null;
@@ -384,9 +389,18 @@ export class AppManager {
                     allowPublicData: false,
                     publishData: false,
                 };
+            } else {
+                this._defaultPrivacyFeatures = {
+                    allowPublicData: true,
+                    publishData: true,
+                };
             }
         }
         console.log(`[AppManager] defaultPlayerId: ${this._defaultStudioId}`);
+        console.log(
+            `[AppManager] defaultPrivacyFeatures: `,
+            this._defaultPrivacyFeatures
+        );
     }
 
     private async _initIndexedDB() {
@@ -400,7 +414,7 @@ export class AppManager {
         });
     }
 
-    private async _initDeviceConfig() {
+    private async _loadDeviceInfo() {
         console.log('[AppManager] Initializing Device Config');
         const nav: any = navigator;
         let arSupported = false;
@@ -435,20 +449,33 @@ export class AppManager {
             }
         }
 
+        this._arSupported = arSupported;
+        this._vrSupported = vrSupported;
+        this._ab1BootstrapUrl = ab1Bootstrap;
+
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
+    }
 
-        let disableCollaboration = this._config.disableCollaboration;
-        let requirePrivo = !!this._config.requirePrivoLogin;
+    private _initDeviceConfig() {
+        const disableCollaboration = this._config.disableCollaboration;
+        const privoAllowsCollaboration =
+            this._defaultPrivacyFeatures.publishData;
 
-        let isCollaborative = disableCollaboration ? false : !requirePrivo;
-        let allowCollaborationUpgrade = !disableCollaboration;
+        let isCollaborative: boolean;
+        if (disableCollaboration || !privoAllowsCollaboration) {
+            isCollaborative = false;
+        } else {
+            isCollaborative = true;
+        }
+
+        const allowCollaborationUpgrade = !disableCollaboration;
 
         this._deviceConfig = {
-            supportsAR: arSupported,
-            supportsVR: vrSupported,
+            supportsAR: this._arSupported,
+            supportsVR: this._vrSupported,
             isCollaborative: isCollaborative,
             allowCollaborationUpgrade: allowCollaborationUpgrade,
-            ab1BootstrapUrl: ab1Bootstrap,
+            ab1BootstrapUrl: this._ab1BootstrapUrl,
         };
     }
 
