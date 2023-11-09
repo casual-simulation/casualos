@@ -1,6 +1,7 @@
 import {
     AssignedRole,
     GetUserPolicyResult,
+    ListMarkerPoliciesResult,
     ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
@@ -34,10 +35,11 @@ export class PrismaPolicyStore implements PolicyStore {
         this._client = client;
     }
 
-    async listPoliciesForMarker(
+    async listPoliciesForMarkerAndUser(
         recordName: string,
+        userId: string,
         marker: string
-    ): Promise<PolicyDocument[]> {
+    ): Promise<ListMarkerPoliciesResult> {
         const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
@@ -51,11 +53,34 @@ export class PrismaPolicyStore implements PolicyStore {
                     marker: marker,
                 },
             },
+            include: {
+                record: {
+                    include: {
+                        owner: true,
+                    },
+                },
+            },
         });
         if (policy) {
             policies.push(policy.document as unknown as PolicyDocument);
         }
-        return policies;
+        const userResult = await this._client.user.findUnique({
+            where: {
+                id: userId,
+            },
+        });
+
+        return {
+            policies,
+            recordOwnerPrivacyFeatures: {
+                publishData: policy.record.owner?.allowPublishData ?? true,
+                allowPublicData: policy.record.owner?.allowPublicData ?? true,
+            },
+            userPrivacyFeatures: {
+                publishData: userResult?.allowPublishData ?? true,
+                allowPublicData: userResult?.allowPublicData ?? true,
+            },
+        };
     }
 
     async listUserPolicies(

@@ -146,8 +146,7 @@ export class PrismaAuthStore implements AuthStore {
             privoServiceId: user.privoServiceId as string,
             privoParentServiceId: user.privoParentServiceId as string,
             allowPublishData: user.privacyFeatures?.publishData ?? true,
-            allowPublishPublicData:
-                user.privacyFeatures?.allowPublicData ?? true,
+            allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
         };
 
         await this._client.user.upsert({
@@ -179,8 +178,7 @@ export class PrismaAuthStore implements AuthStore {
                 privoServiceId: user.privoServiceId as string,
                 privoParentServiceId: user.privoParentServiceId as string,
                 allowPublishData: user.privacyFeatures?.publishData ?? true,
-                allowPublishPublicData:
-                    user.privacyFeatures?.allowPublicData ?? true,
+                allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
             };
 
             if (!!user.currentLoginRequestId) {
