@@ -80,9 +80,7 @@ Use the following environment variables to configure the inst collaboration feat
 
 Use the following environment variables to configure privo features.
 
--   `REQUIRE_PRIVO_AGE_VERIFICATION` - Set to `true` to require that the Age Verification API run before collaboration features are enabled.
--   `PRIVO_AGE_VERIFICATION_API_SCRIPT_URL` - Set to the URL that the private age verification API script is available at. (Different depending on integration or production)
--   `PRIVO_AGE_VERIFICATION_SERVICE_ID` - The service ID that should be presented to the age verification API.
+-   `REQUIRE_PRIVO_LOGIN` - Set to `true` to require that the user logs in with Privo before collaborative features are enabled.
 
 #### mapPortal
 

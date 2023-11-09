@@ -29,12 +29,13 @@ const webConfig = {
     what3WordsApiKey: process.env.WHAT_3_WORDS_API_KEY || 'Z0NHMSXQ',
     playerMode: process.env.AUX_PLAYER_MODE,
     preferredInstSource: process.env.PREFERRED_INST_SOURCE ?? 'private',
-    requirePrivoAgeVerification:
-        process.env.REQUIRE_PRIVO_AGE_VERIFICATION === 'true',
-    privoAgeVerificationApiScriptUrl:
-        process.env.PRIVO_AGE_VERIFICATION_API_SCRIPT_URL || null,
-    privoAgeVerificationServiceId:
-        process.env.PRIVO_AGE_VERIFICATION_SERVICE_ID || null,
+    requirePrivoLogin: process.env.REQUIRE_PRIVO_LOGIN === 'true',
+    // requirePrivoAgeVerification:
+    //     process.env.REQUIRE_PRIVO_AGE_VERIFICATION === 'true',
+    // privoAgeVerificationApiScriptUrl:
+    //     process.env.PRIVO_AGE_VERIFICATION_API_SCRIPT_URL || null,
+    // privoAgeVerificationServiceId:
+    //     process.env.PRIVO_AGE_VERIFICATION_SERVICE_ID || null,
 };
 
 // Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.

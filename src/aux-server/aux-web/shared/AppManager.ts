@@ -43,6 +43,7 @@ import { merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import { PrivoAuthHelper } from './privo/PrivoAuthHelper';
+import { PrivacyFeatures } from '@casual-simulation/aux-records';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -99,6 +100,7 @@ export class AppManager {
         new BehaviorSubject(false);
     private _startLoadTime: number = Date.now();
     private _defaultStudioId: string;
+    private _defaultPrivacyFeatures: PrivacyFeatures;
 
     private _simulationFactory: (
         id: string,
@@ -230,6 +232,13 @@ export class AppManager {
     }
 
     /**
+     * Gets the privacy features that are set by default.
+     */
+    get defaultPrivacyFeatures() {
+        return this._defaultPrivacyFeatures;
+    }
+
+    /**
      * Instructs the app manager to check for new updates online.
      */
     checkForUpdates() {
@@ -338,24 +347,24 @@ export class AppManager {
             recordsAuthOrigin: string
         ) => AuthHelperInterface;
 
-        const primaryAuthOrigin = this._config.authOrigin;
-        const recordsAuthOrigin = this._config.recordsOrigin;
-        if (this._config.requirePrivoAgeVerification) {
-            factory = (authOrigin, recordsOrigin) => {
-                if (
-                    primaryAuthOrigin !== authOrigin ||
-                    recordsOrigin !== recordsAuthOrigin
-                ) {
-                    return null;
-                }
+        // const primaryAuthOrigin = this._config.authOrigin;
+        // const recordsAuthOrigin = this._config.recordsOrigin;
+        // if (this._config.requirePrivoAgeVerification) {
+        //     factory = (authOrigin, recordsOrigin) => {
+        //         if (
+        //             primaryAuthOrigin !== authOrigin ||
+        //             recordsOrigin !== recordsAuthOrigin
+        //         ) {
+        //             return null;
+        //         }
 
-                return new PrivoAuthHelper(
-                    authOrigin,
-                    recordsOrigin,
-                    this._config
-                );
-            };
-        }
+        //         return new PrivoAuthHelper(
+        //             authOrigin,
+        //             recordsOrigin,
+        //             this._config
+        //         );
+        //     };
+        // }
 
         this._auth = new AuthHelper(
             this.config.authOrigin,
@@ -370,6 +379,12 @@ export class AppManager {
         } else {
             console.log('[AppManager] User is not authenticated.');
             this._defaultStudioId = null;
+            if (this._config.requirePrivoLogin) {
+                this._defaultPrivacyFeatures = {
+                    allowPublicData: false,
+                    publishData: false,
+                };
+            }
         }
         console.log(`[AppManager] defaultPlayerId: ${this._defaultStudioId}`);
     }
@@ -423,7 +438,7 @@ export class AppManager {
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
 
         let disableCollaboration = this._config.disableCollaboration;
-        let requirePrivo = !!this._config.requirePrivoAgeVerification;
+        let requirePrivo = !!this._config.requirePrivoLogin;
 
         let isCollaborative = disableCollaboration ? false : !requirePrivo;
         let allowCollaborationUpgrade = !disableCollaboration;
