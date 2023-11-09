@@ -377,6 +377,9 @@
                         <p>You are not logged in. What do you want to do?</p>
                     </div>
                 </div>
+                <p>
+                    <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
+                </p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button type="button" @click="hasAccount(true)" :disabled="processing">

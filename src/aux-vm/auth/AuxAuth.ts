@@ -142,6 +142,11 @@ export interface LoginUIShowIframe {
 
 export interface LoginUIHasAccount {
     page: 'has_account';
+
+    /**
+     * The page that should be linked to as the privacy policy.
+     */
+    privacyPolicyUrl: string;
 }
 
 export interface LoginUIPrivoSignUp {

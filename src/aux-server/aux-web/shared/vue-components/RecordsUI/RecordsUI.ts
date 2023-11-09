@@ -539,6 +539,7 @@ export default class RecordsUI extends Vue {
                     this._loginSim = sim;
                     this._resetUI();
                     this.showHasAccount = true;
+                    this.privacyPolicyUrl = e.privacyPolicyUrl;
                     this.$emit('visible');
                 } else if (e.page === 'show_update_password_link') {
                     this._resetUI();

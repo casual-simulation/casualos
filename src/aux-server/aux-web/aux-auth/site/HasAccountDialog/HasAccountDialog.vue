@@ -8,6 +8,9 @@
                         <p>You are not logged in. What do you want to do?</p>
                     </div>
                 </div>
+                <p>
+                    <router-link to="privacy-policy" target="_blank">Privacy Policy</router-link>
+                </p>
             </md-card-content>
             <md-card-actions>
                 <md-button

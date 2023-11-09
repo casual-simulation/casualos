@@ -687,6 +687,7 @@ export class AuthHandler implements AuxAuth {
     }): Promise<string> {
         this._loginUIStatus.next({
             page: 'has_account',
+            privacyPolicyUrl: this.privacyPolicyUrl,
         });
 
         const hasAccount = await firstValueFrom(
