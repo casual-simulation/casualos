@@ -24,6 +24,7 @@ import {
 import { union } from 'lodash';
 import { ChannelActionResult } from '../../vm';
 import {
+    AuxDevice,
     AuxRuntime,
     RuntimeStateVersion,
     isPromise,
@@ -173,6 +174,10 @@ export class TestAuxVM implements AuxVM {
         let objects = getActiveObjects(this.state);
         let allTags = union(...objects.map((o) => tagsOnBot(o))).sort();
         return allTags;
+    }
+
+    async updateDevice(device: AuxDevice): Promise<void> {
+        this._runtime.context.device = device;
     }
 
     sendState(update: StateUpdatedEvent) {

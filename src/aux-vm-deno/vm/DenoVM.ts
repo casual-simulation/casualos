@@ -28,6 +28,7 @@ import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import {
+    AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
@@ -273,6 +274,11 @@ export class DenoVM implements AuxVM {
     async getTags(): Promise<string[]> {
         if (!this._proxy) return null;
         return await this._proxy.getTags();
+    }
+
+    async updateDevice(device: AuxDevice): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.updateDevice(device);
     }
 
     sendAuthMessage(message: PartitionAuthMessage): Promise<void> {

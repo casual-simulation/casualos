@@ -9,6 +9,8 @@ import {
     StatusUpdate,
     ConnectionIndicator,
     AuxPartitionServices,
+    ON_ALLOW_COLLABORATION_UPGRADE,
+    ON_DISALLOW_COLLABORATION_UPGRADE,
 } from '@casual-simulation/aux-common';
 import {
     createBot,
@@ -44,6 +46,7 @@ import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
 import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
 import {
+    ON_COLLABORATION_ENABLED,
     TEMPORARY_BOT_PARTITION_ID,
     edit,
     enableCollaboration,
@@ -1617,9 +1620,22 @@ describe('BaseAuxChannel', () => {
                 memoryEnableCollaboration.mockReturnValueOnce(promise1);
                 tempEnableCollaboration.mockReturnValueOnce(promise2);
 
+                await memory.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            onCollaborationEnabled: `@os.toast("enabled");`,
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
                 await channel.sendEvents([enableCollaboration(task.taskId)]);
 
                 await waitAsync();
+
+                let actions: Action[] = [];
+                channel.onLocalEvents.subscribe((e) => actions.push(...e));
 
                 expect(memoryEnableCollaboration).toHaveBeenCalled();
                 expect(tempEnableCollaboration).toHaveBeenCalled();
@@ -1638,6 +1654,8 @@ describe('BaseAuxChannel', () => {
                 expect(channel.runtime.context.device.isCollaborative).toBe(
                     true
                 );
+
+                expect(actions).toEqual([toast('enabled')]);
             });
 
             it('should do nothing if collaboration is already enabled', async () => {
@@ -1914,6 +1932,141 @@ describe('BaseAuxChannel', () => {
                     def: createBot('def', {}, 'tempLocal'),
                 },
             });
+        });
+    });
+
+    describe('updateDevice()', () => {
+        beforeEach(async () => {
+            indicator = {
+                connectionId: 'userId',
+            };
+            device = {
+                userId: null,
+                sessionId: null,
+                connectionId: 'userId',
+            };
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            config = {
+                configBotId: 'userId',
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                    device: {
+                        ab1BootstrapUrl: 'url',
+                        supportsAR: false,
+                        supportsVR: false,
+                        allowCollaborationUpgrade: false,
+                        isCollaborative: false,
+                    },
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        partition: memory,
+                    },
+                },
+            };
+
+            channel = new AuxChannelImpl(device, config);
+        });
+
+        it('should update the device info', async () => {
+            await channel.initAndWait();
+
+            const { result: device } = await channel.runtime.execute(
+                'return os.device()'
+            );
+
+            expect(device).toEqual({
+                ab1BootstrapUrl: 'url',
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: false,
+                isCollaborative: false,
+            });
+
+            await channel.updateDevice({
+                ab1BootstrapUrl: 'other',
+                supportsAR: true,
+                supportsVR: true,
+                allowCollaborationUpgrade: true,
+                isCollaborative: true,
+            });
+
+            const { result: device2 } = await channel.runtime.execute(
+                'return os.device()'
+            );
+
+            expect(device2).toEqual({
+                ab1BootstrapUrl: 'other',
+                supportsAR: true,
+                supportsVR: true,
+                allowCollaborationUpgrade: true,
+                isCollaborative: true,
+            });
+        });
+
+        it('should emit a onAllowCollaborationUpgrade shout when allowCollaborationUpgrade is set to true', async () => {
+            await channel.initAndWait();
+
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        [ON_ALLOW_COLLABORATION_UPGRADE]: '@os.toast("abc");',
+                    })
+                ),
+            ]);
+
+            await waitAsync();
+
+            let actions: Action[] = [];
+            channel.onLocalEvents.subscribe((e) => actions.push(...e));
+
+            await channel.updateDevice({
+                ab1BootstrapUrl: 'other',
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: true,
+                isCollaborative: false,
+            });
+
+            await waitAsync();
+
+            expect(actions).toEqual([toast('abc')]);
+        });
+
+        it('should emit a onDisallowCollaborationUpgrade shout when allowCollaborationUpgrade is set to false', async () => {
+            config.config.device.allowCollaborationUpgrade = true;
+            await channel.initAndWait();
+
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        [ON_DISALLOW_COLLABORATION_UPGRADE]:
+                            '@os.toast("abc");',
+                    })
+                ),
+            ]);
+
+            await waitAsync();
+
+            let actions: Action[] = [];
+            channel.onLocalEvents.subscribe((e) => actions.push(...e));
+
+            await channel.updateDevice({
+                ab1BootstrapUrl: 'other',
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: false,
+                isCollaborative: false,
+            });
+
+            await waitAsync();
+
+            expect(actions).toEqual([toast('abc')]);
         });
     });
     // describe('forkAux()', () => {

@@ -2194,6 +2194,23 @@ export const ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME: string =
     'onSpaceRateLimitExceeded';
 
 /**
+ * The name of the event that is triggered once collaboration has been enabled.
+ */
+export const ON_COLLABORATION_ENABLED: string = 'onCollaborationEnabled';
+
+/**
+ * The name of the event that is triggered when collaboration upgrades begin to be allowed.
+ */
+export const ON_ALLOW_COLLABORATION_UPGRADE: string =
+    'onAllowCollaborationUpgrade';
+
+/**
+ * The name of the event that is triggered when collaboration upgrades are no longer allowed.
+ */
+export const ON_DISALLOW_COLLABORATION_UPGRADE: string =
+    'onDisallowCollaborationUpgrade';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots

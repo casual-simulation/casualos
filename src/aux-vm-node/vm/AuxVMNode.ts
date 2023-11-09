@@ -22,6 +22,7 @@ import {
 import {
     RuntimeActions,
     RuntimeStateVersion,
+    AuxDevice,
 } from '@casual-simulation/aux-runtime';
 
 export class AuxVMNode implements AuxVM {
@@ -139,6 +140,10 @@ export class AuxVMNode implements AuxVM {
 
     getTags(): Promise<string[]> {
         return this._channel.getTags();
+    }
+
+    async updateDevice(device: AuxDevice): Promise<void> {
+        return await this._channel.updateDevice(device);
     }
 
     sendAuthMessage(message: PartitionAuthMessage): Promise<void> {

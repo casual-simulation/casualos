@@ -124,6 +124,12 @@ export interface AuxVM extends Initable {
     getTags(): Promise<string[]>;
 
     /**
+     * Updates information about the device that is running the simulation.
+     * @param device The device info.
+     */
+    updateDevice(device: AuxDevice): Promise<void>;
+
+    /**
      * Creates a new MessagePort that can be used to connect to the internal aux channel.
      */
     createEndpoint?(): Promise<MessagePort>;

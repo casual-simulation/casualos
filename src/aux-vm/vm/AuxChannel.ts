@@ -2,6 +2,7 @@ import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { Observable, SubscriptionLike } from 'rxjs';
 import {
+    AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
@@ -191,6 +192,12 @@ export interface AuxChannel extends SubscriptionLike {
      * Gets the list of tags that are in use.
      */
     getTags(): Promise<string[]>;
+
+    /**
+     * Updates the device information for the simulation.
+     * @param device The device.
+     */
+    updateDevice(device: AuxDevice): Promise<void>;
 
     /**
      * Sends the given auth message.

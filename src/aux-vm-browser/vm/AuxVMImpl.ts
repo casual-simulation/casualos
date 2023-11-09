@@ -258,6 +258,11 @@ export class AuxVMImpl implements AuxVM {
         return await this._proxy.getTags();
     }
 
+    async updateDevice(device: AuxDevice): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.updateDevice(device);
+    }
+
     /**
      * Gets a new endpoint for the aux channel.
      * Can then be used with a ConnectableAuxVM.

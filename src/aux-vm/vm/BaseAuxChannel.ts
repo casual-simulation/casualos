@@ -41,6 +41,10 @@ import {
     PartitionAuthMessage,
     AuxPartitionServices,
     PartitionAuthSource,
+    action,
+    ON_COLLABORATION_ENABLED,
+    ON_ALLOW_COLLABORATION_UPGRADE,
+    ON_DISALLOW_COLLABORATION_UPGRADE,
 } from '@casual-simulation/aux-common';
 import {
     realtimeStrategyToRealtimeEditMode,
@@ -52,6 +56,7 @@ import {
     TagMapper,
     RuntimeStateVersion,
     RuntimeActions,
+    AuxDevice,
 } from '@casual-simulation/aux-runtime';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -507,6 +512,35 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._helper.getTags();
     }
 
+    async updateDevice(device: AuxDevice): Promise<void> {
+        let previousDevice = this._config.config.device;
+
+        this._config.config.device = device;
+        if (this._runtime) {
+            this._runtime.context.device = device;
+        }
+
+        if (this._helper) {
+            if (!previousDevice.isCollaborative) {
+                if (
+                    device.allowCollaborationUpgrade &&
+                    !previousDevice.allowCollaborationUpgrade
+                ) {
+                    await this.sendEvents([
+                        action(ON_ALLOW_COLLABORATION_UPGRADE),
+                    ]);
+                } else if (
+                    !device.allowCollaborationUpgrade &&
+                    previousDevice.allowCollaborationUpgrade
+                ) {
+                    await this.sendEvents([
+                        action(ON_DISALLOW_COLLABORATION_UPGRADE),
+                    ]);
+                }
+            }
+        }
+    }
+
     async sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
         if (message.type === 'response') {
             this._authSource.sendAuthResponse(message);
@@ -785,9 +819,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             await Promise.all(promises);
             this._runtime.context.device.isCollaborative = true;
             this._runtime.context.device.allowCollaborationUpgrade = false;
+
             if (hasValue(event.taskId)) {
                 this.sendEvents([asyncResult(event.taskId, null)]);
             }
+            this.sendEvents([action(ON_COLLABORATION_ENABLED)]);
         } catch (err) {
             console.error('[BaseAuxChannel] Error enabling collaboration', err);
             if (hasValue(event.taskId)) {
