@@ -96,6 +96,10 @@ describe('AuthCoordinator', () => {
             authenticateInBackground: jest.fn(),
             getRecordKeyPolicy: jest.fn(),
             getRecordsOrigin: jest.fn().mockResolvedValue(origin),
+            isValidDisplayName: jest.fn(),
+            isValidEmailAddress: jest.fn(),
+            provideHasAccount: jest.fn(),
+            providePrivoSignUpInfo: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -161,6 +165,11 @@ describe('AuthCoordinator', () => {
                     avatarPortraitUrl: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
+                    displayName: null,
+                    privacyFeatures: {
+                        allowPublicData: true,
+                        publishData: true,
+                    },
                 },
             };
 
@@ -184,6 +193,11 @@ describe('AuthCoordinator', () => {
                             avatarPortraitUrl: null,
                             hasActiveSubscription: false,
                             subscriptionTier: null,
+                            displayName: null,
+                            privacyFeatures: {
+                                allowPublicData: true,
+                                publishData: true,
+                            },
                         },
                     },
                 },

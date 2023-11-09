@@ -548,10 +548,9 @@ describe('RecordsServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
-                    features: {
-                        joinAndCollaborate: true,
-                        projectDevelopment: true,
-                        publishProjects: true,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
                     },
                     displayName: null,
                 },
@@ -619,10 +618,9 @@ describe('RecordsServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
-                    features: {
-                        joinAndCollaborate: true,
-                        projectDevelopment: true,
-                        publishProjects: true,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
                     },
                     displayName: null,
                 },

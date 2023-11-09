@@ -143,6 +143,10 @@ export class AuthManager {
         return this._appMetadata?.displayName;
     }
 
+    get privacyFeatures() {
+        return this._appMetadata?.privacyFeatures;
+    }
+
     get subscriptionsSupported() {
         return this._subscriptionsSupported;
     }
@@ -1137,7 +1141,7 @@ export class AuthManager {
     private async _putAppMetadata(
         metadata: Omit<
             AppMetadata,
-            'hasActiveSubscription' | 'subscriptionTier'
+            'hasActiveSubscription' | 'subscriptionTier' | 'privacyFeatures'
         >
     ): Promise<AppMetadata> {
         const response = await axios.put(

@@ -9,6 +9,7 @@ import {
 import {
     AssignedRole,
     GetUserPolicyResult,
+    ListMarkerPoliciesResult,
     ListUserPoliciesStoreResult,
     ListUserPoliciesStoreSuccess,
     ListedRoleAssignments,
@@ -40,12 +41,13 @@ export class CachingPolicyStore implements PolicyStore {
         this._cacheSeconds = cacheSeconds;
     }
 
-    async listPoliciesForMarker(
+    async listPoliciesForMarkerAndUser(
         recordName: string,
+        userId: string,
         marker: string
-    ): Promise<PolicyDocument[]> {
-        const result = await this._cache.retrieve<PolicyDocument[]>(
-            `policies/${recordName}/${marker}`
+    ): Promise<ListMarkerPoliciesResult> {
+        const result = await this._cache.retrieve<ListMarkerPoliciesResult>(
+            `policies/${recordName}/${userId}/${marker}`
         );
 
         if (result) {
@@ -57,28 +59,36 @@ export class CachingPolicyStore implements PolicyStore {
                 list.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
             }
 
-            return list.concat(result);
+            return {
+                ...result,
+                policies: list.concat(result.policies),
+            };
         }
 
-        const policies = await this._store.listPoliciesForMarker(
+        const storeResult = await this._store.listPoliciesForMarkerAndUser(
             recordName,
+            userId,
             marker
         );
-        if (policies) {
-            const cachable = policies.filter(
+        if (storeResult) {
+            const cachablePolicies = storeResult.policies.filter(
                 (p) =>
                     p !== DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT &&
                     p !== DEFAULT_PUBLIC_READ_POLICY_DOCUMENT &&
                     p !== DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT
             );
+            const cachable: ListMarkerPoliciesResult = {
+                ...storeResult,
+                policies: cachablePolicies,
+            };
             await this._cache.store(
-                `policies/${recordName}/${marker}`,
+                `policies/${recordName}/${userId}/${marker}`,
                 cachable,
                 this._cacheSeconds
             );
         }
 
-        return policies;
+        return storeResult;
     }
 
     async listUserPolicies(

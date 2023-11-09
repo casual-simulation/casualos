@@ -2674,6 +2674,21 @@ export interface AuthData {
      * Otherwise, then the user is paying for a subscription for has a default subscription.
      */
     subscriptionTier: string | null;
+
+    /**
+     * The privacy features that the user has enabled.
+     */
+    privacyFeatures: {
+        /**
+         * Whether the user is allowed to publish any data.
+         */
+        publishData: boolean;
+
+        /**
+         * Whether the user is allowed to access or publish public data.
+         */
+        allowPublicData: boolean;
+    };
 }
 
 /**

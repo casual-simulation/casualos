@@ -4462,7 +4462,7 @@ export class RecordsServer {
             phoneNumber: result.phoneNumber,
             hasActiveSubscription: result.hasActiveSubscription,
             subscriptionTier: result.subscriptionTier,
-            features: result.features,
+            privacyFeatures: result.privacyFeatures,
             displayName: result.displayName,
         });
     }

@@ -457,7 +457,7 @@ describe('getStatusCode()', () => {
         ['session_already_revoked', 200] as const,
         ['invalid_code', 403] as const,
         ['invalid_key', 403] as const,
-        ['invalid_record_key', 400] as const,
+        ['invalid_record_key', 403] as const,
         ['invalid_request', 403] as const,
         ['session_expired', 401] as const,
         ['unacceptable_address', 400] as const,
