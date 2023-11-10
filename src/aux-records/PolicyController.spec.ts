@@ -1,12 +1,13 @@
 import { AuthController } from './AuthController';
 import { AuthMessenger } from './AuthMessenger';
-import { AuthStore } from './AuthStore';
+import { AuthStore, PrivacyFeatures } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { MemoryStore } from './MemoryStore';
 import {
     AuthorizeRequest,
     AuthorizeResult,
     PolicyController,
+    filterAndMergeMarkerPermissions,
     willMarkersBeRemaining,
 } from './PolicyController';
 import {
@@ -30,6 +31,7 @@ import {
     createTestRecordKey,
     createTestUser,
 } from './TestUtils';
+import { ListMarkerPoliciesResult } from './PolicyStore';
 
 console.log = jest.fn();
 
@@ -173,6 +175,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -207,6 +211,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -1307,6 +1313,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -1340,6 +1348,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -1373,6 +1383,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -1407,6 +1419,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -2054,6 +2068,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -2087,6 +2103,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -2120,6 +2138,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -2154,6 +2174,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -3467,6 +3489,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -3500,6 +3524,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -3533,6 +3559,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -3567,6 +3595,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -4448,6 +4478,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -4494,6 +4526,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -4540,6 +4574,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -4587,6 +4623,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -6081,6 +6119,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -6115,6 +6155,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -6149,6 +6191,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -6184,6 +6228,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -7491,6 +7537,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -7525,6 +7573,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -7559,6 +7609,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -7594,6 +7646,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -8686,6 +8740,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -8736,6 +8792,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -8786,6 +8844,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -8837,6 +8897,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -10475,6 +10537,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -10509,6 +10573,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -10543,6 +10609,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -10578,6 +10646,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -11576,6 +11646,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -11611,6 +11683,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -11646,6 +11720,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -11682,6 +11758,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -12880,6 +12958,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -12913,6 +12993,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -12946,6 +13028,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -12980,6 +13064,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -13620,6 +13706,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -13653,6 +13741,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -13686,6 +13776,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -13720,6 +13812,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -15083,6 +15177,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -15129,6 +15225,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -15175,6 +15273,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -15222,6 +15322,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -16693,6 +16795,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -16726,6 +16830,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -16759,6 +16865,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -16793,6 +16901,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -17632,6 +17742,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -17664,6 +17776,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -17696,6 +17810,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -17729,6 +17845,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -18404,6 +18522,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -18436,6 +18556,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -18468,6 +18590,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -18501,6 +18625,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -19176,6 +19302,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -19208,6 +19336,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -19240,6 +19370,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -19273,6 +19405,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -19947,6 +20081,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -19978,6 +20114,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -20009,6 +20147,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -20041,6 +20181,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -20697,6 +20839,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -20728,6 +20872,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -20759,6 +20905,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -20791,6 +20939,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -21443,6 +21593,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -21475,6 +21627,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -21507,6 +21661,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -21540,6 +21696,8 @@ describe('PolicyController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -22217,6 +22375,8 @@ describe('PolicyController', () => {
                         privacyFeatures: {
                             publishData: false,
                             allowPublicData: false,
+                            allowAI: true,
+                            allowPublicInsts: true,
                         },
                     });
 
@@ -22250,6 +22410,8 @@ describe('PolicyController', () => {
                         privacyFeatures: {
                             publishData: true,
                             allowPublicData: false,
+                            allowAI: true,
+                            allowPublicInsts: true,
                         },
                     });
 
@@ -22283,6 +22445,8 @@ describe('PolicyController', () => {
                         privacyFeatures: {
                             publishData: false,
                             allowPublicData: false,
+                            allowAI: true,
+                            allowPublicInsts: true,
                         },
                     });
 
@@ -22317,6 +22481,8 @@ describe('PolicyController', () => {
                         privacyFeatures: {
                             publishData: true,
                             allowPublicData: false,
+                            allowAI: true,
+                            allowPublicInsts: true,
                         },
                     });
 
@@ -23191,6 +23357,8 @@ describe('PolicyController', () => {
                         privacyFeatures: {
                             publishData: false,
                             allowPublicData: false,
+                            allowAI: true,
+                            allowPublicInsts: true,
                         },
                     });
 
@@ -23224,6 +23392,8 @@ describe('PolicyController', () => {
                         privacyFeatures: {
                             publishData: true,
                             allowPublicData: false,
+                            allowAI: true,
+                            allowPublicInsts: true,
                         },
                     });
 
@@ -23257,6 +23427,8 @@ describe('PolicyController', () => {
                         privacyFeatures: {
                             publishData: false,
                             allowPublicData: false,
+                            allowAI: true,
+                            allowPublicInsts: true,
                         },
                     });
 
@@ -23291,6 +23463,8 @@ describe('PolicyController', () => {
                         privacyFeatures: {
                             publishData: true,
                             allowPublicData: false,
+                            allowAI: true,
+                            allowPublicInsts: true,
                         },
                     });
 
@@ -24133,7 +24307,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -24166,7 +24342,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -24199,7 +24377,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -24233,7 +24413,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -25333,7 +25515,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -25366,7 +25550,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -25399,7 +25585,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -25433,7 +25621,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -26080,7 +26270,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -26113,7 +26305,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -26146,7 +26340,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -26180,7 +26376,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -27493,7 +27691,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -27526,7 +27726,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -27559,7 +27761,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -27593,7 +27797,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -28416,7 +28622,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -28449,7 +28657,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -28482,7 +28692,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -28516,7 +28728,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -29397,7 +29611,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -29443,7 +29659,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -29489,7 +29707,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -29536,7 +29756,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -30969,7 +31191,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -31002,7 +31226,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -31035,7 +31261,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: false,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -31069,7 +31297,9 @@ describe('PolicyController', () => {
                     ...user,
                     privacyFeatures: {
                         publishData: true,
-                        allowPublicData: false,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -33584,5 +33814,431 @@ describe('willMarkersBeRemaining()', () => {
         const removed = [] as string[];
         const added = ['third'];
         expect(willMarkersBeRemaining(existing, removed, added)).toBe(true);
+    });
+});
+
+describe('filterAndMergeMarkerPermissions()', () => {
+    it('should merge the permissions from the markers together', () => {
+        const markers: { marker: string; result: ListMarkerPoliciesResult }[] =
+            [
+                {
+                    marker: 'first',
+                    result: {
+                        policies: [
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.create',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.delete',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    },
+                },
+                {
+                    marker: 'second',
+                    result: {
+                        policies: [
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.read',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    },
+                },
+            ];
+
+        const result = filterAndMergeMarkerPermissions(markers);
+
+        const expected = result.map((r) => ({
+            marker: r.marker,
+            permissions: r.permissions.map((p) => p.permission),
+        }));
+
+        expect(expected).toEqual([
+            {
+                marker: 'first',
+                permissions: [
+                    {
+                        type: 'data.create',
+                        addresses: true,
+                        role: 'admin',
+                    },
+                    {
+                        type: 'data.delete',
+                        addresses: true,
+                        role: 'admin',
+                    },
+                ],
+            },
+            {
+                marker: 'second',
+                permissions: [
+                    {
+                        type: 'data.read',
+                        addresses: true,
+                        role: 'admin',
+                    },
+                ],
+            },
+        ]);
+    });
+
+    const cases = [['record owner'] as const, ['user'] as const];
+
+    describe.each(cases)('%s', (kind) => {
+        const recordOwnerValue = kind === 'record owner';
+        const userValue = kind !== 'record owner';
+
+        it('should filter out all permissions if not allowed to publish data', () => {
+            const markers: {
+                marker: string;
+                result: ListMarkerPoliciesResult;
+            }[] = [
+                {
+                    marker: 'first',
+                    result: {
+                        policies: [
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.create',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.delete',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                    {
+                                        type: 'data.read',
+                                        addresses: true,
+                                        role: true,
+                                    },
+                                ],
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: recordOwnerValue,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: userValue,
+                        },
+                    },
+                },
+                {
+                    marker: 'second',
+                    result: {
+                        policies: [
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.read',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: recordOwnerValue,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: userValue,
+                        },
+                    },
+                },
+            ];
+
+            const result = filterAndMergeMarkerPermissions(markers);
+
+            const expected = result.map((r) => ({
+                marker: r.marker,
+                permissions: r.permissions.map((p) => p.permission),
+            }));
+
+            expect(expected).toEqual([
+                {
+                    marker: 'first',
+                    permissions: [],
+                },
+                {
+                    marker: 'second',
+                    permissions: [],
+                },
+            ]);
+        });
+
+        it('should filter out markers that contain public rules if allowPublicData is false', () => {
+            const markers: {
+                marker: string;
+                result: ListMarkerPoliciesResult;
+            }[] = [
+                {
+                    marker: 'first',
+                    result: {
+                        policies: [
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.create',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.delete',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                    {
+                                        type: 'data.read',
+                                        addresses: true,
+                                        role: true,
+                                    },
+                                ],
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: recordOwnerValue,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: userValue,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    },
+                },
+                {
+                    marker: 'second',
+                    result: {
+                        policies: [
+                            {
+                                permissions: [
+                                    {
+                                        type: 'data.read',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: recordOwnerValue,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: userValue,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    },
+                },
+            ];
+
+            const result = filterAndMergeMarkerPermissions(markers);
+
+            const expected = result.map((r) => ({
+                marker: r.marker,
+                permissions: r.permissions.map((p) => p.permission),
+            }));
+
+            expect(expected).toEqual([
+                {
+                    marker: 'first',
+                    permissions: [],
+                },
+                {
+                    marker: 'second',
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            addresses: true,
+                            role: 'admin',
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should filter out all inst permissions for markers that contain public rules if not allowed to access public insts', () => {
+            const markers: {
+                marker: string;
+                result: ListMarkerPoliciesResult;
+            }[] = [
+                {
+                    marker: 'first',
+                    result: {
+                        policies: [
+                            {
+                                permissions: [
+                                    {
+                                        type: 'inst.create',
+                                        insts: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                            {
+                                permissions: [
+                                    {
+                                        type: 'inst.delete',
+                                        insts: true,
+                                        role: 'admin',
+                                    },
+                                    {
+                                        type: 'data.delete',
+                                        addresses: true,
+                                        role: 'admin',
+                                    },
+                                    {
+                                        type: 'inst.read',
+                                        insts: true,
+                                        role: true,
+                                    },
+                                ],
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: recordOwnerValue,
+                            publishData: true,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: userValue,
+                            publishData: true,
+                        },
+                    },
+                },
+                {
+                    marker: 'second',
+                    result: {
+                        policies: [
+                            {
+                                permissions: [
+                                    {
+                                        type: 'inst.read',
+                                        insts: true,
+                                        role: 'admin',
+                                    },
+                                ],
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: recordOwnerValue,
+                            publishData: true,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: userValue,
+                            publishData: true,
+                        },
+                    },
+                },
+            ];
+
+            const result = filterAndMergeMarkerPermissions(markers);
+
+            const expected = result.map((r) => ({
+                marker: r.marker,
+                permissions: r.permissions.map((p) => p.permission),
+            }));
+
+            expect(expected).toEqual([
+                {
+                    marker: 'first',
+                    permissions: [
+                        {
+                            type: 'data.delete',
+                            addresses: true,
+                            role: 'admin',
+                        },
+                    ],
+                },
+                {
+                    marker: 'second',
+                    permissions: [
+                        {
+                            type: 'inst.read',
+                            insts: true,
+                            role: 'admin',
+                        },
+                    ],
+                },
+            ]);
+        });
     });
 });

@@ -1424,6 +1424,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: false,
                     allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -1510,6 +1512,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -1609,6 +1613,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: false,
                     allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -1692,6 +1698,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -2208,6 +2216,8 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -2315,6 +2325,8 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -3407,6 +3419,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -3455,6 +3469,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
         });
@@ -4094,6 +4110,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -4152,6 +4170,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
         });
@@ -5123,6 +5143,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
         });
@@ -5140,6 +5162,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -5162,6 +5186,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
         });
@@ -5188,6 +5214,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
         });
@@ -5225,6 +5253,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
         });
@@ -5262,6 +5292,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
         });
@@ -5301,6 +5333,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
         });
@@ -5476,6 +5510,8 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -5537,6 +5573,8 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
 
@@ -5557,6 +5595,8 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 });
             });
@@ -6055,6 +6095,8 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
         expect(result).toEqual({
             publishData: false,
             allowPublicData: false,
+            allowAI: true,
+            allowPublicInsts: true,
         });
     });
 
@@ -6086,6 +6128,8 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
         expect(result).toEqual({
             publishData: false,
             allowPublicData: false,
+            allowAI: true,
+            allowPublicInsts: true,
         });
     });
 
@@ -6117,6 +6161,8 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
         expect(result).toEqual({
             publishData: true,
             allowPublicData: false,
+            allowAI: true,
+            allowPublicInsts: true,
         });
     });
 });

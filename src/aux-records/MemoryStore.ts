@@ -1580,6 +1580,8 @@ export class MemoryStore
         return {
             publishData: true,
             allowPublicData: true,
+            allowAI: true,
+            allowPublicInsts: true,
         };
     }
 
@@ -1594,6 +1596,8 @@ export class MemoryStore
         return {
             publishData: true,
             allowPublicData: true,
+            allowAI: true,
+            allowPublicInsts: true,
         };
     }
 

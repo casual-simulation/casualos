@@ -1835,6 +1835,8 @@ export class AuthController {
                 privacyFeatures = {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 };
             }
 
@@ -3019,8 +3021,17 @@ export function getPrivacyFeaturesFromPermissions(
         permissions.some(
             (p) => p.on && p.featureId === featureIds.joinAndCollaborate
         );
+
+    // TODO:
+    // Whether the AI features are enabled.
+    const allowAI = true;
+
+    // Whether the public insts features are enabled.
+    const allowPublicInsts = true;
     return {
         publishData,
         allowPublicData,
+        allowAI,
+        allowPublicInsts,
     };
 }
