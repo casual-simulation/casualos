@@ -2688,6 +2688,16 @@ export interface AuthData {
          * Whether the user is allowed to access or publish public data.
          */
         allowPublicData: boolean;
+
+        /**
+         * Whether AI is allowed.
+         */
+        allowAI: boolean;
+
+        /**
+         * Whether public insts are allowed.
+         */
+        allowPublicInsts: boolean;
     };
 }
 

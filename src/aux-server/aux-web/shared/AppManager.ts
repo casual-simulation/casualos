@@ -42,7 +42,6 @@ import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
-import { PrivoAuthHelper } from './privo/PrivoAuthHelper';
 import { PrivacyFeatures } from '@casual-simulation/aux-records';
 import { AuxDevice } from '@casual-simulation/aux-runtime';
 
@@ -352,25 +351,6 @@ export class AppManager {
             recordsAuthOrigin: string
         ) => AuthHelperInterface;
 
-        // const primaryAuthOrigin = this._config.authOrigin;
-        // const recordsAuthOrigin = this._config.recordsOrigin;
-        // if (this._config.requirePrivoAgeVerification) {
-        //     factory = (authOrigin, recordsOrigin) => {
-        //         if (
-        //             primaryAuthOrigin !== authOrigin ||
-        //             recordsOrigin !== recordsAuthOrigin
-        //         ) {
-        //             return null;
-        //         }
-
-        //         return new PrivoAuthHelper(
-        //             authOrigin,
-        //             recordsOrigin,
-        //             this._config
-        //         );
-        //     };
-        // }
-
         this._auth = new AuthHelper(
             this.config.authOrigin,
             this.config.recordsOrigin,
@@ -389,11 +369,15 @@ export class AppManager {
                 this._defaultPrivacyFeatures = {
                     allowPublicData: false,
                     publishData: false,
+                    allowAI: false,
+                    allowPublicInsts: false,
                 };
             } else {
                 this._defaultPrivacyFeatures = {
                     allowPublicData: true,
                     publishData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 };
             }
         }

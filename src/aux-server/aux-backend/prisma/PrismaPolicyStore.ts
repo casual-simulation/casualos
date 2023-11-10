@@ -75,10 +75,14 @@ export class PrismaPolicyStore implements PolicyStore {
             recordOwnerPrivacyFeatures: {
                 publishData: policy.record.owner?.allowPublishData ?? true,
                 allowPublicData: policy.record.owner?.allowPublicData ?? true,
+                allowAI: true,
+                allowPublicInsts: true,
             },
             userPrivacyFeatures: {
                 publishData: userResult?.allowPublishData ?? true,
                 allowPublicData: userResult?.allowPublicData ?? true,
+                allowAI: userResult?.allowAI ?? true,
+                allowPublicInsts: userResult?.allowPublicInsts ?? true,
             },
         };
     }

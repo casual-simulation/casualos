@@ -41,6 +41,8 @@ model User {
 
     allowPublishData Boolean?
     allowPublicData Boolean?
+    allowAI Boolean?
+    allowPublicInsts Boolean?
 
     loginRequests LoginRequest[]
     sessions AuthSession[]

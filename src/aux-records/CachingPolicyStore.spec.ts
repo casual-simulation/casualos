@@ -77,10 +77,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -93,10 +97,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -110,10 +118,14 @@ describe('CachingPolicyStore', () => {
                                 recordOwnerPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                                 userPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                             },
                             expireTimeMs: 1000,
@@ -139,10 +151,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -155,10 +171,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -172,10 +192,14 @@ describe('CachingPolicyStore', () => {
                                 recordOwnerPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                                 userPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                             },
                             expireTimeMs: 1000,
@@ -209,10 +233,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -225,10 +253,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -242,10 +274,14 @@ describe('CachingPolicyStore', () => {
                                 recordOwnerPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                                 userPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                             },
                             expireTimeMs: 1000,
@@ -276,10 +312,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -292,10 +332,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -309,10 +353,14 @@ describe('CachingPolicyStore', () => {
                                 recordOwnerPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                                 userPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                             },
                             expireTimeMs: 1000,
@@ -331,10 +379,14 @@ describe('CachingPolicyStore', () => {
                     recordOwnerPrivacyFeatures: {
                         publishData: true,
                         allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                     userPrivacyFeatures: {
                         publishData: true,
                         allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 },
                 1
@@ -351,10 +403,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
             expect(inner.listPoliciesForMarkerAndUser).toBeCalledTimes(0);
@@ -368,10 +424,14 @@ describe('CachingPolicyStore', () => {
                     recordOwnerPrivacyFeatures: {
                         publishData: true,
                         allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                     userPrivacyFeatures: {
                         publishData: true,
                         allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 },
                 1
@@ -390,10 +450,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -406,10 +470,14 @@ describe('CachingPolicyStore', () => {
                 recordOwnerPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
                 userPrivacyFeatures: {
                     publishData: true,
                     allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
                 },
             });
 
@@ -423,10 +491,14 @@ describe('CachingPolicyStore', () => {
                                 recordOwnerPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                                 userPrivacyFeatures: {
                                     publishData: true,
                                     allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
                                 },
                             },
                             expireTimeMs: 2001,

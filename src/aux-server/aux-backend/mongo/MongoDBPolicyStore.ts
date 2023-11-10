@@ -19,8 +19,10 @@ import {
     UpdateUserRolesResult,
     UserPolicyRecord,
     getExpireTime,
+    ListMarkerPoliciesResult,
 } from '@casual-simulation/aux-records';
 import { Collection, FilterQuery } from 'mongodb';
+import { MongoDBAuthUser } from './MongoDBAuthStore';
 
 /**
  * Implements PolicyStore for MongoDB.
@@ -28,19 +30,23 @@ import { Collection, FilterQuery } from 'mongodb';
 export class MongoDBPolicyStore implements PolicyStore {
     private _policies: Collection<MongoDBPolicy>;
     private _roles: Collection<MongoDBRole>;
+    private _users: Collection<MongoDBAuthUser>;
 
     constructor(
         policies: Collection<MongoDBPolicy>,
-        roles: Collection<MongoDBRole>
+        roles: Collection<MongoDBRole>,
+        users: Collection<MongoDBAuthUser>
     ) {
         this._policies = policies;
         this._roles = roles;
+        this._users = users;
     }
 
-    async listPoliciesForMarker(
+    async listPoliciesForMarkerAndUser(
         recordName: string,
+        userId: string,
         marker: string
-    ): Promise<PolicyDocument[]> {
+    ): Promise<ListMarkerPoliciesResult> {
         const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
@@ -52,7 +58,27 @@ export class MongoDBPolicyStore implements PolicyStore {
         if (policy) {
             policies.push(policy.document);
         }
-        return policies;
+
+        if (policy) {
+            policies.push(policy.document as unknown as PolicyDocument);
+        }
+        const userResult = await this._users.findOne({
+            where: {
+                id: userId,
+            },
+        });
+
+        return {
+            policies,
+            // TODO: Support record owner privacy features.
+            recordOwnerPrivacyFeatures: {
+                publishData: true,
+                allowPublicData: true,
+                allowAI: true,
+                allowPublicInsts: true,
+            },
+            userPrivacyFeatures: userResult?.privacyFeatures,
+        };
     }
 
     async listUserPolicies(

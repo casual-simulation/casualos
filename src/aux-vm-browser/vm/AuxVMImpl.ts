@@ -31,6 +31,7 @@ import axios from 'axios';
 import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import {
+    AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';

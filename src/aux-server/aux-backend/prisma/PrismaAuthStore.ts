@@ -179,6 +179,9 @@ export class PrismaAuthStore implements AuthStore {
                 privoParentServiceId: user.privoParentServiceId as string,
                 allowPublishData: user.privacyFeatures?.publishData ?? true,
                 allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
+                allowAI: user.privacyFeatures?.allowAI ?? true,
+                allowPublicInsts:
+                    user.privacyFeatures?.allowPublicInsts ?? true,
             };
 
             if (!!user.currentLoginRequestId) {
@@ -845,6 +848,8 @@ export class PrismaAuthStore implements AuthStore {
                 privacyFeatures: {
                     publishData: user.allowPublishData ?? true,
                     allowPublicData: user.allowPublicData ?? true,
+                    allowAI: user.allowAI ?? true,
+                    allowPublicInsts: user.allowPublicInsts ?? true,
                 },
             };
         }

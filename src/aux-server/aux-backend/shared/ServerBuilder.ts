@@ -305,7 +305,11 @@ export class ServerBuilder implements SubscriptionLike {
                 const authStore = new MongoDBAuthStore(db);
                 this._authStore = authStore;
                 this._recordsStore = authStore;
-                this._policyStore = new MongoDBPolicyStore(policies, roles);
+                this._policyStore = new MongoDBPolicyStore(
+                    policies,
+                    roles,
+                    users
+                );
                 this._dataStore = new MongoDBDataRecordsStore(
                     recordsDataCollection
                 );

@@ -17,12 +17,14 @@ import {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
+    PrivacyFeatures,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
@@ -89,6 +91,32 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             RECORD_KEYS_COLLECTION_NAME
         );
         this._studios = db.collection<MongoDBStudio>(STUDIOS_COLLECTION_NAME);
+    }
+
+    // TODO: Implement
+    findOpenIDLoginRequest(requestId: string): Promise<AuthOpenIDLoginRequest> {
+        throw new Error('Method not implemented.');
+    }
+
+    saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest> {
+        throw new Error('Method not implemented.');
+    }
+
+    markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     async listEmailRules(): Promise<RegexRule[]> {
@@ -1124,6 +1152,8 @@ export interface MongoDBAuthUser {
 
     privoServiceId?: string;
     privoParentServiceId?: string;
+
+    privacyFeatures?: PrivacyFeatures;
 }
 
 export interface MongoDBLoginRequest {

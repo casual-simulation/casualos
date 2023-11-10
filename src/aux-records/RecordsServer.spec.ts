@@ -551,6 +551,8 @@ describe('RecordsServer', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                     displayName: null,
                 },
@@ -621,6 +623,8 @@ describe('RecordsServer', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                     displayName: null,
                 },
