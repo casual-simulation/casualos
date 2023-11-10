@@ -3,6 +3,7 @@ import {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthSubscription,
@@ -71,6 +72,16 @@ export class PrismaAuthStore implements AuthStore {
         return this._convertToAuthUser(user);
     }
 
+    async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        const user = await this._client.user.findUnique({
+            where: {
+                privoServiceId: serviceId,
+            },
+        });
+
+        return this._convertToAuthUser(user);
+    }
+
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
@@ -118,7 +129,7 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async saveUser(user: AuthUser): Promise<void> {
-        const userData = {
+        const userData: Prisma.UserUncheckedCreateInput = {
             id: user.id,
             name: user.name as string,
             email: user.email,
@@ -132,6 +143,10 @@ export class PrismaAuthStore implements AuthStore {
             subscriptionId: user.subscriptionId as string,
             banTime: convertToDate(user.banTimeMs),
             banReason: user.banReason as string,
+            privoServiceId: user.privoServiceId as string,
+            privoParentServiceId: user.privoParentServiceId as string,
+            allowPublishData: user.privacyFeatures?.publishData ?? true,
+            allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
         };
 
         await this._client.user.upsert({
@@ -160,6 +175,13 @@ export class PrismaAuthStore implements AuthStore {
                 subscriptionId: user.subscriptionId as string,
                 banTime: convertToDate(user.banTimeMs),
                 banReason: user.banReason as string,
+                privoServiceId: user.privoServiceId as string,
+                privoParentServiceId: user.privoParentServiceId as string,
+                allowPublishData: user.privacyFeatures?.publishData ?? true,
+                allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
+                allowAI: user.privacyFeatures?.allowAI ?? true,
+                allowPublicInsts:
+                    user.privacyFeatures?.allowPublicInsts ?? true,
             };
 
             if (!!user.currentLoginRequestId) {
@@ -217,6 +239,107 @@ export class PrismaAuthStore implements AuthStore {
             ipAddress: request.ipAddress,
             secretHash: request.secretHash,
         };
+    }
+
+    async findOpenIDLoginRequest(
+        requestId: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        const request = await this._client.openIDLoginRequest.findUnique({
+            where: {
+                requestId: requestId,
+            },
+        });
+
+        if (!request) {
+            return null;
+        }
+
+        return {
+            requestId: request.requestId,
+            authorizationUrl: request.authorizationUrl,
+            redirectUrl: request.redirectUrl,
+            codeMethod: request.codeMethod,
+            codeVerifier: request.codeVerifier,
+            provider: request.provider,
+            scope: request.scope,
+            requestTimeMs: convertToMillis(request.requestTime) as number,
+            expireTimeMs: convertToMillis(request.expireTime) as number,
+            completedTimeMs: convertToMillis(request.completedTime),
+            authorizationTimeMs: convertToMillis(request.authorizationTime),
+            authorizationCode: request.authorizationCode,
+            ipAddress: request.ipAddress,
+        };
+    }
+
+    async saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest> {
+        await this._client.openIDLoginRequest.upsert({
+            where: {
+                requestId: request.requestId,
+            },
+            create: {
+                requestId: request.requestId,
+                authorizationUrl: request.authorizationUrl,
+                redirectUrl: request.redirectUrl,
+                codeMethod: request.codeMethod,
+                codeVerifier: request.codeVerifier,
+                provider: request.provider,
+                scope: request.scope,
+                requestTime: convertToDate(request.requestTimeMs),
+                expireTime: convertToDate(request.expireTimeMs),
+                completedTime: convertToDate(request.completedTimeMs),
+                authorizationTime: convertToDate(request.authorizationTimeMs),
+                authorizationCode: request.authorizationCode,
+                ipAddress: request.ipAddress,
+            },
+            update: {
+                authorizationUrl: request.authorizationUrl,
+                redirectUrl: request.redirectUrl,
+                codeMethod: request.codeMethod,
+                codeVerifier: request.codeVerifier,
+                provider: request.provider,
+                scope: request.scope,
+                requestTime: convertToDate(request.requestTimeMs),
+                expireTime: convertToDate(request.expireTimeMs),
+                completedTime: convertToDate(request.completedTimeMs),
+                authorizationTime: convertToDate(request.authorizationTimeMs),
+                authorizationCode: request.authorizationCode,
+                ipAddress: request.ipAddress,
+            },
+        });
+
+        return request;
+    }
+
+    async markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        await this._client.openIDLoginRequest.update({
+            where: {
+                requestId: requestId,
+            },
+            data: {
+                completedTime: convertToDate(completedTimeMs),
+            },
+        });
+    }
+
+    async saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void> {
+        await this._client.openIDLoginRequest.update({
+            where: {
+                requestId: requestId,
+            },
+            data: {
+                authorizationCode: authorizationCode,
+                authorizationTime: convertToDate(authorizationTimeMs),
+            },
+        });
     }
 
     async findSession(
@@ -718,6 +841,16 @@ export class PrismaAuthStore implements AuthStore {
                 banTimeMs: convertToMillis(user.banTime),
                 banReason: user.banReason as AuthUser['banReason'],
                 subscriptionId: user.subscriptionId as string | undefined,
+                privoServiceId: user.privoServiceId as string | undefined,
+                privoParentServiceId: user.privoParentServiceId as
+                    | string
+                    | undefined,
+                privacyFeatures: {
+                    publishData: user.allowPublishData ?? true,
+                    allowPublicData: user.allowPublicData ?? true,
+                    allowAI: user.allowAI ?? true,
+                    allowPublicInsts: user.allowPublicInsts ?? true,
+                },
             };
         }
         return null;

@@ -304,12 +304,73 @@ export function parseInstancesList(instances: string): string[] {
         .filter((i) => !!i);
 }
 
+export type KnownErrorCodes =
+    | 'not_logged_in'
+    | 'not_supported'
+    | 'data_not_found'
+    | 'data_too_large'
+    | 'record_not_found'
+    | 'file_not_found'
+    | 'session_not_found'
+    | 'operation_not_found'
+    | 'studio_not_found'
+    | 'user_not_found'
+    | 'inst_not_found'
+    | 'session_already_revoked'
+    | 'invalid_code'
+    | 'invalid_key'
+    | 'invalid_request'
+    | 'invalid_origin'
+    | 'invalid_record_key'
+    | 'session_expired'
+    | 'unacceptable_address'
+    | 'unacceptable_user_id'
+    | 'unacceptable_code'
+    | 'unacceptable_session_key'
+    | 'unacceptable_session_id'
+    | 'unacceptable_request_id'
+    | 'unacceptable_ip_address'
+    | 'unacceptable_address_type'
+    | 'unacceptable_expire_time'
+    | 'unacceptable_request'
+    | 'unacceptable_update'
+    | 'address_type_not_supported'
+    | 'server_error'
+    | 'unauthorized_to_create_record_key'
+    | 'price_does_not_match'
+    | 'user_is_banned'
+    | 'rate_limit_exceeded'
+    | 'not_authorized'
+    | 'not_subscribed'
+    | 'invalid_subscription_tier'
+    | 'subscription_limit_reached'
+    | 'record_already_exists'
+    | 'action_not_supported'
+    | 'no_session_key'
+    | 'unacceptable_studio_id'
+    | 'email_already_exists'
+    | 'parent_email_already_exists'
+    | 'parent_email_required'
+    | 'invalid_room_name'
+    | 'invalid_username'
+    | 'invalid_update_policy'
+    | 'invalid_delete_policy'
+    | 'unacceptable_url'
+    | 'file_already_exists'
+    | 'invalid_file_data'
+    | 'invalid_model'
+    | 'roles_too_large'
+    | 'policy_not_found'
+    | 'policy_too_large'
+    | 'invalid_policy'
+    | 'not_completed';
+
 /**
  * Gets the status code that should be used for the given response.
  * @param response The response.
  */
 export function getStatusCode(
-    response: { success: false; errorCode: string } | { success: true }
+    response: { success: false; errorCode: KnownErrorCodes } | { success: true }
 ) {
     if (response.success === false) {
         if (response.errorCode === 'not_logged_in') {
@@ -337,6 +398,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'invalid_code') {
             return 403;
         } else if (response.errorCode === 'invalid_key') {
+            return 403;
+        } else if (response.errorCode === 'invalid_record_key') {
             return 403;
         } else if (response.errorCode === 'invalid_request') {
             return 403;
@@ -384,6 +447,14 @@ export function getStatusCode(
             return 403;
         } else if (response.errorCode === 'record_already_exists') {
             return 403;
+        } else if (response.errorCode === 'subscription_limit_reached') {
+            return 403;
+        } else if (response.errorCode === 'inst_not_found') {
+            return 404;
+        } else if (response.errorCode === 'action_not_supported') {
+            return 500;
+        } else if (response.errorCode === 'policy_not_found') {
+            return 404;
         } else {
             return 400;
         }

@@ -11,6 +11,7 @@ import {
     PUBLIC_WRITE_MARKER,
     PolicyDocument,
 } from '@casual-simulation/aux-common';
+import { ListMarkerPoliciesResult } from './PolicyStore';
 
 describe('CachingPolicyStore', () => {
     let inner: MemoryStore;
@@ -35,7 +36,7 @@ describe('CachingPolicyStore', () => {
         cache = new MemoryCache();
         store = new CachingPolicyStore(inner, cache, 1);
 
-        jest.spyOn(inner, 'listPoliciesForMarker');
+        jest.spyOn(inner, 'listPoliciesForMarkerAndUser');
         jest.spyOn(inner, 'listUserPolicies');
         jest.spyOn(inner, 'listRolesForUser');
         jest.spyOn(inner, 'listRolesForInst');
@@ -63,67 +64,154 @@ describe('CachingPolicyStore', () => {
         Date.now = originalNow;
     });
 
-    describe('listPoliciesForMarker()', () => {
+    describe('listPoliciesForMarkerAndUser()', () => {
         it('should store non-default policies in the store', async () => {
-            const result = await store.listPoliciesForMarker('test', 'marker');
-
-            expect(result).toEqual([
-                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                policy,
-            ]);
-
-            const cached = await cache.retrieve<PolicyDocument[]>(
-                `policies/test/marker`
+            const result = await store.listPoliciesForMarkerAndUser(
+                'test',
+                'userId',
+                'marker'
             );
 
-            expect(cached).toEqual([policy]);
+            expect(result).toEqual({
+                policies: [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT, policy],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
+
+            const cached = await cache.retrieve<ListMarkerPoliciesResult>(
+                `policies/test/userId/marker`
+            );
+
+            expect(cached).toEqual({
+                policies: [policy],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
 
             expect(cache.items).toEqual(
                 new Map([
                     [
-                        `policies/test/marker`,
+                        `policies/test/userId/marker`,
                         {
-                            data: [policy],
+                            data: {
+                                policies: [policy],
+                                recordOwnerPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                                userPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                            },
                             expireTimeMs: 1000,
                         },
                     ],
                 ])
             );
-            expect(inner.listPoliciesForMarker).toBeCalledTimes(1);
+            expect(inner.listPoliciesForMarkerAndUser).toBeCalledTimes(1);
         });
 
         it('should not store the default publicRead policy', async () => {
-            const result = await store.listPoliciesForMarker(
+            const result = await store.listPoliciesForMarkerAndUser(
                 'test',
+                'userId',
                 PUBLIC_READ_MARKER
             );
 
-            expect(result).toEqual([
-                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-            ]);
+            expect(result).toEqual({
+                policies: [
+                    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+                ],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
 
-            const cached = await cache.retrieve<PolicyDocument[]>(
-                `policies/test/${PUBLIC_READ_MARKER}`
+            const cached = await cache.retrieve<ListMarkerPoliciesResult>(
+                `policies/test/userId/${PUBLIC_READ_MARKER}`
             );
 
-            expect(cached).toEqual([]);
+            expect(cached).toEqual({
+                policies: [],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
 
             expect(cache.items).toEqual(
                 new Map([
                     [
-                        `policies/test/${PUBLIC_READ_MARKER}`,
+                        `policies/test/userId/${PUBLIC_READ_MARKER}`,
                         {
-                            data: [],
+                            data: {
+                                policies: [],
+                                recordOwnerPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                                userPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                            },
                             expireTimeMs: 1000,
                         },
                     ],
                 ])
             );
-            expect(inner.listPoliciesForMarker).toBeCalledTimes(1);
+            expect(inner.listPoliciesForMarkerAndUser).toBeCalledTimes(1);
 
-            const result2 = await store.listPoliciesForMarker(
+            const result2 = await store.listPoliciesForMarkerAndUser(
                 'test',
+                'userId',
                 PUBLIC_READ_MARKER
             );
 
@@ -131,37 +219,81 @@ describe('CachingPolicyStore', () => {
         });
 
         it('should not store the default publicWrite policy', async () => {
-            const result = await store.listPoliciesForMarker(
+            const result = await store.listPoliciesForMarkerAndUser(
                 'test',
+                'userId',
                 PUBLIC_WRITE_MARKER
             );
 
-            expect(result).toEqual([
-                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
-            ]);
+            expect(result).toEqual({
+                policies: [
+                    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
+                ],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
 
-            const cached = await cache.retrieve<PolicyDocument[]>(
-                `policies/test/${PUBLIC_WRITE_MARKER}`
+            const cached = await cache.retrieve<ListMarkerPoliciesResult>(
+                `policies/test/userId/${PUBLIC_WRITE_MARKER}`
             );
 
-            expect(cached).toEqual([]);
+            expect(cached).toEqual({
+                policies: [],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
 
             expect(cache.items).toEqual(
                 new Map([
                     [
-                        `policies/test/${PUBLIC_WRITE_MARKER}`,
+                        `policies/test/userId/${PUBLIC_WRITE_MARKER}`,
                         {
-                            data: [],
+                            data: {
+                                policies: [],
+                                recordOwnerPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                                userPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                            },
                             expireTimeMs: 1000,
                         },
                     ],
                 ])
             );
-            expect(inner.listPoliciesForMarker).toBeCalledTimes(1);
+            expect(inner.listPoliciesForMarkerAndUser).toBeCalledTimes(1);
 
-            const result2 = await store.listPoliciesForMarker(
+            const result2 = await store.listPoliciesForMarkerAndUser(
                 'test',
+                'userId',
                 PUBLIC_WRITE_MARKER
             );
 
@@ -169,75 +301,212 @@ describe('CachingPolicyStore', () => {
         });
 
         it('should store empty lists', async () => {
-            const result = await store.listPoliciesForMarker(
+            const result = await store.listPoliciesForMarkerAndUser(
                 'test',
+                'userId',
                 'nopolicies'
             );
 
-            expect(result).toEqual([DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT]);
+            expect(result).toEqual({
+                policies: [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
 
-            const cached = await cache.retrieve<PolicyDocument[]>(
-                `policies/test/nopolicies`
+            const cached = await cache.retrieve<ListMarkerPoliciesResult>(
+                `policies/test/userId/nopolicies`
             );
 
-            expect(cached).toEqual([]);
+            expect(cached).toEqual({
+                policies: [],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
 
             expect(cache.items).toEqual(
                 new Map([
                     [
-                        `policies/test/nopolicies`,
+                        `policies/test/userId/nopolicies`,
                         {
-                            data: [],
+                            data: {
+                                policies: [],
+                                recordOwnerPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                                userPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                            },
                             expireTimeMs: 1000,
                         },
                     ],
                 ])
             );
-            expect(inner.listPoliciesForMarker).toBeCalledTimes(1);
+            expect(inner.listPoliciesForMarkerAndUser).toBeCalledTimes(1);
         });
 
         it('should include the any resource policy in cached results', async () => {
-            await cache.store(`policies/test/marker`, [policy], 1);
+            await cache.store(
+                `policies/test/userId/marker`,
+                {
+                    policies: [policy],
+                    recordOwnerPrivacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    userPrivacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                },
+                1
+            );
 
-            const result = await store.listPoliciesForMarker('test', 'marker');
+            const result = await store.listPoliciesForMarkerAndUser(
+                'test',
+                'userId',
+                'marker'
+            );
 
-            expect(result).toEqual([
-                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                policy,
-            ]);
-            expect(inner.listPoliciesForMarker).toBeCalledTimes(0);
+            expect(result).toEqual({
+                policies: [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT, policy],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
+            expect(inner.listPoliciesForMarkerAndUser).toBeCalledTimes(0);
         });
 
         it('should return the store value if the cached data has expired', async () => {
-            await cache.store(`policies/test/marker`, [policy], 1);
+            await cache.store(
+                `policies/test/userId/marker`,
+                {
+                    policies: [policy],
+                    recordOwnerPrivacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    userPrivacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                },
+                1
+            );
 
             nowMock.mockReturnValue(1001);
 
-            const result = await store.listPoliciesForMarker('test', 'marker');
-
-            expect(result).toEqual([
-                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                policy,
-            ]);
-
-            const cached = await cache.retrieve<PolicyDocument[]>(
-                `policies/test/marker`
+            const result = await store.listPoliciesForMarkerAndUser(
+                'test',
+                'userId',
+                'marker'
             );
 
-            expect(cached).toEqual([policy]);
+            expect(result).toEqual({
+                policies: [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT, policy],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
+
+            const cached = await cache.retrieve<ListMarkerPoliciesResult>(
+                `policies/test/userId/marker`
+            );
+
+            expect(cached).toEqual({
+                policies: [policy],
+                recordOwnerPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                userPrivacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
 
             expect(cache.items).toEqual(
                 new Map([
                     [
-                        `policies/test/marker`,
+                        `policies/test/userId/marker`,
                         {
-                            data: [policy],
+                            data: {
+                                policies: [policy],
+                                recordOwnerPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                                userPrivacyFeatures: {
+                                    publishData: true,
+                                    allowPublicData: true,
+                                    allowAI: true,
+                                    allowPublicInsts: true,
+                                },
+                            },
                             expireTimeMs: 2001,
                         },
                     ],
                 ])
             );
-            expect(inner.listPoliciesForMarker).toBeCalledTimes(1);
+            expect(inner.listPoliciesForMarkerAndUser).toBeCalledTimes(1);
         });
     });
 

@@ -5,6 +5,7 @@ import {
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
+    AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
@@ -194,6 +195,11 @@ export class ConnectableAuxVM implements AuxVM {
     async getTags(): Promise<string[]> {
         if (!this._proxy) return null;
         return await this._proxy.getTags();
+    }
+
+    async updateDevice(device: AuxDevice): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.updateDevice(device);
     }
 
     protected _createSubVM(

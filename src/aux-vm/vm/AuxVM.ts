@@ -12,6 +12,7 @@ import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { ChannelActionResult } from './AuxChannel';
 import {
+    AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
@@ -122,6 +123,12 @@ export interface AuxVM extends Initable {
      * Gets the list of tags that are currently in use.
      */
     getTags(): Promise<string[]>;
+
+    /**
+     * Updates information about the device that is running the simulation.
+     * @param device The device info.
+     */
+    updateDevice(device: AuxDevice): Promise<void>;
 
     /**
      * Creates a new MessagePort that can be used to connect to the internal aux channel.

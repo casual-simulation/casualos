@@ -39,9 +39,11 @@ import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
-import { merge } from 'lodash';
+import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
+import { PrivacyFeatures } from '@casual-simulation/aux-records';
+import { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -74,6 +76,9 @@ const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 export class AppManager {
     public appType: AppType;
     private _updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
+    private _arSupported: boolean;
+    private _vrSupported: boolean;
+    private _ab1BootstrapUrl: string;
 
     get loadingProgress(): Observable<ProgressMessage> {
         return this._progress;
@@ -98,6 +103,7 @@ export class AppManager {
         new BehaviorSubject(false);
     private _startLoadTime: number = Date.now();
     private _defaultStudioId: string;
+    private _defaultPrivacyFeatures: PrivacyFeatures;
 
     private _simulationFactory: (
         id: string,
@@ -229,6 +235,13 @@ export class AppManager {
     }
 
     /**
+     * Gets the privacy features that are set by default.
+     */
+    get defaultPrivacyFeatures() {
+        return this._defaultPrivacyFeatures;
+    }
+
+    /**
      * Instructs the app manager to check for new updates online.
      */
     checkForUpdates() {
@@ -314,13 +327,14 @@ export class AppManager {
         await this._initConfig();
         this._reportTime('Time to config');
         await Promise.all([
-            this._initDeviceConfig().then(() => {
-                this._reportTime('Time to device config');
+            this._loadDeviceInfo().then(() => {
+                this._reportTime('Time to device info');
             }),
             this._initAuth().then(() => {
                 this._reportTime('Time to auth');
             }),
         ]);
+        this._initDeviceConfig();
         this._reportTime('Time to init');
         this._sendProgress('Initialized.', 1, true);
     }
@@ -337,9 +351,6 @@ export class AppManager {
             recordsAuthOrigin: string
         ) => AuthHelperInterface;
 
-        const primaryAuthOrigin = this._config.authOrigin;
-        const recordsAuthOrigin = this._config.recordsOrigin;
-
         this._auth = new AuthHelper(
             this.config.authOrigin,
             this.config.recordsOrigin,
@@ -350,11 +361,46 @@ export class AppManager {
         if (authData) {
             console.log('[AppManager] User is authenticated.');
             this._defaultStudioId = authData.userId;
+            this._defaultPrivacyFeatures = authData.privacyFeatures;
         } else {
             console.log('[AppManager] User is not authenticated.');
             this._defaultStudioId = null;
+            if (this._config.requirePrivoLogin) {
+                this._defaultPrivacyFeatures = {
+                    allowPublicData: false,
+                    publishData: false,
+                    allowAI: false,
+                    allowPublicInsts: false,
+                };
+            } else {
+                this._defaultPrivacyFeatures = {
+                    allowPublicData: true,
+                    publishData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                };
+            }
         }
         console.log(`[AppManager] defaultPlayerId: ${this._defaultStudioId}`);
+        console.log(
+            `[AppManager] defaultPrivacyFeatures: `,
+            this._defaultPrivacyFeatures
+        );
+
+        this._auth.primary.loginStatus.subscribe((status) => {
+            if (status.authData.privacyFeatures) {
+                this._defaultPrivacyFeatures = status.authData.privacyFeatures;
+
+                const newDevice = this._calculateDeviceConfig();
+                if (!isEqual(newDevice, this._deviceConfig)) {
+                    console.log(`[AppManager] New device config: `, newDevice);
+                    this._deviceConfig = newDevice;
+                    for (let sim of this._simulationManager.simulations.values()) {
+                        sim.helper.updateDevice(newDevice);
+                    }
+                }
+            }
+        });
     }
 
     private async _initIndexedDB() {
@@ -368,7 +414,7 @@ export class AppManager {
         });
     }
 
-    private async _initDeviceConfig() {
+    private async _loadDeviceInfo() {
         console.log('[AppManager] Initializing Device Config');
         const nav: any = navigator;
         let arSupported = false;
@@ -403,18 +449,37 @@ export class AppManager {
             }
         }
 
+        this._arSupported = arSupported;
+        this._vrSupported = vrSupported;
+        this._ab1BootstrapUrl = ab1Bootstrap;
+
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
+    }
 
-        let disableCollaboration = this._config.disableCollaboration;
-        let isCollaborative = disableCollaboration ? false : true;
-        let allowCollaborationUpgrade = !disableCollaboration;
+    private _initDeviceConfig() {
+        this._deviceConfig = this._calculateDeviceConfig();
+    }
 
-        this._deviceConfig = {
-            supportsAR: arSupported,
-            supportsVR: vrSupported,
+    private _calculateDeviceConfig(): AuxDevice {
+        const disableCollaboration = this._config.disableCollaboration;
+        const privoAllowsCollaboration =
+            this._defaultPrivacyFeatures.publishData;
+
+        let isCollaborative: boolean;
+        if (disableCollaboration || !privoAllowsCollaboration) {
+            isCollaborative = false;
+        } else {
+            isCollaborative = true;
+        }
+
+        const allowCollaborationUpgrade = !disableCollaboration;
+
+        return {
+            supportsAR: this._arSupported,
+            supportsVR: this._vrSupported,
             isCollaborative: isCollaborative,
             allowCollaborationUpgrade: allowCollaborationUpgrade,
-            ab1BootstrapUrl: ab1Bootstrap,
+            ab1BootstrapUrl: this._ab1BootstrapUrl,
         };
     }
 

@@ -2646,6 +2646,11 @@ export interface AuthData {
     name: string;
 
     /**
+     * The display name of the user.
+     */
+    displayName: string;
+
+    /**
      * The URL of the user's avatar.
      * Null if the user does not have an avatar.
      */
@@ -2669,6 +2674,31 @@ export interface AuthData {
      * Otherwise, then the user is paying for a subscription for has a default subscription.
      */
     subscriptionTier: string | null;
+
+    /**
+     * The privacy features that the user has enabled.
+     */
+    privacyFeatures: {
+        /**
+         * Whether the user is allowed to publish any data.
+         */
+        publishData: boolean;
+
+        /**
+         * Whether the user is allowed to access or publish public data.
+         */
+        allowPublicData: boolean;
+
+        /**
+         * Whether AI is allowed.
+         */
+        allowAI: boolean;
+
+        /**
+         * Whether public insts are allowed.
+         */
+        allowPublicInsts: boolean;
+    };
 }
 
 /**

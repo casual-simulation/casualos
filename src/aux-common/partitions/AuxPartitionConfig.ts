@@ -175,12 +175,6 @@ export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
     childPartitionType?: YjsClientPartitionConfig['type'];
 
     /**
-     * Whether the partition should be loaded without realtime updates.
-     * Basically this means that all you get is the initial state.
-     */
-    static?: boolean;
-
-    /**
      * Whether the partition should skip the initial load until the partition is upgraded to a realtime connection.
      */
     skipInitialLoad?: boolean;
@@ -217,12 +211,6 @@ export interface OtherPlayersClientPartitionConfig extends PartitionConfigBase {
      * Defaults to causal_repo_client.
      */
     childPartitionType?: YjsClientPartitionConfig['type'];
-
-    /**
-     * Whether the partition should be loaded without realtime updates.
-     * Basically this means that all you get is the initial state.
-     */
-    static?: boolean;
 
     /**
      * Whether the partition should skip the initial load until the partition is upgraded to a realtime connection.

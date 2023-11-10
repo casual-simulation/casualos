@@ -40,6 +40,12 @@ export interface AuthStore {
     findUserByStripeCustomerId(customerId: string): Promise<AuthUser | null>;
 
     /**
+     * Finds the user that is associated with the given Privo Service ID.
+     * @param serviceId
+     */
+    findUserByPrivoServiceId(serviceId: string): Promise<AuthUser | null>;
+
+    /**
      * Finds a login request for the given user and request ID.
      * @param userId The ID of the user.
      * @param requestId The ID of the request.
@@ -48,6 +54,14 @@ export interface AuthStore {
         userId: string,
         requestId: string
     ): Promise<AuthLoginRequest | null>;
+
+    /**
+     * Finds the login request for the given request ID.
+     * @param requestId The ID of the Open ID login request.
+     */
+    findOpenIDLoginRequest(
+        requestId: string
+    ): Promise<AuthOpenIDLoginRequest | null>;
 
     /**
      * Finds a login session for the given user and session ID.
@@ -63,6 +77,14 @@ export interface AuthStore {
     saveLoginRequest(request: AuthLoginRequest): Promise<AuthLoginRequest>;
 
     /**
+     * Saves the given login request.
+     * @param request The request that should be saved.
+     */
+    saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest>;
+
+    /**
      * Marks the login request as completed.
      * @param userId The ID oof the user.
      * @param requestId The ID of the request.
@@ -72,6 +94,28 @@ export interface AuthStore {
         userId: string,
         requestId: string,
         completedTimeMs: number
+    ): Promise<void>;
+
+    /**
+     * Marks the login request as completed.
+     * @param requestId The ID of the request.
+     * @param completedTimeMs The time that the request was completed.
+     */
+    markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void>;
+
+    /**
+     * Saves the given authorization code for the given login request.
+     * @param requestId The ID of the request.
+     * @param authorizationCode The authorization code that should be saved.
+     * @param authorizationTimeMs The time of the authorization.
+     */
+    saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
     ): Promise<void>;
 
     /**
@@ -219,10 +263,28 @@ export interface AuthStore {
 export type AddressType = 'email' | 'phone';
 
 export interface AuthUser {
+    /**
+     * The ID of the user.
+     */
     id: string;
+
+    /**
+     * The name of the user.
+     */
     name?: string | null;
+
+    /**
+     * The email address of the user.
+     * Possible to use for login.
+     */
     email: string | null;
+
+    /**
+     * The SMS phone number of the user.
+     * Possible to use for login.
+     */
     phoneNumber: string | null;
+
     avatarUrl?: string | null;
     avatarPortraitUrl?: string | null;
 
@@ -280,6 +342,52 @@ export interface AuthUser {
      * The reason for the ban.
      */
     banReason?: 'terms_of_service_violation' | null | undefined;
+
+    // /**
+    //  * The OpenID login provider that should be required for this user to login with.
+    //  */
+    // oidLoginProvider?: string | null | undefined;
+
+    /**
+     * The Privo Service ID that this user is associated with.
+     */
+    privoServiceId?: string;
+
+    /**
+     * The Privo Service ID of the parent of this user.
+     */
+    privoParentServiceId?: string;
+
+    /**
+     * The privacy-related features that the user has access to.
+     * If null or omitted, then the user has access to all features.
+     */
+    privacyFeatures?: PrivacyFeatures | null;
+}
+
+/**
+ * The privacy-related features that a user can have access to.
+ */
+export interface PrivacyFeatures {
+    /**
+     * Whether the user is allowed to publish data.
+     */
+    publishData: boolean;
+
+    /**
+     * Whether the user is allowed to publish or access public data.
+     */
+    allowPublicData: boolean;
+
+    /**
+     * Whether the user is allowed to access AI features.
+     */
+    allowAI: boolean;
+
+    /**
+     * Whether the user is allowed to access public insts.
+     */
+    allowPublicInsts: boolean;
 }
 
 /**
@@ -336,6 +444,30 @@ export interface AuthLoginRequest {
      * The IP Address that the request came from.
      */
     ipAddress: string;
+
+    // /**
+    //  * The code that the Open ID authorization response should match.
+    //  * If null, then Open ID was not used for the login request.
+    //  */
+    // oidCodeVerifier?: string | null;
+
+    // /**
+    //  * The code challenge method that the Open ID authorization response should match.
+    //  * If null, then Open ID was not used for the login request.
+    //  */
+    // oidCodeMethod?: string | null;
+
+    // /**
+    //  * The name of the provider that was used for the Open ID login.
+    //  * If null, then Open ID was not used for the login request.
+    //  */
+    // oidProvider?: string | null;
+
+    // /**
+    //  * The URL that was used as the redirect URL in the Open ID authorization code flow.
+    //  * If null, then Open ID was not used for the login request.
+    //  */
+    // oidRedirectUrl?: string | null;
 }
 
 /**
@@ -384,6 +516,11 @@ export interface AuthSession {
     requestId: string | null;
 
     /**
+     * The ID of the OpenID login request that aws used to obtain this session.
+     */
+    oidRequestId?: string | null;
+
+    /**
      * The ID of the previous session that was used to obtain this session.
      */
     previousSessionId: string | null;
@@ -395,6 +532,120 @@ export interface AuthSession {
 
     /**
      * The IP Address that the session was granted to.
+     */
+    ipAddress: string;
+
+    /**
+     * The name of the Open ID provider that was used to obtain this session.
+     * If null, then Open ID was not used for the session.
+     */
+    oidProvider?: string | null;
+
+    /**
+     * The access token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidAccessToken?: string | null;
+
+    /**
+     * The type of the access token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidTokenType?: string | null;
+
+    /**
+     * The ID token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidIdToken?: string | null;
+
+    /**
+     * The refresh token that was granted to the session by the Open ID provider.
+     * If null, then Open ID was not used for the session.
+     */
+    oidRefreshToken?: string | null;
+
+    /**
+     * The Open ID scope that was granted to the session.
+     * If null, then Open ID was not used for the session.
+     */
+    oidScope?: string | null;
+
+    /**
+     * The unix timestamp in seconds that the oidAccessToken expires at.
+     * If null, then Open ID was not used for the session.
+     */
+    oidExpiresAtMs?: number | null;
+}
+
+/**
+ * Defines an interface that represents a login request for an Open ID login.
+ */
+export interface AuthOpenIDLoginRequest {
+    /**
+     * The ID of the request.
+     */
+    requestId: string;
+
+    /**
+     * The name of the provider that was used for the Open ID login.
+     */
+    provider: string;
+
+    /**
+     * The code that the Open ID authorization response should match.
+     */
+    codeVerifier: string;
+
+    /**
+     * The code challenge method that the Open ID authorization response should match.
+     */
+    codeMethod: string;
+
+    /**
+     * The URL that was used as the authorization URL in the Open ID authorization code flow.
+     */
+    authorizationUrl: string;
+
+    /**
+     * The URL that was used as the redirect URL in the Open ID authorization code flow.
+     */
+    redirectUrl: string;
+
+    /**
+     * The scope that was requested.
+     */
+    scope: string;
+
+    /**
+     * The unix timestamp in miliseconds that the request was made at.
+     */
+    requestTimeMs: number;
+
+    /**
+     * The unix timestamp in miliseconds that the request will expire at.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The unix timestamp in miliseconds that the request was completed at.
+     * If null, then the request has not been completed.
+     */
+    completedTimeMs: number | null;
+
+    /**
+     * The unix timestamp that the authorization code was registered for the login request.
+     * Null/undefined if the request has not been authorized yet.
+     */
+    authorizationTimeMs?: number | null;
+
+    /**
+     * The authorization code that was recieved for the request.
+     */
+    authorizationCode?: string;
+
+    /**
+     * The IP Address that the request came from.
      */
     ipAddress: string;
 }

@@ -1,10 +1,15 @@
 import {
     ConfigurationStore,
     MemoryConfiguration,
+    PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import {
+    PrivoConfiguration,
+    parsePrivoConfiguration,
+} from '@casual-simulation/aux-records/PrivoConfiguration';
 import { Collection } from 'mongodb';
 
 export class MongoDBConfigurationStore implements ConfigurationStore {
@@ -27,6 +32,17 @@ export class MongoDBConfigurationStore implements ConfigurationStore {
         return parseSubscriptionConfig(
             item?.data,
             this._defaultConfiguration.subscriptions
+        );
+    }
+
+    async getPrivoConfiguration(): Promise<PrivoConfiguration> {
+        const item = await this._collection.findOne({
+            _id: PRIVO_CONFIG_KEY,
+        });
+
+        return parsePrivoConfiguration(
+            item?.data,
+            this._defaultConfiguration.privo
         );
     }
 }

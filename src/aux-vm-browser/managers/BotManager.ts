@@ -195,7 +195,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     branch: DEFAULT_BRANCH_NAME,
                     host: host,
                     connectionProtocol: protocol,
-                    static: true,
                     skipInitialLoad: true,
                 },
                 [TEMPORARY_SHARED_PARTITION_ID]: {
@@ -207,7 +206,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     connectionProtocol: protocol,
                     temporary: true,
                     remoteEvents: false,
-                    static: true,
                     skipInitialLoad: true,
                 },
                 [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
@@ -218,7 +216,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     host: host,
                     connectionProtocol: protocol,
                     childPartitionType: 'yjs_client',
-                    static: true,
                     skipInitialLoad: true,
                 },
             };

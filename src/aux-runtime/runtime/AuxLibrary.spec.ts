@@ -5494,6 +5494,10 @@ describe('AuxLibrary', () => {
                         avatarPortraitUrl: 'portraitUrl',
                         name: 'name',
                         hasActiveSubscription: true,
+                        privacyFeatures: {
+                            publishData: false,
+                            allowPublicData: true,
+                        },
                     } as AuthData,
                     false
                 );
@@ -5512,6 +5516,10 @@ describe('AuxLibrary', () => {
                 );
                 expect(resultBot.tags.name).toEqual('name');
                 expect(resultBot.tags.hasActiveSubscription).toEqual(true);
+                expect(resultBot.tags.privacyFeatures).toEqual({
+                    publishData: false,
+                    allowPublicData: true,
+                });
             });
 
             it('should emit a DefineGlobalBotAction', async () => {

@@ -4,12 +4,14 @@ import {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
+    PrivacyFeatures,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
@@ -65,6 +67,7 @@ import {
 import {
     AssignedRole,
     GetUserPolicyResult,
+    ListMarkerPoliciesResult,
     ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
@@ -118,9 +121,11 @@ import {
     SaveInstResult,
     StoredUpdates,
 } from './websockets';
+import { PrivoConfiguration } from './PrivoConfiguration';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
+    privo?: PrivoConfiguration;
 }
 
 export class MemoryStore
@@ -137,6 +142,7 @@ export class MemoryStore
 {
     private _users: AuthUser[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
+    private _oidLoginRequests: AuthOpenIDLoginRequest[] = [];
     private _sessions: AuthSession[] = [];
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
@@ -163,6 +169,7 @@ export class MemoryStore
     private _instRecords: Map<string, Map<string, InstWithUpdates>> = new Map();
 
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
+    private _privoConfiguration: PrivoConfiguration | null = null;
 
     maxAllowedInstSize: number = Infinity;
 
@@ -196,6 +203,10 @@ export class MemoryStore
 
     get loginRequests() {
         return this._loginRequests;
+    }
+
+    get openIdLoginRequests() {
+        return this._oidLoginRequests;
     }
 
     get sessions() {
@@ -234,8 +245,17 @@ export class MemoryStore
         this._subscriptionConfiguration = value;
     }
 
+    get privoConfiguration() {
+        return this._privoConfiguration;
+    }
+
+    set privoConfiguration(value: PrivoConfiguration | null) {
+        this._privoConfiguration = value;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
+        this._privoConfiguration = config.privo ?? null;
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
@@ -243,6 +263,10 @@ export class MemoryStore
 
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null> {
         return this._subscriptionConfiguration;
+    }
+
+    async getPrivoConfiguration(): Promise<PrivoConfiguration | null> {
+        return this._privoConfiguration;
     }
 
     async getRecordByName(name: string): Promise<Record> {
@@ -582,6 +606,11 @@ export class MemoryStore
         return user;
     }
 
+    async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        const user = this._users.find((u) => u.privoServiceId === serviceId);
+        return user;
+    }
+
     async findLoginRequest(
         userId: string,
         requestId: string
@@ -589,6 +618,12 @@ export class MemoryStore
         return this._loginRequests.find(
             (lr) => lr.userId === userId && lr.requestId === requestId
         );
+    }
+
+    async findOpenIDLoginRequest(
+        requestId: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        return this._oidLoginRequests.find((lr) => lr.requestId === requestId);
     }
 
     async findSession(userId: string, sessionId: string): Promise<AuthSession> {
@@ -609,6 +644,21 @@ export class MemoryStore
             this._loginRequests[index] = request;
         } else {
             this._loginRequests.push(request);
+        }
+
+        return request;
+    }
+
+    async saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === request.requestId
+        );
+        if (index >= 0) {
+            this._oidLoginRequests[index] = request;
+        } else {
+            this._oidLoginRequests.push(request);
         }
 
         return request;
@@ -639,6 +689,39 @@ export class MemoryStore
 
         if (index >= 0) {
             this._loginRequests[index].completedTimeMs = completedTimeMs;
+        } else {
+            throw new Error('Request not found.');
+        }
+    }
+
+    async markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === requestId
+        );
+
+        if (index >= 0) {
+            this._oidLoginRequests[index].completedTimeMs = completedTimeMs;
+        } else {
+            throw new Error('Request not found.');
+        }
+    }
+
+    async saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === requestId
+        );
+
+        if (index >= 0) {
+            const lr = this._oidLoginRequests[index];
+            lr.authorizationCode = authorizationCode;
+            lr.authorizationTimeMs = authorizationTimeMs;
         } else {
             throw new Error('Request not found.');
         }
@@ -1459,10 +1542,11 @@ export class MemoryStore
         };
     }
 
-    async listPoliciesForMarker(
+    async listPoliciesForMarkerAndUser(
         recordName: string,
+        userId: string,
         marker: string
-    ): Promise<PolicyDocument[]> {
+    ): Promise<ListMarkerPoliciesResult> {
         const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
@@ -1473,7 +1557,48 @@ export class MemoryStore
         if (policy) {
             policies.push(policy.document);
         }
-        return policies;
+
+        return {
+            policies,
+            recordOwnerPrivacyFeatures:
+                await this._getRecordOwnerPrivacyFeatures(recordName),
+            userPrivacyFeatures: await this._getUserPrivacyFeatures(userId),
+        };
+    }
+
+    private async _getRecordOwnerPrivacyFeatures(
+        recordName: string
+    ): Promise<PrivacyFeatures> {
+        let record = await this.getRecordByName(recordName);
+
+        if (record?.ownerId) {
+            const owner = await this.findUser(record.ownerId);
+            if (owner?.privacyFeatures) {
+                return owner.privacyFeatures;
+            }
+        }
+        return {
+            publishData: true,
+            allowPublicData: true,
+            allowAI: true,
+            allowPublicInsts: true,
+        };
+    }
+
+    private async _getUserPrivacyFeatures(
+        userId: string
+    ): Promise<PrivacyFeatures> {
+        const user = await this.findUser(userId);
+        if (user?.privacyFeatures) {
+            return user.privacyFeatures;
+        }
+
+        return {
+            publishData: true,
+            allowPublicData: true,
+            allowAI: true,
+            allowPublicInsts: true,
+        };
     }
 
     async listRolesForUser(

@@ -115,6 +115,12 @@ import { Subscription, SubscriptionLike } from 'rxjs';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
 import { RedisMultiCache } from '../redis/RedisMultiCache';
+import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
+import { PrismaPrivoStore } from 'aux-backend/prisma/PrismaPrivoStore';
+import {
+    PrivoConfiguration,
+    privoSchema,
+} from '@casual-simulation/aux-records/PrivoConfiguration';
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
@@ -122,6 +128,9 @@ export class ServerBuilder implements SubscriptionLike {
     private _prismaClient: PrismaClient;
     private _mongoDb: Db;
     private _multiCache: MultiCache;
+
+    private _privoClient: PrivoClient;
+    private _privoStore: PrismaPrivoStore;
 
     private _configStore: ConfigurationStore;
     private _metricsStore: MetricsStore;
@@ -296,7 +305,11 @@ export class ServerBuilder implements SubscriptionLike {
                 const authStore = new MongoDBAuthStore(db);
                 this._authStore = authStore;
                 this._recordsStore = authStore;
-                this._policyStore = new MongoDBPolicyStore(policies, roles);
+                this._policyStore = new MongoDBPolicyStore(
+                    policies,
+                    roles,
+                    users
+                );
                 this._dataStore = new MongoDBDataRecordsStore(
                     recordsDataCollection
                 );
@@ -345,6 +358,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._configStore
         );
         this._authStore = new PrismaAuthStore(prismaClient);
+        this._privoStore = new PrismaPrivoStore(prismaClient);
         this._recordsStore = new PrismaRecordsStore(prismaClient);
         this._policyStore = this._ensurePrismaPolicyStore(
             prismaClient,
@@ -383,39 +397,38 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         const mongodb = options.mongodb;
+        const prismaClient = this._ensurePrisma(options);
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
+        this._metricsStore = new PrismaMetricsStore(
+            prismaClient,
+            this._configStore
+        );
+        this._authStore = new PrismaAuthStore(prismaClient);
+        this._privoStore = new PrismaPrivoStore(prismaClient);
+        this._recordsStore = new PrismaRecordsStore(prismaClient);
+
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
+        this._dataStore = new PrismaDataRecordsStore(prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
+        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+
         this._actions.push({
             priority: 0,
             action: async () => {
-                const prismaClient = this._ensurePrisma(options);
                 const mongo = await this._ensureMongoDB(options);
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
-
-                this._configStore = this._ensurePrismaConfigurationStore(
-                    prismaClient,
-                    options
-                );
-                this._metricsStore = new PrismaMetricsStore(
-                    prismaClient,
-                    this._configStore
-                );
-                this._authStore = new PrismaAuthStore(prismaClient);
-                this._recordsStore = new PrismaRecordsStore(prismaClient);
-                this._policyStore = this._ensurePrismaPolicyStore(
-                    prismaClient,
-                    options
-                );
-                this._dataStore = new PrismaDataRecordsStore(prismaClient);
-                this._manualDataStore = new PrismaDataRecordsStore(
-                    prismaClient,
-                    true
-                );
-                const filesLookup = new PrismaFileRecordsLookup(prismaClient);
                 this._filesStore = new MongoDBFileRecordsStore(
                     filesLookup,
                     mongodb.fileUploadUrl as string
                 );
-                this._eventsStore = new PrismaEventRecordsStore(prismaClient);
             },
         });
 
@@ -721,6 +734,34 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    usePrivo(options: Pick<BuilderOptions, 'privo'> = this._options): this {
+        console.log('[ServerBuilder] Using Privo.');
+        if (!options.privo) {
+            throw new Error('Privo options must be provided');
+        }
+
+        if (!this._configStore) {
+            throw new Error('A config store must be configured!');
+        }
+
+        if (!this._privoStore) {
+            throw new Error('A privo store must be configured!');
+        }
+        this._privoClient = new PrivoClient(
+            this._privoStore,
+            this._configStore
+        );
+
+        this._initActions.push({
+            priority: 20,
+            action: async () => {
+                await this._privoClient.init();
+            },
+        });
+
+        return this;
+    }
+
     useAI(
         options: Pick<
             BuilderOptions,
@@ -892,7 +933,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._authStore,
             this._authMessenger,
             this._configStore,
-            this._forceAllowAllSubscriptionFeatures
+            this._forceAllowAllSubscriptionFeatures,
+            this._privoClient
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,
@@ -1127,10 +1169,11 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _ensurePrismaConfigurationStore(
         prismaClient: PrismaClient,
-        options: Pick<BuilderOptions, 'prisma' | 'subscriptions'>
+        options: Pick<BuilderOptions, 'prisma' | 'subscriptions' | 'privo'>
     ): ConfigurationStore {
         const configStore = new PrismaConfigurationStore(prismaClient, {
             subscriptions: options.subscriptions as SubscriptionConfiguration,
+            privo: options.privo as PrivoConfiguration,
         });
         if (this._multiCache && options.prisma.configurationCacheSeconds) {
             const cache = this._multiCache.getCache('config');
@@ -1677,6 +1720,17 @@ export const optionsSchema = z.object({
             'WebSocket Server configuration options. If omitted, then inst records cannot be used in standalone deployments.'
         )
         .optional(),
+
+    privo: privoSchema
+        .describe(
+            'Privo configuration options. If omitted, then Privo features will be disabled.'
+        )
+        .optional(),
+
+    // auth: authSchema
+    //     .describe('Authentication configuration options.')
+    //     .optional()
+    //     .default({}),
 
     subscriptions: subscriptionConfigSchema
         .describe(

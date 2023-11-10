@@ -76,6 +76,12 @@ Use the following environment variables to configure the inst collaboration feat
 -   `PREFERRED_INST_SOURCE`: The preferred source for loading instances. Possible options are `"public"` and `"private"`. `"public"` means that public instances will be loaded if not already specified in the URL. `"private"` means that private insts will be loaded if not already specified in the URL. Defaults to `"private"`.
 -   `FRONTEND_ORIGIN`: The HTTP Origin that the CasualOS frontend is available at.
 
+#### Privo Features
+
+Use the following environment variables to configure privo features.
+
+-   `REQUIRE_PRIVO_LOGIN` - Set to `true` to require that the user logs in with Privo before collaborative features are enabled.
+
 #### mapPortal
 
 Use the following to configure the mapPortal and mapping-related features:
@@ -95,6 +101,7 @@ Use the following to configure the records system:
 
 -   `AUTH_ORIGIN`: The HTTP Origin that the player should use for auth. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
+-   `ENABLE_SMS_AUTHENTICATION`: Whether SMS phone numbers are allowed to be entered into the front-end and used for authentication. Defaults to `false`.
 
 ## Security Note
 

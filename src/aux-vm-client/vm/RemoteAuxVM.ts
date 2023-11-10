@@ -22,6 +22,7 @@ import {
 import { Observable, Subject } from 'rxjs';
 import { proxy, Remote, createEndpoint } from 'comlink';
 import {
+    AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
@@ -200,6 +201,11 @@ export class RemoteAuxVM implements AuxVM {
     async getTags(): Promise<string[]> {
         if (!this._proxy) return null;
         return await this._proxy.getTags();
+    }
+
+    async updateDevice(device: AuxDevice): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.updateDevice(device);
     }
 
     /**

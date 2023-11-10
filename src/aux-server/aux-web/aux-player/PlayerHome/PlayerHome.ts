@@ -115,8 +115,9 @@ export default class PlayerHome extends Vue {
             let recordName = this.query['record'] ?? null;
             let inst = this.query['inst'] as string | string[];
             const preferPublic =
+                appManager.defaultPrivacyFeatures.allowPublicData &&
                 (appManager.config.preferredInstSource ?? 'private') ===
-                'public';
+                    'public';
 
             const hasQueryParam = Object.keys(this.query).length > 0;
 

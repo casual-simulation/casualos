@@ -12,7 +12,11 @@ import {
     GenericQueryStringParameters,
     GenericWebsocketRequest,
 } from './GenericHttpInterface';
-import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
+import {
+    AuthController,
+    INVALID_KEY_ERROR_MESSAGE,
+    PRIVO_OPEN_ID_PROVIDER,
+} from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
     formatV1OpenAiKey,
@@ -89,6 +93,8 @@ import {
     YjsPartitionImpl,
     constructInitializationUpdate,
 } from '@casual-simulation/aux-common';
+import { PrivoClientInterface } from './PrivoClient';
+import { DateTime } from 'luxon';
 
 console.log = jest.fn();
 
@@ -184,6 +190,26 @@ describe('RecordsServer', () => {
     const accountOrigin = 'https://account-origin.com';
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
+    let privoClient: PrivoClientInterface;
+    let privoClientMock: {
+        createChildAccount: jest.Mock<
+            ReturnType<PrivoClientInterface['createChildAccount']>
+        >;
+        createAdultAccount: jest.Mock<
+            ReturnType<PrivoClientInterface['createAdultAccount']>
+        >;
+        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
+        generateAuthorizationUrl: jest.Mock<
+            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
+        >;
+        processAuthorizationCallback: jest.Mock<
+            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
+        >;
+        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
+        checkDisplayName: jest.Mock<
+            ReturnType<PrivoClientInterface['checkDisplayName']>
+        >;
+    };
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -216,7 +242,22 @@ describe('RecordsServer', () => {
         });
 
         authMessenger = new MemoryAuthMessenger();
-        authController = new AuthController(store, authMessenger, store);
+        privoClient = privoClientMock = {
+            createAdultAccount: jest.fn(),
+            createChildAccount: jest.fn(),
+            getUserInfo: jest.fn(),
+            generateAuthorizationUrl: jest.fn(),
+            processAuthorizationCallback: jest.fn(),
+            checkEmail: jest.fn(),
+            checkDisplayName: jest.fn(),
+        };
+        authController = new AuthController(
+            store,
+            authMessenger,
+            store,
+            undefined,
+            privoClient
+        );
         livekitController = new LivekitController(
             livekitApiKey,
             livekitSecretKey,
@@ -507,6 +548,13 @@ describe('RecordsServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    displayName: null,
                 },
                 headers: accountCorsHeaders,
             });
@@ -572,6 +620,13 @@ describe('RecordsServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    displayName: null,
                 },
                 headers: accountCorsHeaders,
             });
@@ -1519,6 +1574,94 @@ describe('RecordsServer', () => {
         });
     });
 
+    describe('POST /api/v2/email/valid', () => {
+        let accountHeaders: GenericHttpHeaders;
+        beforeEach(() => {
+            accountHeaders = {
+                origin: accountOrigin,
+            };
+        });
+
+        it('should return whether the email is valid', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/email/valid',
+                    JSON.stringify({
+                        email: 'test@example.com',
+                    }),
+                    accountHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    allowed: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/email/valid', () =>
+            JSON.stringify({
+                email: 'test@example.com',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/email/valid', body, accountHeaders)
+        );
+        testRateLimit('POST', `/api/v2/email/valid`, () =>
+            JSON.stringify({
+                email: 'test@example.com',
+            })
+        );
+    });
+
+    describe('POST /api/v2/displayName/valid', () => {
+        let accountHeaders: GenericHttpHeaders;
+        beforeEach(() => {
+            accountHeaders = {
+                origin: accountOrigin,
+            };
+        });
+
+        it('should return whether the email is valid', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/displayName/valid',
+                    JSON.stringify({
+                        displayName: 'test123',
+                    }),
+                    accountHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    allowed: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/displayName/valid', () =>
+            JSON.stringify({
+                displayName: 'test123',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/displayName/valid', body, accountHeaders)
+        );
+        testRateLimit('POST', `/api/v2/displayName/valid`, () =>
+            JSON.stringify({
+                displayName: 'test123',
+            })
+        );
+    });
+
     describe('GET /api/v2/sessions', () => {
         it('should return the list of sessions for the user', async () => {
             const result = await server.handleHttpRequest(
@@ -1928,6 +2071,406 @@ describe('RecordsServer', () => {
             JSON.stringify({
                 address: 'test@example.com',
                 addressType: 'email',
+            })
+        );
+    });
+
+    describe('POST /api/v2/login/privo', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return a login request with the authorization URL', async () => {
+            privoClientMock.generateAuthorizationUrl.mockResolvedValueOnce({
+                authorizationUrl: 'https://authorization_url',
+                codeMethod: 'method',
+                codeVerifier: 'verifier',
+                redirectUrl: 'https://redirect_url',
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/privo`,
+                    JSON.stringify({}),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/login/privo', () => JSON.stringify({}));
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/login/privo', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/login/privo`, () => JSON.stringify({}));
+    });
+
+    describe('POST /api/v2/oauth/code', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should save the authorization code', async () => {
+            privoClientMock.processAuthorizationCallback.mockResolvedValueOnce({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+                tokenType: 'Bearer',
+                idToken: 'idToken',
+                expiresIn: 1000,
+                userInfo: {
+                    roleIdentifier: 'roleIdentifier',
+                    serviceId: 'serviceId',
+                    email: 'test@example.com',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    permissions: [],
+                    displayName: 'displayName',
+                },
+            });
+            const expireTime = Date.now() + 10000000;
+
+            await store.saveOpenIDLoginRequest({
+                requestId: 'requestId',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/oauth/code`,
+                    JSON.stringify({
+                        code: 'code',
+                        state: 'requestId',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(await store.findOpenIDLoginRequest('requestId')).toEqual({
+                requestId: 'requestId',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                authorizationCode: 'code',
+                authorizationTimeMs: expect.any(Number),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+        });
+
+        testOrigin('POST', '/api/v2/oauth/code', () =>
+            JSON.stringify({
+                code: 'code',
+                state: 'requestId',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/oauth/code', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/oauth/code`, () =>
+            JSON.stringify({
+                code: 'code',
+                state: 'requestId',
+            })
+        );
+    });
+
+    describe('POST /api/v2/oauth/complete', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return the session key', async () => {
+            privoClientMock.processAuthorizationCallback.mockResolvedValueOnce({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+                tokenType: 'Bearer',
+                idToken: 'idToken',
+                expiresIn: 1000,
+                userInfo: {
+                    roleIdentifier: 'roleIdentifier',
+                    serviceId: 'serviceId',
+                    email: 'test@example.com',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    permissions: [],
+                    displayName: 'displayName',
+                },
+            });
+
+            const expireTime = Date.now() + 10000000;
+            await store.saveOpenIDLoginRequest({
+                requestId: 'requestId',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                authorizationCode: 'code',
+                authorizationTimeMs: DateTime.utc(
+                    2023,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0
+                ).toMillis(),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/oauth/complete`,
+                    JSON.stringify({
+                        requestId: 'requestId',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId,
+                    sessionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    connectionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/oauth/complete', () =>
+            JSON.stringify({
+                requestId: 'requestId',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/oauth/complete', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/oauth/complete`, () =>
+            JSON.stringify({
+                requestId: 'requestId',
+            })
+        );
+    });
+
+    describe('POST /api/v2/register/privo', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                // verificationIntegration: 'verificationIntegration',
+                // verificationServiceId: 'verificationServiceId',
+                // verificationSiteId: 'verificationSiteId',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return a 200 status code with the registration results', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: 'Test',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: 'displayName',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    updatePasswordUrl: 'link',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/register/privo', () =>
+            JSON.stringify({
+                name: 'Test',
+                email: 'child@example.com',
+                dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                parentEmail: 'parent@example.com',
+                displayName: 'displayName',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/register/privo', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/register/privo`, () =>
+            JSON.stringify({
+                name: 'Test',
+                email: 'child@example.com',
+                dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                parentEmail: 'parent@example.com',
+                displayName: 'displayName',
             })
         );
     });

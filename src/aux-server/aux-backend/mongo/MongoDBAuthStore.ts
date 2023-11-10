@@ -17,12 +17,14 @@ import {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
+    PrivacyFeatures,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
@@ -91,6 +93,32 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         this._studios = db.collection<MongoDBStudio>(STUDIOS_COLLECTION_NAME);
     }
 
+    // TODO: Implement
+    findOpenIDLoginRequest(requestId: string): Promise<AuthOpenIDLoginRequest> {
+        throw new Error('Method not implemented.');
+    }
+
+    saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest> {
+        throw new Error('Method not implemented.');
+    }
+
+    markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
     async listEmailRules(): Promise<RegexRule[]> {
         const result = await this._emailRules.find().toArray();
 
@@ -128,6 +156,22 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
         const user = await this._users.findOne({
             stripeCustomerId: customerId,
+        });
+
+        if (user) {
+            const { _id, ...rest } = user;
+            return {
+                id: _id,
+                ...rest,
+            };
+        }
+
+        return null;
+    }
+
+    async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        const user = await this._users.findOne({
+            privoServiceId: serviceId,
         });
 
         if (user) {
@@ -213,6 +257,8 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     subscriptionId: user.subscriptionId,
                     banTimeMs: user.banTimeMs,
                     banReason: user.banReason,
+                    privoServiceId: user.privoServiceId,
+                    privoParentServiceId: user.privoParentServiceId,
                 },
             },
             {
@@ -254,6 +300,8 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             subscriptionId: user.subscriptionId,
             banTimeMs: user.banTimeMs,
             banReason: user.banReason,
+            privoServiceId: user.privoServiceId,
+            privoParentServiceId: user.privoParentServiceId,
         });
 
         return {
@@ -1101,6 +1149,11 @@ export interface MongoDBAuthUser {
     subscriptionPeriodEndMs?: number;
     banTimeMs?: number;
     banReason?: AuthUser['banReason'];
+
+    privoServiceId?: string;
+    privoParentServiceId?: string;
+
+    privacyFeatures?: PrivacyFeatures;
 }
 
 export interface MongoDBLoginRequest {

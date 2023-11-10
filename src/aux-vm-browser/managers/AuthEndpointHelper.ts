@@ -4,12 +4,15 @@ import {
     AuxAuth,
     LoginStatus,
     LoginUIStatus,
+    PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { AuthData, hasValue } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
+    IsValidDisplayNameResult,
+    IsValidEmailAddressResult,
     parseRecordKey,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
@@ -366,6 +369,42 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         );
     }
 
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                success: true,
+                allowed: true,
+            };
+        }
+        return await this._proxy.isValidEmailAddress(email);
+    }
+
+    async isValidDisplayName(
+        displayName: string
+    ): Promise<IsValidDisplayNameResult> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                success: true,
+                allowed: true,
+            };
+        }
+        return await this._proxy.isValidDisplayName(displayName);
+    }
+
     async provideSmsNumber(
         sms: string,
         acceptedTermsOfService: boolean
@@ -393,6 +432,32 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             return;
         }
         return await this._proxy.provideCode(code);
+    }
+
+    async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return;
+        }
+        return await this._proxy.providePrivoSignUpInfo(info);
+    }
+
+    async provideHasAccount(hasAccount: boolean): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return;
+        }
+        return await this._proxy.provideHasAccount(hasAccount);
     }
 
     async cancelLogin() {

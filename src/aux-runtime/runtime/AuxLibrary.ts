@@ -7917,6 +7917,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         name: data.name,
                         hasActiveSubscription: data.hasActiveSubscription,
                         subscriptionTier: data.subscriptionTier,
+                        privacyFeatures: data.privacyFeatures,
                     },
                     TEMPORARY_BOT_PARTITION_ID
                 )

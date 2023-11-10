@@ -123,5 +123,9 @@ export function constructServerBuilder() {
         builder.useAI();
     }
 
+    if (config.privo) {
+        builder.usePrivo();
+    }
+
     return builder;
 }
