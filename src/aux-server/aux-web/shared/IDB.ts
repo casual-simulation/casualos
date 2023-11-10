@@ -32,9 +32,15 @@ export function openIDB(
  * @param db The Database to put the item in.
  * @param store The store that the item should be put in.
  * @param item The item that should be placed in the store.
+ * @param key The key that should be used for the item.
  * @returns
  */
-export function putItem<T>(db: IDBDatabase, store: string, item: T) {
+export function putItem<T>(
+    db: IDBDatabase,
+    store: string,
+    item: T,
+    key?: string
+) {
     return _transaction<T>(db, store, 'readwrite', (objs) => objs.put(item));
 }
 

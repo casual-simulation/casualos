@@ -1,13 +1,13 @@
 import { ProgressManager } from './ProgressManager';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
-import { ProgressMessage } from '@casual-simulation/causal-trees';
+import { ProgressMessage } from '@casual-simulation/aux-common';
 
 describe('ProgressManager', () => {
     let subject: ProgressManager;
     let vm: TestAuxVM;
 
     beforeEach(() => {
-        vm = new TestAuxVM('user');
+        vm = new TestAuxVM('sim', 'user');
         subject = new ProgressManager(vm);
     });
 
@@ -19,7 +19,7 @@ describe('ProgressManager', () => {
         });
 
         let messages: ProgressMessage[] = [];
-        subject.updates.subscribe(m => messages.push(m));
+        subject.updates.subscribe((m) => messages.push(m));
 
         expect(messages).toEqual([
             {
@@ -32,7 +32,7 @@ describe('ProgressManager', () => {
 
     it('should emit a done progress event when initialized', () => {
         let messages: ProgressMessage[] = [];
-        subject.updates.subscribe(m => messages.push(m));
+        subject.updates.subscribe((m) => messages.push(m));
 
         vm.connectionStateChanged.next({
             type: 'init',
@@ -55,12 +55,12 @@ describe('ProgressManager', () => {
 
     it('should emit a done progress event when not authenticated', () => {
         let messages: ProgressMessage[] = [];
-        subject.updates.subscribe(m => messages.push(m));
+        subject.updates.subscribe((m) => messages.push(m));
 
         vm.connectionStateChanged.next({
             type: 'authentication',
             authenticated: false,
-            reason: 'wrong_token',
+            reason: 'invalid_token',
         });
 
         expect(messages).toEqual([
@@ -82,7 +82,7 @@ describe('ProgressManager', () => {
         let messages: ProgressMessage[] = [];
         let completed: boolean = false;
         subject.updates.subscribe(
-            m => messages.push(m),
+            (m) => messages.push(m),
             null,
             () => (completed = true)
         );

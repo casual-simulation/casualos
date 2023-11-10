@@ -49,6 +49,7 @@ import {
     Rotation,
     Vector3 as CasualOSVector3,
 } from '@casual-simulation/aux-common/math';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -537,7 +538,7 @@ export abstract class Simulation3D
         this._removeBotsFromGroups(groups, event.dimension, event.bot);
     }
 
-    private _localEvent(e: LocalActions): void {
+    private _localEvent(e: RuntimeActions): void {
         if (e.type === 'local_form_animation') {
             this._queueEventForBot(e, e.botId);
         } else if (e.type === 'local_tween') {

@@ -35,9 +35,7 @@ import {
     KNOWN_TAG_PREFIXES,
     DNA_TAG_PREFIX,
     SHEET_PORTAL,
-    createBotLink,
     formatValue,
-    calculateIndexFromLocation,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '@casual-simulation/aux-components';
 
@@ -62,6 +60,7 @@ import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 import { getActiveTheme } from '../utils';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime';
 
 export interface TableBot {
     /**

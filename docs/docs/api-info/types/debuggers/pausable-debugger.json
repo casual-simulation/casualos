@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Pausable Debugger",
     "contents": [
         {
-            "id": 2345,
+            "id": 2349,
             "order": 9999,
             "name": "PausableDebugger",
             "reflection": {
-                "id": 2345,
+                "id": 2349,
                 "name": "PausableDebugger",
                 "kind": 256,
                 "kindString": "Interface",
@@ -51,7 +51,7 @@
                 },
                 "children": [
                     {
-                        "id": 2457,
+                        "id": 2461,
                         "name": "action",
                         "kind": 1024,
                         "kindString": "Property",
@@ -74,14 +74,14 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1336,
+                                "line": 1338,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 2458,
+                                "id": 2462,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
@@ -97,7 +97,7 @@
                         "references": "- [`action.perform(action)`](ref:action.perform)\n- [`action.reject(action)`](ref:action.reject)\n"
                     },
                     {
-                        "id": 2455,
+                        "id": 2459,
                         "name": "os",
                         "kind": 1024,
                         "kindString": "Property",
@@ -120,14 +120,14 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1322,
+                                "line": 1324,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 2456,
+                                "id": 2460,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
@@ -140,10 +140,10 @@
                         },
                         "typeText": "interface OSActions {\n}",
                         "typeReference": "OSActions",
-                        "references": "- [`os.beginAudioRecording(options)`](ref:os.beginAudioRecording)\n- [`os.endAudioRecording()`](ref:os.endAudioRecording)\n- [`os.attachDebugger(debug, options)`](ref:os.attachDebugger)\n- [`os.createDebugger(options)`](ref:os.createDebugger-normal)\n- [`os.createDebugger(options)`](ref:os.createDebugger-pausable)\n- [`os.focusOn(bot, options)`](ref:os.focusOn-bot)\n- [`os.focusOn(position, options)`](ref:os.focusOn-position)\n- [`os.getExecutingDebugger()`](ref:os.getExecutingDebugger)\n- [`os.showInput(currentValue, options)`](ref:os.showInput)\n- [`os.addBotDropGrid(bot, ...targets)`](ref:os.addBotDropGrid)\n- [`os.addBotDropSnap(bot, ...targets)`](ref:os.addBotDropSnap)\n- [`os.addDropGrid(...targets)`](ref:os.addDropGrid)\n- [`os.addDropSnap(...targets)`](ref:os.addDropSnap)\n- [`os.applyUpdatesToInst(updates)`](ref:os.applyUpdatesToInst)\n- [`os.arSupported()`](ref:os.arSupported)\n- [`os.beginAudioRecording(options)`](ref:os.beginAudioRecording)\n- [`os.bufferFormAddressGLTF(address)`](ref:os.bufferFormAddressGLTF)\n- [`os.bufferSound(url)`](ref:os.bufferSound)\n- [`os.calculateRayFromCamera(portal, viewportCoordinates)`](ref:os.calculateRayFromCamera)\n- [`os.cancelSound(soundId)`](ref:os.cancelSound)\n- [`os.capturePhoto(options)`](ref:os.capturePhoto)\n- [`os.closeBarcodeScanner()`](ref:os.closeBarcodeScanner)\n- [`os.closeCircleWipe(options)`](ref:os.closeCircleWipe)\n- [`os.closeImageClassifier()`](ref:os.closeImageClassifier)\n- [`os.closePhotoCamera()`](ref:os.closePhotoCamera)\n- [`os.closeQRCodeScanner()`](ref:os.closeQRCodeScanner)\n- [`os.compileApp(appId, content)`](ref:os.compileApp)\n- [`os.convertGeolocationToWhat3Words(location)`](ref:os.convertGeolocationToWhat3Words)\n- [`os.countEvents(recordNameOrKey, eventName, endpoint)`](ref:os.countEvents)\n- [`os.createInitializationUpdate(bots)`](ref:os.createInitializationUpdate)\n- [`os.device()`](ref:os.device)\n- [`os.disableAR()`](ref:os.disableAR)\n- [`os.disablePointOfView()`](ref:os.disablePointOfView)\n- [`os.disableVR()`](ref:os.disableVR)\n- [`os.disableWakeLock()`](ref:os.disableWakeLock)\n- [`os.download(data, filename, mimeType)`](ref:os.download)\n- [`os.downloadBots(bots, filename)`](ref:os.downloadBots)\n- [`os.downloadBotsAsInitialzationUpdate(bots, filename)`](ref:os.downloadBotsAsInitialzationUpdate)\n- [`os.downloadInst()`](ref:os.downloadInst)\n- [`os.downloadInst()`](ref:os.downloadInst)\n- [`os.enableAR(options)`](ref:os.enableAR)\n- [`os.enableCustomDragging()`](ref:os.enableCustomDragging)\n- [`os.enablePointOfView(center, imu)`](ref:os.enablePointOfView)\n- [`os.enableVR(options)`](ref:os.enableVR)\n- [`os.endAudioRecording()`](ref:os.endAudioRecording)\n- [`os.eraseData(recordKeyOrName, address, endpoint)`](ref:os.eraseData)\n- [`os.eraseManualApprovalData(recordKeyOrName, address, endpoint)`](ref:os.eraseManualApprovalData)\n- [`os.exitFullscreenMode()`](ref:os.exitFullscreenMode)\n- [`os.getAverageFrameRate()`](ref:os.getAverageFrameRate)\n- [`os.getCameraPosition(portal)`](ref:os.getCameraPosition)\n- [`os.getCameraRotation(portal)`](ref:os.getCameraRotation)\n- [`os.getCurrentDimension()`](ref:os.getCurrentDimension)\n- [`os.getCurrentInst()`](ref:os.getCurrentInst)\n- [`os.getCurrentInstUpdate()`](ref:os.getCurrentInstUpdate)\n- [`os.getCurrentInst()`](ref:os.getCurrentInst)\n- [`os.getData(recordKeyOrName, address, endpoint)`](ref:os.getData)\n- [`os.getDimensionalDepth(dimension)`](ref:os.getDimensionalDepth)\n- [`os.getFocusPoint(portal)`](ref:os.getFocusPoint)\n- [`os.getGeolocation()`](ref:os.getGeolocation)\n- [`os.getInputList()`](ref:os.getInputList)\n- [`os.getInputState(controller, button)`](ref:os.getInputState)\n- [`os.getInstStateFromUpdates(updates)`](ref:os.getInstStateFromUpdates)\n- [`os.getManualApprovalData(recordKeyOrName, address, endpoint)`](ref:os.getManualApprovalData)\n- [`os.getMediaPermission(options)`](ref:os.getMediaPermission)\n- [`os.getMenuDimension()`](ref:os.getMenuDimension)\n- [`os.getMiniPortalDimension()`](ref:os.getMiniPortalDimension)\n- [`os.getPointerDirection(pointer)`](ref:os.getPointerDirection)\n- [`os.getPointerPosition(pointer)`](ref:os.getPointerPosition)\n- [`os.getPointerRotation(pointer)`](ref:os.getPointerRotation)\n- [`os.getPortalDimension(portal)`](ref:os.getPortalDimension)\n- [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey)\n- [`os.getRoomOptions(roomName)`](ref:os.getRoomOptions)\n- [`os.getRoomRemoteOptions(roomName, remoteId)`](ref:os.getRoomRemoteOptions)\n- [`os.getRoomTrackOptions(roomName, address)`](ref:os.getRoomTrackOptions)\n- [`os.getSubjectlessPublicRecordKey(name)`](ref:os.getSubjectlessPublicRecordKey)\n- [`os.getWakeLockConfiguration()`](ref:os.getWakeLockConfiguration)\n- [`os.goToDimension(dimension)`](ref:os.goToDimension)\n- [`os.goToURL(url)`](ref:os.goToURL)\n- [`os.grantInstAdminPermission(recordName, options)`](ref:os.grantInstAdminPermission)\n- [`os.grantInstRole(recordName, role, inst, expireTimeMs, options)`](ref:os.grantInstRole)\n- [`os.grantRecordMarkerPermission(recordName, marker, permission, options)`](ref:os.grantRecordMarkerPermission)\n- [`os.grantUserRole(recordName, role, userId, expireTimeMs, options)`](ref:os.grantUserRole)\n- [`os.hasBotInMiniPortal(bots)`](ref:os.hasBotInMiniPortal)\n- [`os.hideBarcode()`](ref:os.hideBarcode)\n- [`os.hideChat()`](ref:os.hideChat)\n- [`os.hideHtml()`](ref:os.hideHtml)\n- [`os.hideQRCode()`](ref:os.hideQRCode)\n- [`os.hideTips(tipIds)`](ref:os.hideTips)\n- [`os.importAUX(urlOrJSON)`](ref:os.importAUX)\n- [`os.inSheet()`](ref:os.inSheet)\n- [`os.instStatuses()`](ref:os.instStatuses)\n- [`os.instances()`](ref:os.instances)\n- [`os.isCollaborative()`](ref:os.isCollaborative)\n- [`os.isInDimension(dimension)`](ref:os.isInDimension)\n- [`os.isRecordKey(key)`](ref:os.isRecordKey)\n- [`os.joinRoom(roomName, options)`](ref:os.joinRoom)\n- [`os.leaveRoom(roomName, options)`](ref:os.leaveRoom)\n- [`os.listBuiltinTags()`](ref:os.listBuiltinTags)\n- [`os.listData(recordKeyOrName, startingAddress, endpoint)`](ref:os.listData)\n- [`os.listFormAnimations(botOrAddress)`](ref:os.listFormAnimations)\n- [`os.listInstUpdates()`](ref:os.listInstUpdates)\n- [`os.loadInst(id)`](ref:os.loadInst)\n- [`os.loadInst(id)`](ref:os.loadInst)\n- [`os.log(...args)`](ref:os.log)\n- [`os.meetCommand(command, ...args)`](ref:os.meetCommand)\n- [`os.meetFunction(functionName, ...args)`](ref:os.meetFunction)\n- [`os.openBarcodeScanner(camera)`](ref:os.openBarcodeScanner)\n- [`os.openCircleWipe(options)`](ref:os.openCircleWipe)\n- [`os.openDevConsole()`](ref:os.openDevConsole)\n- [`os.openImageClassifier(options)`](ref:os.openImageClassifier)\n- [`os.openPhotoCamera(options)`](ref:os.openPhotoCamera)\n- [`os.openQRCodeScanner(camera)`](ref:os.openQRCodeScanner)\n- [`os.openURL(url)`](ref:os.openURL)\n- [`os.parseBotsFromData(jsonOrPdf)`](ref:os.parseBotsFromData)\n- [`os.playSound(url)`](ref:os.playSound)\n- [`os.raycast(portal, origin, direction)`](ref:os.raycast)\n- [`os.raycastFromCamera(portal, viewportCoordinates)`](ref:os.raycastFromCamera)\n- [`os.recordData(recordKeyOrRecordName, address, data, endpointOrOptions)`](ref:os.recordData)\n- [`os.recordEvent(recordKeyOrName, eventName, endpoint)`](ref:os.recordEvent)\n- [`os.recordFile(recordKeyOrName, data, options, endpoint)`](ref:os.recordFile)\n- [`os.recordManualApprovalData(recordKeyOrRecordName, address, data, endpointOrOptions)`](ref:os.recordManualApprovalData)\n- [`os.registerApp(portalId, bot)`](ref:os.registerApp)\n- [`os.registerTagPrefix(prefix, options)`](ref:os.registerTagPrefix)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.replaceDragBot(bot)`](ref:os.replaceDragBot)\n- [`os.requestAuthBot()`](ref:os.requestAuthBot)\n- [`os.requestFullscreenMode()`](ref:os.requestFullscreenMode)\n- [`os.requestWakeLock()`](ref:os.requestWakeLock)\n- [`os.revokeInstRole(recordName, role, inst, options)`](ref:os.revokeInstRole)\n- [`os.revokeRecordMarkerPermission(recordName, marker, permission, options)`](ref:os.revokeRecordMarkerPermission)\n- [`os.revokeUserRole(recordName, role, userId, options)`](ref:os.revokeUserRole)\n- [`os.run(script)`](ref:os.run)\n- [`os.setClipboard(text)`](ref:os.setClipboard)\n- [`os.setRoomOptions(roomName, options)`](ref:os.setRoomOptions)\n- [`os.setRoomTrackOptions(roomName, address, options)`](ref:os.setRoomTrackOptions)\n- [`os.share(options)`](ref:os.share)\n- [`os.showBarcode(code, format)`](ref:os.showBarcode)\n- [`os.showConfirm(options)`](ref:os.showConfirm)\n- [`os.showHtml(html)`](ref:os.showHtml)\n- [`os.showInputForTag(bot, tag, options)`](ref:os.showInputForTag)\n- [`os.showJoinCode(inst, dimension)`](ref:os.showJoinCode)\n- [`os.showQRCode(code)`](ref:os.showQRCode)\n- [`os.showUploadAuxFile()`](ref:os.showUploadAuxFile)\n- [`os.showUploadFiles()`](ref:os.showUploadFiles)\n- [`os.sleep(time)`](ref:os.sleep)\n- [`os.startFormAnimation(botOrBots, nameOrIndex, options)`](ref:os.startFormAnimation)\n- [`os.stopFormAnimation(botOrBots, options)`](ref:os.stopFormAnimation)\n- [`os.tip(message, pixelX, pixelY, duration)`](ref:os.tip)\n- [`os.toast(message, duration)`](ref:os.toast)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.unloadInst(id)`](ref:os.unloadInst)\n- [`os.unloadInst(id)`](ref:os.unloadInst)\n- [`os.unregisterApp(appId)`](ref:os.unregisterApp)\n- [`os.version()`](ref:os.version)\n- [`os.vrSupported()`](ref:os.vrSupported)\n- [`os.agreedUponTime`](ref:os.agreedUponTime)\n- [`os.deadReckoningTime`](ref:os.deadReckoningTime)\n- [`os.instLatency`](ref:os.instLatency)\n- [`os.instTimeOffset`](ref:os.instTimeOffset)\n- [`os.instTimeOffsetSpread`](ref:os.instTimeOffsetSpread)\n- [`os.localTime`](ref:os.localTime)\n- [`os.registerTagPrefix(prefix, options)`](ref:os.registerTagPrefix)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.instStatuses()`](ref:os.instStatuses)\n- [`os.instances()`](ref:os.instances)\n- [`os.instances()`](ref:os.instances)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.sleep(time)`](ref:os.sleep)\n"
+                        "references": "- [`os.beginAudioRecording(options)`](ref:os.beginAudioRecording)\n- [`os.endAudioRecording()`](ref:os.endAudioRecording)\n- [`os.attachDebugger(debug, options)`](ref:os.attachDebugger)\n- [`os.createDebugger(options)`](ref:os.createDebugger-normal)\n- [`os.createDebugger(options)`](ref:os.createDebugger-pausable)\n- [`os.focusOn(bot, options)`](ref:os.focusOn-bot)\n- [`os.focusOn(position, options)`](ref:os.focusOn-position)\n- [`os.getExecutingDebugger()`](ref:os.getExecutingDebugger)\n- [`os.showInput(currentValue, options)`](ref:os.showInput)\n- [`os.addBotDropGrid(bot, ...targets)`](ref:os.addBotDropGrid)\n- [`os.addBotDropSnap(bot, ...targets)`](ref:os.addBotDropSnap)\n- [`os.addDropGrid(...targets)`](ref:os.addDropGrid)\n- [`os.addDropSnap(...targets)`](ref:os.addDropSnap)\n- [`os.applyUpdatesToInst(updates)`](ref:os.applyUpdatesToInst)\n- [`os.arSupported()`](ref:os.arSupported)\n- [`os.beginAudioRecording(options)`](ref:os.beginAudioRecording)\n- [`os.bufferFormAddressGLTF(address)`](ref:os.bufferFormAddressGLTF)\n- [`os.bufferSound(url)`](ref:os.bufferSound)\n- [`os.calculateRayFromCamera(portal, viewportCoordinates)`](ref:os.calculateRayFromCamera)\n- [`os.cancelSound(soundId)`](ref:os.cancelSound)\n- [`os.capturePhoto(options)`](ref:os.capturePhoto)\n- [`os.closeBarcodeScanner()`](ref:os.closeBarcodeScanner)\n- [`os.closeCircleWipe(options)`](ref:os.closeCircleWipe)\n- [`os.closeImageClassifier()`](ref:os.closeImageClassifier)\n- [`os.closePhotoCamera()`](ref:os.closePhotoCamera)\n- [`os.closeQRCodeScanner()`](ref:os.closeQRCodeScanner)\n- [`os.compileApp(appId, content)`](ref:os.compileApp)\n- [`os.convertGeolocationToWhat3Words(location)`](ref:os.convertGeolocationToWhat3Words)\n- [`os.countEvents(recordNameOrKey, eventName, endpoint)`](ref:os.countEvents)\n- [`os.createInitializationUpdate(bots)`](ref:os.createInitializationUpdate)\n- [`os.device()`](ref:os.device)\n- [`os.disableAR()`](ref:os.disableAR)\n- [`os.disablePointOfView()`](ref:os.disablePointOfView)\n- [`os.disableVR()`](ref:os.disableVR)\n- [`os.disableWakeLock()`](ref:os.disableWakeLock)\n- [`os.download(data, filename, mimeType)`](ref:os.download)\n- [`os.downloadBots(bots, filename)`](ref:os.downloadBots)\n- [`os.downloadBotsAsInitialzationUpdate(bots, filename)`](ref:os.downloadBotsAsInitialzationUpdate)\n- [`os.downloadInst()`](ref:os.downloadInst)\n- [`os.downloadInst()`](ref:os.downloadInst)\n- [`os.enableAR(options)`](ref:os.enableAR)\n- [`os.enableCustomDragging()`](ref:os.enableCustomDragging)\n- [`os.enablePointOfView(center, imu)`](ref:os.enablePointOfView)\n- [`os.enableVR(options)`](ref:os.enableVR)\n- [`os.endAudioRecording()`](ref:os.endAudioRecording)\n- [`os.eraseData(recordKeyOrName, address, endpoint)`](ref:os.eraseData)\n- [`os.eraseManualApprovalData(recordKeyOrName, address, endpoint)`](ref:os.eraseManualApprovalData)\n- [`os.exitFullscreenMode()`](ref:os.exitFullscreenMode)\n- [`os.getAverageFrameRate()`](ref:os.getAverageFrameRate)\n- [`os.getCameraPosition(portal)`](ref:os.getCameraPosition)\n- [`os.getCameraRotation(portal)`](ref:os.getCameraRotation)\n- [`os.getCurrentDimension()`](ref:os.getCurrentDimension)\n- [`os.getCurrentInst()`](ref:os.getCurrentInst)\n- [`os.getCurrentInstUpdate()`](ref:os.getCurrentInstUpdate)\n- [`os.getCurrentInst()`](ref:os.getCurrentInst)\n- [`os.getData(recordKeyOrName, address, endpoint)`](ref:os.getData)\n- [`os.getDimensionalDepth(dimension)`](ref:os.getDimensionalDepth)\n- [`os.getFocusPoint(portal)`](ref:os.getFocusPoint)\n- [`os.getGeolocation()`](ref:os.getGeolocation)\n- [`os.getInputList()`](ref:os.getInputList)\n- [`os.getInputState(controller, button)`](ref:os.getInputState)\n- [`os.getInstStateFromUpdates(updates)`](ref:os.getInstStateFromUpdates)\n- [`os.getManualApprovalData(recordKeyOrName, address, endpoint)`](ref:os.getManualApprovalData)\n- [`os.getMediaPermission(options)`](ref:os.getMediaPermission)\n- [`os.getMenuDimension()`](ref:os.getMenuDimension)\n- [`os.getMiniPortalDimension()`](ref:os.getMiniPortalDimension)\n- [`os.getPointerDirection(pointer)`](ref:os.getPointerDirection)\n- [`os.getPointerPosition(pointer)`](ref:os.getPointerPosition)\n- [`os.getPointerRotation(pointer)`](ref:os.getPointerRotation)\n- [`os.getPortalDimension(portal)`](ref:os.getPortalDimension)\n- [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey)\n- [`os.getRoomOptions(roomName)`](ref:os.getRoomOptions)\n- [`os.getRoomRemoteOptions(roomName, remoteId)`](ref:os.getRoomRemoteOptions)\n- [`os.getRoomTrackOptions(roomName, address)`](ref:os.getRoomTrackOptions)\n- [`os.getSubjectlessPublicRecordKey(name)`](ref:os.getSubjectlessPublicRecordKey)\n- [`os.getWakeLockConfiguration()`](ref:os.getWakeLockConfiguration)\n- [`os.goToDimension(dimension)`](ref:os.goToDimension)\n- [`os.goToURL(url)`](ref:os.goToURL)\n- [`os.grantInstAdminPermission(recordName, options)`](ref:os.grantInstAdminPermission)\n- [`os.grantInstRole(recordName, role, inst, expireTimeMs, options)`](ref:os.grantInstRole)\n- [`os.grantRecordMarkerPermission(recordName, marker, permission, options)`](ref:os.grantRecordMarkerPermission)\n- [`os.grantUserRole(recordName, role, userId, expireTimeMs, options)`](ref:os.grantUserRole)\n- [`os.hasBotInMiniPortal(bots)`](ref:os.hasBotInMiniPortal)\n- [`os.hideBarcode()`](ref:os.hideBarcode)\n- [`os.hideChat()`](ref:os.hideChat)\n- [`os.hideHtml()`](ref:os.hideHtml)\n- [`os.hideQRCode()`](ref:os.hideQRCode)\n- [`os.hideTips(tipIds)`](ref:os.hideTips)\n- [`os.importAUX(urlOrJSON)`](ref:os.importAUX)\n- [`os.inSheet()`](ref:os.inSheet)\n- [`os.instStatuses()`](ref:os.instStatuses)\n- [`os.instances()`](ref:os.instances)\n- [`os.isCollaborative()`](ref:os.isCollaborative)\n- [`os.isInDimension(dimension)`](ref:os.isInDimension)\n- [`os.isRecordKey(key)`](ref:os.isRecordKey)\n- [`os.joinRoom(roomName, options)`](ref:os.joinRoom)\n- [`os.leaveRoom(roomName, options)`](ref:os.leaveRoom)\n- [`os.listBuiltinTags()`](ref:os.listBuiltinTags)\n- [`os.listData(recordKeyOrName, startingAddress, endpoint)`](ref:os.listData)\n- [`os.listFormAnimations(botOrAddress)`](ref:os.listFormAnimations)\n- [`os.listInstUpdates()`](ref:os.listInstUpdates)\n- [`os.listUserStudios(endpoint)`](ref:os.listUserStudios)\n- [`os.loadInst(id)`](ref:os.loadInst)\n- [`os.loadInst(id)`](ref:os.loadInst)\n- [`os.log(...args)`](ref:os.log)\n- [`os.meetCommand(command, ...args)`](ref:os.meetCommand)\n- [`os.meetFunction(functionName, ...args)`](ref:os.meetFunction)\n- [`os.openBarcodeScanner(camera)`](ref:os.openBarcodeScanner)\n- [`os.openCircleWipe(options)`](ref:os.openCircleWipe)\n- [`os.openDevConsole()`](ref:os.openDevConsole)\n- [`os.openImageClassifier(options)`](ref:os.openImageClassifier)\n- [`os.openPhotoCamera(options)`](ref:os.openPhotoCamera)\n- [`os.openQRCodeScanner(camera)`](ref:os.openQRCodeScanner)\n- [`os.openURL(url)`](ref:os.openURL)\n- [`os.parseBotsFromData(jsonOrPdf)`](ref:os.parseBotsFromData)\n- [`os.playSound(url)`](ref:os.playSound)\n- [`os.raycast(portal, origin, direction)`](ref:os.raycast)\n- [`os.raycastFromCamera(portal, viewportCoordinates)`](ref:os.raycastFromCamera)\n- [`os.recordData(recordKeyOrRecordName, address, data, endpointOrOptions)`](ref:os.recordData)\n- [`os.recordEvent(recordKeyOrName, eventName, endpoint)`](ref:os.recordEvent)\n- [`os.recordFile(recordKeyOrName, data, options, endpoint)`](ref:os.recordFile)\n- [`os.recordManualApprovalData(recordKeyOrRecordName, address, data, endpointOrOptions)`](ref:os.recordManualApprovalData)\n- [`os.registerApp(portalId, bot)`](ref:os.registerApp)\n- [`os.registerTagPrefix(prefix, options)`](ref:os.registerTagPrefix)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.replaceDragBot(bot)`](ref:os.replaceDragBot)\n- [`os.requestAuthBot()`](ref:os.requestAuthBot)\n- [`os.requestFullscreenMode()`](ref:os.requestFullscreenMode)\n- [`os.requestWakeLock()`](ref:os.requestWakeLock)\n- [`os.revokeInstRole(recordName, role, inst, options)`](ref:os.revokeInstRole)\n- [`os.revokeRecordMarkerPermission(recordName, marker, permission, options)`](ref:os.revokeRecordMarkerPermission)\n- [`os.revokeUserRole(recordName, role, userId, options)`](ref:os.revokeUserRole)\n- [`os.run(script)`](ref:os.run)\n- [`os.setClipboard(text)`](ref:os.setClipboard)\n- [`os.setRoomOptions(roomName, options)`](ref:os.setRoomOptions)\n- [`os.setRoomTrackOptions(roomName, address, options)`](ref:os.setRoomTrackOptions)\n- [`os.share(options)`](ref:os.share)\n- [`os.showBarcode(code, format)`](ref:os.showBarcode)\n- [`os.showConfirm(options)`](ref:os.showConfirm)\n- [`os.showHtml(html)`](ref:os.showHtml)\n- [`os.showInputForTag(bot, tag, options)`](ref:os.showInputForTag)\n- [`os.showJoinCode(inst, dimension)`](ref:os.showJoinCode)\n- [`os.showQRCode(code)`](ref:os.showQRCode)\n- [`os.showUploadAuxFile()`](ref:os.showUploadAuxFile)\n- [`os.showUploadFiles()`](ref:os.showUploadFiles)\n- [`os.sleep(time)`](ref:os.sleep)\n- [`os.startFormAnimation(botOrBots, nameOrIndex, options)`](ref:os.startFormAnimation)\n- [`os.stopFormAnimation(botOrBots, options)`](ref:os.stopFormAnimation)\n- [`os.tip(message, pixelX, pixelY, duration)`](ref:os.tip)\n- [`os.toast(message, duration)`](ref:os.toast)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.unloadInst(id)`](ref:os.unloadInst)\n- [`os.unloadInst(id)`](ref:os.unloadInst)\n- [`os.unregisterApp(appId)`](ref:os.unregisterApp)\n- [`os.version()`](ref:os.version)\n- [`os.vrSupported()`](ref:os.vrSupported)\n- [`os.agreedUponTime`](ref:os.agreedUponTime)\n- [`os.deadReckoningTime`](ref:os.deadReckoningTime)\n- [`os.instLatency`](ref:os.instLatency)\n- [`os.instTimeOffset`](ref:os.instTimeOffset)\n- [`os.instTimeOffsetSpread`](ref:os.instTimeOffsetSpread)\n- [`os.localTime`](ref:os.localTime)\n- [`os.registerTagPrefix(prefix, options)`](ref:os.registerTagPrefix)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.instStatuses()`](ref:os.instStatuses)\n- [`os.instances()`](ref:os.instances)\n- [`os.instances()`](ref:os.instances)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.sleep(time)`](ref:os.sleep)\n"
                     },
                     {
-                        "id": 2453,
+                        "id": 2457,
                         "name": "web",
                         "kind": 1024,
                         "kindString": "Property",
@@ -166,14 +166,14 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1314,
+                                "line": 1316,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 2454,
+                                "id": 2458,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
@@ -189,14 +189,14 @@
                         "references": "- [`web.get(url, options)`](ref:web.get)\n- [`web.hook(options)`](ref:web.hook)\n- [`web.post(url, data, options)`](ref:web.post)\n"
                     },
                     {
-                        "id": 2355,
+                        "id": 2359,
                         "name": "_setPauseTrigger_botOrId",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2356,
+                                "id": 2360,
                                 "name": "_setPauseTrigger_botOrId",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -228,7 +228,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2357,
+                                        "id": 2361,
                                         "name": "botOrIdOrTrigger",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -246,14 +246,14 @@
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 2773,
+                                                    "id": 2777,
                                                     "name": "Bot"
                                                 }
                                             ]
                                         }
                                     },
                                     {
-                                        "id": 2358,
+                                        "id": 2362,
                                         "name": "tag",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -270,7 +270,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2359,
+                                        "id": 2363,
                                         "name": "options",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -283,28 +283,28 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 2472,
+                                            "id": 2476,
                                             "name": "PauseTriggerOptions"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 2464,
+                                    "id": 2468,
                                     "name": "PauseTrigger"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 2352,
+                        "id": 2356,
                         "name": "_setPauseTrigger_trigger",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2353,
+                                "id": 2357,
                                 "name": "_setPauseTrigger_trigger",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -327,7 +327,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2354,
+                                        "id": 2358,
                                         "name": "trigger",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -338,28 +338,28 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 2464,
+                                            "id": 2468,
                                             "name": "PauseTrigger"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 2464,
+                                    "id": 2468,
                                     "name": "PauseTrigger"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 2399,
+                        "id": 2403,
                         "name": "changeState",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2400,
+                                "id": 2404,
                                 "name": "changeState",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -370,7 +370,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2401,
+                                        "id": 2405,
                                         "name": "bot",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -381,12 +381,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 2773,
+                                            "id": 2777,
                                             "name": "Bot"
                                         }
                                     },
                                     {
-                                        "id": 2402,
+                                        "id": 2406,
                                         "name": "stateName",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -401,7 +401,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2403,
+                                        "id": 2407,
                                         "name": "groupName",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -434,14 +434,14 @@
                         ]
                     },
                     {
-                        "id": 2380,
+                        "id": 2384,
                         "name": "create",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2381,
+                                "id": 2385,
                                 "name": "create",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -464,7 +464,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2382,
+                                        "id": 2386,
                                         "name": "mods",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -479,7 +479,7 @@
                                             "type": "array",
                                             "elementType": {
                                                 "type": "reference",
-                                                "id": 2159,
+                                                "id": 2163,
                                                 "name": "Mod"
                                             }
                                         }
@@ -493,14 +493,14 @@
                                             "types": [
                                                 {
                                                     "type": "reference",
-                                                    "id": 2773,
+                                                    "id": 2777,
                                                     "name": "Bot"
                                                 },
                                                 {
                                                     "type": "array",
                                                     "elementType": {
                                                         "type": "reference",
-                                                        "id": 2773,
+                                                        "id": 2777,
                                                         "name": "Bot"
                                                     }
                                                 }
@@ -515,14 +515,14 @@
                         ]
                     },
                     {
-                        "id": 2383,
+                        "id": 2387,
                         "name": "destroy",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2384,
+                                "id": 2388,
                                 "name": "destroy",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -533,7 +533,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2385,
+                                        "id": 2389,
                                         "name": "bot",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -551,14 +551,14 @@
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 2773,
+                                                    "id": 2777,
                                                     "name": "Bot"
                                                 },
                                                 {
                                                     "type": "array",
                                                     "elementType": {
                                                         "type": "reference",
-                                                        "id": 2773,
+                                                        "id": 2777,
                                                         "name": "Bot"
                                                     }
                                                 }
@@ -582,14 +582,14 @@
                         ]
                     },
                     {
-                        "id": 2363,
+                        "id": 2367,
                         "name": "disablePauseTrigger",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2364,
+                                "id": 2368,
                                 "name": "disablePauseTrigger",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -606,7 +606,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2365,
+                                        "id": 2369,
                                         "name": "triggerOrId",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -624,7 +624,7 @@
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 2464,
+                                                    "id": 2468,
                                                     "name": "PauseTrigger"
                                                 }
                                             ]
@@ -639,14 +639,14 @@
                         ]
                     },
                     {
-                        "id": 2366,
+                        "id": 2370,
                         "name": "enablePauseTrigger",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2367,
+                                "id": 2371,
                                 "name": "enablePauseTrigger",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -663,7 +663,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2368,
+                                        "id": 2372,
                                         "name": "triggerOrId",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -681,7 +681,7 @@
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 2464,
+                                                    "id": 2468,
                                                     "name": "PauseTrigger"
                                                 }
                                             ]
@@ -696,14 +696,14 @@
                         ]
                     },
                     {
-                        "id": 2406,
+                        "id": 2410,
                         "name": "getAllActions",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2407,
+                                "id": 2411,
                                 "name": "getAllActions",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -737,14 +737,14 @@
                         }
                     },
                     {
-                        "id": 2410,
+                        "id": 2414,
                         "name": "getBotActions",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2411,
+                                "id": 2415,
                                 "name": "getBotActions",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -779,14 +779,14 @@
                         }
                     },
                     {
-                        "id": 2378,
+                        "id": 2382,
                         "name": "getCallStack",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2379,
+                                "id": 2383,
                                 "name": "getCallStack",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -805,7 +805,7 @@
                                     "type": "array",
                                     "elementType": {
                                         "type": "reference",
-                                        "id": 2477,
+                                        "id": 2481,
                                         "name": "DebuggerCallFrame"
                                     }
                                 }
@@ -813,14 +813,14 @@
                         ]
                     },
                     {
-                        "id": 2408,
+                        "id": 2412,
                         "name": "getCommonActions",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2409,
+                                "id": 2413,
                                 "name": "getCommonActions",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -855,14 +855,14 @@
                         }
                     },
                     {
-                        "id": 2412,
+                        "id": 2416,
                         "name": "getErrors",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2413,
+                                "id": 2417,
                                 "name": "getErrors",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -897,14 +897,14 @@
                         }
                     },
                     {
-                        "id": 2404,
+                        "id": 2408,
                         "name": "getPortalBots",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2405,
+                                "id": 2409,
                                 "name": "getPortalBots",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -922,7 +922,7 @@
                                         },
                                         {
                                             "type": "reference",
-                                            "id": 2773,
+                                            "id": 2777,
                                             "name": "Bot"
                                         }
                                     ],
@@ -942,14 +942,14 @@
                         }
                     },
                     {
-                        "id": 2371,
+                        "id": 2375,
                         "name": "listCommonPauseTriggers",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2372,
+                                "id": 2376,
                                 "name": "listCommonPauseTriggers",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -971,7 +971,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2373,
+                                        "id": 2377,
                                         "name": "botOrId",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -989,14 +989,14 @@
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 2773,
+                                                    "id": 2777,
                                                     "name": "Bot"
                                                 }
                                             ]
                                         }
                                     },
                                     {
-                                        "id": 2374,
+                                        "id": 2378,
                                         "name": "tag",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1015,7 +1015,7 @@
                                     "type": "array",
                                     "elementType": {
                                         "type": "reference",
-                                        "id": 2459,
+                                        "id": 2463,
                                         "name": "PossiblePauseTriggerLocation"
                                     }
                                 }
@@ -1023,14 +1023,14 @@
                         ]
                     },
                     {
-                        "id": 2369,
+                        "id": 2373,
                         "name": "listPauseTriggers",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2370,
+                                "id": 2374,
                                 "name": "listPauseTriggers",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1059,7 +1059,7 @@
                                     "type": "array",
                                     "elementType": {
                                         "type": "reference",
-                                        "id": 2464,
+                                        "id": 2468,
                                         "name": "PauseTrigger"
                                     }
                                 }
@@ -1067,14 +1067,14 @@
                         ]
                     },
                     {
-                        "id": 2420,
+                        "id": 2424,
                         "name": "onAfterAction",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2421,
+                                "id": 2425,
                                 "name": "onAfterAction",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1085,7 +1085,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2422,
+                                        "id": 2426,
                                         "name": "handler",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1097,21 +1097,21 @@
                                         "type": {
                                             "type": "reflection",
                                             "declaration": {
-                                                "id": 2423,
+                                                "id": 2427,
                                                 "name": "__type",
                                                 "kind": 65536,
                                                 "kindString": "Type literal",
                                                 "flags": {},
                                                 "signatures": [
                                                     {
-                                                        "id": 2424,
+                                                        "id": 2428,
                                                         "name": "__type",
                                                         "kind": 4096,
                                                         "kindString": "Call signature",
                                                         "flags": {},
                                                         "parameters": [
                                                             {
-                                                                "id": 2425,
+                                                                "id": 2429,
                                                                 "name": "action",
                                                                 "kind": 32768,
                                                                 "kindString": "Parameter",
@@ -1148,14 +1148,14 @@
                         }
                     },
                     {
-                        "id": 2438,
+                        "id": 2442,
                         "name": "onAfterScriptUpdatedTag",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2439,
+                                "id": 2443,
                                 "name": "onAfterScriptUpdatedTag",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1172,7 +1172,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2440,
+                                        "id": 2444,
                                         "name": "listener",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1184,28 +1184,28 @@
                                         "type": {
                                             "type": "reflection",
                                             "declaration": {
-                                                "id": 2441,
+                                                "id": 2445,
                                                 "name": "__type",
                                                 "kind": 65536,
                                                 "kindString": "Type literal",
                                                 "flags": {},
                                                 "signatures": [
                                                     {
-                                                        "id": 2442,
+                                                        "id": 2446,
                                                         "name": "__type",
                                                         "kind": 4096,
                                                         "kindString": "Call signature",
                                                         "flags": {},
                                                         "parameters": [
                                                             {
-                                                                "id": 2443,
+                                                                "id": 2447,
                                                                 "name": "update",
                                                                 "kind": 32768,
                                                                 "kindString": "Parameter",
                                                                 "flags": {},
                                                                 "type": {
                                                                     "type": "reference",
-                                                                    "id": 2491,
+                                                                    "id": 2495,
                                                                     "name": "DebuggerTagUpdate"
                                                                 }
                                                             }
@@ -1236,14 +1236,14 @@
                         }
                     },
                     {
-                        "id": 2444,
+                        "id": 2448,
                         "name": "onAfterScriptUpdatedTagMask",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2445,
+                                "id": 2449,
                                 "name": "onAfterScriptUpdatedTagMask",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1260,7 +1260,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2446,
+                                        "id": 2450,
                                         "name": "listener",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1272,28 +1272,28 @@
                                         "type": {
                                             "type": "reflection",
                                             "declaration": {
-                                                "id": 2447,
+                                                "id": 2451,
                                                 "name": "__type",
                                                 "kind": 65536,
                                                 "kindString": "Type literal",
                                                 "flags": {},
                                                 "signatures": [
                                                     {
-                                                        "id": 2448,
+                                                        "id": 2452,
                                                         "name": "__type",
                                                         "kind": 4096,
                                                         "kindString": "Call signature",
                                                         "flags": {},
                                                         "parameters": [
                                                             {
-                                                                "id": 2449,
+                                                                "id": 2453,
                                                                 "name": "update",
                                                                 "kind": 32768,
                                                                 "kindString": "Parameter",
                                                                 "flags": {},
                                                                 "type": {
                                                                     "type": "reference",
-                                                                    "id": 2485,
+                                                                    "id": 2489,
                                                                     "name": "DebuggerTagMaskUpdate"
                                                                 }
                                                             }
@@ -1324,14 +1324,14 @@
                         }
                     },
                     {
-                        "id": 2414,
+                        "id": 2418,
                         "name": "onBeforeAction",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2415,
+                                "id": 2419,
                                 "name": "onBeforeAction",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1342,7 +1342,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2416,
+                                        "id": 2420,
                                         "name": "handler",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1354,21 +1354,21 @@
                                         "type": {
                                             "type": "reflection",
                                             "declaration": {
-                                                "id": 2417,
+                                                "id": 2421,
                                                 "name": "__type",
                                                 "kind": 65536,
                                                 "kindString": "Type literal",
                                                 "flags": {},
                                                 "signatures": [
                                                     {
-                                                        "id": 2418,
+                                                        "id": 2422,
                                                         "name": "__type",
                                                         "kind": 4096,
                                                         "kindString": "Call signature",
                                                         "flags": {},
                                                         "parameters": [
                                                             {
-                                                                "id": 2419,
+                                                                "id": 2423,
                                                                 "name": "action",
                                                                 "kind": 32768,
                                                                 "kindString": "Parameter",
@@ -1405,14 +1405,14 @@
                         }
                     },
                     {
-                        "id": 2426,
+                        "id": 2430,
                         "name": "onBeforeUserAction",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2427,
+                                "id": 2431,
                                 "name": "onBeforeUserAction",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1440,7 +1440,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2428,
+                                        "id": 2432,
                                         "name": "listener",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1452,21 +1452,21 @@
                                         "type": {
                                             "type": "reflection",
                                             "declaration": {
-                                                "id": 2429,
+                                                "id": 2433,
                                                 "name": "__type",
                                                 "kind": 65536,
                                                 "kindString": "Type literal",
                                                 "flags": {},
                                                 "signatures": [
                                                     {
-                                                        "id": 2430,
+                                                        "id": 2434,
                                                         "name": "__type",
                                                         "kind": 4096,
                                                         "kindString": "Call signature",
                                                         "flags": {},
                                                         "parameters": [
                                                             {
-                                                                "id": 2431,
+                                                                "id": 2435,
                                                                 "name": "action",
                                                                 "kind": 32768,
                                                                 "kindString": "Parameter",
@@ -1503,14 +1503,14 @@
                         }
                     },
                     {
-                        "id": 2346,
+                        "id": 2350,
                         "name": "onPause",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2347,
+                                "id": 2351,
                                 "name": "onPause",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1537,7 +1537,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2348,
+                                        "id": 2352,
                                         "name": "handler",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1549,28 +1549,28 @@
                                         "type": {
                                             "type": "reflection",
                                             "declaration": {
-                                                "id": 2349,
+                                                "id": 2353,
                                                 "name": "__type",
                                                 "kind": 65536,
                                                 "kindString": "Type literal",
                                                 "flags": {},
                                                 "signatures": [
                                                     {
-                                                        "id": 2350,
+                                                        "id": 2354,
                                                         "name": "__type",
                                                         "kind": 4096,
                                                         "kindString": "Call signature",
                                                         "flags": {},
                                                         "parameters": [
                                                             {
-                                                                "id": 2351,
+                                                                "id": 2355,
                                                                 "name": "pause",
                                                                 "kind": 32768,
                                                                 "kindString": "Parameter",
                                                                 "flags": {},
                                                                 "type": {
                                                                     "type": "reference",
-                                                                    "id": 2506,
+                                                                    "id": 2510,
                                                                     "name": "DebuggerPause"
                                                                 }
                                                             }
@@ -1593,14 +1593,14 @@
                         ]
                     },
                     {
-                        "id": 2432,
+                        "id": 2436,
                         "name": "onScriptActionEnqueued",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2433,
+                                "id": 2437,
                                 "name": "onScriptActionEnqueued",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1618,7 +1618,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2434,
+                                        "id": 2438,
                                         "name": "listener",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1630,21 +1630,21 @@
                                         "type": {
                                             "type": "reflection",
                                             "declaration": {
-                                                "id": 2435,
+                                                "id": 2439,
                                                 "name": "__type",
                                                 "kind": 65536,
                                                 "kindString": "Type literal",
                                                 "flags": {},
                                                 "signatures": [
                                                     {
-                                                        "id": 2436,
+                                                        "id": 2440,
                                                         "name": "__type",
                                                         "kind": 4096,
                                                         "kindString": "Call signature",
                                                         "flags": {},
                                                         "parameters": [
                                                             {
-                                                                "id": 2437,
+                                                                "id": 2441,
                                                                 "name": "action",
                                                                 "kind": 32768,
                                                                 "kindString": "Parameter",
@@ -1681,14 +1681,14 @@
                         }
                     },
                     {
-                        "id": 2450,
+                        "id": 2454,
                         "name": "performUserAction",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2451,
+                                "id": 2455,
                                 "name": "performUserAction",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1700,7 +1700,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2452,
+                                        "id": 2456,
                                         "name": "actions",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1750,14 +1750,14 @@
                         }
                     },
                     {
-                        "id": 2386,
+                        "id": 2390,
                         "name": "priorityShout",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2387,
+                                "id": 2391,
                                 "name": "priorityShout",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1768,7 +1768,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2388,
+                                        "id": 2392,
                                         "name": "eventNames",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1786,7 +1786,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2389,
+                                        "id": 2393,
                                         "name": "arg",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1819,14 +1819,14 @@
                         ]
                     },
                     {
-                        "id": 2360,
+                        "id": 2364,
                         "name": "removePauseTrigger",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2361,
+                                "id": 2365,
                                 "name": "removePauseTrigger",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1843,7 +1843,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2362,
+                                        "id": 2366,
                                         "name": "triggerOrId",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1861,7 +1861,7 @@
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 2464,
+                                                    "id": 2468,
                                                     "name": "PauseTrigger"
                                                 }
                                             ]
@@ -1876,14 +1876,14 @@
                         ]
                     },
                     {
-                        "id": 2375,
+                        "id": 2379,
                         "name": "resume",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2376,
+                                "id": 2380,
                                 "name": "resume",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1900,7 +1900,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2377,
+                                        "id": 2381,
                                         "name": "pause",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1911,7 +1911,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 2506,
+                                            "id": 2510,
                                             "name": "DebuggerPause"
                                         }
                                     }
@@ -1924,14 +1924,14 @@
                         ]
                     },
                     {
-                        "id": 2390,
+                        "id": 2394,
                         "name": "shout",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2391,
+                                "id": 2395,
                                 "name": "shout",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1959,7 +1959,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2392,
+                                        "id": 2396,
                                         "name": "name",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1974,7 +1974,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2393,
+                                        "id": 2397,
                                         "name": "arg",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2010,14 +2010,14 @@
                         ]
                     },
                     {
-                        "id": 2394,
+                        "id": 2398,
                         "name": "whisper",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2395,
+                                "id": 2399,
                                 "name": "whisper",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -2029,7 +2029,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2396,
+                                        "id": 2400,
                                         "name": "bot",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2047,7 +2047,7 @@
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 2773,
+                                                    "id": 2777,
                                                     "name": "Bot"
                                                 },
                                                 {
@@ -2061,7 +2061,7 @@
                                                             },
                                                             {
                                                                 "type": "reference",
-                                                                "id": 2773,
+                                                                "id": 2777,
                                                                 "name": "Bot"
                                                             }
                                                         ]
@@ -2071,7 +2071,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2397,
+                                        "id": 2401,
                                         "name": "eventName",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2086,7 +2086,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2398,
+                                        "id": 2402,
                                         "name": "arg",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2124,50 +2124,50 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2457,
-                            2455,
-                            2453
+                            2461,
+                            2459,
+                            2457
                         ]
                     },
                     {
                         "title": "Methods",
                         "kind": 2048,
                         "children": [
-                            2355,
-                            2352,
-                            2399,
-                            2380,
-                            2383,
-                            2363,
-                            2366,
-                            2406,
+                            2359,
+                            2356,
+                            2403,
+                            2384,
+                            2387,
+                            2367,
+                            2370,
                             2410,
-                            2378,
-                            2408,
-                            2412,
-                            2404,
-                            2371,
-                            2369,
-                            2420,
-                            2438,
-                            2444,
                             2414,
-                            2426,
-                            2346,
-                            2432,
-                            2450,
-                            2386,
-                            2360,
+                            2382,
+                            2412,
+                            2416,
+                            2408,
                             2375,
+                            2373,
+                            2424,
+                            2442,
+                            2448,
+                            2418,
+                            2430,
+                            2350,
+                            2436,
+                            2454,
                             2390,
-                            2394
+                            2364,
+                            2379,
+                            2394,
+                            2398
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1407,
+                        "line": 1409,
                         "character": 17
                     }
                 ],
@@ -2220,329 +2220,337 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2949": "CasualOSError",
+        "id-2953": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3339": "Quaternion",
+        "id-3358": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3371": "Rotation",
+        "id-3390": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3205": "Vector2",
+        "id-3224": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3262": "Vector3",
+        "id-3281": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2968": "AIChatMessage",
+        "id-2972": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2746": "AIChatOptions",
+        "id-2750": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
-        "id-2551": "AIGenerateImageSuccess",
+        "id-2555": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-2760": "AIGenerateImageOptions",
+        "id-2764": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-2756": "AIGenerateSkyboxOptions",
+        "id-2760": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
-        "id-2544": "AIGenerateSkyboxRequest",
+        "id-2548": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
-        "id-2548": "AIGenerateSkyboxResult",
+        "id-2552": "AIGenerateSkyboxResult",
         "AIGeneratedImage": "types/ai",
-        "id-2554": "AIGeneratedImage",
+        "id-2558": "AIGeneratedImage",
         "AddCountFailure": "types/records/events",
-        "id-3152": "AddCountFailure",
+        "id-3157": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3147": "AddCountSuccess",
+        "id-3152": "AddCountSuccess",
         "AnimateTagOptions": "types/animation",
-        "id-2149": "AnimateTagOptions",
+        "id-2153": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2524": "AttachDebuggerOptions",
+        "id-2528": "AttachDebuggerOptions",
         "CasualOSDevice": "types/os",
-        "id-2937": "CasualOSDevice",
+        "id-2941": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2929": "CasualOSVersion",
+        "id-2933": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3417": "AxisAndAngle",
+        "id-3436": "AxisAndAngle",
         "BotTagMasks": "types/core",
-        "id-2906": "BotTagMasks",
+        "id-2910": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2821": "BotTags",
+        "id-2825": "BotTags",
         "BotState": "types/core",
-        "id-2919": "BotState",
+        "id-2923": "BotState",
         "CompiledBotListeners": "types/core",
-        "id-2900": "CompiledBotListeners",
+        "id-2904": "CompiledBotListeners",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2581": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2585": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2979": "CreatePublicRecordKeyFailure",
+        "id-2983": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2975": "CreatePublicRecordKeySuccess",
+        "id-2979": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2477": "DebuggerCallFrame",
+        "id-2481": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2512": "DebuggerFunctionLocation",
+        "id-2516": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2506": "DebuggerPause",
+        "id-2510": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2485": "DebuggerTagMaskUpdate",
+        "id-2489": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2491": "DebuggerTagUpdate",
+        "id-2495": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2518": "DebuggerVariable",
+        "id-2522": "DebuggerVariable",
         "Easing": "types/animation",
-        "id-2561": "Easing",
+        "id-2565": "Easing",
         "EnableXROptions": "types/os",
-        "id-2655": "EnableXROptions",
+        "id-2659": "EnableXROptions",
         "EraseDataFailure": "types/records/data",
-        "id-3123": "EraseDataFailure",
+        "id-3128": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3119": "EraseDataSuccess",
+        "id-3124": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3142": "EraseFileFailure",
+        "id-3147": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3138": "EraseFileSuccess",
+        "id-3143": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3420": "EulerAnglesRotation",
+        "id-3439": "EulerAnglesRotation",
         "FocusOnOptions": "types/os",
-        "id-2615": "FocusOnOptions",
+        "id-2619": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2627": "FocusOnRotation",
+        "id-2631": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2673": "FormAnimationData",
+        "id-2677": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3414": "FromToRotation",
+        "id-3433": "FromToRotation",
         "GenericError": "types/error",
-        "id-2946": "GenericError",
+        "id-2950": "GenericError",
         "GetCountFailure": "types/records/events",
-        "id-3163": "GetCountFailure",
+        "id-3168": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3157": "GetCountSuccess",
+        "id-3162": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3114": "GetDataFailure",
+        "id-3119": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3105": "GetDataSuccess",
+        "id-3110": "GetDataSuccess",
         "GetRoomOptionsFailure": "types/os",
-        "id-2239": "GetRoomOptionsFailure",
+        "id-2243": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
-        "id-2235": "GetRoomOptionsSuccess",
+        "id-2239": "GetRoomOptionsSuccess",
         "GetRoomRemoteOptionsFailure": "types/os",
-        "id-2282": "GetRoomRemoteOptionsFailure",
+        "id-2286": "GetRoomRemoteOptionsFailure",
         "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-2277": "GetRoomRemoteOptionsSuccess",
+        "id-2281": "GetRoomRemoteOptionsSuccess",
         "GetRoomTrackOptionsFailure": "types/os",
-        "id-2258": "GetRoomTrackOptionsFailure",
+        "id-2262": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
-        "id-2253": "GetRoomTrackOptionsSuccess",
+        "id-2257": "GetRoomTrackOptionsSuccess",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3191": "GrantMarkerPermissionFailure",
+        "id-3196": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3189": "GrantMarkerPermissionSuccess",
+        "id-3194": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3177": "GrantRoleFailure",
+        "id-3182": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3175": "GrantRoleSuccess",
+        "id-3180": "GrantRoleSuccess",
         "ImageClassifierOptions": "types/os",
-        "id-2633": "ImageClassifierOptions",
+        "id-2637": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2942": "InstUpdate",
+        "id-2946": "InstUpdate",
         "JoinRoomFailure": "types/os",
-        "id-2220": "JoinRoomFailure",
+        "id-2224": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
-        "id-2217": "JoinRoomSuccess",
+        "id-2221": "JoinRoomSuccess",
         "LeaveRoomFailure": "types/os",
-        "id-2229": "LeaveRoomFailure",
+        "id-2233": "LeaveRoomFailure",
         "LeaveRoomSuccess": "types/os",
-        "id-2226": "LeaveRoomSuccess",
+        "id-2230": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3133": "ListDataFailure",
+        "id-3138": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3128": "ListDataSuccess",
+        "id-3133": "ListDataSuccess",
+        "ListStudiosFailure": "types/records/studios",
+        "id-3211": "ListStudiosFailure",
+        "ListStudiosSuccess": "types/records/studios",
+        "id-3208": "ListStudiosSuccess",
+        "ListedStudio": "types/records/studios",
+        "id-3215": "ListedStudio",
         "LookRotation": "types/math/rotations",
-        "id-3437": "LookRotation",
+        "id-3456": "LookRotation",
         "MediaPermissionOptions": "types/os",
-        "id-2652": "MediaPermissionOptions",
+        "id-2656": "MediaPermissionOptions",
         "Debugger": "types/debuggers/debugger",
-        "id-2289": "Debugger",
+        "id-2293": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2496": "NormalDebuggerOptions",
+        "id-2500": "NormalDebuggerOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2730": "PhotoCameraOptions",
+        "id-2734": "PhotoCameraOptions",
         "ParsedBotLink": "types/core",
-        "id-2925": "ParsedBotLink",
+        "id-2929": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2922": "PartialBotState",
+        "id-2926": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2345": "PausableDebugger",
+        "id-2349": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2501": "PausableDebuggerOptions",
+        "id-2505": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2464": "PauseTrigger",
+        "id-2468": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2472": "PauseTriggerOptions",
+        "id-2476": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2742": "Photo",
+        "id-2746": "Photo",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2459": "PossiblePauseTriggerLocation",
+        "id-2463": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2533": "PseudoRandomNumberGenerator",
+        "id-2537": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3430": "QuaternionRotation",
+        "id-3449": "QuaternionRotation",
         "RaycastRay": "types/os",
-        "id-2213": "RaycastRay",
+        "id-2217": "RaycastRay",
         "RaycastResult": "types/os",
-        "id-2210": "RaycastResult",
+        "id-2214": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2564": "RecordActionOptions",
+        "id-2568": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3100": "RecordDataFailure",
+        "id-3104": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3096": "RecordDataSuccess",
+        "id-3100": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-2180": "RecordFileFailure",
+        "id-2184": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-2176": "RecordFileSuccess",
+        "id-2180": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2717": "RecordedFile",
+        "id-2721": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2715": "Recording",
+        "id-2719": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2722": "RecordingOptions",
+        "id-2726": "RecordingOptions",
         "RegisterPrefixOptions": "types/core",
-        "id-2712": "RegisterPrefixOptions",
+        "id-2716": "RegisterPrefixOptions",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3198": "RevokeMarkerPermissionFailure",
+        "id-3203": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3196": "RevokeMarkerPermissionSuccess",
+        "id-3201": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3184": "RevokeRoleFailure",
+        "id-3189": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3182": "RevokeRoleSuccess",
+        "id-3187": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2678": "RoomJoinOptions",
+        "id-2682": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2687": "RoomOptions",
+        "id-2691": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2703": "RoomRemoteOptions",
+        "id-2707": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2691": "RoomTrackOptions",
+        "id-2695": "RoomTrackOptions",
         "RuntimeBot": "types/core",
-        "id-2773": "RuntimeBot",
+        "id-2777": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2912": "RuntimeBotLinks",
+        "id-2916": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2909": "RuntimeBotVars",
+        "id-2913": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3428": "SequenceRotation",
+        "id-3447": "SequenceRotation",
         "SetRoomOptionsSuccess": "types/os",
-        "id-2244": "SetRoomOptionsSuccess",
+        "id-2248": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2709": "SetRoomTrackOptions",
+        "id-2713": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
-        "id-2270": "SetRoomTrackOptionsFailure",
+        "id-2274": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
-        "id-2265": "SetRoomTrackOptionsSuccess",
+        "id-2269": "SetRoomTrackOptionsSuccess",
         "ShareOptions": "types/os",
-        "id-2611": "ShareOptions",
+        "id-2615": "ShareOptions",
         "ShowChatOptions": "types/os",
-        "id-2605": "ShowChatOptions",
+        "id-2609": "ShowChatOptions",
         "ShowConfirmOptions": "types/os",
-        "id-2647": "ShowConfirmOptions",
+        "id-2651": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2638": "ShowInputOptions",
+        "id-2642": "ShowInputOptions",
         "SnapAxis": "types/os",
-        "id-2585": "SnapAxis",
+        "id-2589": "SnapAxis",
         "SnapGridTarget": "types/os",
-        "id-2185": "SnapGridTarget",
+        "id-2189": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2597": "SnapPoint",
+        "id-2601": "SnapPoint",
         "SpeakTextOptions": "types/experimental",
-        "id-2529": "SpeakTextOptions",
+        "id-2533": "SpeakTextOptions",
         "StartFormAnimationOptions": "types/os",
-        "id-2657": "StartFormAnimationOptions",
+        "id-2661": "StartFormAnimationOptions",
         "StopFormAnimationOptions": "types/os",
-        "id-2670": "StopFormAnimationOptions",
+        "id-2674": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2567": "SuccessfulGeolocation",
+        "id-2571": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2726": "SyntheticVoice",
+        "id-2730": "SyntheticVoice",
         "TweenOptions": "types/experimental",
-        "id-2526": "TweenOptions",
+        "id-2530": "TweenOptions",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2577": "UnsuccessfulGeolocation",
+        "id-2581": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3170": "UpdateEventRecordFailure",
+        "id-3175": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3168": "UpdateEventRecordSuccess",
+        "id-3173": "UpdateEventRecordSuccess",
         "UploadedFile": "types/os",
-        "id-2206": "UploadedFile",
+        "id-2210": "UploadedFile",
         "WebhookOptions": "types/web",
-        "id-2130": "WebhookOptions",
+        "id-2134": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-2142": "WebhookResult",
+        "id-2146": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3146": "AddCountResult",
+        "id-3151": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2984": "AvailablePermissions",
+        "id-2988": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2632": "BarcodeFormat",
+        "id-2636": "BarcodeFormat",
         "BotFilter": "types/core",
-        "id-2164": "BotFilter",
+        "id-2168": "BotFilter",
         "BotSpace": "types/core",
-        "id-2896": "BotSpace",
+        "id-2900": "BotSpace",
         "CameraType": "types/os",
-        "id-2631": "CameraType",
+        "id-2635": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2974": "CreatePublicRecordKeyResult",
+        "id-2978": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
-        "id-2560": "EaseMode",
+        "id-2564": "EaseMode",
         "EaseType": "types/animation",
-        "id-2559": "EaseType",
+        "id-2563": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3118": "EraseDataResult",
+        "id-3123": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3137": "EraseFileResult",
+        "id-3142": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2566": "Geolocation",
+        "id-2570": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3156": "GetCountResult",
+        "id-3161": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3104": "GetDataResult",
+        "id-3109": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
-        "id-2234": "GetRoomOptionsResult",
+        "id-2238": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
-        "id-2276": "GetRoomRemoteOptionsResult",
+        "id-2280": "GetRoomRemoteOptionsResult",
         "GetRoomTrackOptionsResult": "types/os",
-        "id-2252": "GetRoomTrackOptionsResult",
+        "id-2256": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3188": "GrantMarkerPermissionResult",
+        "id-3193": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3174": "GrantRoleResult",
+        "id-3179": "GrantRoleResult",
         "JoinRoomResult": "types/os",
-        "id-2216": "JoinRoomResult",
+        "id-2220": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
-        "id-2225": "LeaveRoomResult",
+        "id-2229": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3127": "ListDataResult",
+        "id-3132": "ListDataResult",
+        "ListStudiosResult": "types/records/studios",
+        "id-3207": "ListStudiosResult",
         "Mod": "types/core",
-        "id-2159": "Mod",
+        "id-2163": "Mod",
         "PortalType": "types/core",
-        "id-2928": "PortalType",
+        "id-2932": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2463": "PossiblePauseTriggerStates",
+        "id-2467": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3095": "RecordDataResult",
+        "id-3099": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-2175": "RecordFileResult",
+        "id-2179": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3195": "RevokeMarkerPermissionResult",
+        "id-3200": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3181": "RevokeRoleResult",
+        "id-3186": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
-        "id-2243": "SetRoomOptionsResult",
+        "id-2247": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
-        "id-2264": "SetRoomTrackOptionsResult",
+        "id-2268": "SetRoomTrackOptionsResult",
         "SnapTarget": "types/os",
-        "id-2604": "SnapTarget",
+        "id-2608": "SnapTarget",
         "TagFilter": "types/core",
-        "id-2160": "TagFilter",
+        "id-2164": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3167": "UpdateEventRecordResult",
+        "id-3172": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",
@@ -2570,9 +2578,9 @@
         "whisper": "actions/event",
         "id-263": "whisper",
         "action.perform": "actions/event",
-        "id-1630": "action.perform",
+        "id-1634": "action.perform",
         "action.reject": "actions/event",
-        "id-1634": "action.reject",
+        "id-1638": "action.reject",
         "ai.chat-string": "actions/ai",
         "id-423": "ai.chat-string",
         "ai.chat-message": "actions/ai",
@@ -2608,55 +2616,55 @@
         "byTag": "actions/bot-filters",
         "id-276": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1854": "bytes.fromBase64String",
+        "id-1858": "bytes.fromBase64String",
         "bytes.fromBase64Url": "actions/bytes",
-        "id-1871": "bytes.fromBase64Url",
+        "id-1875": "bytes.fromBase64Url",
         "bytes.fromHexString": "actions/bytes",
-        "id-1862": "bytes.fromHexString",
+        "id-1866": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1850": "bytes.toBase64String",
+        "id-1854": "bytes.toBase64String",
         "bytes.toBase64Url": "actions/bytes",
-        "id-1866": "bytes.toBase64Url",
+        "id-1870": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
-        "id-1858": "bytes.toHexString",
+        "id-1862": "bytes.toHexString",
         "clearAnimations": "actions/utility",
         "id-378": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-106": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1877": "crypto.hash-raw",
+        "id-1881": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1883": "crypto.hash-string",
+        "id-1887": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1914": "crypto.hmac-raw",
+        "id-1918": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1907": "crypto.hmac-string",
+        "id-1911": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1972": "crypto.asymmetric.decrypt",
+        "id-1976": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1967": "crypto.asymmetric.encrypt",
+        "id-1971": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1978": "crypto.asymmetric.isEncrypted",
+        "id-1982": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1963": "crypto.asymmetric.isKeypair",
+        "id-1967": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1959": "crypto.asymmetric.keypair",
+        "id-1963": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1943": "crypto.encrypt",
+        "id-1947": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1933": "crypto.hmacSha256",
+        "id-1937": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1938": "crypto.hmacSha512",
+        "id-1942": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1953": "crypto.isEncrypted",
+        "id-1957": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1982": "crypto.keypair",
+        "id-1986": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1899": "crypto.sha256",
+        "id-1903": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1903": "crypto.sha512",
+        "id-1907": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1986": "crypto.sign",
+        "id-1990": "crypto.sign",
         "deleteTagMaskText": "actions/data",
         "id-133": "deleteTagMaskText",
         "deleteTagText": "actions/data",
@@ -2666,25 +2674,25 @@
         "either": "actions/bot-filters",
         "id-318": "either",
         "os.beginAudioRecording": "actions/audio",
-        "id-1688": "os.beginAudioRecording",
+        "id-1692": "os.beginAudioRecording",
         "experiment.beginRecording": "actions/experimental",
-        "id-1695": "experiment.beginRecording",
+        "id-1699": "experiment.beginRecording",
         "os.endAudioRecording": "actions/audio",
-        "id-1692": "os.endAudioRecording",
+        "id-1696": "os.endAudioRecording",
         "experiment.endRecording": "actions/experimental",
-        "id-1699": "experiment.endRecording",
+        "id-1703": "experiment.endRecording",
         "experiment.getAnchorPointPosition": "actions/experimental",
-        "id-1678": "experiment.getAnchorPointPosition",
+        "id-1682": "experiment.getAnchorPointPosition",
         "experiment.getVoices": "actions/experimental",
-        "id-1707": "experiment.getVoices",
+        "id-1711": "experiment.getVoices",
         "experiment.localFormAnimation": "actions/experimental",
-        "id-1651": "experiment.localFormAnimation",
+        "id-1655": "experiment.localFormAnimation",
         "experiment.localPositionTween": "actions/experimental",
-        "id-1656": "experiment.localPositionTween",
+        "id-1660": "experiment.localPositionTween",
         "experiment.localRotationTween": "actions/experimental",
-        "id-1667": "experiment.localRotationTween",
+        "id-1671": "experiment.localRotationTween",
         "experiment.speakText": "actions/experimental",
-        "id-1702": "experiment.speakText",
+        "id-1706": "experiment.speakText",
         "getBotLinks": "actions/data",
         "id-194": "getBotLinks",
         "getBotPosition": "actions/data",
@@ -2716,63 +2724,63 @@
         "insertTagText": "actions/data",
         "id-111": "insertTagText",
         "math.abs": "actions/math",
-        "id-1724": "math.abs",
+        "id-1728": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1794": "math.addVectors",
+        "id-1798": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1825": "math.areClose",
+        "id-1829": "math.areClose",
         "math.avg": "actions/math",
-        "id-1716": "math.avg",
+        "id-1720": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1750": "math.degreesToRadians",
+        "id-1754": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1790": "math.getAnchorPointOffset",
+        "id-1794": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1758": "math.getForwardDirection",
+        "id-1762": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1732": "math.getSeededRandomNumberGenerator",
+        "id-1736": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1767": "math.intersectPlane",
+        "id-1771": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1804": "math.negateVector",
+        "id-1808": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1809": "math.normalizeVector",
+        "id-1813": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1754": "math.radiansToDegrees",
+        "id-1758": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1745": "math.random",
+        "id-1749": "math.random",
         "math.randomInt": "actions/math",
-        "id-1740": "math.randomInt",
+        "id-1744": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1819": "math.scaleVector",
+        "id-1823": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1736": "math.setRandomSeed",
+        "id-1740": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1720": "math.sqrt",
+        "id-1724": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1728": "math.stdDev",
+        "id-1732": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1799": "math.subtractVectors",
+        "id-1803": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1712": "math.sum",
+        "id-1716": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1814": "math.vectorLength",
+        "id-1818": "math.vectorLength",
         "neighboring": "actions/bot-filters",
         "id-304": "neighboring",
         "not": "actions/bot-filters",
         "id-325": "not",
         "os.attachDebugger": "actions/debuggers",
-        "id-1328": "os.attachDebugger",
+        "id-1332": "os.attachDebugger",
         "os.createDebugger-normal": "actions/debuggers",
-        "id-1317": "os.createDebugger-normal",
+        "id-1321": "os.createDebugger-normal",
         "os.createDebugger-pausable": "actions/debuggers",
-        "id-1321": "os.createDebugger-pausable",
+        "id-1325": "os.createDebugger-pausable",
         "os.focusOn-bot": "actions/portals",
         "id-510": "os.focusOn-bot",
         "os.focusOn-position": "actions/portals",
         "id-515": "os.focusOn-position",
         "os.getExecutingDebugger": "actions/debuggers",
-        "id-1325": "os.getExecutingDebugger",
+        "id-1329": "os.getExecutingDebugger",
         "showChat-options": "actions/os",
         "id-537": "showChat-options",
         "showChat-placeholder": "actions/os",
@@ -2788,15 +2796,15 @@
         "os.addDropSnap": "actions/portals",
         "id-814": "os.addDropSnap",
         "os.applyUpdatesToInst": "actions/os",
-        "id-1271": "os.applyUpdatesToInst",
+        "id-1275": "os.applyUpdatesToInst",
         "os.arSupported": "actions/xr",
         "id-578": "os.arSupported",
         "os.bufferFormAddressGLTF": "actions/animations",
-        "id-1224": "os.bufferFormAddressGLTF",
+        "id-1228": "os.bufferFormAddressGLTF",
         "os.bufferSound": "actions/audio",
         "id-790": "os.bufferSound",
         "os.calculateRayFromCamera": "actions/portals",
-        "id-1219": "os.calculateRayFromCamera",
+        "id-1223": "os.calculateRayFromCamera",
         "os.cancelSound": "actions/audio",
         "id-794": "os.cancelSound",
         "os.capturePhoto": "actions/camera",
@@ -2814,11 +2822,11 @@
         "os.compileApp": "actions/app",
         "id-941": "os.compileApp",
         "os.convertGeolocationToWhat3Words": "actions/os",
-        "id-1204": "os.convertGeolocationToWhat3Words",
+        "id-1208": "os.convertGeolocationToWhat3Words",
         "os.countEvents": "actions/records",
         "id-1198": "os.countEvents",
         "os.createInitializationUpdate": "actions/os",
-        "id-1267": "os.createInitializationUpdate",
+        "id-1271": "os.createInitializationUpdate",
         "os.device": "actions/os",
         "id-555": "os.device",
         "os.disableAR": "actions/xr",
@@ -2862,7 +2870,7 @@
         "os.getCurrentInst": "actions/portals",
         "id-730": "os.getCurrentInst",
         "os.getCurrentInstUpdate": "actions/os",
-        "id-1275": "os.getCurrentInstUpdate",
+        "id-1279": "os.getCurrentInstUpdate",
         "os.getData": "actions/records",
         "id-1123": "os.getData",
         "os.getDimensionalDepth": "actions/portals",
@@ -2876,7 +2884,7 @@
         "os.getInputState": "actions/portals",
         "id-877": "os.getInputState",
         "os.getInstStateFromUpdates": "actions/os",
-        "id-1263": "os.getInstStateFromUpdates",
+        "id-1267": "os.getInstStateFromUpdates",
         "os.getManualApprovalData": "actions/records",
         "id-1129": "os.getManualApprovalData",
         "os.getMediaPermission": "actions/os",
@@ -2934,9 +2942,9 @@
         "os.inSheet": "actions/portals",
         "id-842": "os.inSheet",
         "os.instStatuses": "actions/os",
-        "id-1292": "os.instStatuses",
+        "id-1296": "os.instStatuses",
         "os.instances": "actions/os",
-        "id-1282": "os.instances",
+        "id-1286": "os.instances",
         "os.isCollaborative": "actions/os",
         "id-558": "os.isCollaborative",
         "os.isInDimension": "actions/portals",
@@ -2952,17 +2960,19 @@
         "os.listData": "actions/records",
         "id-1135": "os.listData",
         "os.listFormAnimations": "actions/animations",
-        "id-1239": "os.listFormAnimations",
+        "id-1243": "os.listFormAnimations",
         "os.listInstUpdates": "actions/os",
-        "id-1260": "os.listInstUpdates",
+        "id-1264": "os.listInstUpdates",
+        "os.listUserStudios": "actions/records",
+        "id-1204": "os.listUserStudios",
         "os.loadInst": "actions/os",
         "id-700": "os.loadInst",
         "os.log": "actions/os",
         "id-835": "os.log",
         "os.meetCommand": "actions/os",
-        "id-1305": "os.meetCommand",
+        "id-1309": "os.meetCommand",
         "os.meetFunction": "actions/os",
-        "id-1310": "os.meetFunction",
+        "id-1314": "os.meetFunction",
         "os.openBarcodeScanner": "actions/barcodes",
         "id-647": "os.openBarcodeScanner",
         "os.openCircleWipe": "actions/portals",
@@ -2982,9 +2992,9 @@
         "os.playSound": "actions/audio",
         "id-786": "os.playSound",
         "os.raycast": "actions/portals",
-        "id-1213": "os.raycast",
+        "id-1217": "os.raycast",
         "os.raycastFromCamera": "actions/portals",
-        "id-1208": "os.raycastFromCamera",
+        "id-1212": "os.raycastFromCamera",
         "os.recordData": "actions/records",
         "id-1109": "os.recordData",
         "os.recordEvent": "actions/records",
@@ -2998,9 +3008,9 @@
         "os.registerTagPrefix": "actions/app",
         "id-927": "os.registerTagPrefix",
         "os.remoteCount": "actions/os",
-        "id-1285": "os.remoteCount",
+        "id-1289": "os.remoteCount",
         "os.remotes": "actions/os",
-        "id-1257": "os.remotes",
+        "id-1261": "os.remotes",
         "os.replaceDragBot": "actions/portals",
         "id-716": "os.replaceDragBot",
         "os.requestAuthBot": "actions/records",
@@ -3044,15 +3054,15 @@
         "os.sleep": "actions/os",
         "id-453": "os.sleep",
         "os.startFormAnimation": "actions/animations",
-        "id-1228": "os.startFormAnimation",
+        "id-1232": "os.startFormAnimation",
         "os.stopFormAnimation": "actions/animations",
-        "id-1234": "os.stopFormAnimation",
+        "id-1238": "os.stopFormAnimation",
         "os.tip": "actions/portals",
         "id-462": "os.tip",
         "os.toast": "actions/os",
         "id-457": "os.toast",
         "os.totalRemoteCount": "actions/os",
-        "id-1289": "os.totalRemoteCount",
+        "id-1293": "os.totalRemoteCount",
         "os.unloadInst": "actions/os",
         "id-704": "os.unloadInst",
         "os.unregisterApp": "actions/app",
@@ -3088,11 +3098,11 @@
         "uuid": "actions/data",
         "id-355": "uuid",
         "web.get": "actions/web",
-        "id-2029": "web.get",
+        "id-2033": "web.get",
         "web.hook": "actions/web",
-        "id-2040": "web.hook",
+        "id-2044": "web.hook",
         "web.post": "actions/web",
-        "id-2034": "web.post",
+        "id-2038": "web.post",
         "configBot": "actions/os",
         "id-418": "configBot"
     }

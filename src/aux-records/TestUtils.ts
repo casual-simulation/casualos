@@ -8,6 +8,8 @@ import {
     allowAllFeatures,
 } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
+import { parseSessionKey } from './AuthUtils';
+import { PrivoConfiguration } from './PrivoConfiguration';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -26,9 +28,39 @@ export function createTestSubConfiguration(): SubscriptionConfiguration {
     };
 }
 
-export function createTestControllers(config?: SubscriptionConfiguration) {
-    const subConfig: SubscriptionConfiguration =
-        config ?? createTestSubConfiguration();
+export function createTestPrivoConfiguration(): PrivoConfiguration {
+    return {
+        gatewayEndpoint: 'endpoint',
+        featureIds: {
+            adultPrivoSSO: 'adultAccount',
+            childPrivoSSO: 'childAccount',
+            joinAndCollaborate: 'joinAndCollaborate',
+            publishProjects: 'publish',
+            projectDevelopment: 'dev',
+        },
+        clientId: 'clientId',
+        clientSecret: 'clientSecret',
+        publicEndpoint: 'publicEndpoint',
+        roleIds: {
+            child: 'childRole',
+            adult: 'adultRole',
+            parent: 'parentRole',
+        },
+        clientTokenScopes: 'scope1 scope2',
+        userTokenScopes: 'scope1 scope2',
+        // verificationIntegration: 'verificationIntegration',
+        // verificationServiceId: 'verificationServiceId',
+        // verificationSiteId: 'verificationSiteId',
+        redirectUri: 'redirectUri',
+        ageOfConsent: 18,
+    };
+}
+
+export function createTestControllers(
+    config?: SubscriptionConfiguration | null
+) {
+    const subConfig: SubscriptionConfiguration | null =
+        typeof config === 'undefined' ? createTestSubConfiguration() : null;
 
     const store = new MemoryStore({
         subscriptions: subConfig,
@@ -83,17 +115,22 @@ export async function createTestUser(
         ipAddress: '123.456.789',
     });
 
-    if (!loginResult.success) {
-        throw new Error('Unable to login!');
+    if (loginResult.success === false) {
+        throw new Error('Unable to login: ' + loginResult.errorMessage);
     }
 
     const userId = loginResult.userId;
     const sessionKey = loginResult.sessionKey;
+    const connectionKey = loginResult.connectionKey;
+
+    const [_, sessionId] = parseSessionKey(sessionKey);
 
     return {
         emailAddress,
         userId,
         sessionKey,
+        connectionKey,
+        sessionId,
     };
 }
 

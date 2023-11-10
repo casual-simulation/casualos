@@ -9,7 +9,7 @@ import {
     StudioAssignment,
     ListedStudioAssignment,
     ListedUserAssignment,
-    ListedStudio,
+    StoreListedStudio,
     ListStudioAssignmentFilters,
     StudioAssignmentRole,
     CountRecordsFilter,
@@ -46,14 +46,18 @@ export class PrismaRecordsStore implements RecordsStore {
     }
 
     async addRecord(record: Record): Promise<void> {
-        await this._client.record.create({
-            data: {
+        await this._client.record.upsert({
+            where: {
+                name: record.name,
+            },
+            create: {
                 name: record.name,
                 ownerId: record.ownerId,
                 studioId: record.studioId,
                 secretHashes: record.secretHashes,
                 secretSalt: record.secretSalt,
             },
+            update: {},
         });
     }
 
@@ -225,7 +229,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
-    async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
+    async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
         const assignments = await this._client.studioAssignment.findMany({
             where: {
                 userId: userId,
@@ -238,6 +242,8 @@ export class PrismaRecordsStore implements RecordsStore {
                 studio: {
                     select: {
                         displayName: true,
+                        subscriptionId: true,
+                        subscriptionStatus: true,
                     },
                 },
             },
@@ -249,6 +255,8 @@ export class PrismaRecordsStore implements RecordsStore {
             role: a.role as StudioAssignmentRole,
             isPrimaryContact: a.isPrimaryContact,
             displayName: a.studio.displayName,
+            subscriptionId: a.studio.subscriptionId,
+            subscriptionStatus: a.studio.subscriptionStatus,
         }));
     }
 

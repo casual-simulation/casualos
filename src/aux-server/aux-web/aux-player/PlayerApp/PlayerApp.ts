@@ -48,22 +48,18 @@ import { tap } from 'rxjs/operators';
 import { findIndex, merge } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
-import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
+import { Simulation, LoginState } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
-import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
+import { ConnectionInfo } from '@casual-simulation/aux-common';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import VueBarcode from '../../shared/public/VueBarcode';
 import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
-import Checkout from '../Checkout/Checkout';
-import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
-import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
 import UploadServerModal from '../../shared/vue-components/UploadServerModal/UploadServerModal';
-import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 import download from 'downloadjs';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
 import { SimulationInfo, createSimulationInfo } from '../../shared/RouterUtils';
@@ -92,6 +88,7 @@ import PhotoCamera from '../../shared/vue-components/PhotoCamera/PhotoCamera';
 import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
 import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
 import WakeLock from '../../shared/vue-components/WakeLock/WakeLock';
+import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -117,6 +114,7 @@ declare function sa_event(name: string, callback: Function): void;
 
 @Component({
     components: {
+        'auth-ui': AuthUI,
         'load-app': LoadApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
@@ -136,9 +134,6 @@ declare function sa_event(name: string, callback: Function): void;
         'ide-portal': IdePortal,
         console: Console,
         tagline: Tagline,
-        checkout: Checkout,
-        login: LoginPopup,
-        authorize: AuthorizePopup,
         'imu-portal': ImuPortal,
         'html-portals': HtmlAppContainer,
         'system-portal': SystemPortal,
@@ -155,6 +150,7 @@ export default class PlayerApp extends Vue {
     showConfirmDialog: boolean = false;
     showAlertDialog: boolean = false;
     updateAvailable: boolean = false;
+    showNotAuthorized: boolean = false;
     snackbar: SnackbarOptions = {
         visible: false,
         message: '',
@@ -266,7 +262,7 @@ export default class PlayerApp extends Vue {
     chatBarPlaceholderColor: string = null;
 
     showConsole: boolean = false;
-    loginInfo: DeviceInfo = null;
+    loginInfo: ConnectionInfo = null;
     loginState: LoginState = null;
 
     streamImu: boolean = false;
@@ -286,6 +282,9 @@ export default class PlayerApp extends Vue {
     private _recordingSub: Subscription;
     private _currentRecording: MediaRecording;
     private _currentQRMediaStream: MediaStream;
+    private _notAuthorizedSimulationId: string;
+    showChangeLogin: boolean = false;
+    private _isLoggingIn: boolean = false;
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -293,10 +292,6 @@ export default class PlayerApp extends Vue {
 
     get versionTooltip() {
         return appManager.version.gitCommit;
-    }
-
-    get isAdmin() {
-        return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
     }
 
     get canSwitchCameras() {
@@ -392,6 +387,8 @@ export default class PlayerApp extends Vue {
         this._audioRecorder = createDefaultAudioRecorder();
         this._recorder = new Recorder();
         this.supportedCameras = [];
+        this.showNotAuthorized = false;
+        this.showChangeLogin = false;
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(
                 (updateAvailable) => {
@@ -413,7 +410,7 @@ export default class PlayerApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn((user, sim) => {
+            appManager.whileLoggedIn((sim) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
@@ -463,13 +460,6 @@ export default class PlayerApp extends Vue {
         this._subs.forEach((s) => s.unsubscribe());
     }
 
-    async logout() {
-        await loginToSim(
-            appManager.simulationManager.primary,
-            generateGuestId()
-        );
-    }
-
     snackbarClick(action: SnackbarOptions['action']) {
         if (action) {
             switch (action.type) {
@@ -478,10 +468,6 @@ export default class PlayerApp extends Vue {
                     break;
             }
         }
-    }
-
-    getUser(): AuxUser {
-        return appManager.user;
     }
 
     menuClicked() {
@@ -611,10 +597,6 @@ export default class PlayerApp extends Vue {
         return this.qrCode || this.url();
     }
 
-    getLoginCode(): string {
-        return appManager.user ? appManager.user.token : '';
-    }
-
     getBarcode() {
         return this.barcode || '';
     }
@@ -685,7 +667,7 @@ export default class PlayerApp extends Vue {
         let info: SimulationInfo = createSimulationInfo(simulation);
 
         subs.push(
-            simulation.login.loginStateChanged.subscribe((state) => {
+            simulation.login.loginStateChanged.subscribe(async (state) => {
                 this.loginState = state;
                 if (!state.authenticated) {
                     console.log(
@@ -707,13 +689,13 @@ export default class PlayerApp extends Vue {
                     this.authorized = true;
                     console.log('[PlayerApp] Authorized!');
                 } else if (state.authorized === false) {
-                    console.log('[PlayerApp] Not authorized.');
-                    if (state.authorizationError === 'channel_doesnt_exist') {
-                        this.snackbar = {
-                            message: 'This inst does not exist.',
-                            visible: true,
-                        };
-                    } else {
+                    console.log('[PlayerApp] Not authorized.', state.error);
+                    if (!this._isLoggingIn) {
+                        const authenticated =
+                            await simulation.auth.primary.isAuthenticated();
+                        this.showNotAuthorized = true;
+                        this._notAuthorizedSimulationId = simulation.id;
+                        this.showChangeLogin = authenticated;
                         this.snackbar = {
                             message:
                                 'You are not authorized to view this inst.',
@@ -781,7 +763,6 @@ export default class PlayerApp extends Vue {
                         this._hideBarcode();
                     }
                 } else if (e.type === 'go_to_dimension') {
-                    this.updateTitleContext(e.dimension);
                     this.setTitleToID();
                 } else if (e.type === 'go_to_url') {
                     navigateToUrl(e.url, null, 'noreferrer');
@@ -1144,7 +1125,9 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'request_auth_data') {
                     try {
-                        const id = await simulation.auth.primary.authenticate();
+                        const id = e.requestInBackground
+                            ? await simulation.auth.primary.authenticateInBackground()
+                            : await simulation.auth.primary.authenticate();
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, id, false)
@@ -1256,11 +1239,11 @@ export default class PlayerApp extends Vue {
                             info.lostConnection = true;
                             await this._superAction(
                                 ON_INST_STREAM_LOST_ACTION_NAME,
-                                onServerStreamLostArg(simulation.id)
+                                onServerStreamLostArg(simulation.inst)
                             );
                             await this._superAction(
                                 ON_SERVER_STREAM_LOST_ACTION_NAME,
-                                onServerStreamLostArg(simulation.id)
+                                onServerStreamLostArg(simulation.inst)
                             );
                         }
                     } else {
@@ -1270,15 +1253,15 @@ export default class PlayerApp extends Vue {
                             info.subscribed = true;
                             await this._superAction(
                                 ON_INST_JOINED_ACTION_NAME,
-                                onServerSubscribedArg(simulation.id)
+                                onServerSubscribedArg(simulation.inst)
                             );
                             await this._superAction(
                                 ON_SERVER_JOINED_ACTION_NAME,
-                                onServerSubscribedArg(simulation.id)
+                                onServerSubscribedArg(simulation.inst)
                             );
                             await this._superAction(
                                 ON_SERVER_SUBSCRIBED_ACTION_NAME,
-                                onServerSubscribedArg(simulation.id)
+                                onServerSubscribedArg(simulation.inst)
                             );
 
                             // Send onInstJoined events for already loaded insts
@@ -1292,48 +1275,48 @@ export default class PlayerApp extends Vue {
                                 await simulation.helper.action(
                                     ON_INST_JOINED_ACTION_NAME,
                                     null,
-                                    onServerSubscribedArg(info.id)
+                                    onServerSubscribedArg(info.inst)
                                 );
                                 await simulation.helper.action(
                                     ON_SERVER_JOINED_ACTION_NAME,
                                     null,
-                                    onServerSubscribedArg(info.id)
+                                    onServerSubscribedArg(info.inst)
                                 );
                                 await simulation.helper.action(
                                     ON_SERVER_SUBSCRIBED_ACTION_NAME,
                                     null,
-                                    onServerSubscribedArg(info.id)
+                                    onServerSubscribedArg(info.inst)
                                 );
                             }
 
-                            console.log(
-                                '[PlayerApp] Authenticating user in background...'
-                            );
-                            simulation.auth.primary
-                                .authenticateInBackground()
-                                .then((data) => {
-                                    if (data) {
-                                        console.log(
-                                            '[PlayerApp] Authenticated user in background.'
-                                        );
-                                    } else {
-                                        console.log(
-                                            '[PlayerApp] Failed to authenticate user in background.'
-                                        );
-                                    }
-                                })
-                                .catch((err) => {
-                                    console.error(err);
-                                });
+                            // console.log(
+                            //     '[PlayerApp] Authenticating user in background...'
+                            // );
+                            // simulation.auth.primary
+                            //     .authenticateInBackground()
+                            //     .then((data) => {
+                            //         if (data) {
+                            //             console.log(
+                            //                 '[PlayerApp] Authenticated user in background.'
+                            //             );
+                            //         } else {
+                            //             console.log(
+                            //                 '[PlayerApp] Failed to authenticate user in background.'
+                            //             );
+                            //         }
+                            //     })
+                            //     .catch((err) => {
+                            //         console.error(err);
+                            //     });
                         }
 
                         await this._superAction(
                             ON_INST_STREAMING_ACTION_NAME,
-                            onServerStreamingArg(simulation.id)
+                            onServerStreamingArg(simulation.inst)
                         );
                         await this._superAction(
                             ON_SERVER_STREAMING_ACTION_NAME,
-                            onServerStreamingArg(simulation.id)
+                            onServerStreamingArg(simulation.inst)
                         );
                     }
                 }
@@ -1357,15 +1340,15 @@ export default class PlayerApp extends Vue {
             new Subscription(async () => {
                 await this._superAction(
                     ON_INST_LEAVE_ACTION_NAME,
-                    onServerUnsubscribedArg(simulation.id)
+                    onServerUnsubscribedArg(simulation.inst)
                 );
                 await this._superAction(
                     ON_SERVER_LEAVE_ACTION_NAME,
-                    onServerUnsubscribedArg(simulation.id)
+                    onServerUnsubscribedArg(simulation.inst)
                 );
                 await this._superAction(
                     ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
-                    onServerUnsubscribedArg(simulation.id)
+                    onServerUnsubscribedArg(simulation.inst)
                 );
             })
         );
@@ -1374,6 +1357,44 @@ export default class PlayerApp extends Vue {
         this.simulations.push(info);
 
         this.setTitleToID();
+    }
+
+    async logout() {
+        if (this._notAuthorizedSimulationId) {
+            const simulation = appManager.simulationManager.simulations.get(
+                this._notAuthorizedSimulationId
+            );
+
+            if (simulation) {
+                this.showNotAuthorized = false;
+                await simulation.auth.primary.logout();
+                const data = await simulation.auth.primary.authenticate();
+                if (data) {
+                    location.reload();
+                }
+            }
+        }
+    }
+
+    async login() {
+        if (this._notAuthorizedSimulationId) {
+            const simulation = appManager.simulationManager.simulations.get(
+                this._notAuthorizedSimulationId
+            );
+            if (simulation) {
+                this._isLoggingIn = true;
+                this.showNotAuthorized = false;
+                const data = await simulation.auth.primary.authenticate();
+                if (data) {
+                    location.reload();
+                }
+                this._isLoggingIn = false;
+            }
+        }
+    }
+
+    async newInst() {
+        location.href = location.origin;
     }
 
     private _showQRCode(code: string) {
@@ -1401,22 +1422,6 @@ export default class PlayerApp extends Vue {
 
     setTitleToID() {
         const id: string = appManager.simulationManager.primaryId || '...';
-        document.title = id;
-    }
-
-    updateTitleContext(newContext: string) {
-        let id: string = '...';
-
-        if (appManager.simulationManager.primary != null) {
-            let temp = appManager.simulationManager.primary.id.split('/');
-            id = '';
-            for (let i = 1; i < temp.length; i++) {
-                id += temp[i];
-            }
-            id = newContext + '/' + id;
-        }
-
-        appManager.simulationManager.primary.updateID(id);
         document.title = id;
     }
 

@@ -1,0 +1,45 @@
+{
+    "name": "@casual-simulation/aux-websocket-aws",
+    "version": "3.1.11",
+    "description": "AWS API Gateway Websocket integration with AUX services",
+    "keywords": [],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/casualos",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@casual-simulation/aux-common": "^3.2.6",
+        "@casual-simulation/websocket": "^3.1.11",
+        "rxjs": "7.5.7",
+        "axios": "0.25.0"
+    }
+}

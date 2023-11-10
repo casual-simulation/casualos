@@ -231,23 +231,6 @@ Every bot is stored in a space that specifies how long the bot lives and if it i
     Only the other remote's session can create, edit, and destroy bots in this space.
     When the other remote's session is closed, the bot is destroyed.
   </PossibleValueCode>
-  <PossibleValueCode value='history'>
-    The bot represents a mark (save point).
-    The history space is not available by default.
-    You need to use the <ActionLink action='server.browseHistory()'/> function to load it.
-    Additionally, the history space is read-only. This means that bots cannot be added or removed from it and they also cannot be edited.
-  </PossibleValueCode>
-  <PossibleValueCode value='admin'>
-    The bot is saved on the server and is shared across all instances.
-    Admin space is initially locked whenever a new session starts. While locked, it is impossible to create, update, or destroy bots in the admin space.
-    You must use the <ActionLink action='adminSpace.unlock(password)'/> function to unlock it.
-  </PossibleValueCode>
-  <PossibleValueCode value='certified'>
-    The bot represents a <a href="https://en.wikipedia.org/wiki/Public_key_certificate">cryptographic certificate</a>.
-    Certified bots cannot be edited or destroyed using traditional means.
-    Instead, you can create and destroy certificates using the <ActionLink action='crypto.createCertificate(certificate, password, keypair)'/> and 
-    <ActionLink action='crypto.revokeCertificate(certificate, password, signer?)'/> functions.
-  </PossibleValueCode>
 </PossibleValuesTable>
 
 
@@ -890,6 +873,11 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='input'>
     The bot will appear as an input box in the menu portal.
     You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
+    You can change the type of input using the <TagLink tag='formSubtype'/> tag.
+  </PossibleValueCode>
+  <PossibleValueCode value='light'>
+    The bot will appear as a light.
+    You can change the type of light using the <TagLink tag='formSubtype'/> tag.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -912,6 +900,127 @@ The subtype that the form should use. Useful for specifying how a mesh should be
   <PossibleValueCode value='src'>
     The URL that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe.
   </PossibleValueCode>
+  <PossibleValueCode value='pointLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a pointlight.
+  </PossibleValueCode>
+  <PossibleValueCode value='ambientLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as an ambientLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='directionalLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a directionalLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='spotLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a spotLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='hemisphereLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a hemisphereLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='password'>
+    A bot with the <TagLink tag='form'/> set to `input` will function as a password input. (Characters are masked)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightIntensity`
+
+  The intensity of the light.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    Changes the intensity of the light.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formLightTarget`
+
+  The target of the light. Bot must have a <TagLink tag='formSubtype'/> of `directionalLight` or `spotLight`. Bot can not target self.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Light will target (0, 0, 0). (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Bot ID'>
+    The bot with the specified ID acts as the light's target. The light's direction is defined by the direction from the position of the light to the target.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formLightDistance`
+
+The maximum range of the light. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    No limit (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    When distance is non-zero, light will attenuate according to inverse-square law until near the distance cutoff, where it will then attenuate quickly and smoothly to 0.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightAngle`
+
+Represents the angle between edges of spotLight. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. Angle is in radians.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Math.PI / 3 (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    Changes the angle of the light in radians.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightPenumbra`
+
+Represents the percent of the spotlight cone that is attenuated due to penumbra. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. Takes values between 0 and 1.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number between 0 and 1'>
+    Percent of the spotlight cone that is attenuated due to penumbra.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightDecay`
+
+The amount the light dims along the distance of the light. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. In context of physically-correct rendering the default value should not be changed.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='2'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    The amount the light dims along the distance of the light.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightGroundColor`
+
+The light's ground color. Bot must have a <TagLink tag='formSubtype'/> of `hemisphereLight`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
 </PossibleValuesTable>
 
 ### `formAddress`
@@ -1648,6 +1757,24 @@ Additionally, this tag does nothing when in VR.
   </PossibleValueCode>
   <PossibleValueCode value='"casualos://camera-feed/front"'>
     Display a feed of the front (user) facing camera as the background.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `defaultLighting`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+Sets the default lighting in the gridPortalBot/miniGridPortal
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disables default lighting
   </PossibleValueCode>
 </PossibleValuesTable>
 

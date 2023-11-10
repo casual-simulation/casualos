@@ -76,4 +76,34 @@ export interface WebConfig {
      * - "builder" indicates that the instance has been configured for building AUXes.
      */
     playerMode?: 'player' | 'builder' | null;
+
+    /**
+     * The preferred source for loading instances.
+     * - "public" means that public instances should be loaded by default.
+     * - "private" means that private instances should be loaded if possible.
+     *
+     * Defaults to "private".
+     */
+    preferredInstSource?: 'public' | 'private';
+
+    /**
+     * Whetehr to require that users login with Privo before they can access collaboration features.
+     */
+    requirePrivoLogin?: boolean;
+
+    // /**
+    //  * Whether to require that age verification runs before the user can access collaboration features.
+    //  * Defaults to false.
+    //  */
+    // requirePrivoAgeVerification?: boolean;
+
+    // /**
+    //  * The URL that the Privo Age Verification API script should be loaded from.
+    //  */
+    // privoAgeVerificationApiScriptUrl?: string;
+
+    // /**
+    //  * The service identifier that should be used for the Privo Age Verification API.
+    //  */
+    // privoAgeVerificationServiceId?: string;
 }

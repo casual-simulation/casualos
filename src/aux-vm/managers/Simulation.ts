@@ -3,16 +3,35 @@ import {
     LocalActions,
     BotIndex,
     StoredAux,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
-import { DeviceAction } from '@casual-simulation/causal-trees';
+import { DeviceAction } from '@casual-simulation/aux-common';
 import { Initable } from './Initable';
 import { BotHelper } from './BotHelper';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
+
+export interface SimulationOrigin {
+    /**
+     * The name of the record that the simulation should be loaded from.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the simulation should be loaded from.
+     */
+    inst: string | null;
+
+    /**
+     * The host for the simulation.
+     */
+    host?: string;
+}
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -24,9 +43,9 @@ export interface Simulation extends Initable {
     id: string;
 
     /**
-     * Gets the parsed ID of the simulation.
+     * Gets the config bot ID for the simulation.
      */
-    parsedId: SimulationIdParseSuccess;
+    get configBotId(): string;
 
     /**
      * Gets whether the app is connected to the inst but may
@@ -73,7 +92,7 @@ export interface Simulation extends Initable {
     /**
      * Gets the observable list of events that should have an effect on the UI.
      */
-    localEvents: Observable<LocalActions>;
+    localEvents: Observable<RuntimeActions>;
 
     /**
      * Gets the observable list of events that were received from a remote device.
@@ -84,6 +103,11 @@ export interface Simulation extends Initable {
      * Gets the observable list of errors from the simulation.
      */
     onError: Observable<AuxChannelErrorType>;
+
+    /**
+     * Gets the observable list of auth messages to and from the simulation.
+     */
+    onAuthMessage: Observable<PartitionAuthMessage>;
 
     /**
      * Gets the observable list of sub simulations that have been added.
@@ -111,4 +135,10 @@ export interface Simulation extends Initable {
      * Exports the causal tree for the simulation.
      */
     export(): Promise<StoredAux>;
+
+    /**
+     * Sends the given auth message to the simulation.
+     * @param message The message.
+     */
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void>;
 }

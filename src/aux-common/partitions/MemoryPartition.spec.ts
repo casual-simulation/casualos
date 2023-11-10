@@ -52,8 +52,8 @@ describe('MemoryPartition', () => {
                 .pipe(first())
                 .toPromise();
 
-            expect(version.currentSite).not.toBe(null);
-            expect(version.currentSite).toBeDefined();
+            expect(version?.currentSite).not.toBe(null);
+            expect(version?.currentSite).toBeDefined();
         });
 
         it('should place all the initial bots in the space that the partition is for', async () => {

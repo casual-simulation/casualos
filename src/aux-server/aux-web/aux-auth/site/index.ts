@@ -84,7 +84,11 @@ import AuthRecordsEvents from './AuthRecordsEvents/AuthRecordsEvents';
 import AuthRecordsPolicies from './AuthRecordsPolicies/AuthRecordsPolicies';
 import AuthRecordsRoles from './AuthRecordsRoles/AuthRecordsRoles';
 import AuthStudio from './AuthStudio/AuthStudio';
+import AuthRecordsInsts from './AuthRecordsInsts/AuthRecordsInsts';
 import './global.css';
+import { appManager } from 'aux-web/shared/AppManager';
+import OAuthRedirect from './OAuthRedirect/OAuthRedirect';
+import PrivoRegistrationDialog from './PrivoRegistrationDialog/PrivoRegistrationDialog';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -178,6 +182,11 @@ const routes: RouteConfig[] = [
         component: AuthRecords,
         children: [
             {
+                path: 'insts',
+                name: 'records-insts',
+                component: AuthRecordsInsts,
+            },
+            {
                 path: 'data',
                 name: 'records-data',
                 component: AuthRecordsData,
@@ -212,6 +221,16 @@ const routes: RouteConfig[] = [
             studioName: route.params.studioName,
         }),
         component: AuthStudio,
+    },
+    {
+        path: '/oauth/redirect',
+        name: 'oauth-redirect',
+        component: OAuthRedirect,
+    },
+    {
+        path: '/sign-up',
+        name: 'sign-up',
+        component: PrivoRegistrationDialog,
     },
 ];
 
@@ -267,11 +286,13 @@ router.beforeEach((to, from, next) => {
 
 const publicPages = new Set([
     'login',
+    'sign-up',
     'code',
     'terms',
     'privacy-policy',
     'acceptable-use-policy',
     'olx-terms-of-service',
+    'oauth-redirect',
 ]);
 
 router.beforeEach(async (to, from, next) => {
@@ -296,7 +317,11 @@ router.beforeEach(async (to, from, next) => {
             try {
                 await manager.loadUserInfo();
 
-                if (to.name === 'login' || to.name === 'code') {
+                if (
+                    to.name === 'login' ||
+                    to.name === 'sign-up' ||
+                    to.name === 'code'
+                ) {
                     console.log(
                         '[index] Already logged in. Redirecting to home.'
                     );

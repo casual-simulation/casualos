@@ -27,7 +27,7 @@ describe('IdePortalManager', () => {
     let localEvents: Subject<BotAction[]>;
 
     beforeEach(async () => {
-        vm = new TestAuxVM(userId);
+        vm = new TestAuxVM('sim', userId);
         vm.processEvents = true;
         localEvents = vm.localEvents = new Subject();
         helper = new BotHelper(vm);

@@ -11,7 +11,7 @@ describe('CodeLanguageManager', () => {
     let subject: CodeLanguageManager;
 
     beforeEach(() => {
-        vm = new TestAuxVM('user');
+        vm = new TestAuxVM('sim', 'user');
         vm.processEvents = true;
         subject = new CodeLanguageManager(vm);
     });

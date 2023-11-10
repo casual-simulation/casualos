@@ -1,13 +1,4 @@
-import { User, StatusUpdate, Action } from '@casual-simulation/causal-trees';
 import {
-    CurrentVersion,
-    treeVersion,
-    VersionVector,
-} from '@casual-simulation/causal-trees/core2';
-import {
-    AuxCausalTree,
-    auxTree,
-    applyEvents,
     isTagEdit,
     TagEditOp,
     preserve,
@@ -15,7 +6,7 @@ import {
     insert,
     edit,
     TagEdit,
-} from '../aux-format-2';
+} from '../bots';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
     CausalRepoPartition,
@@ -32,9 +23,6 @@ import {
     RemoveBotAction,
     UpdateBotAction,
     breakIntoIndividualEvents,
-    CreateCertificateAction,
-    SignTagAction,
-    RevokeCertificateAction,
     StateUpdatedEvent,
     stateUpdatedEvent,
     BotsState,
@@ -47,13 +35,8 @@ import {
     botUpdated,
     convertToString,
 } from '../bots';
-import {
-    PartitionConfig,
-    CausalRepoPartitionConfig,
-    YjsPartitionConfig,
-} from './AuxPartitionConfig';
+import { PartitionConfig, YjsPartitionConfig } from './AuxPartitionConfig';
 import { flatMap, random } from 'lodash';
-import { v4 as uuid } from 'uuid';
 import {
     Doc,
     Text,
@@ -72,7 +55,8 @@ import {
     getClock,
     getStateVector,
 } from '../yjs/YjsHelpers';
-import { ensureTagIsSerializable } from '../runtime/Utils';
+import { ensureTagIsSerializable } from './PartitionUtils';
+import { Action, CurrentVersion, StatusUpdate, VersionVector } from '../common';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -226,10 +210,7 @@ export class YjsPartitionImpl implements YjsPartition {
             } else if (
                 e.type === 'add_bot' ||
                 e.type === 'remove_bot' ||
-                e.type === 'update_bot' ||
-                e.type === 'create_certificate' ||
-                e.type === 'sign_tag' ||
-                e.type === 'revoke_certificate'
+                e.type === 'update_bot'
             ) {
                 return [e] as const;
             } else {
@@ -267,14 +248,7 @@ export class YjsPartitionImpl implements YjsPartition {
     }
 
     private _applyEvents(
-        events: (
-            | AddBotAction
-            | RemoveBotAction
-            | UpdateBotAction
-            | CreateCertificateAction
-            | SignTagAction
-            | RevokeCertificateAction
-        )[]
+        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
         this._isLocalTransaction = true;
         this._doc.transact((t) => {

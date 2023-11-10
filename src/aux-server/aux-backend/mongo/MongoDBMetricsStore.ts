@@ -9,6 +9,7 @@ import {
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
+    InstSubscriptionMetrics,
     MetricsStore,
     Record,
     RecordSubscriptionMetrics,
@@ -60,6 +61,18 @@ export class MongoDBMetricsStore implements MetricsStore {
         this._imageMetrics = this._db.collection(IMAGE_METRICS_COLLECTION);
         this._skyboxMetrics = this._db.collection(SKYBOX_METRICS_COLLECTION);
         this._config = configStore;
+    }
+
+    getSubscriptionInstMetrics(
+        filter: SubscriptionFilter
+    ): Promise<InstSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
+    }
+
+    getSubscriptionInstMetricsByRecordName(
+        recordName: string
+    ): Promise<InstSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
     }
 
     async getSubscriptionAiImageMetrics(
@@ -218,6 +231,7 @@ export class MongoDBMetricsStore implements MetricsStore {
             studioId: record.studioId,
             subscriptionId: subscriptionId,
             subscriptionStatus: subscriptionStatus,
+            subscriptionType: record.ownerId ? 'user' : 'studio',
             recordName: record.name,
             totalItems: count,
             ...(await this._getSubscriptionPeriod(periodStart, periodEnd)),
@@ -264,6 +278,7 @@ export class MongoDBMetricsStore implements MetricsStore {
             studioId: record.studioId,
             subscriptionId: subscriptionId,
             subscriptionStatus: subscriptionStatus,
+            subscriptionType: record.ownerId ? 'user' : 'studio',
             recordName: record.name,
             totalFiles: count,
             totalFileBytesReserved: reservedSize,
@@ -295,6 +310,7 @@ export class MongoDBMetricsStore implements MetricsStore {
             studioId: record.studioId,
             subscriptionId: subscriptionId,
             subscriptionStatus: subscriptionStatus,
+            subscriptionType: record.ownerId ? 'user' : 'studio',
             recordName: record.name,
             totalEventNames: count,
             ...(await this._getSubscriptionPeriod(periodStart, periodEnd)),
@@ -319,6 +335,7 @@ export class MongoDBMetricsStore implements MetricsStore {
                 studioId: null,
                 subscriptionId: user.subscriptionId,
                 subscriptionStatus: user.subscriptionStatus,
+                subscriptionType: 'user',
                 totalRecords: count,
                 ...(await this._getSubscriptionPeriod(
                     user.subscriptionPeriodStartMs,
@@ -340,6 +357,7 @@ export class MongoDBMetricsStore implements MetricsStore {
                 studioId: studio._id,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                subscriptionType: 'studio',
                 totalRecords: count,
                 ...(await this._getSubscriptionPeriod(
                     studio.subscriptionPeriodStartMs,

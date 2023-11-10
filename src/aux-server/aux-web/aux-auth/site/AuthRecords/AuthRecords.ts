@@ -9,6 +9,7 @@ import AuthRecordsFiles from '../AuthRecordsFiles/AuthRecordsFiles';
 import AuthRecordsEvents from '../AuthRecordsEvents/AuthRecordsEvents';
 import AuthRecordsPolicies from '../AuthRecordsPolicies/AuthRecordsPolicies';
 import AuthRecordsRoles from '../AuthRecordsRoles/AuthRecordsRoles';
+import AuthRecordsInsts from '../AuthRecordsInsts/AuthRecordsInsts';
 
 @Component({
     components: {
@@ -18,6 +19,7 @@ import AuthRecordsRoles from '../AuthRecordsRoles/AuthRecordsRoles';
         'records-events': AuthRecordsEvents,
         'records-policies': AuthRecordsPolicies,
         'records-roles': AuthRecordsRoles,
+        'records-insts': AuthRecordsInsts,
     },
 })
 export default class AuthRecords extends Vue {

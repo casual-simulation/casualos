@@ -6,7 +6,7 @@ import {
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
-} from './Errors';
+} from '@casual-simulation/aux-common/Errors';
 import { AIChatInterface, AIChatMessage } from './AIChatInterface';
 import {
     AIGenerateSkyboxInterface,

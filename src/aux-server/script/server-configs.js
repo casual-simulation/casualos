@@ -61,7 +61,7 @@ function createConfigs(dev, version) {
         SERVER_CONFIG: JSON.stringify(SERVER_CONFIG),
     };
     const developmentVariables = {
-        DEVELOPMENT: dev ?? JSON.stringify(true),
+        DEVELOPMENT: dev ? JSON.stringify(true) : JSON.stringify(false),
     };
     return [
         [

@@ -1,5 +1,6 @@
 <template>
     <div id="app">
+        <auth-ui></auth-ui>
         <load-app>
             <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <bot-portal>
@@ -30,7 +31,6 @@
             <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui>
 
             <upload-files></upload-files>
-            <checkout></checkout>
             <show-input></show-input>
             <show-confirm></show-confirm>
 
@@ -131,7 +131,21 @@
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
 
-            <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
+            <!-- <md-dialog
+                :md-active.sync="showNotAuthorized"
+                class="not-authorized-dialog"
+                @md-closed="onBarcodeScannerClosed()"
+            >
+                <md-dialog-title>Not Authorized</md-dialog-title>
+                <md-dialog-content>
+                    <p>You are not authorized to view this inst.</p>
+                </md-dialog-content>
+                <md-dialog-actions>
+                    <md-button v-if="showChangeLogin" @click="logout()">Change Login</md-button>
+                    <md-button v-else @click="login()">Login</md-button>
+                    <md-button @click="newInst()">New Inst</md-button>
+                </md-dialog-actions>
+            </md-dialog> -->
 
             <md-snackbar
                 md-position="center"

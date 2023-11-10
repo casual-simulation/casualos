@@ -4,12 +4,14 @@ import {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
+    PrivacyFeatures,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
@@ -25,7 +27,7 @@ import {
     StudioAssignment,
     CountRecordsFilter,
     ListedRecord,
-    ListedStudio,
+    StoreListedStudio,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import {
@@ -65,6 +67,7 @@ import {
 import {
     AssignedRole,
     GetUserPolicyResult,
+    ListMarkerPoliciesResult,
     ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
@@ -79,9 +82,11 @@ import {
 import {
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
     PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
     PolicyDocument,
-} from './PolicyPermissions';
+} from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
     AIImageMetrics,
@@ -96,13 +101,31 @@ import {
     SubscriptionMetrics,
     AIImageSubscriptionMetrics,
     AISkyboxSubscriptionMetrics,
+    InstSubscriptionMetrics,
 } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { DateTime } from 'luxon';
+import {
+    AddUpdatesResult,
+    BranchRecord,
+    BranchRecordWithInst,
+    CurrentUpdates,
+    InstRecord,
+    InstRecordsStore,
+    InstWithBranches,
+    InstWithSubscriptionInfo,
+    ListInstsStoreResult,
+    ReplaceUpdatesResult,
+    SaveBranchResult,
+    SaveInstResult,
+    StoredUpdates,
+} from './websockets';
+import { PrivoConfiguration } from './PrivoConfiguration';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
+    privo?: PrivoConfiguration;
 }
 
 export class MemoryStore
@@ -114,10 +137,12 @@ export class MemoryStore
         EventRecordsStore,
         PolicyStore,
         MetricsStore,
-        ConfigurationStore
+        ConfigurationStore,
+        InstRecordsStore
 {
     private _users: AuthUser[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
+    private _oidLoginRequests: AuthOpenIDLoginRequest[] = [];
     private _sessions: AuthSession[] = [];
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
@@ -141,7 +166,12 @@ export class MemoryStore
     private _emailRules: RegexRule[] = [];
     private _smsRules: RegexRule[] = [];
 
+    private _instRecords: Map<string, Map<string, InstWithUpdates>> = new Map();
+
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
+    private _privoConfiguration: PrivoConfiguration | null = null;
+
+    maxAllowedInstSize: number = Infinity;
 
     policies: {
         [recordName: string]: {
@@ -173,6 +203,10 @@ export class MemoryStore
 
     get loginRequests() {
         return this._loginRequests;
+    }
+
+    get openIdLoginRequests() {
+        return this._oidLoginRequests;
     }
 
     get sessions() {
@@ -211,8 +245,17 @@ export class MemoryStore
         this._subscriptionConfiguration = value;
     }
 
+    get privoConfiguration() {
+        return this._privoConfiguration;
+    }
+
+    set privoConfiguration(value: PrivoConfiguration | null) {
+        this._privoConfiguration = value;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
+        this._privoConfiguration = config.privo ?? null;
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
@@ -220,6 +263,10 @@ export class MemoryStore
 
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null> {
         return this._subscriptionConfiguration;
+    }
+
+    async getPrivoConfiguration(): Promise<PrivoConfiguration | null> {
+        return this._privoConfiguration;
     }
 
     async getRecordByName(name: string): Promise<Record> {
@@ -365,7 +412,7 @@ export class MemoryStore
         return this._studios.find((s) => s.stripeCustomerId === customerId);
     }
 
-    async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
+    async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
         const assignments = await this.listUserAssignments(userId);
         const studios = await Promise.all(
             assignments.map(async (a) => {
@@ -381,6 +428,8 @@ export class MemoryStore
             displayName: s.displayName,
             role: s.role,
             isPrimaryContact: s.isPrimaryContact,
+            subscriptionId: s.subscriptionId,
+            subscriptionStatus: s.subscriptionStatus,
         }));
     }
 
@@ -557,6 +606,11 @@ export class MemoryStore
         return user;
     }
 
+    async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        const user = this._users.find((u) => u.privoServiceId === serviceId);
+        return user;
+    }
+
     async findLoginRequest(
         userId: string,
         requestId: string
@@ -564,6 +618,12 @@ export class MemoryStore
         return this._loginRequests.find(
             (lr) => lr.userId === userId && lr.requestId === requestId
         );
+    }
+
+    async findOpenIDLoginRequest(
+        requestId: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        return this._oidLoginRequests.find((lr) => lr.requestId === requestId);
     }
 
     async findSession(userId: string, sessionId: string): Promise<AuthSession> {
@@ -584,6 +644,21 @@ export class MemoryStore
             this._loginRequests[index] = request;
         } else {
             this._loginRequests.push(request);
+        }
+
+        return request;
+    }
+
+    async saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === request.requestId
+        );
+        if (index >= 0) {
+            this._oidLoginRequests[index] = request;
+        } else {
+            this._oidLoginRequests.push(request);
         }
 
         return request;
@@ -614,6 +689,39 @@ export class MemoryStore
 
         if (index >= 0) {
             this._loginRequests[index].completedTimeMs = completedTimeMs;
+        } else {
+            throw new Error('Request not found.');
+        }
+    }
+
+    async markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === requestId
+        );
+
+        if (index >= 0) {
+            this._oidLoginRequests[index].completedTimeMs = completedTimeMs;
+        } else {
+            throw new Error('Request not found.');
+        }
+    }
+
+    async saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void> {
+        const index = this._oidLoginRequests.findIndex(
+            (lr) => lr.requestId === requestId
+        );
+
+        if (index >= 0) {
+            const lr = this._oidLoginRequests[index];
+            lr.authorizationCode = authorizationCode;
+            lr.authorizationTimeMs = authorizationTimeMs;
         } else {
             throw new Error('Request not found.');
         }
@@ -1434,19 +1542,63 @@ export class MemoryStore
         };
     }
 
-    async listPoliciesForMarker(
+    async listPoliciesForMarkerAndUser(
         recordName: string,
+        userId: string,
         marker: string
-    ): Promise<PolicyDocument[]> {
+    ): Promise<ListMarkerPoliciesResult> {
         const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
+        } else if (marker === PUBLIC_WRITE_MARKER) {
+            policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
         }
         const policy = this.policies[recordName]?.[marker];
         if (policy) {
             policies.push(policy.document);
         }
-        return policies;
+
+        return {
+            policies,
+            recordOwnerPrivacyFeatures:
+                await this._getRecordOwnerPrivacyFeatures(recordName),
+            userPrivacyFeatures: await this._getUserPrivacyFeatures(userId),
+        };
+    }
+
+    private async _getRecordOwnerPrivacyFeatures(
+        recordName: string
+    ): Promise<PrivacyFeatures> {
+        let record = await this.getRecordByName(recordName);
+
+        if (record?.ownerId) {
+            const owner = await this.findUser(record.ownerId);
+            if (owner?.privacyFeatures) {
+                return owner.privacyFeatures;
+            }
+        }
+        return {
+            publishData: true,
+            allowPublicData: true,
+            allowAI: true,
+            allowPublicInsts: true,
+        };
+    }
+
+    private async _getUserPrivacyFeatures(
+        userId: string
+    ): Promise<PrivacyFeatures> {
+        const user = await this.findUser(userId);
+        if (user?.privacyFeatures) {
+            return user.privacyFeatures;
+        }
+
+        return {
+            publishData: true,
+            allowPublicData: true,
+            allowAI: true,
+            allowPublicInsts: true,
+        };
     }
 
     async listRolesForUser(
@@ -1788,6 +1940,54 @@ export class MemoryStore
         };
     }
 
+    async getSubscriptionInstMetrics(
+        filter: SubscriptionFilter
+    ): Promise<InstSubscriptionMetrics> {
+        const info = await this._getSubscriptionMetrics(filter);
+
+        let totalInsts = 0;
+        for (let [recordName, insts] of this._instRecords) {
+            let r = this._records.find((r) => r.name === recordName);
+            if (!r) {
+                continue;
+            } else if (
+                r.ownerId === filter.ownerId ||
+                r.studioId === filter.studioId
+            ) {
+                totalInsts += insts.size;
+            }
+        }
+
+        return {
+            ...info,
+            totalInsts,
+        };
+    }
+
+    async getSubscriptionInstMetricsByRecordName(
+        recordName: string
+    ): Promise<InstSubscriptionMetrics> {
+        const info = await this._getSubscriptionInfo(recordName);
+
+        let totalInsts = 0;
+        for (let [recordName, insts] of this._instRecords) {
+            let r = this._records.find((r) => r.name === recordName);
+            if (!r) {
+                continue;
+            } else if (
+                r.ownerId === info.ownerId ||
+                r.studioId === info.studioId
+            ) {
+                totalInsts += insts.size;
+            }
+        }
+
+        return {
+            ...info,
+            totalInsts,
+        };
+    }
+
     async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {
         this._aiChatMetrics.push(metrics);
     }
@@ -1897,6 +2097,7 @@ export class MemoryStore
             subscriptionStatus: null,
             currentPeriodStartMs: currentPeriodStart,
             currentPeriodEndMs: currentPeriodEnd,
+            subscriptionType: filter.ownerId ? 'user' : 'studio',
         };
 
         if (filter.ownerId) {
@@ -1931,6 +2132,486 @@ export class MemoryStore
             return this.listRecordsByStudioId(record.studioId);
         }
     }
+
+    async getInstByName(
+        recordName: string,
+        inst: string
+    ): Promise<InstWithSubscriptionInfo> {
+        const i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return null;
+        }
+
+        const r = this._records.find((r) => r.name === recordName);
+        if (!r) {
+            return null;
+        }
+
+        const metrics = await this.getSubscriptionInstMetrics({
+            ...r,
+        });
+
+        return {
+            recordName: i.recordName,
+            inst: i.inst,
+            markers: i.markers,
+            subscriptionId: metrics.subscriptionId,
+            subscriptionStatus: metrics.subscriptionStatus,
+            subscriptionType: !metrics.subscriptionId
+                ? undefined
+                : metrics.ownerId
+                ? 'user'
+                : 'studio',
+        };
+    }
+
+    async listInstsByRecord(
+        recordName: string,
+        startingInst?: string
+    ): Promise<ListInstsStoreResult> {
+        if (!recordName) {
+            return {
+                success: true,
+                insts: [],
+                totalCount: 0,
+            };
+        }
+        const record = await this._getInstRecord(recordName);
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The record was not found.',
+            };
+        }
+
+        let insts = [...record.values()];
+        if (startingInst) {
+            insts = insts.filter((i) => i.inst > startingInst);
+        }
+
+        return {
+            success: true,
+            insts: insts.slice(0, 10).map((i) => ({
+                recordName: i.recordName,
+                inst: i.inst,
+                markers: i.markers,
+            })),
+            totalCount: insts.length,
+        };
+    }
+
+    async getBranchByName(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<BranchRecordWithInst> {
+        let i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return null;
+        }
+
+        const b = i.branches.find((b) => b.branch === branch);
+
+        if (!b) {
+            return null;
+        }
+
+        const r = this._records.find((r) => r.name === recordName);
+        if (!r) {
+            return null;
+        }
+
+        const metrics = await this.getSubscriptionInstMetrics({
+            ...r,
+        });
+
+        return {
+            recordName: b.recordName,
+            inst: b.inst,
+            branch: b.branch,
+            temporary: b.temporary,
+            linkedInst: {
+                recordName: i.recordName,
+                inst: i.inst,
+                markers: i.markers,
+                subscriptionId: metrics.subscriptionId,
+                subscriptionStatus: metrics.subscriptionStatus,
+                subscriptionType: !metrics.subscriptionId
+                    ? undefined
+                    : metrics.ownerId
+                    ? 'user'
+                    : 'studio',
+            },
+        };
+    }
+
+    async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
+        const r = await this._getInstRecord(inst.recordName);
+
+        if (!r) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The record was not found',
+            };
+        }
+
+        let i = await this._getInst(inst.recordName, inst.inst);
+
+        const { branches, ...rest } = inst;
+
+        let update: InstWithUpdates = {
+            branches: null,
+            ...(i ?? {
+                instSizeInBytes: 0,
+            }),
+            ...rest,
+        };
+
+        if (branches) {
+            update.branches = branches.map((b) => {
+                return {
+                    recordName: inst.recordName,
+                    inst: inst.inst,
+                    branch: b.branch,
+                    temporary: b.temporary,
+                    updates: {
+                        updates: [],
+                        timestamps: [],
+                    },
+                    archived: {
+                        updates: [],
+                        timestamps: [],
+                    },
+                };
+            });
+        } else if (!update.branches) {
+            update.branches = [];
+        }
+
+        r.set(inst.inst, update);
+
+        return {
+            success: true,
+        };
+    }
+
+    async deleteInst(recordName: string, inst: string): Promise<void> {
+        const r = await this._getInstRecord(recordName);
+
+        if (!r) {
+            return;
+        }
+
+        r.delete(inst);
+    }
+
+    async saveBranch(branch: BranchRecord): Promise<SaveBranchResult> {
+        let i = await this._getInst(branch.recordName, branch.inst);
+
+        if (!i) {
+            return {
+                success: false,
+                errorCode: 'inst_not_found',
+                errorMessage: 'The inst was not found.',
+            };
+        }
+
+        const b = i.branches.find((b) => b.branch === branch.branch);
+
+        if (!b) {
+            i.branches.push({
+                ...branch,
+                updates: {
+                    updates: [],
+                    timestamps: [],
+                },
+                archived: {
+                    updates: [],
+                    timestamps: [],
+                },
+            });
+            return {
+                success: true,
+            };
+        }
+
+        b.temporary = branch.temporary;
+
+        return {
+            success: true,
+        };
+    }
+
+    async getAllUpdates(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<CurrentUpdates> {
+        const i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return null;
+        }
+
+        const b = i.branches.find((b) => b.branch === branch);
+
+        if (!b) {
+            return null;
+        }
+
+        return {
+            updates: b.archived.updates.slice(),
+            timestamps: b.archived.timestamps.slice(),
+            instSizeInBytes: i.instSizeInBytes,
+        };
+    }
+
+    async getCurrentUpdates(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<CurrentUpdates> {
+        const i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return null;
+        }
+
+        const b = i.branches.find((b) => b.branch === branch);
+
+        if (!b) {
+            return null;
+        }
+
+        return {
+            updates: b.updates.updates.slice(),
+            timestamps: b.updates.timestamps.slice(),
+            instSizeInBytes: i.instSizeInBytes,
+        };
+    }
+
+    async getInstSize(recordName: string, inst: string): Promise<number> {
+        const i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return null;
+        }
+
+        return i.instSizeInBytes;
+    }
+
+    async countUpdates(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<number> {
+        const i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return 0;
+        }
+
+        const b = i.branches.find((b) => b.branch === branch);
+
+        if (!b) {
+            return 0;
+        }
+
+        return b.updates.updates.length;
+    }
+
+    async addUpdates(
+        recordName: string | null,
+        inst: string,
+        branch: string,
+        updates: string[],
+        sizeInBytes: number
+    ): Promise<AddUpdatesResult> {
+        const r = this._instRecords.get(recordName);
+
+        if (!r) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                branch,
+            };
+        }
+
+        const i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return {
+                success: false,
+                errorCode: 'inst_not_found',
+                branch,
+            };
+        }
+
+        let b = i.branches.find((b) => b.branch === branch);
+
+        if (!b) {
+            b = {
+                branch,
+                inst: i.inst,
+                recordName: i.recordName,
+                temporary: false,
+                updates: {
+                    updates: [],
+                    timestamps: [],
+                },
+                archived: {
+                    updates: [],
+                    timestamps: [],
+                },
+            };
+            i.branches.push(b);
+        }
+
+        let storedUpdates = b.updates;
+
+        const newSize = i.instSizeInBytes + sizeInBytes;
+
+        if (newSize > this.maxAllowedInstSize) {
+            return {
+                success: false,
+                errorCode: 'max_size_reached',
+                branch,
+                maxInstSizeInBytes: this.maxAllowedInstSize,
+                neededInstSizeInBytes: newSize,
+            };
+        }
+        i.instSizeInBytes = newSize;
+
+        storedUpdates.updates.push(...updates);
+        storedUpdates.timestamps.push(Date.now());
+
+        const archivedUpdates = b.archived;
+        archivedUpdates.updates.push(...updates);
+        archivedUpdates.timestamps.push(Date.now());
+
+        return {
+            success: true,
+        };
+    }
+
+    async replaceCurrentUpdates(
+        recordName: string,
+        inst: string,
+        branch: string,
+        updateToAdd: string,
+        sizeInBytes: number
+    ): Promise<ReplaceUpdatesResult> {
+        const r = this._instRecords.get(recordName);
+
+        if (!r) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                branch,
+            };
+        }
+
+        const i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return {
+                success: false,
+                errorCode: 'inst_not_found',
+                branch,
+            };
+        }
+
+        let b = i.branches.find((b) => b.branch === branch);
+
+        if (!b) {
+            b = {
+                branch,
+                inst: i.inst,
+                recordName: i.recordName,
+                temporary: false,
+                updates: {
+                    updates: [],
+                    timestamps: [],
+                },
+                archived: {
+                    updates: [],
+                    timestamps: [],
+                },
+            };
+            i.branches.push(b);
+        }
+
+        const storedUpdates = b.updates;
+        storedUpdates.updates = [];
+        storedUpdates.timestamps = [];
+
+        return this.addUpdates(
+            recordName,
+            inst,
+            branch,
+            [updateToAdd],
+            sizeInBytes
+        );
+    }
+
+    async deleteBranch(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<void> {
+        const r = this._instRecords.get(recordName);
+
+        if (!r) {
+            return;
+        }
+
+        const i = await this._getInst(recordName, inst);
+
+        if (!i) {
+            return;
+        }
+
+        const index = i.branches.findIndex((b) => b.branch === branch);
+        if (index >= 0) {
+            const b = i.branches[index];
+            for (let update of b.updates.updates) {
+                i.instSizeInBytes -= update.length;
+            }
+            i.branches.splice(index, 1);
+        }
+    }
+
+    // reset() {
+    //     this._instRecords = new Map();
+    //     this.maxAllowedInstSize = Infinity;
+    // }
+
+    private async _getInst(
+        recordName: string,
+        inst: string
+    ): Promise<InstWithUpdates | null> {
+        let record = await this._getInstRecord(recordName);
+        return record?.get(inst);
+    }
+
+    private async _getInstRecord(
+        recordName: string
+    ): Promise<Map<string, InstWithUpdates>> {
+        let record = this._instRecords.get(recordName);
+        if (!record) {
+            const r = await this.getRecordByName(recordName);
+            if (r) {
+                record = new Map();
+                this._instRecords.set(recordName, record);
+            }
+        }
+        return record;
+    }
 }
 
 interface RecordData {
@@ -1956,4 +2637,14 @@ interface StoredFile {
     uploaded: boolean;
     description: string;
     markers: string[];
+}
+
+export interface InstWithUpdates extends InstRecord {
+    instSizeInBytes: number;
+    branches: BranchWithUpdates[];
+}
+
+export interface BranchWithUpdates extends BranchRecord {
+    updates: StoredUpdates;
+    archived: StoredUpdates;
 }

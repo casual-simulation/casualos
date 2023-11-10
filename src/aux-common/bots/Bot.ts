@@ -1,4 +1,5 @@
-import { TagEditOp } from '../aux-format-2';
+import { type } from 'os';
+import { TagEditOp } from './AuxStateHelpers';
 
 export type PartialBot = Partial<Bot>;
 
@@ -943,12 +944,18 @@ export type BotShape =
     | 'nothing'
     | 'keyboard'
     | 'codeButton'
-    | 'codeHint';
+    | 'codeHint'
+    | 'light';
 
 /**
  * Defines the possible forms that a menu bot can appear as.
  */
 export type MenuBotForm = 'button' | 'input';
+
+/**
+ * Defines the possible subtype forms that a menu bot can appear as.
+ */
+export type MenuBotSubtype = 'input' | 'password';
 
 /**
  * Defines the possible hover styles that can be used for a menu bot.
@@ -964,7 +971,16 @@ export type MenuBotResolvedHoverStyle = 'hover' | 'none';
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
-export type BotSubShape = 'gltf' | 'src' | 'html' | null;
+export type BotSubShape =
+    | 'gltf'
+    | 'src'
+    | 'html'
+    | 'pointLight'
+    | 'ambientLight'
+    | 'directionalLight'
+    | 'spotLight'
+    | 'hemisphereLight'
+    | null;
 
 /**
  * Defines the possible drag modes that a bot can have.
@@ -1344,6 +1360,8 @@ export const DEFAULT_PORTAL_PANNABLE = true;
  * Whether portals are rotatable by default.
  */
 export const DEFAULT_PORTAL_ROTATABLE = true;
+
+export const DEFAULT_GRID_PORTAL_LIGHTING = true;
 
 /**
  * Whether portals are zoomable by default.
@@ -2176,6 +2194,23 @@ export const ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME: string =
     'onSpaceRateLimitExceeded';
 
 /**
+ * The name of the event that is triggered once collaboration has been enabled.
+ */
+export const ON_COLLABORATION_ENABLED: string = 'onCollaborationEnabled';
+
+/**
+ * The name of the event that is triggered when collaboration upgrades begin to be allowed.
+ */
+export const ON_ALLOW_COLLABORATION_UPGRADE: string =
+    'onAllowCollaborationUpgrade';
+
+/**
+ * The name of the event that is triggered when collaboration upgrades are no longer allowed.
+ */
+export const ON_DISALLOW_COLLABORATION_UPGRADE: string =
+    'onDisallowCollaborationUpgrade';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -2519,6 +2554,7 @@ export const KNOWN_TAGS: string[] = [
     'pixelHeight',
     'pixelRatio',
     'defaultPixelRatio',
+    'defaultLighting',
     'pageTitle',
     'pointerPixelX',
     'pointerPixelY',
@@ -2674,6 +2710,13 @@ export const KNOWN_TAGS: string[] = [
     'formRenderOrder',
     'formDepthTest',
     'formDepthWrite',
+    'formLightIntensity',
+    'formLightTarget',
+    'formLightDistance',
+    'formLightAngle',
+    'formLightPenumbra',
+    'formLightDecay',
+    'formLightGroundColor',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',

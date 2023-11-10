@@ -6,7 +6,7 @@
                     <svg-icon name="PersonPinCircle" class="title-img"></svg-icon>
                     <strong>{{ title }}</strong>
                 </a>
-                <md-button v-if="showLogout" @click="logout">Logout</md-button>
+                <md-button v-if="showLogout" @click="logout">Sign Out</md-button>
             </md-app-toolbar>
             <md-app-drawer v-if="showLogout" md-permanent="clipped">
                 <md-list>
@@ -27,7 +27,7 @@
                                 v-for="record in records"
                                 :key="record.name"
                                 class="md-inset record-item"
-                                :to="{ name: 'records-data', params: { recordName: record.name } }"
+                                :to="{ name: 'records-insts', params: { recordName: record.name } }"
                             >
                                 <md-icon>description</md-icon>
                                 <span v-if="record.name !== userId">{{ record.label }}</span>
@@ -48,7 +48,7 @@
                                 <strong class="md-list-item-text">No Records</strong>
                             </md-list-item>
                             <md-button class="md-raised md-primary" @click="startCreateRecord()"
-                                >Create Record</md-button
+                                >Add Record</md-button
                             >
                         </md-list>
                     </md-list-item>
@@ -108,7 +108,7 @@
                             <md-button
                                 class="md-raised md-primary"
                                 @click="startCreateRecord(studio.studioId)"
-                                >Create Record</md-button
+                                >Add Record</md-button
                             >
                         </md-list>
                     </md-list-item>
@@ -117,7 +117,7 @@
                             v-if="allowCreateStudio"
                             class="md-raised md-primary"
                             @click="startCreateStudio()"
-                            >Create Studio</md-button
+                            >Add Studio</md-button
                         >
                     </md-list-item>
                 </md-list>
@@ -128,7 +128,7 @@
         </md-app>
 
         <md-dialog :md-active.sync="showCreateStudio">
-            <md-dialog-title>Create Studio</md-dialog-title>
+            <md-dialog-title>Add Studio</md-dialog-title>
 
             <md-dialog-content>
                 <md-field>
@@ -143,7 +143,7 @@
         </md-dialog>
 
         <md-dialog :md-active.sync="showCreateRecord">
-            <md-dialog-title>Create Record</md-dialog-title>
+            <md-dialog-title>Add Record</md-dialog-title>
             <md-dialog-content>
                 <form @submit.prevent="createRecord()">
                     <md-field>

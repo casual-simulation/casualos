@@ -4,61 +4,50 @@ import {
     AuxPartition,
     createAuxPartition,
     createMemoryPartition,
-    createCausalRepoPartition,
-    createCausalRepoClientPartition,
-    createCausalRepoHistoryClientPartition,
-    createBotClientPartition,
     iteratePartitions,
     createOtherPlayersClientPartition,
     createYjsPartition,
     createRemoteClientYjsPartition,
-    AuxRuntime,
+    ConnectionIndicator,
+    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
     BaseAuxChannel,
-    AuxUser,
     AuxChannelOptions,
 } from '@casual-simulation/aux-vm';
 import {
-    createBotPartition,
-    createRemoteCausalRepoPartition,
     createOtherPlayersRepoPartition,
     createRemoteYjsPartition,
     createTimeSyncController,
 } from '../partitions';
 import { TimeSyncController } from '@casual-simulation/timesync';
 import { AuxSubChannel } from '@casual-simulation/aux-vm/vm';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
 
 export class RemoteAuxChannel extends BaseAuxChannel {
-    constructor(
-        user: AuxUser,
-        config: AuxConfig,
-        options: RemoteAuxChannelOptions
-    ) {
-        super(user, config, options);
+    constructor(config: AuxConfig, options: RemoteAuxChannelOptions) {
+        super(config, options);
     }
 
     protected async _createPartition(
-        config: PartitionConfig
+        config: PartitionConfig,
+        services: AuxPartitionServices
     ): Promise<AuxPartition> {
         return await createAuxPartition(
             config,
+            services,
             createMemoryPartition,
-            (config) => createCausalRepoPartition(config, this.user),
-            (config) => createRemoteCausalRepoPartition(config, this.user),
-            (config) => createCausalRepoClientPartition(config, this.user),
             (config) =>
-                createCausalRepoHistoryClientPartition(config, this.user),
-            (config) => createBotPartition(config),
-            (config) => createBotClientPartition(config),
-            (config) => createOtherPlayersClientPartition(config, this.user),
-            (config) => createOtherPlayersRepoPartition(config, this.user),
+                createOtherPlayersClientPartition(config, services.authSource),
+            (config) =>
+                createOtherPlayersRepoPartition(config, services.authSource),
             (config) => createYjsPartition(config),
-            (config) => createRemoteYjsPartition(config, this.user),
-            (config) => createRemoteClientYjsPartition(config, this.user)
+            (config) => createRemoteYjsPartition(config, services.authSource),
+            (config) =>
+                createRemoteClientYjsPartition(config, services.authSource)
         );
     }
 
@@ -67,7 +56,7 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             return (
                 createTimeSyncController(
                     this._config.config.timesync,
-                    this.user
+                    this._authSource
                 ) ?? super._createTimeSyncController()
             );
         }
@@ -101,11 +90,10 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     }
 
     protected _createSubChannel(
-        user: AuxUser,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
-        const channel = new RemoteAuxChannel(user, config, this._options);
+        const channel = new RemoteAuxChannel(config, this._options);
         channel._runtime = runtime;
         return channel;
     }

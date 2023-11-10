@@ -18,7 +18,7 @@ describe('BotDimensionManager', () => {
     let dimensions: BotDimensionManager;
 
     beforeEach(() => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('id');
         helper = new BotHelper(vm);
         helper.userId = 'user';
         index = new BotIndex();

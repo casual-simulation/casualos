@@ -1,67 +1,58 @@
 import { BaseAuxChannel } from './BaseAuxChannel';
 import {
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
     RemoteAction,
     DeviceAction,
     remote,
-    DeviceInfo,
+    ConnectionInfo,
     Action,
     CurrentVersion,
     StatusUpdate,
-} from '@casual-simulation/causal-trees';
+    ConnectionIndicator,
+    AuxPartitionServices,
+    ON_ALLOW_COLLABORATION_UPGRADE,
+    ON_DISALLOW_COLLABORATION_UPGRADE,
+} from '@casual-simulation/aux-common';
 import {
     createBot,
     botAdded,
-    browseHistory,
     MemoryPartition,
     createMemoryPartition,
     MemoryPartitionConfig,
     PartitionConfig,
     AuxPartition,
     createAuxPartition,
-    SearchPartitionClientConfig,
-    MemoryBotClient,
     StateUpdatedEvent,
     createPrecalculatedBot,
-    BotAction,
     toast,
-    createBotClientPartition,
     AuxPartitions,
     action,
-    Bot,
-    runScript,
     stateUpdatedEvent,
-    createCausalRepoPartition,
     MemoryPartitionImpl,
     MemoryPartitionStateConfig,
-    RuntimeStateVersion,
-    LocalActions,
     asyncResult,
-    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
-    AuxRuntime,
-    attachRuntime,
     botUpdated,
-    asyncError,
-    enableAR,
-    arSupported,
-    updatedBot,
-    detachRuntime,
 } from '@casual-simulation/aux-common';
-import { AuxUser } from '../AuxUser';
+import {
+    AuxRuntime,
+    RuntimeActions,
+    RuntimeStateVersion,
+    attachRuntime,
+    detachRuntime,
+} from '@casual-simulation/aux-runtime';
 import { AuxConfig } from './AuxConfig';
 import { v4 as uuid } from 'uuid';
 import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
 import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
-import FeatureTemplatesViewModel from 'esri/widgets/FeatureTemplates/FeatureTemplatesViewModel';
 import {
+    ON_COLLABORATION_ENABLED,
+    TEMPORARY_BOT_PARTITION_ID,
     edit,
+    enableCollaboration,
     insert,
     preserve,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import { AuxSubChannel } from './AuxChannel';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -73,28 +64,23 @@ console.error = jest.fn();
 
 describe('BaseAuxChannel', () => {
     let channel: AuxChannelImpl;
-    let user: AuxUser;
-    let device: DeviceInfo;
+    let indicator: ConnectionIndicator;
+    let device: ConnectionInfo;
     let config: AuxConfig;
     let memory: MemoryPartition;
 
     beforeEach(async () => {
-        user = {
-            id: 'userId',
-            username: 'username',
-            name: 'name',
-            token: 'token',
+        indicator = {
+            connectionId: 'userId',
         };
         device = {
-            claims: {
-                [USERNAME_CLAIM]: 'username',
-                [DEVICE_ID_CLAIM]: 'deviceId',
-                [SESSION_ID_CLAIM]: 'sessionId',
-            },
-            roles: [],
+            userId: null,
+            sessionId: null,
+            connectionId: 'userId',
         };
         memory = createMemoryPartition({ type: 'memory', initialState: {} });
         config = {
+            configBotId: 'userId',
             config: {
                 version: 'v1.0.0',
                 versionHash: 'hash',
@@ -107,7 +93,7 @@ describe('BaseAuxChannel', () => {
             },
         };
 
-        channel = new AuxChannelImpl(user, device, config);
+        channel = new AuxChannelImpl(device, config);
     });
 
     afterEach(() => {
@@ -133,7 +119,6 @@ describe('BaseAuxChannel', () => {
 
         it('should load the builder aux file', async () => {
             channel = new AuxChannelImpl(
-                user,
                 device,
                 merge({}, config, {
                     config: {
@@ -161,7 +146,6 @@ describe('BaseAuxChannel', () => {
 
         it('should not load builder if bootstrap state was included', async () => {
             channel = new AuxChannelImpl(
-                user,
                 device,
                 merge({}, config, {
                     config: {
@@ -192,7 +176,6 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                user,
                 device,
                 merge({}, config, {
                     config: {
@@ -229,7 +212,6 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                user,
                 device,
                 merge({}, config, {
                     config: {
@@ -267,7 +249,6 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                user,
                 device,
                 merge({}, config, {
                     config: {
@@ -305,7 +286,6 @@ describe('BaseAuxChannel', () => {
             ]);
 
             channel = new AuxChannelImpl(
-                user,
                 device,
                 merge({}, config, {
                     config: {
@@ -327,6 +307,7 @@ describe('BaseAuxChannel', () => {
 
         it('should error if unable to construct a partition', async () => {
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -340,7 +321,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             await expect(channel.initAndWait()).rejects.toEqual(
                 new Error('[BaseAuxChannel] Unable to build partition: shared')
@@ -353,6 +334,7 @@ describe('BaseAuxChannel', () => {
                 initialState: {},
             });
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -369,7 +351,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             uuidMock
                 .mockReturnValueOnce('authBot')
@@ -407,27 +389,6 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should pass the forceSignedScripts config option to the runtime', async () => {
-            config = {
-                config: {
-                    version: 'v1.0.0',
-                    versionHash: 'hash',
-                    forceSignedScripts: true,
-                },
-                partitions: {
-                    shared: {
-                        type: 'memory',
-                        initialState: {},
-                    },
-                },
-            };
-            channel = new AuxChannelImpl(user, device, config);
-
-            await channel.initAndWait();
-
-            expect(channel.runtime.forceSignedScripts).toBe(true);
-        });
-
         it('should merge version vectors from different partitions', async () => {
             let shared = new TestPartition({
                 type: 'memory',
@@ -438,6 +399,7 @@ describe('BaseAuxChannel', () => {
                 initialState: {},
             });
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -453,7 +415,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             let versions = [] as RuntimeStateVersion[];
 
@@ -520,6 +482,7 @@ describe('BaseAuxChannel', () => {
                 initialState: {},
             });
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -531,7 +494,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             let statuses = [] as StatusUpdate[];
             channel.onConnectionStateChanged.subscribe((a) => statuses.push(a));
@@ -548,7 +511,6 @@ describe('BaseAuxChannel', () => {
                     {
                         type: 'authentication',
                         authenticated: true,
-                        user: user,
                     },
                 ]
             );
@@ -556,6 +518,7 @@ describe('BaseAuxChannel', () => {
 
         it('should create a sync controller if a sync configuration is provided', async () => {
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -569,7 +532,7 @@ describe('BaseAuxChannel', () => {
                     },
                 },
             };
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             await channel.initAndWait();
 
@@ -585,6 +548,7 @@ describe('BaseAuxChannel', () => {
             try {
                 jest.useFakeTimers({});
                 config = {
+                    configBotId: 'userId',
                     config: {
                         version: 'v1.0.0',
                         versionHash: 'hash',
@@ -598,7 +562,7 @@ describe('BaseAuxChannel', () => {
                         },
                     },
                 };
-                channel = new AuxChannelImpl(user, device, config);
+                channel = new AuxChannelImpl(device, config);
 
                 await channel.initAndWait();
 
@@ -652,20 +616,17 @@ describe('BaseAuxChannel', () => {
             await channel.sendEvents([
                 {
                     type: 'device',
-                    device: {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
-                            [DEVICE_ID_CLAIM]: 'deviceId',
-                            [SESSION_ID_CLAIM]: 'sessionId',
-                        },
-                        roles: ['role'],
+                    connection: {
+                        connectionId: 'deviceId',
+                        sessionId: 'sessionId',
+                        userId: 'username',
                     },
                     event: botAdded(createBot('def')),
                 },
                 botAdded(createBot('test')),
                 {
                     type: 'device',
-                    device: null,
+                    connection: null,
                     event: botAdded(createBot('abc')),
                 },
             ]);
@@ -673,19 +634,16 @@ describe('BaseAuxChannel', () => {
             expect(deviceEvents).toEqual([
                 {
                     type: 'device',
-                    device: {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
-                            [DEVICE_ID_CLAIM]: 'deviceId',
-                            [SESSION_ID_CLAIM]: 'sessionId',
-                        },
-                        roles: ['role'],
+                    connection: {
+                        connectionId: 'deviceId',
+                        sessionId: 'sessionId',
+                        userId: 'username',
                     },
                     event: botAdded(createBot('def')),
                 },
                 {
                     type: 'device',
-                    device: null,
+                    connection: null,
                     event: botAdded(createBot('abc')),
                 },
             ]);
@@ -736,6 +694,7 @@ describe('BaseAuxChannel', () => {
             });
             // _memory.onBotsAdded = subject;
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -748,7 +707,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             let localEvents = [] as Action[];
             channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
@@ -793,6 +752,7 @@ describe('BaseAuxChannel', () => {
                 },
             });
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -805,7 +765,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(device, config);
 
             let localEvents = [] as Action[];
             channel.onLocalEvents.subscribe((e) => localEvents.push(...e));
@@ -912,77 +872,6 @@ describe('BaseAuxChannel', () => {
                 expect(abc).toBeUndefined();
             });
 
-            it('should handle adding spaces with delayed edit modes', async () => {
-                await channel.initAndWait();
-                let client = new MemoryBotClient();
-
-                await channel.sendEvents([
-                    {
-                        type: 'load_space',
-                        space: <any>'random',
-                        config: <SearchPartitionClientConfig>{
-                            type: 'bot_client',
-                            client: client,
-                            inst: 'inst',
-                        },
-                    },
-                ]);
-
-                await waitAsync();
-
-                let updates = [] as StateUpdatedEvent[];
-                channel.onStateUpdated.subscribe((update) =>
-                    updates.push(update)
-                );
-
-                let actions = [] as BotAction[];
-                channel.onLocalEvents.subscribe((events) =>
-                    actions.push(...events)
-                );
-
-                uuidMock
-                    .mockReturnValueOnce('test1')
-                    .mockReturnValueOnce('test2');
-                await channel.sendEvents([
-                    {
-                        type: 'run_script',
-                        script: 'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); os.toast(bot)',
-                        taskId: null,
-                    },
-                ]);
-
-                await waitAsync();
-
-                // test2 is not included because the bot space doesn't
-                // automatically add all new bots.
-                expect(updates).toEqual([
-                    {
-                        addedBots: ['test1'],
-                        removedBots: [],
-                        updatedBots: [],
-                        state: {
-                            test1: createPrecalculatedBot(
-                                'test1',
-                                {
-                                    value: 'fun',
-                                },
-                                undefined,
-                                'shared'
-                            ),
-                        },
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                ]);
-
-                // the toasted value should be null because the runtime
-                // should know that the new partition is delayed instead of immediate
-                expect(actions).toContainEqual(toast(null));
-            });
-
             it('should resolve load_space events that have a task id', async () => {
                 await channel.initAndWait();
 
@@ -1041,7 +930,7 @@ describe('BaseAuxChannel', () => {
         });
 
         describe('attach_runtime', () => {
-            let events: LocalActions[];
+            let events: RuntimeActions[];
             let subChannels: AuxSubChannel[];
             let stateUpdates: StateUpdatedEvent[];
             let sub: Subscription;
@@ -1083,6 +972,7 @@ describe('BaseAuxChannel', () => {
                         supportsAR: false,
                         supportsVR: false,
                         isCollaborative: false,
+                        allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                     }
                 );
@@ -1116,9 +1006,9 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    configBotId: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(await subChannel.getChannel()).toBeInstanceOf(
@@ -1141,6 +1031,7 @@ describe('BaseAuxChannel', () => {
                         supportsAR: false,
                         supportsVR: false,
                         isCollaborative: false,
+                        allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                     }
                 );
@@ -1175,9 +1066,9 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    configBotId: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1228,6 +1119,7 @@ describe('BaseAuxChannel', () => {
                         supportsAR: false,
                         supportsVR: false,
                         isCollaborative: false,
+                        allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                     }
                 );
@@ -1273,9 +1165,9 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    configBotId: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1326,6 +1218,7 @@ describe('BaseAuxChannel', () => {
                         supportsAR: false,
                         supportsVR: false,
                         isCollaborative: false,
+                        allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                     }
                 );
@@ -1377,9 +1270,9 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    configBotId: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1441,6 +1334,7 @@ describe('BaseAuxChannel', () => {
                         supportsAR: false,
                         supportsVR: false,
                         isCollaborative: false,
+                        allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                     }
                 );
@@ -1490,9 +1384,9 @@ describe('BaseAuxChannel', () => {
 
                 expect(await subChannel.getInfo()).toEqual({
                     id: 'runtime1',
-                    user: {
-                        ...user,
-                        id: 'newUserId',
+                    configBotId: 'newUserId',
+                    indicator: {
+                        connectionId: 'newUserId',
                     },
                 });
                 expect(c).toBeInstanceOf(AuxChannelImpl);
@@ -1566,7 +1460,7 @@ describe('BaseAuxChannel', () => {
         });
 
         describe('detach_runtime', () => {
-            let events: LocalActions[];
+            let events: RuntimeActions[];
             let subChannels: AuxSubChannel[];
             let removedChannels: string[];
             let stateUpdates: StateUpdatedEvent[];
@@ -1615,6 +1509,7 @@ describe('BaseAuxChannel', () => {
                         supportsAR: false,
                         supportsVR: false,
                         isCollaborative: false,
+                        allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                     }
                 );
@@ -1651,6 +1546,249 @@ describe('BaseAuxChannel', () => {
 
                 expect(events.slice(1)).toEqual([asyncResult('task2', null)]);
                 expect(removedChannels).toEqual(['runtime1']);
+            });
+        });
+
+        describe('enable_collaboration', () => {
+            let tempPartition: MemoryPartition;
+            let memoryEnableCollaboration: jest.Mock<any>;
+            let tempEnableCollaboration: jest.Mock<any>;
+
+            beforeEach(() => {
+                tempPartition = new MemoryPartitionImpl({
+                    type: 'memory',
+                    initialState: {},
+                });
+                memoryEnableCollaboration = memory.enableCollaboration =
+                    jest.fn();
+                tempEnableCollaboration = tempPartition.enableCollaboration =
+                    jest.fn();
+                config = {
+                    configBotId: 'userId',
+                    config: {
+                        version: 'v1.0.0',
+                        versionHash: 'hash',
+                        device: {
+                            isCollaborative: false,
+                            allowCollaborationUpgrade: true,
+                            ab1BootstrapUrl: 'url',
+                            supportsAR: false,
+                            supportsVR: false,
+                        },
+                    },
+                    partitions: {
+                        shared: {
+                            type: 'memory',
+                            partition: memory,
+                        },
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            type: 'memory',
+                            partition: tempPartition,
+                        },
+                    },
+                };
+
+                channel = new AuxChannelImpl(device, config);
+            });
+
+            it('should enable collaboration on each partition', async () => {
+                await channel.initAndWait();
+
+                await channel.sendEvents([enableCollaboration()]);
+
+                await waitAsync();
+
+                expect(memoryEnableCollaboration).toHaveBeenCalled();
+                expect(tempEnableCollaboration).toHaveBeenCalled();
+            });
+
+            it('should resolve the task once every partition resolves', async () => {
+                await channel.initAndWait();
+
+                let resolve1: () => void;
+                let promise1 = new Promise<void>((r) => (resolve1 = r));
+
+                let resolve2: () => void;
+                let promise2 = new Promise<void>((r) => (resolve2 = r));
+
+                const task = channel.runtime.context.createTask();
+                let resolved = false;
+                task.promise.then((val) => {
+                    resolved = true;
+                });
+
+                memoryEnableCollaboration.mockReturnValueOnce(promise1);
+                tempEnableCollaboration.mockReturnValueOnce(promise2);
+
+                await memory.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            onCollaborationEnabled: `@os.toast("enabled");`,
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                await channel.sendEvents([enableCollaboration(task.taskId)]);
+
+                await waitAsync();
+
+                let actions: Action[] = [];
+                channel.onLocalEvents.subscribe((e) => actions.push(...e));
+
+                expect(memoryEnableCollaboration).toHaveBeenCalled();
+                expect(tempEnableCollaboration).toHaveBeenCalled();
+
+                expect(resolved).toBe(false);
+
+                resolve1();
+                resolve2();
+
+                await waitAsync();
+
+                expect(resolved).toBe(true);
+                expect(
+                    channel.runtime.context.device.allowCollaborationUpgrade
+                ).toBe(false);
+                expect(channel.runtime.context.device.isCollaborative).toBe(
+                    true
+                );
+
+                expect(actions).toEqual([toast('enabled')]);
+            });
+
+            it('should do nothing if collaboration is already enabled', async () => {
+                config = {
+                    configBotId: 'userId',
+                    config: {
+                        version: 'v1.0.0',
+                        versionHash: 'hash',
+                        device: {
+                            isCollaborative: true,
+                            allowCollaborationUpgrade: false,
+                            ab1BootstrapUrl: 'url',
+                            supportsAR: false,
+                            supportsVR: false,
+                        },
+                    },
+                    partitions: {
+                        shared: {
+                            type: 'memory',
+                            partition: memory,
+                        },
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            type: 'memory',
+                            partition: tempPartition,
+                        },
+                    },
+                };
+
+                channel = new AuxChannelImpl(device, config);
+
+                await channel.initAndWait();
+
+                const task = channel.runtime.context.createTask();
+                let resolved = false;
+                task.promise.then((val) => {
+                    resolved = true;
+                });
+
+                await channel.sendEvents([enableCollaboration(task.taskId)]);
+
+                await waitAsync();
+
+                expect(memoryEnableCollaboration).not.toHaveBeenCalled();
+                expect(tempEnableCollaboration).not.toHaveBeenCalled();
+
+                expect(resolved).toBe(true);
+            });
+
+            it('should do nothing if no configuration device info is present', async () => {
+                config = {
+                    configBotId: 'userId',
+                    config: {
+                        version: 'v1.0.0',
+                        versionHash: 'hash',
+                    },
+                    partitions: {
+                        shared: {
+                            type: 'memory',
+                            partition: memory,
+                        },
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            type: 'memory',
+                            partition: tempPartition,
+                        },
+                    },
+                };
+
+                channel = new AuxChannelImpl(device, config);
+
+                await channel.initAndWait();
+
+                const task = channel.runtime.context.createTask();
+                let resolved = false;
+                task.promise.then((val) => {
+                    resolved = true;
+                });
+
+                await channel.sendEvents([enableCollaboration(task.taskId)]);
+
+                await waitAsync();
+
+                expect(memoryEnableCollaboration).not.toHaveBeenCalled();
+                expect(tempEnableCollaboration).not.toHaveBeenCalled();
+
+                expect(resolved).toBe(true);
+            });
+
+            it('should reject with an error if collaboration is disabled and not able to be enabled', async () => {
+                config = {
+                    configBotId: 'userId',
+                    config: {
+                        version: 'v1.0.0',
+                        versionHash: 'hash',
+                        device: {
+                            isCollaborative: false,
+                            allowCollaborationUpgrade: false,
+                            ab1BootstrapUrl: 'url',
+                            supportsAR: false,
+                            supportsVR: false,
+                        },
+                    },
+                    partitions: {
+                        shared: {
+                            type: 'memory',
+                            partition: memory,
+                        },
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            type: 'memory',
+                            partition: tempPartition,
+                        },
+                    },
+                };
+
+                channel = new AuxChannelImpl(device, config);
+
+                await channel.initAndWait();
+
+                const task = channel.runtime.context.createTask();
+                let rejectedErr: any;
+                task.promise.catch((val) => {
+                    rejectedErr = val;
+                });
+
+                await channel.sendEvents([enableCollaboration(task.taskId)]);
+
+                await waitAsync();
+
+                expect(memoryEnableCollaboration).not.toHaveBeenCalled();
+                expect(tempEnableCollaboration).not.toHaveBeenCalled();
+
+                expect(rejectedErr).toEqual(
+                    new Error('Collaboration upgrades are not allowed.')
+                );
             });
         });
     });
@@ -1731,6 +1869,7 @@ describe('BaseAuxChannel', () => {
     describe('export()', () => {
         beforeEach(async () => {
             config = {
+                configBotId: 'userId',
                 config: {
                     version: 'v1.0.0',
                     versionHash: 'hash',
@@ -1756,7 +1895,7 @@ describe('BaseAuxChannel', () => {
                 },
             };
 
-            channel = new AuxChannelImpl(user, device, config);
+            channel = new AuxChannelImpl(device, config);
         });
 
         it('should only export public bots', async () => {
@@ -1795,6 +1934,141 @@ describe('BaseAuxChannel', () => {
             });
         });
     });
+
+    describe('updateDevice()', () => {
+        beforeEach(async () => {
+            indicator = {
+                connectionId: 'userId',
+            };
+            device = {
+                userId: null,
+                sessionId: null,
+                connectionId: 'userId',
+            };
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            config = {
+                configBotId: 'userId',
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                    device: {
+                        ab1BootstrapUrl: 'url',
+                        supportsAR: false,
+                        supportsVR: false,
+                        allowCollaborationUpgrade: false,
+                        isCollaborative: false,
+                    },
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        partition: memory,
+                    },
+                },
+            };
+
+            channel = new AuxChannelImpl(device, config);
+        });
+
+        it('should update the device info', async () => {
+            await channel.initAndWait();
+
+            const { result: device } = await channel.runtime.execute(
+                'return os.device()'
+            );
+
+            expect(device).toEqual({
+                ab1BootstrapUrl: 'url',
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: false,
+                isCollaborative: false,
+            });
+
+            await channel.updateDevice({
+                ab1BootstrapUrl: 'other',
+                supportsAR: true,
+                supportsVR: true,
+                allowCollaborationUpgrade: true,
+                isCollaborative: true,
+            });
+
+            const { result: device2 } = await channel.runtime.execute(
+                'return os.device()'
+            );
+
+            expect(device2).toEqual({
+                ab1BootstrapUrl: 'other',
+                supportsAR: true,
+                supportsVR: true,
+                allowCollaborationUpgrade: true,
+                isCollaborative: true,
+            });
+        });
+
+        it('should emit a onAllowCollaborationUpgrade shout when allowCollaborationUpgrade is set to true', async () => {
+            await channel.initAndWait();
+
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        [ON_ALLOW_COLLABORATION_UPGRADE]: '@os.toast("abc");',
+                    })
+                ),
+            ]);
+
+            await waitAsync();
+
+            let actions: Action[] = [];
+            channel.onLocalEvents.subscribe((e) => actions.push(...e));
+
+            await channel.updateDevice({
+                ab1BootstrapUrl: 'other',
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: true,
+                isCollaborative: false,
+            });
+
+            await waitAsync();
+
+            expect(actions).toEqual([toast('abc')]);
+        });
+
+        it('should emit a onDisallowCollaborationUpgrade shout when allowCollaborationUpgrade is set to false', async () => {
+            config.config.device.allowCollaborationUpgrade = true;
+            await channel.initAndWait();
+
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        [ON_DISALLOW_COLLABORATION_UPGRADE]:
+                            '@os.toast("abc");',
+                    })
+                ),
+            ]);
+
+            await waitAsync();
+
+            let actions: Action[] = [];
+            channel.onLocalEvents.subscribe((e) => actions.push(...e));
+
+            await channel.updateDevice({
+                ab1BootstrapUrl: 'other',
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: false,
+                isCollaborative: false,
+            });
+
+            await waitAsync();
+
+            expect(actions).toEqual([toast('abc')]);
+        });
+    });
     // describe('forkAux()', () => {
     //     it('should call fork on the partitions', async () => {
     //         await channel.initAndWait();
@@ -1808,14 +2082,14 @@ describe('BaseAuxChannel', () => {
 class AuxChannelImpl extends BaseAuxChannel {
     remoteEvents: RemoteAction[];
 
-    private _device: DeviceInfo;
+    private _device: ConnectionInfo;
 
     get runtime() {
         return this._runtime;
     }
 
-    constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
-        super(user, config, {});
+    constructor(device: ConnectionInfo, config: AuxConfig) {
+        super(config, {});
         this._device = device;
         this.remoteEvents = [];
     }
@@ -1824,11 +2098,14 @@ class AuxChannelImpl extends BaseAuxChannel {
         this.remoteEvents.push(...events);
     }
 
-    protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
+    protected _createPartition(
+        config: PartitionConfig,
+        services: AuxPartitionServices
+    ): Promise<AuxPartition> {
         return createAuxPartition(
             config,
+            services,
             (cfg) => createMemoryPartition(cfg),
-            (config) => createBotClientPartition(config),
             (config) => createTestPartition(config)
         );
     }
@@ -1852,11 +2129,10 @@ class AuxChannelImpl extends BaseAuxChannel {
     }
 
     protected _createSubChannel(
-        user: AuxUser,
         runtime: AuxRuntime,
         config: AuxConfig
     ): BaseAuxChannel {
-        const channel = new AuxChannelImpl(user, this._device, config);
+        const channel = new AuxChannelImpl(this._device, config);
         channel._runtime = runtime;
         return channel;
     }

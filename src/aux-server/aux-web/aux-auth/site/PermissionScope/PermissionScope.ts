@@ -4,7 +4,7 @@ import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import { AvailablePermissions } from '@casual-simulation/aux-records';
+import { AvailablePermissions } from '@casual-simulation/aux-common';
 import DataSize from '../DataSize/DataSize';
 
 @Component({

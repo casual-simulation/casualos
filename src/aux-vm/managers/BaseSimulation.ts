@@ -6,27 +6,22 @@ import {
     AuxPartitionConfig,
     LocalActions,
     StoredAux,
+    ConnectionIndicator,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
-
-import { AuxUser } from '../AuxUser';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
 import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
-import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import {
-    DeviceAction,
-    DevicesEvent,
-    LoadingProgressCallback,
-} from '@casual-simulation/causal-trees';
-import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
-import { Simulation } from './Simulation';
+import { DeviceAction } from '@casual-simulation/aux-common';
+import { Simulation, SimulationOrigin } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit bots.
@@ -47,8 +42,6 @@ export class BaseSimulation implements Simulation {
     protected _subscriptions: SubscriptionLike[];
     private _status: string;
     private _id: string;
-    private _originalId: string;
-    private _parsedId: SimulationIdParseSuccess;
 
     private _errored: boolean;
 
@@ -58,18 +51,11 @@ export class BaseSimulation implements Simulation {
      * Gets the ID of the simulation that is currently being used.
      */
     get id() {
-        return this._originalId;
+        return this._id;
     }
 
-    /**
-     * Gets the parsed ID of the simulation.
-     */
-    get parsedId(): SimulationIdParseSuccess {
-        return this._parsedId;
-    }
-
-    set parsedId(id: SimulationIdParseSuccess) {
-        this._parsedId = id;
+    get configBotId() {
+        return this._vm.configBotId;
     }
 
     /**
@@ -118,8 +104,14 @@ export class BaseSimulation implements Simulation {
         return this._code;
     }
 
-    get localEvents(): Observable<LocalActions> {
-        return this._vm.localEvents.pipe(flatMap((e) => e));
+    get onAuthMessage() {
+        return this._vm.onAuthMessage;
+    }
+
+    get localEvents(): Observable<RuntimeActions> {
+        return this._vm.localEvents.pipe(
+            flatMap((e) => e)
+        ) as Observable<RuntimeActions>;
     }
 
     get onError(): Observable<AuxChannelErrorType> {
@@ -132,15 +124,11 @@ export class BaseSimulation implements Simulation {
 
     /**
      * Creates a new simulation for the given user and channel ID.
-     * @param id The ID of the channel.
      * @param vm The VM that should be used.
      */
-    constructor(id: string, vm: AuxVM) {
+    constructor(vm: AuxVM) {
         this._vm = vm;
-        this._originalId = id || 'default';
-        this._vm.id = this._originalId;
-        this._parsedId = parseSimulationId(this._originalId);
-        this._id = this._getTreeName(this._parsedId.channel);
+        this._id = vm.id;
         this._onSubSimulationAdded = new Subject();
         this._onSubSimulationRemoved = new Subject();
         this._subSimulations = new Map();
@@ -170,12 +158,6 @@ export class BaseSimulation implements Simulation {
         return this._init();
     }
 
-    updateID(id: string) {
-        let temp = id || 'default';
-        this._parsedId = parseSimulationId(temp);
-        this._id = this._getTreeName(this._parsedId.channel);
-    }
-
     /**
      * Forks the current session's aux into the given session ID.
      * @param forkName The ID of the new session.
@@ -196,6 +178,10 @@ export class BaseSimulation implements Simulation {
      */
     export(): Promise<StoredAux> {
         return this._vm.export();
+    }
+
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        return this._vm.sendAuthMessage(message);
     }
 
     private _getTreeName(id: string) {
@@ -221,7 +207,7 @@ export class BaseSimulation implements Simulation {
         await this._vm.init();
         this._afterVmInit();
 
-        this._setStatus('Initialized.');
+        this._setStatus('VM Initialized.');
     }
 
     /**
@@ -248,7 +234,7 @@ export class BaseSimulation implements Simulation {
 
         this._subscriptions.push(
             this._vm.subVMAdded.subscribe(async (vm) => {
-                const sim = this._createSubSimulation(vm.user, vm.id, vm.vm);
+                const sim = this._createSubSimulation(vm.vm);
                 if (sim) {
                     this._subSimulations.set(vm.id, sim);
                     this._onSubSimulationAdded.next(sim);
@@ -267,12 +253,10 @@ export class BaseSimulation implements Simulation {
 
     /**
      * Creates a sub simulation from the given VM.
-     * @param user The user that should be used by the sim.
-     * @param id The ID of the sim.
      * @param vm The VM that the simulation should use.
      */
-    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
-        return new BaseSimulation(id, vm);
+    protected _createSubSimulation(vm: AuxVM) {
+        return new BaseSimulation(vm);
     }
 
     /**

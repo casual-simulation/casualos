@@ -1,13 +1,17 @@
 import {
-    AssignedRole,
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+    PolicyDocument,
+} from '@casual-simulation/aux-common';
+import {
+    AssignedRole,
     GetUserPolicyResult,
     ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
-    PUBLIC_READ_MARKER,
-    PolicyDocument,
     PolicyStore,
     RoleAssignment,
     UpdateRolesUpdate,
@@ -15,8 +19,10 @@ import {
     UpdateUserRolesResult,
     UserPolicyRecord,
     getExpireTime,
+    ListMarkerPoliciesResult,
 } from '@casual-simulation/aux-records';
 import { Collection, FilterQuery } from 'mongodb';
+import { MongoDBAuthUser } from './MongoDBAuthStore';
 
 /**
  * Implements PolicyStore for MongoDB.
@@ -24,29 +30,55 @@ import { Collection, FilterQuery } from 'mongodb';
 export class MongoDBPolicyStore implements PolicyStore {
     private _policies: Collection<MongoDBPolicy>;
     private _roles: Collection<MongoDBRole>;
+    private _users: Collection<MongoDBAuthUser>;
 
     constructor(
         policies: Collection<MongoDBPolicy>,
-        roles: Collection<MongoDBRole>
+        roles: Collection<MongoDBRole>,
+        users: Collection<MongoDBAuthUser>
     ) {
         this._policies = policies;
         this._roles = roles;
+        this._users = users;
     }
 
-    async listPoliciesForMarker(
+    async listPoliciesForMarkerAndUser(
         recordName: string,
+        userId: string,
         marker: string
-    ): Promise<PolicyDocument[]> {
+    ): Promise<ListMarkerPoliciesResult> {
         const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
+        } else if (marker === PUBLIC_WRITE_MARKER) {
+            policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
         }
         const id = policyId(recordName, marker);
         const policy = await this._policies.findOne({ _id: id });
         if (policy) {
             policies.push(policy.document);
         }
-        return policies;
+
+        if (policy) {
+            policies.push(policy.document as unknown as PolicyDocument);
+        }
+        const userResult = await this._users.findOne({
+            where: {
+                id: userId,
+            },
+        });
+
+        return {
+            policies,
+            // TODO: Support record owner privacy features.
+            recordOwnerPrivacyFeatures: {
+                publishData: true,
+                allowPublicData: true,
+                allowAI: true,
+                allowPublicInsts: true,
+            },
+            userPrivacyFeatures: userResult?.privacyFeatures,
+        };
     }
 
     async listUserPolicies(
