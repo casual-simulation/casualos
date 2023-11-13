@@ -169,6 +169,8 @@ describe('AuthCoordinator', () => {
                     privacyFeatures: {
                         allowPublicData: true,
                         publishData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
                     },
                 },
             };
