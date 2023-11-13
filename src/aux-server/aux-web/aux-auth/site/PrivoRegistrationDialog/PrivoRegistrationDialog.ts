@@ -150,7 +150,7 @@ export default class PrivoRegistrationDialog extends Vue {
             const displayNameResult = await authManager.isValidDisplayName(
                 this.displayName
             );
-            if (!displayNameResult.success || displayNameResult.allowed) {
+            if (!displayNameResult.success || !displayNameResult.allowed) {
                 this.showDisplayNameError = true;
                 return;
             }
