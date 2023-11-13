@@ -520,17 +520,16 @@ export class PrivoClient implements PrivoClientInterface {
 
         const data = result.data;
 
+        // Privo's email API returns invalid profanity information.
         const schema = z.object({
             available: z.boolean(),
             suggestions: z.array(z.string()).optional(),
-            profanity: z.boolean().optional(),
         });
 
         const validated = schema.parse(data);
 
         return {
             available: validated.available,
-            profanity: validated.profanity,
             suggestions: validated.suggestions,
         };
     }
