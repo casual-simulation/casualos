@@ -1,4 +1,4 @@
-import { ConfigurationStore } from 'ConfigurationStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import { PrivoConfiguration } from './PrivoConfiguration';
 import { PrivoClientCredentials, PrivoStore } from './PrivoStore';
 import { Client, Issuer, TokenSet, generators } from 'openid-client';
