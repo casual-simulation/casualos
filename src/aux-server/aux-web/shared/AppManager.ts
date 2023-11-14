@@ -176,6 +176,7 @@ export class AppManager {
             causalRepoConnectionProtocol:
                 this._config.causalRepoConnectionProtocol,
             causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
+            causalRepoLocalPersistence: this._config.causalRepoLocalPersistence,
             sharedPartitionsVersion: this._config.sharedPartitionsVersion,
             vmOrigin: this._config.vmOrigin,
             authOrigin: this._config.authOrigin,
@@ -388,7 +389,7 @@ export class AppManager {
         );
 
         this._auth.primary.loginStatus.subscribe((status) => {
-            if (status.authData.privacyFeatures) {
+            if (status?.authData?.privacyFeatures) {
                 this._defaultPrivacyFeatures = status.authData.privacyFeatures;
 
                 const newDevice = this._calculateDeviceConfig();
@@ -472,7 +473,7 @@ export class AppManager {
             isCollaborative = true;
         }
 
-        const allowCollaborationUpgrade = !disableCollaboration;
+        const allowCollaborationUpgrade = false;
 
         return {
             supportsAR: this._arSupported,

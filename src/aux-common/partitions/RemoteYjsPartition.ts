@@ -99,6 +99,7 @@ import {
 } from '../common';
 import { InstRecordsClient } from '../websockets';
 import { PartitionAuthSource } from './PartitionAuthSource';
+import { IndexeddbPersistence } from 'y-indexeddb';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -155,6 +156,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _readOnly: boolean;
     private _remoteEvents: boolean;
     private _authSource: PartitionAuthSource;
+    private _indexeddb: IndexeddbPersistence;
+    private _persistence: RemoteYjsPartitionConfig['localPersistence'];
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -252,6 +255,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._inst = config.inst;
         this._branch = config.branch;
         this._temporary = config.temporary;
+        this._persistence = config.localPersistence;
         this._synced = false;
         this._authorized = false;
         this._authSource = authSource;
@@ -341,6 +345,14 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     async init(): Promise<void> {}
 
     connect(): void {
+        if (!this._temporary && this._persistence?.saveToIndexedDb) {
+            console.log('[RemoteYjsPartition] Using IndexedDB persistence');
+            const name = `${this._recordName ?? ''}/${this._inst}/${
+                this._branch
+            }`;
+            this._indexeddb = new IndexeddbPersistence(name, this._doc);
+        }
+
         if (this._skipInitialLoad) {
             this._initializePartitionWithoutLoading();
         } else if (this._static) {

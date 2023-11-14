@@ -281,6 +281,21 @@ export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
      * Whether to use websocket or the apiary protocol to connect. (Default is websocket)
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
+
+    /**
+     * The options for local persistence for the partition.
+     */
+    localPersistence?: {
+        /**
+         * Whether to save partition updates to indexed db.
+         */
+        saveToIndexedDb?: boolean;
+
+        /**
+         * The encryption key that should be used.
+         */
+        encryptionKey?: string;
+    };
 }
 
 /**
@@ -334,4 +349,19 @@ export interface YjsClientPartitionConfig extends PartitionConfigBase {
      * Whether to support remote events. (Default is true)
      */
     remoteEvents?: boolean;
+
+    /**
+     * The options for local persistence for the partition.
+     */
+    localPersistence?: {
+        /**
+         * Whether to save partition updates to indexed db.
+         */
+        saveToIndexedDb?: boolean;
+
+        /**
+         * The encryption key that should be used.
+         */
+        encryptionKey?: string;
+    };
 }
