@@ -6,6 +6,7 @@ import {
     isClientUpdates,
     DEFAULT_BRANCH_NAME,
     isWatchBranchResult,
+    SyncUpdatesEvent,
 } from './InstRecordsClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -1904,6 +1905,63 @@ describe('InstRecordsClient', () => {
 
             jest.advanceTimersByTime(100000);
             expect(connection.sentMessages.slice(8)).toEqual([]);
+        });
+    });
+
+    describe('onSyncUpdatesEvent', () => {
+        it('should send a syncing events that match whether the client has any unacknowledged updates left for the branch', async () => {
+            const updatesReceived = new Subject<UpdatesReceivedMessage>();
+            connection.events.set('repo/updates_received', updatesReceived);
+            connection.connect();
+
+            let syncEvents: SyncUpdatesEvent[] = [];
+            client.onSyncUpdatesEvent.subscribe((event) =>
+                syncEvents.push(event)
+            );
+
+            client
+                .watchBranchUpdates({
+                    type: 'repo/watch_branch',
+                    recordName: 'record',
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                })
+                .subscribe();
+
+            client.addUpdates('record', 'abc', DEFAULT_BRANCH_NAME, [
+                '111',
+                '222',
+            ]);
+
+            await waitAsync();
+
+            expect(syncEvents).toEqual([
+                {
+                    type: 'syncing',
+                    recordName: 'record',
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+
+            updatesReceived.next({
+                type: 'repo/updates_received',
+                recordName: 'record',
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+                updateId: 1,
+            });
+
+            await waitAsync();
+
+            expect(syncEvents.slice(1)).toEqual([
+                {
+                    type: 'synced',
+                    recordName: 'record',
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
         });
     });
 });

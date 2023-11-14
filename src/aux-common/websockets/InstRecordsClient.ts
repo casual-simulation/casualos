@@ -9,7 +9,7 @@ import {
     first,
     scan,
 } from 'rxjs/operators';
-import { merge, Observable, of } from 'rxjs';
+import { merge, Observable, of, Subject } from 'rxjs';
 import {
     AddUpdatesMessage,
     ConnectedToBranchMessage,
@@ -47,6 +47,12 @@ export class InstRecordsClient {
     private _resendUpdatesAfter: number = null;
     private _resendUpdatesInterval: number = null;
     private _resendUpdatesIntervalId: number = null;
+
+    private _onSyncUpdatesEvent: Subject<SyncUpdatesEvent> = new Subject();
+
+    get onSyncUpdatesEvent(): Observable<SyncUpdatesEvent> {
+        return this._onSyncUpdatesEvent;
+    }
 
     /**
      * Gets the amount of time in miliseconds that the client should wait before resending updates that were never acknowledged.
@@ -329,6 +335,14 @@ export class InstRecordsClient {
                                 branch
                             );
                             list.delete(event.updateId);
+                            if (list.size === 0) {
+                                this._onSyncUpdatesEvent.next({
+                                    type: 'synced',
+                                    recordName,
+                                    inst,
+                                    branch,
+                                });
+                            }
                         }),
                         map((event) => {
                             if (event.errorCode === 'max_size_reached') {
@@ -624,6 +638,14 @@ export class InstRecordsClient {
             updates,
             this._updateCounter
         );
+        if (list.size === 1) {
+            this._onSyncUpdatesEvent.next({
+                type: 'syncing',
+                recordName,
+                inst,
+                branch,
+            });
+        }
     }
 
     /**
@@ -898,4 +920,20 @@ interface SentUpdates {
     sentTimeMs: number;
     lastTryTimeMs: number;
     tryCount: number;
+}
+
+export type SyncUpdatesEvent = SyncingUpdatesEvent | SyncedUpdatesEvent;
+
+export interface SyncingUpdatesEvent {
+    type: 'syncing';
+    recordName: string | null;
+    inst: string;
+    branch: string;
+}
+
+export interface SyncedUpdatesEvent {
+    type: 'synced';
+    recordName: string | null;
+    inst: string;
+    branch: string;
 }
