@@ -241,6 +241,7 @@ import {
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
 import { applyUpdate } from 'yjs';
 import { CasualOSError } from './CasualOSError';
+import { array } from '@hapi/joi';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4521,6 +4522,12 @@ describe('AuxLibrary', () => {
                 player.tags.inst = 'inst';
                 const result = library.api.os.getCurrentInst();
                 expect(result).toEqual('inst');
+            });
+
+            it('should return array when multiple inst are loaded', () => {
+                player.tags.inst = array();
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual(array);
             });
 
             it('should return undefined when inst is not set', () => {
