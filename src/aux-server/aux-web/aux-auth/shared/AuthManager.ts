@@ -881,7 +881,7 @@ export class AuthManager {
         const response = await axios.post<PrivoSignUpRequestResult>(
             `${this.apiEndpoint}/api/v2/register/privo`,
             {
-                email: info.email,
+                email: !!info.email ? info.email : undefined,
                 displayName: info.displayName,
                 name: info.name,
                 dateOfBirth: info.dateOfBirth.toJSON(),

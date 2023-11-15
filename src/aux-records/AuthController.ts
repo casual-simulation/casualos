@@ -1011,6 +1011,15 @@ export class AuthController {
                     result.features
                 );
             } else {
+                if (!request.email) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'An email is required to sign up an adult.',
+                    };
+                }
+
                 const result = await this._privoClient.createAdultAccount({
                     adultFirstName: request.name,
                     adultEmail: request.email,
@@ -2142,7 +2151,7 @@ export interface PrivoSignUpRequest {
     /**
      * The email address of the user.
      */
-    email: string;
+    email: string | null;
 
     /**
      * The display name of the user.

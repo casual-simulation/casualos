@@ -1449,6 +1449,81 @@ describe('AuthController', () => {
             });
         });
 
+        it('should support child sign ups without an email address', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'test name',
+                email: null,
+                displayName: 'displayName',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'userId',
+                updatePasswordUrl: 'link',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+            });
+
+            expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
+                parentEmail: 'parent@example.com',
+                childEmail: null,
+                childFirstName: 'test name',
+                childDisplayName: 'displayName',
+                childDateOfBirth: new Date(2010, 1, 1),
+                featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
+            });
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+
+            expect(await store.findUser('userId')).toEqual({
+                id: 'userId',
+                name: 'test name',
+                email: null,
+                phoneNumber: null,
+                privoServiceId: 'childServiceId',
+                privoParentServiceId: 'parentServiceId',
+                currentLoginRequestId: null,
+                allSessionRevokeTimeMs: null,
+                privacyFeatures: {
+                    publishData: false,
+                    allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
+
+            expect(await store.listSessions('userId', Infinity)).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: 'userId',
+                        sessionId: fromByteArray(sessionId),
+                        secretHash: expect.any(String),
+                        connectionSecret: expect.any(String),
+                        grantedTimeMs: Date.now(),
+                        expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+                        requestId: null,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ],
+            });
+        });
+
         it('should save the privacy features to the child account', async () => {
             uuidMock.mockReturnValueOnce('userId');
 

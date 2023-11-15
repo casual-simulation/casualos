@@ -357,31 +357,6 @@ export class AuthHandler implements AuxAuth {
     }
 
     async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {
-        if (!info.email) {
-            this._loginUIStatus.next({
-                page: 'enter_privo_account_info',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                privacyPolicyUrl: this.privacyPolicyUrl,
-                showEnterEmailError: true,
-                errorCode: 'email_not_provided',
-                errorMessage: 'You must provide an email address.',
-            });
-            return;
-        }
-        if (!(await authManager.validateEmail(info.email))) {
-            this._loginUIStatus.next({
-                page: 'enter_privo_account_info',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                privacyPolicyUrl: this.privacyPolicyUrl,
-                showInvalidEmailError: true,
-                errorCode: 'invalid_email',
-                errorMessage: 'The provided email is not accepted.',
-            });
-            return;
-        }
-
         if (!info.displayName) {
             this._loginUIStatus.next({
                 page: 'enter_privo_account_info',
@@ -431,7 +406,6 @@ export class AuthHandler implements AuxAuth {
             });
             return;
         }
-
         if (Math.abs(dob.diffNow('years').as('years')) < 18) {
             if (!info.parentEmail) {
                 this._loginUIStatus.next({
@@ -446,6 +420,18 @@ export class AuthHandler implements AuxAuth {
                 return;
             }
         } else {
+            if (!info.email) {
+                this._loginUIStatus.next({
+                    page: 'enter_privo_account_info',
+                    siteName: this.siteName,
+                    termsOfServiceUrl: this.termsOfServiceUrl,
+                    privacyPolicyUrl: this.privacyPolicyUrl,
+                    showEnterEmailError: true,
+                    errorCode: 'email_not_provided',
+                    errorMessage: 'You must provide an email address.',
+                });
+                return;
+            }
             if (!info.acceptedTermsOfService) {
                 this._loginUIStatus.next({
                     page: 'enter_privo_account_info',
@@ -455,6 +441,21 @@ export class AuthHandler implements AuxAuth {
                     showAcceptTermsOfServiceError: true,
                     errorCode: 'terms_not_accepted',
                     errorMessage: 'You must accept the terms of service.',
+                });
+                return;
+            }
+        }
+
+        if (info.email) {
+            if (!(await authManager.validateEmail(info.email))) {
+                this._loginUIStatus.next({
+                    page: 'enter_privo_account_info',
+                    siteName: this.siteName,
+                    termsOfServiceUrl: this.termsOfServiceUrl,
+                    privacyPolicyUrl: this.privacyPolicyUrl,
+                    showInvalidEmailError: true,
+                    errorCode: 'invalid_email',
+                    errorMessage: 'The provided email is not accepted.',
                 });
                 return;
             }

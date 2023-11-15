@@ -155,6 +155,26 @@ export default class RecordsUI extends Vue {
         return this.showInvalidCodeError ? 'md-invalid' : '';
     }
 
+    get registerEmailFieldHint() {
+        if (this.requireEmail) {
+            return 'Email';
+        } else {
+            return 'Email (Optional)';
+        }
+    }
+
+    get showEmail() {
+        return !!this.dateOfBirth;
+    }
+
+    get requireEmail() {
+        if (this.dateOfBirth) {
+            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            return Math.abs(dob.diffNow('years').years) >= 18;
+        }
+        return false;
+    }
+
     get requireParentEmail() {
         if (this.dateOfBirth) {
             const dob = DateTime.fromJSDate(this.dateOfBirth);
@@ -227,15 +247,6 @@ export default class RecordsUI extends Vue {
         this.showDateOfBirthError = false;
         this.showEnterAddressError = false;
 
-        this.email = this.email.trim();
-        if (!hasValue(this.email)) {
-            this.showEnterAddressError = true;
-            return;
-        } else if (!mightBeEmailAddress(this.email)) {
-            this.showInvalidAddressError = true;
-            return;
-        }
-
         this.displayName = this.displayName.trim();
         if (!hasValue(this.displayName)) {
             this.showDisplayNameError = true;
@@ -251,6 +262,17 @@ export default class RecordsUI extends Vue {
         if (!hasValue(this.dateOfBirth)) {
             this.showDateOfBirthError = true;
             return;
+        }
+
+        this.email = this.email.trim();
+        if (this.requireEmail) {
+            if (!hasValue(this.email)) {
+                this.showEnterAddressError = true;
+                return;
+            } else if (!mightBeEmailAddress(this.email)) {
+                this.showInvalidAddressError = true;
+                return;
+            }
         }
 
         this.parentEmail = this.parentEmail?.trim();

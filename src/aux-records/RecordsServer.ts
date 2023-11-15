@@ -3747,7 +3747,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            email: z.string().nonempty().email(),
+            email: z.string().nonempty().email().optional(),
             parentEmail: z.string().nonempty().email().optional(),
             name: z.string().nonempty(),
             dateOfBirth: z.coerce.date(),
