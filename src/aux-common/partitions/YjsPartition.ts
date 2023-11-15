@@ -76,6 +76,7 @@ import {
     StatusUpdate,
     VersionVector,
 } from '../common';
+import { IndexeddbPersistence } from 'y-indexeddb';
 import { fromByteArray, toByteArray } from 'base64-js';
 
 const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN = '__apply_updates_to_inst';
@@ -110,6 +111,8 @@ export class YjsPartitionImpl implements YjsPartition {
     private _masks: Map<MapValue>;
     private _internalPartition: MemoryPartitionImpl;
     private _currentVersion: CurrentVersion;
+    private _indexeddb: IndexeddbPersistence;
+    private _persistence: YjsPartitionConfig['localPersistence'];
     private _isRemoteUpdate: boolean = false;
 
     private _isLocalTransaction: boolean = true;
@@ -187,6 +190,7 @@ export class YjsPartitionImpl implements YjsPartition {
 
     constructor(config: YjsPartitionConfig) {
         this.private = config.private || false;
+        this._persistence = config.localPersistence;
         this._remoteEvents = config.remoteEvents;
         this._localId = this._doc.clientID;
         this._remoteId = new Doc().clientID;
@@ -377,6 +381,14 @@ export class YjsPartitionImpl implements YjsPartition {
     async init(): Promise<void> {}
 
     connect(): void {
+        if (this._persistence?.saveToIndexedDb) {
+            console.log('[YjsPartition] Using IndexedDB persistence');
+            this._indexeddb = new IndexeddbPersistence(
+                this._persistence.database,
+                this._doc
+            );
+        }
+
         this._onStatusUpdated.next({
             type: 'connection',
             connected: true,
