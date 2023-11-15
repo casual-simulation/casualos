@@ -116,7 +116,7 @@ export class YjsPartitionImpl implements YjsPartition {
     private _isRemoteUpdate: boolean = false;
 
     private _isLocalTransaction: boolean = true;
-    private _remoteEvents: PartitionRemoteEvents;
+    private _remoteEvents: PartitionRemoteEvents | boolean;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
