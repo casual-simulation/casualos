@@ -157,7 +157,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _readOnly: boolean;
     private _remoteEvents: PartitionRemoteEvents | boolean;
     private _authSource: PartitionAuthSource;
-    private _indexeddb: IndexeddbPersistence;
+    private _indexeddb: YjsIndexedDBPersistence;
     private _persistence: RemoteYjsPartitionConfig['localPersistence'];
 
     get onBotsAdded(): Observable<Bot[]> {

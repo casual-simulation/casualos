@@ -111,7 +111,7 @@ export class YjsPartitionImpl implements YjsPartition {
     private _masks: Map<MapValue>;
     private _internalPartition: MemoryPartitionImpl;
     private _currentVersion: CurrentVersion;
-    private _indexeddb: IndexeddbPersistence;
+    private _indexeddb: YjsIndexedDBPersistence;
     private _persistence: YjsPartitionConfig['localPersistence'];
     private _isRemoteUpdate: boolean = false;
 
