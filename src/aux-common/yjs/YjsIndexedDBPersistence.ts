@@ -26,6 +26,7 @@
 import { Doc, applyUpdate, encodeStateAsUpdate, transact } from 'yjs';
 import * as idb from 'lib0/indexeddb';
 import { BehaviorSubject, Observable, filter, firstValueFrom, map } from 'rxjs';
+import { v4 as uuid } from 'uuid';
 
 const customStoreName = 'custom';
 const updatesStoreName = 'updates';
@@ -106,6 +107,27 @@ export const storeState = (
 
 export const clearDocument = (name: string) => idb.deleteDB(name);
 
+export interface YjsIndexedDBPersistenceOptions {
+    /**
+     * The ID of the persistence instance.
+     */
+    id?: string;
+
+    /**
+     * Whether to broadcast the changes using a broadcast channel.
+     * The channel name is always formatted as `yjs/${name}`.
+     *
+     * Defaults to false.
+     */
+    broadcastChanges?: boolean;
+
+    /**
+     * The key that the updates should be encrypted with.
+     * If not specified, then no encryption is provided.
+     */
+    // encryptionKey?: string;
+}
+
 /**
  * Defines a class that is able to persist a Yjs document to IndexedDB.
  */
@@ -121,6 +143,8 @@ export class YjsIndexedDBPersistence {
     private _onSyncChanged: BehaviorSubject<boolean>;
     private _channel: BroadcastChannel;
     private _whenSynced: Promise<void>;
+    private _encryptionKey: string;
+    private _id: string;
     db: IDBDatabase;
 
     get whenSynced() {
@@ -167,13 +191,18 @@ export class YjsIndexedDBPersistence {
         this._dbsize = val;
     }
 
-    constructor(name: string, doc: Doc, broadcastChanges: boolean = false) {
+    constructor(
+        name: string,
+        doc: Doc,
+        options?: YjsIndexedDBPersistenceOptions
+    ) {
         this._doc = doc;
         this._name = name;
         this._dbref = 0;
         this._dbsize = 0;
         this._destroyed = false;
         this.db = null;
+        this._id = options?.id ?? uuid();
         this._onSyncChanged = new BehaviorSubject(false);
         this._db = idb.openDB(name, (db) =>
             idb.createStores(db, [
@@ -181,6 +210,8 @@ export class YjsIndexedDBPersistence {
                 ['custom'],
             ])
         );
+        const broadcastChanges = options?.broadcastChanges ?? false;
+        // this._encryptionKey = options?.encryptionKey ?? null;
         this._channel = broadcastChanges
             ? new BroadcastChannel(`yjs/${name}`)
             : null;
@@ -198,7 +229,10 @@ export class YjsIndexedDBPersistence {
 
         if (this._channel) {
             this._channel.addEventListener('message', (event) => {
-                if (event.data === 'update') {
+                if (
+                    event.data.type === 'update' &&
+                    event.data.id !== this._id
+                ) {
                     this._onSyncChanged.next(false);
                     this._fetchUpdates();
                 }
@@ -252,7 +286,10 @@ export class YjsIndexedDBPersistence {
             }
 
             if (this._channel) {
-                this._channel.postMessage('update');
+                this._channel.postMessage({
+                    type: 'update',
+                    id: this._id,
+                });
             }
         }
     }

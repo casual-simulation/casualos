@@ -76,7 +76,7 @@ import {
     StatusUpdate,
     VersionVector,
 } from '../common';
-import { IndexeddbPersistence } from 'y-indexeddb';
+import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
 import { fromByteArray, toByteArray } from 'base64-js';
 
 const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN = '__apply_updates_to_inst';
@@ -383,9 +383,10 @@ export class YjsPartitionImpl implements YjsPartition {
     connect(): void {
         if (this._persistence?.saveToIndexedDb) {
             console.log('[YjsPartition] Using IndexedDB persistence');
-            this._indexeddb = new IndexeddbPersistence(
+            this._indexeddb = new YjsIndexedDBPersistence(
                 this._persistence.database,
-                this._doc
+                this._doc,
+                { broadcastChanges: true }
             );
         }
 

@@ -100,7 +100,7 @@ import {
 } from '../common';
 import { InstRecordsClient } from '../websockets';
 import { PartitionAuthSource } from './PartitionAuthSource';
-import { IndexeddbPersistence } from 'y-indexeddb';
+import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -351,7 +351,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             const name = `${this._recordName ?? ''}/${this._inst}/${
                 this._branch
             }`;
-            this._indexeddb = new IndexeddbPersistence(name, this._doc);
+            this._indexeddb = new YjsIndexedDBPersistence(name, this._doc);
         }
 
         if (this._skipInitialLoad) {

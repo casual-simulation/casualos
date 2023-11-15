@@ -139,4 +139,28 @@ describe('YjsIndexedDBPersistence', () => {
 
         expect(hasbeenSyced).toBe(false);
     });
+
+    it('should support broadcasting changes to other instances', async () => {
+        const doc1 = new Doc();
+        const doc2 = new Doc();
+        const persistence1 = new YjsIndexedDBPersistence('test', doc1, {
+            broadcastChanges: true,
+        });
+        const persistence2 = new YjsIndexedDBPersistence('test', doc2, {
+            broadcastChanges: true,
+        });
+        await persistence1.whenSynced;
+        await persistence2.whenSynced;
+
+        const arr1 = doc1.getArray('t');
+        const arr2 = doc2.getArray('t');
+
+        arr1.insert(0, [0]);
+
+        for (let i = 0; i < 10; i++) {
+            await waitAsync();
+        }
+
+        expect(arr2.toArray()).toEqual(arr1.toArray());
+    });
 });
