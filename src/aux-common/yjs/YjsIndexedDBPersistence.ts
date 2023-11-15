@@ -1,0 +1,318 @@
+// The MIT License (MIT)
+
+// Copyright (c) 2014,2023
+//   - Kevin Jahns <kevin.jahns@rwth-aachen.de>.
+//   - Chair of Computer Science 5 (Databases & Information Systems), RWTH Aachen University, Germany
+//   - Casual Simulation, Inc.
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+import { Doc, applyUpdate, encodeStateAsUpdate, transact } from 'yjs';
+import * as idb from 'lib0/indexeddb';
+import { BehaviorSubject, Observable, filter, firstValueFrom, map } from 'rxjs';
+
+const customStoreName = 'custom';
+const updatesStoreName = 'updates';
+
+export const PREFERRED_TRIM_SIZE = 500;
+
+export type ApplyUpdatesCallback = (updatesStore: IDBObjectStore) => void;
+
+export const fetchUpdates = (
+    idbPersistence: YjsIndexedDBPersistence,
+    beforeApplyUpdatesCallback: ApplyUpdatesCallback = () => {},
+    afterApplyUpdatesCallback: ApplyUpdatesCallback = () => {}
+) => {
+    const [updatesStore] = idb.transact(
+        /** @type {IDBDatabase} */ idbPersistence.db,
+        [updatesStoreName]
+    ); // , 'readonly')
+    return idb
+        .getAll(
+            updatesStore,
+            idb.createIDBKeyRangeLowerBound(idbPersistence.dbref, false)
+        )
+        .then((updates) => {
+            if (!idbPersistence.destroyed) {
+                beforeApplyUpdatesCallback(updatesStore);
+                transact(
+                    idbPersistence.doc,
+                    () => {
+                        updates.forEach((val) =>
+                            applyUpdate(idbPersistence.doc, val)
+                        );
+                    },
+                    idbPersistence,
+                    false
+                );
+                afterApplyUpdatesCallback(updatesStore);
+            }
+        })
+        .then(() =>
+            idb.getLastKey(updatesStore).then((lastKey) => {
+                idbPersistence.dbref = lastKey + 1;
+            })
+        )
+        .then(() =>
+            idb.count(updatesStore).then((cnt) => {
+                idbPersistence.dbsize = cnt;
+            })
+        )
+        .then(() => updatesStore);
+};
+
+export const storeState = (
+    idbPersistence: YjsIndexedDBPersistence,
+    forceStore = true
+) =>
+    fetchUpdates(idbPersistence).then((updatesStore) => {
+        if (forceStore || idbPersistence.dbsize >= PREFERRED_TRIM_SIZE) {
+            idb.addAutoKey(
+                updatesStore,
+                encodeStateAsUpdate(idbPersistence.doc)
+            )
+                .then(() =>
+                    idb.del(
+                        updatesStore,
+                        idb.createIDBKeyRangeUpperBound(
+                            idbPersistence.dbref,
+                            true
+                        )
+                    )
+                )
+                .then(() =>
+                    idb.count(updatesStore).then((cnt) => {
+                        idbPersistence.dbsize = cnt;
+                    })
+                );
+        }
+    });
+
+export const clearDocument = (name: string) => idb.deleteDB(name);
+
+/**
+ * Defines a class that is able to persist a Yjs document to IndexedDB.
+ */
+export class YjsIndexedDBPersistence {
+    private _doc: Doc;
+    private _name: string;
+    private _dbref: number;
+    private _dbsize: number;
+    private _destroyed: boolean;
+    private _db: Promise<IDBDatabase>;
+    private _storeTimeout: number;
+    private _storeTimeoutId: any;
+    private _onSyncChanged: BehaviorSubject<boolean>;
+    private _channel: BroadcastChannel;
+    private _whenSynced: Promise<void>;
+    db: IDBDatabase;
+
+    get whenSynced() {
+        return this._whenSynced;
+    }
+
+    get storeTimeout(): number {
+        return this._storeTimeout;
+    }
+
+    set storeTimeout(val: number) {
+        this._storeTimeout = val;
+    }
+
+    get onSyncChanged(): Observable<boolean> {
+        return this._onSyncChanged;
+    }
+
+    get synced() {
+        return this._onSyncChanged.value;
+    }
+
+    get destroyed() {
+        return this._destroyed;
+    }
+
+    get doc() {
+        return this._doc;
+    }
+
+    get dbref(): number {
+        return this._dbref;
+    }
+
+    set dbref(val: number) {
+        this._dbref = val;
+    }
+
+    get dbsize(): number {
+        return this._dbsize;
+    }
+
+    set dbsize(val: number) {
+        this._dbsize = val;
+    }
+
+    constructor(name: string, doc: Doc, broadcastChanges: boolean = false) {
+        this._doc = doc;
+        this._name = name;
+        this._dbref = 0;
+        this._dbsize = 0;
+        this._destroyed = false;
+        this.db = null;
+        this._onSyncChanged = new BehaviorSubject(false);
+        this._db = idb.openDB(name, (db) =>
+            idb.createStores(db, [
+                ['updates', { autoIncrement: true }],
+                ['custom'],
+            ])
+        );
+        this._channel = broadcastChanges
+            ? new BroadcastChannel(`yjs/${name}`)
+            : null;
+        this._whenSynced = firstValueFrom(
+            this._onSyncChanged.pipe(
+                filter((sync) => sync),
+                map(() => undefined)
+            )
+        );
+
+        this._initDb();
+
+        this._storeTimeout = 1000;
+        this._storeTimeoutId = null;
+
+        if (this._channel) {
+            this._channel.addEventListener('message', (event) => {
+                if (event.data === 'update') {
+                    this._onSyncChanged.next(false);
+                    this._fetchUpdates();
+                }
+            });
+        }
+
+        this._storeUpdate = this._storeUpdate.bind(this);
+        this.destroy = this.destroy.bind(this);
+        doc.on('update', this._storeUpdate);
+        doc.on('destroy', this.destroy);
+    }
+
+    private async _initDb() {
+        const db = await this._db;
+        this.db = db;
+        this._fetchUpdates();
+    }
+
+    private async _fetchUpdates() {
+        await this._db;
+        if (this._destroyed) {
+            return;
+        }
+        const beforeApplyUpdatesCallback: ApplyUpdatesCallback = (
+            updatesStore
+        ) => idb.addAutoKey(updatesStore, encodeStateAsUpdate(this.doc));
+        const afterApplyUpdatesCallback: ApplyUpdatesCallback = () => {
+            if (this._destroyed) return this;
+            this._onSyncChanged.next(true);
+        };
+        fetchUpdates(
+            this,
+            beforeApplyUpdatesCallback,
+            afterApplyUpdatesCallback
+        );
+    }
+
+    private _storeUpdate(update: Uint8Array, origin: any) {
+        if (this.db && origin !== this) {
+            const [updatesStore] = idb.transact(this.db, [updatesStoreName]);
+            idb.addAutoKey(updatesStore, update);
+            if (++this._dbsize >= PREFERRED_TRIM_SIZE) {
+                // debounce store call
+                if (this._storeTimeoutId !== null) {
+                    clearTimeout(this._storeTimeoutId);
+                }
+                this._storeTimeoutId = setTimeout(() => {
+                    storeState(this, false);
+                    this._storeTimeoutId = null;
+                }, this._storeTimeout);
+            }
+
+            if (this._channel) {
+                this._channel.postMessage('update');
+            }
+        }
+    }
+
+    async destroy(): Promise<void> {
+        if (this._storeTimeoutId) {
+            clearTimeout(this._storeTimeoutId);
+        }
+        this._doc.off('update', this._storeUpdate);
+        this._doc.off('destroy', this.destroy);
+        this._destroyed = true;
+
+        const db = await this._db;
+        db.close();
+    }
+
+    /**
+     * Destroys this instance and removes all data from indexeddb.
+     */
+    async clearData(): Promise<void> {
+        await this.destroy();
+        idb.deleteDB(this._name);
+    }
+
+    /**
+     * Retrieves a value from the IndexedDB database.
+     * @param key - The key of the value to retrieve.
+     * @returns A promise that resolves with the retrieved value.
+     */
+    async get(
+        key: string | number | ArrayBuffer | Date
+    ): Promise<string | number | ArrayBuffer | Date | any> {
+        const db = await this._db;
+        const [custom] = idb.transact(db, [customStoreName], 'readonly');
+        return idb.get(custom, key);
+    }
+
+    /**
+     * Sets a value in the IndexedDB database.
+     * @param key The key to use for the value. Can be a string, number, ArrayBuffer, or Date.
+     * @param value The value to store in the database.
+     * @returns A Promise that resolves when the value has been successfully stored.
+     */
+    async set(
+        key: string | number | ArrayBuffer | Date,
+        value: any
+    ): Promise<any> {
+        const db = await this._db;
+        const [custom] = idb.transact(db, [customStoreName]);
+        return idb.put(custom, value, key);
+    }
+
+    /**
+     * Deletes the value associated with the given key from the custom store.
+     * @param key The key of the value to delete.
+     * @returns A promise that resolves when the value has been deleted.
+     */
+    async del(key: string | number | ArrayBuffer | Date): Promise<void> {
+        const db = await this._db;
+        const [custom] = idb.transact(db, [customStoreName]);
+        return idb.del(custom, key);
+    }
+}

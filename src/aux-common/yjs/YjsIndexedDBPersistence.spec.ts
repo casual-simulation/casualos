@@ -1,0 +1,142 @@
+// The MIT License (MIT)
+
+// Copyright (c) 2014,2023
+//   - Kevin Jahns <kevin.jahns@rwth-aachen.de>.
+//   - Chair of Computer Science 5 (Databases & Information Systems), RWTH Aachen University, Germany
+//   - Casual Simulation, Inc.
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+import { IDBFactory } from 'fake-indexeddb';
+import { Doc } from 'yjs';
+import {
+    YjsIndexedDBPersistence,
+    PREFERRED_TRIM_SIZE,
+    fetchUpdates,
+} from './YjsIndexedDBPersistence';
+import { waitAsync } from '../test/TestHelpers';
+
+describe('YjsIndexedDBPersistence', () => {
+    beforeEach(() => {
+        indexedDB = new IDBFactory();
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it('should be able to store updates and merge them', async () => {
+        const doc1 = new Doc();
+        const arr1 = doc1.getArray('t');
+        const doc2 = new Doc();
+        const arr2 = doc2.getArray('t');
+        arr1.insert(0, [0]);
+        const persistence1 = new YjsIndexedDBPersistence('test', doc1);
+        persistence1.storeTimeout = 0;
+        await persistence1.whenSynced;
+        arr1.insert(0, [1]);
+        const persistence2 = new YjsIndexedDBPersistence('test', doc2);
+        persistence2.storeTimeout = 0;
+        let calledObserver = false;
+        arr2.observe((event, tr) => {
+            expect(tr.local).toBe(false);
+            expect(tr.origin === persistence2).toBe(true);
+            calledObserver = true;
+        });
+        await persistence2.whenSynced;
+
+        expect(calledObserver).toBe(true);
+        expect(arr2.length === 2).toBe(true);
+        for (let i = 2; i < PREFERRED_TRIM_SIZE + 1; i++) {
+            arr1.insert(i, [i]);
+        }
+
+        jest.advanceTimersByTime(1);
+
+        await fetchUpdates(persistence2);
+        expect(arr2.length === PREFERRED_TRIM_SIZE + 1).toBe(true);
+        expect(persistence1.dbsize).toBe(1); // wait for dbsize === 0. db should be concatenated
+    });
+
+    it('should be able to perform merges concurrently', async () => {
+        const doc1 = new Doc();
+        const arr1 = doc1.getArray('t');
+        const doc2 = new Doc();
+        const arr2 = doc2.getArray('t');
+        arr1.insert(0, [0]);
+        const persistence1 = new YjsIndexedDBPersistence('test', doc1);
+        persistence1.storeTimeout = 0;
+        await persistence1.whenSynced;
+        arr1.insert(0, [1]);
+        const persistence2 = new YjsIndexedDBPersistence('test', doc2);
+        persistence2.storeTimeout = 0;
+        await persistence2.whenSynced;
+        expect(arr2.length).toBe(2);
+        arr1.insert(0, ['left']);
+        for (let i = 0; i < PREFERRED_TRIM_SIZE + 1; i++) {
+            arr1.insert(i, [i]);
+        }
+        arr2.insert(0, ['right']);
+        for (let i = 0; i < PREFERRED_TRIM_SIZE + 1; i++) {
+            arr2.insert(i, [i]);
+        }
+
+        jest.advanceTimersByTime(100);
+        await fetchUpdates(persistence1);
+        await fetchUpdates(persistence2);
+        expect(persistence1.dbsize).toBeLessThan(10);
+        expect(persistence2.dbsize).toBeLessThan(10);
+        expect(arr1.toArray()).toEqual(arr2.toArray());
+    });
+
+    it('should support metadata storage', async () => {
+        const ydoc = new Doc();
+        const persistence = new YjsIndexedDBPersistence('test', ydoc);
+        persistence.set('a', 4);
+        persistence.set(4, 'meta!');
+        // @ts-ignore
+        persistence.set('obj', { a: 4 });
+        const resA = await persistence.get('a');
+
+        expect(resA).toEqual(4);
+        const resB = await persistence.get(4);
+        expect(resB).toEqual('meta!');
+        const resC = await persistence.get('obj');
+
+        expect(resC).toEqual({ a: 4 });
+    });
+
+    it('should support destroy', async () => {
+        let hasbeenSyced = false;
+        const ydoc = new Doc();
+        const indexDBProvider = new YjsIndexedDBPersistence('test', ydoc);
+        indexDBProvider.onSyncChanged.subscribe((synced) => {
+            if (synced) {
+                hasbeenSyced = true;
+            }
+        });
+
+        indexDBProvider.destroy();
+        jest.advanceTimersByTime(500);
+        await waitAsync();
+
+        expect(hasbeenSyced).toBe(false);
+    });
+});
