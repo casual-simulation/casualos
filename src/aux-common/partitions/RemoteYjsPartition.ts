@@ -61,6 +61,7 @@ import {
     PartitionConfig,
     YjsClientPartitionConfig,
     RemoteYjsPartitionConfig,
+    PartitionRemoteEvents,
 } from './AuxPartitionConfig';
 import { flatMap, random } from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -86,7 +87,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { filter, startWith } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
-import { ensureTagIsSerializable } from './PartitionUtils';
+import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
 import {
     Action,
     ConnectionIndicator,
@@ -154,7 +155,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _branch: string;
     private _temporary: boolean;
     private _readOnly: boolean;
-    private _remoteEvents: boolean;
+    private _remoteEvents: PartitionRemoteEvents | boolean;
     private _authSource: PartitionAuthSource;
     private _indexeddb: IndexeddbPersistence;
     private _persistence: RemoteYjsPartitionConfig['localPersistence'];
@@ -367,6 +368,10 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             return;
         }
         for (let event of events) {
+            if (!supportsRemoteEvent(this._remoteEvents, event)) {
+                continue;
+            }
+
             if (event.type === 'remote') {
                 if (event.event.type === 'get_remotes') {
                     // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.

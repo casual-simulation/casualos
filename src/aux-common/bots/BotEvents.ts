@@ -170,6 +170,14 @@ export type AsyncActions =
     | OpenPhotoCameraAction
     | EnableCollaborationAction;
 
+export type RemoteBotActions =
+    | GetRemoteCountAction
+    | ListInstUpdatesAction
+    | GetInstStateFromUpdatesAction
+    | CreateInitializationUpdateAction
+    | ApplyUpdatesToInstAction
+    | GetCurrentInstUpdateAction;
+
 /**
  * Defines an interface for actions that represent asynchronous tasks.
  */

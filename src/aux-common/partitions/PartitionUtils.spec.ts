@@ -3,6 +3,7 @@ import { applyUpdate, encodeStateAsUpdate } from 'yjs';
 import {
     InstUpdate,
     ORIGINAL_OBJECT,
+    action,
     botAdded,
     botUpdated,
     createBot,
@@ -17,12 +18,15 @@ import {
     ensureTagIsSerializable,
     getStateFromUpdates,
     mergeInstUpdates,
+    supportsRemoteEvent,
 } from './PartitionUtils';
 import { YjsPartitionImpl } from './YjsPartition';
 import { customDataTypeCases, waitAsync } from '../test/TestHelpers';
 import { createDummyRuntimeBot } from '../../aux-runtime/runtime/test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
+import { PartitionRemoteEvents } from '.';
+import { remote, remoteResult } from '../common';
 
 describe('constructInitializationUpdate()', () => {
     it('should return an update that represents the bots', async () => {
@@ -522,5 +526,57 @@ describe('ensureTagIsSerializable()', () => {
         let result = ensureTagIsSerializable(b);
 
         expect(result).toBe(b);
+    });
+});
+
+describe('supportsRemoteEvent()', () => {
+    it('should return true if the remote event is supported', () => {
+        const config: PartitionRemoteEvents | boolean = {
+            create_initialization_update: true,
+        };
+        const result = supportsRemoteEvent(
+            config,
+            remote(createInitializationUpdate([]))
+        );
+
+        expect(result).toBe(true);
+    });
+
+    it('should return true if the remote actions are supported but the type is not in the config', () => {
+        const config: PartitionRemoteEvents | boolean = {
+            remoteActions: true,
+        };
+        const result = supportsRemoteEvent(config, remote(action('event')));
+
+        expect(result).toBe(true);
+    });
+
+    it('should return true if the remote actions are supported and the action is a remote result action', () => {
+        const config: PartitionRemoteEvents | boolean = {
+            remoteActions: true,
+        };
+        const result = supportsRemoteEvent(config, remoteResult(123));
+
+        expect(result).toBe(true);
+    });
+
+    it('should return false if the type is not in the config', () => {
+        const config: PartitionRemoteEvents | boolean = {};
+        const result = supportsRemoteEvent(
+            config,
+            remote(createInitializationUpdate([]))
+        );
+
+        expect(result).toBe(false);
+    });
+
+    it('should return true if the config is true', () => {
+        const config: PartitionRemoteEvents | boolean = true;
+        const result = supportsRemoteEvent(
+            config,
+            remote(createInitializationUpdate([]))
+        );
+
+        expect(result).toBe(true);
     });
 });
