@@ -9,7 +9,11 @@
             <div class="ui-container"></div>
         </game-view>
         <div v-if="showBios">Show BIOS</div>
-        <md-dialog :md-active.sync="showBios">
+        <md-dialog
+            :md-active.sync="showBios"
+            :md-close-on-esc="false"
+            :md-click-outside-to-close="false"
+        >
             <md-dialog-title>BIOS</md-dialog-title>
             <md-dialog-content>
                 <md-field>
