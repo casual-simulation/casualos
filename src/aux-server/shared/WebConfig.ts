@@ -4,6 +4,22 @@ import {
 } from '@casual-simulation/aux-common';
 
 /**
+ * The possible BIOS options.
+ *
+ * - "staticInst" indicates that the instance should be loaded statically.
+ * - "publicInst" indicates that the instance should be loaded from the public partition.
+ * - "privateInst" indicates that the instance should be loaded from the private partition.
+ * - "sign in" indicates that the user should be prompted to sign in.
+ * - "sign up" indicates that the user should be prompted to sign up.
+ */
+export type BiosOption =
+    | 'static inst'
+    | 'public inst'
+    | 'private inst'
+    | 'sign in'
+    | 'sign up';
+
+/**
  * Defines an interface for the configuration that the web client should try to pull from the server.
  */
 export interface WebConfig {
@@ -95,6 +111,12 @@ export interface WebConfig {
      * Whetehr to require that users login with Privo before they can access collaboration features.
      */
     requirePrivoLogin?: boolean;
+
+    /**
+     * The allowed BIOS options.
+     * If omitted, then all options are allowed.
+     */
+    allowedBiosOptions?: BiosOption[];
 
     // /**
     //  * Whether to require that age verification runs before the user can access collaboration features.

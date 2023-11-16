@@ -71,7 +71,16 @@ export enum AppType {
     Player = 'player',
 }
 
+interface StoredInst {
+    id: string;
+    origin: SimulationOrigin;
+    isStatic: boolean;
+}
+
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
+
+const STATIC_INSTS_STORE = 'staticInsts';
+const INSTS_STORE = 'publicInsts';
 
 export class AppManager {
     public appType: AppType;
@@ -86,6 +95,10 @@ export class AppManager {
 
     get authCoordinator() {
         return this._authCoordinator;
+    }
+
+    get auth() {
+        return this._auth;
     }
 
     private _auth: AuthHelper;
@@ -108,7 +121,8 @@ export class AppManager {
     private _simulationFactory: (
         id: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config']
+        config: AuxConfig['config'],
+        isStatic: boolean
     ) => Promise<BotManager>;
 
     get systemPortal() {
@@ -118,21 +132,33 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
-        this._simulationFactory = async (id, origin, config) => {
+        this._simulationFactory = async (id, origin, config, isStatic) => {
             const configBotId = uuid();
-            // const indicator = await this.getConnectionIndicator(
-            //     configBotId,
-            //     origin.recordName,
-            //     origin.inst,
-            //     origin.host
-            // );
-            const partitions = BotManager.createPartitions(
-                id,
-                configBotId,
-                origin,
-                config,
-                this._config.causalRepoConnectionUrl
+            const partitions = isStatic
+                ? BotManager.createStaticPartitions(
+                      id,
+                      configBotId,
+                      origin,
+                      config
+                  )
+                : BotManager.createPartitions(
+                      id,
+                      configBotId,
+                      origin,
+                      config,
+                      this._config.causalRepoConnectionUrl
+                  );
+
+            putItem<StoredInst>(
+                this._db,
+                isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
+                {
+                    id: id,
+                    origin,
+                    isStatic: isStatic,
+                }
             );
+
             return new BotManager(
                 origin,
                 config,
@@ -151,11 +177,12 @@ export class AppManager {
             if (forceSignedScripts) {
                 console.log('[AppManager] Forcing signed scripts for ' + id);
             }
-            const { ...origin } = config;
+            const { isStatic, ...origin } = config;
             return await this._simulationFactory(
                 id,
                 origin,
-                this.createSimulationConfig({ forceSignedScripts })
+                this.createSimulationConfig({ forceSignedScripts }),
+                isStatic
             );
         });
         this._systemPortal = new SystemPortalCoordinator(
@@ -225,7 +252,8 @@ export class AppManager {
         factory: (
             id: string,
             origin: SimulationOrigin,
-            config: AuxConfig['config']
+            config: AuxConfig['config'],
+            isStatic: boolean
         ) => Promise<BotManager>
     ) {
         this._simulationFactory = factory;
@@ -405,11 +433,19 @@ export class AppManager {
     }
 
     private async _initIndexedDB() {
-        this._db = await openIDB('Aux', 20, (db, oldVersion) => {
+        this._db = await openIDB('Aux', 21, (db, oldVersion) => {
             if (oldVersion < 20) {
                 let keyval = db.createObjectStore('keyval', { keyPath: 'key' });
                 let users = db.createObjectStore('users', {
                     keyPath: 'username',
+                });
+            }
+            if (oldVersion < 21) {
+                let staticInsts = db.createObjectStore(STATIC_INSTS_STORE, {
+                    keyPath: 'id',
+                });
+                let insts = db.createObjectStore(INSTS_STORE, {
+                    keyPath: 'id',
                 });
             }
         });
@@ -525,7 +561,11 @@ export class AppManager {
         }
     }
 
-    async setPrimarySimulation(recordName: string | null, inst: string) {
+    async setPrimarySimulation(
+        recordName: string | null,
+        inst: string,
+        isStatic: boolean
+    ) {
         const simulationId = getSimulationId(recordName, inst);
         if (
             (this.simulationManager.primary &&
@@ -538,7 +578,8 @@ export class AppManager {
         this._primaryPromise = this._setPrimarySimulation(
             simulationId,
             recordName,
-            inst
+            inst,
+            isStatic
         );
 
         return await this._primaryPromise;
@@ -547,7 +588,8 @@ export class AppManager {
     private async _setPrimarySimulation(
         id: string,
         recordName: string | null,
-        inst: string
+        inst: string,
+        isStatic: boolean
     ) {
         this._sendProgress('Requesting inst...', 0.1);
 
@@ -561,6 +603,7 @@ export class AppManager {
         await this.simulationManager.setPrimary(id, {
             recordName,
             inst,
+            isStatic,
         });
 
         this._initOffline();
@@ -644,6 +687,14 @@ export class AppManager {
     logout() {
         console.log('[AppManager] Logout');
         this.simulationManager.clear();
+    }
+
+    /**
+     * Lists the static insts that have been created.
+     */
+    async listStaticInsts(): Promise<string[]> {
+        const insts = await getItems<StoredInst>(this._db, STATIC_INSTS_STORE);
+        return insts.map((i) => i.origin.inst);
     }
 
     private async _getConfig(): Promise<WebConfig> {
