@@ -23,6 +23,11 @@ export interface WebConfig {
     causalRepoConnectionUrl?: string | null;
 
     /**
+     * Whether the causal repo should be persisted locally.
+     */
+    causalRepoLocalPersistence?: boolean;
+
+    /**
      * The version of the shared partitions that should be used.
      */
     sharedPartitionsVersion?: SharedPartitionsVersion | null;

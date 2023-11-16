@@ -17,6 +17,8 @@ const config: ClientConfig = {
                 .CAUSAL_REPO_CONNECTION_PROTOCOL as RemoteCausalRepoProtocol) ||
             'websocket',
         causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
+        causalRepoLocalPersistence:
+            process.env.CAUSAL_REPO_LOCAL_PERSISTENCE !== 'false',
         sharedPartitionsVersion:
             (process.env
                 .SHARED_PARTITIONS_VERSION as SharedPartitionsVersion) ?? 'v2',

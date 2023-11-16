@@ -57,6 +57,11 @@ export interface AuxConfigParameters {
     causalRepoConnectionUrl?: string;
 
     /**
+     * Whether the causal repo should be persisted locally.
+     */
+    causalRepoLocalPersistence?: boolean;
+
+    /**
      * The version of the shared partitions that should be used.
      */
     sharedPartitionsVersion?: SharedPartitionsVersion;

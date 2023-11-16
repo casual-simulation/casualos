@@ -149,7 +149,8 @@
         "workbox-expiration": "6.5.3",
         "vite-plugin-html": "2.1.1",
         "source-map": "0.7.3",
-        "http-server": "14.1.1"
+        "http-server": "14.1.1",
+        "fake-indexeddb": "5.0.1"
     },
     "dependencies": {},
     "prisma": {

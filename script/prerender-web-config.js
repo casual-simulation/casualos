@@ -16,6 +16,8 @@ const webConfig = {
     causalRepoConnectionProtocol:
         process.env.CAUSAL_REPO_CONNECTION_PROTOCOL || 'websocket',
     causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
+    causalRepoLocalPersistence:
+        process.env.CAUSAL_REPO_LOCAL_PERSISTENCE !== 'false',
     sharedPartitionsVersion: process.env.SHARED_PARTITIONS_VERSION || 'v2',
     vmOrigin: process.env.VM_ORIGIN || null,
     authOrigin: process.env.AUTH_ORIGIN || null,
