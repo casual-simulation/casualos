@@ -45,6 +45,7 @@ import {
 } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { PrivoConfiguration } from './PrivoConfiguration';
+import { ZodIssue } from 'zod';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -2348,6 +2349,11 @@ export interface PrivoSignUpRequestFailure {
      * The error message.
      */
     errorMessage: string;
+
+    /**
+     * The issues that were found with the request.
+     */
+    issues?: ZodIssue[];
 }
 
 export interface LoginRequest {

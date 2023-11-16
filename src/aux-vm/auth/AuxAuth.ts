@@ -59,52 +59,49 @@ export interface LoginUIAddressStatus {
     siteName: string;
 
     /**
-     * The reason for this login UI.
-     * -    "login" means that the user is entering an email/sms to login.
-     * -    "signup" means that the user is entering an email/sms and other info to signup.
-     * -    "collect_parent_email" means that the user is entering their parent's email address.
+     * The errors that should be displayed.
      */
-    collectionReason?: 'login' | 'collect_parent_email';
+    errors: FormError[];
 
-    /**
-     * Whether to show an error message that indicates that the terms of service must be accepted.
-     */
-    showAcceptTermsOfServiceError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the terms of service must be accepted.
+    //  */
+    // showAcceptTermsOfServiceError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that an email address must be provided.
-     */
-    showEnterEmailError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that an email address must be provided.
+    //  */
+    // showEnterEmailError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the email address is invalid.
-     */
-    showInvalidEmailError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the email address is invalid.
+    //  */
+    // showInvalidEmailError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates a phone number must be provided.
-     */
-    showEnterSmsError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates a phone number must be provided.
+    //  */
+    // showEnterSmsError?: boolean;
 
-    /**
-     * Whether to show an error message that the phone number is invalid.
-     */
-    showInvalidSmsError?: boolean;
+    // /**
+    //  * Whether to show an error message that the phone number is invalid.
+    //  */
+    // showInvalidSmsError?: boolean;
 
-    /**
-     * Whether to show an error message that the user was banned.
-     */
-    showBannedUserError?: boolean;
+    // /**
+    //  * Whether to show an error message that the user was banned.
+    //  */
+    // showBannedUserError?: boolean;
 
-    /**
-     * The error code that ocurred.
-     */
-    errorCode?: string;
+    // /**
+    //  * The error code that ocurred.
+    //  */
+    // errorCode?: string;
 
-    /**
-     * The error message that should be shown.
-     */
-    errorMessage?: string;
+    // /**
+    //  * The error message that should be shown.
+    //  */
+    // errorMessage?: string;
 
     /**
      * Whether SMS phone numbers are supported for login.
@@ -131,9 +128,13 @@ export interface LoginUICheckAddressStatus {
     enterCode?: boolean;
 
     /**
-     * Whether to show an error message that the code is invalid.
+     * The errors that should be displayed.
      */
-    showInvalidCodeError?: boolean;
+    errors: FormError[];
+    // /**
+    //  * Whether to show an error message that the code is invalid.
+    //  */
+    // showInvalidCodeError?: boolean;
 }
 
 export interface LoginUIShowIframe {
@@ -168,59 +169,64 @@ export interface LoginUIPrivoSignUp {
     siteName: string;
 
     /**
-     * Whether to show an error message that indicates that the terms of service must be accepted.
+     * The errors that should be displayed.
      */
-    showAcceptTermsOfServiceError?: boolean;
+    errors: FormError[];
 
-    /**
-     * Whether to show an error message that indicates that an email address must be provided.
-     */
-    showEnterEmailError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the terms of service must be accepted.
+    //  */
+    // showAcceptTermsOfServiceError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the email address is invalid.
-     */
-    showInvalidEmailError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that an email address must be provided.
+    //  */
+    // showEnterEmailError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the name field must be provided.
-     */
-    showEnterNameError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the email address is invalid.
+    //  */
+    // showInvalidEmailError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the name field is invalid.
-     */
-    showInvalidNameError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the name field must be provided.
+    //  */
+    // showEnterNameError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the date of birth field must be provided.
-     */
-    showEnterDateOfBirthError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the name field is invalid.
+    //  */
+    // showInvalidNameError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the date of birth field is invalid.
-     */
-    showInvalidDateOfBirthError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the date of birth field must be provided.
+    //  */
+    // showEnterDateOfBirthError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the parent email field must be provided.
-     */
-    showEnterParentEmailError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the date of birth field is invalid.
+    //  */
+    // showInvalidDateOfBirthError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the parent email field is invalid.
-     */
-    showInvalidParentEmailError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the parent email field must be provided.
+    //  */
+    // showEnterParentEmailError?: boolean;
 
-    /**
-     * Whether to show an error message that indicates that the display name field must be provided.
-     */
-    showEnterDisplayNameError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the parent email field is invalid.
+    //  */
+    // showInvalidParentEmailError?: boolean;
 
-    /**
-     * Whether to show an error message that the user was banned.
-     */
-    showBannedUserError?: boolean;
+    // /**
+    //  * Whether to show an error message that indicates that the display name field must be provided.
+    //  */
+    // showEnterDisplayNameError?: boolean;
+
+    // /**
+    //  * Whether to show an error message that the user was banned.
+    //  */
+    // showBannedUserError?: boolean;
 
     /**
      * The error code that ocurred.
@@ -357,12 +363,10 @@ export interface AuxAuth {
      * Only supported on protocol version 2 or more.
      * @param email The email address that should be used to login.
      * @param acceptedTermsOfService Whether the user accepted the terms of service.
-     * @param collectionReason The reason why the email address was collected. Optional. Only supported on protocol version 9 or more.
      */
     provideEmailAddress(
         email: string,
-        acceptedTermsOfService: boolean,
-        collectionReason?: LoginUIAddressStatus['collectionReason']
+        acceptedTermsOfService: boolean
     ): Promise<void>;
 
     /**
