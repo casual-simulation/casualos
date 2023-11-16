@@ -229,7 +229,21 @@
             </md-dialog-actions>
         </md-dialog>
 
-        <md-dialog
+        <register-dialog
+            v-if="showEnterAccountInfo"
+            :termsOfServiceUrl="termsOfServiceUrl"
+            :privacyPolicyUrl="privacyPolicyUrl"
+            :loginSiteName="loginSiteName"
+            :errors="registrationErrors"
+            :processing="processing"
+            @cancel="cancelRegistration()"
+            @checkDisplayName="checkDisplayName()"
+            @checkEmail="checkEmail()"
+            @register="register"
+        >
+        </register-dialog>
+
+        <!-- <md-dialog
             :md-active.sync="showEnterAccountInfo"
             @md-closed="cancelRegistration()"
             :md-close-on-esc="true"
@@ -360,7 +374,7 @@
                     <span v-else>Register</span>
                 </md-button>
             </md-dialog-actions>
-        </md-dialog>
+        </md-dialog> -->
 
         <md-dialog
             :md-active.sync="showHasAccount"

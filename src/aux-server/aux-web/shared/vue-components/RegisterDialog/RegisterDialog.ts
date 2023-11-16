@@ -9,7 +9,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
-import { LoginStatus } from '@casual-simulation/aux-vm';
+import { LoginStatus, PrivoSignUpInfo } from '@casual-simulation/aux-vm';
 import { DateTime } from 'luxon';
 import {
     DATE_OF_BIRTH_FIELD,
@@ -138,13 +138,15 @@ export default class RegisterDialog extends Vue {
         this.email = this.email.trim();
         this.parentEmail = this.parentEmail?.trim();
 
-        this.$emit('register', {
+        const info: PrivoSignUpInfo = {
             acceptedTermsOfService: this.acceptedTerms,
             email: this.email,
             name: this.name,
             dateOfBirth: this.dateOfBirth,
             displayName: this.displayName,
             parentEmail: this.parentEmail,
-        });
+        };
+
+        this.$emit('register', info);
     }
 }

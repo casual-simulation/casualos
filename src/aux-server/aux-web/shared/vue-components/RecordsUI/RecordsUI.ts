@@ -3,8 +3,15 @@ import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import { AuthHelperInterface, Simulation } from '@casual-simulation/aux-vm';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    AuthHelperInterface,
+    PrivoSignUpInfo,
+    Simulation,
+} from '@casual-simulation/aux-vm';
+import {
+    AuthHelper,
+    BrowserSimulation,
+} from '@casual-simulation/aux-vm-browser';
 import {
     asyncResult,
     asyncError,
@@ -23,6 +30,10 @@ import {
 } from '@casual-simulation/aux-runtime';
 import {
     CreatePublicRecordKeyResult,
+    DISPLAY_NAME_FIELD,
+    EMAIL_FIELD,
+    FormError,
+    getFormErrors,
     parseRecordKey,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
@@ -83,6 +94,8 @@ export default class RecordsUI extends Vue {
     showInvalidParentEmailError: boolean = false;
     showEnterParentEmailError: boolean = false;
     hasAccountValue: boolean = null;
+
+    registrationErrors: FormError[] = [];
 
     processing: boolean = false;
 
@@ -239,56 +252,15 @@ export default class RecordsUI extends Vue {
         }
     }
 
-    async register() {
-        this.showInvalidAddressError = false;
-        this.showEnterParentEmailError = false;
-        this.showNameError = false;
-        this.showDisplayNameError = false;
-        this.showDateOfBirthError = false;
-        this.showEnterAddressError = false;
-
-        this.displayName = this.displayName.trim();
-        if (!hasValue(this.displayName)) {
-            this.showDisplayNameError = true;
-            return;
-        }
-
-        this.name = this.name.trim();
-        if (!hasValue(this.name)) {
-            this.showNameError = true;
-            return;
-        }
-
-        if (!hasValue(this.dateOfBirth)) {
-            this.showDateOfBirthError = true;
-            return;
-        }
-
-        this.email = this.email.trim();
-        if (this.requireEmail) {
-            if (!hasValue(this.email)) {
-                this.showEnterAddressError = true;
-                return;
-            } else if (!mightBeEmailAddress(this.email)) {
-                this.showInvalidAddressError = true;
-                return;
-            }
-        }
-
-        this.parentEmail = this.parentEmail?.trim();
-        if (this.requireParentEmail && !hasValue(this.parentEmail)) {
-            this.showEnterParentEmailError = true;
-            return;
-        }
-
+    async register(info: PrivoSignUpInfo) {
         this.processing = true;
         await this._currentLoginAuth.providePrivoSignUpInfo({
-            acceptedTermsOfService: this.acceptedTerms,
-            email: this.email,
-            name: this.name,
-            dateOfBirth: this.dateOfBirth,
-            displayName: this.displayName,
-            parentEmail: this.parentEmail,
+            acceptedTermsOfService: info.acceptedTermsOfService,
+            email: info.email,
+            name: info.name,
+            dateOfBirth: info.dateOfBirth,
+            displayName: info.displayName,
+            parentEmail: info.parentEmail,
         });
     }
 
@@ -507,13 +479,13 @@ export default class RecordsUI extends Vue {
                     this.termsOfServiceUrl = e.termsOfServiceUrl;
                     this.privacyPolicyUrl = e.privacyPolicyUrl;
                     this.loginSiteName = e.siteName;
-                    this.showEmailError =
-                        e.showEnterEmailError || e.showInvalidEmailError;
-                    this.showSmsError =
-                        e.showInvalidSmsError || e.showEnterSmsError;
-                    this.showTermsOfServiceError =
-                        e.showAcceptTermsOfServiceError;
-                    this.showBannedUserError = e.showBannedUserError;
+                    // this.showEmailError =
+                    //     e.showEnterEmailError || e.showInvalidEmailError;
+                    // this.showSmsError =
+                    //     e.showInvalidSmsError || e.showEnterSmsError;
+                    // this.showTermsOfServiceError =
+                    //     e.showAcceptTermsOfServiceError;
+                    // this.showBannedUserError = e.showBannedUserError;
                     this.supportsSms = e.supportsSms;
                     this.$emit('visible');
                 } else if (
@@ -526,7 +498,7 @@ export default class RecordsUI extends Vue {
                     this.showCode = !!e.enterCode;
                     this.addressToCheck = e.address ?? this.email;
                     this.addressTypeToCheck = e.addressType;
-                    this.showInvalidCodeError = e.showInvalidCodeError;
+                    // this.showInvalidCodeError = e.showInvalidCodeError;
                     this.$emit('visible');
                 } else if (e.page === 'show_iframe') {
                     this._resetUI();
@@ -541,21 +513,7 @@ export default class RecordsUI extends Vue {
                     this.termsOfServiceUrl = e.termsOfServiceUrl;
                     this.privacyPolicyUrl = e.privacyPolicyUrl;
                     this.loginSiteName = e.siteName;
-                    this.showEmailError =
-                        e.showEnterEmailError || e.showInvalidEmailError;
-                    this.showNameError =
-                        e.showEnterNameError || e.showInvalidNameError;
-                    this.showDateOfBirthError =
-                        e.showEnterDateOfBirthError ||
-                        e.showInvalidDateOfBirthError;
-                    this.showTermsOfServiceError =
-                        e.showAcceptTermsOfServiceError;
-                    this.showBannedUserError = e.showBannedUserError;
-                    this.showDisplayNameError = e.showEnterDisplayNameError;
-                    this.showInvalidParentEmailError =
-                        e.showInvalidParentEmailError;
-                    this.showEnterParentEmailError =
-                        e.showEnterParentEmailError;
+                    this.registrationErrors = e.errors;
                     this.$emit('visible');
                 } else if (e.page === 'has_account') {
                     this._loginSim = sim;
@@ -581,21 +539,41 @@ export default class RecordsUI extends Vue {
         sim.auth.setUseCustomUI(true);
     }
 
-    async checkEmail() {
-        if (this.email) {
+    // private _registerAuth(auth: AuthHelper) {
+
+    // }
+
+    async checkEmail(email: string) {
+        if (email) {
             const result = await this._currentLoginAuth.isValidEmailAddress(
-                this.email
+                email
             );
-            this.showEmailError = !result.success || !result.allowed;
+            if (!result.success) {
+                this.registrationErrors.push(...getFormErrors(result));
+            } else if (!result.allowed) {
+                this.registrationErrors.push({
+                    for: EMAIL_FIELD,
+                    errorCode: 'invalid_email',
+                    errorMessage: 'The email is not allowed.',
+                });
+            }
         }
     }
 
-    async checkDisplayName() {
-        if (this.displayName) {
+    async checkDisplayName(displayName: string) {
+        if (displayName) {
             const result = await this._currentLoginAuth.isValidDisplayName(
-                this.displayName
+                displayName
             );
-            this.showDisplayNameError = !result.success || !result.allowed;
+            if (!result.success) {
+                this.registrationErrors.push(...getFormErrors(result));
+            } else if (!result.allowed) {
+                this.registrationErrors.push({
+                    for: DISPLAY_NAME_FIELD,
+                    errorCode: 'invalid_display_name',
+                    errorMessage: 'The display name is not allowed.',
+                });
+            }
         }
     }
 

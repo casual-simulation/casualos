@@ -1,6 +1,13 @@
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
+import {
+    Observable,
+    Subject,
+    Subscription,
+    SubscriptionLike,
+    startWith,
+} from 'rxjs';
 import { BrowserSimulation } from './BrowserSimulation';
 import {
+    AuthHelperInterface,
     Simulation,
     SimulationManager,
 } from '@casual-simulation/aux-vm/managers';
@@ -11,7 +18,7 @@ import {
     MissingPermissionDenialReason,
     PartitionAuthRequest,
 } from '@casual-simulation/aux-common';
-import { LoginStatus } from '@casual-simulation/aux-vm/auth';
+import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
 
 /**
  * Defines a class that is able to coordinate authentication across multiple simulations.
@@ -24,6 +31,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         new Subject();
     private _onShowAccountInfo: Subject<ShowAccountInfoEvent> = new Subject();
     private _sub: Subscription;
+    private _authHelper: AuthHelper;
 
     get onMissingPermission(): Observable<MissingPermissionEvent> {
         return this._onMissingPermission;
@@ -33,8 +41,20 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         return this._onShowAccountInfo;
     }
 
-    constructor(manager: SimulationManager<TSim>) {
+    get authEndpoints() {
+        return this._authHelper.endpoints;
+    }
+
+    get onAuthEndpointDiscovered(): Observable<{
+        endpoint: string;
+        helper: AuthHelperInterface;
+    }> {
+        return this._authHelper.onEndpointDiscovered;
+    }
+
+    constructor(manager: SimulationManager<TSim>, authHelper: AuthHelper) {
         this._simulationManager = manager;
+        this._authHelper = authHelper;
         this._sub = new Subscription();
 
         this._sub.add(
