@@ -116,7 +116,7 @@
             </md-dialog-actions>
         </md-dialog>
 
-        <div v-show="showIframe" class="md-overlay md-fixed md-dialog-overlay"></div>
+        <!-- <div v-show="showIframe" class="md-overlay md-fixed md-dialog-overlay"></div> -->
     </div>
 </template>
 <script src="./RecordsUI.ts"></script>

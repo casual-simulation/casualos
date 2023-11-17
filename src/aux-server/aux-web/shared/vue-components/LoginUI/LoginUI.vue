@@ -6,4 +6,4 @@
 </template>
 <script src="./LoginUI.ts"></script>
 <style src="./LoginUI.css" scoped></style>
-<style src="./LoginUIGlobal.css"></style>
+<style src="./LoginUIGlobals.css"></style>

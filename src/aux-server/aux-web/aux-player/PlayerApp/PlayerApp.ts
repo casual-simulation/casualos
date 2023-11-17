@@ -89,7 +89,7 @@ import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
 import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
 import WakeLock from '../../shared/vue-components/WakeLock/WakeLock';
 import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
-import LoginUI from '../../shared/vue-components/LoginEndpointUI/LoginEndpointUI';
+import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
 
 let syntheticVoices = [] as SyntheticVoice[];
 

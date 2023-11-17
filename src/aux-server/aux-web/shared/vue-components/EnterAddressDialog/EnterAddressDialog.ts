@@ -53,7 +53,7 @@ export default class EnterAddressDialog extends Vue {
     }
 
     get emailFieldClass() {
-        return this.status.errors.some((e) => e.for === ADDRESS_FIELD)
+        return this.formErrors.some((e) => e.for === ADDRESS_FIELD)
             ? 'md-invalid'
             : '';
     }
@@ -67,7 +67,7 @@ export default class EnterAddressDialog extends Vue {
     }
 
     get formErrors() {
-        return this.status.errors;
+        return this.status.errors ?? [];
     }
 
     acceptedTerms: boolean = false;

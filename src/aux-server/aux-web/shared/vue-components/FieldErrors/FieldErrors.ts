@@ -14,6 +14,9 @@ export default class RegisterDialog extends Vue {
     errors: FormError[];
 
     get fieldErrors() {
+        if (!this.errors) {
+            return [];
+        }
         return this.errors.filter((e) => e.for === this.field);
     }
 }

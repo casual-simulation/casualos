@@ -8,6 +8,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { Prop, Watch } from 'vue-property-decorator';
 import FieldErrors from '../FieldErrors/FieldErrors';
+import { CODE_FIELD } from '@casual-simulation/aux-records';
 
 @Component({
     components: {
@@ -27,6 +28,12 @@ export default class CheckAddressDialog extends Vue {
     showCheckAddress: boolean;
     loginCode: string;
 
+    get checkAddressTitle() {
+        return `Check your ${
+            this.addressTypeToCheck === 'phone' ? 'phone' : 'email'
+        }`;
+    }
+
     get showCode() {
         return !!this.status.enterCode;
     }
@@ -40,7 +47,13 @@ export default class CheckAddressDialog extends Vue {
     }
 
     get formErrors() {
-        return this.status.errors;
+        return this.status.errors ?? [];
+    }
+
+    get codeFieldClass() {
+        return this.formErrors.some((e) => e.for === CODE_FIELD)
+            ? 'md-invalid'
+            : '';
     }
 
     processing: boolean = false;
