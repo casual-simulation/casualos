@@ -1,5 +1,6 @@
 import {
     AuxAuth,
+    LoginHint,
     LoginStatus,
     LoginUIAddressStatus,
     LoginUIStatus,
@@ -87,7 +88,10 @@ export class AuthHandler implements AuxAuth {
         return false;
     }
 
-    async login(backgroundLogin?: boolean): Promise<AuthData> {
+    async login(
+        backgroundLogin?: boolean,
+        hint?: 'sign in' | 'sign up' | null
+    ): Promise<AuthData> {
         if (await this.isLoggedIn()) {
             return this._loginData;
         }
@@ -103,7 +107,7 @@ export class AuthHandler implements AuxAuth {
             let userId: string;
             if (this._useCustomUI) {
                 console.log('[AuthHandler] Attempting login with Custom UI.');
-                userId = await this._loginWithCustomUI();
+                userId = await this._loginWithCustomUI(hint);
             } else {
                 console.log('[AuthHandler] Attempting login with new tab.');
                 userId = await this._loginWithNewTab();
@@ -492,7 +496,7 @@ export class AuthHandler implements AuxAuth {
         });
     }
 
-    private async _loginWithCustomUI(): Promise<string> {
+    private async _loginWithCustomUI(hint: LoginHint): Promise<string> {
         try {
             let canceled = this._canceledLogins
                 .pipe(
@@ -510,7 +514,7 @@ export class AuthHandler implements AuxAuth {
 
             return await Promise.race<string>([
                 canceled,
-                this._tryLoginWithCustomUI(cancelSignal),
+                this._tryLoginWithCustomUI(hint, cancelSignal),
             ]);
         } finally {
             this._loginUIStatus.next({
@@ -519,11 +523,14 @@ export class AuthHandler implements AuxAuth {
         }
     }
 
-    private async _tryLoginWithCustomUI(cancelSignal: {
-        canceled: boolean;
-    }): Promise<string> {
+    private async _tryLoginWithCustomUI(
+        hint: LoginHint,
+        cancelSignal: {
+            canceled: boolean;
+        }
+    ): Promise<string> {
         if (authManager.usePrivoLogin) {
-            return this._privoLoginWithCustomUI(cancelSignal);
+            return this._privoLoginWithCustomUI(hint, cancelSignal);
         } else {
             return this._regularLoginWithCustomUI(cancelSignal);
         }
@@ -625,23 +632,40 @@ export class AuthHandler implements AuxAuth {
         return authManager.userId;
     }
 
-    private async _privoLoginWithCustomUI(cancelSignal: {
-        canceled: boolean;
-    }): Promise<string> {
-        this._loginUIStatus.next({
-            page: 'has_account',
-            privacyPolicyUrl: this.privacyPolicyUrl,
-        });
-
-        const hasAccount = await firstValueFrom(
-            this._providedHasAccount.pipe(filter(() => !cancelSignal.canceled))
-        );
-
-        if (hasAccount) {
-            // redirect to privo login
+    private async _privoLoginWithCustomUI(
+        hint: LoginHint,
+        cancelSignal: {
+            canceled: boolean;
+        }
+    ): Promise<string> {
+        if (hint === 'sign in') {
+            console.log(
+                '[AuthHandler] Hint: sign in. Logging in with Privo...'
+            );
             return await this._loginWithPrivo(cancelSignal);
-        } else {
+        } else if (hint === 'sign up') {
+            console.log(
+                '[AuthHandler] Hint: sign up. Registering with Privo...'
+            );
             return await this._registerWithPrivo(cancelSignal);
+        } else {
+            this._loginUIStatus.next({
+                page: 'has_account',
+                privacyPolicyUrl: this.privacyPolicyUrl,
+            });
+
+            const hasAccount = await firstValueFrom(
+                this._providedHasAccount.pipe(
+                    filter(() => !cancelSignal.canceled)
+                )
+            );
+
+            if (hasAccount) {
+                // redirect to privo login
+                return await this._loginWithPrivo(cancelSignal);
+            } else {
+                return await this._registerWithPrivo(cancelSignal);
+            }
         }
     }
 

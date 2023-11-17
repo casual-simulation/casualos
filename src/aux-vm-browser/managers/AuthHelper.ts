@@ -76,7 +76,7 @@ export class AuthHelper {
     getOrCreateEndpoint(endpoint: string) {
         let e = this.getEndpoint(endpoint);
         if (!e) {
-            e = this.createEndpoint(endpoint);
+            e = this._createEndpoint(endpoint);
             this._onEndpointDiscovered.next({ endpoint, helper: e });
         }
 
@@ -87,7 +87,8 @@ export class AuthHelper {
         return this._auths.get(endpoint);
     }
 
-    createEndpoint(endpoint: string): AuthHelperInterface {
+    private _createEndpoint(endpoint: string): AuthHelperInterface {
+        console.log('[AuthHelper] Creating endpoint', endpoint);
         const helper = new AuthEndpointHelper(endpoint);
         helper.loginUIStatus
             .pipe(map((s) => ({ ...s, endpoint })))

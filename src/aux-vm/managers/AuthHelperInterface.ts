@@ -6,7 +6,12 @@ import {
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
-import { LoginStatus, LoginUIStatus, PrivoSignUpInfo } from '../auth/AuxAuth';
+import {
+    LoginHint,
+    LoginStatus,
+    LoginUIStatus,
+    PrivoSignUpInfo,
+} from '../auth/AuxAuth';
 
 /**
  * Defines an interface for objects that are able to keep track of the user's authentication state.
@@ -50,8 +55,9 @@ export interface AuthHelperInterface extends SubscriptionLike {
 
     /**
      * Requests that the user become authenticated if they are not already.
+     * @param hint The hint that should be used to determine what kind of authentication should be used.
      */
-    authenticate(): Promise<AuthData>;
+    authenticate(hint?: LoginHint): Promise<AuthData>;
 
     /**
      * Requests that the user become authenticated entirely in the background.

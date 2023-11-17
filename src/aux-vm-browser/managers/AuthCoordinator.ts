@@ -1,9 +1,12 @@
 import {
+    BehaviorSubject,
+    NEVER,
     Observable,
     Subject,
     Subscription,
     SubscriptionLike,
     startWith,
+    switchMap,
 } from 'rxjs';
 import { BrowserSimulation } from './BrowserSimulation';
 import {
@@ -30,8 +33,10 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private _onMissingPermission: Subject<MissingPermissionEvent> =
         new Subject();
     private _onShowAccountInfo: Subject<ShowAccountInfoEvent> = new Subject();
+    private _onAuthHelper: BehaviorSubject<AuthHelper> = new BehaviorSubject(
+        null
+    );
     private _sub: Subscription;
-    private _authHelper: AuthHelper;
 
     get onMissingPermission(): Observable<MissingPermissionEvent> {
         return this._onMissingPermission;
@@ -41,20 +46,35 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         return this._onShowAccountInfo;
     }
 
-    get authEndpoints() {
-        return this._authHelper.endpoints;
+    get authEndpoints(): Map<string, AuthHelperInterface> {
+        const helper = this.authHelper;
+        if (helper) {
+            return helper.endpoints;
+        }
+        return new Map();
     }
 
     get onAuthEndpointDiscovered(): Observable<{
         endpoint: string;
         helper: AuthHelperInterface;
     }> {
-        return this._authHelper.onEndpointDiscovered;
+        return this._onAuthHelper.pipe(
+            switchMap((helper) =>
+                helper ? helper.onEndpointDiscovered : NEVER
+            )
+        );
     }
 
-    constructor(manager: SimulationManager<TSim>, authHelper: AuthHelper) {
+    get authHelper() {
+        return this._onAuthHelper.value;
+    }
+
+    set authHelper(value: AuthHelper) {
+        this._onAuthHelper.next(value);
+    }
+
+    constructor(manager: SimulationManager<TSim>) {
         this._simulationManager = manager;
-        this._authHelper = authHelper;
         this._sub = new Subscription();
 
         this._sub.add(

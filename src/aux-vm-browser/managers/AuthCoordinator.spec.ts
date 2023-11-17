@@ -140,7 +140,7 @@ describe('AuthCoordinator', () => {
         });
         sim = await addSimulation('sim-1');
 
-        manager = new AuthCoordinator(simManager, authHelper);
+        manager = new AuthCoordinator(simManager);
 
         sim.onAuthMessage.subscribe((msg) => {
             if (msg.type === 'response') {

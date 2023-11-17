@@ -284,6 +284,14 @@ export interface PrivoSignUpInfo {
 }
 
 /**
+ * The type of possible login hints.
+ * - "sign in" indicates that the user should be prompted to sign in.
+ * - "sign up" indicates that the user should be prompted to sign up.
+ * - null indicates that the user should be asked.
+ */
+export type LoginHint = 'sign in' | 'sign up' | null;
+
+/**
  * Defines an interface for an object that is able to communicate with an authentication service.
  */
 export interface AuxAuth {
@@ -296,8 +304,9 @@ export interface AuxAuth {
      * Logs the user in.
      * Returns a promise that resolves with data about the user.
      * @param backgroundLogin Whether to only try to log in in the background. This will prevent any UI from popping up to log the user in but may not be able to login the user completely. Defaults to false.
+     * @param hint The hint that should be used to determine whether to sign in or sign up. If null, then the user may be asked. Defaults to null.
      */
-    login(backgroundLogin?: boolean): Promise<AuthData>;
+    login(backgroundLogin?: boolean, hint?: LoginHint): Promise<AuthData>;
 
     /**
      * Logs the user out.

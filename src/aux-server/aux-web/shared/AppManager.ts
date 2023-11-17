@@ -101,6 +101,7 @@ export class AppManager {
         return this._auth;
     }
 
+    private _initPromise: Promise<void>;
     private _auth: AuthHelper;
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
@@ -343,7 +344,14 @@ export class AppManager {
             .subscribe();
     }
 
-    async init() {
+    init(): Promise<void> {
+        if (!this._initPromise) {
+            this._initPromise = this._initCore();
+        }
+        return this._initPromise;
+    }
+
+    private async _initCore() {
         console.log('[AppManager] Starting init...');
         this._reportTime('Time to start');
         console.log(
@@ -385,30 +393,32 @@ export class AppManager {
             this.config.recordsOrigin,
             factory
         );
+        this._authCoordinator.authHelper = this._auth;
         console.log('[AppManager] Authenticating user in background...');
         const authData = await this._auth.primary.authenticateInBackground();
+
         if (authData) {
             console.log('[AppManager] User is authenticated.');
             this._defaultStudioId = authData.userId;
-            this._defaultPrivacyFeatures = authData.privacyFeatures;
         } else {
             console.log('[AppManager] User is not authenticated.');
             this._defaultStudioId = null;
-            if (this._config.requirePrivoLogin) {
-                this._defaultPrivacyFeatures = {
-                    allowPublicData: false,
-                    publishData: false,
-                    allowAI: false,
-                    allowPublicInsts: false,
-                };
-            } else {
-                this._defaultPrivacyFeatures = {
-                    allowPublicData: true,
-                    publishData: true,
-                    allowAI: true,
-                    allowPublicInsts: true,
-                };
-            }
+        }
+
+        if (this._config.requirePrivoLogin) {
+            this._defaultPrivacyFeatures = {
+                allowPublicData: false,
+                publishData: false,
+                allowAI: false,
+                allowPublicInsts: false,
+            };
+        } else {
+            this._defaultPrivacyFeatures = {
+                allowPublicData: true,
+                publishData: true,
+                allowAI: true,
+                allowPublicInsts: true,
+            };
         }
         console.log(`[AppManager] defaultPlayerId: ${this._defaultStudioId}`);
         console.log(
@@ -417,9 +427,11 @@ export class AppManager {
         );
 
         this._auth.primary.loginStatus.subscribe((status) => {
-            if (status?.authData?.privacyFeatures) {
-                this._defaultPrivacyFeatures = status.authData.privacyFeatures;
+            if (status.authData) {
+                this._defaultStudioId = status.authData.userId;
+            }
 
+            if (status?.authData?.privacyFeatures) {
                 const newDevice = this._calculateDeviceConfig();
                 if (!isEqual(newDevice, this._deviceConfig)) {
                     console.log(`[AppManager] New device config: `, newDevice);

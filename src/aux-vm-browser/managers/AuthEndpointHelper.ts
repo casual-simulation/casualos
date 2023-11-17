@@ -2,6 +2,7 @@ import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
     AuthHelperInterface,
     AuxAuth,
+    LoginHint,
     LoginStatus,
     LoginUIStatus,
     PrivoSignUpInfo,
@@ -199,18 +200,18 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     /**
      * Requests that the user become authenticated if they are not already.
      */
-    async authenticate() {
+    async authenticate(hint?: LoginHint) {
         if (!hasValue(this._origin)) {
             return null;
         }
         if (!this._initialized) {
             await this._init();
         }
-        return await this._authenticateCore();
+        return await this._authenticateCore(hint);
     }
 
-    protected async _authenticateCore() {
-        const result = await this._proxy.login();
+    protected async _authenticateCore(hint?: LoginHint) {
+        const result = await this._proxy.login(undefined, hint);
 
         if (this._protocolVersion < 2) {
             this._loginStatus.next({

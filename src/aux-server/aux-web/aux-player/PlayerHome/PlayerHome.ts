@@ -57,6 +57,7 @@ export default class PlayerHome extends Vue {
     debug: boolean = false;
     isLoading: boolean = false;
     showBios: boolean = false;
+    showLoggingIn: boolean = false;
     biosOptions: BiosOption[] = [];
     biosSelection: BiosOption = null;
 
@@ -149,10 +150,7 @@ export default class PlayerHome extends Vue {
                     params.isStatic
                 );
             } else {
-                this.showBios = true;
-                this._getBiosOptions().then((options) => {
-                    this.biosOptions = options;
-                });
+                this._showBiosOptions();
             }
 
             // // const preferPublic =
@@ -210,6 +208,13 @@ export default class PlayerHome extends Vue {
         }
     }
 
+    private async _showBiosOptions() {
+        this.showBios = true;
+        this.biosSelection = null;
+        const options = await this._getBiosOptions();
+        this.biosOptions = options;
+    }
+
     async executeBiosOption(
         option: BiosOption,
         recordName: string,
@@ -218,7 +223,18 @@ export default class PlayerHome extends Vue {
         this.showBios = false;
         console.log('selection', option, recordName, inst);
         if (option === 'sign in' || option === 'sign up') {
-            appManager.auth.primary.authenticate();
+            try {
+                if (option === 'sign in') {
+                    this.showLoggingIn = true;
+                }
+                await appManager.auth.primary.authenticate(option);
+            } finally {
+                this.showLoggingIn = false;
+                this._showBiosOptions();
+            }
+        } else if (option === 'sign out') {
+            await appManager.auth.primary.logout();
+            this._showBiosOptions();
         } else if (option === 'static inst') {
             this._loadStaticInst(inst);
         } else if (option === 'private inst') {
@@ -226,6 +242,11 @@ export default class PlayerHome extends Vue {
         } else if (option === 'public inst') {
             this._loadPublicInst();
         }
+    }
+
+    async cancelLogin() {
+        this.showLoggingIn = false;
+        await appManager.auth.primary.cancelLogin();
     }
 
     private _loadStaticInst(instSelection: string) {
@@ -248,7 +269,28 @@ export default class PlayerHome extends Vue {
         this._setServer(null, inst, true);
     }
 
-    private _loadPrivateInst() {}
+    private _loadPrivateInst() {
+        const userId =
+            appManager.auth.primary.currentLoginStatus.authData?.userId;
+
+        if (userId) {
+            const update: Dictionary<string | string[]> = {};
+            const inst = uniqueNamesGenerator(namesConfig);
+
+            update.player = userId;
+            update.inst = inst;
+
+            if (!hasValue(this.query['gridPortal'])) {
+                update.gridPortal = 'home';
+            }
+
+            if (Object.keys(update).length > 0) {
+                this._updateQuery(update);
+            }
+
+            this._setServer(null, inst, false);
+        }
+    }
 
     private _loadPublicInst() {
         const update: Dictionary<string | string[]> = {};
@@ -268,7 +310,9 @@ export default class PlayerHome extends Vue {
     }
 
     private async _getBiosOptions(): Promise<BiosOption[]> {
-        const privacyFeatures = appManager.defaultPrivacyFeatures;
+        const privacyFeatures =
+            appManager.auth.primary.currentLoginStatus?.authData
+                ?.privacyFeatures ?? appManager.defaultPrivacyFeatures;
         const authenticated = await appManager.auth.primary.isAuthenticated();
         return (
             appManager.config.allowedBiosOptions ?? [
@@ -277,6 +321,7 @@ export default class PlayerHome extends Vue {
                 'public inst',
                 'sign in',
                 'sign up',
+                'sign out',
             ]
         ).filter((option) => {
             if (
@@ -296,6 +341,8 @@ export default class PlayerHome extends Vue {
                 (option === 'sign in' || option === 'sign up') &&
                 !authenticated
             ) {
+                return true;
+            } else if (option === 'sign out' && authenticated) {
                 return true;
             } else {
                 return false;

@@ -16,14 +16,17 @@ export default class LoginUI extends Vue {
     private _endpointUIs: Map<AuthHelperInterface, LoginUIStatus>;
     private _visible: boolean;
 
-    endpoints: string[];
+    endpoints: string[] = [];
 
     created() {
         this._sub = new Subscription();
         this._endpointSubs = new Map();
         this._endpointUIs = new Map();
         this.endpoints = [];
-        this._visible = false;
+
+        appManager.init().then(() => {
+            appManager.auth.setUseCustomUI(true);
+        });
 
         this._sub.add(
             appManager.authCoordinator.onAuthEndpointDiscovered.subscribe(

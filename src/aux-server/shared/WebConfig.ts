@@ -11,13 +11,15 @@ import {
  * - "privateInst" indicates that the instance should be loaded from the private partition.
  * - "sign in" indicates that the user should be prompted to sign in.
  * - "sign up" indicates that the user should be prompted to sign up.
+ * - "sign out" indicates that the user should be logged out.
  */
 export type BiosOption =
     | 'static inst'
     | 'public inst'
     | 'private inst'
     | 'sign in'
-    | 'sign up';
+    | 'sign up'
+    | 'sign out';
 
 /**
  * Defines an interface for the configuration that the web client should try to pull from the server.
