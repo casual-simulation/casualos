@@ -88,7 +88,7 @@ import AuthRecordsInsts from './AuthRecordsInsts/AuthRecordsInsts';
 import './global.css';
 import { appManager } from 'aux-web/shared/AppManager';
 import OAuthRedirect from './OAuthRedirect/OAuthRedirect';
-import PrivoRegistrationDialog from './PrivoRegistrationDialog/PrivoRegistrationDialog';
+import PrivoRegistrationCard from './PrivoRegistrationCard/PrivoRegistrationCard';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -230,7 +230,7 @@ const routes: RouteConfig[] = [
     {
         path: '/sign-up',
         name: 'sign-up',
-        component: PrivoRegistrationDialog,
+        component: PrivoRegistrationCard,
     },
 ];
 

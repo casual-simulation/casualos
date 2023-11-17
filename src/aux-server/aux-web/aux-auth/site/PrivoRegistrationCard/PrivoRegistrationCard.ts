@@ -9,7 +9,7 @@ import UpdatePasswordDialog from '../UpdatePasswordDialog/UpdatePasswordDialog';
         'update-password-dialog': UpdatePasswordDialog,
     },
 })
-export default class PrivoRegistrationDialog extends Vue {
+export default class PrivoRegistrationCard extends Vue {
     email: string = '';
     acceptedTerms: boolean = false;
     name: string = '';

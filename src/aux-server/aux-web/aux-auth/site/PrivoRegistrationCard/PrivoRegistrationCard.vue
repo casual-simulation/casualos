@@ -135,5 +135,5 @@
         </md-card>
     </div>
 </template>
-<script src="./PrivoRegistrationDialog.ts"></script>
-<style src="./PrivoRegistrationDialog.css" scoped></style>
+<script src="./PrivoRegistrationCard.ts"></script>
+<style src="./PrivoRegistrationCard.css" scoped></style>
