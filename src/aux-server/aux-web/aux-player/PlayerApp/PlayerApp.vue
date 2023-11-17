@@ -1,6 +1,7 @@
 <template>
     <div id="app">
         <auth-ui></auth-ui>
+        <login-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></login-ui>
         <load-app>
             <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <bot-portal>
@@ -28,7 +29,7 @@
             </bot-portal>
 
             <html-portals v-show="showCustomApps"></html-portals>
-            <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui>
+            <!-- <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui> -->
 
             <upload-files></upload-files>
             <show-input></show-input>

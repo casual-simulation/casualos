@@ -89,6 +89,7 @@ import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
 import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
 import WakeLock from '../../shared/vue-components/WakeLock/WakeLock';
 import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
+import LoginUI from '../../shared/vue-components/LoginEndpointUI/LoginEndpointUI';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -115,6 +116,7 @@ declare function sa_event(name: string, callback: Function): void;
 @Component({
     components: {
         'auth-ui': AuthUI,
+        'login-ui': LoginUI,
         'load-app': LoadApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
