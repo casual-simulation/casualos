@@ -66,7 +66,7 @@
             </md-card>
         </form>
         <div v-else>
-            <has-account-dialog @hasAccount="hasAccount"> </has-account-dialog>
+            <has-account-card @hasAccount="hasAccount"> </has-account-card>
         </div>
     </div>
 </template>
