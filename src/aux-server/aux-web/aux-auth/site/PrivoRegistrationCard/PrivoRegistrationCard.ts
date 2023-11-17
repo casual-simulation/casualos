@@ -2,11 +2,11 @@ import { authManager } from '../../shared';
 import { DateTime } from 'luxon';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import UpdatePasswordDialog from '../UpdatePasswordDialog/UpdatePasswordDialog';
+import UpdatePasswordCard from '../UpdatePasswordCard/UpdatePasswordCard';
 
 @Component({
     components: {
-        'update-password-dialog': UpdatePasswordDialog,
+        'update-password-card': UpdatePasswordCard,
     },
 })
 export default class PrivoRegistrationCard extends Vue {

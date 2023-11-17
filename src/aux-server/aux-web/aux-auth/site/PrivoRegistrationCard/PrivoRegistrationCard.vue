@@ -1,10 +1,10 @@
 <template>
     <div class="register-container">
-        <update-password-dialog
+        <update-password-card
             v-if="updatePasswordUrl"
             :updatePasswordUrl="updatePasswordUrl"
             @close="goHome()"
-        ></update-password-dialog>
+        ></update-password-card>
         <md-card v-else>
             <form @submit.prevent="register">
                 <md-card-header><div class="md-title">Register</div></md-card-header>
