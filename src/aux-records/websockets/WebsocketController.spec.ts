@@ -134,6 +134,7 @@ describe('WebsocketController', () => {
                 services.auth,
                 services.policies,
                 services.configStore,
+                services.store,
                 services.store
             );
 
@@ -502,6 +503,129 @@ describe('WebsocketController', () => {
 
                     expect(
                         messenger.getEvents(device1Info.serverConnectionId)
+                    ).toEqual([]);
+
+                    expect(
+                        await instStore.getBranchByName(
+                            null,
+                            inst,
+                            'doesNotExist'
+                        )
+                    ).toEqual(null);
+                    // Should not create an inst when the record name is null.
+                    expect(await instStore.getInstByName(null, inst)).toBe(
+                        null
+                    );
+                });
+
+                it('should return a not_authorized error if the user is not allowed to access public insts based on their privacy features', async () => {
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            publishData: true,
+                            allowPublicInsts: false,
+                        },
+                    });
+
+                    await connectionStore.saveConnection(user1Info);
+
+                    await server.watchBranch(user1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
+                        branch: 'doesNotExist',
+                    });
+
+                    expect(
+                        messenger.getMessages(user1Info.serverConnectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: false,
+                            recordName: null,
+                            inst,
+                            branch: 'doesNotExist',
+                            errorCode: 'not_authorized',
+                            errorMessage: 'Public insts are not allowed.',
+                        },
+                    ]);
+
+                    expect(
+                        messenger.getEvents(user1Info.serverConnectionId)
+                    ).toEqual([]);
+
+                    expect(
+                        await instStore.getBranchByName(
+                            null,
+                            inst,
+                            'doesNotExist'
+                        )
+                    ).toEqual(null);
+                    // Should not create an inst when the record name is null.
+                    expect(await instStore.getInstByName(null, inst)).toBe(
+                        null
+                    );
+                });
+
+                it('should return a not_authorized error if the user is not logged in and privo is configured to deny public insts by default', async () => {
+                    store.privoConfiguration = {
+                        gatewayEndpoint: 'endpoint',
+                        featureIds: {
+                            adultPrivoSSO: 'adultAccount',
+                            childPrivoSSO: 'childAccount',
+                            joinAndCollaborate: 'joinAndCollaborate',
+                            publishProjects: 'publish',
+                            projectDevelopment: 'dev',
+                        },
+                        clientId: 'clientId',
+                        clientSecret: 'clientSecret',
+                        publicEndpoint: 'publicEndpoint',
+                        roleIds: {
+                            child: 'childRole',
+                            adult: 'adultRole',
+                            parent: 'parentRole',
+                        },
+                        clientTokenScopes: 'scope1 scope2',
+                        userTokenScopes: 'scope1 scope2',
+                        redirectUri: 'redirectUri',
+                        ageOfConsent: 18,
+                    };
+                    user1Info = {
+                        serverConnectionId,
+                        clientConnectionId: connectionId,
+                        userId: null,
+                        sessionId: null,
+                        token: null,
+                    };
+
+                    await connectionStore.saveConnection(user1Info);
+
+                    await server.watchBranch(user1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
+                        branch: 'doesNotExist',
+                    });
+
+                    expect(
+                        messenger.getMessages(user1Info.serverConnectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: false,
+                            recordName: null,
+                            inst,
+                            branch: 'doesNotExist',
+                            errorCode: 'not_authorized',
+                            errorMessage: 'Public insts are not allowed.',
+                        },
+                    ]);
+
+                    expect(
+                        messenger.getEvents(user1Info.serverConnectionId)
                     ).toEqual([]);
 
                     expect(

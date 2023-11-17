@@ -1000,7 +1000,8 @@ export class ServerBuilder implements SubscriptionLike {
                 this._authController,
                 this._policyController,
                 this._configStore,
-                this._metricsStore
+                this._metricsStore,
+                this._authStore
             );
         }
 
