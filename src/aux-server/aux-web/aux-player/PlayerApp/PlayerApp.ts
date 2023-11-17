@@ -269,7 +269,12 @@ export default class PlayerApp extends Vue {
 
     streamImu: boolean = false;
 
-    showCustomApps: boolean = true;
+    loginUIVisible: boolean = false;
+    recordsUIVisible: boolean = false;
+
+    get showCustomApps(): boolean {
+        return !this.loginUIVisible && !this.recordsUIVisible;
+    }
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -442,12 +447,20 @@ export default class PlayerApp extends Vue {
         });
     }
 
-    hideCustomApps() {
-        this.showCustomApps = false;
+    onRecordsUIVisisble() {
+        this.recordsUIVisible = false;
     }
 
-    displayCustomApps() {
-        this.showCustomApps = true;
+    onRecordsUIHidden() {
+        this.recordsUIVisible = false;
+    }
+
+    onLoginUIVisible() {
+        this.loginUIVisible = true;
+    }
+
+    onLoginUIHidden() {
+        this.loginUIVisible = false;
     }
 
     copy(text: string) {
