@@ -1,6 +1,6 @@
 <template>
     <md-dialog
-        :md-active="true"
+        :md-active.sync="showEnterAccountInfo"
         @md-closed="cancelRegistration()"
         :md-close-on-esc="true"
         :md-click-outside-to-close="true"
@@ -101,5 +101,5 @@
         </md-dialog-actions>
     </md-dialog>
 </template>
-<script src="./RegisterDialog.ts"></script>
-<style src="./RegisterDialog.css"></style>
+<script src="./EnterAccountInfoDialog.ts"></script>
+<style src="./EnterAccountInfoDialog.css"></style>

@@ -8,16 +8,18 @@ import CheckAddressDialog from '../CheckAddressDialog/CheckAddressDialog';
 import EnterAddressDialog from '../EnterAddressDialog/EnterAddressDialog';
 import HasAccountDialog from '../HasAccountDialog/HasAccountDialog';
 import UpdatePasswordLinkDialog from '../UpdatePasswordLinkDialog/UpdatePasswordLinkDialog';
+import EnterAccountInfoDialog from '../EnterAccountInfoDialog/EnterAccountInfoDialog';
 
 @Component({
     components: {
-        'check-address-dialog': CheckAddressDialog,
         'enter-address-dialog': EnterAddressDialog,
+        'check-address-dialog': CheckAddressDialog,
         'has-account-dialog': HasAccountDialog,
+        'enter-account-info-dialog': EnterAccountInfoDialog,
         'update-password-link-dialog': UpdatePasswordLinkDialog,
     },
 })
-export default class LoginUI extends Vue {
+export default class LoginEndpointUI extends Vue {
     private _sub: Subscription;
     private _endpoint: AuthHelperInterface;
 
@@ -39,11 +41,13 @@ export default class LoginUI extends Vue {
     }
 
     created() {
+        console.log('load endpoint', this.endpoint);
         this.loginUIStatus = null;
         this._sub = new Subscription();
         this._endpoint = appManager.authCoordinator.authEndpoints.get(
             this.endpoint
         );
+        this._registerSubs();
     }
 
     beforeDestroy() {
@@ -65,6 +69,7 @@ export default class LoginUI extends Vue {
     }
 
     private _handleLoginStatus(status: LoginUIStatus) {
+        console.log('[LoginUI] Got login page', status.page);
         this.loginUIStatus = status;
     }
 }
