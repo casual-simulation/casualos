@@ -1,44 +1,21 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import {
-    AuthHelperInterface,
-    LoginUIStatus,
-    Simulation,
-} from '@casual-simulation/aux-vm';
-import {
-    AuthHelper,
-    BrowserSimulation,
-} from '@casual-simulation/aux-vm-browser';
-import {
-    asyncResult,
-    asyncError,
-    approveAction,
-    APPROVED_SYMBOL,
-    hasValue,
-    cleanPhoneNumber,
-    mightBeEmailAddress,
-} from '@casual-simulation/aux-common';
-import {
-    RecordDataAction,
-    DataRecordAction,
-    GetRecordDataAction,
-    EraseRecordDataAction,
-    GrantInstAdminPermissionAction,
-} from '@casual-simulation/aux-runtime';
-import {
-    CreatePublicRecordKeyResult,
-    parseRecordKey,
-    PublicRecordKeyPolicy,
-} from '@casual-simulation/aux-records';
-import { AddressType } from '@casual-simulation/aux-records/AuthStore';
-import { DateTime } from 'luxon';
+import { AuthHelperInterface, LoginUIStatus } from '@casual-simulation/aux-vm';
 import { Prop, Watch } from 'vue-property-decorator';
+import CheckAddressDialog from '../CheckAddressDialog/CheckAddressDialog';
+import EnterAddressDialog from '../EnterAddressDialog/EnterAddressDialog';
+import HasAccountDialog from '../HasAccountDialog/HasAccountDialog';
+import UpdatePasswordLinkDialog from '../UpdatePasswordLinkDialog/UpdatePasswordLinkDialog';
 
 @Component({
-    components: {},
+    components: {
+        'check-address-dialog': CheckAddressDialog,
+        'enter-address-dialog': EnterAddressDialog,
+        'has-account-dialog': HasAccountDialog,
+        'update-password-link-dialog': UpdatePasswordLinkDialog,
+    },
 })
 export default class LoginUI extends Vue {
     private _sub: Subscription;

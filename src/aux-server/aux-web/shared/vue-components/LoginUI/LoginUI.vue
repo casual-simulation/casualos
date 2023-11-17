@@ -4,6 +4,6 @@
         </login-endpoint>
     </div>
 </template>
-<script src="./RecordsUI.ts"></script>
-<style src="./RecordsUI.css" scoped></style>
-<style src="./RecordsUIGlobal.css"></style>
+<script src="./LoginUI.ts"></script>
+<style src="./LoginUI.css" scoped></style>
+<style src="./LoginUIGlobal.css"></style>

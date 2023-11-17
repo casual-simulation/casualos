@@ -30,6 +30,11 @@ export default class HasAccountDialog extends Vue {
 
     processing: boolean = false;
 
+    @Watch('status')
+    onStatusChanged() {
+        this.processing = false;
+    }
+
     @Watch('endpoint')
     onEndpointChanged() {
         this._endpoint = appManager.authCoordinator.authEndpoints.get(

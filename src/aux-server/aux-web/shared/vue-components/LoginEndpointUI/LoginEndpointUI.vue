@@ -23,12 +23,12 @@
             :status="loginUIStatus"
         >
         </enter-account-info-dialog>
-        <show-update-password-link-dialog
+        <update-password-link-dialog
             v-else-if="page === 'show_update_password_link'"
             :endpoint="endpoint"
             :status="loginUIStatus"
         >
-        </show-update-password-link-dialog>
+        </update-password-link-dialog>
     </div>
 </template>
 <script src="./LoginEndpointUI.ts"></script>

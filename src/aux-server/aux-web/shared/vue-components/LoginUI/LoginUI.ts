@@ -1,9 +1,8 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import { AuthHelperInterface, Simulation } from '@casual-simulation/aux-vm';
+import { AuthHelperInterface } from '@casual-simulation/aux-vm';
 import LoginEndpointUI from '../LoginEndpointUI/LoginEndpointUI';
 
 @Component({
@@ -41,7 +40,7 @@ export default class LoginUI extends Vue {
 
         sub.add(
             helper.loginUIStatus.subscribe((status) => {
-                this.endpoints.push(endpoint);
+                this.endpoints = [...this.endpoints, endpoint];
             })
         );
 

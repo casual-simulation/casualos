@@ -1,6 +1,7 @@
 import { AuthData } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
+    FormError,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
