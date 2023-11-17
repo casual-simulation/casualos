@@ -1936,6 +1936,7 @@ describe('BaseAuxChannel', () => {
     });
 
     describe('updateDevice()', () => {
+        let memoryEnableCollaboration: jest.Mock<any>;
         beforeEach(async () => {
             indicator = {
                 connectionId: 'userId',
@@ -1949,6 +1950,7 @@ describe('BaseAuxChannel', () => {
                 type: 'memory',
                 initialState: {},
             });
+            memoryEnableCollaboration = memory.enableCollaboration = jest.fn();
             config = {
                 configBotId: 'userId',
                 config: {
@@ -2007,6 +2009,35 @@ describe('BaseAuxChannel', () => {
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
+        });
+
+        it('should emit a onCollaborationEnabled shout when isCollaborative is set to true', async () => {
+            await channel.initAndWait();
+
+            await memory.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        [ON_COLLABORATION_ENABLED]: '@os.toast("abc");',
+                    })
+                ),
+            ]);
+
+            await waitAsync();
+
+            let actions: Action[] = [];
+            channel.onLocalEvents.subscribe((e) => actions.push(...e));
+
+            await channel.updateDevice({
+                ab1BootstrapUrl: 'other',
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: true,
+                isCollaborative: true,
+            });
+
+            await waitAsync();
+
+            expect(actions).toEqual([toast('abc')]);
         });
 
         it('should emit a onAllowCollaborationUpgrade shout when allowCollaborationUpgrade is set to true', async () => {
