@@ -69,7 +69,6 @@ export default class AuthUI extends Vue {
             const simId = this._simId;
             this.closeAccountInfo();
             await appManager.authCoordinator.openAccountDashboard(simId);
-            location.reload();
         }
     }
 
