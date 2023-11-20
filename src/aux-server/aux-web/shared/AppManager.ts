@@ -432,6 +432,11 @@ export class AppManager {
             }
 
             if (status?.authData?.privacyFeatures) {
+                console.log(
+                    'App Manager: New privacy features',
+                    status.authData.privacyFeatures
+                );
+
                 const newDevice = this._calculateDeviceConfig();
                 if (!isEqual(newDevice, this._deviceConfig)) {
                     console.log(`[AppManager] New device config: `, newDevice);

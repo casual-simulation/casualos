@@ -67,6 +67,8 @@ export default class PlayerHome extends Vue {
     recordSelection: string = null;
     instSelection: string = null;
 
+    private _loadedStaticInst: boolean = false;
+
     private _simulations: Map<BrowserSimulation, Subscription>;
 
     get botManager() {
@@ -75,10 +77,13 @@ export default class PlayerHome extends Vue {
 
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
+        const staticInst = this.query['staticInst'] as string | string[];
         const inst = this.query['inst'] as string | string[];
         let recordName = this.query['record'] ?? this.query['player'] ?? null;
-        if (hasValue(inst)) {
-            // await this._setServer(recordName, inst);
+        if (hasValue(staticInst)) {
+            await this._setServer(recordName, staticInst, true);
+        } else if (hasValue(inst)) {
+            await this._setServer(recordName, inst, false);
         }
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
@@ -386,9 +391,25 @@ export default class PlayerHome extends Vue {
                                     null
                                 );
                             if (hasValue(inst)) {
-                                // TODO:
-                                console.error('[PlayerHome] not supported!');
-                                // this._setServer(recordName, inst);
+                                // Handle changing inst tag
+                                const wasStatic = !!this._loadedStaticInst;
+                                const final = {
+                                    ...this.$route,
+                                    query: {
+                                        ...this.query,
+                                    },
+                                };
+                                if (wasStatic) {
+                                    final.query.staticInst = inst;
+                                } else {
+                                    final.query.inst = inst;
+                                }
+                                window.history.pushState(
+                                    {},
+                                    window.document.title
+                                );
+                                this.$router.replace(final);
+                                this._setServer(recordName, inst, wasStatic);
                             }
                         }
 
@@ -458,9 +479,12 @@ export default class PlayerHome extends Vue {
         newServer: string | string[],
         isStatic: boolean
     ) {
+        this._loadedStaticInst = isStatic;
         const record = getFirst(recordName);
         if (typeof newServer === 'string') {
             await this._loadPrimarySimulation(record, newServer, isStatic);
+        } else if (newServer.length === 1) {
+            await this._loadPrimarySimulation(record, newServer[0], isStatic);
         } else {
             if (!appManager.simulationManager.primary) {
                 await this._loadPrimarySimulation(
