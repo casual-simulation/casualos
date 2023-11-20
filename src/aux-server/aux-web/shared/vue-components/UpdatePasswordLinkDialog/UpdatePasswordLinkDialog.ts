@@ -21,7 +21,7 @@ export default class UpdatePasswordLinkDialog extends Vue {
     @Prop()
     status: LoginUIUpdatePasswordLink;
 
-    showUpdatePassword: boolean;
+    showUpdatePassword: boolean = false;
 
     get updatePasswordUrl() {
         return this.status.updatePasswordUrl;
@@ -45,6 +45,10 @@ export default class UpdatePasswordLinkDialog extends Vue {
 
     beforeDestroy() {
         this._sub.unsubscribe();
+    }
+
+    onClose() {
+        this.$emit('close');
     }
 
     private _registerSubs() {

@@ -512,11 +512,19 @@ export class AuthHandler implements AuxAuth {
                 return null;
             });
 
-            return await Promise.race<string>([
+            const userId = await Promise.race<string>([
                 canceled,
                 this._tryLoginWithCustomUI(hint, cancelSignal),
             ]);
-        } finally {
+
+            if (!userId) {
+                this._loginUIStatus.next({
+                    page: false,
+                });
+            }
+
+            return userId;
+        } catch {
             this._loginUIStatus.next({
                 page: false,
             });
@@ -629,6 +637,10 @@ export class AuthHandler implements AuxAuth {
         await authManager.loadUserInfo();
         await this._loadUserInfo();
 
+        this._loginUIStatus.next({
+            page: false,
+        });
+
         return authManager.userId;
     }
 
@@ -711,6 +723,10 @@ export class AuthHandler implements AuxAuth {
 
             await authManager.loadUserInfo();
             await this._loadUserInfo();
+
+            this._loginUIStatus.next({
+                page: false,
+            });
 
             return authManager.userId;
         }

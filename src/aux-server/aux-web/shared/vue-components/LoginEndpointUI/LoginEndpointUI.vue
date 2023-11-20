@@ -27,6 +27,7 @@
             v-else-if="page === 'show_update_password_link'"
             :endpoint="endpoint"
             :status="loginUIStatus"
+            @close="closePasswordLinkDialog()"
         >
         </update-password-link-dialog>
     </div>

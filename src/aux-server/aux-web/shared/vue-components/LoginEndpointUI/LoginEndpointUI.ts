@@ -54,6 +54,10 @@ export default class LoginEndpointUI extends Vue {
         this._sub.unsubscribe();
     }
 
+    closePasswordLinkDialog() {
+        this.loginUIStatus = null;
+    }
+
     private _registerSubs() {
         if (this._sub) {
             this._sub.unsubscribe();

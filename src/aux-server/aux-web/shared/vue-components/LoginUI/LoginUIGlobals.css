@@ -23,3 +23,7 @@ iframe.auth-helper-iframe {
 .md-datepicker.md-field.md-theme-dark > .md-icon:after {
     background-color: transparent;
 }
+
+.md-dialog.input-dialog {
+    z-index: 20;
+}

@@ -5,6 +5,7 @@
         :md-click-outside-to-close="true"
         :md-fullscreen="true"
         class="input-dialog"
+        @md-closed="onClose()"
     >
         <md-dialog-title>Account Created</md-dialog-title>
         <md-dialog-content class="input-dialog-content">

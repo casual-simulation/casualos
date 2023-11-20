@@ -164,6 +164,9 @@ export default class EnterAccountInfoDialog extends Vue {
     }
 
     async checkDisplayName() {
+        if (!this.displayName) {
+            return;
+        }
         const result = await this._endpoint.isValidDisplayName(
             this.displayName
         );
@@ -187,6 +190,9 @@ export default class EnterAccountInfoDialog extends Vue {
     }
 
     async checkEmail() {
+        if (!this.email) {
+            return;
+        }
         const result = await this._endpoint.isValidEmailAddress(this.email);
 
         const valid = !result.success || result.allowed;
@@ -214,6 +220,7 @@ export default class EnterAccountInfoDialog extends Vue {
     }
 
     async register() {
+        this.processing = true;
         this.displayName = this.displayName.trim();
         this.name = this.name.trim();
         this.email = this.email.trim();
