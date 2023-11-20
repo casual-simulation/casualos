@@ -329,6 +329,7 @@ describe('RecordsServer', () => {
             authController,
             policyController,
             store,
+            store,
             store
         );
 
