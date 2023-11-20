@@ -346,7 +346,14 @@ export default class PlayerHome extends Vue {
                 (option === 'sign in' || option === 'sign up') &&
                 !authenticated
             ) {
-                return true;
+                if (
+                    option === 'sign up' &&
+                    !appManager.config?.requirePrivoLogin
+                ) {
+                    return false;
+                } else {
+                    return true;
+                }
             } else if (option === 'sign out' && authenticated) {
                 return true;
             } else {
