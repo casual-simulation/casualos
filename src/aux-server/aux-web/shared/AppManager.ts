@@ -205,7 +205,9 @@ export class AppManager {
             causalRepoConnectionProtocol:
                 this._config.causalRepoConnectionProtocol,
             causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
-            causalRepoLocalPersistence: this._config.causalRepoLocalPersistence,
+            collaborativeRepLocalPersistence:
+                this._config.collaborativeRepoLocalPersistence,
+            staticRepoLocalPersistence: this._config.staticRepoLocalPersistence,
             sharedPartitionsVersion: this._config.sharedPartitionsVersion,
             vmOrigin: this._config.vmOrigin,
             authOrigin: this._config.authOrigin,

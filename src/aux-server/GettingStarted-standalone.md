@@ -99,6 +99,8 @@ Use the following environment variables to configure the inst collaboration feat
 -   `SHARED_PARTITIONS_VERSION`: The version of the shared partitions that should be used. The "shared partitions" are the services used to implement the shared spaces (`shared`, `tempShared`, and `remoteTempShared`). Currently, the only possible option is `v2`. Defaults to `v2`.
 -   `PREFERRED_INST_SOURCE`: The preferred source for loading instances. Possible options are `"public"` and `"private"`. `"public"` means that public instances will be loaded if not already specified in the URL. `"private"` means that private insts will be loaded if not already specified in the URL. Defaults to `"private"`.
 -   `FRONTEND_ORIGIN`: The HTTP Origin that the CasualOS frontend is available at.
+-   `COLLABORATIVE_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for shared inst data. Currently experimental and may not work properly when enabled. Defaults to `false`.
+-   `STATIC_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for static inst data. Defaults to `true`.
 
 #### Privo Features
 
