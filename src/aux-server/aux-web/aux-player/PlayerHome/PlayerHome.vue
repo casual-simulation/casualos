@@ -23,6 +23,12 @@
                         }}</md-option>
                     </md-select>
                 </md-field>
+
+                <md-field v-if="biosSelection === 'enter join code'" :class="joinCodeClass">
+                    <label for="joinCode">Join Code</label>
+                    <md-input name="joinCode" id="joinCode" v-model="joinCode" />
+                    <field-errors field="joinCode" :errors="errors" />
+                </md-field>
                 <md-field v-if="recordsOptions.length > 0">
                     <label for="recordOption">Record</label>
                     <md-select v-model="recordSelection" name="recordOption" id="recordOption">
@@ -43,7 +49,10 @@
                 </md-field>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button @click="executeBiosOption(biosSelection, recordSelection, instSelection)"
+                <md-button
+                    @click="
+                        executeBiosOption(biosSelection, recordSelection, instSelection, joinCode)
+                    "
                     >Continue</md-button
                 >
             </md-dialog-actions>

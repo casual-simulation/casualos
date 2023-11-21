@@ -39,6 +39,8 @@ import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
 import { getInstParameters } from '../UrlUtils';
 import { BiosOption } from 'shared/WebConfig';
+import { FormError } from '@casual-simulation/aux-records';
+import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 
 const namesConfig: Config = {
     dictionaries: [adjectives, colors, animals],
@@ -48,6 +50,7 @@ const namesConfig: Config = {
 @Component({
     components: {
         'game-view': PlayerGameView,
+        'field-errors': FieldErrors,
     },
 })
 export default class PlayerHome extends Vue {
@@ -66,10 +69,18 @@ export default class PlayerHome extends Vue {
 
     recordSelection: string = null;
     instSelection: string = null;
+    joinCode: string = null;
+
+    errors: FormError[] = [];
 
     private _loadedStaticInst: boolean = false;
 
     private _simulations: Map<BrowserSimulation, Subscription>;
+
+    get joinCodeClass() {
+        const hasJoinCodeError = this.errors.some((e) => e.for === 'joinCode');
+        return hasJoinCodeError ? 'md-invalid' : '';
+    }
 
     get botManager() {
         return appManager.simulationManager.primary;
@@ -127,6 +138,7 @@ export default class PlayerHome extends Vue {
         this.recordSelection = null;
         this.instSelection = 'new-inst';
         this.biosOptions = [];
+        this.errors = [];
         this._simulations = new Map();
 
         appManager.simulationManager.simulationAdded.subscribe((sim) => {
@@ -142,10 +154,6 @@ export default class PlayerHome extends Vue {
         });
 
         if (this.query) {
-            // let update: Dictionary<string | string[]> = {};
-            // let recordName = this.query['record'] ?? null;
-            // let inst = this.query['inst'] as string | string[];
-
             const params = getInstParameters(this.query);
 
             if (params) {
@@ -155,24 +163,30 @@ export default class PlayerHome extends Vue {
                     params.isStatic
                 );
             } else {
-                const biosOption = this.query['bios'];
+                const joinCode = this.query['joinCode'];
+                if (joinCode) {
+                    const code = Array.isArray(joinCode)
+                        ? joinCode[0]
+                        : joinCode;
+                    this._loadJoinCode(code);
+                } else {
+                    const biosOption = this.query['bios'];
 
-                let hasValidBiosOption = false;
-                if (biosOption) {
-                    const bios = (
-                        Array.isArray(biosOption) ? biosOption[0] : biosOption
-                    ) as BiosOption;
-                    const options = await this._getBiosOptions();
+                    let hasValidBiosOption = false;
+                    if (biosOption) {
+                        const bios = getFirst(biosOption) as BiosOption;
+                        const options = await this._getBiosOptions();
 
-                    if (options.some((o) => o === bios)) {
-                        hasValidBiosOption = true;
-                        this.biosSelection = bios;
-                        this.executeBiosOption(bios, null, null);
+                        if (options.some((o) => o === bios)) {
+                            hasValidBiosOption = true;
+                            this.biosSelection = bios;
+                            this.executeBiosOption(bios, null, null, null);
+                        }
                     }
-                }
 
-                if (!hasValidBiosOption) {
-                    this._showBiosOptions();
+                    if (!hasValidBiosOption) {
+                        this._showBiosOptions();
+                    }
                 }
             }
         }
@@ -188,7 +202,8 @@ export default class PlayerHome extends Vue {
     async executeBiosOption(
         option: BiosOption,
         recordName: string,
-        inst: string
+        inst: string,
+        joinCode: string
     ) {
         this.showBios = false;
         console.log('selection', option, recordName, inst);
@@ -211,6 +226,8 @@ export default class PlayerHome extends Vue {
             this._loadPrivateInst();
         } else if (option === 'public inst') {
             this._loadPublicInst();
+        } else if (option === 'enter join code') {
+            this._loadJoinCode(joinCode);
         }
     }
 
@@ -227,6 +244,36 @@ export default class PlayerHome extends Vue {
                 : instSelection;
 
         update.staticInst = inst;
+
+        if (!hasValue(this.query['gridPortal'])) {
+            update.gridPortal = 'home';
+        }
+
+        if (Object.keys(update).length > 0) {
+            this._updateQuery(update);
+        }
+
+        this._setServer(null, inst, true);
+    }
+
+    private _loadJoinCode(joinCode: string) {
+        if (!joinCode) {
+            this.errors = [
+                ...this.errors.filter((e) => e.for !== 'joinCode'),
+                {
+                    for: 'joinCode',
+                    errorCode: 'invalid_join_code',
+                    errorMessage: 'A join code must be provided.',
+                },
+            ];
+            this.showBios = true;
+            return;
+        }
+        const update: Dictionary<string | string[]> = {};
+        const inst = uniqueNamesGenerator(namesConfig);
+
+        update.staticInst = inst;
+        update.joinCode = joinCode;
 
         if (!hasValue(this.query['gridPortal'])) {
             update.gridPortal = 'home';
@@ -286,6 +333,7 @@ export default class PlayerHome extends Vue {
         const authenticated = await appManager.auth.primary.isAuthenticated();
         return (
             appManager.config.allowedBiosOptions ?? [
+                'enter join code',
                 'static inst',
                 'private inst',
                 'public inst',
@@ -321,6 +369,11 @@ export default class PlayerHome extends Vue {
                 }
             } else if (option === 'sign out' && authenticated) {
                 return true;
+            } else if (
+                option === 'enter join code' &&
+                privacyFeatures.allowPublicInsts
+            ) {
+                return true;
             } else {
                 return false;
             }
@@ -337,10 +390,7 @@ export default class PlayerHome extends Vue {
                 } else {
                     if (sim.id === appManager.simulationManager.primary.id) {
                         this._handleQueryUpdates(sim, update);
-                        if (
-                            update.tags.has('inst') &&
-                            !appManager.config.disableCollaboration
-                        ) {
+                        if (update.tags.has('inst')) {
                             // inst changed - update it
                             const calc = sim.helper.createContext();
                             const inst = calculateStringListTagValue(
