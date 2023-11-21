@@ -4,7 +4,7 @@
     "version": "0.3.0",
     "scripts": {
         "start": "node ./src/aux-server/aux-backend/server/dist/main.js",
-        "bootstrap": "lerna bootstrap --hoist -- --legacy-peer-deps && npm run bootstrap:aws",
+        "bootstrap": "lerna bootstrap --hoist -- --legacy-peer-deps && patch-package && npm run bootstrap:aws",
         "bootstrap:aws": "node src/aux-server/script/bootstrap.js",
         "cockroach": "cockroach start-single-node --insecure",
         "reset:aws": "node src/aux-server/script/bootstrap.js --reset",
@@ -150,7 +150,8 @@
         "vite-plugin-html": "2.1.1",
         "source-map": "0.7.3",
         "http-server": "14.1.1",
-        "fake-indexeddb": "5.0.1"
+        "fake-indexeddb": "5.0.1",
+        "patch-package": "8.0.0"
     },
     "dependencies": {},
     "prisma": {
