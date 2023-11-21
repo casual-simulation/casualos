@@ -1308,6 +1308,7 @@ describe('AuthController', () => {
                     joinAndCollaborate: 'joinAndCollaborate',
                     publishProjects: 'publish',
                     projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
                 },
                 clientId: 'clientId',
                 clientSecret: 'clientSecret',
@@ -1408,7 +1409,13 @@ describe('AuthController', () => {
                 childFirstName: 'test name',
                 childDisplayName: 'displayName',
                 childDateOfBirth: new Date(2010, 1, 1),
-                featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'childAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
 
@@ -1424,8 +1431,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: false,
                     allowPublicData: false,
-                    allowAI: true,
-                    allowPublicInsts: true,
+                    allowAI: false,
+                    allowPublicInsts: false,
                 },
             });
 
@@ -1483,7 +1490,13 @@ describe('AuthController', () => {
                 childFirstName: 'test name',
                 childDisplayName: 'displayName',
                 childDateOfBirth: new Date(2010, 1, 1),
-                featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'childAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
 
@@ -1499,8 +1512,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: false,
                     allowPublicData: false,
-                    allowAI: true,
-                    allowPublicInsts: true,
+                    allowAI: false,
+                    allowPublicInsts: false,
                 },
             });
 
@@ -1543,6 +1556,10 @@ describe('AuthController', () => {
                         on: true,
                         featureId: 'dev',
                     },
+                    {
+                        on: true,
+                        featureId: 'buildaieggs',
+                    },
                 ],
                 updatePasswordLink: 'link',
             });
@@ -1571,7 +1588,13 @@ describe('AuthController', () => {
                 childFirstName: 'test name',
                 childDisplayName: 'displayName',
                 childDateOfBirth: new Date(2010, 1, 1),
-                featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'childAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
 
@@ -1673,7 +1696,13 @@ describe('AuthController', () => {
                 adultDisplayName: 'displayName',
                 adultFirstName: 'test name',
                 adultDateOfBirth: new Date(2000, 1, 1),
-                featureIds: ['adultAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'adultAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
 
@@ -1688,8 +1717,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: false,
                     allowPublicData: false,
-                    allowAI: true,
-                    allowPublicInsts: true,
+                    allowAI: false,
+                    allowPublicInsts: false,
                 },
             });
 
@@ -1731,6 +1760,10 @@ describe('AuthController', () => {
                         on: true,
                         featureId: 'dev',
                     },
+                    {
+                        on: true,
+                        featureId: 'buildaieggs',
+                    },
                 ],
                 updatePasswordLink: 'link',
             });
@@ -1758,7 +1791,13 @@ describe('AuthController', () => {
                 adultDisplayName: 'displayName',
                 adultFirstName: 'test name',
                 adultDateOfBirth: new Date(2000, 1, 1),
-                featureIds: ['adultAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'adultAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
 
@@ -1824,6 +1863,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -1953,6 +1993,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -2157,6 +2198,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -2291,8 +2333,8 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
-                        allowAI: true,
-                        allowPublicInsts: true,
+                        allowAI: false,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -2342,6 +2384,13 @@ describe('AuthController', () => {
                                     on: true,
                                     consentDateSeconds: 1234567890,
                                     featureId: 'dev',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'buildaieggs',
                                     active: true,
                                     category: 'Standard',
                                 },
@@ -5501,6 +5550,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -5557,7 +5607,7 @@ describe('AuthController', () => {
                             category: 'Standard',
                         },
                         {
-                            on: false,
+                            on: true,
                             consentDateSeconds: 1234567890,
                             featureId: 'dev',
                             active: true,
@@ -5583,9 +5633,9 @@ describe('AuthController', () => {
                     subscriptionTier: null,
                     displayName: 'displayName',
                     privacyFeatures: {
-                        publishData: false,
+                        publishData: true,
                         allowPublicData: false,
-                        allowAI: true,
+                        allowAI: false,
                         allowPublicInsts: true,
                     },
                 });
@@ -5613,16 +5663,23 @@ describe('AuthController', () => {
                             category: 'Standard',
                         },
                         {
-                            on: true,
+                            on: false,
                             consentDateSeconds: 1234567890,
                             featureId: 'publish',
                             active: true,
                             category: 'Standard',
                         },
                         {
-                            on: false,
+                            on: true,
                             consentDateSeconds: 1234567890,
                             featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'buildaieggs',
                             active: true,
                             category: 'Standard',
                         },
@@ -5649,7 +5706,7 @@ describe('AuthController', () => {
                         publishData: true,
                         allowPublicData: false,
                         allowAI: true,
-                        allowPublicInsts: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -5670,6 +5727,202 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: false,
+                    },
+                });
+            });
+
+            it('should update the users features if ai permissions was changed', async () => {
+                await store.saveUser({
+                    ...(await store.findUser(userId)),
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: false,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                privoClientMock.getUserInfo.mockResolvedValue({
+                    serviceId: 'serviceId',
+                    emailVerified: true,
+                    email: 'email',
+                    givenName: 'name',
+                    locale: 'en-US',
+                    roleIdentifier: 'ab1Child',
+                    displayName: 'displayName',
+                    permissions: [
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'joinAndCollaborate',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'buildaieggs',
+                            active: true,
+                            category: 'Standard',
+                        },
+                    ],
+                });
+
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: 'displayName',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
+                    'serviceId'
+                );
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    privoServiceId: 'serviceId',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+            });
+
+            it('should update the users features if public insts permissions was changed', async () => {
+                await store.saveUser({
+                    ...(await store.findUser(userId)),
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
+                    },
+                });
+
+                privoClientMock.getUserInfo.mockResolvedValue({
+                    serviceId: 'serviceId',
+                    emailVerified: true,
+                    email: 'email',
+                    givenName: 'name',
+                    locale: 'en-US',
+                    roleIdentifier: 'ab1Child',
+                    displayName: 'displayName',
+                    permissions: [
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'joinAndCollaborate',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'buildaieggs',
+                            active: true,
+                            category: 'Standard',
+                        },
+                    ],
+                });
+
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: 'displayName',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
+                    'serviceId'
+                );
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    privoServiceId: 'serviceId',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
                         allowAI: true,
                         allowPublicInsts: true,
                     },
@@ -6005,6 +6258,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -6089,6 +6343,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -6163,6 +6418,7 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
                 joinAndCollaborate: 'joinAndCollaborate',
                 projectDevelopment: 'projectDevelopment',
                 publishProjects: 'publishProjects',
+                buildAIEggs: 'buildaieggs',
             },
             []
         );
@@ -6170,12 +6426,12 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
         expect(result).toEqual({
             publishData: false,
             allowPublicData: false,
-            allowAI: true,
-            allowPublicInsts: true,
+            allowAI: false,
+            allowPublicInsts: false,
         });
     });
 
-    it('should disable the publishData feature if the publishProjects feature is disabled', () => {
+    it('should disable the allowPublicData feature if the publishProjects feature is disabled', () => {
         const result = getPrivacyFeaturesFromPermissions(
             {
                 adultPrivoSSO: 'aSSO',
@@ -6183,6 +6439,7 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
                 joinAndCollaborate: 'joinAndCollaborate',
                 projectDevelopment: 'projectDevelopment',
                 publishProjects: 'publishProjects',
+                buildAIEggs: 'buildaieggs',
             },
             [
                 {
@@ -6197,37 +6454,8 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
                     featureId: 'publishProjects',
                     on: false,
                 },
-            ]
-        );
-
-        expect(result).toEqual({
-            publishData: false,
-            allowPublicData: false,
-            allowAI: true,
-            allowPublicInsts: true,
-        });
-    });
-
-    it('should disable the allowPublicData feature if the joinAndCollaborate feature is disabled', () => {
-        const result = getPrivacyFeaturesFromPermissions(
-            {
-                adultPrivoSSO: 'aSSO',
-                childPrivoSSO: 'cSSO',
-                joinAndCollaborate: 'joinAndCollaborate',
-                projectDevelopment: 'projectDevelopment',
-                publishProjects: 'publishProjects',
-            },
-            [
                 {
-                    featureId: 'projectDevelopment',
-                    on: true,
-                },
-                {
-                    featureId: 'joinAndCollaborate',
-                    on: false,
-                },
-                {
-                    featureId: 'publishProjects',
+                    featureId: 'buildaieggs',
                     on: true,
                 },
             ]
@@ -6237,6 +6465,82 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
             publishData: true,
             allowPublicData: false,
             allowAI: true,
+            allowPublicInsts: true,
+        });
+    });
+
+    it('should disable the allowPublicInsts feature if the joinAndCollaborate feature is disabled', () => {
+        const result = getPrivacyFeaturesFromPermissions(
+            {
+                adultPrivoSSO: 'aSSO',
+                childPrivoSSO: 'cSSO',
+                joinAndCollaborate: 'joinAndCollaborate',
+                projectDevelopment: 'projectDevelopment',
+                publishProjects: 'publishProjects',
+                buildAIEggs: 'buildaieggs',
+            },
+            [
+                {
+                    featureId: 'projectDevelopment',
+                    on: true,
+                },
+                {
+                    featureId: 'joinAndCollaborate',
+                    on: false,
+                },
+                {
+                    featureId: 'publishProjects',
+                    on: true,
+                },
+                {
+                    featureId: 'buildaieggs',
+                    on: true,
+                },
+            ]
+        );
+
+        expect(result).toEqual({
+            publishData: true,
+            allowPublicData: true,
+            allowAI: true,
+            allowPublicInsts: false,
+        });
+    });
+
+    it('should disable the allowAI feature if the buildAIEggs feature is disabled', () => {
+        const result = getPrivacyFeaturesFromPermissions(
+            {
+                adultPrivoSSO: 'aSSO',
+                childPrivoSSO: 'cSSO',
+                joinAndCollaborate: 'joinAndCollaborate',
+                projectDevelopment: 'projectDevelopment',
+                publishProjects: 'publishProjects',
+                buildAIEggs: 'buildaieggs',
+            },
+            [
+                {
+                    featureId: 'projectDevelopment',
+                    on: true,
+                },
+                {
+                    featureId: 'joinAndCollaborate',
+                    on: true,
+                },
+                {
+                    featureId: 'publishProjects',
+                    on: true,
+                },
+                {
+                    featureId: 'buildaieggs',
+                    on: false,
+                },
+            ]
+        );
+
+        expect(result).toEqual({
+            publishData: true,
+            allowPublicData: true,
+            allowAI: false,
             allowPublicInsts: true,
         });
     });

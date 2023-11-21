@@ -317,7 +317,7 @@ export class PlaywrightSimulation
         if (endpoint === this._config.authOrigin) {
             return this._authHelper.primary;
         } else {
-            const helper = this._authHelper.createEndpoint(endpoint);
+            const helper = this._authHelper.getOrCreateEndpoint(endpoint);
             this._subscriptions.push(helper);
             return helper;
         }

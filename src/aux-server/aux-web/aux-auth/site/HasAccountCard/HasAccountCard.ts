@@ -5,7 +5,7 @@ import { Prop, Provide, Watch } from 'vue-property-decorator';
 @Component({
     components: {},
 })
-export default class HasAccountDialog extends Vue {
+export default class HasAccountCard extends Vue {
     processing: boolean = false;
     hasAccountValue: boolean = null;
 

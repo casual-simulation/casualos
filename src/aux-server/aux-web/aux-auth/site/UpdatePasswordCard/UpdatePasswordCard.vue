@@ -25,5 +25,5 @@
         </md-card>
     </div>
 </template>
-<script src="./UpdatePasswordDialog.ts"></script>
-<style src="./UpdatePasswordDialog.css" scoped></style>
+<script src="./UpdatePasswordCard.ts"></script>
+<style src="./UpdatePasswordCard.css" scoped></style>

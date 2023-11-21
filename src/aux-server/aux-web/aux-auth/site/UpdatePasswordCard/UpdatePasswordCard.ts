@@ -5,7 +5,7 @@ import { Prop, Provide, Watch } from 'vue-property-decorator';
 @Component({
     components: {},
 })
-export default class UpdatePasswordDialog extends Vue {
+export default class UpdatePasswordCard extends Vue {
     @Prop() updatePasswordUrl: string;
     close() {
         this.$emit('close');

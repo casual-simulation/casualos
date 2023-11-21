@@ -2950,6 +2950,43 @@ All tags on the config bot will be synced with the URL query parameters.
 This means that setting the `#abc` tag on the config bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `miniGridPortal=myDimension` into the query string will set the <TagLink tag='miniGridPortal'/> tag to `myDimension`.
 
+### `bios`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The BIOS option that was used to initialize CasualOS.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No BIOS option was used. This will cause a selection box to appear asking the user what their preference is. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='static inst'>
+    A new static inst will be generated.
+  </PossibleValueCode>
+  <PossibleValueCode value='private inst'>
+    A new private inst will be generated in "My Studio".
+  </PossibleValueCode>
+  <PossibleValueCode value='public inst'>
+    A new public inst will be generated.
+  </PossibleValueCode>
+  <PossibleValueCode value='enter join code'>
+    The BIOS selection box will be shown with the "enter join code" option selected.
+  </PossibleValueCode>
+  <PossibleValueCode value='sign in'>
+    The BIOS selection box will be shown with the "sign in" option selected.
+  </PossibleValueCode>
+  <PossibleValueCode value='sign up'>
+    The BIOS selection box will be shown with the "sign up" option selected.
+  </PossibleValueCode>
+  <PossibleValueCode value='sign out'>
+    The BIOS selection box will be shown with the "sign out" option selected.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `inst`
 
 <Badges>
@@ -2957,6 +2994,22 @@ It also means that putting `miniGridPortal=myDimension` into the query string wi
 </Badges>
 
 The instance that is loaded into CasualOS.
+
+### `staticInst`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The static instance that is loaded into CasualOS. Not present if the inst is not a static inst.
+
+### `joinCode`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The join code that ab1 should use to join an inst. If specified, then the BIOS selection box will be skipped.
 
 ### `theme`
 

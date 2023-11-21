@@ -47,5 +47,5 @@
         </md-card>
     </div>
 </template>
-<script src="./HasAccountDialog.ts"></script>
-<style src="./HasAccountDialog.css" scoped></style>
+<script src="./HasAccountCard.ts"></script>
+<style src="./HasAccountCard.css" scoped></style>

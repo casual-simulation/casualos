@@ -177,7 +177,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         const host = origin.host ?? defaultHost;
         const protocol = config.causalRepoConnectionProtocol;
         const versions = config.sharedPartitionsVersion;
-        const localPersistence = config.causalRepoLocalPersistence;
+        const localPersistence =
+            config.collaborativeRepLocalPersistence ?? false;
 
         console.log('[BotManager] Using v2 shared partitions');
         if (localPersistence) {
@@ -241,7 +242,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         origin: SimulationOrigin,
         config: AuxConfig['config']
     ): AuxPartitionConfig {
-        const localPersistence = config.causalRepoLocalPersistence;
+        const localPersistence = config.staticRepoLocalPersistence ?? true;
         console.log('[BotManager] Using static partitions');
 
         if (localPersistence) {
@@ -394,7 +395,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         if (endpoint === this._authHelper.primaryAuthOrigin) {
             return this._authHelper.primary;
         } else {
-            const helper = this._authHelper.createEndpoint(endpoint);
+            const helper = this._authHelper.getOrCreateEndpoint(endpoint);
             this._subscriptions.push(helper);
             return helper;
         }

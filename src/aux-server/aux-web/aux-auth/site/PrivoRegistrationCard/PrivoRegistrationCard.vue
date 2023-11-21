@@ -1,10 +1,10 @@
 <template>
     <div class="register-container">
-        <update-password-dialog
+        <update-password-card
             v-if="updatePasswordUrl"
             :updatePasswordUrl="updatePasswordUrl"
             @close="goHome()"
-        ></update-password-dialog>
+        ></update-password-card>
         <md-card v-else>
             <form @submit.prevent="register">
                 <md-card-header><div class="md-title">Register</div></md-card-header>
@@ -135,5 +135,5 @@
         </md-card>
     </div>
 </template>
-<script src="./PrivoRegistrationDialog.ts"></script>
-<style src="./PrivoRegistrationDialog.css" scoped></style>
+<script src="./PrivoRegistrationCard.ts"></script>
+<style src="./PrivoRegistrationCard.css" scoped></style>

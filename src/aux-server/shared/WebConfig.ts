@@ -6,18 +6,22 @@ import {
 /**
  * The possible BIOS options.
  *
+ * - "enter join code" indicates that the user should be prompted to enter a join code.
  * - "staticInst" indicates that the instance should be loaded statically.
  * - "publicInst" indicates that the instance should be loaded from the public partition.
  * - "privateInst" indicates that the instance should be loaded from the private partition.
  * - "sign in" indicates that the user should be prompted to sign in.
  * - "sign up" indicates that the user should be prompted to sign up.
+ * - "sign out" indicates that the user should be logged out.
  */
 export type BiosOption =
+    | 'enter join code'
     | 'static inst'
     | 'public inst'
     | 'private inst'
     | 'sign in'
-    | 'sign up';
+    | 'sign up'
+    | 'sign out';
 
 /**
  * Defines an interface for the configuration that the web client should try to pull from the server.
@@ -39,9 +43,16 @@ export interface WebConfig {
     causalRepoConnectionUrl?: string | null;
 
     /**
-     * Whether the causal repo should be persisted locally.
+     * Whether collaborative repositories should be persisted locally.
+     * Defaults to false.
      */
-    causalRepoLocalPersistence?: boolean;
+    collaborativeRepoLocalPersistence?: boolean;
+
+    /**
+     * Whether static repositories should be persisted locally.
+     * Defaults to true.
+     */
+    staticRepoLocalPersistence?: boolean;
 
     /**
      * The version of the shared partitions that should be used.
@@ -99,15 +110,6 @@ export interface WebConfig {
     playerMode?: 'player' | 'builder' | null;
 
     /**
-     * The preferred source for loading instances.
-     * - "public" means that public instances should be loaded by default.
-     * - "private" means that private instances should be loaded if possible.
-     *
-     * Defaults to "private".
-     */
-    preferredInstSource?: 'public' | 'private';
-
-    /**
      * Whetehr to require that users login with Privo before they can access collaboration features.
      */
     requirePrivoLogin?: boolean;
@@ -115,6 +117,15 @@ export interface WebConfig {
     /**
      * The allowed BIOS options.
      * If omitted, then all options are allowed.
+     *
+     * Possible options are:
+     * - "enter join code"
+     * - "static inst"
+     * - "public inst"
+     * - "private inst"
+     * - "sign in"
+     * - "sign up"
+     * - "sign out"
      */
     allowedBiosOptions?: BiosOption[];
 

@@ -522,20 +522,24 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         if (this._helper) {
             if (!previousDevice.isCollaborative) {
-                if (
-                    device.allowCollaborationUpgrade &&
-                    !previousDevice.allowCollaborationUpgrade
-                ) {
-                    await this.sendEvents([
-                        action(ON_ALLOW_COLLABORATION_UPGRADE),
-                    ]);
-                } else if (
-                    !device.allowCollaborationUpgrade &&
-                    previousDevice.allowCollaborationUpgrade
-                ) {
-                    await this.sendEvents([
-                        action(ON_DISALLOW_COLLABORATION_UPGRADE),
-                    ]);
+                if (!device.isCollaborative) {
+                    if (
+                        device.allowCollaborationUpgrade &&
+                        !previousDevice.allowCollaborationUpgrade
+                    ) {
+                        await this.sendEvents([
+                            action(ON_ALLOW_COLLABORATION_UPGRADE),
+                        ]);
+                    } else if (
+                        !device.allowCollaborationUpgrade &&
+                        previousDevice.allowCollaborationUpgrade
+                    ) {
+                        await this.sendEvents([
+                            action(ON_DISALLOW_COLLABORATION_UPGRADE),
+                        ]);
+                    }
+                } else {
+                    await this.sendEvents([action(ON_COLLABORATION_ENABLED)]);
                 }
             }
         }

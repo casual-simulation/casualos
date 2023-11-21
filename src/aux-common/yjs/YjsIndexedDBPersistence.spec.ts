@@ -42,6 +42,11 @@ describe('YjsIndexedDBPersistence', () => {
         jest.useRealTimers();
     });
 
+    function runTask<T>(exec: () => Promise<T>): Promise<T> {
+        const task = exec();
+        return jest.runAllTimersAsync().then(() => task);
+    }
+
     it('should be able to store updates and merge them', async () => {
         const doc1 = new Doc();
         const arr1 = doc1.getArray('t');
@@ -50,7 +55,10 @@ describe('YjsIndexedDBPersistence', () => {
         arr1.insert(0, [0]);
         const persistence1 = new YjsIndexedDBPersistence('test', doc1);
         persistence1.storeTimeout = 0;
-        await persistence1.whenSynced;
+        console.log('[test1] before sync');
+        await runTask(() => persistence1.whenSynced);
+        console.log('[test1] synced persistence1');
+
         arr1.insert(0, [1]);
         const persistence2 = new YjsIndexedDBPersistence('test', doc2);
         persistence2.storeTimeout = 0;
@@ -60,7 +68,9 @@ describe('YjsIndexedDBPersistence', () => {
             expect(tr.origin === persistence2).toBe(true);
             calledObserver = true;
         });
-        await persistence2.whenSynced;
+
+        await runTask(() => persistence2.whenSynced);
+        console.log('[test1] synced persistence2');
 
         expect(calledObserver).toBe(true);
         expect(arr2.length === 2).toBe(true);
@@ -68,11 +78,17 @@ describe('YjsIndexedDBPersistence', () => {
             arr1.insert(i, [i]);
         }
 
+        console.log('[test1] advance timers');
         jest.advanceTimersByTime(1);
 
-        await fetchUpdates(persistence2);
+        console.log('[test1] fetch updates');
+        await runTask(() => fetchUpdates(persistence2));
+
+        console.log('[test1] done');
         expect(arr2.length === PREFERRED_TRIM_SIZE + 1).toBe(true);
         expect(persistence1.dbsize).toBe(1); // wait for dbsize === 0. db should be concatenated
+
+        console.log('[test1] completed');
     });
 
     it('should be able to perform merges concurrently', async () => {
@@ -83,11 +99,15 @@ describe('YjsIndexedDBPersistence', () => {
         arr1.insert(0, [0]);
         const persistence1 = new YjsIndexedDBPersistence('test', doc1);
         persistence1.storeTimeout = 0;
-        await persistence1.whenSynced;
+        console.log('[test2] before sync');
+        await runTask(() => persistence1.whenSynced);
+        console.log('[test2] sync2');
         arr1.insert(0, [1]);
         const persistence2 = new YjsIndexedDBPersistence('test', doc2);
         persistence2.storeTimeout = 0;
-        await persistence2.whenSynced;
+        await runTask(() => persistence2.whenSynced);
+        console.log('[test2] sync2');
+
         expect(arr2.length).toBe(2);
         arr1.insert(0, ['left']);
         for (let i = 0; i < PREFERRED_TRIM_SIZE + 1; i++) {
@@ -98,12 +118,18 @@ describe('YjsIndexedDBPersistence', () => {
             arr2.insert(i, [i]);
         }
 
+        console.log('[test2] advance timers');
         jest.advanceTimersByTime(100);
-        await fetchUpdates(persistence1);
-        await fetchUpdates(persistence2);
+        console.log('[test2] fetch1');
+        await runTask(() => fetchUpdates(persistence1));
+        console.log('[test2] fetch2');
+        await runTask(() => fetchUpdates(persistence2));
+        console.log('[test2] done');
         expect(persistence1.dbsize).toBeLessThan(10);
         expect(persistence2.dbsize).toBeLessThan(10);
         expect(arr1.toArray()).toEqual(arr2.toArray());
+
+        console.log('[test2] completed');
     });
 
     it('should support metadata storage', async () => {
@@ -113,12 +139,12 @@ describe('YjsIndexedDBPersistence', () => {
         persistence.set(4, 'meta!');
         // @ts-ignore
         persistence.set('obj', { a: 4 });
-        const resA = await persistence.get('a');
+        const resA = await runTask(() => persistence.get('a'));
 
         expect(resA).toEqual(4);
-        const resB = await persistence.get(4);
+        const resB = await runTask(() => persistence.get(4));
         expect(resB).toEqual('meta!');
-        const resC = await persistence.get('obj');
+        const resC = await runTask(() => persistence.get('obj'));
 
         expect(resC).toEqual({ a: 4 });
     });
@@ -149,14 +175,15 @@ describe('YjsIndexedDBPersistence', () => {
         const persistence2 = new YjsIndexedDBPersistence('test', doc2, {
             broadcastChanges: true,
         });
-        await persistence1.whenSynced;
-        await persistence2.whenSynced;
+        await runTask(() => persistence1.whenSynced);
+        await runTask(() => persistence2.whenSynced);
 
         const arr1 = doc1.getArray('t');
         const arr2 = doc2.getArray('t');
 
         arr1.insert(0, [0]);
 
+        await jest.runAllTimersAsync();
         for (let i = 0; i < 10; i++) {
             await waitAsync();
         }

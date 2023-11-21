@@ -1,6 +1,16 @@
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
+import {
+    BehaviorSubject,
+    NEVER,
+    Observable,
+    Subject,
+    Subscription,
+    SubscriptionLike,
+    startWith,
+    switchMap,
+} from 'rxjs';
 import { BrowserSimulation } from './BrowserSimulation';
 import {
+    AuthHelperInterface,
     Simulation,
     SimulationManager,
 } from '@casual-simulation/aux-vm/managers';
@@ -11,7 +21,7 @@ import {
     MissingPermissionDenialReason,
     PartitionAuthRequest,
 } from '@casual-simulation/aux-common';
-import { LoginStatus } from '@casual-simulation/aux-vm/auth';
+import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
 
 /**
  * Defines a class that is able to coordinate authentication across multiple simulations.
@@ -23,6 +33,9 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private _onMissingPermission: Subject<MissingPermissionEvent> =
         new Subject();
     private _onShowAccountInfo: Subject<ShowAccountInfoEvent> = new Subject();
+    private _onAuthHelper: BehaviorSubject<AuthHelper> = new BehaviorSubject(
+        null
+    );
     private _sub: Subscription;
 
     get onMissingPermission(): Observable<MissingPermissionEvent> {
@@ -31,6 +44,33 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
 
     get onShowAccountInfo(): Observable<ShowAccountInfoEvent> {
         return this._onShowAccountInfo;
+    }
+
+    get authEndpoints(): Map<string, AuthHelperInterface> {
+        const helper = this.authHelper;
+        if (helper) {
+            return helper.endpoints;
+        }
+        return new Map();
+    }
+
+    get onAuthEndpointDiscovered(): Observable<{
+        endpoint: string;
+        helper: AuthHelperInterface;
+    }> {
+        return this._onAuthHelper.pipe(
+            switchMap((helper) =>
+                helper ? helper.onEndpointDiscovered : NEVER
+            )
+        );
+    }
+
+    get authHelper() {
+        return this._onAuthHelper.value;
+    }
+
+    set authHelper(value: AuthHelper) {
+        this._onAuthHelper.next(value);
     }
 
     constructor(manager: SimulationManager<TSim>) {

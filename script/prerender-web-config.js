@@ -16,8 +16,10 @@ const webConfig = {
     causalRepoConnectionProtocol:
         process.env.CAUSAL_REPO_CONNECTION_PROTOCOL || 'websocket',
     causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
-    causalRepoLocalPersistence:
-        process.env.CAUSAL_REPO_LOCAL_PERSISTENCE !== 'false',
+    collaborativeRepoLocalPersistence:
+        process.env.COLLABORATIVE_REPO_LOCAL_PERSISTENCE === 'true',
+    staticRepoLocalPersistence:
+        process.env.STATIC_REPO_LOCAL_PERSISTENCE !== 'false',
     sharedPartitionsVersion: process.env.SHARED_PARTITIONS_VERSION || 'v2',
     vmOrigin: process.env.VM_ORIGIN || null,
     authOrigin: process.env.AUTH_ORIGIN || null,
@@ -30,8 +32,8 @@ const webConfig = {
         'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf',
     what3WordsApiKey: process.env.WHAT_3_WORDS_API_KEY || 'Z0NHMSXQ',
     playerMode: process.env.AUX_PLAYER_MODE,
-    preferredInstSource: process.env.PREFERRED_INST_SOURCE ?? 'private',
     requirePrivoLogin: process.env.REQUIRE_PRIVO_LOGIN === 'true',
+    allowedBiosOptions: process.env.BIOS_OPTIONS?.split(',') || null,
     // requirePrivoAgeVerification:
     //     process.env.REQUIRE_PRIVO_AGE_VERIFICATION === 'true',
     // privoAgeVerificationApiScriptUrl:

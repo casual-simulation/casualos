@@ -339,6 +339,31 @@ describe('getSubscriptionFeatures()', () => {
         expect(features).toEqual(allowAllFeatures());
     });
 
+    it('should return the default features if there are no tiers', () => {
+        delete (config as any).tiers;
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'subId',
+            'user'
+        );
+
+        expect(features).toEqual(config.defaultFeatures.user);
+    });
+
+    it('should return all features if there are no tiers and no default features', () => {
+        delete (config as any).tiers;
+        delete (config as any).defaultFeatures;
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'subId',
+            'user'
+        );
+
+        expect(features).toEqual(allowAllFeatures());
+    });
+
     const statusTypes = [
         ['active', true] as const,
         ['trialing', true] as const,

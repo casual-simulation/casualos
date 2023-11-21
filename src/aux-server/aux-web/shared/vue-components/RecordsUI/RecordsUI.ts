@@ -3,8 +3,15 @@ import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import { AuthHelperInterface, Simulation } from '@casual-simulation/aux-vm';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    AuthHelperInterface,
+    PrivoSignUpInfo,
+    Simulation,
+} from '@casual-simulation/aux-vm';
+import {
+    AuthHelper,
+    BrowserSimulation,
+} from '@casual-simulation/aux-vm-browser';
 import {
     asyncResult,
     asyncError,
@@ -23,6 +30,10 @@ import {
 } from '@casual-simulation/aux-runtime';
 import {
     CreatePublicRecordKeyResult,
+    DISPLAY_NAME_FIELD,
+    EMAIL_FIELD,
+    FormError,
+    getFormErrors,
     parseRecordKey,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
@@ -46,44 +57,6 @@ export default class RecordsUI extends Vue {
     completedAllowRecord: boolean = false;
     recordDataEvent: DataRecordAction = null;
 
-    showEnterAddress: boolean = false;
-    termsOfServiceUrl: string = '';
-    privacyPolicyUrl: string = '';
-    loginSiteName: string = '';
-    email: string = '';
-    acceptedTerms: boolean = false;
-    showCheckAddress: boolean = false;
-    supportsSms: boolean = false;
-    showIframe: boolean = false;
-    loginCode: string = '';
-    addressToCheck: string = '';
-    addressTypeToCheck: AddressType = 'email';
-    showCode: boolean = false;
-    name: string = '';
-    displayName: string = '';
-    dateOfBirth: Date = null;
-    parentEmail: string = null;
-
-    showEnterAccountInfo: boolean = false;
-    showHasAccount: boolean = false;
-    showUpdatePassword: boolean = false;
-    updatePasswordUrl: string = '';
-
-    showSmsError: boolean = false;
-    showEmailError: boolean = false;
-    showNameError: boolean = false;
-    showDateOfBirthError: boolean = false;
-    showEnterAddressError: boolean = false;
-    showInvalidAddressError: boolean = false;
-    showTermsOfServiceError: boolean = false;
-    showInvalidCodeError: boolean = false;
-    showBannedUserError: boolean = false;
-    showDisplayNameError: boolean = false;
-    showParentEmailError: boolean = false;
-    showInvalidParentEmailError: boolean = false;
-    showEnterParentEmailError: boolean = false;
-    hasAccountValue: boolean = null;
-
     processing: boolean = false;
 
     showGrantInstAdminPermission: boolean = false;
@@ -94,102 +67,9 @@ export default class RecordsUI extends Vue {
     private _requestRecordSimulation: BrowserSimulation;
     private _allowRecordSimulation: BrowserSimulation;
     private _currentLoginAuth: AuthHelperInterface;
-    private _loginSim: BrowserSimulation;
 
     grantInstPermissionEvent: GrantInstAdminPermissionAction;
     private _grantInstPermisisonSimulation: BrowserSimulation;
-
-    get emailFieldClass() {
-        return this.showEmailError ||
-            this.showSmsError ||
-            this.showEnterAddressError ||
-            this.showInvalidAddressError ||
-            this.showBannedUserError
-            ? 'md-invalid'
-            : '';
-    }
-
-    get emailFieldHint() {
-        if (this.supportsSms) {
-            return 'Email or Phone Number';
-        } else {
-            return 'Email';
-        }
-    }
-
-    get enterAddressErrorMessage() {
-        if (this.supportsSms) {
-            return 'Please enter an Email Address or Phone Number';
-        } else {
-            return 'Please enter an Email Address';
-        }
-    }
-
-    get checkAddressTitle() {
-        return `Check your ${
-            this.addressTypeToCheck === 'phone' ? 'phone' : 'email'
-        }`;
-    }
-
-    get dateOfBirthFieldClass() {
-        return this.showDateOfBirthError ? 'md-invalid' : '';
-    }
-
-    get nameFieldClass() {
-        return this.showNameError ? 'md-invalid' : '';
-    }
-
-    get displayNameFieldClass() {
-        return this.showDisplayNameError ? 'md-invalid' : '';
-    }
-
-    get parentEmailFieldClass() {
-        return this.showParentEmailError ||
-            this.showEnterParentEmailError ||
-            this.showInvalidParentEmailError
-            ? 'md-invalid'
-            : '';
-    }
-
-    get codeFieldClass() {
-        return this.showInvalidCodeError ? 'md-invalid' : '';
-    }
-
-    get registerEmailFieldHint() {
-        if (this.requireEmail) {
-            return 'Email';
-        } else {
-            return 'Email (Optional)';
-        }
-    }
-
-    get showEmail() {
-        return !!this.dateOfBirth;
-    }
-
-    get requireEmail() {
-        if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
-            return Math.abs(dob.diffNow('years').years) >= 18;
-        }
-        return false;
-    }
-
-    get requireParentEmail() {
-        if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
-            return Math.abs(dob.diffNow('years').years) < 18;
-        }
-        return false;
-    }
-
-    get requireTermsOfService() {
-        if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
-            return Math.abs(dob.diffNow('years').years) >= 18;
-        }
-        return false;
-    }
 
     created() {
         this._sub = new Subscription();
@@ -211,139 +91,71 @@ export default class RecordsUI extends Vue {
         this._sub.unsubscribe();
     }
 
-    async login() {
-        this.processing = true;
-        this.showInvalidAddressError = false;
+    private _simulationAdded(sim: BrowserSimulation): void {
+        let sub = new Subscription();
+        this._sub.add(sub);
 
-        if (!hasValue(this.email)) {
-            this.showEnterAddressError = true;
-        } else {
-            this.showEnterAddressError = false;
-            if (!this.supportsSms || mightBeEmailAddress(this.email)) {
-                await this._currentLoginAuth.provideEmailAddress(
-                    this.email,
-                    this.acceptedTerms
-                );
-            } else {
-                const sms = cleanPhoneNumber(this.email);
-
-                if (!hasValue(sms)) {
-                    this.showInvalidAddressError = true;
-                } else {
-                    await this._currentLoginAuth.provideSmsNumber(
-                        sms,
-                        this.acceptedTerms
-                    );
+        sub.add(
+            sim.localEvents.subscribe((e) => {
+                if (e.type === 'get_public_record_key') {
+                    this.showRequestPublicRecord = true;
+                    this.requestRecordName = e.recordName;
+                    this.requestRecordPolicy = e.policy;
+                    this._requestRecordTaskId = e.taskId;
+                    this._requestRecordSimulation = sim;
+                    this.$emit('visible');
+                } else if (e.type === 'record_data' && e.requiresApproval) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    let key = parseRecordKey(e.recordKey);
+                    if (key) {
+                        this.allowRecordName = key[0];
+                    } else {
+                        this.allowRecordName = 'N/A';
+                    }
+                } else if (e.type === 'get_record_data' && e.requiresApproval) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    this.allowRecordName = e.recordName;
+                } else if (
+                    e.type === 'erase_record_data' &&
+                    e.requiresApproval
+                ) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    let key = parseRecordKey(e.recordKey);
+                    if (key) {
+                        this.allowRecordName = key[0];
+                    } else {
+                        this.allowRecordName = 'N/A';
+                    }
+                } else if (e.type === 'grant_inst_admin_permission') {
+                    this._grantInstPermisisonSimulation = sim;
+                    this.showGrantInstAdminPermission = true;
+                    this.completedGrantInstAdminPermission = false;
+                    this.grantInstPermissionEvent = e;
+                    this.allowRecordName = e.recordName;
+                    this.grantInstId = sim.inst;
                 }
-            }
-        }
+            })
+        );
     }
 
-    async register() {
-        this.showInvalidAddressError = false;
-        this.showEnterParentEmailError = false;
-        this.showNameError = false;
-        this.showDisplayNameError = false;
-        this.showDateOfBirthError = false;
-        this.showEnterAddressError = false;
-
-        this.displayName = this.displayName.trim();
-        if (!hasValue(this.displayName)) {
-            this.showDisplayNameError = true;
-            return;
+    private _simulationRemoved(sim: Simulation): void {
+        const sub = this._simulationSubs.get(sim);
+        if (sub) {
+            sub.unsubscribe();
         }
-
-        this.name = this.name.trim();
-        if (!hasValue(this.name)) {
-            this.showNameError = true;
-            return;
-        }
-
-        if (!hasValue(this.dateOfBirth)) {
-            this.showDateOfBirthError = true;
-            return;
-        }
-
-        this.email = this.email.trim();
-        if (this.requireEmail) {
-            if (!hasValue(this.email)) {
-                this.showEnterAddressError = true;
-                return;
-            } else if (!mightBeEmailAddress(this.email)) {
-                this.showInvalidAddressError = true;
-                return;
-            }
-        }
-
-        this.parentEmail = this.parentEmail?.trim();
-        if (this.requireParentEmail && !hasValue(this.parentEmail)) {
-            this.showEnterParentEmailError = true;
-            return;
-        }
-
-        this.processing = true;
-        await this._currentLoginAuth.providePrivoSignUpInfo({
-            acceptedTermsOfService: this.acceptedTerms,
-            email: this.email,
-            name: this.name,
-            dateOfBirth: this.dateOfBirth,
-            displayName: this.displayName,
-            parentEmail: this.parentEmail,
-        });
-    }
-
-    async hasAccount(hasAccount: boolean) {
-        this.processing = true;
-        this.hasAccountValue = hasAccount;
-        await this._currentLoginAuth.provideHasAccount(hasAccount);
-    }
-
-    async sendCode() {
-        if (this._loginSim) {
-            this.processing = true;
-            await this._currentLoginAuth.provideCode(this.loginCode);
-        }
-    }
-
-    cancelLogin(automaticCancel: boolean) {
-        if (this._loginSim) {
-            if (
-                (!this.showIframe &&
-                    !this.showCheckAddress &&
-                    !this.showHasAccount &&
-                    !this.showEnterAccountInfo &&
-                    !this.showHasAccount) ||
-                !automaticCancel
-            ) {
-                this._currentLoginAuth.cancelLogin();
-            }
-        }
-    }
-
-    cancelRegistration() {
-        if (this._currentLoginAuth) {
-            if (
-                !this.showEnterAccountInfo &&
-                !this.showHasAccount &&
-                !this.showEnterAddress &&
-                !this.showUpdatePassword
-            ) {
-                this._currentLoginAuth.cancelLogin();
-            }
-        }
-    }
-
-    hideCheckAddress(automaticCancel?: boolean) {
-        if (this._loginSim && (this.showCheckAddress || automaticCancel)) {
-            this._currentLoginAuth.cancelLogin();
-        }
-        this.showCheckAddress = false;
-        this.$emit('hidden');
-    }
-
-    hideCheckSms() {
-        this.showIframe = false;
-        this.$emit('hidden');
+        this._simulationSubs.delete(sim);
     }
 
     allowRecordData() {
@@ -406,199 +218,6 @@ export default class RecordsUI extends Vue {
         this.completedGrantInstAdminPermission = false;
     }
 
-    private _resetUI() {
-        this.showAllowRecordData = false;
-        this.showEnterAddress = false;
-        this.showEnterAccountInfo = false;
-        this.showCheckAddress = false;
-        this.showHasAccount = false;
-        this.showUpdatePassword = false;
-        this.showIframe = false;
-        this.showEmailError = false;
-        this.showNameError = false;
-        this.showDateOfBirthError = false;
-        this.showSmsError = false;
-        this.showTermsOfServiceError = false;
-        this.showBannedUserError = false;
-        this.showEnterParentEmailError = false;
-        this.showInvalidParentEmailError = false;
-        this.showDisplayNameError = false;
-        this.processing = false;
-        this.hasAccountValue = null;
-    }
-
-    private _resetFields() {
-        this.name = '';
-        this.email = '';
-        this.displayName = '';
-        this.parentEmail = '';
-        this.acceptedTerms = false;
-        this.dateOfBirth = null;
-    }
-
-    private _simulationAdded(sim: BrowserSimulation): void {
-        let sub = new Subscription();
-        this._sub.add(sub);
-
-        sub.add(
-            sim.localEvents.subscribe((e) => {
-                if (e.type === 'get_public_record_key') {
-                    this.showRequestPublicRecord = true;
-                    this.requestRecordName = e.recordName;
-                    this.requestRecordPolicy = e.policy;
-                    this._requestRecordTaskId = e.taskId;
-                    this._requestRecordSimulation = sim;
-                    this.$emit('visible');
-                } else if (e.type === 'record_data' && e.requiresApproval) {
-                    this._allowRecordSimulation = sim;
-                    this.showAllowRecordData = true;
-                    this.completedAllowRecord = false;
-                    this.recordDataEvent = e;
-                    this.allowAddress = e.address;
-                    let key = parseRecordKey(e.recordKey);
-                    if (key) {
-                        this.allowRecordName = key[0];
-                    } else {
-                        this.allowRecordName = 'N/A';
-                    }
-                } else if (e.type === 'get_record_data' && e.requiresApproval) {
-                    this._allowRecordSimulation = sim;
-                    this.showAllowRecordData = true;
-                    this.completedAllowRecord = false;
-                    this.recordDataEvent = e;
-                    this.allowAddress = e.address;
-                    this.allowRecordName = e.recordName;
-                } else if (
-                    e.type === 'erase_record_data' &&
-                    e.requiresApproval
-                ) {
-                    this._allowRecordSimulation = sim;
-                    this.showAllowRecordData = true;
-                    this.completedAllowRecord = false;
-                    this.recordDataEvent = e;
-                    this.allowAddress = e.address;
-                    let key = parseRecordKey(e.recordKey);
-                    if (key) {
-                        this.allowRecordName = key[0];
-                    } else {
-                        this.allowRecordName = 'N/A';
-                    }
-                } else if (e.type === 'grant_inst_admin_permission') {
-                    this._grantInstPermisisonSimulation = sim;
-                    this.showGrantInstAdminPermission = true;
-                    this.completedGrantInstAdminPermission = false;
-                    this.grantInstPermissionEvent = e;
-                    this.allowRecordName = e.recordName;
-                    this.grantInstId = sim.inst;
-                }
-            })
-        );
-
-        sub.add(
-            sim.auth.loginUIStatus.subscribe((e) => {
-                this._currentLoginAuth = sim.auth.getEndpoint(e.endpoint);
-                if (e.page === 'enter_address' || e.page === 'enter_email') {
-                    this._loginSim = sim;
-                    if (!this.showEnterAddress) {
-                        this._resetFields();
-                    }
-                    this._resetUI();
-                    this.showEnterAddress = true;
-                    this.termsOfServiceUrl = e.termsOfServiceUrl;
-                    this.privacyPolicyUrl = e.privacyPolicyUrl;
-                    this.loginSiteName = e.siteName;
-                    this.showEmailError =
-                        e.showEnterEmailError || e.showInvalidEmailError;
-                    this.showSmsError =
-                        e.showInvalidSmsError || e.showEnterSmsError;
-                    this.showTermsOfServiceError =
-                        e.showAcceptTermsOfServiceError;
-                    this.showBannedUserError = e.showBannedUserError;
-                    this.supportsSms = e.supportsSms;
-                    this.$emit('visible');
-                } else if (
-                    e.page === 'check_address' ||
-                    e.page === 'check_email'
-                ) {
-                    this._resetFields();
-                    this._resetUI();
-                    this.showCheckAddress = true;
-                    this.showCode = !!e.enterCode;
-                    this.addressToCheck = e.address ?? this.email;
-                    this.addressTypeToCheck = e.addressType;
-                    this.showInvalidCodeError = e.showInvalidCodeError;
-                    this.$emit('visible');
-                } else if (e.page === 'show_iframe') {
-                    this._resetUI();
-                    this.showIframe = true;
-                } else if (e.page === 'enter_privo_account_info') {
-                    this._loginSim = sim;
-                    if (!this.showEnterAccountInfo) {
-                        this._resetFields();
-                    }
-                    this._resetUI();
-                    this.showEnterAccountInfo = true;
-                    this.termsOfServiceUrl = e.termsOfServiceUrl;
-                    this.privacyPolicyUrl = e.privacyPolicyUrl;
-                    this.loginSiteName = e.siteName;
-                    this.showEmailError =
-                        e.showEnterEmailError || e.showInvalidEmailError;
-                    this.showNameError =
-                        e.showEnterNameError || e.showInvalidNameError;
-                    this.showDateOfBirthError =
-                        e.showEnterDateOfBirthError ||
-                        e.showInvalidDateOfBirthError;
-                    this.showTermsOfServiceError =
-                        e.showAcceptTermsOfServiceError;
-                    this.showBannedUserError = e.showBannedUserError;
-                    this.showDisplayNameError = e.showEnterDisplayNameError;
-                    this.showInvalidParentEmailError =
-                        e.showInvalidParentEmailError;
-                    this.showEnterParentEmailError =
-                        e.showEnterParentEmailError;
-                    this.$emit('visible');
-                } else if (e.page === 'has_account') {
-                    this._loginSim = sim;
-                    this._resetUI();
-                    this.showHasAccount = true;
-                    this.privacyPolicyUrl = e.privacyPolicyUrl;
-                    this.$emit('visible');
-                } else if (e.page === 'show_update_password_link') {
-                    this._resetUI();
-                    this.showUpdatePassword = true;
-                    this.updatePasswordUrl = e.updatePasswordUrl;
-                    this.$emit('visible');
-                } else if (!this.showUpdatePassword) {
-                    this.$emit('hidden');
-                    this._resetUI();
-                    if (this._loginSim === sim) {
-                        this._loginSim = null;
-                    }
-                }
-            })
-        );
-
-        sim.auth.setUseCustomUI(true);
-    }
-
-    async checkEmail() {
-        if (this.email) {
-            const result = await this._currentLoginAuth.isValidEmailAddress(
-                this.email
-            );
-            this.showEmailError = !result.success || !result.allowed;
-        }
-    }
-
-    async checkDisplayName() {
-        if (this.displayName) {
-            const result = await this._currentLoginAuth.isValidDisplayName(
-                this.displayName
-            );
-            this.showDisplayNameError = !result.success || !result.allowed;
-        }
-    }
-
     async createRecordKey(recordName: string) {
         const taskId = this._requestRecordTaskId;
         const sim = this._requestRecordSimulation;
@@ -633,23 +252,11 @@ export default class RecordsUI extends Vue {
         }
     }
 
-    disabledDates(date: Date) {
-        return date > new Date();
-    }
-
     private _hideCreateRecordKey() {
         this.showRequestPublicRecord = false;
         this.requestRecordName = '';
         this._requestRecordTaskId = null;
         this._requestRecordSimulation = null;
         this.$emit('hidden');
-    }
-
-    private _simulationRemoved(sim: Simulation): void {
-        const sub = this._simulationSubs.get(sim);
-        if (sub) {
-            sub.unsubscribe();
-        }
-        this._simulationSubs.delete(sim);
     }
 }

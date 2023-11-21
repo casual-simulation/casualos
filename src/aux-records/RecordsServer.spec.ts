@@ -329,6 +329,7 @@ describe('RecordsServer', () => {
             authController,
             policyController,
             store,
+            store,
             store
         );
 
@@ -2089,6 +2090,7 @@ describe('RecordsServer', () => {
                     joinAndCollaborate: 'joinAndCollaborate',
                     publishProjects: 'publish',
                     projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
                 },
                 clientId: 'clientId',
                 clientSecret: 'clientSecret',
@@ -2157,6 +2159,7 @@ describe('RecordsServer', () => {
                     joinAndCollaborate: 'joinAndCollaborate',
                     publishProjects: 'publish',
                     projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
                 },
                 clientId: 'clientId',
                 clientSecret: 'clientSecret',
@@ -2279,6 +2282,7 @@ describe('RecordsServer', () => {
                     joinAndCollaborate: 'joinAndCollaborate',
                     publishProjects: 'publish',
                     projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
                 },
                 clientId: 'clientId',
                 clientSecret: 'clientSecret',
@@ -2394,6 +2398,7 @@ describe('RecordsServer', () => {
                     joinAndCollaborate: 'joinAndCollaborate',
                     publishProjects: 'publish',
                     projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
                 },
                 clientId: 'clientId',
                 clientSecret: 'clientSecret',

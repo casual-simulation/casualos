@@ -101,12 +101,12 @@ export class AppManager {
         return this._auth;
     }
 
+    private _initPromise: Promise<void>;
     private _auth: AuthHelper;
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<BotManager>;
     private _config: WebConfig;
-    private _deviceConfig: AuxConfig['config']['device'];
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
     private _systemPortal: SystemPortalCoordinator<BotManager>;
@@ -181,7 +181,7 @@ export class AppManager {
             return await this._simulationFactory(
                 id,
                 origin,
-                this.createSimulationConfig({ forceSignedScripts }),
+                this.createSimulationConfig({ forceSignedScripts, isStatic }),
                 isStatic
             );
         });
@@ -193,23 +193,27 @@ export class AppManager {
 
     createSimulationConfig(options: {
         forceSignedScripts: boolean;
+        isStatic: boolean;
     }): AuxConfig['config'] {
+        const device = this._calculateDeviceConfig(options.isStatic);
         return {
             version: this.version.latestTaggedVersion,
             versionHash: this.version.gitCommit,
-            device: this._deviceConfig,
+            device: device,
             bootstrapState: bootstrap,
             forceSignedScripts: options.forceSignedScripts,
             causalRepoConnectionProtocol:
                 this._config.causalRepoConnectionProtocol,
             causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
-            causalRepoLocalPersistence: this._config.causalRepoLocalPersistence,
+            collaborativeRepLocalPersistence:
+                this._config.collaborativeRepoLocalPersistence,
+            staticRepoLocalPersistence: this._config.staticRepoLocalPersistence,
             sharedPartitionsVersion: this._config.sharedPartitionsVersion,
             vmOrigin: this._config.vmOrigin,
             authOrigin: this._config.authOrigin,
             recordsOrigin: this._config.recordsOrigin,
             builtinPortals: KNOWN_PORTALS,
-            timesync: this._deviceConfig.isCollaborative
+            timesync: device.isCollaborative
                 ? {
                       host:
                           this._config.causalRepoConnectionUrl ??
@@ -343,7 +347,14 @@ export class AppManager {
             .subscribe();
     }
 
-    async init() {
+    init(): Promise<void> {
+        if (!this._initPromise) {
+            this._initPromise = this._initCore();
+        }
+        return this._initPromise;
+    }
+
+    private async _initCore() {
         console.log('[AppManager] Starting init...');
         this._reportTime('Time to start');
         console.log(
@@ -363,7 +374,6 @@ export class AppManager {
                 this._reportTime('Time to auth');
             }),
         ]);
-        this._initDeviceConfig();
         this._reportTime('Time to init');
         this._sendProgress('Initialized.', 1, true);
     }
@@ -385,30 +395,32 @@ export class AppManager {
             this.config.recordsOrigin,
             factory
         );
+        this._authCoordinator.authHelper = this._auth;
         console.log('[AppManager] Authenticating user in background...');
         const authData = await this._auth.primary.authenticateInBackground();
+
         if (authData) {
             console.log('[AppManager] User is authenticated.');
             this._defaultStudioId = authData.userId;
-            this._defaultPrivacyFeatures = authData.privacyFeatures;
         } else {
             console.log('[AppManager] User is not authenticated.');
             this._defaultStudioId = null;
-            if (this._config.requirePrivoLogin) {
-                this._defaultPrivacyFeatures = {
-                    allowPublicData: false,
-                    publishData: false,
-                    allowAI: false,
-                    allowPublicInsts: false,
-                };
-            } else {
-                this._defaultPrivacyFeatures = {
-                    allowPublicData: true,
-                    publishData: true,
-                    allowAI: true,
-                    allowPublicInsts: true,
-                };
-            }
+        }
+
+        if (this._config.requirePrivoLogin) {
+            this._defaultPrivacyFeatures = {
+                allowPublicData: false,
+                publishData: false,
+                allowAI: false,
+                allowPublicInsts: false,
+            };
+        } else {
+            this._defaultPrivacyFeatures = {
+                allowPublicData: true,
+                publishData: true,
+                allowAI: true,
+                allowPublicInsts: true,
+            };
         }
         console.log(`[AppManager] defaultPlayerId: ${this._defaultStudioId}`);
         console.log(
@@ -417,17 +429,15 @@ export class AppManager {
         );
 
         this._auth.primary.loginStatus.subscribe((status) => {
-            if (status?.authData?.privacyFeatures) {
-                this._defaultPrivacyFeatures = status.authData.privacyFeatures;
+            if (status.authData) {
+                this._defaultStudioId = status.authData.userId;
+            }
 
-                const newDevice = this._calculateDeviceConfig();
-                if (!isEqual(newDevice, this._deviceConfig)) {
-                    console.log(`[AppManager] New device config: `, newDevice);
-                    this._deviceConfig = newDevice;
-                    for (let sim of this._simulationManager.simulations.values()) {
-                        sim.helper.updateDevice(newDevice);
-                    }
-                }
+            if (status?.authData?.privacyFeatures) {
+                console.log(
+                    'App Manager: New privacy features',
+                    status.authData.privacyFeatures
+                );
             }
         });
     }
@@ -493,29 +503,12 @@ export class AppManager {
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
     }
 
-    private _initDeviceConfig() {
-        this._deviceConfig = this._calculateDeviceConfig();
-    }
-
-    private _calculateDeviceConfig(): AuxDevice {
-        const disableCollaboration = this._config.disableCollaboration;
-        const privoAllowsCollaboration =
-            this._defaultPrivacyFeatures.publishData;
-
-        let isCollaborative: boolean;
-        if (disableCollaboration || !privoAllowsCollaboration) {
-            isCollaborative = false;
-        } else {
-            isCollaborative = true;
-        }
-
-        const allowCollaborationUpgrade = false;
-
+    private _calculateDeviceConfig(isStatic: boolean): AuxDevice {
         return {
             supportsAR: this._arSupported,
             supportsVR: this._vrSupported,
-            isCollaborative: isCollaborative,
-            allowCollaborationUpgrade: allowCollaborationUpgrade,
+            isCollaborative: !isStatic,
+            allowCollaborationUpgrade: false,
             ab1BootstrapUrl: this._ab1BootstrapUrl,
         };
     }

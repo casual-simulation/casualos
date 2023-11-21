@@ -45,6 +45,7 @@ import {
 } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { PrivoConfiguration } from './PrivoConfiguration';
+import { ZodIssue } from 'zod';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -999,7 +1000,9 @@ export class AuthController {
                     featureIds: [
                         config.featureIds.childPrivoSSO,
                         config.featureIds.joinAndCollaborate,
+                        config.featureIds.projectDevelopment,
                         config.featureIds.publishProjects,
+                        config.featureIds.buildAIEggs,
                     ],
                 });
 
@@ -1028,7 +1031,9 @@ export class AuthController {
                     featureIds: [
                         config.featureIds.adultPrivoSSO,
                         config.featureIds.joinAndCollaborate,
+                        config.featureIds.projectDevelopment,
                         config.featureIds.publishProjects,
+                        config.featureIds.buildAIEggs,
                     ],
                 });
 
@@ -1806,19 +1811,6 @@ export class AuthController {
                 const userInfo = await this._privoClient.getUserInfo(
                     result.privoServiceId
                 );
-                const publishData = userInfo.permissions.some(
-                    (p) =>
-                        p.on &&
-                        p.featureId === privoConfig.featureIds.publishProjects
-                );
-                const allowPublicData =
-                    publishData &&
-                    userInfo.permissions.some(
-                        (p) =>
-                            p.on &&
-                            p.featureId ===
-                                privoConfig.featureIds.joinAndCollaborate
-                    );
                 privacyFeatures = getPrivacyFeaturesFromPermissions(
                     privoConfig.featureIds,
                     userInfo.permissions
@@ -1826,8 +1818,14 @@ export class AuthController {
                 displayName = userInfo.displayName;
 
                 if (
-                    result.privacyFeatures?.publishData !== publishData ||
-                    result.privacyFeatures?.allowPublicData !== allowPublicData
+                    result.privacyFeatures?.publishData !==
+                        privacyFeatures.publishData ||
+                    result.privacyFeatures?.allowPublicData !==
+                        privacyFeatures.allowPublicData ||
+                    result.privacyFeatures?.allowAI !==
+                        privacyFeatures.allowAI ||
+                    result.privacyFeatures?.allowPublicInsts !==
+                        privacyFeatures.allowPublicInsts
                 ) {
                     await this._store.saveUser({
                         ...result,
@@ -2348,6 +2346,11 @@ export interface PrivoSignUpRequestFailure {
      * The error message.
      */
     errorMessage: string;
+
+    /**
+     * The issues that were found with the request.
+     */
+    issues?: ZodIssue[];
 }
 
 export interface LoginRequest {
@@ -3023,20 +3026,26 @@ export function getPrivacyFeaturesFromPermissions(
     permissions: (PrivoPermission | PrivoFeatureStatus)[]
 ): PrivacyFeatures {
     const publishData = permissions.some(
-        (p) => p.on && p.featureId === featureIds.publishProjects
+        (p) => p.on && p.featureId === featureIds.projectDevelopment
     );
     const allowPublicData =
         publishData &&
         permissions.some(
-            (p) => p.on && p.featureId === featureIds.joinAndCollaborate
+            (p) => p.on && p.featureId === featureIds.publishProjects
         );
 
     // TODO:
     // Whether the AI features are enabled.
-    const allowAI = true;
+    const allowAI = permissions.some(
+        (p) => p.on && p.featureId === featureIds.buildAIEggs
+    );
 
     // Whether the public insts features are enabled.
-    const allowPublicInsts = true;
+    const allowPublicInsts =
+        publishData &&
+        permissions.some(
+            (p) => p.on && p.featureId === featureIds.joinAndCollaborate
+        );
     return {
         publishData,
         allowPublicData,
