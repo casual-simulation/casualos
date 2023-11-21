@@ -24,7 +24,7 @@
 // SOFTWARE.
 
 import { IDBFactory } from 'fake-indexeddb';
-import { Doc } from 'yjs';
+import { Doc, Transaction, YEvent } from 'yjs';
 import {
     YjsIndexedDBPersistence,
     PREFERRED_TRIM_SIZE,
@@ -35,16 +35,21 @@ import { waitAsync } from '../test/TestHelpers';
 describe('YjsIndexedDBPersistence', () => {
     beforeEach(() => {
         indexedDB = new IDBFactory();
-        jest.useFakeTimers();
+        // jest.useFakeTimers();
     });
 
     afterEach(() => {
-        jest.useRealTimers();
+        // jest.useRealTimers();
     });
 
     function runTask<T>(exec: () => Promise<T>): Promise<T> {
-        const task = exec();
-        return jest.runAllTimersAsync().then(() => task);
+        return exec();
+        // const task = exec();
+        // return jest.runAllTimersAsync().then(() => task);
+    }
+
+    function sleep(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     it('should be able to store updates and merge them', async () => {
@@ -63,11 +68,12 @@ describe('YjsIndexedDBPersistence', () => {
         const persistence2 = new YjsIndexedDBPersistence('test', doc2);
         persistence2.storeTimeout = 0;
         let calledObserver = false;
-        arr2.observe((event, tr) => {
+        const handler2 = (event: YEvent<any>, tr: Transaction) => {
             expect(tr.local).toBe(false);
             expect(tr.origin === persistence2).toBe(true);
             calledObserver = true;
-        });
+        };
+        arr2.observe(handler2);
 
         await runTask(() => persistence2.whenSynced);
         console.log('[test1] synced persistence2');
@@ -79,7 +85,8 @@ describe('YjsIndexedDBPersistence', () => {
         }
 
         console.log('[test1] advance timers');
-        jest.advanceTimersByTime(1);
+        await sleep(10);
+        // await jest.advanceTimersByTimeAsync(1);
 
         console.log('[test1] fetch updates');
         await runTask(() => fetchUpdates(persistence2));
@@ -88,6 +95,8 @@ describe('YjsIndexedDBPersistence', () => {
         expect(arr2.length === PREFERRED_TRIM_SIZE + 1).toBe(true);
         expect(persistence1.dbsize).toBe(1); // wait for dbsize === 0. db should be concatenated
 
+        arr2.unobserve(handler2);
+        // await jest.runAllTimersAsync();
         console.log('[test1] completed');
     });
 
@@ -119,7 +128,9 @@ describe('YjsIndexedDBPersistence', () => {
         }
 
         console.log('[test2] advance timers');
-        jest.advanceTimersByTime(100);
+        await sleep(10);
+        // await jest.advanceTimersByTimeAsync(100);
+
         console.log('[test2] fetch1');
         await runTask(() => fetchUpdates(persistence1));
         console.log('[test2] fetch2');
@@ -129,6 +140,7 @@ describe('YjsIndexedDBPersistence', () => {
         expect(persistence2.dbsize).toBeLessThan(10);
         expect(arr1.toArray()).toEqual(arr2.toArray());
 
+        // await jest.runAllTimersAsync();
         console.log('[test2] completed');
     });
 
@@ -153,17 +165,20 @@ describe('YjsIndexedDBPersistence', () => {
         let hasbeenSyced = false;
         const ydoc = new Doc();
         const indexDBProvider = new YjsIndexedDBPersistence('test', ydoc);
-        indexDBProvider.onSyncChanged.subscribe((synced) => {
+        let sub = indexDBProvider.onSyncChanged.subscribe((synced) => {
             if (synced) {
                 hasbeenSyced = true;
             }
         });
 
         indexDBProvider.destroy();
-        jest.advanceTimersByTime(500);
+        // jest.advanceTimersByTime(500);
+        await sleep(10);
         await waitAsync();
 
         expect(hasbeenSyced).toBe(false);
+
+        sub.unsubscribe();
     });
 
     it('should support broadcasting changes to other instances', async () => {
@@ -183,7 +198,7 @@ describe('YjsIndexedDBPersistence', () => {
 
         arr1.insert(0, [0]);
 
-        await jest.runAllTimersAsync();
+        // await jest.runAllTimersAsync();
         for (let i = 0; i < 10; i++) {
             await waitAsync();
         }
