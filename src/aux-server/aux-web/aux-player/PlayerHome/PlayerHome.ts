@@ -178,9 +178,16 @@ export default class PlayerHome extends Vue {
                         const options = await this._getBiosOptions();
 
                         if (options.some((o) => o === bios)) {
-                            hasValidBiosOption = true;
                             this.biosSelection = bios;
-                            this.executeBiosOption(bios, null, null, null);
+                            if (
+                                bios !== 'enter join code' &&
+                                bios !== 'sign up' &&
+                                bios !== 'sign in' &&
+                                bios !== 'sign out'
+                            ) {
+                                hasValidBiosOption = true;
+                                this.executeBiosOption(bios, null, null, null);
+                            }
                         }
                     }
 
@@ -194,7 +201,6 @@ export default class PlayerHome extends Vue {
 
     private async _showBiosOptions() {
         this.showBios = true;
-        this.biosSelection = null;
         const options = await this._getBiosOptions();
         this.biosOptions = options;
     }
@@ -215,10 +221,12 @@ export default class PlayerHome extends Vue {
                 await appManager.auth.primary.authenticate(option);
             } finally {
                 this.showLoggingIn = false;
+                this.biosSelection = null;
                 this._showBiosOptions();
             }
         } else if (option === 'sign out') {
             await appManager.auth.primary.logout();
+            this.biosSelection = null;
             this._showBiosOptions();
         } else if (option === 'static inst') {
             this._loadStaticInst(inst);
@@ -256,7 +264,7 @@ export default class PlayerHome extends Vue {
         this._setServer(null, inst, true);
     }
 
-    private _loadJoinCode(joinCode: string) {
+    private async _loadJoinCode(joinCode: string) {
         if (!joinCode) {
             this.errors = [
                 ...this.errors.filter((e) => e.for !== 'joinCode'),
