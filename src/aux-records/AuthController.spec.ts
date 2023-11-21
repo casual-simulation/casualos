@@ -5732,6 +5732,202 @@ describe('AuthController', () => {
                     },
                 });
             });
+
+            it('should update the users features if ai permissions was changed', async () => {
+                await store.saveUser({
+                    ...(await store.findUser(userId)),
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: false,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                privoClientMock.getUserInfo.mockResolvedValue({
+                    serviceId: 'serviceId',
+                    emailVerified: true,
+                    email: 'email',
+                    givenName: 'name',
+                    locale: 'en-US',
+                    roleIdentifier: 'ab1Child',
+                    displayName: 'displayName',
+                    permissions: [
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'joinAndCollaborate',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'buildaieggs',
+                            active: true,
+                            category: 'Standard',
+                        },
+                    ],
+                });
+
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: 'displayName',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
+                    'serviceId'
+                );
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    privoServiceId: 'serviceId',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+            });
+
+            it('should update the users features if public insts permissions was changed', async () => {
+                await store.saveUser({
+                    ...(await store.findUser(userId)),
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
+                    },
+                });
+
+                privoClientMock.getUserInfo.mockResolvedValue({
+                    serviceId: 'serviceId',
+                    emailVerified: true,
+                    email: 'email',
+                    givenName: 'name',
+                    locale: 'en-US',
+                    roleIdentifier: 'ab1Child',
+                    displayName: 'displayName',
+                    permissions: [
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'joinAndCollaborate',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'buildaieggs',
+                            active: true,
+                            category: 'Standard',
+                        },
+                    ],
+                });
+
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: 'displayName',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
+                    'serviceId'
+                );
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    privoServiceId: 'serviceId',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+            });
         });
     });
 

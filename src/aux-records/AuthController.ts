@@ -1811,19 +1811,6 @@ export class AuthController {
                 const userInfo = await this._privoClient.getUserInfo(
                     result.privoServiceId
                 );
-                const publishData = userInfo.permissions.some(
-                    (p) =>
-                        p.on &&
-                        p.featureId === privoConfig.featureIds.publishProjects
-                );
-                const allowPublicData =
-                    publishData &&
-                    userInfo.permissions.some(
-                        (p) =>
-                            p.on &&
-                            p.featureId ===
-                                privoConfig.featureIds.joinAndCollaborate
-                    );
                 privacyFeatures = getPrivacyFeaturesFromPermissions(
                     privoConfig.featureIds,
                     userInfo.permissions
@@ -1831,8 +1818,14 @@ export class AuthController {
                 displayName = userInfo.displayName;
 
                 if (
-                    result.privacyFeatures?.publishData !== publishData ||
-                    result.privacyFeatures?.allowPublicData !== allowPublicData
+                    result.privacyFeatures?.publishData !==
+                        privacyFeatures.publishData ||
+                    result.privacyFeatures?.allowPublicData !==
+                        privacyFeatures.allowPublicData ||
+                    result.privacyFeatures?.allowAI !==
+                        privacyFeatures.allowAI ||
+                    result.privacyFeatures?.allowPublicInsts !==
+                        privacyFeatures.allowPublicInsts
                 ) {
                     await this._store.saveUser({
                         ...result,
