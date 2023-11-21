@@ -1000,7 +1000,9 @@ export class AuthController {
                     featureIds: [
                         config.featureIds.childPrivoSSO,
                         config.featureIds.joinAndCollaborate,
+                        config.featureIds.projectDevelopment,
                         config.featureIds.publishProjects,
+                        config.featureIds.buildAIEggs,
                     ],
                 });
 
@@ -1029,7 +1031,9 @@ export class AuthController {
                     featureIds: [
                         config.featureIds.adultPrivoSSO,
                         config.featureIds.joinAndCollaborate,
+                        config.featureIds.projectDevelopment,
                         config.featureIds.publishProjects,
+                        config.featureIds.buildAIEggs,
                     ],
                 });
 
@@ -3029,20 +3033,26 @@ export function getPrivacyFeaturesFromPermissions(
     permissions: (PrivoPermission | PrivoFeatureStatus)[]
 ): PrivacyFeatures {
     const publishData = permissions.some(
-        (p) => p.on && p.featureId === featureIds.publishProjects
+        (p) => p.on && p.featureId === featureIds.projectDevelopment
     );
     const allowPublicData =
         publishData &&
         permissions.some(
-            (p) => p.on && p.featureId === featureIds.joinAndCollaborate
+            (p) => p.on && p.featureId === featureIds.publishProjects
         );
 
     // TODO:
     // Whether the AI features are enabled.
-    const allowAI = true;
+    const allowAI = permissions.some(
+        (p) => p.on && p.featureId === featureIds.buildAIEggs
+    );
 
     // Whether the public insts features are enabled.
-    const allowPublicInsts = true;
+    const allowPublicInsts =
+        publishData &&
+        permissions.some(
+            (p) => p.on && p.featureId === featureIds.joinAndCollaborate
+        );
     return {
         publishData,
         allowPublicData,

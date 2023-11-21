@@ -579,6 +579,7 @@ describe('WebsocketController', () => {
                             joinAndCollaborate: 'joinAndCollaborate',
                             publishProjects: 'publish',
                             projectDevelopment: 'dev',
+                            buildAIEggs: 'buildaieggs',
                         },
                         clientId: 'clientId',
                         clientSecret: 'clientSecret',
