@@ -110,15 +110,6 @@ export interface WebConfig {
     playerMode?: 'player' | 'builder' | null;
 
     /**
-     * The preferred source for loading instances.
-     * - "public" means that public instances should be loaded by default.
-     * - "private" means that private instances should be loaded if possible.
-     *
-     * Defaults to "private".
-     */
-    preferredInstSource?: 'public' | 'private';
-
-    /**
      * Whetehr to require that users login with Privo before they can access collaboration features.
      */
     requirePrivoLogin?: boolean;
@@ -126,6 +117,15 @@ export interface WebConfig {
     /**
      * The allowed BIOS options.
      * If omitted, then all options are allowed.
+     *
+     * Possible options are:
+     * - "enter join code"
+     * - "static inst"
+     * - "public inst"
+     * - "private inst"
+     * - "sign in"
+     * - "sign up"
+     * - "sign out"
      */
     allowedBiosOptions?: BiosOption[];
 
