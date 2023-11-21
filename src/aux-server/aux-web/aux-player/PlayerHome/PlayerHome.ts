@@ -155,61 +155,26 @@ export default class PlayerHome extends Vue {
                     params.isStatic
                 );
             } else {
-                this._showBiosOptions();
+                const biosOption = this.query['bios'];
+
+                let hasValidBiosOption = false;
+                if (biosOption) {
+                    const bios = (
+                        Array.isArray(biosOption) ? biosOption[0] : biosOption
+                    ) as BiosOption;
+                    const options = await this._getBiosOptions();
+
+                    if (options.some((o) => o === bios)) {
+                        hasValidBiosOption = true;
+                        this.biosSelection = bios;
+                        this.executeBiosOption(bios, null, null);
+                    }
+                }
+
+                if (!hasValidBiosOption) {
+                    this._showBiosOptions();
+                }
             }
-
-            // // const preferPublic =
-            // //     appManager.defaultPrivacyFeatures.allowPublicData &&
-            // //     (appManager.config.preferredInstSource ?? 'private') ===
-            // //         'public';
-
-            // // const hasQueryParam = Object.keys(this.query).length > 0;
-
-            // if (hasValue(recordName)) {
-            //     update.record = recordName;
-            // } else {
-            //     let player = this.query['player'] ?? null;
-            //     if (player) {
-            //         update.player = player;
-            //         recordName = player;
-            //     }
-            // }
-
-            // // On first load check the inst and load a default
-            // if (!hasValue(inst)) {
-            //     // if there is no inst tag defined, check for the story tag and then the server tag
-            //     inst = this.query['story'] ?? this.query['server'];
-            //     if (hasValue(inst)) {
-            //         update.inst = inst;
-            //         update.story = null;
-            //         update.server = null;
-            //     } else {
-            //         // Generate a random inst name
-            //         const randomName: string =
-            //             uniqueNamesGenerator(namesConfig);
-            //         if (!appManager.config.disableCollaboration) {
-            //             update.inst = randomName;
-            //         }
-            //         if (!hasValue(this.query['gridPortal'])) {
-            //             update.gridPortal = 'home';
-            //         }
-            //         inst = randomName;
-            //     }
-            // }
-
-            // if (
-            //     hasValue(this.query['pagePortal']) &&
-            //     !hasValue(this.query['gridPortal'])
-            // ) {
-            //     const portal = this.query['pagePortal'];
-            //     update.pagePortal = null;
-            //     update.gridPortal = Array.isArray(portal) ? portal[0] : portal;
-            // }
-
-            // if (Object.keys(update).length > 0) {
-            //     this._updateQuery(update);
-            // }
-            // this._setServer(recordName, inst);
         }
     }
 

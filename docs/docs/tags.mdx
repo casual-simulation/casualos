@@ -2950,6 +2950,31 @@ All tags on the config bot will be synced with the URL query parameters.
 This means that setting the `#abc` tag on the config bot to `hello` will update the URL to include `abc=hello`.
 It also means that putting `miniGridPortal=myDimension` into the query string will set the <TagLink tag='miniGridPortal'/> tag to `myDimension`.
 
+### `bios`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The BIOS option that was used to initialize CasualOS.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No BIOS option was used. This will cause a selection box to appear asking the user what their preference is. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='static inst'>
+    A new static inst will be generated.
+  </PossibleValueCode>
+  <PossibleValueCode value='private inst'>
+    A new private inst will be generated in "My Studio".
+  </PossibleValueCode>
+  <PossibleValueCode value='public inst'>
+    A new public inst will be generated.
+  </PossibleValueCode>
+<PossibleValuesTable>
+
 ### `inst`
 
 <Badges>
