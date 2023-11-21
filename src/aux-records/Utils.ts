@@ -363,7 +363,8 @@ export type KnownErrorCodes =
     | 'policy_not_found'
     | 'policy_too_large'
     | 'invalid_policy'
-    | 'not_completed';
+    | 'not_completed'
+    | 'invalid_display_name';
 
 /**
  * Gets the status code that should be used for the given response.

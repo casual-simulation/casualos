@@ -1664,6 +1664,35 @@ describe('AuthController', () => {
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
         });
 
+        it('should return a invalid_display_name error code when the display name contains the users name', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'name',
+                displayName: 'displayName',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_display_name',
+                errorMessage: 'The display name cannot contain your name.',
+            });
+
+            expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+        });
+
         it('should request that an adult be signed up when given a adult birth date', async () => {
             uuidMock.mockReturnValueOnce('userId');
 

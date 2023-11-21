@@ -961,6 +961,19 @@ export class AuthController {
                 };
             }
 
+            const lowercaseName = request.name.trim().toLowerCase();
+            const lowercaseDisplayName = request.displayName
+                .trim()
+                .toLowerCase();
+
+            if (lowercaseDisplayName.includes(lowercaseName)) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_display_name',
+                    errorMessage: 'The display name cannot contain your name.',
+                };
+            }
+
             const now = new Date(Date.now());
             const years = Math.floor(
                 -DateTime.fromJSDate(request.dateOfBirth)
@@ -2339,6 +2352,7 @@ export interface PrivoSignUpRequestFailure {
         | 'email_already_exists'
         | 'parent_email_already_exists'
         | 'parent_email_required'
+        | 'invalid_display_name'
         | NotSupportedError
         | ServerError;
 
