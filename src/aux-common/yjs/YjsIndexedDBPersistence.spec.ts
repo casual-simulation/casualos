@@ -29,7 +29,6 @@ import {
     YjsIndexedDBPersistence,
     PREFERRED_TRIM_SIZE,
     fetchUpdates,
-    setTag,
 } from './YjsIndexedDBPersistence';
 import { waitAsync } from '../test/TestHelpers';
 
@@ -44,7 +43,6 @@ describe('YjsIndexedDBPersistence', () => {
 
     // Broken when running tests in CI
     it.skip('should be able to store updates and merge them', async () => {
-        setTag('test1');
         const doc1 = new Doc();
         const arr1 = doc1.getArray('t');
         const doc2 = new Doc();
@@ -94,7 +92,6 @@ describe('YjsIndexedDBPersistence', () => {
 
     // Broken when running tests in CI
     it.skip('should be able to perform merges concurrently', async () => {
-        setTag('test2');
         const doc1 = new Doc();
         const arr1 = doc1.getArray('t');
         const doc2 = new Doc();

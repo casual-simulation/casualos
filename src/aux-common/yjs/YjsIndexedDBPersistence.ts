@@ -35,34 +35,24 @@ export const PREFERRED_TRIM_SIZE = 500;
 
 export type ApplyUpdatesCallback = (updatesStore: IDBObjectStore) => void;
 
-export let tag = 'test1';
-
-export function setTag(value: string) {
-    tag = value;
-}
-
 export const fetchUpdates = async (
     idbPersistence: YjsIndexedDBPersistence,
     beforeApplyUpdatesCallback: ApplyUpdatesCallback = () => {},
     afterApplyUpdatesCallback: ApplyUpdatesCallback = () => {}
 ) => {
-    console.log(`[${tag}] before transact`);
     const [updatesStore] = idb.transact(
         /** @type {IDBDatabase} */ idbPersistence.db,
         [updatesStoreName]
     ); // , 'readonly')
-    console.log(`[${tag}] after transact`);
 
     const updates = await idb.getAll(
         updatesStore,
         idb.createIDBKeyRangeLowerBound(idbPersistence.dbref, false)
     );
 
-    console.log(`[${tag}] after getAll`);
     if (!idbPersistence.destroyed) {
-        console.log(`[${tag}] before beforeApplyUpdatesCallback`);
         beforeApplyUpdatesCallback(updatesStore);
-        console.log(`[${tag}] after beforeApplyUpdatesCallback`);
+
         transact(
             idbPersistence.doc,
             () => {
@@ -71,20 +61,16 @@ export const fetchUpdates = async (
             idbPersistence,
             false
         );
-        console.log(`[${tag}] after doc transact`);
+
         afterApplyUpdatesCallback(updatesStore);
-        console.log(`[${tag}] after afterApplyUpdatesCallback`);
     }
 
     const lastKey = await idb.getLastKey(updatesStore);
-    console.log(`[${tag}] update dbref`);
     idbPersistence.dbref = lastKey + 1;
 
     const cnt = await idb.count(updatesStore);
-    console.log(`[${tag}] update dbsize`);
     idbPersistence.dbsize = cnt;
 
-    console.log(`[${tag}] done fetchUpdates`);
     return updatesStore;
 };
 
