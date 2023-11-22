@@ -308,6 +308,11 @@ export class YjsIndexedDBPersistence {
         if (this._storeTimeoutId) {
             clearTimeout(this._storeTimeoutId);
         }
+        if (this._channel) {
+            this._channel.close();
+            this._channel = null;
+        }
+
         this._doc.off('update', this._storeUpdate);
         this._doc.off('destroy', this.destroy);
         this._destroyed = true;

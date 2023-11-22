@@ -207,5 +207,8 @@ describe('YjsIndexedDBPersistence', () => {
         }
 
         expect(arr2.toArray()).toEqual(arr1.toArray());
+
+        persistence1.destroy();
+        persistence2.destroy();
     });
 });
