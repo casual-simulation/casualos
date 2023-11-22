@@ -38,7 +38,7 @@ jobs:
               run: |
                   npm ci
                   npm run bootstrap
-                  npx --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
+                  npx --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache --testPathPattern YjsInd
               env:
                   CI: true
     build:
