@@ -14180,6 +14180,7 @@ describe('AuxLibrary', () => {
 
                 afterAll(() => {
                     globalThis.performance.now = oldNow;
+                    jest.useRealTimers();
                 });
 
                 it('should use performance.now() to track the amount of time the shout takes', () => {
