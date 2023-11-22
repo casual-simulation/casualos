@@ -40,18 +40,22 @@ export const fetchUpdates = (
     beforeApplyUpdatesCallback: ApplyUpdatesCallback = () => {},
     afterApplyUpdatesCallback: ApplyUpdatesCallback = () => {}
 ) => {
+    console.log('before transact');
     const [updatesStore] = idb.transact(
         /** @type {IDBDatabase} */ idbPersistence.db,
         [updatesStoreName]
     ); // , 'readonly')
+    console.log('after transact');
     return idb
         .getAll(
             updatesStore,
             idb.createIDBKeyRangeLowerBound(idbPersistence.dbref, false)
         )
         .then((updates) => {
+            console.log('after getAll');
             if (!idbPersistence.destroyed) {
                 beforeApplyUpdatesCallback(updatesStore);
+                console.log('after beforeApplyUpdatesCallback');
                 transact(
                     idbPersistence.doc,
                     () => {
@@ -62,20 +66,27 @@ export const fetchUpdates = (
                     idbPersistence,
                     false
                 );
+                console.log('after doc transact');
                 afterApplyUpdatesCallback(updatesStore);
+                console.log('after afterApplyUpdatesCallback');
             }
         })
         .then(() =>
             idb.getLastKey(updatesStore).then((lastKey) => {
+                console.log('update dbref');
                 idbPersistence.dbref = lastKey + 1;
             })
         )
         .then(() =>
             idb.count(updatesStore).then((cnt) => {
+                console.log('update dbsize');
                 idbPersistence.dbsize = cnt;
             })
         )
-        .then(() => updatesStore);
+        .then(() => {
+            console.log('done fetchUpdates');
+            return updatesStore;
+        });
 };
 
 export const storeState = (
