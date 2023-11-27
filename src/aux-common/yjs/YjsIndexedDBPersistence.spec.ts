@@ -37,9 +37,9 @@ describe('YjsIndexedDBPersistence', () => {
         return exec();
     }
 
-    // function sleep(ms: number) {
-    //     return new Promise((resolve) => setTimeout(resolve, ms));
-    // }
+    function sleep(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
 
     // Broken when running tests in CI
     it.skip('should be able to store updates and merge them', async () => {
