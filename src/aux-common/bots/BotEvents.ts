@@ -243,6 +243,7 @@ export interface UpdateBotAction extends Action {
 
 /**
  * A set of bot events in one.
+ * @docname TransactionAction
  */
 export interface TransactionAction extends Action {
     type: 'transaction';
@@ -261,6 +262,7 @@ export interface ApplyStateAction extends Action {
 
 /**
  * The options for pasting bots state into a channel.
+ * @docname PasteStateOptions
  */
 export interface PasteStateOptions {
     /**
@@ -292,6 +294,7 @@ export interface PasteStateOptions {
 
 /**
  * An event to paste the given bots state as a new worksurface at a position.
+ * @docname PasteStateAction
  */
 export interface PasteStateAction extends Action {
     type: 'paste_state';
@@ -305,6 +308,7 @@ export interface PasteStateAction extends Action {
 
 /**
  * An event that is used to override dragging a bot.
+ * @docname ReplaceDragBotAction
  */
 export interface ReplaceDragBotAction extends Action {
     type: 'replace_drag_bot';
@@ -317,6 +321,7 @@ export interface ReplaceDragBotAction extends Action {
 
 /**
  * An event that is used to run a shell script.
+ * @docname ShellAction
  */
 export interface ShellAction extends Action {
     type: 'shell';
@@ -329,6 +334,7 @@ export interface ShellAction extends Action {
 
 /**
  * An event that is used to show a toast message to the user.
+ * @docname ShowToastAction
  */
 export interface ShowToastAction extends Action {
     type: 'show_toast';
@@ -345,6 +351,7 @@ export interface ShowToastAction extends Action {
 
 /**
  * An event that is used to show a tooltip message to the user.
+ * @docname ShowTooltipAction
  */
 export interface ShowTooltipAction extends AsyncAction {
     type: 'show_tooltip';
@@ -374,6 +381,7 @@ export interface ShowTooltipAction extends AsyncAction {
 
 /**
  * An event that is used to hide tooltip messages.
+ * @docname HideTooltipAction
  */
 export interface HideTooltipAction extends AsyncAction {
     type: 'hide_tooltip';
@@ -387,6 +395,7 @@ export interface HideTooltipAction extends AsyncAction {
 
 /**
  * An event that is used to show some HTML to the user.
+ * @docname ShowHtmlAction
  */
 export interface ShowHtmlAction extends Action {
     type: 'show_html';
@@ -404,6 +413,7 @@ export interface ShowHtmlAction extends Action {
 
 /**
  * An event that is used to hide the HTML from the user.
+ * @docname HideHtmlAction
  */
 export interface HideHtmlAction extends Action {
     type: 'show_html';
@@ -511,6 +521,7 @@ export interface FocusOnRotation {
 
 /**
  * An event that is used to focus on a given bot.
+ * @docname FocusOnBotAction
  */
 export interface FocusOnBotAction extends AsyncAction, FocusOnOptions {
     type: 'focus_on';
@@ -523,6 +534,7 @@ export interface FocusOnBotAction extends AsyncAction, FocusOnOptions {
 
 /**
  * An event that is used to focus on a given position.
+ * @docname FocusOnPositionAction
  */
 export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
     type: 'focus_on_position';
@@ -539,6 +551,7 @@ export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
 
 /**
  * An event that is used to cancel the current camera animation.
+ * @docname CancelAnimationAction
  */
 export interface CancelAnimationAction extends AsyncAction {
     type: 'cancel_animation';
@@ -554,6 +567,7 @@ export type CameraType = 'front' | 'rear';
 
 /**
  * An event that is used to show or hide the QR Code Scanner.
+ * @docname OpenQRCodeScannerAction
  */
 export interface OpenQRCodeScannerAction extends Action {
     type: 'show_qr_code_scanner';
@@ -576,6 +590,7 @@ export interface OpenQRCodeScannerAction extends Action {
 
 /**
  * An event that is used to show or hide the barcode scanner.
+ * @docname OpenBarcodeScannerAction
  */
 export interface OpenBarcodeScannerAction extends Action {
     type: 'show_barcode_scanner';
@@ -598,6 +613,7 @@ export interface OpenBarcodeScannerAction extends Action {
 
 /**
  * An event that is used to show or hide the photo camera.
+ * @docname OpenPhotoCameraAction
  */
 export interface OpenPhotoCameraAction extends AsyncAction {
     type: 'open_photo_camera';
@@ -719,6 +735,7 @@ export interface OpenPhotoCameraOptions {
 
 /**
  * An event that is used to toggle whether the console is open.
+ * @docname OpenConsoleAction
  */
 export interface OpenConsoleAction extends Action {
     type: 'open_console';
@@ -731,6 +748,7 @@ export interface OpenConsoleAction extends Action {
 
 /**
  * An event that is used to show or hide a QR Code on screen.
+ * @docname ShowQRCodeAction
  */
 export interface ShowQRCodeAction extends Action {
     type: 'show_qr_code';
@@ -765,6 +783,7 @@ export type BarcodeFormat =
 
 /**
  * An event that is used to show or hide a barcode on screen.
+ * @docname ShowBarcodeAction
  */
 export interface ShowBarcodeAction extends Action {
     type: 'show_barcode';
@@ -787,6 +806,7 @@ export interface ShowBarcodeAction extends Action {
 
 /**
  * An event that is used to show or hide an image classifier on screen.
+ * @docname OpenImageClassifierAction
  */
 export interface OpenImageClassifierAction
     extends AsyncAction,
@@ -831,6 +851,7 @@ export interface ImageClassifierOptions {
 
 /**
  * An event that is used to load a simulation.
+ * @docname LoadServerAction
  */
 export interface LoadServerAction extends Action {
     type: 'load_server';
@@ -843,6 +864,7 @@ export interface LoadServerAction extends Action {
 
 /**
  * An event that is used to unload a simulation.
+ * @docname UnloadServerAction
  */
 export interface UnloadServerAction extends Action {
     type: 'unload_server';
@@ -855,6 +877,7 @@ export interface UnloadServerAction extends Action {
 
 /**
  * An event that is used to load an AUX from a remote location.
+ * @docname ImportAUXAction
  */
 export interface ImportAUXAction extends AsyncAction {
     type: 'import_aux';
@@ -867,6 +890,7 @@ export interface ImportAUXAction extends AsyncAction {
 
 /**
  * Defines an event for actions that are shouted to every current loaded simulation.
+ * @docname SuperShoutAction
  */
 export interface SuperShoutAction extends Action {
     type: 'super_shout';
@@ -884,6 +908,7 @@ export interface SuperShoutAction extends Action {
 
 /**
  * Defines an event that sends a web request to a instance.
+ * @docname SendWebhookAction
  */
 export interface SendWebhookAction extends AsyncAction {
     type: 'send_webhook';
@@ -928,6 +953,7 @@ export interface WebhookOptions {
 
 /**
  * Defines an event that animates a tag on a bot over some time.
+ * @docname AnimateTagAction
  */
 export interface AnimateTagAction extends AsyncAction {
     type: 'animate_tag';
@@ -950,6 +976,7 @@ export interface AnimateTagAction extends AsyncAction {
 
 /**
  * Defines the options that can be used to animate a tag.
+ * @docname AnimateTagOptions
  */
 export interface AnimateTagOptions {
     /**
@@ -981,6 +1008,7 @@ export interface AnimateTagOptions {
 
 /**
  * Defines an event that is used to get the player count.
+ * @docname GetRemoteCountAction
  */
 export interface GetRemoteCountAction extends Action {
     type: 'get_remote_count';
@@ -1003,6 +1031,7 @@ export interface GetRemoteCountAction extends Action {
 }
 /**
  * Defines an event that is used to get the list of remote devices on the instance.
+ * @docname GetRemotesAction
  */
 export interface GetRemotesAction extends Action {
     type: 'get_remotes';
@@ -1010,6 +1039,7 @@ export interface GetRemotesAction extends Action {
 
 /**
  * Defines an event that is used to get the list of bot updates on the instance.
+ * @docname ListInstUpdatesAction
  */
 export interface ListInstUpdatesAction extends Action {
     type: 'list_inst_updates';
@@ -1017,6 +1047,7 @@ export interface ListInstUpdatesAction extends Action {
 
 /**
  * Defines an event that is used to get the state of the inst with a particular set of updates.
+ * @docname GetInstStateFromUpdatesAction
  */
 export interface GetInstStateFromUpdatesAction extends Action {
     type: 'get_inst_state_from_updates';
@@ -1029,6 +1060,7 @@ export interface GetInstStateFromUpdatesAction extends Action {
 
 /**
  * Defines an event that is used to create an initialization update for a given list of bots.
+ * @docname CreateInitializationUpdateAction
  */
 export interface CreateInitializationUpdateAction extends Action {
     type: 'create_initialization_update';
@@ -1041,6 +1073,7 @@ export interface CreateInitializationUpdateAction extends Action {
 
 /**
  * Defines an event that applies the given updates to the inst.
+ * @docname ApplyUpdatesToInstAction
  */
 export interface ApplyUpdatesToInstAction extends Action {
     type: 'apply_updates_to_inst';
@@ -1053,6 +1086,7 @@ export interface ApplyUpdatesToInstAction extends Action {
 
 /**
  * Defines an event that is used to get the current inst update.
+ * @docname GetCurrentInstUpdateAction
  */
 export interface GetCurrentInstUpdateAction extends Action {
     type: 'get_current_inst_update';
@@ -1060,6 +1094,7 @@ export interface GetCurrentInstUpdateAction extends Action {
 
 /**
  * Defines an event that is used to send the player to a dimension.
+ * @docname GoToDimensionAction
  */
 export interface GoToDimensionAction extends Action {
     type: 'go_to_dimension';
@@ -1072,6 +1107,7 @@ export interface GoToDimensionAction extends Action {
 
 /**
  * Defines an event that is used to show an input box to edit a tag on a bot.
+ * @docname ShowInputForTagAction
  */
 export interface ShowInputForTagAction extends Action {
     type: 'show_input_for_tag';
@@ -1094,6 +1130,7 @@ export interface ShowInputForTagAction extends Action {
 
 /**
  * Defines an event that is used to show an input box.
+ * @docname ShowInputAction
  */
 export interface ShowInputAction extends AsyncAction {
     type: 'show_input';
@@ -1111,6 +1148,8 @@ export interface ShowInputAction extends AsyncAction {
 
 /**
  * Defines an event that is used to show a confirmation dialog.
+ * @dochash types/os
+ * @docname ShowConfirmAction
  */
 export interface ShowConfirmAction extends AsyncAction {
     type: 'show_confirm';
@@ -1151,6 +1190,7 @@ export interface ShowConfirmOptions {
 
 /**
  * Defines an event that is used to set whether the connection is forced to be offline.
+ * @docname SetForcedOfflineAction
  */
 export interface SetForcedOfflineAction extends Action {
     type: 'set_offline_state';
@@ -1164,6 +1204,7 @@ export interface SetForcedOfflineAction extends Action {
 /**
  * Defines an event that is used to redirect the user to the given URL.
  * This should be equivalent to clicking a link with rel="noreferrer".
+ * @docname GoToURLAction
  */
 export interface GoToURLAction extends Action {
     type: 'go_to_url';
@@ -1306,11 +1347,15 @@ export interface ShowInputItem {
 
 /**
  * Defines the possible input types.
+ * @dochash types/os
+ * @docname ShowInputType
  */
 export type ShowInputType = 'text' | 'color' | 'secret' | 'date' | 'list';
 
 /**
  * Defines the possible input types.
+ * @dochash types/os
+ * @docname ShowInputSuptype
  */
 export type ShowInputSubtype =
     | 'basic'
