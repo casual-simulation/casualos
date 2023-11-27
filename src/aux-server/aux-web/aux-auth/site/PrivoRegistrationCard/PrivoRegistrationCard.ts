@@ -81,6 +81,10 @@ export default class PrivoRegistrationCard extends Vue {
         return false;
     }
 
+    get showEmail() {
+        return !!this.dateOfBirth;
+    }
+
     created() {
         this.resetFields();
         this.resetErrors();

@@ -11,30 +11,6 @@
                 <md-card-content class="input-dialog-content">
                     <div class="md-layout md-gutter">
                         <div class="md-layout-item">
-                            <md-field :class="emailFieldClass">
-                                <label for="email">Email</label>
-                                <md-input
-                                    name="email"
-                                    id="email"
-                                    autocomplete="email"
-                                    v-model="email"
-                                    :disabled="processing"
-                                    @blur="checkEmail()"
-                                />
-                                <span v-if="showEmailError" class="md-error"
-                                    >This email is not allowed</span
-                                >
-                                <span v-else-if="showInvalidAddressError" class="md-error"
-                                    >This value is not recognized as an email address</span
-                                >
-                                <span v-else-if="showEnterAddressError" class="md-error"
-                                    >Please enter an email address</span
-                                >
-                                <span v-else-if="showBannedUserError" class="md-error"
-                                    >This user has been banned</span
-                                >
-                            </md-field>
-
                             <md-field :class="displayNameFieldClass">
                                 <label for="name">Display Name</label>
                                 <md-input
@@ -79,6 +55,30 @@
                                     This Date of Birth is not allowed
                                 </span>
                             </md-datepicker>
+
+                            <md-field v-if="showEmail" :class="emailFieldClass">
+                                <label for="email">Email</label>
+                                <md-input
+                                    name="email"
+                                    id="email"
+                                    autocomplete="email"
+                                    v-model="email"
+                                    :disabled="processing"
+                                    @blur="checkEmail()"
+                                />
+                                <span v-if="showEmailError" class="md-error"
+                                    >This email is not allowed</span
+                                >
+                                <span v-else-if="showInvalidAddressError" class="md-error"
+                                    >This value is not recognized as an email address</span
+                                >
+                                <span v-else-if="showEnterAddressError" class="md-error"
+                                    >Please enter an email address</span
+                                >
+                                <span v-else-if="showBannedUserError" class="md-error"
+                                    >This user has been banned</span
+                                >
+                            </md-field>
 
                             <md-field v-if="requireParentEmail" :class="parentEmailFieldClass">
                                 <label for="parentEmail">Enter Parent Email</label>
