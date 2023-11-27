@@ -168,7 +168,8 @@ export default class EnterAccountInfoDialog extends Vue {
             return;
         }
         const result = await this._endpoint.isValidDisplayName(
-            this.displayName
+            this.displayName,
+            this.name
         );
 
         const valid = !result.success || result.allowed;
@@ -178,14 +179,26 @@ export default class EnterAccountInfoDialog extends Vue {
                 (e) => e.for !== DISPLAY_NAME_FIELD
             );
         } else {
-            this.errors = [
-                ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
-                {
-                    for: DISPLAY_NAME_FIELD,
-                    errorCode: 'invalid_display_name',
-                    errorMessage: 'This display name is not allowed.',
-                },
-            ];
+            if (result.containsName) {
+                this.errors = [
+                    ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
+                    {
+                        for: DISPLAY_NAME_FIELD,
+                        errorCode: 'invalid_display_name',
+                        errorMessage:
+                            'The display name cannot contain your name.',
+                    },
+                ];
+            } else {
+                this.errors = [
+                    ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
+                    {
+                        for: DISPLAY_NAME_FIELD,
+                        errorCode: 'invalid_display_name',
+                        errorMessage: 'This display name is not allowed.',
+                    },
+                ];
+            }
         }
     }
 

@@ -117,8 +117,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Determines whether the given display name is valid.
      * Only supported on protocol version 9 or more.
      * @param displayName The display name to check.
+     * @param name The name to check.
      */
-    isValidDisplayName(displayName: string): Promise<IsValidDisplayNameResult>;
+    isValidDisplayName(
+        displayName: string,
+        name: string
+    ): Promise<IsValidDisplayNameResult>;
 
     /**
      * Provides the given email address and whether the user accepted the terms of service for the login flow.

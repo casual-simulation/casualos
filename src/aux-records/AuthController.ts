@@ -2120,10 +2120,25 @@ export class AuthController {
     }
 
     async isValidDisplayName(
-        displayName: string
+        displayName: string,
+        name?: string
     ): Promise<IsValidDisplayNameResult> {
         try {
             if (this._privoClient) {
+                if (name) {
+                    const lowercaseName = name.trim().toLowerCase();
+                    const lowercaseDisplayName = displayName
+                        .trim()
+                        .toLowerCase();
+                    if (lowercaseDisplayName.includes(lowercaseName)) {
+                        return {
+                            success: true,
+                            allowed: false,
+                            containsName: true,
+                        };
+                    }
+                }
+
                 const config = await this._config.getPrivoConfiguration();
                 if (config) {
                     const result = await this._privoClient.checkDisplayName(
@@ -3027,6 +3042,11 @@ export interface IsValidDisplayNameSuccess {
      * Whether the email contains profanity.
      */
     profanity?: boolean;
+
+    /**
+     * Whether the display name contains the user's name.
+     */
+    containsName?: boolean;
 }
 
 export interface IsValidDisplayNameFailure {

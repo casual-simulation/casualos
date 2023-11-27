@@ -32,6 +32,7 @@
                                 autocomplete="given-name"
                                 v-model="name"
                                 :disabled="processing"
+                                @blur="checkDisplayName()"
                             />
                             <field-errors field="name" :errors="errors" />
                         </md-field>

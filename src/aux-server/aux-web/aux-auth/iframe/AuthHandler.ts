@@ -336,9 +336,10 @@ export class AuthHandler implements AuxAuth {
     }
 
     async isValidDisplayName(
-        displayName: string
+        displayName: string,
+        name: string
     ): Promise<IsValidDisplayNameResult> {
-        return await authManager.isValidDisplayName(displayName);
+        return await authManager.isValidDisplayName(displayName, name);
     }
 
     async provideCode(code: string): Promise<void> {

@@ -212,12 +212,14 @@ export class AuthManager {
     }
 
     async isValidDisplayName(
-        displayName: string
+        displayName: string,
+        name: string
     ): Promise<IsValidDisplayNameResult> {
         const result = await axios.post<IsValidDisplayNameResult>(
             `${this.apiEndpoint}/api/v2/displayName/valid`,
             {
                 displayName,
+                name,
             },
             {
                 validateStatus: (status) => status < 500,

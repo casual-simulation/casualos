@@ -1157,7 +1157,8 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            displayName: z.string(),
+            displayName: z.string().trim(),
+            name: z.string().trim().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1166,8 +1167,8 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { displayName } = parseResult.data;
-        const result = await this._auth.isValidDisplayName(displayName);
+        const { displayName, name } = parseResult.data;
+        const result = await this._auth.isValidDisplayName(displayName, name);
         return returnResult(result);
     }
 

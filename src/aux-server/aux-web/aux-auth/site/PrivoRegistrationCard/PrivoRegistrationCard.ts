@@ -26,6 +26,7 @@ export default class PrivoRegistrationCard extends Vue {
     showTermsOfServiceError: boolean = false;
     showBannedUserError: boolean = false;
     showDisplayNameError: boolean = false;
+    showDisplayNameContainsNameError: boolean = false;
     showParentEmailError: boolean = false;
     showInvalidParentEmailError: boolean = false;
     showEnterParentEmailError: boolean = false;
@@ -50,7 +51,10 @@ export default class PrivoRegistrationCard extends Vue {
     }
 
     get displayNameFieldClass() {
-        return this.showDisplayNameError ? 'md-invalid' : '';
+        return this.showDisplayNameError ||
+            this.showDisplayNameContainsNameError
+            ? 'md-invalid'
+            : '';
     }
 
     get parentEmailFieldClass() {
@@ -99,8 +103,21 @@ export default class PrivoRegistrationCard extends Vue {
 
     async checkDisplayName() {
         if (this.displayName) {
-            let result = await authManager.isValidDisplayName(this.displayName);
-            this.showDisplayNameError = !result.success || !result.allowed;
+            let result = await authManager.isValidDisplayName(
+                this.displayName,
+                this.name
+            );
+            if (result.success && !result.allowed) {
+                if (result.containsName) {
+                    this.showDisplayNameContainsNameError = true;
+                } else {
+                    this.showDisplayNameError = true;
+                    this.showDisplayNameContainsNameError = false;
+                }
+            } else {
+                this.showDisplayNameContainsNameError = false;
+                this.showDisplayNameError = false;
+            }
         }
     }
 
@@ -116,6 +133,7 @@ export default class PrivoRegistrationCard extends Vue {
         this.showParentEmailError = false;
         this.showInvalidParentEmailError = false;
         this.showEnterParentEmailError = false;
+        this.showDisplayNameContainsNameError = false;
     }
 
     resetFields() {
@@ -148,7 +166,8 @@ export default class PrivoRegistrationCard extends Vue {
                 return;
             }
             const displayNameResult = await authManager.isValidDisplayName(
-                this.displayName
+                this.displayName,
+                this.name
             );
             if (!displayNameResult.success || !displayNameResult.allowed) {
                 this.showDisplayNameError = true;

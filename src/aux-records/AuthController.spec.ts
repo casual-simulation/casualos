@@ -6392,6 +6392,55 @@ describe('AuthController', () => {
                 };
             });
 
+            it('should return false if the display name contains the given name', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: true,
+                });
+
+                const result = await controller.isValidDisplayName(
+                    'displayName',
+                    'name'
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: false,
+                    containsName: true,
+                });
+            });
+
+            it('should return true if the name is empty', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: true,
+                });
+
+                const result = await controller.isValidDisplayName(
+                    'displayName',
+                    ''
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: true,
+                });
+            });
+
+            it('should return true if the name is null', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: true,
+                });
+
+                const result = await controller.isValidDisplayName(
+                    'displayName',
+                    null
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: true,
+                });
+            });
+
             it('should check the privo client if the display name is valid', async () => {
                 privoClientMock.checkDisplayName.mockResolvedValueOnce({
                     available: true,

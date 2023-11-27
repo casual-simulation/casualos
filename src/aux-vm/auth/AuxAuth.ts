@@ -390,8 +390,12 @@ export interface AuxAuth {
      * Determines whether the given display name is valid.
      * Only supported on protocol version 9 or more.
      * @param displayName The display name to check.
+     * @param name The name to check.
      */
-    isValidDisplayName(displayName: string): Promise<IsValidDisplayNameResult>;
+    isValidDisplayName(
+        displayName: string,
+        name: string
+    ): Promise<IsValidDisplayNameResult>;
 
     /**
      * Specifies the SMS phone number and whether the user accepted the terms of service during the login process.

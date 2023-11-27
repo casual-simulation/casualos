@@ -21,6 +21,7 @@ describe('getFormErrors()', () => {
         ['invalid_username', DISPLAY_NAME_FIELD],
         ['unacceptable_code', CODE_FIELD],
         ['user_is_banned', null],
+        ['invalid_display_name', DISPLAY_NAME_FIELD],
     ];
 
     it.each(fieldCases)(

@@ -389,7 +389,8 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     }
 
     async isValidDisplayName(
-        displayName: string
+        displayName: string,
+        name: string
     ): Promise<IsValidDisplayNameResult> {
         if (!hasValue(this._origin)) {
             return;
@@ -403,7 +404,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 allowed: true,
             };
         }
-        return await this._proxy.isValidDisplayName(displayName);
+        return await this._proxy.isValidDisplayName(displayName, name);
     }
 
     async provideSmsNumber(

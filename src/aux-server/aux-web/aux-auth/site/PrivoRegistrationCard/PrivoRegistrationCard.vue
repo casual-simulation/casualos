@@ -47,6 +47,9 @@
                                 <span v-if="showDisplayNameError" class="md-error"
                                     >This display name is not allowed</span
                                 >
+                                <span v-if="showDisplayNameContainsNameError" class="md-error"
+                                    >The display name cannot contain your name.</span
+                                >
                             </md-field>
 
                             <md-field :class="nameFieldClass">
@@ -57,6 +60,7 @@
                                     autocomplete="given-name"
                                     v-model="name"
                                     :disabled="processing"
+                                    @blur="checkDisplayName()"
                                 />
                                 <span v-if="showNameError" class="md-error"
                                     >This name is not allowed</span
