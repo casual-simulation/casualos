@@ -171,6 +171,12 @@ export default class PlayerHome extends Vue {
                     params.inst,
                     params.isStatic
                 );
+
+                if ('bios' in this.query) {
+                    this._updateQuery({
+                        bios: null,
+                    });
+                }
             } else {
                 const joinCode = this.query['joinCode'];
                 if (joinCode) {
@@ -261,6 +267,7 @@ export default class PlayerHome extends Vue {
                 : instSelection;
 
         update.staticInst = inst;
+        update.bios = null;
 
         if (!hasValue(this.query['gridPortal'])) {
             update.gridPortal = 'home';
@@ -291,6 +298,7 @@ export default class PlayerHome extends Vue {
 
         update.staticInst = inst;
         update.joinCode = joinCode;
+        update.bios = null;
 
         if (!hasValue(this.query['gridPortal'])) {
             update.gridPortal = 'home';
@@ -313,6 +321,7 @@ export default class PlayerHome extends Vue {
 
             update.owner = userId;
             update.inst = inst;
+            update.bios = null;
 
             if (!hasValue(this.query['gridPortal'])) {
                 update.gridPortal = 'home';
@@ -332,6 +341,7 @@ export default class PlayerHome extends Vue {
 
         update.owner = PUBLIC_OWNER;
         update.inst = inst;
+        update.bios = null;
 
         if (!hasValue(this.query['gridPortal'])) {
             update.gridPortal = 'home';
@@ -681,6 +691,11 @@ export default class PlayerHome extends Vue {
                 }
             }
 
+            for (let param in final.query) {
+                if (!hasValue(final.query[param])) {
+                    delete final.query[param];
+                }
+            }
 
             if (pushState) {
                 window.history.pushState({}, window.document.title);
