@@ -34,7 +34,7 @@ export interface InstParameters {
 export function getInstParameters(query: any): InstParameters {
     const inst =
         query.staticInst ?? query.inst ?? query.story ?? query.server ?? null;
-    const recordName = query.record ?? query.player ?? null;
+    const recordName = query.owner ?? query.record ?? query.player ?? null;
 
     if (!hasValue(inst)) {
         return null;
@@ -54,4 +54,21 @@ export function getInstParameters(query: any): InstParameters {
     }
 
     return ret;
+}
+
+/**
+ * Gets a sharable link for the given URL and record name.
+ * @param url The URL that the link should be generated for.
+ * @param recordName The name of the record that the inst was loaded from.
+ */
+export function getPermalink(url: string, recordName: string): string {
+    const link = new URL(url);
+    if (recordName) {
+        link.searchParams.set('owner', recordName);
+        link.searchParams.delete('record');
+        link.searchParams.delete('player');
+    } else if (link.searchParams.get('owner') !== 'public') {
+        link.searchParams.delete('owner');
+    }
+    return link.href;
 }

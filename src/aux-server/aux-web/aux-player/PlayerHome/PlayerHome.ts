@@ -42,7 +42,7 @@ import adjectives from '../../shared/dictionaries/adjectives';
 import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
-import { getInstParameters } from '../UrlUtils';
+import { getInstParameters, getPermalink } from '../UrlUtils';
 import { BiosOption } from 'shared/WebConfig';
 import { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
@@ -591,6 +591,19 @@ export default class PlayerHome extends Vue {
         }
         if (bot.tags.url !== location.href) {
             changes.url = location.href;
+            hasChange = true;
+        }
+        const permalink = getPermalink(
+            location.href,
+            botManager.origin.recordName
+        );
+        if (bot.tags.permalink !== permalink) {
+            changes.permalink = permalink;
+            hasChange = true;
+        }
+        const recordName = botManager.origin.recordName;
+        if (bot.tags.record !== recordName) {
+            changes.record = recordName;
             hasChange = true;
         }
         if (hasChange) {

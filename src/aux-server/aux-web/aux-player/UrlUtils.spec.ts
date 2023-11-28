@@ -1,9 +1,21 @@
-import { getInstParameters } from './UrlUtils';
+import { getInstParameters, getPermalink } from './UrlUtils';
 
 describe('getInstParameters()', () => {
     it('should return null if no inst options could be resolved', () => {
         const params = getInstParameters({ ab: 'test' });
         expect(params).toEqual(null);
+    });
+
+    it('should use the owner parameter', () => {
+        const params = getInstParameters({
+            inst: 'test',
+            owner: 'testRecord',
+        });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: 'testRecord',
+            isStatic: false,
+        });
     });
 
     it('should return the inst and record', () => {
@@ -75,5 +87,42 @@ describe('getInstParameters()', () => {
             recordName: null,
             isStatic: true,
         });
+    });
+});
+
+describe('getPermalink()', () => {
+    it('should add the given record name to the URL', () => {
+        const url = getPermalink('https://test.com', 'testRecord');
+        expect(url).toEqual('https://test.com/?owner=testRecord');
+    });
+
+    it('should do nothing if the record name is null', () => {
+        const url = getPermalink('https://test.com', null);
+        expect(url).toEqual('https://test.com/');
+    });
+
+    it('should remove the owner if the record name is null', () => {
+        const url = getPermalink('https://test.com?owner=test', null);
+        expect(url).toEqual('https://test.com/');
+    });
+
+    it('should overwrite the owner on the URL with the record name', () => {
+        const url = getPermalink('https://test.com?owner=test', 'testRecord');
+        expect(url).toEqual('https://test.com/?owner=testRecord');
+    });
+
+    it('should preserve the owner if the owner is public and the recordName is null', () => {
+        const url = getPermalink('https://test.com?owner=public', null);
+        expect(url).toEqual('https://test.com/?owner=public');
+    });
+
+    it('should remove the record query parameter', () => {
+        const url = getPermalink('https://test.com?record=other', 'testRecord');
+        expect(url).toEqual('https://test.com/?owner=testRecord');
+    });
+
+    it('should remove the player query parameter', () => {
+        const url = getPermalink('https://test.com?player=other', 'testRecord');
+        expect(url).toEqual('https://test.com/?owner=testRecord');
     });
 });
