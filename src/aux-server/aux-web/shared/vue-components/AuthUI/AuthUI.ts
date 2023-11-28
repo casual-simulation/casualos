@@ -37,6 +37,13 @@ export default class AuthUI extends Vue {
             })
         );
         this._sub.add(
+            appManager.authCoordinator.onNotAuthorized.subscribe((e) => {
+                this.showNotAuthorized = true;
+                this._simId = e.simulationId;
+                this._origin = e.origin;
+            })
+        );
+        this._sub.add(
             appManager.authCoordinator.onShowAccountInfo.subscribe((e) => {
                 this.showAccountInfo = true;
                 this.loginStatus = e.loginStatus;
@@ -69,7 +76,6 @@ export default class AuthUI extends Vue {
             const simId = this._simId;
             this.closeAccountInfo();
             await appManager.authCoordinator.openAccountDashboard(simId);
-            location.reload();
         }
     }
 

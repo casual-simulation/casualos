@@ -51,6 +51,9 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async findUser(userId: string): Promise<AuthUser | null> {
+        if (!userId) {
+            return null;
+        }
         const user = await this._client.user.findUnique({
             where: {
                 id: userId,
@@ -63,6 +66,9 @@ export class PrismaAuthStore implements AuthStore {
     async findUserByStripeCustomerId(
         customerId: string
     ): Promise<AuthUser | null> {
+        if (!customerId) {
+            return null;
+        }
         const user = await this._client.user.findUnique({
             where: {
                 stripeCustomerId: customerId,
@@ -73,6 +79,9 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        if (!serviceId) {
+            return null;
+        }
         const user = await this._client.user.findUnique({
             where: {
                 privoServiceId: serviceId,
@@ -114,6 +123,9 @@ export class PrismaAuthStore implements AuthStore {
         address: string,
         addressType: AddressType
     ): Promise<AuthUser | null> {
+        if (!address) {
+            return null;
+        }
         const user = await this._client.user.findUnique({
             where:
                 addressType === 'email'
@@ -217,6 +229,9 @@ export class PrismaAuthStore implements AuthStore {
         userId: string,
         requestId: string
     ): Promise<AuthLoginRequest | null> {
+        if (!requestId) {
+            return null;
+        }
         const request = await this._client.loginRequest.findUnique({
             where: {
                 requestId: requestId,
@@ -244,6 +259,9 @@ export class PrismaAuthStore implements AuthStore {
     async findOpenIDLoginRequest(
         requestId: string
     ): Promise<AuthOpenIDLoginRequest> {
+        if (!requestId) {
+            return null;
+        }
         const request = await this._client.openIDLoginRequest.findUnique({
             where: {
                 requestId: requestId,
@@ -256,6 +274,41 @@ export class PrismaAuthStore implements AuthStore {
 
         return {
             requestId: request.requestId,
+            state: request.state,
+            authorizationUrl: request.authorizationUrl,
+            redirectUrl: request.redirectUrl,
+            codeMethod: request.codeMethod,
+            codeVerifier: request.codeVerifier,
+            provider: request.provider,
+            scope: request.scope,
+            requestTimeMs: convertToMillis(request.requestTime) as number,
+            expireTimeMs: convertToMillis(request.expireTime) as number,
+            completedTimeMs: convertToMillis(request.completedTime),
+            authorizationTimeMs: convertToMillis(request.authorizationTime),
+            authorizationCode: request.authorizationCode,
+            ipAddress: request.ipAddress,
+        };
+    }
+
+    async findOpenIDLoginRequestByState(
+        state: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        if (!state) {
+            return null;
+        }
+        const request = await this._client.openIDLoginRequest.findUnique({
+            where: {
+                state: state,
+            },
+        });
+
+        if (!request) {
+            return null;
+        }
+
+        return {
+            requestId: request.requestId,
+            state: request.state,
             authorizationUrl: request.authorizationUrl,
             redirectUrl: request.redirectUrl,
             codeMethod: request.codeMethod,
@@ -280,6 +333,7 @@ export class PrismaAuthStore implements AuthStore {
             },
             create: {
                 requestId: request.requestId,
+                state: request.state,
                 authorizationUrl: request.authorizationUrl,
                 redirectUrl: request.redirectUrl,
                 codeMethod: request.codeMethod,
@@ -295,6 +349,7 @@ export class PrismaAuthStore implements AuthStore {
             },
             update: {
                 authorizationUrl: request.authorizationUrl,
+                state: request.state,
                 redirectUrl: request.redirectUrl,
                 codeMethod: request.codeMethod,
                 codeVerifier: request.codeVerifier,
@@ -346,6 +401,9 @@ export class PrismaAuthStore implements AuthStore {
         userId: string,
         sessionId: string
     ): Promise<AuthSession | null> {
+        if (!sessionId) {
+            return null;
+        }
         const session = await this._client.authSession.findUnique({
             where: {
                 sessionId: sessionId,
@@ -475,6 +533,9 @@ export class PrismaAuthStore implements AuthStore {
         userId: string,
         expireTimeMs: number
     ): Promise<ListSessionsDataResult> {
+        if (!userId) {
+            return null;
+        }
         let where: Prisma.AuthSessionWhereInput = {
             userId: userId,
         };
@@ -513,6 +574,9 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
     async getSubscriptionById(id: string): Promise<AuthSubscription> {
+        if (!id) {
+            return null;
+        }
         const sub = await this._client.subscription.findUnique({
             where: {
                 id: id,
@@ -523,6 +587,9 @@ export class PrismaAuthStore implements AuthStore {
     async getSubscriptionByStripeSubscriptionId(
         id: string
     ): Promise<AuthSubscription> {
+        if (!id) {
+            return null;
+        }
         const sub = await this._client.subscription.findUnique({
             where: {
                 stripeSubscriptionId: id,
@@ -551,6 +618,9 @@ export class PrismaAuthStore implements AuthStore {
     async getSubscriptionPeriodById(
         id: string
     ): Promise<AuthSubscriptionPeriod> {
+        if (!id) {
+            return null;
+        }
         const period = await this._client.subscriptionPeriod.findUnique({
             where: {
                 id: id,
@@ -562,6 +632,9 @@ export class PrismaAuthStore implements AuthStore {
     async listSubscriptionPeriodsBySubscriptionId(
         subscriptionId: string
     ): Promise<AuthSubscriptionPeriod[]> {
+        if (!subscriptionId) {
+            return [];
+        }
         const periods = await this._client.subscriptionPeriod.findMany({
             where: {
                 subscriptionId,
@@ -585,6 +658,9 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async getInvoiceById(id: string): Promise<AuthInvoice> {
+        if (!id) {
+            return null;
+        }
         return await this._client.invoice.findUnique({
             where: {
                 id,

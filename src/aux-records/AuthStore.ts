@@ -64,6 +64,14 @@ export interface AuthStore {
     ): Promise<AuthOpenIDLoginRequest | null>;
 
     /**
+     * Finds the login request for the given state.
+     * @param state The state that the request contains.
+     */
+    findOpenIDLoginRequestByState(
+        state: string
+    ): Promise<AuthOpenIDLoginRequest | null>;
+
+    /**
      * Finds a login session for the given user and session ID.
      * @param userId The ID of the user.
      * @param sessionId The ID of the session.
@@ -586,6 +594,11 @@ export interface AuthOpenIDLoginRequest {
      * The ID of the request.
      */
     requestId: string;
+
+    /**
+     * The state generated for the request.
+     */
+    state: string;
 
     /**
      * The name of the provider that was used for the Open ID login.

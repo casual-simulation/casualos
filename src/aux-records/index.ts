@@ -47,3 +47,4 @@ export * from './CachingPolicyStore';
 export * from './CachingConfigStore';
 
 export * from './websockets';
+export * from './forms';

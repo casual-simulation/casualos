@@ -6,6 +6,14 @@ import {
     insert,
     edit,
     TagEdit,
+    GetRemoteCountAction,
+    asyncResult,
+    GetInstStateFromUpdatesAction,
+    asyncError,
+    CreateInitializationUpdateAction,
+    InstUpdate,
+    ApplyUpdatesToInstAction,
+    GetCurrentInstUpdateAction,
 } from '../bots';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
@@ -35,7 +43,11 @@ import {
     botUpdated,
     convertToString,
 } from '../bots';
-import { PartitionConfig, YjsPartitionConfig } from './AuxPartitionConfig';
+import {
+    PartitionConfig,
+    PartitionRemoteEvents,
+    YjsPartitionConfig,
+} from './AuxPartitionConfig';
 import { flatMap, random } from 'lodash';
 import {
     Doc,
@@ -48,6 +60,7 @@ import {
     YTextEvent,
     AbstractType,
     YEvent,
+    encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
 import {
@@ -55,8 +68,18 @@ import {
     getClock,
     getStateVector,
 } from '../yjs/YjsHelpers';
-import { ensureTagIsSerializable } from './PartitionUtils';
-import { Action, CurrentVersion, StatusUpdate, VersionVector } from '../common';
+import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
+import {
+    Action,
+    CurrentVersion,
+    RemoteActions,
+    StatusUpdate,
+    VersionVector,
+} from '../common';
+import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
+import { fromByteArray, toByteArray } from 'base64-js';
+
+const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN = '__apply_updates_to_inst';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -88,8 +111,12 @@ export class YjsPartitionImpl implements YjsPartition {
     private _masks: Map<MapValue>;
     private _internalPartition: MemoryPartitionImpl;
     private _currentVersion: CurrentVersion;
+    private _indexeddb: YjsIndexedDBPersistence;
+    private _persistence: YjsPartitionConfig['localPersistence'];
+    private _isRemoteUpdate: boolean = false;
 
     private _isLocalTransaction: boolean = true;
+    private _remoteEvents: PartitionRemoteEvents | boolean;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -163,6 +190,8 @@ export class YjsPartitionImpl implements YjsPartition {
 
     constructor(config: YjsPartitionConfig) {
         this.private = config.private || false;
+        this._persistence = config.localPersistence;
+        this._remoteEvents = config.remoteEvents;
         this._localId = this._doc.clientID;
         this._remoteId = new Doc().clientID;
         this._bots = this._doc.getMap('bots');
@@ -190,17 +219,143 @@ export class YjsPartitionImpl implements YjsPartition {
 
         this._internalPartition.getNextVersion = (textEdit: TagEdit) => {
             const version = getStateVector(this._doc);
-            const site = textEdit.isRemote
-                ? this._remoteSite
-                : this._currentSite;
-            return {
-                currentSite: this._currentSite,
-                remoteSite: this._remoteSite,
-                vector: {
-                    [site]: version[this._doc.clientID],
-                },
-            };
+
+            if (this._isRemoteUpdate) {
+                const {
+                    [this._currentSite]: currentVersion,
+                    ...otherVersions
+                } = version;
+                return {
+                    currentSite: this._currentSite,
+                    remoteSite: this._remoteSite,
+                    vector: otherVersions,
+                };
+            } else {
+                const site = textEdit.isRemote
+                    ? this._remoteSite
+                    : this._currentSite;
+                return {
+                    currentSite: this._currentSite,
+                    remoteSite: this._remoteSite,
+                    vector: {
+                        [site]: version[this._doc.clientID] ?? 0,
+                    },
+                };
+            }
         };
+    }
+
+    async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
+        if (!this._remoteEvents) {
+            return;
+        }
+
+        for (let event of events) {
+            if (!supportsRemoteEvent(this._remoteEvents, event)) {
+                continue;
+            }
+
+            if (event.type === 'remote') {
+                if (event.event.type === 'get_remote_count') {
+                    this._onEvents.next([asyncResult(event.taskId, 1)]);
+                } else if (event.event.type === 'list_inst_updates') {
+                    try {
+                        const updates: InstUpdate[] = [
+                            {
+                                id: 0,
+                                timestamp: Date.now(),
+                                update: fromByteArray(
+                                    encodeStateAsUpdate(this._doc)
+                                ),
+                            },
+                        ];
+                        this._onEvents.next([
+                            asyncResult(event.taskId, updates, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (event.event.type === 'get_inst_state_from_updates') {
+                    const action = <GetInstStateFromUpdatesAction>event.event;
+                    try {
+                        let partition = new YjsPartitionImpl({
+                            type: 'yjs',
+                        });
+
+                        for (let { update } of action.updates) {
+                            const updateBytes = toByteArray(update);
+                            applyUpdate(partition.doc, updateBytes);
+                        }
+
+                        this._onEvents.next([
+                            asyncResult(event.taskId, partition.state, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (
+                    event.event.type === 'create_initialization_update'
+                ) {
+                    const action = <CreateInitializationUpdateAction>(
+                        event.event
+                    );
+                    try {
+                        let partition = new YjsPartitionImpl({
+                            type: 'yjs',
+                        });
+
+                        partition.doc.on('update', (update: Uint8Array) => {
+                            let instUpdate: InstUpdate = {
+                                id: 0,
+                                timestamp: Date.now(),
+                                update: fromByteArray(update),
+                            };
+
+                            this._onEvents.next([
+                                asyncResult(event.taskId, instUpdate, false),
+                            ]);
+                        });
+
+                        await partition.applyEvents(
+                            action.bots.map((b) =>
+                                botAdded(createBot(b.id, b.tags))
+                            )
+                        );
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (event.event.type === 'apply_updates_to_inst') {
+                    const action = <ApplyUpdatesToInstAction>event.event;
+                    try {
+                        this._applyUpdates(
+                            action.updates.map((u) => u.update),
+                            APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN
+                        );
+                        this._onEvents.next([
+                            asyncResult(event.taskId, null, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (event.event.type === 'get_current_inst_update') {
+                    const action = <GetCurrentInstUpdateAction>event.event;
+                    try {
+                        const update: InstUpdate = {
+                            id: 0,
+                            timestamp: Date.now(),
+                            update: fromByteArray(
+                                encodeStateAsUpdate(this._doc)
+                            ),
+                        };
+                        this._onEvents.next([
+                            asyncResult(event.taskId, update, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                }
+            }
+        }
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
@@ -226,6 +381,15 @@ export class YjsPartitionImpl implements YjsPartition {
     async init(): Promise<void> {}
 
     connect(): void {
+        if (this._persistence?.saveToIndexedDb) {
+            console.log('[YjsPartition] Using IndexedDB persistence');
+            this._indexeddb = new YjsIndexedDBPersistence(
+                this._persistence.database,
+                this._doc,
+                { broadcastChanges: true }
+            );
+        }
+
         this._onStatusUpdated.next({
             type: 'connection',
             connected: true,
@@ -337,6 +501,18 @@ export class YjsPartitionImpl implements YjsPartition {
                 }
             }
         });
+    }
+
+    private _applyUpdates(updates: string[], transactionOrigin?: string) {
+        try {
+            this._isRemoteUpdate = true;
+            for (let updateBase64 of updates) {
+                const update = toByteArray(updateBase64);
+                applyUpdate(this._doc, update, transactionOrigin);
+            }
+        } finally {
+            this._isRemoteUpdate = false;
+        }
     }
 
     private async _processTransaction(transaction: Transaction) {

@@ -1,5 +1,6 @@
 import {
     AuthenticatedConnectionClient,
+    ConnectionClient,
     ConnectionIndicator,
     InstRecordsClient,
     InstRecordsClientTimeSyncConnection,
@@ -21,6 +22,9 @@ import {
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
 import { TimeSyncController } from '@casual-simulation/timesync';
+
+const DEFAULT_RESEND_UPDATES_INTERVAL_MS = 1000;
+const DEFAULT_RETRY_UPDATES_AFTER_MS = 5000;
 
 /**
  * A map of hostnames to CausalRepoClients.
@@ -48,6 +52,15 @@ export function getClientForHostAndProtocol(
     } else {
         return getWebSocketClientForHost(host, authSource);
     }
+}
+
+function constructInstRecordsClientWithRetry(
+    connection: ConnectionClient
+): InstRecordsClient {
+    const client = new InstRecordsClient(connection);
+    client.resendUpdatesAfterMs = DEFAULT_RETRY_UPDATES_AFTER_MS;
+    client.resendUpdatesIntervalMs = DEFAULT_RESEND_UPDATES_INTERVAL_MS;
+    return client;
 }
 
 /**
@@ -79,7 +92,7 @@ export function getAWSApiaryClientForHostAndProtocol(
             awsConnection,
             authSource
         );
-        client = new InstRecordsClient(connection);
+        client = constructInstRecordsClientWithRetry(connection);
         awsApiaryClientCache.set(host, client);
 
         connection.connect();
@@ -110,7 +123,7 @@ export function getWebSocketClientForHost(
         manager.init();
         const inner = new WebsocketConnectionClient(manager.socket);
         const connection = new AuthenticatedConnectionClient(inner, authSource);
-        client = new InstRecordsClient(connection);
+        client = constructInstRecordsClientWithRetry(connection);
         websocketClientCache.set(host, client);
 
         connection.connect();

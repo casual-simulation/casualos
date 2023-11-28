@@ -21,6 +21,8 @@ import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
 import { forOwn } from 'lodash';
 import '../BlobPolyfill';
+import { PartitionRemoteEvents } from './AuxPartitionConfig';
+import { RemoteAction, RemoteActions } from '../common';
 
 /**
  * Creates a new initialization update using the given action.
@@ -261,4 +263,23 @@ export function ensureTagIsSerializable(value: any): any {
     }
 
     return value;
+}
+
+/**
+ * Determines if the given config supports the given remote action.
+ * @param config The config. If this is true, then it will be treated as if every remote event is supported.
+ * @param action The action to test.
+ */
+export function supportsRemoteEvent(
+    config: PartitionRemoteEvents | boolean,
+    action: RemoteActions
+): boolean {
+    if (config === true) {
+        return true;
+    } else if (config === false) {
+        return false;
+    } else if (action.type === 'remote' && action.event.type in config) {
+        return config[action.event.type] ?? false;
+    }
+    return config.remoteActions ?? false;
 }

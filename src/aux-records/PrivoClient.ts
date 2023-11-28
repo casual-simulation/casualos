@@ -1,4 +1,4 @@
-import { ConfigurationStore } from 'ConfigurationStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import { PrivoConfiguration } from './PrivoConfiguration';
 import { PrivoClientCredentials, PrivoStore } from './PrivoStore';
 import { Client, Issuer, TokenSet, generators } from 'openid-client';
@@ -272,9 +272,6 @@ export class PrivoClient implements PrivoClientInterface {
 
         const validated = schema.parse(data);
 
-        console.log('privo data', data);
-        console.log('connected profiles', data.to.connected_profiles);
-
         return {
             parentServiceId: validated.to.service_id,
             childServiceId: validated.to.connected_profiles[0].service_id,
@@ -343,9 +340,6 @@ export class PrivoClient implements PrivoClientInterface {
 
         const validated = schema.parse(data);
 
-        console.log('privo data', data);
-        console.log('connected profiles', data.to.connected_profiles);
-
         return {
             adultServiceId: validated.to.service_id,
             updatePasswordLink: validated.to.update_password_link,
@@ -378,7 +372,7 @@ export class PrivoClient implements PrivoClientInterface {
             sub: z.string(),
             locale: z.string(),
             given_name: z.string(),
-            email: z.string(),
+            email: z.string().optional().nullable(),
             email_verified: z.boolean(),
             role_identifier: z.string(),
             display_name: z.string(),
@@ -394,9 +388,6 @@ export class PrivoClient implements PrivoClientInterface {
         });
 
         const validated = schema.parse(data);
-
-        console.log('user data', data);
-        // console.log('connected profiles', data.to.connected_profiles);
 
         return {
             serviceId: validated.sub,
@@ -458,13 +449,11 @@ export class PrivoClient implements PrivoClientInterface {
 
         const data: any = await this._openid.userinfo(tokens.access_token);
 
-        console.log('privo data', data);
-
         const schema = z.object({
             sub: z.string(),
             locale: z.string(),
             given_name: z.string(),
-            email: z.string(),
+            email: z.string().optional().nullable(),
             email_verified: z.boolean(),
             role_identifier: z.string(),
             preferred_username: z.string(),

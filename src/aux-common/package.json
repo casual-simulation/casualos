@@ -60,7 +60,7 @@
         "seedrandom": "3.0.5",
         "stackframe": "^1.2.0",
         "uuid": "^8.3.2",
-        "yjs": "13.5.41"
+        "yjs": "13.6.8"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

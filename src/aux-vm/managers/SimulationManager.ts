@@ -24,6 +24,11 @@ export interface SimulationFactoryOptions {
      * The host for the simulation.
      */
     host?: string;
+
+    /**
+     * Whether the simulation should be loaded as static.
+     */
+    isStatic?: boolean;
 }
 
 /**

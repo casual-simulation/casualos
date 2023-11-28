@@ -7,13 +7,13 @@ import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { CompleteOpenIDLoginSuccess } from '@casual-simulation/aux-records';
-import HasAccountDialog from '../HasAccountDialog/HasAccountDialog';
+import HasAccountCard from '../HasAccountCard/HasAccountCard';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
 @Component({
     components: {
-        'has-account-dialog': HasAccountDialog,
+        'has-account-card': HasAccountCard,
     },
 })
 export default class AuthLogin extends Vue {

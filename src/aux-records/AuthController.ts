@@ -45,6 +45,7 @@ import {
 } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { PrivoConfiguration } from './PrivoConfiguration';
+import { ZodIssue } from 'zod';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -580,12 +581,14 @@ export class AuthController {
             }
 
             const requestId = uuid();
+            const state = uuid();
             const result = await this._privoClient.generateAuthorizationUrl(
-                requestId
+                state
             );
 
             const loginRequest: AuthOpenIDLoginRequest = {
                 requestId: requestId,
+                state: state,
                 provider: PRIVO_OPEN_ID_PROVIDER,
                 codeMethod: result.codeMethod,
                 codeVerifier: result.codeVerifier,
@@ -642,12 +645,12 @@ export class AuthController {
                 };
             }
 
-            const requestId = request.state;
-            const loginRequest = await this._store.findOpenIDLoginRequest(
-                requestId
-            );
+            const state = request.state;
+            const loginRequest =
+                await this._store.findOpenIDLoginRequestByState(state);
 
             if (!loginRequest) {
+                console.log('[AuthController] Could not find login request.');
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -683,7 +686,7 @@ export class AuthController {
             }
 
             await this._store.saveOpenIDLoginRequestAuthorizationCode(
-                requestId,
+                loginRequest.requestId,
                 request.authorizationCode,
                 Date.now()
             );
@@ -960,6 +963,19 @@ export class AuthController {
                 };
             }
 
+            const lowercaseName = request.name.trim().toLowerCase();
+            const lowercaseDisplayName = request.displayName
+                .trim()
+                .toLowerCase();
+
+            if (lowercaseDisplayName.includes(lowercaseName)) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_display_name',
+                    errorMessage: 'The display name cannot contain your name.',
+                };
+            }
+
             const now = new Date(Date.now());
             const years = Math.floor(
                 -DateTime.fromJSDate(request.dateOfBirth)
@@ -999,7 +1015,9 @@ export class AuthController {
                     featureIds: [
                         config.featureIds.childPrivoSSO,
                         config.featureIds.joinAndCollaborate,
+                        config.featureIds.projectDevelopment,
                         config.featureIds.publishProjects,
+                        config.featureIds.buildAIEggs,
                     ],
                 });
 
@@ -1011,6 +1029,15 @@ export class AuthController {
                     result.features
                 );
             } else {
+                if (!request.email) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'An email is required to sign up an adult.',
+                    };
+                }
+
                 const result = await this._privoClient.createAdultAccount({
                     adultFirstName: request.name,
                     adultEmail: request.email,
@@ -1019,7 +1046,9 @@ export class AuthController {
                     featureIds: [
                         config.featureIds.adultPrivoSSO,
                         config.featureIds.joinAndCollaborate,
+                        config.featureIds.projectDevelopment,
                         config.featureIds.publishProjects,
+                        config.featureIds.buildAIEggs,
                     ],
                 });
 
@@ -1797,19 +1826,6 @@ export class AuthController {
                 const userInfo = await this._privoClient.getUserInfo(
                     result.privoServiceId
                 );
-                const publishData = userInfo.permissions.some(
-                    (p) =>
-                        p.on &&
-                        p.featureId === privoConfig.featureIds.publishProjects
-                );
-                const allowPublicData =
-                    publishData &&
-                    userInfo.permissions.some(
-                        (p) =>
-                            p.on &&
-                            p.featureId ===
-                                privoConfig.featureIds.joinAndCollaborate
-                    );
                 privacyFeatures = getPrivacyFeaturesFromPermissions(
                     privoConfig.featureIds,
                     userInfo.permissions
@@ -1817,8 +1833,14 @@ export class AuthController {
                 displayName = userInfo.displayName;
 
                 if (
-                    result.privacyFeatures?.publishData !== publishData ||
-                    result.privacyFeatures?.allowPublicData !== allowPublicData
+                    result.privacyFeatures?.publishData !==
+                        privacyFeatures.publishData ||
+                    result.privacyFeatures?.allowPublicData !==
+                        privacyFeatures.allowPublicData ||
+                    result.privacyFeatures?.allowAI !==
+                        privacyFeatures.allowAI ||
+                    result.privacyFeatures?.allowPublicInsts !==
+                        privacyFeatures.allowPublicInsts
                 ) {
                     await this._store.saveUser({
                         ...result,
@@ -2100,10 +2122,25 @@ export class AuthController {
     }
 
     async isValidDisplayName(
-        displayName: string
+        displayName: string,
+        name?: string
     ): Promise<IsValidDisplayNameResult> {
         try {
             if (this._privoClient) {
+                if (name) {
+                    const lowercaseName = name.trim().toLowerCase();
+                    const lowercaseDisplayName = displayName
+                        .trim()
+                        .toLowerCase();
+                    if (lowercaseDisplayName.includes(lowercaseName)) {
+                        return {
+                            success: true,
+                            allowed: false,
+                            containsName: true,
+                        };
+                    }
+                }
+
                 const config = await this._config.getPrivoConfiguration();
                 if (config) {
                     const result = await this._privoClient.checkDisplayName(
@@ -2142,7 +2179,7 @@ export interface PrivoSignUpRequest {
     /**
      * The email address of the user.
      */
-    email: string;
+    email: string | null;
 
     /**
      * The display name of the user.
@@ -2332,6 +2369,7 @@ export interface PrivoSignUpRequestFailure {
         | 'email_already_exists'
         | 'parent_email_already_exists'
         | 'parent_email_required'
+        | 'invalid_display_name'
         | NotSupportedError
         | ServerError;
 
@@ -2339,6 +2377,11 @@ export interface PrivoSignUpRequestFailure {
      * The error message.
      */
     errorMessage: string;
+
+    /**
+     * The issues that were found with the request.
+     */
+    issues?: ZodIssue[];
 }
 
 export interface LoginRequest {
@@ -3001,6 +3044,11 @@ export interface IsValidDisplayNameSuccess {
      * Whether the email contains profanity.
      */
     profanity?: boolean;
+
+    /**
+     * Whether the display name contains the user's name.
+     */
+    containsName?: boolean;
 }
 
 export interface IsValidDisplayNameFailure {
@@ -3014,20 +3062,26 @@ export function getPrivacyFeaturesFromPermissions(
     permissions: (PrivoPermission | PrivoFeatureStatus)[]
 ): PrivacyFeatures {
     const publishData = permissions.some(
-        (p) => p.on && p.featureId === featureIds.publishProjects
+        (p) => p.on && p.featureId === featureIds.projectDevelopment
     );
     const allowPublicData =
         publishData &&
         permissions.some(
-            (p) => p.on && p.featureId === featureIds.joinAndCollaborate
+            (p) => p.on && p.featureId === featureIds.publishProjects
         );
 
     // TODO:
     // Whether the AI features are enabled.
-    const allowAI = true;
+    const allowAI = permissions.some(
+        (p) => p.on && p.featureId === featureIds.buildAIEggs
+    );
 
     // Whether the public insts features are enabled.
-    const allowPublicInsts = true;
+    const allowPublicInsts =
+        publishData &&
+        permissions.some(
+            (p) => p.on && p.featureId === featureIds.joinAndCollaborate
+        );
     return {
         publishData,
         allowPublicData,

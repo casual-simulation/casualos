@@ -20,7 +20,7 @@
                         @click="onExpandRecords"
                     >
                         <md-icon>description</md-icon>
-                        <span class="md-list-item-text">My Studio</span>
+                        <span class="md-list-item-text">Player Studio</span>
 
                         <md-list slot="md-expand">
                             <md-list-item

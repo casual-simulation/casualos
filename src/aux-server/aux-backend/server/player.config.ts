@@ -4,6 +4,7 @@ import {
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
 } from '@casual-simulation/aux-common';
+import { BiosOption } from '../../shared/WebConfig';
 
 declare var DEVELOPMENT: boolean;
 
@@ -17,6 +18,10 @@ const config: ClientConfig = {
                 .CAUSAL_REPO_CONNECTION_PROTOCOL as RemoteCausalRepoProtocol) ||
             'websocket',
         causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
+        collaborativeRepoLocalPersistence:
+            process.env.COLLABORATIVE_REPO_LOCAL_PERSISTENCE === 'true',
+        staticRepoLocalPersistence:
+            process.env.STATIC_REPO_LOCAL_PERSISTENCE !== 'false',
         sharedPartitionsVersion:
             (process.env
                 .SHARED_PARTITIONS_VERSION as SharedPartitionsVersion) ?? 'v2',
@@ -35,19 +40,9 @@ const config: ClientConfig = {
             'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf',
         what3WordsApiKey: process.env.WHAT_3_WORDS_API_KEY || 'Z0NHMSXQ',
         playerMode: process.env.AUX_PLAYER_MODE as 'player' | 'builder',
-        preferredInstSource:
-            (process.env.PREFERRED_INST_SOURCE as 'public' | 'private') ??
-            'private',
         requirePrivoLogin: process.env.REQUIRE_PRIVO_LOGIN === 'true',
-        // requirePrivoAgeVerification:
-        //     process.env.REQUIRE_PRIVO_AGE_VERIFICATION === 'true',
-        // privoAgeVerificationApiScriptUrl:
-        //     process.env.PRIVO_AGE_VERIFICATION_API_SCRIPT_URL ||
-        //     (DEVELOPMENT
-        //         ? 'https://age-int.privo.com/verification/privo.min.js'
-        //         : 'https://age.privo.com/verification/privo.min.js'),
-        // privoAgeVerificationServiceId:
-        //     process.env.PRIVO_AGE_VERIFICATION_SERVICE_ID || null,
+        allowedBiosOptions: (process.env.BIOS_OPTIONS?.split(',') ||
+            null) as BiosOption[],
     },
 };
 

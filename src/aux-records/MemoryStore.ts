@@ -626,6 +626,12 @@ export class MemoryStore
         return this._oidLoginRequests.find((lr) => lr.requestId === requestId);
     }
 
+    async findOpenIDLoginRequestByState(
+        state: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        return this._oidLoginRequests.find((lr) => lr.state === state);
+    }
+
     async findSession(userId: string, sessionId: string): Promise<AuthSession> {
         return this._sessions.find(
             (s) => s.userId === userId && s.sessionId === sessionId

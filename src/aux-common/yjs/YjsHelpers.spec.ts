@@ -5,6 +5,7 @@ import {
     Doc,
     encodeStateAsUpdate,
     Transaction,
+    YEvent,
     YTextEvent,
 } from 'yjs';
 import {
@@ -241,6 +242,18 @@ describe('YjsHelpers', () => {
 
             const text1 = doc.getText();
             let transaction: Transaction;
+
+            let events: YEvent<any>[] = [];
+            let changes: any[] = [];
+            doc.on('afterTransaction', (transaction: Transaction) => {
+                for (let event of transaction.changedParentTypes.values()) {
+                    events.push(...event);
+                    for (let e of event) {
+                        changes.push(e.changes.delta);
+                    }
+                }
+            });
+
             doc.transact((t) => {
                 transaction = t;
 
@@ -275,11 +288,10 @@ describe('YjsHelpers', () => {
             ]);
 
             expect(transaction.changedParentTypes.size).toBe(1);
-            let events = first(transaction.changedParentTypes.values());
             expect(events.length).toBe(1);
             const event: YTextEvent = events[0] as YTextEvent;
             expect(event).toBeInstanceOf(YTextEvent);
-            expect(event.changes.delta).toEqual([
+            expect(changes[0]).toEqual([
                 {
                     insert: 'ghidefabc',
                 },

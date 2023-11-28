@@ -61,6 +61,7 @@ const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 const SESSION_KEY = 'sessionKey';
 const CONNECTION_KEY = 'connectionKey';
+export const OAUTH_LOGIN_CHANNEL_NAME = 'aux-login-oauth';
 
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 
@@ -212,12 +213,14 @@ export class AuthManager {
     }
 
     async isValidDisplayName(
-        displayName: string
+        displayName: string,
+        name: string
     ): Promise<IsValidDisplayNameResult> {
         const result = await axios.post<IsValidDisplayNameResult>(
             `${this.apiEndpoint}/api/v2/displayName/valid`,
             {
                 displayName,
+                name,
             },
             {
                 validateStatus: (status) => status < 500,
@@ -881,7 +884,7 @@ export class AuthManager {
         const response = await axios.post<PrivoSignUpRequestResult>(
             `${this.apiEndpoint}/api/v2/register/privo`,
             {
-                email: info.email,
+                email: !!info.email ? info.email : undefined,
                 displayName: info.displayName,
                 name: info.name,
                 dateOfBirth: info.dateOfBirth.toJSON(),

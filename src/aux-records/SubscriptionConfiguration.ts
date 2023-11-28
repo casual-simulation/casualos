@@ -828,24 +828,26 @@ export function getSubscriptionFeatures(
     if (!config) {
         return allowAllFeatures();
     }
-    const roleSubscriptions = config.subscriptions.filter((s) =>
-        subscriptionMatchesRole(s, type)
-    );
-    if (isActiveSubscription(subscriptionStatus)) {
-        const sub = roleSubscriptions.find((s) => s.id === subscriptionId);
-        const tier = sub?.tier;
-        const features = tier ? config.tiers[tier]?.features : null;
+    if (config.tiers) {
+        const roleSubscriptions = config.subscriptions.filter((s) =>
+            subscriptionMatchesRole(s, type)
+        );
+        if (isActiveSubscription(subscriptionStatus)) {
+            const sub = roleSubscriptions.find((s) => s.id === subscriptionId);
+            const tier = sub?.tier;
+            const features = tier ? config.tiers[tier]?.features : null;
 
-        if (features) {
-            return features;
-        }
-    } else {
-        const sub = roleSubscriptions.find((s) => s.defaultSubscription);
-        const tier = sub?.tier;
-        const features = tier ? config.tiers[tier]?.features : null;
+            if (features) {
+                return features;
+            }
+        } else {
+            const sub = roleSubscriptions.find((s) => s.defaultSubscription);
+            const tier = sub?.tier;
+            const features = tier ? config.tiers[tier]?.features : null;
 
-        if (features) {
-            return features;
+            if (features) {
+                return features;
+            }
         }
     }
 
