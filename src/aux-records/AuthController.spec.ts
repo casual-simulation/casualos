@@ -1926,7 +1926,9 @@ describe('AuthController', () => {
             });
 
             it('should return the redirect URL', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
+                uuidMock
+                    .mockReturnValueOnce('uuid')
+                    .mockReturnValueOnce('uuid2');
                 privoClientMock.generateAuthorizationUrl.mockResolvedValueOnce({
                     codeVerifier: 'verifier',
                     codeMethod: 'method',
@@ -1948,6 +1950,7 @@ describe('AuthController', () => {
                 expect(store.openIdLoginRequests).toEqual([
                     {
                         requestId: 'uuid',
+                        state: 'uuid2',
                         provider: 'privo',
                         codeVerifier: 'verifier',
                         codeMethod: 'method',
@@ -1972,7 +1975,7 @@ describe('AuthController', () => {
 
                 expect(
                     privoClientMock.generateAuthorizationUrl
-                ).toHaveBeenCalledWith('uuid');
+                ).toHaveBeenCalledWith('uuid2');
             });
 
             it('should return an error if the privo client throws an error', async () => {
@@ -2043,7 +2046,7 @@ describe('AuthController', () => {
                 store.privoConfiguration = null;
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2059,6 +2062,7 @@ describe('AuthController', () => {
             it('should save the info to the request', async () => {
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     redirectUrl: 'https://redirect_url',
                     authorizationUrl: 'https://mock_authorization_url',
                     codeMethod: 'method',
@@ -2072,7 +2076,7 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2084,6 +2088,7 @@ describe('AuthController', () => {
                 expect(store.openIdLoginRequests).toEqual([
                     {
                         requestId: 'requestId',
+                        state: 'state',
                         redirectUrl: 'https://redirect_url',
                         authorizationUrl: 'https://mock_authorization_url',
                         codeMethod: 'method',
@@ -2103,6 +2108,7 @@ describe('AuthController', () => {
             it('should return an error if the request already is authorized', async () => {
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     redirectUrl: 'https://redirect_url',
                     authorizationUrl: 'https://mock_authorization_url',
                     codeMethod: 'method',
@@ -2118,7 +2124,7 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2133,6 +2139,7 @@ describe('AuthController', () => {
             it('should return an error if the request already is complete', async () => {
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     redirectUrl: 'https://redirect_url',
                     authorizationUrl: 'https://mock_authorization_url',
                     codeMethod: 'method',
@@ -2146,7 +2153,7 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2161,6 +2168,7 @@ describe('AuthController', () => {
             it('should return an error if the request expired', async () => {
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     redirectUrl: 'https://redirect_url',
                     authorizationUrl: 'https://mock_authorization_url',
                     codeMethod: 'method',
@@ -2174,7 +2182,7 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2188,7 +2196,7 @@ describe('AuthController', () => {
 
             it('should return an error if the request is missing', async () => {
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2277,6 +2285,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2307,6 +2316,7 @@ describe('AuthController', () => {
                 expect(await store.findOpenIDLoginRequest('requestId')).toEqual(
                     {
                         requestId: 'requestId',
+                        state: 'state',
                         authorizationUrl: 'https://mock_authorization_url',
                         redirectUrl: 'https://redirect_url',
                         codeVerifier: 'verifier',
@@ -2439,6 +2449,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2526,6 +2537,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2587,6 +2599,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2646,6 +2659,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2707,6 +2721,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2768,6 +2783,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2821,6 +2837,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2883,6 +2900,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',

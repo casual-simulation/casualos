@@ -581,12 +581,14 @@ export class AuthController {
             }
 
             const requestId = uuid();
+            const state = uuid();
             const result = await this._privoClient.generateAuthorizationUrl(
-                requestId
+                state
             );
 
             const loginRequest: AuthOpenIDLoginRequest = {
                 requestId: requestId,
+                state: state,
                 provider: PRIVO_OPEN_ID_PROVIDER,
                 codeMethod: result.codeMethod,
                 codeVerifier: result.codeVerifier,
@@ -643,12 +645,12 @@ export class AuthController {
                 };
             }
 
-            const requestId = request.state;
-            const loginRequest = await this._store.findOpenIDLoginRequest(
-                requestId
-            );
+            const state = request.state;
+            const loginRequest =
+                await this._store.findOpenIDLoginRequestByState(state);
 
             if (!loginRequest) {
+                console.log('[AuthController] Could not find login request.');
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -684,7 +686,7 @@ export class AuthController {
             }
 
             await this._store.saveOpenIDLoginRequestAuthorizationCode(
-                requestId,
+                loginRequest.requestId,
                 request.authorizationCode,
                 Date.now()
             );

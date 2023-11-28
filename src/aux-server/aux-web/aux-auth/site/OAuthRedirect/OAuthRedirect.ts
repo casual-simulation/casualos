@@ -22,6 +22,7 @@ export default class OAuthRedirect extends Vue {
             const result = await authManager.processAuthCode(params);
 
             if (result.success === true) {
+                console.log('[OAuthRedirect] Login successful');
                 channel.postMessage('login');
             }
 

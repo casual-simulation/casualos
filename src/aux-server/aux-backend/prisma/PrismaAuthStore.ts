@@ -274,6 +274,41 @@ export class PrismaAuthStore implements AuthStore {
 
         return {
             requestId: request.requestId,
+            state: request.state,
+            authorizationUrl: request.authorizationUrl,
+            redirectUrl: request.redirectUrl,
+            codeMethod: request.codeMethod,
+            codeVerifier: request.codeVerifier,
+            provider: request.provider,
+            scope: request.scope,
+            requestTimeMs: convertToMillis(request.requestTime) as number,
+            expireTimeMs: convertToMillis(request.expireTime) as number,
+            completedTimeMs: convertToMillis(request.completedTime),
+            authorizationTimeMs: convertToMillis(request.authorizationTime),
+            authorizationCode: request.authorizationCode,
+            ipAddress: request.ipAddress,
+        };
+    }
+
+    async findOpenIDLoginRequestByState(
+        state: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        if (!state) {
+            return null;
+        }
+        const request = await this._client.openIDLoginRequest.findUnique({
+            where: {
+                state: state,
+            },
+        });
+
+        if (!request) {
+            return null;
+        }
+
+        return {
+            requestId: request.requestId,
+            state: request.state,
             authorizationUrl: request.authorizationUrl,
             redirectUrl: request.redirectUrl,
             codeMethod: request.codeMethod,
@@ -298,6 +333,7 @@ export class PrismaAuthStore implements AuthStore {
             },
             create: {
                 requestId: request.requestId,
+                state: request.state,
                 authorizationUrl: request.authorizationUrl,
                 redirectUrl: request.redirectUrl,
                 codeMethod: request.codeMethod,
@@ -313,6 +349,7 @@ export class PrismaAuthStore implements AuthStore {
             },
             update: {
                 authorizationUrl: request.authorizationUrl,
+                state: request.state,
                 redirectUrl: request.redirectUrl,
                 codeMethod: request.codeMethod,
                 codeVerifier: request.codeVerifier,
