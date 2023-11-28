@@ -93,6 +93,7 @@
 -   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
 -   Fixed an issue where labels were broken when setting labelPosition and labelAlignment to left or right
 -   Attempted to fix an issue where the code editor could get desynced from the actual bot script state.
+-   Fixed an issue where using `os.enablePointOfView()` with IMU data would not produce correct rotations.
 
 ## V3.2.6
 
