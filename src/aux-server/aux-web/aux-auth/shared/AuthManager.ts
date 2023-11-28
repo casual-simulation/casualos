@@ -61,6 +61,7 @@ const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 const SESSION_KEY = 'sessionKey';
 const CONNECTION_KEY = 'connectionKey';
+export const OAUTH_LOGIN_CHANNEL_NAME = 'aux-login-oauth';
 
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 

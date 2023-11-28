@@ -4,6 +4,7 @@ import {
     LoginStatus,
     LoginUIAddressStatus,
     LoginUIStatus,
+    OAuthRedirectRequest,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { AuthData } from '@casual-simulation/aux-common';
@@ -50,6 +51,7 @@ import {
     mergeAll,
 } from 'rxjs/operators';
 import { DateTime } from 'luxon';
+import { OAUTH_LOGIN_CHANNEL_NAME } from '../shared/AuthManager';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
@@ -70,6 +72,7 @@ export class AuthHandler implements AuxAuth {
     );
     private _loginUIStatus: BehaviorSubject<LoginUIStatus> =
         new BehaviorSubject({ page: false });
+    private _oauthRedirect: Subject<OAuthRedirectRequest> = new Subject();
     private _useCustomUI: boolean = false;
     private _providedEmails: Subject<string> = new Subject();
     private _providedSms: Subject<string> = new Subject();
@@ -77,6 +80,18 @@ export class AuthHandler implements AuxAuth {
     private _providedCodes: Subject<string> = new Subject();
     private _providedHasAccount: Subject<boolean> = new Subject();
     private _providedPrivoSignUpInfo: Subject<PrivoSignUpInfo> = new Subject();
+    private _oauthRedirectComplete: Subject<void> = new Subject();
+    private _oauthChannel: BroadcastChannel = new BroadcastChannel(
+        OAUTH_LOGIN_CHANNEL_NAME
+    );
+
+    constructor() {
+        this._oauthChannel.addEventListener('message', (event) => {
+            if (event.data === 'login') {
+                this._oauthRedirectComplete.next();
+            }
+        });
+    }
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
@@ -226,6 +241,12 @@ export class AuthHandler implements AuxAuth {
 
     async addLoginUICallback(callback: (status: LoginUIStatus) => void) {
         this._loginUIStatus.subscribe((status) => callback(status));
+    }
+
+    async addOAuthRedirectCallback(
+        callback: (request: OAuthRedirectRequest) => void
+    ): Promise<void> {
+        this._oauthRedirect.subscribe((request) => callback(request));
     }
 
     async setUseCustomUI(useCustomUI: boolean) {
@@ -688,39 +709,22 @@ export class AuthHandler implements AuxAuth {
         const result = await authManager.loginWithPrivo();
         if (result.success) {
             const requestId = result.requestId;
-            const newTab = window.open(result.authorizationUrl, '_blank');
 
-            const codes: CompleteOpenIDLoginSuccess =
-                await new Promise<CompleteOpenIDLoginSuccess>(
-                    (resolve, reject) => {
-                        let intervalId: number | NodeJS.Timer;
-                        const handleClose = async () => {
-                            if (intervalId) {
-                                clearInterval(intervalId);
-                            }
+            this._oauthRedirect.next({
+                authorizationUrl: result.authorizationUrl,
+            });
 
-                            const loginResult =
-                                await authManager.completeOAuthLogin(requestId);
+            await firstValueFrom(this._oauthRedirectComplete);
 
-                            if (loginResult.success === true) {
-                                resolve(loginResult);
-                            } else {
-                                if (loginResult.errorCode === 'not_completed') {
-                                    reject(new Error('Login canceled.'));
-                                } else {
-                                    reject(new Error('Login failed.'));
-                                }
-                            }
-                        };
+            const loginResult = await authManager.completeOAuthLogin(requestId);
 
-                        intervalId = setInterval(() => {
-                            if (newTab.closed) {
-                                console.error('Closed!');
-                                handleClose();
-                            }
-                        }, 500);
-                    }
-                );
+            if (loginResult.success === false) {
+                if (loginResult.errorCode === 'not_completed') {
+                    throw new Error('Login canceled.');
+                } else {
+                    throw new Error('Login failed.');
+                }
+            }
 
             await authManager.loadUserInfo();
             await this._loadUserInfo();

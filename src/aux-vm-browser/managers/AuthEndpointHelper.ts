@@ -5,6 +5,7 @@ import {
     LoginHint,
     LoginStatus,
     LoginUIStatus,
+    OAuthRedirectRequest,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
@@ -45,6 +46,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
+    private _newTab: Window;
 
     get currentLoginStatus() {
         const status = this._loginStatus.value;
@@ -161,6 +163,13 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 })
             );
         }
+        if (this._protocolVersion >= 9) {
+            await this._proxy.addOAuthRedirectCallback(
+                proxy((request) => {
+                    this._handleOAuthRedirectCallback(request);
+                })
+            );
+        }
 
         if (this._protocolVersion >= 4) {
             this._recordsOrigin = await this._proxy.getRecordsOrigin();
@@ -178,6 +187,12 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
 
         this._initialized = true;
+    }
+
+    private _handleOAuthRedirectCallback(request: OAuthRedirectRequest) {
+        if (this._newTab && !this._newTab.closed) {
+            this._newTab.location = request.authorizationUrl;
+        }
     }
 
     /**
@@ -453,12 +468,18 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!hasValue(this._origin)) {
             return;
         }
+
+        if (hasAccount) {
+            this._newTab = window.open('/loading-oauth.html', '_blank');
+        }
+
         if (!this._initialized) {
             await this._init();
         }
         if (this._protocolVersion < 9) {
             return;
         }
+
         return await this._proxy.provideHasAccount(hasAccount);
     }
 

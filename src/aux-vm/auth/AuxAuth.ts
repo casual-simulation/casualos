@@ -132,10 +132,6 @@ export interface LoginUICheckAddressStatus {
      * The errors that should be displayed.
      */
     errors: FormError[];
-    // /**
-    //  * Whether to show an error message that the code is invalid.
-    //  */
-    // showInvalidCodeError?: boolean;
 }
 
 export interface LoginUIShowIframe {
@@ -283,6 +279,10 @@ export interface PrivoSignUpInfo {
     parentEmail?: string;
 }
 
+export interface OAuthRedirectRequest {
+    authorizationUrl: string;
+}
+
 /**
  * The type of possible login hints.
  * - "sign in" indicates that the user should be prompted to sign in.
@@ -357,6 +357,15 @@ export interface AuxAuth {
      */
     addLoginUICallback(
         callback: (status: LoginUIStatus) => void
+    ): Promise<void>;
+
+    /**
+     * Adds the given function as a callback for OAuth redirect information.
+     * Only supported on protocol version 9 or more.
+     * @param callback The callback.
+     */
+    addOAuthRedirectCallback(
+        callback: (request: OAuthRedirectRequest) => void
     ): Promise<void>;
 
     /**
