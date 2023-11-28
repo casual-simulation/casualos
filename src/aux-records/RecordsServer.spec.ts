@@ -2198,6 +2198,7 @@ describe('RecordsServer', () => {
 
             await store.saveOpenIDLoginRequest({
                 requestId: 'requestId',
+                state: 'state',
                 authorizationUrl: 'https://mock_authorization_url',
                 redirectUrl: 'https://redirect_url',
                 codeVerifier: 'verifier',
@@ -2216,7 +2217,7 @@ describe('RecordsServer', () => {
                     `/api/v2/oauth/code`,
                     JSON.stringify({
                         code: 'code',
-                        state: 'requestId',
+                        state: 'state',
                     }),
                     {
                         origin: 'https://account-origin.com',
@@ -2235,6 +2236,7 @@ describe('RecordsServer', () => {
 
             expect(await store.findOpenIDLoginRequest('requestId')).toEqual({
                 requestId: 'requestId',
+                state: 'state',
                 authorizationUrl: 'https://mock_authorization_url',
                 redirectUrl: 'https://redirect_url',
                 codeVerifier: 'verifier',
@@ -2321,6 +2323,7 @@ describe('RecordsServer', () => {
             const expireTime = Date.now() + 10000000;
             await store.saveOpenIDLoginRequest({
                 requestId: 'requestId',
+                state: 'state',
                 authorizationUrl: 'https://mock_authorization_url',
                 redirectUrl: 'https://redirect_url',
                 codeVerifier: 'verifier',
