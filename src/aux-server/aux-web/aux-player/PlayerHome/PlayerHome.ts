@@ -558,11 +558,10 @@ export default class PlayerHome extends Vue {
     }
 
     private async _loadPrimarySimulation(
-        owner: string,
+        recordName: string,
         newServer: string,
         isStatic: boolean
     ) {
-        const recordName = appManager.getRecordName(owner);
         const sim = await appManager.setPrimarySimulation(
             recordName,
             newServer,

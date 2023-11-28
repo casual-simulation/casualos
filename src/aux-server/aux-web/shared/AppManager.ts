@@ -570,7 +570,9 @@ export class AppManager {
      */
     getRecordName(owner: string): string {
         if (owner === PLAYER_OWNER) {
-            return this._defaultStudioId;
+            return (
+                this.auth.primary.currentLoginStatus.authData?.userId ?? null
+            );
         } else if (owner === PUBLIC_OWNER) {
             return null;
         } else {
