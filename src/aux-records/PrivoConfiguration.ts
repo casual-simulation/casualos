@@ -51,15 +51,23 @@ export const privoSchema = z.object({
             .nonempty(),
         joinAndCollaborate: z
             .string()
-            .describe('The ID of the "Join & Collaborate" feature')
+            .describe('The ID of the "Join & Collaborate" feature.')
             .nonempty(),
         publishProjects: z
             .string()
-            .describe('The ID of the "Publish Projects" feature')
+            .describe(
+                'The ID of the "Publish Projects" feature. Also known as the "Publish Public Eggs" feature.'
+            )
             .nonempty(),
         projectDevelopment: z
             .string()
-            .describe('The ID of the "Project Development" feature')
+            .describe(
+                'The ID of the "Project Development" feature. Also known as the "Build Private Eggs" feature.'
+            )
+            .nonempty(),
+        buildAIEggs: z
+            .string()
+            .describe('The ID of the "Build AI Eggs" feature.')
             .nonempty(),
     }),
 

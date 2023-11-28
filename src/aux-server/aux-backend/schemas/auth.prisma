@@ -139,6 +139,7 @@ model AuthSession {
 
 model OpenIDLoginRequest {
     requestId String @id @db.Uuid
+    state String? @unique @db.Uuid
 
     provider String
     codeVerifier String

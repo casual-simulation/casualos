@@ -57,6 +57,18 @@ export interface AuxConfigParameters {
     causalRepoConnectionUrl?: string;
 
     /**
+     * Whether collaborative repositories should be persisted locally.
+     * Defaults to false.
+     */
+    collaborativeRepLocalPersistence?: boolean;
+
+    /**
+     * Whether static repositories should be persisted locally.
+     * Defaults to true.
+     */
+    staticRepoLocalPersistence?: boolean;
+
+    /**
      * The version of the shared partitions that should be used.
      */
     sharedPartitionsVersion?: SharedPartitionsVersion;

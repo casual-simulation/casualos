@@ -2500,6 +2500,12 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
 
     'inst',
+    'staticInst',
+    'record',
+    'owner',
+    'joinCode',
+    'url',
+    'sharableUrl',
     'theme',
     MINI_PORTAL,
     'menuPortal',
@@ -2891,6 +2897,10 @@ export const KNOWN_TAGS: string[] = [
     ON_FORM_ANIMATION_LOOPED,
     ON_ANY_FORM_ANIMATION_LOOPED,
     ON_SPACE_MAX_SIZE_REACHED,
+
+    ON_COLLABORATION_ENABLED,
+    ON_ALLOW_COLLABORATION_UPGRADE,
+    ON_DISALLOW_COLLABORATION_UPGRADE,
 ];
 
 export function onClickArg(

@@ -76,6 +76,7 @@ import {
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
 import { MetricsStore } from '../MetricsStore';
+import { AuthStore } from '../AuthStore';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -89,6 +90,7 @@ export class WebsocketController {
     private _policies: PolicyController;
     private _config: ConfigurationStore;
     private _metrics: MetricsStore;
+    private _authStore: AuthStore;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -109,13 +111,15 @@ export class WebsocketController {
         auth: AuthController,
         policies: PolicyController,
         config: ConfigurationStore,
-        metrics: MetricsStore
+        metrics: MetricsStore,
+        authStore: AuthStore
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;
         this._instStore = instStore;
         this._temporaryStore = temporaryInstStore;
         this._auth = auth;
+        this._authStore = authStore;
         this._policies = policies;
         this._config = config;
         this._metrics = metrics;
@@ -1918,6 +1922,30 @@ export class WebsocketController {
                 }
             } else {
                 inst = savedInst;
+            }
+        } else {
+            // null record name means public temporary inst
+            const userInfo = await this._authStore.findUser(userId);
+            if (userInfo) {
+                const userPrivacyFeatures = userInfo.privacyFeatures;
+                if (userPrivacyFeatures) {
+                    if (!userPrivacyFeatures.allowPublicInsts) {
+                        return {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage: 'Public insts are not allowed.',
+                        };
+                    }
+                }
+            } else {
+                const privoConfig = await this._config.getPrivoConfiguration();
+                if (privoConfig) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Public insts are not allowed.',
+                    };
+                }
             }
         }
 

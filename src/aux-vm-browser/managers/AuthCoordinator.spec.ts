@@ -2,6 +2,7 @@ import { Subject, Subscription } from 'rxjs';
 import {
     AuthCoordinator,
     MissingPermissionEvent,
+    NotAuthorizedEvent,
     ShowAccountInfoEvent,
 } from './AuthCoordinator';
 import { BotManager } from './BotManager';
@@ -586,6 +587,33 @@ describe('AuthCoordinator', () => {
                             marker: 'marker',
                             permission: 'inst.read',
                         },
+                    },
+                ]);
+            });
+        });
+
+        describe('not_authorized', () => {
+            it('should send a onNotAuthorized event', async () => {
+                let events: NotAuthorizedEvent[] = [];
+                manager.onNotAuthorized.subscribe((e) => events.push(e));
+
+                await sim.sendAuthMessage({
+                    type: 'request',
+                    origin: origin,
+                    kind: 'not_authorized',
+                    errorCode: 'not_authorized',
+                    errorMessage: 'Not authorized.',
+                });
+
+                await waitAsync();
+
+                expect(responses).toEqual([]);
+                expect(events).toEqual([
+                    {
+                        simulationId: 'sim-1',
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Not authorized.',
+                        origin: origin,
                     },
                 ]);
             });

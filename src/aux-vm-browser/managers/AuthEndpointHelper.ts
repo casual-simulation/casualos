@@ -2,8 +2,10 @@ import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
     AuthHelperInterface,
     AuxAuth,
+    LoginHint,
     LoginStatus,
     LoginUIStatus,
+    OAuthRedirectRequest,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
@@ -44,6 +46,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
+    private _newTab: Window;
 
     get currentLoginStatus() {
         const status = this._loginStatus.value;
@@ -160,6 +163,13 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 })
             );
         }
+        if (this._protocolVersion >= 9) {
+            await this._proxy.addOAuthRedirectCallback(
+                proxy((request) => {
+                    this._handleOAuthRedirectCallback(request);
+                })
+            );
+        }
 
         if (this._protocolVersion >= 4) {
             this._recordsOrigin = await this._proxy.getRecordsOrigin();
@@ -177,6 +187,12 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
 
         this._initialized = true;
+    }
+
+    private _handleOAuthRedirectCallback(request: OAuthRedirectRequest) {
+        if (this._newTab && !this._newTab.closed) {
+            this._newTab.location = request.authorizationUrl;
+        }
     }
 
     /**
@@ -199,18 +215,18 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     /**
      * Requests that the user become authenticated if they are not already.
      */
-    async authenticate() {
+    async authenticate(hint?: LoginHint) {
         if (!hasValue(this._origin)) {
             return null;
         }
         if (!this._initialized) {
             await this._init();
         }
-        return await this._authenticateCore();
+        return await this._authenticateCore(hint);
     }
 
-    protected async _authenticateCore() {
-        const result = await this._proxy.login();
+    protected async _authenticateCore(hint?: LoginHint) {
+        const result = await this._proxy.login(undefined, hint);
 
         if (this._protocolVersion < 2) {
             this._loginStatus.next({
@@ -388,7 +404,8 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     }
 
     async isValidDisplayName(
-        displayName: string
+        displayName: string,
+        name: string
     ): Promise<IsValidDisplayNameResult> {
         if (!hasValue(this._origin)) {
             return;
@@ -402,7 +419,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 allowed: true,
             };
         }
-        return await this._proxy.isValidDisplayName(displayName);
+        return await this._proxy.isValidDisplayName(displayName, name);
     }
 
     async provideSmsNumber(
@@ -451,12 +468,18 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!hasValue(this._origin)) {
             return;
         }
+
+        if (hasAccount) {
+            this._newTab = window.open('/loading-oauth.html', '_blank');
+        }
+
         if (!this._initialized) {
             await this._init();
         }
         if (this._protocolVersion < 9) {
             return;
         }
+
         return await this._proxy.provideHasAccount(hasAccount);
     }
 

@@ -61,6 +61,7 @@ import {
     PartitionConfig,
     YjsClientPartitionConfig,
     RemoteYjsPartitionConfig,
+    PartitionRemoteEvents,
 } from './AuxPartitionConfig';
 import { flatMap, random } from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -86,7 +87,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { filter, startWith } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
-import { ensureTagIsSerializable } from './PartitionUtils';
+import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
 import {
     Action,
     ConnectionIndicator,
@@ -99,6 +100,7 @@ import {
 } from '../common';
 import { InstRecordsClient } from '../websockets';
 import { PartitionAuthSource } from './PartitionAuthSource';
+import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -153,8 +155,10 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _branch: string;
     private _temporary: boolean;
     private _readOnly: boolean;
-    private _remoteEvents: boolean;
+    private _remoteEvents: PartitionRemoteEvents | boolean;
     private _authSource: PartitionAuthSource;
+    private _indexeddb: YjsIndexedDBPersistence;
+    private _persistence: RemoteYjsPartitionConfig['localPersistence'];
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -252,6 +256,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._inst = config.inst;
         this._branch = config.branch;
         this._temporary = config.temporary;
+        this._persistence = config.localPersistence;
         this._synced = false;
         this._authorized = false;
         this._authSource = authSource;
@@ -341,6 +346,14 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     async init(): Promise<void> {}
 
     connect(): void {
+        if (!this._temporary && this._persistence?.saveToIndexedDb) {
+            console.log('[RemoteYjsPartition] Using IndexedDB persistence');
+            const name = `${this._recordName ?? ''}/${this._inst}/${
+                this._branch
+            }`;
+            this._indexeddb = new YjsIndexedDBPersistence(name, this._doc);
+        }
+
         if (this._skipInitialLoad) {
             this._initializePartitionWithoutLoading();
         } else if (this._static) {
@@ -355,6 +368,10 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             return;
         }
         for (let event of events) {
+            if (!supportsRemoteEvent(this._remoteEvents, event)) {
+                continue;
+            }
+
             if (event.type === 'remote') {
                 if (event.event.type === 'get_remotes') {
                     // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.

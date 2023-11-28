@@ -129,32 +129,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         return this._portals;
     }
 
-    static createPartitions(
+    static createDefaultPartitions(
         id: string,
         configBotId: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config'],
-        defaultHost: string = location.origin
-    ): AuxPartitionConfig {
-        const host = origin.host ?? defaultHost;
-        const protocol = config.causalRepoConnectionProtocol;
-        const versions = config.sharedPartitionsVersion;
-        const isCollaborative = !!config.device?.isCollaborative;
-        const allowCollaborationUpgrade =
-            !!config.device?.allowCollaborationUpgrade;
-        const upgradableCollaborative =
-            !isCollaborative && allowCollaborationUpgrade;
-
-        if (upgradableCollaborative) {
-            console.log(
-                '[BotManager] Disabling Collaboration Features but enabling upgrade.'
-            );
-        } else if (!isCollaborative) {
-            console.log('[BotManager] Disabling Collaboration Features.');
-        } else {
-            console.log('[BotManager] Using v2 shared partitions');
-        }
-
+        config: AuxConfig['config']
+    ): Partial<AuxPartitionConfig> {
         const defaultPartitions: Partial<AuxPartitionConfig> = {
             [TEMPORARY_BOT_PARTITION_ID]: {
                 type: 'memory',
@@ -184,83 +164,120 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             },
         };
 
-        let partitions: AuxPartitionConfig;
+        return defaultPartitions;
+    }
 
-        if (upgradableCollaborative) {
-            partitions = {
-                shared: {
-                    type: 'remote_yjs',
-                    recordName: origin.recordName,
-                    inst: origin.inst,
-                    branch: DEFAULT_BRANCH_NAME,
-                    host: host,
-                    connectionProtocol: protocol,
-                    skipInitialLoad: true,
-                },
-                [TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'remote_yjs',
-                    recordName: origin.recordName,
-                    inst: origin.inst,
-                    branch: `${DEFAULT_BRANCH_NAME}-player-${configBotId}`,
-                    host: host,
-                    connectionProtocol: protocol,
-                    temporary: true,
-                    remoteEvents: false,
-                    skipInitialLoad: true,
-                },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'other_players_repo',
-                    recordName: origin.recordName,
-                    inst: origin.inst,
-                    branch: DEFAULT_BRANCH_NAME,
-                    host: host,
-                    connectionProtocol: protocol,
-                    childPartitionType: 'yjs_client',
-                    skipInitialLoad: true,
-                },
-            };
-        } else if (isCollaborative) {
-            partitions = {
-                shared: {
-                    type: 'remote_yjs',
-                    recordName: origin.recordName,
-                    inst: origin.inst,
-                    branch: DEFAULT_BRANCH_NAME,
-                    host: host,
-                    connectionProtocol: protocol,
-                },
+    static createPartitions(
+        id: string,
+        configBotId: string,
+        origin: SimulationOrigin,
+        config: AuxConfig['config'],
+        defaultHost: string = location.origin
+    ): AuxPartitionConfig {
+        const host = origin.host ?? defaultHost;
+        const protocol = config.causalRepoConnectionProtocol;
+        const versions = config.sharedPartitionsVersion;
+        const localPersistence =
+            config.collaborativeRepLocalPersistence ?? false;
 
-                [TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'remote_yjs',
-                    recordName: origin.recordName,
-                    inst: origin.inst,
-                    branch: `${DEFAULT_BRANCH_NAME}-player-${configBotId}`,
-                    host: host,
-                    connectionProtocol: protocol,
-                    temporary: true,
-                    remoteEvents: false,
+        console.log('[BotManager] Using v2 shared partitions');
+        if (localPersistence) {
+            console.log('[BotManager] Enabling local persistence.');
+        }
+
+        const defaultPartitions = BotManager.createDefaultPartitions(
+            id,
+            configBotId,
+            origin,
+            config
+        );
+
+        const partitions: AuxPartitionConfig = {
+            shared: {
+                type: 'remote_yjs',
+                recordName: origin.recordName,
+                inst: origin.inst,
+                branch: DEFAULT_BRANCH_NAME,
+                host: host,
+                connectionProtocol: protocol,
+                localPersistence: localPersistence
+                    ? {
+                          saveToIndexedDb: true,
+                      }
+                    : null,
+            },
+
+            [TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'remote_yjs',
+                recordName: origin.recordName,
+                inst: origin.inst,
+                branch: `${DEFAULT_BRANCH_NAME}-player-${configBotId}`,
+                host: host,
+                connectionProtocol: protocol,
+                temporary: true,
+                remoteEvents: false,
+            },
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'other_players_repo',
+                recordName: origin.recordName,
+                inst: origin.inst,
+                branch: DEFAULT_BRANCH_NAME,
+                host: host,
+                connectionProtocol: protocol,
+                childPartitionType: 'yjs_client',
+            },
+        };
+
+        const finalPartitions = Object.assign(
+            {},
+            defaultPartitions,
+            partitions
+        );
+        return finalPartitions;
+    }
+
+    static createStaticPartitions(
+        id: string,
+        configBotId: string,
+        origin: SimulationOrigin,
+        config: AuxConfig['config']
+    ): AuxPartitionConfig {
+        const localPersistence = config.staticRepoLocalPersistence ?? true;
+        console.log('[BotManager] Using static partitions');
+
+        if (localPersistence) {
+            console.log('[BotManager] Enabling local persistence.');
+        }
+
+        const defaultPartitions = BotManager.createDefaultPartitions(
+            id,
+            configBotId,
+            origin,
+            config
+        );
+
+        let partitions: AuxPartitionConfig = {
+            shared: {
+                type: 'memory',
+                initialState: {},
+            },
+            [TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'memory',
+                initialState: {},
+            },
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: null,
+        };
+
+        if (localPersistence) {
+            partitions.shared = {
+                type: 'yjs',
+                remoteEvents: true,
+                localPersistence: {
+                    saveToIndexedDb: true,
+                    database: `${origin.recordName ?? ''}/${
+                        origin.inst
+                    }/${DEFAULT_BRANCH_NAME}`,
                 },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'other_players_repo',
-                    recordName: origin.recordName,
-                    inst: origin.inst,
-                    branch: DEFAULT_BRANCH_NAME,
-                    host: host,
-                    connectionProtocol: protocol,
-                    childPartitionType: 'yjs_client',
-                },
-            };
-        } else {
-            partitions = {
-                shared: {
-                    type: 'memory',
-                    initialState: {},
-                },
-                [TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'memory',
-                    initialState: {},
-                },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: null,
             };
         }
 
@@ -378,7 +395,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         if (endpoint === this._authHelper.primaryAuthOrigin) {
             return this._authHelper.primary;
         } else {
-            const helper = this._authHelper.createEndpoint(endpoint);
+            const helper = this._authHelper.getOrCreateEndpoint(endpoint);
             this._subscriptions.push(helper);
             return helper;
         }

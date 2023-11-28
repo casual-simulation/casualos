@@ -1,17 +1,62 @@
 <template>
     <div class="register-container">
-        <update-password-dialog
+        <update-password-card
             v-if="updatePasswordUrl"
             :updatePasswordUrl="updatePasswordUrl"
             @close="goHome()"
-        ></update-password-dialog>
+        ></update-password-card>
         <md-card v-else>
             <form @submit.prevent="register">
                 <md-card-header><div class="md-title">Register</div></md-card-header>
                 <md-card-content class="input-dialog-content">
                     <div class="md-layout md-gutter">
                         <div class="md-layout-item">
-                            <md-field :class="emailFieldClass">
+                            <md-field :class="displayNameFieldClass">
+                                <label for="name">Display Name</label>
+                                <md-input
+                                    name="displayName"
+                                    id="displayName"
+                                    v-model="displayName"
+                                    :disabled="processing"
+                                    @blur="checkDisplayName()"
+                                />
+                                <span v-if="showDisplayNameError" class="md-error"
+                                    >This display name is not allowed</span
+                                >
+                                <span v-if="showDisplayNameContainsNameError" class="md-error"
+                                    >The display name cannot contain your name.</span
+                                >
+                            </md-field>
+
+                            <md-field :class="nameFieldClass">
+                                <label for="name">Name</label>
+                                <md-input
+                                    name="name"
+                                    id="name"
+                                    autocomplete="given-name"
+                                    v-model="name"
+                                    :disabled="processing"
+                                    @blur="checkDisplayName()"
+                                />
+                                <span v-if="showNameError" class="md-error"
+                                    >This name is not allowed</span
+                                >
+                            </md-field>
+
+                            <md-datepicker
+                                v-model="dateOfBirth"
+                                :class="dateOfBirthFieldClass"
+                                :md-model-type="Date"
+                                :md-disabled-dates="disabledDates"
+                            >
+                                <label>Date of Birth</label>
+
+                                <span v-if="showDateOfBirthError" class="md-error">
+                                    This Date of Birth is not allowed
+                                </span>
+                            </md-datepicker>
+
+                            <md-field v-if="showEmail" :class="emailFieldClass">
                                 <label for="email">Email</label>
                                 <md-input
                                     name="email"
@@ -34,47 +79,6 @@
                                     >This user has been banned</span
                                 >
                             </md-field>
-
-                            <md-field :class="displayNameFieldClass">
-                                <label for="name">Display Name</label>
-                                <md-input
-                                    name="displayName"
-                                    id="displayName"
-                                    v-model="displayName"
-                                    :disabled="processing"
-                                    @blur="checkDisplayName()"
-                                />
-                                <span v-if="showDisplayNameError" class="md-error"
-                                    >This display name is not allowed</span
-                                >
-                            </md-field>
-
-                            <md-field :class="nameFieldClass">
-                                <label for="name">Name</label>
-                                <md-input
-                                    name="name"
-                                    id="name"
-                                    autocomplete="given-name"
-                                    v-model="name"
-                                    :disabled="processing"
-                                />
-                                <span v-if="showNameError" class="md-error"
-                                    >This name is not allowed</span
-                                >
-                            </md-field>
-
-                            <md-datepicker
-                                v-model="dateOfBirth"
-                                :class="dateOfBirthFieldClass"
-                                :md-model-type="Date"
-                                :md-disabled-dates="disabledDates"
-                            >
-                                <label>Date of Birth</label>
-
-                                <span v-if="showDateOfBirthError" class="md-error">
-                                    This Date of Birth is not allowed
-                                </span>
-                            </md-datepicker>
 
                             <md-field v-if="requireParentEmail" :class="parentEmailFieldClass">
                                 <label for="parentEmail">Enter Parent Email</label>
@@ -135,5 +139,5 @@
         </md-card>
     </div>
 </template>
-<script src="./PrivoRegistrationDialog.ts"></script>
-<style src="./PrivoRegistrationDialog.css" scoped></style>
+<script src="./PrivoRegistrationCard.ts"></script>
+<style src="./PrivoRegistrationCard.css" scoped></style>

@@ -20,7 +20,12 @@ import {
     getBotTheme,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
-import { appManager, getSimulationId } from '../../shared/AppManager';
+import {
+    PLAYER_OWNER,
+    PUBLIC_OWNER,
+    appManager,
+    getSimulationId,
+} from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
 import { Dictionary } from 'vue-router/types/router';
 import {
@@ -37,6 +42,10 @@ import adjectives from '../../shared/dictionaries/adjectives';
 import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
+import { getInstParameters, getPermalink } from '../UrlUtils';
+import { BiosOption } from 'shared/WebConfig';
+import { FormError } from '@casual-simulation/aux-records';
+import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 
 const namesConfig: Config = {
     dictionaries: [adjectives, colors, animals],
@@ -46,6 +55,7 @@ const namesConfig: Config = {
 @Component({
     components: {
         'game-view': PlayerGameView,
+        'field-errors': FieldErrors,
     },
 })
 export default class PlayerHome extends Vue {
@@ -54,8 +64,28 @@ export default class PlayerHome extends Vue {
 
     debug: boolean = false;
     isLoading: boolean = false;
+    showBios: boolean = false;
+    showLoggingIn: boolean = false;
+    biosOptions: BiosOption[] = [];
+    biosSelection: BiosOption = null;
+
+    recordsOptions: string[] = [];
+    instOptions: string[] = [];
+
+    recordSelection: string = null;
+    instSelection: string = null;
+    joinCode: string = null;
+
+    errors: FormError[] = [];
+
+    private _loadedStaticInst: boolean = false;
 
     private _simulations: Map<BrowserSimulation, Subscription>;
+
+    get joinCodeClass() {
+        const hasJoinCodeError = this.errors.some((e) => e.for === 'joinCode');
+        return hasJoinCodeError ? 'md-invalid' : '';
+    }
 
     get botManager() {
         return appManager.simulationManager.primary;
@@ -63,10 +93,17 @@ export default class PlayerHome extends Vue {
 
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
+        const staticInst = this.query['staticInst'] as string | string[];
         const inst = this.query['inst'] as string | string[];
-        let recordName = this.query['record'] ?? this.query['player'] ?? null;
-        if (hasValue(inst)) {
-            await this._setServer(recordName, inst);
+        let recordName =
+            this.query['owner'] ??
+            this.query['record'] ??
+            this.query['player'] ??
+            null;
+        if (hasValue(staticInst)) {
+            await this._setServer(recordName, staticInst, true);
+        } else if (hasValue(inst)) {
+            await this._setServer(recordName, inst, false);
         }
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe(
@@ -90,12 +127,27 @@ export default class PlayerHome extends Vue {
         }
     }
 
+    @Watch('biosSelection')
+    async onBiosSelectionChanged() {
+        if (this.biosSelection === 'static inst') {
+            this.instOptions = await appManager.listStaticInsts();
+        } else {
+            this.instOptions = [];
+        }
+    }
+
     constructor() {
         super();
     }
 
     async created() {
         this.isLoading = true;
+        this.showBios = false;
+        this.biosSelection = null;
+        this.recordSelection = null;
+        this.instSelection = 'new-inst';
+        this.biosOptions = [];
+        this.errors = [];
         this._simulations = new Map();
 
         appManager.simulationManager.simulationAdded.subscribe((sim) => {
@@ -111,73 +163,249 @@ export default class PlayerHome extends Vue {
         });
 
         if (this.query) {
-            let update: Dictionary<string | string[]> = {};
-            let recordName = this.query['record'] ?? null;
-            let inst = this.query['inst'] as string | string[];
-            const preferPublic =
-                appManager.defaultPrivacyFeatures.allowPublicData &&
-                (appManager.config.preferredInstSource ?? 'private') ===
-                    'public';
+            const params = getInstParameters(this.query);
 
-            const hasQueryParam = Object.keys(this.query).length > 0;
+            if (params) {
+                this._setServer(
+                    params.recordName,
+                    params.inst,
+                    params.isStatic
+                );
 
-            if (hasValue(recordName)) {
-                update.record = recordName;
+                if ('bios' in this.query) {
+                    this._updateQuery({
+                        bios: null,
+                    });
+                }
             } else {
-                let player = this.query['player'] ?? null;
-                if (player) {
-                    update.player = player;
-                    recordName = player;
-                } else if (
-                    !preferPublic &&
-                    appManager.defaultPlayerId &&
-                    !hasQueryParam
-                ) {
-                    // Only use the default player if there are no other query params.
-                    // This prevents bad actors from giving the user a URL that auto-populates data into a private inst.
-                    update.player = appManager.defaultPlayerId;
-                    recordName = appManager.defaultPlayerId;
-                } else if (preferPublic) {
-                    recordName = null;
-                }
-            }
-
-            // On first load check the inst and load a default
-            if (!hasValue(inst)) {
-                // if there is no inst tag defined, check for the story tag and then the server tag
-                inst = this.query['story'] ?? this.query['server'];
-                if (hasValue(inst)) {
-                    update.inst = inst;
-                    update.story = null;
-                    update.server = null;
+                const joinCode = this.query['joinCode'];
+                if (joinCode) {
+                    const code = Array.isArray(joinCode)
+                        ? joinCode[0]
+                        : joinCode;
+                    this._loadJoinCode(code);
                 } else {
-                    // Generate a random inst name
-                    const randomName: string =
-                        uniqueNamesGenerator(namesConfig);
-                    if (!appManager.config.disableCollaboration) {
-                        update.inst = randomName;
+                    const biosOption = this.query['bios'];
+
+                    let hasValidBiosOption = false;
+                    if (biosOption) {
+                        const bios = getFirst(biosOption) as BiosOption;
+                        const options = await this._getBiosOptions();
+
+                        if (options.some((o) => o === bios)) {
+                            this.biosSelection = bios;
+                            if (
+                                bios !== 'enter join code' &&
+                                bios !== 'sign up' &&
+                                bios !== 'sign in' &&
+                                bios !== 'sign out'
+                            ) {
+                                hasValidBiosOption = true;
+                                this.executeBiosOption(bios, null, null, null);
+                            }
+                        }
                     }
-                    if (!hasValue(this.query['gridPortal'])) {
-                        update.gridPortal = 'home';
+
+                    if (!hasValidBiosOption) {
+                        this._showBiosOptions();
                     }
-                    inst = randomName;
                 }
             }
+        }
+    }
 
-            if (
-                hasValue(this.query['pagePortal']) &&
-                !hasValue(this.query['gridPortal'])
-            ) {
-                const portal = this.query['pagePortal'];
-                update.pagePortal = null;
-                update.gridPortal = Array.isArray(portal) ? portal[0] : portal;
+    private async _showBiosOptions() {
+        this.showBios = true;
+        const options = await this._getBiosOptions();
+        this.biosOptions = options;
+    }
+
+    async executeBiosOption(
+        option: BiosOption,
+        recordName: string,
+        inst: string,
+        joinCode: string
+    ) {
+        this.showBios = false;
+        console.log('selection', option, recordName, inst);
+        if (option === 'sign in' || option === 'sign up') {
+            try {
+                if (option === 'sign in') {
+                    this.showLoggingIn = true;
+                }
+                await appManager.auth.primary.authenticate(option);
+            } finally {
+                this.showLoggingIn = false;
+                this.biosSelection = null;
+                this._showBiosOptions();
+            }
+        } else if (option === 'sign out') {
+            await appManager.auth.primary.logout();
+            this.biosSelection = null;
+            this._showBiosOptions();
+        } else if (option === 'static inst') {
+            this._loadStaticInst(inst);
+        } else if (option === 'private inst') {
+            this._loadPrivateInst();
+        } else if (option === 'public inst') {
+            this._loadPublicInst();
+        } else if (option === 'enter join code') {
+            this._loadJoinCode(joinCode);
+        }
+    }
+
+    async cancelLogin() {
+        this.showLoggingIn = false;
+        await appManager.auth.primary.cancelLogin();
+    }
+
+    private _loadStaticInst(instSelection: string) {
+        const update: Dictionary<string | string[]> = {};
+        const inst =
+            instSelection === 'new-inst' || !instSelection
+                ? uniqueNamesGenerator(namesConfig)
+                : instSelection;
+
+        update.staticInst = inst;
+        update.bios = null;
+
+        if (!hasValue(this.query['gridPortal'])) {
+            update.gridPortal = 'home';
+        }
+
+        if (Object.keys(update).length > 0) {
+            this._updateQuery(update);
+        }
+
+        this._setServer(null, inst, true);
+    }
+
+    private async _loadJoinCode(joinCode: string) {
+        if (!joinCode) {
+            this.errors = [
+                ...this.errors.filter((e) => e.for !== 'joinCode'),
+                {
+                    for: 'joinCode',
+                    errorCode: 'invalid_join_code',
+                    errorMessage: 'A join code must be provided.',
+                },
+            ];
+            this.showBios = true;
+            return;
+        }
+        const update: Dictionary<string | string[]> = {};
+        const inst = uniqueNamesGenerator(namesConfig);
+
+        update.staticInst = inst;
+        update.joinCode = joinCode;
+        update.bios = null;
+
+        if (!hasValue(this.query['gridPortal'])) {
+            update.gridPortal = 'home';
+        }
+
+        if (Object.keys(update).length > 0) {
+            this._updateQuery(update);
+        }
+
+        this._setServer(null, inst, true);
+    }
+
+    private _loadPrivateInst() {
+        const userId =
+            appManager.auth.primary.currentLoginStatus.authData?.userId;
+
+        if (userId) {
+            const update: Dictionary<string | string[]> = {};
+            const inst = uniqueNamesGenerator(namesConfig);
+
+            update.owner = userId;
+            update.inst = inst;
+            update.bios = null;
+
+            if (!hasValue(this.query['gridPortal'])) {
+                update.gridPortal = 'home';
             }
 
             if (Object.keys(update).length > 0) {
                 this._updateQuery(update);
             }
-            this._setServer(recordName, inst);
+
+            this._setServer(userId, inst, false);
         }
+    }
+
+    private _loadPublicInst() {
+        const update: Dictionary<string | string[]> = {};
+        const inst = uniqueNamesGenerator(namesConfig);
+
+        update.owner = PUBLIC_OWNER;
+        update.inst = inst;
+        update.bios = null;
+
+        if (!hasValue(this.query['gridPortal'])) {
+            update.gridPortal = 'home';
+        }
+
+        if (Object.keys(update).length > 0) {
+            this._updateQuery(update);
+        }
+
+        this._setServer(PUBLIC_OWNER, inst, false);
+    }
+
+    private async _getBiosOptions(): Promise<BiosOption[]> {
+        const privacyFeatures =
+            appManager.auth.primary.currentLoginStatus?.authData
+                ?.privacyFeatures ?? appManager.defaultPrivacyFeatures;
+        const authenticated = await appManager.auth.primary.isAuthenticated();
+        return (
+            appManager.config.allowedBiosOptions ?? [
+                'enter join code',
+                'static inst',
+                'private inst',
+                'public inst',
+                'sign in',
+                'sign up',
+                'sign out',
+            ]
+        ).filter((option) => {
+            if (
+                option === 'private inst' &&
+                privacyFeatures.publishData &&
+                authenticated
+            ) {
+                return true;
+            } else if (
+                option === 'public inst' &&
+                privacyFeatures.allowPublicInsts
+            ) {
+                return true;
+            } else if (option === 'static inst') {
+                return true;
+            } else if (
+                (option === 'sign in' || option === 'sign up') &&
+                !authenticated
+            ) {
+                if (
+                    option === 'sign up' &&
+                    !appManager.config?.requirePrivoLogin
+                ) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else if (option === 'sign out' && authenticated) {
+                return true;
+            } else if (
+                option === 'enter join code' &&
+                privacyFeatures.allowPublicInsts
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        });
     }
 
     private _setupSimulation(sim: BrowserSimulation): Subscription {
@@ -190,10 +418,7 @@ export default class PlayerHome extends Vue {
                 } else {
                     if (sim.id === appManager.simulationManager.primary.id) {
                         this._handleQueryUpdates(sim, update);
-                        if (
-                            update.tags.has('inst') &&
-                            !appManager.config.disableCollaboration
-                        ) {
+                        if (update.tags.has('inst')) {
                             // inst changed - update it
                             const calc = sim.helper.createContext();
                             const inst = calculateStringListTagValue(
@@ -216,7 +441,25 @@ export default class PlayerHome extends Vue {
                                     null
                                 );
                             if (hasValue(inst)) {
-                                this._setServer(recordName, inst);
+                                // Handle changing inst tag
+                                const wasStatic = !!this._loadedStaticInst;
+                                const final = {
+                                    ...this.$route,
+                                    query: {
+                                        ...this.query,
+                                    },
+                                };
+                                if (wasStatic) {
+                                    final.query.staticInst = inst;
+                                } else {
+                                    final.query.inst = inst;
+                                }
+                                window.history.pushState(
+                                    {},
+                                    window.document.title
+                                );
+                                this.$router.replace(final);
+                                this._setServer(recordName, inst, wasStatic);
                             }
                         }
 
@@ -283,14 +526,23 @@ export default class PlayerHome extends Vue {
 
     private async _setServer(
         recordName: string | string[],
-        newServer: string | string[]
+        newServer: string | string[],
+        isStatic: boolean
     ) {
-        const record = getFirst(recordName);
+        this._loadedStaticInst = isStatic;
+        const owner = getFirst(recordName);
+        const record = appManager.getRecordName(owner);
         if (typeof newServer === 'string') {
-            await this._loadPrimarySimulation(record, newServer);
+            await this._loadPrimarySimulation(record, newServer, isStatic);
+        } else if (newServer.length === 1) {
+            await this._loadPrimarySimulation(record, newServer[0], isStatic);
         } else {
             if (!appManager.simulationManager.primary) {
-                await this._loadPrimarySimulation(record, newServer[0]);
+                await this._loadPrimarySimulation(
+                    record,
+                    newServer[0],
+                    isStatic
+                );
             }
             await appManager.simulationManager.updateSimulations(
                 newServer.map((s) => ({
@@ -298,6 +550,7 @@ export default class PlayerHome extends Vue {
                     options: {
                         recordName: record,
                         inst: s,
+                        isStatic: isStatic,
                     },
                 }))
             );
@@ -306,11 +559,13 @@ export default class PlayerHome extends Vue {
 
     private async _loadPrimarySimulation(
         recordName: string,
-        newServer: string
+        newServer: string,
+        isStatic: boolean
     ) {
         const sim = await appManager.setPrimarySimulation(
             recordName,
-            newServer
+            newServer,
+            isStatic
         );
         sim.connection.syncStateChanged
             .pipe(first((synced) => synced))
@@ -345,6 +600,19 @@ export default class PlayerHome extends Vue {
         }
         if (bot.tags.url !== location.href) {
             changes.url = location.href;
+            hasChange = true;
+        }
+        const permalink = getPermalink(
+            location.href,
+            botManager.origin.recordName
+        );
+        if (bot.tags.permalink !== permalink) {
+            changes.permalink = permalink;
+            hasChange = true;
+        }
+        const recordName = botManager.origin.recordName;
+        if (bot.tags.record !== recordName) {
+            changes.record = recordName;
             hasChange = true;
         }
         if (hasChange) {
@@ -419,6 +687,12 @@ export default class PlayerHome extends Vue {
                     if (pushState) {
                         break;
                     }
+                }
+            }
+
+            for (let param in final.query) {
+                if (!hasValue(final.query[param])) {
+                    delete final.query[param];
                 }
             }
 

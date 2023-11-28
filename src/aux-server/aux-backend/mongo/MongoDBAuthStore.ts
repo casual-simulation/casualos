@@ -98,6 +98,12 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         throw new Error('Method not implemented.');
     }
 
+    findOpenIDLoginRequestByState(
+        state: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        throw new Error('Method not implemented.');
+    }
+
     saveOpenIDLoginRequest(
         request: AuthOpenIDLoginRequest
     ): Promise<AuthOpenIDLoginRequest> {

@@ -1308,6 +1308,7 @@ describe('AuthController', () => {
                     joinAndCollaborate: 'joinAndCollaborate',
                     publishProjects: 'publish',
                     projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
                 },
                 clientId: 'clientId',
                 clientSecret: 'clientSecret',
@@ -1408,7 +1409,13 @@ describe('AuthController', () => {
                 childFirstName: 'test name',
                 childDisplayName: 'displayName',
                 childDateOfBirth: new Date(2010, 1, 1),
-                featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'childAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
 
@@ -1424,8 +1431,89 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: false,
                     allowPublicData: false,
-                    allowAI: true,
-                    allowPublicInsts: true,
+                    allowAI: false,
+                    allowPublicInsts: false,
+                },
+            });
+
+            expect(await store.listSessions('userId', Infinity)).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: 'userId',
+                        sessionId: fromByteArray(sessionId),
+                        secretHash: expect.any(String),
+                        connectionSecret: expect.any(String),
+                        grantedTimeMs: Date.now(),
+                        expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+                        requestId: null,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ],
+            });
+        });
+
+        it('should support child sign ups without an email address', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'test name',
+                email: null,
+                displayName: 'displayName',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'userId',
+                updatePasswordUrl: 'link',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+            });
+
+            expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
+                parentEmail: 'parent@example.com',
+                childEmail: null,
+                childFirstName: 'test name',
+                childDisplayName: 'displayName',
+                childDateOfBirth: new Date(2010, 1, 1),
+                featureIds: [
+                    'childAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
+            });
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+
+            expect(await store.findUser('userId')).toEqual({
+                id: 'userId',
+                name: 'test name',
+                email: null,
+                phoneNumber: null,
+                privoServiceId: 'childServiceId',
+                privoParentServiceId: 'parentServiceId',
+                currentLoginRequestId: null,
+                allSessionRevokeTimeMs: null,
+                privacyFeatures: {
+                    publishData: false,
+                    allowPublicData: false,
+                    allowAI: false,
+                    allowPublicInsts: false,
                 },
             });
 
@@ -1468,6 +1556,10 @@ describe('AuthController', () => {
                         on: true,
                         featureId: 'dev',
                     },
+                    {
+                        on: true,
+                        featureId: 'buildaieggs',
+                    },
                 ],
                 updatePasswordLink: 'link',
             });
@@ -1496,7 +1588,13 @@ describe('AuthController', () => {
                 childFirstName: 'test name',
                 childDisplayName: 'displayName',
                 childDateOfBirth: new Date(2010, 1, 1),
-                featureIds: ['childAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'childAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
 
@@ -1566,6 +1664,35 @@ describe('AuthController', () => {
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
         });
 
+        it('should return a invalid_display_name error code when the display name contains the users name', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'name',
+                displayName: 'displayName',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_display_name',
+                errorMessage: 'The display name cannot contain your name.',
+            });
+
+            expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+        });
+
         it('should request that an adult be signed up when given a adult birth date', async () => {
             uuidMock.mockReturnValueOnce('userId');
 
@@ -1598,7 +1725,13 @@ describe('AuthController', () => {
                 adultDisplayName: 'displayName',
                 adultFirstName: 'test name',
                 adultDateOfBirth: new Date(2000, 1, 1),
-                featureIds: ['adultAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'adultAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
 
@@ -1613,8 +1746,8 @@ describe('AuthController', () => {
                 privacyFeatures: {
                     publishData: false,
                     allowPublicData: false,
-                    allowAI: true,
-                    allowPublicInsts: true,
+                    allowAI: false,
+                    allowPublicInsts: false,
                 },
             });
 
@@ -1656,6 +1789,10 @@ describe('AuthController', () => {
                         on: true,
                         featureId: 'dev',
                     },
+                    {
+                        on: true,
+                        featureId: 'buildaieggs',
+                    },
                 ],
                 updatePasswordLink: 'link',
             });
@@ -1683,7 +1820,13 @@ describe('AuthController', () => {
                 adultDisplayName: 'displayName',
                 adultFirstName: 'test name',
                 adultDateOfBirth: new Date(2000, 1, 1),
-                featureIds: ['adultAccount', 'joinAndCollaborate', 'publish'],
+                featureIds: [
+                    'adultAccount',
+                    'joinAndCollaborate',
+                    'dev',
+                    'publish',
+                    'buildaieggs',
+                ],
             });
             expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
 
@@ -1749,6 +1892,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -1782,7 +1926,9 @@ describe('AuthController', () => {
             });
 
             it('should return the redirect URL', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
+                uuidMock
+                    .mockReturnValueOnce('uuid')
+                    .mockReturnValueOnce('uuid2');
                 privoClientMock.generateAuthorizationUrl.mockResolvedValueOnce({
                     codeVerifier: 'verifier',
                     codeMethod: 'method',
@@ -1804,6 +1950,7 @@ describe('AuthController', () => {
                 expect(store.openIdLoginRequests).toEqual([
                     {
                         requestId: 'uuid',
+                        state: 'uuid2',
                         provider: 'privo',
                         codeVerifier: 'verifier',
                         codeMethod: 'method',
@@ -1828,7 +1975,7 @@ describe('AuthController', () => {
 
                 expect(
                     privoClientMock.generateAuthorizationUrl
-                ).toHaveBeenCalledWith('uuid');
+                ).toHaveBeenCalledWith('uuid2');
             });
 
             it('should return an error if the privo client throws an error', async () => {
@@ -1878,6 +2025,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -1898,7 +2046,7 @@ describe('AuthController', () => {
                 store.privoConfiguration = null;
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -1914,6 +2062,7 @@ describe('AuthController', () => {
             it('should save the info to the request', async () => {
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     redirectUrl: 'https://redirect_url',
                     authorizationUrl: 'https://mock_authorization_url',
                     codeMethod: 'method',
@@ -1927,7 +2076,7 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -1939,6 +2088,7 @@ describe('AuthController', () => {
                 expect(store.openIdLoginRequests).toEqual([
                     {
                         requestId: 'requestId',
+                        state: 'state',
                         redirectUrl: 'https://redirect_url',
                         authorizationUrl: 'https://mock_authorization_url',
                         codeMethod: 'method',
@@ -1958,6 +2108,7 @@ describe('AuthController', () => {
             it('should return an error if the request already is authorized', async () => {
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     redirectUrl: 'https://redirect_url',
                     authorizationUrl: 'https://mock_authorization_url',
                     codeMethod: 'method',
@@ -1973,7 +2124,7 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -1988,6 +2139,7 @@ describe('AuthController', () => {
             it('should return an error if the request already is complete', async () => {
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     redirectUrl: 'https://redirect_url',
                     authorizationUrl: 'https://mock_authorization_url',
                     codeMethod: 'method',
@@ -2001,7 +2153,7 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2016,6 +2168,7 @@ describe('AuthController', () => {
             it('should return an error if the request expired', async () => {
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     redirectUrl: 'https://redirect_url',
                     authorizationUrl: 'https://mock_authorization_url',
                     codeMethod: 'method',
@@ -2029,7 +2182,7 @@ describe('AuthController', () => {
                 });
 
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2043,7 +2196,7 @@ describe('AuthController', () => {
 
             it('should return an error if the request is missing', async () => {
                 const result = await controller.processOpenIDAuthorizationCode({
-                    state: 'requestId',
+                    state: 'state',
                     authorizationCode: 'code',
                     ipAddress: '127.0.0.1',
                 });
@@ -2082,6 +2235,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -2131,6 +2285,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2161,6 +2316,7 @@ describe('AuthController', () => {
                 expect(await store.findOpenIDLoginRequest('requestId')).toEqual(
                     {
                         requestId: 'requestId',
+                        state: 'state',
                         authorizationUrl: 'https://mock_authorization_url',
                         redirectUrl: 'https://redirect_url',
                         codeVerifier: 'verifier',
@@ -2216,8 +2372,8 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: false,
                         allowPublicData: false,
-                        allowAI: true,
-                        allowPublicInsts: true,
+                        allowAI: false,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -2270,6 +2426,13 @@ describe('AuthController', () => {
                                     active: true,
                                     category: 'Standard',
                                 },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'buildaieggs',
+                                    active: true,
+                                    category: 'Standard',
+                                },
                             ],
                             displayName: 'displayName',
                         },
@@ -2286,6 +2449,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2373,6 +2537,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2434,6 +2599,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2493,6 +2659,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2554,6 +2721,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2615,6 +2783,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2668,6 +2837,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -2730,6 +2900,7 @@ describe('AuthController', () => {
 
                 await store.saveOpenIDLoginRequest({
                     requestId: 'requestId',
+                    state: 'state',
                     authorizationUrl: 'https://mock_authorization_url',
                     redirectUrl: 'https://redirect_url',
                     codeVerifier: 'verifier',
@@ -5426,6 +5597,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -5482,7 +5654,7 @@ describe('AuthController', () => {
                             category: 'Standard',
                         },
                         {
-                            on: false,
+                            on: true,
                             consentDateSeconds: 1234567890,
                             featureId: 'dev',
                             active: true,
@@ -5508,9 +5680,9 @@ describe('AuthController', () => {
                     subscriptionTier: null,
                     displayName: 'displayName',
                     privacyFeatures: {
-                        publishData: false,
+                        publishData: true,
                         allowPublicData: false,
-                        allowAI: true,
+                        allowAI: false,
                         allowPublicInsts: true,
                     },
                 });
@@ -5538,16 +5710,23 @@ describe('AuthController', () => {
                             category: 'Standard',
                         },
                         {
-                            on: true,
+                            on: false,
                             consentDateSeconds: 1234567890,
                             featureId: 'publish',
                             active: true,
                             category: 'Standard',
                         },
                         {
-                            on: false,
+                            on: true,
                             consentDateSeconds: 1234567890,
                             featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'buildaieggs',
                             active: true,
                             category: 'Standard',
                         },
@@ -5574,7 +5753,7 @@ describe('AuthController', () => {
                         publishData: true,
                         allowPublicData: false,
                         allowAI: true,
-                        allowPublicInsts: true,
+                        allowPublicInsts: false,
                     },
                 });
 
@@ -5595,6 +5774,202 @@ describe('AuthController', () => {
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: false,
+                        allowAI: true,
+                        allowPublicInsts: false,
+                    },
+                });
+            });
+
+            it('should update the users features if ai permissions was changed', async () => {
+                await store.saveUser({
+                    ...(await store.findUser(userId)),
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: false,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                privoClientMock.getUserInfo.mockResolvedValue({
+                    serviceId: 'serviceId',
+                    emailVerified: true,
+                    email: 'email',
+                    givenName: 'name',
+                    locale: 'en-US',
+                    roleIdentifier: 'ab1Child',
+                    displayName: 'displayName',
+                    permissions: [
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'joinAndCollaborate',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'buildaieggs',
+                            active: true,
+                            category: 'Standard',
+                        },
+                    ],
+                });
+
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: 'displayName',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
+                    'serviceId'
+                );
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    privoServiceId: 'serviceId',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+            });
+
+            it('should update the users features if public insts permissions was changed', async () => {
+                await store.saveUser({
+                    ...(await store.findUser(userId)),
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: false,
+                    },
+                });
+
+                privoClientMock.getUserInfo.mockResolvedValue({
+                    serviceId: 'serviceId',
+                    emailVerified: true,
+                    email: 'email',
+                    givenName: 'name',
+                    locale: 'en-US',
+                    roleIdentifier: 'ab1Child',
+                    displayName: 'displayName',
+                    permissions: [
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'joinAndCollaborate',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'publish',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'dev',
+                            active: true,
+                            category: 'Standard',
+                        },
+                        {
+                            on: true,
+                            consentDateSeconds: 1234567890,
+                            featureId: 'buildaieggs',
+                            active: true,
+                            category: 'Standard',
+                        },
+                    ],
+                });
+
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: 'displayName',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
+                    'serviceId'
+                );
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    privoServiceId: 'serviceId',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
                         allowAI: true,
                         allowPublicInsts: true,
                     },
@@ -5930,6 +6305,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -6014,6 +6390,7 @@ describe('AuthController', () => {
                         joinAndCollaborate: 'joinAndCollaborate',
                         publishProjects: 'publish',
                         projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
                     },
                     clientId: 'clientId',
                     clientSecret: 'clientSecret',
@@ -6031,6 +6408,55 @@ describe('AuthController', () => {
                     redirectUri: 'redirectUri',
                     ageOfConsent: 18,
                 };
+            });
+
+            it('should return false if the display name contains the given name', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: true,
+                });
+
+                const result = await controller.isValidDisplayName(
+                    'displayName',
+                    'name'
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: false,
+                    containsName: true,
+                });
+            });
+
+            it('should return true if the name is empty', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: true,
+                });
+
+                const result = await controller.isValidDisplayName(
+                    'displayName',
+                    ''
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: true,
+                });
+            });
+
+            it('should return true if the name is null', async () => {
+                privoClientMock.checkDisplayName.mockResolvedValueOnce({
+                    available: true,
+                });
+
+                const result = await controller.isValidDisplayName(
+                    'displayName',
+                    null
+                );
+
+                expect(result).toEqual({
+                    success: true,
+                    allowed: true,
+                });
             });
 
             it('should check the privo client if the display name is valid', async () => {
@@ -6088,6 +6514,7 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
                 joinAndCollaborate: 'joinAndCollaborate',
                 projectDevelopment: 'projectDevelopment',
                 publishProjects: 'publishProjects',
+                buildAIEggs: 'buildaieggs',
             },
             []
         );
@@ -6095,12 +6522,12 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
         expect(result).toEqual({
             publishData: false,
             allowPublicData: false,
-            allowAI: true,
-            allowPublicInsts: true,
+            allowAI: false,
+            allowPublicInsts: false,
         });
     });
 
-    it('should disable the publishData feature if the publishProjects feature is disabled', () => {
+    it('should disable the allowPublicData feature if the publishProjects feature is disabled', () => {
         const result = getPrivacyFeaturesFromPermissions(
             {
                 adultPrivoSSO: 'aSSO',
@@ -6108,6 +6535,7 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
                 joinAndCollaborate: 'joinAndCollaborate',
                 projectDevelopment: 'projectDevelopment',
                 publishProjects: 'publishProjects',
+                buildAIEggs: 'buildaieggs',
             },
             [
                 {
@@ -6122,37 +6550,8 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
                     featureId: 'publishProjects',
                     on: false,
                 },
-            ]
-        );
-
-        expect(result).toEqual({
-            publishData: false,
-            allowPublicData: false,
-            allowAI: true,
-            allowPublicInsts: true,
-        });
-    });
-
-    it('should disable the allowPublicData feature if the joinAndCollaborate feature is disabled', () => {
-        const result = getPrivacyFeaturesFromPermissions(
-            {
-                adultPrivoSSO: 'aSSO',
-                childPrivoSSO: 'cSSO',
-                joinAndCollaborate: 'joinAndCollaborate',
-                projectDevelopment: 'projectDevelopment',
-                publishProjects: 'publishProjects',
-            },
-            [
                 {
-                    featureId: 'projectDevelopment',
-                    on: true,
-                },
-                {
-                    featureId: 'joinAndCollaborate',
-                    on: false,
-                },
-                {
-                    featureId: 'publishProjects',
+                    featureId: 'buildaieggs',
                     on: true,
                 },
             ]
@@ -6162,6 +6561,82 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
             publishData: true,
             allowPublicData: false,
             allowAI: true,
+            allowPublicInsts: true,
+        });
+    });
+
+    it('should disable the allowPublicInsts feature if the joinAndCollaborate feature is disabled', () => {
+        const result = getPrivacyFeaturesFromPermissions(
+            {
+                adultPrivoSSO: 'aSSO',
+                childPrivoSSO: 'cSSO',
+                joinAndCollaborate: 'joinAndCollaborate',
+                projectDevelopment: 'projectDevelopment',
+                publishProjects: 'publishProjects',
+                buildAIEggs: 'buildaieggs',
+            },
+            [
+                {
+                    featureId: 'projectDevelopment',
+                    on: true,
+                },
+                {
+                    featureId: 'joinAndCollaborate',
+                    on: false,
+                },
+                {
+                    featureId: 'publishProjects',
+                    on: true,
+                },
+                {
+                    featureId: 'buildaieggs',
+                    on: true,
+                },
+            ]
+        );
+
+        expect(result).toEqual({
+            publishData: true,
+            allowPublicData: true,
+            allowAI: true,
+            allowPublicInsts: false,
+        });
+    });
+
+    it('should disable the allowAI feature if the buildAIEggs feature is disabled', () => {
+        const result = getPrivacyFeaturesFromPermissions(
+            {
+                adultPrivoSSO: 'aSSO',
+                childPrivoSSO: 'cSSO',
+                joinAndCollaborate: 'joinAndCollaborate',
+                projectDevelopment: 'projectDevelopment',
+                publishProjects: 'publishProjects',
+                buildAIEggs: 'buildaieggs',
+            },
+            [
+                {
+                    featureId: 'projectDevelopment',
+                    on: true,
+                },
+                {
+                    featureId: 'joinAndCollaborate',
+                    on: true,
+                },
+                {
+                    featureId: 'publishProjects',
+                    on: true,
+                },
+                {
+                    featureId: 'buildaieggs',
+                    on: false,
+                },
+            ]
+        );
+
+        expect(result).toEqual({
+            publishData: true,
+            allowPublicData: true,
+            allowAI: false,
             allowPublicInsts: true,
         });
     });

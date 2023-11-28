@@ -1,7 +1,7 @@
 import { LoginUIStatus } from '@casual-simulation/aux-vm/auth';
 import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
 import { Observable, Subject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, startWith } from 'rxjs/operators';
 import { AuthEndpointHelper } from './AuthEndpointHelper';
 
 export class AuthHelper {
@@ -13,6 +13,29 @@ export class AuthHelper {
         primaryAuthOrigin: string,
         primaryRecordsOrigin: string
     ) => AuthHelperInterface;
+
+    private _onEndpointDiscovered: Subject<{
+        endpoint: string;
+        helper: AuthHelperInterface;
+    }> = new Subject();
+
+    get endpoints() {
+        return this._auths;
+    }
+
+    get onEndpointDiscovered(): Observable<{
+        endpoint: string;
+        helper: AuthHelperInterface;
+    }> {
+        return this._onEndpointDiscovered.pipe(
+            startWith(
+                ...[...this._auths.entries()].map(([endpoint, helper]) => ({
+                    endpoint,
+                    helper,
+                }))
+            )
+        );
+    }
 
     get primaryAuthOrigin() {
         return this._primary.origin;
@@ -51,14 +74,21 @@ export class AuthHelper {
     }
 
     getOrCreateEndpoint(endpoint: string) {
-        return this.getEndpoint(endpoint) ?? this.createEndpoint(endpoint);
+        let e = this.getEndpoint(endpoint);
+        if (!e) {
+            e = this._createEndpoint(endpoint);
+            this._onEndpointDiscovered.next({ endpoint, helper: e });
+        }
+
+        return e;
     }
 
     getEndpoint(endpoint: string): AuthHelperInterface {
         return this._auths.get(endpoint);
     }
 
-    createEndpoint(endpoint: string): AuthHelperInterface {
+    private _createEndpoint(endpoint: string): AuthHelperInterface {
+        console.log('[AuthHelper] Creating endpoint', endpoint);
         const helper = new AuthEndpointHelper(endpoint);
         helper.loginUIStatus
             .pipe(map((s) => ({ ...s, endpoint })))
