@@ -32,6 +32,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private _simulationManager: SimulationManager<TSim>;
     private _onMissingPermission: Subject<MissingPermissionEvent> =
         new Subject();
+    private _onNotAuthorized: Subject<NotAuthorizedEvent> = new Subject();
     private _onShowAccountInfo: Subject<ShowAccountInfoEvent> = new Subject();
     private _onAuthHelper: BehaviorSubject<AuthHelper> = new BehaviorSubject(
         null
@@ -40,6 +41,10 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
 
     get onMissingPermission(): Observable<MissingPermissionEvent> {
         return this._onMissingPermission;
+    }
+
+    get onNotAuthorized(): Observable<NotAuthorizedEvent> {
+        return this._onNotAuthorized;
     }
 
     get onShowAccountInfo(): Observable<ShowAccountInfoEvent> {
@@ -278,6 +283,8 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
             await this._handleNotLoggedIn(sim, request);
         } else if (request.reason?.type === 'missing_permission') {
             await this._handleMissingPermission(sim, request, request.reason);
+        } else {
+            await this._handleNotAuthorizedError(sim, request);
         }
     }
 
@@ -337,6 +344,21 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         });
     }
 
+    private async _handleNotAuthorizedError<TSim extends BrowserSimulation>(
+        sim: TSim,
+        request: PartitionAuthRequest
+    ) {
+        console.log(
+            `[AuthCoordinator] [${sim.id}] Not authorized: ${request.errorMessage}.`
+        );
+        this._onNotAuthorized.next({
+            simulationId: sim.id,
+            errorCode: request.errorCode,
+            errorMessage: request.errorMessage,
+            origin: request.origin,
+        });
+    }
+
     unsubscribe(): void {
         return this._sub.unsubscribe();
     }
@@ -357,4 +379,11 @@ export interface MissingPermissionEvent {
 export interface ShowAccountInfoEvent {
     simulationId: string;
     loginStatus: LoginStatus;
+}
+
+export interface NotAuthorizedEvent {
+    simulationId: string;
+    errorCode: string;
+    errorMessage: string;
+    origin: string;
 }
