@@ -20,7 +20,12 @@ import {
     getBotTheme,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
-import { appManager, getSimulationId } from '../../shared/AppManager';
+import {
+    PLAYER_OWNER,
+    PUBLIC_OWNER,
+    appManager,
+    getSimulationId,
+} from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
 import { Dictionary } from 'vue-router/types/router';
 import {
@@ -90,7 +95,11 @@ export default class PlayerHome extends Vue {
     async onQueryChanged(newValue: any, oldQuery: any) {
         const staticInst = this.query['staticInst'] as string | string[];
         const inst = this.query['inst'] as string | string[];
-        let recordName = this.query['record'] ?? this.query['player'] ?? null;
+        let recordName =
+            this.query['owner'] ??
+            this.query['record'] ??
+            this.query['player'] ??
+            null;
         if (hasValue(staticInst)) {
             await this._setServer(recordName, staticInst, true);
         } else if (hasValue(inst)) {
@@ -302,7 +311,7 @@ export default class PlayerHome extends Vue {
             const update: Dictionary<string | string[]> = {};
             const inst = uniqueNamesGenerator(namesConfig);
 
-            update.player = userId;
+            update.owner = userId;
             update.inst = inst;
 
             if (!hasValue(this.query['gridPortal'])) {
@@ -313,7 +322,7 @@ export default class PlayerHome extends Vue {
                 this._updateQuery(update);
             }
 
-            this._setServer(null, inst, false);
+            this._setServer(userId, inst, false);
         }
     }
 
@@ -321,6 +330,7 @@ export default class PlayerHome extends Vue {
         const update: Dictionary<string | string[]> = {};
         const inst = uniqueNamesGenerator(namesConfig);
 
+        update.owner = PUBLIC_OWNER;
         update.inst = inst;
 
         if (!hasValue(this.query['gridPortal'])) {
@@ -331,7 +341,7 @@ export default class PlayerHome extends Vue {
             this._updateQuery(update);
         }
 
-        this._setServer(null, inst, false);
+        this._setServer(PUBLIC_OWNER, inst, false);
     }
 
     private async _getBiosOptions(): Promise<BiosOption[]> {
@@ -510,7 +520,8 @@ export default class PlayerHome extends Vue {
         isStatic: boolean
     ) {
         this._loadedStaticInst = isStatic;
-        const record = getFirst(recordName);
+        const owner = getFirst(recordName);
+        const record = appManager.getRecordName(owner);
         if (typeof newServer === 'string') {
             await this._loadPrimarySimulation(record, newServer, isStatic);
         } else if (newServer.length === 1) {
@@ -537,10 +548,11 @@ export default class PlayerHome extends Vue {
     }
 
     private async _loadPrimarySimulation(
-        recordName: string,
+        owner: string,
         newServer: string,
         isStatic: boolean
     ) {
+        const recordName = appManager.getRecordName(owner);
         const sim = await appManager.setPrimarySimulation(
             recordName,
             newServer,
@@ -655,6 +667,7 @@ export default class PlayerHome extends Vue {
                     }
                 }
             }
+
 
             if (pushState) {
                 window.history.pushState({}, window.document.title);

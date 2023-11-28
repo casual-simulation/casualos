@@ -3011,6 +3011,42 @@ The static instance that is loaded into CasualOS. Not present if the inst is not
 
 The join code that ab1 should use to join an inst. If specified, then the BIOS selection box will be skipped.
 
+### `record`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The name of the record that the inst was loaded from. Null if the inst was loaded as temporary and public.
+
+### `owner`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The place that the inst should be loaded from.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='public'>
+    The inst will be loaded as temporary and public.
+  </PossibleValueCode>
+  <PossibleValueCode value='player'>
+    The inst will be loaded from the currently logged in user's default record.
+  </PossibleValueCode>
+  <PossibleValue value='Any Record Name'>
+    The inst will be loaded from the given record.
+  </PossibleValue>
+  <PossibleValue value='Any User ID'>
+    The inst will be loaded from the given user's player studio default record.
+  </PossibleValue>
+  <PossibleValue value='Any Studio ID'>
+    The inst will be loaded from the given studio's default record.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `theme`
 
 <Badges>
@@ -3638,6 +3674,11 @@ The URL that is currently specified in the tab.
     The URL that is loaded in the tab.
   </PossibleValue>
 </PossibleValuesTable>
+
+### `permalink`
+
+The URL, but with the <TagLink tag='owner'/> query parameter replaced with the value of the <TagLink tag='record'/> tag on the config bot.
+This tag is useful for sharing an exact link to the current inst.
 
 ### `pageTitle`
 

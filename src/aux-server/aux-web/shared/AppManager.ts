@@ -82,6 +82,16 @@ const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 const STATIC_INSTS_STORE = 'staticInsts';
 const INSTS_STORE = 'publicInsts';
 
+/**
+ * The owner
+ */
+export const PLAYER_OWNER = 'player';
+
+/**
+ *
+ */
+export const PUBLIC_OWNER = 'public';
+
 export class AppManager {
     public appType: AppType;
     private _updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
@@ -551,6 +561,20 @@ export class AppManager {
     updateServiceWorker() {
         if (this._updateServiceWorker) {
             this._updateServiceWorker(true);
+        }
+    }
+
+    /**
+     * Gets the name of the record that the given owner should be loaded from.
+     * @param owner The owner of the record.
+     */
+    getRecordName(owner: string): string {
+        if (owner === PLAYER_OWNER) {
+            return this._defaultStudioId;
+        } else if (owner === PUBLIC_OWNER) {
+            return null;
+        } else {
+            return owner;
         }
     }
 

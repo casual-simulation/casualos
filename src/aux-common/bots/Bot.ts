@@ -2501,6 +2501,11 @@ export const KNOWN_TAGS: string[] = [
 
     'inst',
     'staticInst',
+    'record',
+    'owner',
+    'joinCode',
+    'url',
+    'sharableUrl',
     'theme',
     MINI_PORTAL,
     'menuPortal',
