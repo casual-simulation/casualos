@@ -783,7 +783,7 @@ export class AuthController {
             const result = await this._privoClient.processAuthorizationCallback(
                 {
                     code: loginRequest.authorizationCode,
-                    state: loginRequest.requestId,
+                    state: loginRequest.state,
                     codeVerifier: loginRequest.codeVerifier,
                     redirectUrl: loginRequest.redirectUrl,
                 }
