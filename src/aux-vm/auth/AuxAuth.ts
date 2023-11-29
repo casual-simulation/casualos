@@ -441,6 +441,11 @@ export interface AuxAuth {
     provideHasAccount(hasAccount: boolean): Promise<void>;
 
     /**
+     * Specifies when the user has completed the OAuth login process.
+     */
+    provideOAuthLoginComplete(): Promise<void>;
+
+    /**
      * Cancels the in-progress login attempt.
      */
     cancelLogin(): Promise<void>;
