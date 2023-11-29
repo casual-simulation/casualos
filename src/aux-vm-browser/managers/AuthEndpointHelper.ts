@@ -47,7 +47,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
     private _newTab: Window;
-    private _tabCloseInterval: number;
+    private _tabCloseInterval: any;
 
     get currentLoginStatus() {
         const status = this._loginStatus.value;
