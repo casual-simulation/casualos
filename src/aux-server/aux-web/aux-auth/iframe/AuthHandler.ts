@@ -88,9 +88,14 @@ export class AuthHandler implements AuxAuth {
     constructor() {
         this._oauthChannel.addEventListener('message', (event) => {
             if (event.data === 'login') {
+                console.log('[AuthHandler] Got oauth login message.');
                 this._oauthRedirectComplete.next();
             }
         });
+    }
+
+    async provideOAuthLoginComplete(): Promise<void> {
+        this._oauthRedirectComplete.next();
     }
 
     async isLoggedIn(): Promise<boolean> {

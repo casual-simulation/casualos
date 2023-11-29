@@ -47,6 +47,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
     private _newTab: Window;
+    private _tabCloseInterval: number;
 
     get currentLoginStatus() {
         const status = this._loginStatus.value;
@@ -192,6 +193,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _handleOAuthRedirectCallback(request: OAuthRedirectRequest) {
         if (this._newTab && !this._newTab.closed) {
             this._newTab.location = request.authorizationUrl;
+        } else {
+            console.error(
+                '[AuthEndpointHelper] Cannot handle oauth redirect callback.'
+            );
         }
     }
 
@@ -226,6 +231,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     }
 
     protected async _authenticateCore(hint?: LoginHint) {
+        if (hint === 'sign in') {
+            this._createNewTab();
+        }
+
         const result = await this._proxy.login(undefined, hint);
 
         if (this._protocolVersion < 2) {
@@ -470,7 +479,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         }
 
         if (hasAccount) {
-            this._newTab = window.open('/loading-oauth.html', '_blank');
+            this._createNewTab();
         }
 
         if (!this._initialized) {
@@ -511,5 +520,23 @@ export class AuthEndpointHelper implements AuthHelperInterface {
 
     protected async _logoutCore() {
         return await this._proxy.logout();
+    }
+
+    private _createNewTab() {
+        this._newTab = window.open('/loading-oauth.html', '_blank');
+        if (this._newTab) {
+            if (this._tabCloseInterval) {
+                clearInterval(this._tabCloseInterval);
+            }
+            this._tabCloseInterval = setInterval(() => {
+                if (!this._newTab || this._newTab.closed) {
+                    clearInterval(this._tabCloseInterval);
+                }
+                if (this._newTab?.closed) {
+                    this._newTab = null;
+                    this._proxy.provideOAuthLoginComplete();
+                }
+            }, 500);
+        }
     }
 }
