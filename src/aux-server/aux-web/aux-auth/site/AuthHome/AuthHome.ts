@@ -15,12 +15,15 @@ import {
     isOpenAiKey,
     parseOpenAiKey,
 } from '@casual-simulation/aux-records/AuthUtils';
+import { PrivacyFeatures } from '@casual-simulation/aux-records';
+import PrivacyItem from '../PrivacyItem/PrivacyItem';
 
 @Component({
     components: {
         avatar: Avatar,
         security: Security,
         subscription: AuthSubscription,
+        'privacy-item': PrivacyItem,
     },
 })
 export default class AuthHome extends Vue {
@@ -32,6 +35,7 @@ export default class AuthHome extends Vue {
     originalAvatarPortraitUrl: string = null;
     hasActiveSubscription: boolean = false;
 
+    privacyFeatures: PrivacyFeatures = null;
     updating: boolean = false;
     updated: boolean = false;
 
@@ -39,10 +43,15 @@ export default class AuthHome extends Vue {
 
     private _sub: Subscription;
 
+    get showPrivacyFeatures() {
+        return authManager.usePrivoLogin && !!this.privacyFeatures;
+    }
+
     created() {
         this.metadata = null;
         this.updating = false;
         this.updated = false;
+        this.privacyFeatures = null;
         this.subscriptionsSupported = authManager.subscriptionsSupported;
 
         this._updateMetadata = this._updateMetadata.bind(this);
@@ -58,6 +67,9 @@ export default class AuthHome extends Vue {
             this.originalPhone = authManager.phone;
             this.subscriptionsSupported = authManager.subscriptionsSupported;
             this.hasActiveSubscription = authManager.hasActiveSubscription;
+            this.privacyFeatures = {
+                ...authManager.privacyFeatures,
+            };
 
             this.metadata = {
                 email: authManager.email,

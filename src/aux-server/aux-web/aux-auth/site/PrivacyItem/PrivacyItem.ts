@@ -1,0 +1,20 @@
+import { EventBus } from '@casual-simulation/aux-components';
+import Vue from 'vue';
+import Component from 'vue-class-component';
+import { Provide, Watch, Prop } from 'vue-property-decorator';
+import { authManager } from '../../shared/index';
+import { SvgIcon } from '@casual-simulation/aux-components';
+
+@Component({
+    components: {
+        // 'svg-icon': SvgIcon,
+    },
+})
+export default class PrivacyItem extends Vue {
+    @Prop({ required: true })
+    value: boolean;
+
+    get tooltip() {
+        return this.value ? 'Allowed' : 'Denied';
+    }
+}
