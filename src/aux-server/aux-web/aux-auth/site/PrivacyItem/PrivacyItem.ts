@@ -1,14 +1,9 @@
-import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Watch, Prop } from 'vue-property-decorator';
-import { authManager } from '../../shared/index';
-import { SvgIcon } from '@casual-simulation/aux-components';
 
 @Component({
-    components: {
-        // 'svg-icon': SvgIcon,
-    },
+    components: {},
 })
 export default class PrivacyItem extends Vue {
     @Prop({ required: true })
