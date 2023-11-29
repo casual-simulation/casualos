@@ -2381,7 +2381,7 @@ describe('AuthController', () => {
                     privoClientMock.processAuthorizationCallback
                 ).toHaveBeenCalledWith({
                     code: 'code',
-                    state: 'requestId',
+                    state: 'state',
                     codeVerifier: 'verifier',
                     redirectUrl: 'https://redirect_url',
                 });
@@ -2498,7 +2498,7 @@ describe('AuthController', () => {
                     privoClientMock.processAuthorizationCallback
                 ).toHaveBeenCalledWith({
                     code: 'code',
-                    state: 'requestId',
+                    state: 'state',
                     codeVerifier: 'verifier',
                     redirectUrl: 'https://redirect_url',
                 });
