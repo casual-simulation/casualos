@@ -5,6 +5,18 @@
                 <h1 class="md-title">Casual Simulation Web Services Acceptable Use Policy</h1>
             </md-card-header>
             <md-card-content>
+                <p>
+                    You can find a plain-text version of this acceptable use policy
+                    <a href="/acceptable-use-policy.txt">here</a>.
+                </p>
+                <p>
+                    By using our products or services, you agree to this Acceptable Use Policy as
+                    well as our <a href="/terms">Terms of Service</a> and
+                    <a href="/privacy-policy">Privacy Policy</a>.
+                </p>
+                <div v-html="acceptableUsePolicyHtml"></div>
+
+                <!--                 
                 <p><em>Last updated on April 6th, 2022</em></p>
                 <p>
                     You can find a plain-text version of this acceptable use policy
@@ -216,7 +228,7 @@
                         Accounts or media that use Services to post sexually explicit or
                         pornographic material, or links to it, will be terminated or suspended.
                     </p>
-                </div>
+                </div> -->
             </md-card-content>
         </md-card>
     </div>

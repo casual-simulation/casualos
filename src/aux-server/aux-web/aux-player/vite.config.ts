@@ -5,7 +5,14 @@ import vue from '@vitejs/plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
+import virtual from '@rollup/plugin-virtual';
 import { generateDependencyGraphRollupPlugin } from '../../../../script/vite-helpers';
+import {
+    getPolicies,
+    listEnvironmentFiles,
+    loadEnvFiles,
+} from '../../script/vite-utils';
+import writeFilesPlugin from '../../plugins/write-files-plugin';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
@@ -28,6 +35,8 @@ const casualOsPackages = fs
         path.resolve(__dirname, '..', '..', '..')
     )
     .map((folder) => `@casual-simulation/${folder}`);
+
+const policies = getPolicies();
 
 export default defineConfig(({ command, mode }) => ({
     cacheDir: path.resolve(
@@ -103,6 +112,7 @@ export default defineConfig(({ command, mode }) => ({
                     '**/deno.js',
                     '**/*.map*',
                     '**/NotoSansKR*',
+                    '**/*.md',
                 ],
             },
         }),

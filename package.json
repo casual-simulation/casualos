@@ -151,7 +151,14 @@
         "vite-plugin-svg-icons": "2.0.1",
         "vite-plugin-pwa": "0.16.0",
         "vite-plugin-html": "2.1.1",
-        "rollup-plugin-copy": "3.5.0"
+        "rollup-plugin-copy": "3.5.0",
+        "@rollup/plugin-virtual": "3.0.2",
+        "unified": "11.0.4",
+        "remark": "15.0.1",
+        "remark-parse": "11.0.0",
+        "remark-rehype": "11.0.0",
+        "rehype-stringify": "10.0.0",
+        "remark-toc": "9.0.0"
     },
     "dependencies": {},
     "prisma": {
