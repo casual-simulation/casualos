@@ -43,7 +43,8 @@ const config: ClientConfig = {
         requirePrivoLogin: process.env.REQUIRE_PRIVO_LOGIN === 'true',
         allowedBiosOptions: (process.env.BIOS_OPTIONS?.split(',') ||
             null) as BiosOption[],
-        defaultBiosOption: process.env.DEFAULT_BIOS_OPTION || null,
+        defaultBiosOption: (process.env.DEFAULT_BIOS_OPTION ||
+            null) as BiosOption,
     },
 };
 
