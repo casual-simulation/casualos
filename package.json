@@ -130,7 +130,7 @@
         "@testing-library/vue": "5.6.1",
         "@testing-library/jest-dom": "5.11.9",
         "browserslist": ">=4.16.5",
-        "vite": "2.9.14",
+        "vite": "3.2.6",
         "sass": "1.56.1",
         "esbuild": "^0.13.8",
         "esbuild-copy-static-files": "0.1.0",
