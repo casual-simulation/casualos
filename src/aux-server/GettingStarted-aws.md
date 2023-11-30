@@ -84,7 +84,7 @@ Use the following environment variables to configure the inst collaboration feat
 
 Use the following environment variables to configure privo features.
 
--   `REQUIRE_PRIVO_LOGIN` - Set to `true` to require that the user logs in with Privo before collaborative features are enabled.
+-   `REQUIRE_PRIVO_LOGIN` - Set to `true` to require that the user logs in with Privo before collaborative features are enabled. Defaults to `false`.
 
 #### mapPortal
 
