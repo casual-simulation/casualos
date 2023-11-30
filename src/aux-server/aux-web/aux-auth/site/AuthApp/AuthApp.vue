@@ -1,6 +1,6 @@
 <template>
-    <div id="app">
-        <md-app>
+    <div id="app" class="app-container">
+        <md-app class="app">
             <md-app-toolbar>
                 <a class="title-link md-title" href="/" style="flex: 1">
                     <svg-icon name="PersonPinCircle" class="title-img"></svg-icon>
@@ -170,6 +170,13 @@
                 <md-button class="md-primary" @click="createRecord()">Create</md-button>
             </md-dialog-actions>
         </md-dialog>
+
+        <footer>
+            <ul class="footer-links">
+                <li><a href="/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/terms">Terms of Service</a></li>
+            </ul>
+        </footer>
     </div>
 </template>
 <script src="./AuthApp.ts"></script>

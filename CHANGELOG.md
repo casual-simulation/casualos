@@ -2,7 +2,7 @@
 
 ## V3.2.7
 
-#### Date: 11/29/2023
+#### Date: 11/30/2023
 
 ### :boom: Breaking Changes
 
@@ -86,6 +86,7 @@
     -   Returns the user's auth bot if they are signed in.
     -   Returns `null` if the user is not signed in.
 -   Added the `REQUIRE_PRIVO_LOGIN` environment variable during build to control whether login with Privo is required.
+-   Added the `DEFAULT_BIOS_OPTION` environment variable during build to control which BIOS option is selected by default.
 
 ### :bug: Bug Fixes
 

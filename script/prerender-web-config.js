@@ -34,12 +34,7 @@ const webConfig = {
     playerMode: process.env.AUX_PLAYER_MODE,
     requirePrivoLogin: process.env.REQUIRE_PRIVO_LOGIN === 'true',
     allowedBiosOptions: process.env.BIOS_OPTIONS?.split(',') || null,
-    // requirePrivoAgeVerification:
-    //     process.env.REQUIRE_PRIVO_AGE_VERIFICATION === 'true',
-    // privoAgeVerificationApiScriptUrl:
-    //     process.env.PRIVO_AGE_VERIFICATION_API_SCRIPT_URL || null,
-    // privoAgeVerificationServiceId:
-    //     process.env.PRIVO_AGE_VERIFICATION_SERVICE_ID || null,
+    defaultBiosOption: process.env.DEFAULT_BIOS_OPTION || null,
 };
 
 // Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.
