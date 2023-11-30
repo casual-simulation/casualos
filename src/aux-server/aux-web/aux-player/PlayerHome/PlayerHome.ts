@@ -207,6 +207,10 @@ export default class PlayerHome extends Vue {
                     }
 
                     if (!hasValidBiosOption) {
+                        if (!this.biosSelection) {
+                            this.biosSelection =
+                                appManager.config.defaultBiosOption;
+                        }
                         this._showBiosOptions();
                     }
                 }

@@ -110,7 +110,7 @@ export interface WebConfig {
     playerMode?: 'player' | 'builder' | null;
 
     /**
-     * Whetehr to require that users login with Privo before they can access collaboration features.
+     * Whether to require that users login with Privo before they can access collaboration features.
      */
     requirePrivoLogin?: boolean;
 
@@ -128,6 +128,12 @@ export interface WebConfig {
      * - "sign out"
      */
     allowedBiosOptions?: BiosOption[];
+
+    /**
+     * The default BIOS option.
+     * If specified, then
+     */
+    defaultBiosOption?: BiosOption;
 
     // /**
     //  * Whether to require that age verification runs before the user can access collaboration features.
