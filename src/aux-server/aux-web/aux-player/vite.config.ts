@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { defineConfig } from 'vite';
-import { createVuePlugin } from 'vite-plugin-vue2';
+import vue from '@vitejs/plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -54,7 +54,7 @@ export default defineConfig(({ command, mode }) => ({
         target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
     },
     plugins: [
-        createVuePlugin(),
+        vue(),
         createSvgIconsPlugin({
             iconDirs: [
                 path.resolve(
@@ -222,7 +222,7 @@ export default defineConfig(({ command, mode }) => ({
         },
     },
     optimizeDeps: {
-        exclude: [...casualOsPackages],
+        exclude: [...casualOsPackages, 'monaco-editor'],
     },
     css: {
         preprocessorOptions: {

@@ -59,10 +59,10 @@ async function build(builds) {
                     ...options,
                 })
                 .then((result) => {
-                    return [true, name, result];
+                    return [true, name, null, result];
                 })
                 .catch((result) => {
-                    return [false, name, result];
+                    return [false, name, nullresult];
                 });
         })
     );
@@ -90,15 +90,14 @@ async function setupWatch(builds) {
     let builders = await Promise.all(
         builds.map(([name, options]) => {
             return esbuild
-                .build({
+                .context({
                     bundle: true,
                     logLevel: 'silent',
-                    incremental: true,
                     loader,
                     ...options,
                 })
-                .then((result) => {
-                    return [true, name, result];
+                .then((context) => {
+                    return [true, name, context, context];
                 })
                 .catch((result) => {
                     return [false, name, result];
@@ -110,11 +109,11 @@ async function setupWatch(builds) {
     const build = _.debounce(async () => {
         console.log('[dev-server] Rebuilding...');
         builders = await Promise.all(
-            builders.map(([success, name, result]) => {
-                return result
+            builders.map(([success, name, result, context]) => {
+                return context
                     .rebuild()
                     .then((result) => {
-                        return [true, name, result];
+                        return [true, name, result, context];
                     })
                     .catch((result) => {
                         return [false, name, result];
@@ -123,6 +122,8 @@ async function setupWatch(builds) {
         );
         logBuilders(builders);
     }, 1000);
+
+    build();
 
     watcher.on('all', async (event, path) => {
         if (event === 'unlink') {

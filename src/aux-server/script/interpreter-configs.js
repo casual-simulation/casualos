@@ -33,7 +33,7 @@ function createConfigs(dev, version) {
         GIT_TAG: JSON.stringify(version ?? GIT_TAG),
     };
     const developmentVariables = {
-        DEVELOPMENT: dev ?? JSON.stringify(true),
+        DEVELOPMENT: JSON.stringify(dev ?? true),
     };
     return [
         [
