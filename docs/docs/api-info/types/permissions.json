@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Permissions",
     "contents": [
         {
-            "id": 3055,
+            "id": 3419,
             "order": 9999,
             "name": "AssignPolicyPermission",
             "reflection": {
-                "id": 3055,
+                "id": 3419,
                 "name": "AssignPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -26,7 +26,7 @@
                 },
                 "children": [
                     {
-                        "id": 3057,
+                        "id": 3421,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -62,7 +62,7 @@
                         }
                     },
                     {
-                        "id": 3058,
+                        "id": 3422,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -98,7 +98,7 @@
                         }
                     },
                     {
-                        "id": 3056,
+                        "id": 3420,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -125,9 +125,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3057,
-                            3058,
-                            3056
+                            3421,
+                            3422,
+                            3420
                         ]
                     }
                 ],
@@ -159,11 +159,11 @@
             "group": null
         },
         {
-            "id": 2960,
+            "id": 3324,
             "order": 9999,
             "name": "AvailablePermissions",
             "reflection": {
-                "id": 2960,
+                "id": 3324,
                 "name": "AvailablePermissions",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -210,127 +210,127 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 2961,
+                            "id": 3325,
                             "name": "CreateDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2965,
+                            "id": 3329,
                             "name": "ReadDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2969,
+                            "id": 3333,
                             "name": "UpdateDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2977,
+                            "id": 3341,
                             "name": "DeleteDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2973,
+                            "id": 3337,
                             "name": "ListDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2981,
+                            "id": 3345,
                             "name": "CreateFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2986,
+                            "id": 3350,
                             "name": "ReadFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3001,
+                            "id": 3365,
                             "name": "ListFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2991,
+                            "id": 3355,
                             "name": "UpdateFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2996,
+                            "id": 3360,
                             "name": "DeleteFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3006,
+                            "id": 3370,
                             "name": "IncrementEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3010,
+                            "id": 3374,
                             "name": "CountEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3014,
+                            "id": 3378,
                             "name": "UpdateEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3018,
+                            "id": 3382,
                             "name": "ListEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3063,
+                            "id": 3427,
                             "name": "ReadPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3047,
+                            "id": 3411,
                             "name": "GrantPermissionToPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3051,
+                            "id": 3415,
                             "name": "RevokePermissionFromPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3067,
+                            "id": 3431,
                             "name": "ListPoliciesPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3055,
+                            "id": 3419,
                             "name": "AssignPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3059,
+                            "id": 3423,
                             "name": "UnassignPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3022,
+                            "id": 3386,
                             "name": "GrantRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3029,
+                            "id": 3393,
                             "name": "RevokeRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3035,
+                            "id": 3399,
                             "name": "ReadRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3043,
+                            "id": 3407,
                             "name": "ListRolesPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 3039,
+                            "id": 3403,
                             "name": "UpdateRolePermission"
                         },
                         {
@@ -378,11 +378,11 @@
             "group": null
         },
         {
-            "id": 3010,
+            "id": 3374,
             "order": 9999,
             "name": "CountEventPermission",
             "reflection": {
-                "id": 3010,
+                "id": 3374,
                 "name": "CountEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -399,7 +399,7 @@
                 },
                 "children": [
                     {
-                        "id": 3012,
+                        "id": 3376,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -435,7 +435,7 @@
                         }
                     },
                     {
-                        "id": 3013,
+                        "id": 3377,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -471,7 +471,7 @@
                         }
                     },
                     {
-                        "id": 3011,
+                        "id": 3375,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -498,9 +498,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3012,
-                            3013,
-                            3011
+                            3376,
+                            3377,
+                            3375
                         ]
                     }
                 ],
@@ -532,11 +532,11 @@
             "group": null
         },
         {
-            "id": 2961,
+            "id": 3325,
             "order": 9999,
             "name": "CreateDataPermission",
             "reflection": {
-                "id": 2961,
+                "id": 3325,
                 "name": "CreateDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -553,7 +553,7 @@
                 },
                 "children": [
                     {
-                        "id": 2963,
+                        "id": 3327,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -589,7 +589,7 @@
                         }
                     },
                     {
-                        "id": 2964,
+                        "id": 3328,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -625,7 +625,7 @@
                         }
                     },
                     {
-                        "id": 2962,
+                        "id": 3326,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -652,9 +652,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2963,
-                            2964,
-                            2962
+                            3327,
+                            3328,
+                            3326
                         ]
                     }
                 ],
@@ -686,11 +686,11 @@
             "group": null
         },
         {
-            "id": 2981,
+            "id": 3345,
             "order": 9999,
             "name": "CreateFilePermission",
             "reflection": {
-                "id": 2981,
+                "id": 3345,
                 "name": "CreateFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -707,7 +707,7 @@
                 },
                 "children": [
                     {
-                        "id": 2984,
+                        "id": 3348,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -747,7 +747,7 @@
                         }
                     },
                     {
-                        "id": 2983,
+                        "id": 3347,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -775,7 +775,7 @@
                         }
                     },
                     {
-                        "id": 2985,
+                        "id": 3349,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -811,7 +811,7 @@
                         }
                     },
                     {
-                        "id": 2982,
+                        "id": 3346,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -838,10 +838,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2984,
-                            2983,
-                            2985,
-                            2982
+                            3348,
+                            3347,
+                            3349,
+                            3346
                         ]
                     }
                 ],
@@ -873,11 +873,11 @@
             "group": null
         },
         {
-            "id": 2977,
+            "id": 3341,
             "order": 9999,
             "name": "DeleteDataPermission",
             "reflection": {
-                "id": 2977,
+                "id": 3341,
                 "name": "DeleteDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -894,7 +894,7 @@
                 },
                 "children": [
                     {
-                        "id": 2979,
+                        "id": 3343,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -930,7 +930,7 @@
                         }
                     },
                     {
-                        "id": 2980,
+                        "id": 3344,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -966,7 +966,7 @@
                         }
                     },
                     {
-                        "id": 2978,
+                        "id": 3342,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -993,9 +993,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2979,
-                            2980,
-                            2978
+                            3343,
+                            3344,
+                            3342
                         ]
                     }
                 ],
@@ -1027,11 +1027,11 @@
             "group": null
         },
         {
-            "id": 2996,
+            "id": 3360,
             "order": 9999,
             "name": "DeleteFilePermission",
             "reflection": {
-                "id": 2996,
+                "id": 3360,
                 "name": "DeleteFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1048,7 +1048,7 @@
                 },
                 "children": [
                     {
-                        "id": 2999,
+                        "id": 3363,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1088,7 +1088,7 @@
                         }
                     },
                     {
-                        "id": 2998,
+                        "id": 3362,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1116,7 +1116,7 @@
                         }
                     },
                     {
-                        "id": 3000,
+                        "id": 3364,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1152,7 +1152,7 @@
                         }
                     },
                     {
-                        "id": 2997,
+                        "id": 3361,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1179,10 +1179,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2999,
-                            2998,
-                            3000,
-                            2997
+                            3363,
+                            3362,
+                            3364,
+                            3361
                         ]
                     }
                 ],
@@ -1214,11 +1214,11 @@
             "group": null
         },
         {
-            "id": 3047,
+            "id": 3411,
             "order": 9999,
             "name": "GrantPermissionToPolicyPermission",
             "reflection": {
-                "id": 3047,
+                "id": 3411,
                 "name": "GrantPermissionToPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1235,7 +1235,7 @@
                 },
                 "children": [
                     {
-                        "id": 3049,
+                        "id": 3413,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1271,7 +1271,7 @@
                         }
                     },
                     {
-                        "id": 3050,
+                        "id": 3414,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1307,7 +1307,7 @@
                         }
                     },
                     {
-                        "id": 3048,
+                        "id": 3412,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1334,9 +1334,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3049,
-                            3050,
-                            3048
+                            3413,
+                            3414,
+                            3412
                         ]
                     }
                 ],
@@ -1368,11 +1368,11 @@
             "group": null
         },
         {
-            "id": 3022,
+            "id": 3386,
             "order": 9999,
             "name": "GrantRolePermission",
             "reflection": {
-                "id": 3022,
+                "id": 3386,
                 "name": "GrantRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1389,7 +1389,7 @@
                 },
                 "children": [
                     {
-                        "id": 3025,
+                        "id": 3389,
                         "name": "instances",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1420,7 +1420,7 @@
                         }
                     },
                     {
-                        "id": 3026,
+                        "id": 3390,
                         "name": "maxDurationMs",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1444,7 +1444,7 @@
                         }
                     },
                     {
-                        "id": 3028,
+                        "id": 3392,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1480,7 +1480,7 @@
                         }
                     },
                     {
-                        "id": 3027,
+                        "id": 3391,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1516,7 +1516,7 @@
                         }
                     },
                     {
-                        "id": 3023,
+                        "id": 3387,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1538,7 +1538,7 @@
                         }
                     },
                     {
-                        "id": 3024,
+                        "id": 3388,
                         "name": "userIds",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1577,12 +1577,12 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3025,
-                            3026,
-                            3028,
-                            3027,
-                            3023,
-                            3024
+                            3389,
+                            3390,
+                            3392,
+                            3391,
+                            3387,
+                            3388
                         ]
                     }
                 ],
@@ -1614,11 +1614,11 @@
             "group": null
         },
         {
-            "id": 3006,
+            "id": 3370,
             "order": 9999,
             "name": "IncrementEventPermission",
             "reflection": {
-                "id": 3006,
+                "id": 3370,
                 "name": "IncrementEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1635,7 +1635,7 @@
                 },
                 "children": [
                     {
-                        "id": 3008,
+                        "id": 3372,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1671,7 +1671,7 @@
                         }
                     },
                     {
-                        "id": 3009,
+                        "id": 3373,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1707,7 +1707,7 @@
                         }
                     },
                     {
-                        "id": 3007,
+                        "id": 3371,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1734,9 +1734,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3008,
-                            3009,
-                            3007
+                            3372,
+                            3373,
+                            3371
                         ]
                     }
                 ],
@@ -1768,11 +1768,11 @@
             "group": null
         },
         {
-            "id": 2973,
+            "id": 3337,
             "order": 9999,
             "name": "ListDataPermission",
             "reflection": {
-                "id": 2973,
+                "id": 3337,
                 "name": "ListDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1789,7 +1789,7 @@
                 },
                 "children": [
                     {
-                        "id": 2975,
+                        "id": 3339,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1825,7 +1825,7 @@
                         }
                     },
                     {
-                        "id": 2976,
+                        "id": 3340,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1861,7 +1861,7 @@
                         }
                     },
                     {
-                        "id": 2974,
+                        "id": 3338,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1888,9 +1888,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2975,
-                            2976,
-                            2974
+                            3339,
+                            3340,
+                            3338
                         ]
                     }
                 ],
@@ -1922,11 +1922,11 @@
             "group": null
         },
         {
-            "id": 3018,
+            "id": 3382,
             "order": 9999,
             "name": "ListEventPermission",
             "reflection": {
-                "id": 3018,
+                "id": 3382,
                 "name": "ListEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1943,7 +1943,7 @@
                 },
                 "children": [
                     {
-                        "id": 3020,
+                        "id": 3384,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1979,7 +1979,7 @@
                         }
                     },
                     {
-                        "id": 3021,
+                        "id": 3385,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2015,7 +2015,7 @@
                         }
                     },
                     {
-                        "id": 3019,
+                        "id": 3383,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2042,9 +2042,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3020,
-                            3021,
-                            3019
+                            3384,
+                            3385,
+                            3383
                         ]
                     }
                 ],
@@ -2076,11 +2076,11 @@
             "group": null
         },
         {
-            "id": 3067,
+            "id": 3431,
             "order": 9999,
             "name": "ListPoliciesPermission",
             "reflection": {
-                "id": 3067,
+                "id": 3431,
                 "name": "ListPoliciesPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2097,7 +2097,7 @@
                 },
                 "children": [
                     {
-                        "id": 3069,
+                        "id": 3433,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2133,7 +2133,7 @@
                         }
                     },
                     {
-                        "id": 3070,
+                        "id": 3434,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2169,7 +2169,7 @@
                         }
                     },
                     {
-                        "id": 3068,
+                        "id": 3432,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2196,9 +2196,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3069,
-                            3070,
-                            3068
+                            3433,
+                            3434,
+                            3432
                         ]
                     }
                 ],
@@ -2230,11 +2230,11 @@
             "group": null
         },
         {
-            "id": 3043,
+            "id": 3407,
             "order": 9999,
             "name": "ListRolesPermission",
             "reflection": {
-                "id": 3043,
+                "id": 3407,
                 "name": "ListRolesPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2251,7 +2251,7 @@
                 },
                 "children": [
                     {
-                        "id": 3046,
+                        "id": 3410,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2287,7 +2287,7 @@
                         }
                     },
                     {
-                        "id": 3045,
+                        "id": 3409,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2323,7 +2323,7 @@
                         }
                     },
                     {
-                        "id": 3044,
+                        "id": 3408,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2350,9 +2350,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3046,
-                            3045,
-                            3044
+                            3410,
+                            3409,
+                            3408
                         ]
                     }
                 ],
@@ -2384,11 +2384,11 @@
             "group": null
         },
         {
-            "id": 2965,
+            "id": 3329,
             "order": 9999,
             "name": "ReadDataPermission",
             "reflection": {
-                "id": 2965,
+                "id": 3329,
                 "name": "ReadDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2405,7 +2405,7 @@
                 },
                 "children": [
                     {
-                        "id": 2967,
+                        "id": 3331,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2441,7 +2441,7 @@
                         }
                     },
                     {
-                        "id": 2968,
+                        "id": 3332,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2477,7 +2477,7 @@
                         }
                     },
                     {
-                        "id": 2966,
+                        "id": 3330,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2504,9 +2504,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2967,
-                            2968,
-                            2966
+                            3331,
+                            3332,
+                            3330
                         ]
                     }
                 ],
@@ -2538,11 +2538,11 @@
             "group": null
         },
         {
-            "id": 2986,
+            "id": 3350,
             "order": 9999,
             "name": "ReadFilePermission",
             "reflection": {
-                "id": 2986,
+                "id": 3350,
                 "name": "ReadFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2559,7 +2559,7 @@
                 },
                 "children": [
                     {
-                        "id": 2989,
+                        "id": 3353,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2599,7 +2599,7 @@
                         }
                     },
                     {
-                        "id": 2988,
+                        "id": 3352,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2627,7 +2627,7 @@
                         }
                     },
                     {
-                        "id": 2990,
+                        "id": 3354,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2663,7 +2663,7 @@
                         }
                     },
                     {
-                        "id": 2987,
+                        "id": 3351,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2690,10 +2690,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2989,
-                            2988,
-                            2990,
-                            2987
+                            3353,
+                            3352,
+                            3354,
+                            3351
                         ]
                     }
                 ],
@@ -2725,11 +2725,11 @@
             "group": null
         },
         {
-            "id": 3063,
+            "id": 3427,
             "order": 9999,
             "name": "ReadPolicyPermission",
             "reflection": {
-                "id": 3063,
+                "id": 3427,
                 "name": "ReadPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2746,7 +2746,7 @@
                 },
                 "children": [
                     {
-                        "id": 3065,
+                        "id": 3429,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2782,7 +2782,7 @@
                         }
                     },
                     {
-                        "id": 3066,
+                        "id": 3430,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2818,7 +2818,7 @@
                         }
                     },
                     {
-                        "id": 3064,
+                        "id": 3428,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2845,9 +2845,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3065,
-                            3066,
-                            3064
+                            3429,
+                            3430,
+                            3428
                         ]
                     }
                 ],
@@ -2879,11 +2879,11 @@
             "group": null
         },
         {
-            "id": 3035,
+            "id": 3399,
             "order": 9999,
             "name": "ReadRolePermission",
             "reflection": {
-                "id": 3035,
+                "id": 3399,
                 "name": "ReadRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2900,7 +2900,7 @@
                 },
                 "children": [
                     {
-                        "id": 3038,
+                        "id": 3402,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2936,7 +2936,7 @@
                         }
                     },
                     {
-                        "id": 3037,
+                        "id": 3401,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2972,7 +2972,7 @@
                         }
                     },
                     {
-                        "id": 3036,
+                        "id": 3400,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2999,9 +2999,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3038,
-                            3037,
-                            3036
+                            3402,
+                            3401,
+                            3400
                         ]
                     }
                 ],
@@ -3033,11 +3033,11 @@
             "group": null
         },
         {
-            "id": 3051,
+            "id": 3415,
             "order": 9999,
             "name": "RevokePermissionFromPolicyPermission",
             "reflection": {
-                "id": 3051,
+                "id": 3415,
                 "name": "RevokePermissionFromPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3054,7 +3054,7 @@
                 },
                 "children": [
                     {
-                        "id": 3053,
+                        "id": 3417,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3090,7 +3090,7 @@
                         }
                     },
                     {
-                        "id": 3054,
+                        "id": 3418,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3126,7 +3126,7 @@
                         }
                     },
                     {
-                        "id": 3052,
+                        "id": 3416,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3153,9 +3153,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3053,
-                            3054,
-                            3052
+                            3417,
+                            3418,
+                            3416
                         ]
                     }
                 ],
@@ -3187,11 +3187,11 @@
             "group": null
         },
         {
-            "id": 3029,
+            "id": 3393,
             "order": 9999,
             "name": "RevokeRolePermission",
             "reflection": {
-                "id": 3029,
+                "id": 3393,
                 "name": "RevokeRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3208,7 +3208,7 @@
                 },
                 "children": [
                     {
-                        "id": 3032,
+                        "id": 3396,
                         "name": "instances",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3239,7 +3239,7 @@
                         }
                     },
                     {
-                        "id": 3034,
+                        "id": 3398,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3275,7 +3275,7 @@
                         }
                     },
                     {
-                        "id": 3033,
+                        "id": 3397,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3311,7 +3311,7 @@
                         }
                     },
                     {
-                        "id": 3030,
+                        "id": 3394,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3333,7 +3333,7 @@
                         }
                     },
                     {
-                        "id": 3031,
+                        "id": 3395,
                         "name": "userIds",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3372,11 +3372,11 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3032,
-                            3034,
-                            3033,
-                            3030,
-                            3031
+                            3396,
+                            3398,
+                            3397,
+                            3394,
+                            3395
                         ]
                     }
                 ],
@@ -3408,11 +3408,11 @@
             "group": null
         },
         {
-            "id": 3059,
+            "id": 3423,
             "order": 9999,
             "name": "UnassignPolicyPermission",
             "reflection": {
-                "id": 3059,
+                "id": 3423,
                 "name": "UnassignPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3429,7 +3429,7 @@
                 },
                 "children": [
                     {
-                        "id": 3061,
+                        "id": 3425,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3465,7 +3465,7 @@
                         }
                     },
                     {
-                        "id": 3062,
+                        "id": 3426,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3501,7 +3501,7 @@
                         }
                     },
                     {
-                        "id": 3060,
+                        "id": 3424,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3528,9 +3528,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3061,
-                            3062,
-                            3060
+                            3425,
+                            3426,
+                            3424
                         ]
                     }
                 ],
@@ -3562,11 +3562,11 @@
             "group": null
         },
         {
-            "id": 2969,
+            "id": 3333,
             "order": 9999,
             "name": "UpdateDataPermission",
             "reflection": {
-                "id": 2969,
+                "id": 3333,
                 "name": "UpdateDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3583,7 +3583,7 @@
                 },
                 "children": [
                     {
-                        "id": 2971,
+                        "id": 3335,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3619,7 +3619,7 @@
                         }
                     },
                     {
-                        "id": 2972,
+                        "id": 3336,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3655,7 +3655,7 @@
                         }
                     },
                     {
-                        "id": 2970,
+                        "id": 3334,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3682,9 +3682,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2971,
-                            2972,
-                            2970
+                            3335,
+                            3336,
+                            3334
                         ]
                     }
                 ],
@@ -3716,11 +3716,11 @@
             "group": null
         },
         {
-            "id": 3014,
+            "id": 3378,
             "order": 9999,
             "name": "UpdateEventPermission",
             "reflection": {
-                "id": 3014,
+                "id": 3378,
                 "name": "UpdateEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3737,7 +3737,7 @@
                 },
                 "children": [
                     {
-                        "id": 3016,
+                        "id": 3380,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3773,7 +3773,7 @@
                         }
                     },
                     {
-                        "id": 3017,
+                        "id": 3381,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3809,7 +3809,7 @@
                         }
                     },
                     {
-                        "id": 3015,
+                        "id": 3379,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3836,9 +3836,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3016,
-                            3017,
-                            3015
+                            3380,
+                            3381,
+                            3379
                         ]
                     }
                 ],
@@ -3870,11 +3870,11 @@
             "group": null
         },
         {
-            "id": 2991,
+            "id": 3355,
             "order": 9999,
             "name": "UpdateFilePermission",
             "reflection": {
-                "id": 2991,
+                "id": 3355,
                 "name": "UpdateFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3891,7 +3891,7 @@
                 },
                 "children": [
                     {
-                        "id": 2994,
+                        "id": 3358,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3931,7 +3931,7 @@
                         }
                     },
                     {
-                        "id": 2993,
+                        "id": 3357,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3959,7 +3959,7 @@
                         }
                     },
                     {
-                        "id": 2995,
+                        "id": 3359,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3995,7 +3995,7 @@
                         }
                     },
                     {
-                        "id": 2992,
+                        "id": 3356,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4022,10 +4022,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2994,
-                            2993,
-                            2995,
-                            2992
+                            3358,
+                            3357,
+                            3359,
+                            3356
                         ]
                     }
                 ],
@@ -4057,11 +4057,11 @@
             "group": null
         },
         {
-            "id": 3039,
+            "id": 3403,
             "order": 9999,
             "name": "UpdateRolePermission",
             "reflection": {
-                "id": 3039,
+                "id": 3403,
                 "name": "UpdateRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -4078,7 +4078,7 @@
                 },
                 "children": [
                     {
-                        "id": 3042,
+                        "id": 3406,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4114,7 +4114,7 @@
                         }
                     },
                     {
-                        "id": 3041,
+                        "id": 3405,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4150,7 +4150,7 @@
                         }
                     },
                     {
-                        "id": 3040,
+                        "id": 3404,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4177,9 +4177,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3042,
-                            3041,
-                            3040
+                            3406,
+                            3405,
+                            3404
                         ]
                     }
                 ],
@@ -4213,59 +4213,85 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2935": "CasualOSError",
+        "id-3299": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3340": "Quaternion",
+        "id-3704": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3372": "Rotation",
+        "id-3736": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3206": "Vector2",
+        "id-3570": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3263": "Vector3",
+        "id-3627": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2954": "AIChatMessage",
+        "id-3318": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2731": "AIChatOptions",
+        "id-3095": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
         "id-2250": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-2745": "AIGenerateImageOptions",
+        "id-3109": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-2741": "AIGenerateSkyboxOptions",
+        "id-3105": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
         "id-2243": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
         "id-2247": "AIGenerateSkyboxResult",
         "AIGeneratedImage": "types/ai",
         "id-2253": "AIGeneratedImage",
+        "ARSupportedAction": "types/os",
+        "id-2840": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3139": "AddCountFailure",
+        "id-3503": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3134": "AddCountSuccess",
+        "id-3498": "AddCountSuccess",
+        "AddDropSnapAction": "types/os",
+        "id-2469": "AddDropSnapAction",
+        "AddDropSnapPointsAction": "types/os",
+        "id-2473": "AddDropSnapPointsAction",
+        "AnalyticsRecordEventAction": "types/os",
+        "id-3045": "AnalyticsRecordEventAction",
         "AnimateTagOptions": "types/animation",
         "id-1848": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
         "id-2223": "AttachDebuggerOptions",
+        "AuthData": "types/os",
+        "id-2984": "AuthData",
         "CasualOSDevice": "types/os",
-        "id-2922": "CasualOSDevice",
+        "id-3286": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2914": "CasualOSVersion",
+        "id-3278": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3418": "AxisAndAngle",
+        "id-3782": "AxisAndAngle",
+        "BeginRecordingAction": "types/os",
+        "id-2927": "BeginRecordingAction",
         "BotTagMasks": "types/core",
-        "id-2891": "BotTagMasks",
+        "id-3255": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2806": "BotTags",
+        "id-3170": "BotTags",
         "BotState": "types/core",
-        "id-2904": "BotState",
+        "id-3268": "BotState",
+        "BufferFormAddressGLTFAction": "types/os",
+        "id-3052": "BufferFormAddressGLTFAction",
+        "BufferSoundAction": "types/os",
+        "id-2651": "BufferSoundAction",
+        "CalculateRayFromCameraAction": "types/os",
+        "id-3025": "CalculateRayFromCameraAction",
+        "CancelSoundAction": "types/os",
+        "id-2657": "CancelSoundAction",
         "CompiledBotListeners": "types/core",
-        "id-2885": "CompiledBotListeners",
+        "id-3249": "CompiledBotListeners",
+        "ConfigureWakeLockAction": "types/os",
+        "id-3032": "ConfigureWakeLockAction",
+        "ConvertGeolocationToWhat3WordsAction": "types/os",
+        "id-2415": "ConvertGeolocationToWhat3WordsAction",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2372": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2404": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3076": "CreatePublicRecordKeyFailure",
+        "id-3440": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3072": "CreatePublicRecordKeySuccess",
+        "id-3436": "CreatePublicRecordKeySuccess",
+        "CustomAppContainerAvailableAction": "types/os",
+        "id-2884": "CustomAppContainerAvailableAction",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2176": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -4278,40 +4304,60 @@
         "id-2190": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
         "id-2217": "DebuggerVariable",
+        "DefineGlobalBotAction": "types/os",
+        "id-2408": "DefineGlobalBotAction",
+        "DownloadAction": "types/os",
+        "id-2663": "DownloadAction",
         "Easing": "types/animation",
-        "id-2354": "Easing",
+        "id-2386": "Easing",
+        "EnableARAction": "types/os",
+        "id-2836": "EnableARAction",
         "EnableCollaborationAction": "types/os",
-        "id-2682": "EnableCollaborationAction",
+        "id-2795": "EnableCollaborationAction",
+        "EnableCustomDraggingAction": "types/os",
+        "id-2499": "EnableCustomDraggingAction",
+        "EnablePOVAction": "types/os",
+        "id-2854": "EnablePOVAction",
+        "EnableVRAction": "types/os",
+        "id-2850": "EnableVRAction",
         "EnableXROptions": "types/os",
-        "id-2626": "EnableXROptions",
+        "id-2706": "EnableXROptions",
+        "EndRecordingAction": "types/os",
+        "id-2935": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3110": "EraseDataFailure",
+        "id-3474": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3106": "EraseDataSuccess",
+        "id-3470": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3129": "EraseFileFailure",
+        "id-3493": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3125": "EraseFileSuccess",
+        "id-3489": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3421": "EulerAnglesRotation",
+        "id-3785": "EulerAnglesRotation",
+        "ExitFullscreenAction": "types/os",
+        "id-2869": "ExitFullscreenAction",
         "FocusOnOptions": "types/os",
-        "id-2406": "FocusOnOptions",
+        "id-2453": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2418": "FocusOnRotation",
+        "id-2465": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2644": "FormAnimationData",
+        "id-2751": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3415": "FromToRotation",
+        "id-3779": "FromToRotation",
         "GenericError": "types/error",
-        "id-2932": "GenericError",
+        "id-3296": "GenericError",
+        "GetAverageFrameRateAction": "types/os",
+        "id-3005": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3150": "GetCountFailure",
+        "id-3514": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3144": "GetCountSuccess",
+        "id-3508": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3101": "GetDataFailure",
+        "id-3465": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3092": "GetDataSuccess",
+        "id-3456": "GetDataSuccess",
+        "GetGeolocationAction": "types/os",
+        "id-2968": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os",
         "id-1938": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
@@ -4324,18 +4370,28 @@
         "id-1957": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
         "id-1952": "GetRoomTrackOptionsSuccess",
+        "GetVoicesAction": "types/os",
+        "id-2963": "GetVoicesAction",
+        "GetWakeLockConfigurationAction": "types/os",
+        "id-3038": "GetWakeLockConfigurationAction",
+        "GoToTagAction": "types/os",
+        "id-2973": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3178": "GrantMarkerPermissionFailure",
+        "id-3542": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3176": "GrantMarkerPermissionSuccess",
+        "id-3540": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3164": "GrantRoleFailure",
+        "id-3528": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3162": "GrantRoleSuccess",
+        "id-3526": "GrantRoleSuccess",
+        "HtmlAppEventAction": "types/os",
+        "id-2315": "HtmlAppEventAction",
+        "HtmlAppMethodCallAction": "types/os",
+        "id-2320": "HtmlAppMethodCallAction",
         "ImageClassifierOptions": "types/os",
-        "id-2424": "ImageClassifierOptions",
+        "id-2504": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2928": "InstUpdate",
+        "id-3292": "InstUpdate",
         "JoinRoomFailure": "types/os",
         "id-1919": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
@@ -4345,29 +4401,53 @@
         "LeaveRoomSuccess": "types/os",
         "id-1925": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3120": "ListDataFailure",
+        "id-3484": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3115": "ListDataSuccess",
+        "id-3479": "ListDataSuccess",
+        "ListFormAnimationsAction": "types/os",
+        "id-2755": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3193": "ListStudiosFailure",
+        "id-3557": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3190": "ListStudiosSuccess",
+        "id-3554": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3197": "ListedStudio",
+        "id-3561": "ListedStudio",
+        "LoadBotsAction": "types/os",
+        "id-2800": "LoadBotsAction",
+        "LoadSpaceAction": "types/os",
+        "id-2696": "LoadSpaceAction",
+        "LocalFormAnimationAction": "types/os",
+        "id-2807": "LocalFormAnimationAction",
+        "LocalPositionTweenAction": "types/os",
+        "id-2821": "LocalPositionTweenAction",
+        "LocalTweenAction": "types/os",
+        "id-2811": "LocalTweenAction",
         "LookRotation": "types/math/rotations",
-        "id-3438": "LookRotation",
+        "id-3802": "LookRotation",
+        "MediaPermissionAction": "types/os",
+        "id-2998": "MediaPermissionAction",
         "MediaPermissionOptions": "types/os",
-        "id-2623": "MediaPermissionOptions",
+        "id-2703": "MediaPermissionOptions",
+        "MeetCommandAction": "types/os",
+        "id-2940": "MeetCommandAction",
+        "MeetFunctionAction": "types/os",
+        "id-2947": "MeetFunctionAction",
         "Debugger": "types/debuggers/debugger",
         "id-1988": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
         "id-2195": "NormalDebuggerOptions",
+        "OpenCircleWipeAction": "types/os",
+        "id-2917": "OpenCircleWipeAction",
+        "OpenCircleWipeOptions": "types/os",
+        "id-2924": "OpenCircleWipeOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2666": "PhotoCameraOptions",
+        "id-2779": "PhotoCameraOptions",
+        "OpenURLAction": "types/os",
+        "id-2640": "OpenURLAction",
         "ParsedBotLink": "types/core",
-        "id-2910": "ParsedBotLink",
+        "id-3274": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2907": "PartialBotState",
+        "id-3271": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
         "id-2044": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
@@ -4377,135 +4457,193 @@
         "PauseTriggerOptions": "types/debuggers/common",
         "id-2171": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2678": "Photo",
+        "id-2791": "Photo",
+        "PlaySoundAction": "types/os",
+        "id-2644": "PlaySoundAction",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
         "id-2158": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
         "id-2232": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3431": "QuaternionRotation",
+        "id-3795": "QuaternionRotation",
+        "RaycastFromCameraAction": "types/os",
+        "id-3010": "RaycastFromCameraAction",
+        "RaycastInPortalAction": "types/os",
+        "id-3017": "RaycastInPortalAction",
         "RaycastRay": "types/os",
         "id-1912": "RaycastRay",
         "RaycastResult": "types/os",
         "id-1909": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2694": "RecordActionOptions",
+        "id-3058": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3086": "RecordDataFailure",
+        "id-3450": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3082": "RecordDataSuccess",
+        "id-3446": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-1879": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
         "id-1875": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2653": "RecordedFile",
+        "id-2766": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2651": "Recording",
+        "id-2764": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2658": "RecordingOptions",
+        "id-2771": "RecordingOptions",
+        "RegisterBuiltinPortalAction": "types/os",
+        "id-2879": "RegisterBuiltinPortalAction",
+        "RegisterCustomAppAction": "types/os",
+        "id-2887": "RegisterCustomAppAction",
+        "RegisterHtmlAppAction": "types/os",
+        "id-2900": "RegisterHtmlAppAction",
         "RegisterPrefixOptions": "types/core",
-        "id-2648": "RegisterPrefixOptions",
+        "id-2761": "RegisterPrefixOptions",
+        "RejectAction": "types/os",
+        "id-2669": "RejectAction",
+        "RequestAuthDataAction": "types/os",
+        "id-2978": "RequestAuthDataAction",
+        "RequestFullscreenAction": "types/os",
+        "id-2867": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3185": "RevokeMarkerPermissionFailure",
+        "id-3549": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3183": "RevokeMarkerPermissionSuccess",
+        "id-3547": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3171": "RevokeRoleFailure",
+        "id-3535": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3169": "RevokeRoleSuccess",
+        "id-3533": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2697": "RoomJoinOptions",
+        "id-3061": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2706": "RoomOptions",
+        "id-3070": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2722": "RoomRemoteOptions",
+        "id-3086": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2710": "RoomTrackOptions",
+        "id-3074": "RoomTrackOptions",
+        "RunScriptAction": "types/os",
+        "id-2683": "RunScriptAction",
         "RuntimeBot": "types/core",
-        "id-2758": "RuntimeBot",
+        "id-3122": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2897": "RuntimeBotLinks",
+        "id-3261": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2894": "RuntimeBotVars",
+        "id-3258": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3429": "SequenceRotation",
+        "id-3793": "SequenceRotation",
+        "SerializableMutationRecord": "types/os",
+        "id-2329": "SerializableMutationRecord",
+        "SetAppOutputAction": "types/os",
+        "id-2912": "SetAppOutputAction",
+        "SetClipboardAction": "types/os",
+        "id-2672": "SetClipboardAction",
         "SetRoomOptionsSuccess": "types/os",
         "id-1943": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2728": "SetRoomTrackOptions",
+        "id-3092": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
         "id-1969": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
         "id-1964": "SetRoomTrackOptionsSuccess",
+        "ShareAction": "types/os",
+        "id-2871": "ShareAction",
         "ShareOptions": "types/os",
-        "id-2402": "ShareOptions",
+        "id-2449": "ShareOptions",
+        "ShowChatBarAction": "types/os",
+        "id-2675": "ShowChatBarAction",
         "ShowChatOptions": "types/os",
-        "id-2396": "ShowChatOptions",
+        "id-2443": "ShowChatOptions",
         "ShowConfirmAction": "types/os",
-        "id-2445": "ShowConfirmAction",
+        "id-2525": "ShowConfirmAction",
         "ShowConfirmOptions": "types/os",
-        "id-2440": "ShowConfirmOptions",
+        "id-2520": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2429": "ShowInputOptions",
+        "id-2509": "ShowInputOptions",
+        "ShowJoinCodeAction": "types/os",
+        "id-2863": "ShowJoinCodeAction",
+        "ShowUploadAuxFileAction": "types/os",
+        "id-2689": "ShowUploadAuxFileAction",
+        "ShowUploadFilesAction": "types/os",
+        "id-2691": "ShowUploadFilesAction",
         "SnapAxis": "types/os",
-        "id-2376": "SnapAxis",
+        "id-2423": "SnapAxis",
+        "SnapGrid": "types/os",
+        "id-2478": "SnapGrid",
         "SnapGridTarget": "types/os",
         "id-1884": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2388": "SnapPoint",
+        "id-2435": "SnapPoint",
+        "SpeakTextAction": "types/os",
+        "id-2954": "SpeakTextAction",
         "SpeakTextOptions": "types/experimental",
         "id-2228": "SpeakTextOptions",
+        "StartFormAnimationAction": "types/os",
+        "id-2732": "StartFormAnimationAction",
         "StartFormAnimationOptions": "types/os",
-        "id-2628": "StartFormAnimationOptions",
+        "id-2708": "StartFormAnimationOptions",
+        "StopFormAnimationAction": "types/os",
+        "id-2721": "StopFormAnimationAction",
         "StopFormAnimationOptions": "types/os",
-        "id-2641": "StopFormAnimationOptions",
+        "id-2729": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2358": "SuccessfulGeolocation",
+        "id-2390": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2662": "SyntheticVoice",
+        "id-2775": "SyntheticVoice",
         "TweenOptions": "types/experimental",
         "id-2225": "TweenOptions",
+        "UnregisterCustomAppAction": "types/os",
+        "id-2894": "UnregisterCustomAppAction",
+        "UnregisterHtmlAppAction": "types/os",
+        "id-2907": "UnregisterHtmlAppAction",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2368": "UnsuccessfulGeolocation",
+        "id-2400": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3157": "UpdateEventRecordFailure",
+        "id-3521": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3155": "UpdateEventRecordSuccess",
+        "id-3519": "UpdateEventRecordSuccess",
+        "UpdateHtmlAppAction": "types/os",
+        "id-2309": "UpdateHtmlAppAction",
         "UploadedFile": "types/os",
         "id-1905": "UploadedFile",
+        "VRSupportedAction": "types/os",
+        "id-2845": "VRSupportedAction",
+        "WakeLockConfiguration": "types/os",
+        "id-3043": "WakeLockConfiguration",
         "WebhookOptions": "types/web",
         "id-1829": "WebhookOptions",
         "WebhookResult": "types/web",
         "id-1841": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3133": "AddCountResult",
+        "id-3497": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2960": "AvailablePermissions",
+        "id-3324": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2423": "BarcodeFormat",
+        "id-2503": "BarcodeFormat",
         "BotFilter": "types/core",
         "id-1863": "BotFilter",
         "BotSpace": "types/core",
-        "id-2881": "BotSpace",
+        "id-3245": "BotSpace",
         "CameraType": "types/os",
-        "id-2422": "CameraType",
+        "id-2502": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3071": "CreatePublicRecordKeyResult",
+        "id-3435": "CreatePublicRecordKeyResult",
+        "CustomAppOutputType": "types/os",
+        "id-2882": "CustomAppOutputType",
+        "CustomPortalOutputMode": "types/os",
+        "id-2883": "CustomPortalOutputMode",
         "EaseMode": "types/animation",
-        "id-2353": "EaseMode",
+        "id-2385": "EaseMode",
         "EaseType": "types/animation",
-        "id-2352": "EaseType",
+        "id-2384": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3105": "EraseDataResult",
+        "id-3469": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3124": "EraseFileResult",
+        "id-3488": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2357": "Geolocation",
+        "id-2389": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3143": "GetCountResult",
+        "id-3507": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3091": "GetDataResult",
+        "id-3455": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
         "id-1933": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
@@ -4513,45 +4651,45 @@
         "GetRoomTrackOptionsResult": "types/os",
         "id-1951": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3175": "GrantMarkerPermissionResult",
+        "id-3539": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3161": "GrantRoleResult",
+        "id-3525": "GrantRoleResult",
         "JoinRoomResult": "types/os",
         "id-1915": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
         "id-1924": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3114": "ListDataResult",
+        "id-3478": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3189": "ListStudiosResult",
+        "id-3553": "ListStudiosResult",
         "Mod": "types/core",
         "id-1858": "Mod",
         "PortalType": "types/core",
-        "id-2913": "PortalType",
+        "id-3277": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2162": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3081": "RecordDataResult",
+        "id-3445": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-1874": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3182": "RevokeMarkerPermissionResult",
+        "id-3546": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3168": "RevokeRoleResult",
+        "id-3532": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
         "id-1942": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
         "id-1963": "SetRoomTrackOptionsResult",
         "ShowInputSuptype": "types/os",
-        "id-2439": "ShowInputSuptype",
+        "id-2519": "ShowInputSuptype",
         "ShowInputType": "types/os",
-        "id-2438": "ShowInputType",
+        "id-2518": "ShowInputType",
         "SnapTarget": "types/os",
-        "id-2395": "SnapTarget",
+        "id-2442": "SnapTarget",
         "TagFilter": "types/core",
         "id-1859": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3154": "UpdateEventRecordResult",
+        "id-3518": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",

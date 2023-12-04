@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Vectors",
     "contents": [
         {
-            "id": 3206,
+            "id": 3570,
             "order": 0,
             "name": "Vector2",
             "reflection": {
-                "id": 3206,
+                "id": 3570,
                 "name": "Vector2",
                 "kind": 128,
                 "kindString": "Class",
@@ -51,7 +51,7 @@
                 },
                 "children": [
                     {
-                        "id": 3229,
+                        "id": 3593,
                         "name": "constructor",
                         "kind": 512,
                         "kindString": "Constructor",
@@ -65,7 +65,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3230,
+                                "id": 3594,
                                 "name": "new Vector2",
                                 "kind": 16384,
                                 "kindString": "Constructor signature",
@@ -87,7 +87,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3231,
+                                        "id": 3595,
                                         "name": "x",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -103,7 +103,7 @@
                                         "defaultValue": "0"
                                     },
                                     {
-                                        "id": 3232,
+                                        "id": 3596,
                                         "name": "y",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -121,14 +121,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3233,
+                        "id": 3597,
                         "name": "x",
                         "kind": 1024,
                         "kindString": "Property",
@@ -150,7 +150,7 @@
                         }
                     },
                     {
-                        "id": 3234,
+                        "id": 3598,
                         "name": "y",
                         "kind": 1024,
                         "kindString": "Property",
@@ -172,7 +172,7 @@
                         }
                     },
                     {
-                        "id": 3235,
+                        "id": 3599,
                         "name": "add",
                         "kind": 2048,
                         "kindString": "Method",
@@ -186,7 +186,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3236,
+                                "id": 3600,
                                 "name": "add",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -203,7 +203,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3237,
+                                        "id": 3601,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -214,21 +214,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3247,
+                        "id": 3611,
                         "name": "dot",
                         "kind": 2048,
                         "kindString": "Method",
@@ -242,7 +242,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3248,
+                                "id": 3612,
                                 "name": "dot",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -259,7 +259,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3249,
+                                        "id": 3613,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -270,7 +270,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     }
@@ -283,7 +283,7 @@
                         ]
                     },
                     {
-                        "id": 3260,
+                        "id": 3624,
                         "name": "equals",
                         "kind": 2048,
                         "kindString": "Method",
@@ -297,7 +297,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3261,
+                                "id": 3625,
                                 "name": "equals",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -314,7 +314,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3262,
+                                        "id": 3626,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -325,7 +325,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     }
@@ -338,7 +338,7 @@
                         ]
                     },
                     {
-                        "id": 3250,
+                        "id": 3614,
                         "name": "length",
                         "kind": 2048,
                         "kindString": "Method",
@@ -352,7 +352,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3251,
+                                "id": 3615,
                                 "name": "length",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -375,7 +375,7 @@
                         ]
                     },
                     {
-                        "id": 3244,
+                        "id": 3608,
                         "name": "multiply",
                         "kind": 2048,
                         "kindString": "Method",
@@ -389,7 +389,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3245,
+                                "id": 3609,
                                 "name": "multiply",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -406,7 +406,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3246,
+                                        "id": 3610,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -417,21 +417,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3241,
+                        "id": 3605,
                         "name": "multiplyScalar",
                         "kind": 2048,
                         "kindString": "Method",
@@ -445,7 +445,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3242,
+                                "id": 3606,
                                 "name": "multiplyScalar",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -462,7 +462,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3243,
+                                        "id": 3607,
                                         "name": "scale",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -479,14 +479,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3256,
+                        "id": 3620,
                         "name": "negate",
                         "kind": 2048,
                         "kindString": "Method",
@@ -500,7 +500,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3257,
+                                "id": 3621,
                                 "name": "negate",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -517,14 +517,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3254,
+                        "id": 3618,
                         "name": "normalize",
                         "kind": 2048,
                         "kindString": "Method",
@@ -538,7 +538,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3255,
+                                "id": 3619,
                                 "name": "normalize",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -556,14 +556,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3252,
+                        "id": 3616,
                         "name": "squareLength",
                         "kind": 2048,
                         "kindString": "Method",
@@ -577,7 +577,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3253,
+                                "id": 3617,
                                 "name": "squareLength",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -600,7 +600,7 @@
                         ]
                     },
                     {
-                        "id": 3238,
+                        "id": 3602,
                         "name": "subtract",
                         "kind": 2048,
                         "kindString": "Method",
@@ -614,7 +614,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3239,
+                                "id": 3603,
                                 "name": "subtract",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -636,7 +636,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3240,
+                                        "id": 3604,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -647,21 +647,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3258,
+                        "id": 3622,
                         "name": "toString",
                         "kind": 2048,
                         "kindString": "Method",
@@ -675,7 +675,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3259,
+                                "id": 3623,
                                 "name": "toString",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -698,7 +698,7 @@
                         ]
                     },
                     {
-                        "id": 3211,
+                        "id": 3575,
                         "name": "angleBetween",
                         "kind": 2048,
                         "kindString": "Method",
@@ -714,7 +714,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3212,
+                                "id": 3576,
                                 "name": "angleBetween",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -731,7 +731,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3213,
+                                        "id": 3577,
                                         "name": "first",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -742,12 +742,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     },
                                     {
-                                        "id": 3214,
+                                        "id": 3578,
                                         "name": "second",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -758,7 +758,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     }
@@ -771,7 +771,7 @@
                         ]
                     },
                     {
-                        "id": 3207,
+                        "id": 3571,
                         "name": "createNormalized",
                         "kind": 2048,
                         "kindString": "Method",
@@ -787,7 +787,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3208,
+                                "id": 3572,
                                 "name": "createNormalized",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -804,7 +804,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3209,
+                                        "id": 3573,
                                         "name": "x",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -819,7 +819,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3210,
+                                        "id": 3574,
                                         "name": "y",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -836,14 +836,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3215,
+                        "id": 3579,
                         "name": "distanceBetween",
                         "kind": 2048,
                         "kindString": "Method",
@@ -859,7 +859,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3216,
+                                "id": 3580,
                                 "name": "distanceBetween",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -876,7 +876,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3217,
+                                        "id": 3581,
                                         "name": "first",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -887,12 +887,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     },
                                     {
-                                        "id": 3218,
+                                        "id": 3582,
                                         "name": "second",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -903,7 +903,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     }
@@ -916,7 +916,7 @@
                         ]
                     },
                     {
-                        "id": 3224,
+                        "id": 3588,
                         "name": "interpolateDirection",
                         "kind": 2048,
                         "kindString": "Method",
@@ -932,7 +932,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3225,
+                                "id": 3589,
                                 "name": "interpolateDirection",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -950,7 +950,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3226,
+                                        "id": 3590,
                                         "name": "start",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -961,12 +961,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     },
                                     {
-                                        "id": 3227,
+                                        "id": 3591,
                                         "name": "finish",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -977,12 +977,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     },
                                     {
-                                        "id": 3228,
+                                        "id": 3592,
                                         "name": "amount",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -999,14 +999,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3219,
+                        "id": 3583,
                         "name": "interpolatePosition",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1022,7 +1022,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3220,
+                                "id": 3584,
                                 "name": "interpolatePosition",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1044,7 +1044,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3221,
+                                        "id": 3585,
                                         "name": "start",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1055,12 +1055,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     },
                                     {
-                                        "id": 3222,
+                                        "id": 3586,
                                         "name": "finish",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1071,12 +1071,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     },
                                     {
-                                        "id": 3223,
+                                        "id": 3587,
                                         "name": "amount",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1093,7 +1093,7 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
@@ -1105,37 +1105,37 @@
                         "title": "Constructors",
                         "kind": 512,
                         "children": [
-                            3229
+                            3593
                         ]
                     },
                     {
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3233,
-                            3234
+                            3597,
+                            3598
                         ]
                     },
                     {
                         "title": "Methods",
                         "kind": 2048,
                         "children": [
-                            3235,
-                            3247,
-                            3260,
-                            3250,
-                            3244,
-                            3241,
-                            3256,
-                            3254,
-                            3252,
-                            3238,
-                            3258,
-                            3211,
-                            3207,
-                            3215,
-                            3224,
-                            3219
+                            3599,
+                            3611,
+                            3624,
+                            3614,
+                            3608,
+                            3605,
+                            3620,
+                            3618,
+                            3616,
+                            3602,
+                            3622,
+                            3575,
+                            3571,
+                            3579,
+                            3588,
+                            3583
                         ]
                     }
                 ],
@@ -1186,11 +1186,11 @@
             "group": null
         },
         {
-            "id": 3263,
+            "id": 3627,
             "order": 1,
             "name": "Vector3",
             "reflection": {
-                "id": 3263,
+                "id": 3627,
                 "name": "Vector3",
                 "kind": 128,
                 "kindString": "Class",
@@ -1232,7 +1232,7 @@
                 },
                 "children": [
                     {
-                        "id": 3287,
+                        "id": 3651,
                         "name": "constructor",
                         "kind": 512,
                         "kindString": "Constructor",
@@ -1246,7 +1246,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3288,
+                                "id": 3652,
                                 "name": "new Vector3",
                                 "kind": 16384,
                                 "kindString": "Constructor signature",
@@ -1268,7 +1268,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3289,
+                                        "id": 3653,
                                         "name": "x",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1284,7 +1284,7 @@
                                         "defaultValue": "0"
                                     },
                                     {
-                                        "id": 3290,
+                                        "id": 3654,
                                         "name": "y",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1300,7 +1300,7 @@
                                         "defaultValue": "0"
                                     },
                                     {
-                                        "id": 3291,
+                                        "id": 3655,
                                         "name": "z",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1318,14 +1318,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3292,
+                        "id": 3656,
                         "name": "x",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1347,7 +1347,7 @@
                         }
                     },
                     {
-                        "id": 3293,
+                        "id": 3657,
                         "name": "y",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1369,7 +1369,7 @@
                         }
                     },
                     {
-                        "id": 3294,
+                        "id": 3658,
                         "name": "z",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1391,7 +1391,7 @@
                         }
                     },
                     {
-                        "id": 3295,
+                        "id": 3659,
                         "name": "xy",
                         "kind": 262144,
                         "kindString": "Accessor",
@@ -1405,7 +1405,7 @@
                         ],
                         "getSignature": [
                             {
-                                "id": 3296,
+                                "id": 3660,
                                 "name": "xy",
                                 "kind": 524288,
                                 "kindString": "Get signature",
@@ -1416,14 +1416,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3297,
+                        "id": 3661,
                         "name": "xz",
                         "kind": 262144,
                         "kindString": "Accessor",
@@ -1437,7 +1437,7 @@
                         ],
                         "getSignature": [
                             {
-                                "id": 3298,
+                                "id": 3662,
                                 "name": "xz",
                                 "kind": 524288,
                                 "kindString": "Get signature",
@@ -1448,14 +1448,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3299,
+                        "id": 3663,
                         "name": "yz",
                         "kind": 262144,
                         "kindString": "Accessor",
@@ -1469,7 +1469,7 @@
                         ],
                         "getSignature": [
                             {
-                                "id": 3300,
+                                "id": 3664,
                                 "name": "yz",
                                 "kind": 524288,
                                 "kindString": "Get signature",
@@ -1480,14 +1480,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3206,
+                                    "id": 3570,
                                     "name": "Vector2"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3301,
+                        "id": 3665,
                         "name": "add",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1501,7 +1501,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3302,
+                                "id": 3666,
                                 "name": "add",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1518,7 +1518,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3303,
+                                        "id": 3667,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1529,21 +1529,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3316,
+                        "id": 3680,
                         "name": "cross",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1557,7 +1557,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3317,
+                                "id": 3681,
                                 "name": "cross",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1574,7 +1574,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3318,
+                                        "id": 3682,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1585,21 +1585,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3313,
+                        "id": 3677,
                         "name": "dot",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1613,7 +1613,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3314,
+                                "id": 3678,
                                 "name": "dot",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1630,7 +1630,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3315,
+                                        "id": 3679,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1641,7 +1641,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
@@ -1654,7 +1654,7 @@
                         ]
                     },
                     {
-                        "id": 3329,
+                        "id": 3693,
                         "name": "equals",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1668,7 +1668,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3330,
+                                "id": 3694,
                                 "name": "equals",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1685,7 +1685,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3331,
+                                        "id": 3695,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1696,7 +1696,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
@@ -1709,7 +1709,7 @@
                         ]
                     },
                     {
-                        "id": 3319,
+                        "id": 3683,
                         "name": "length",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1723,7 +1723,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3320,
+                                "id": 3684,
                                 "name": "length",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1746,7 +1746,7 @@
                         ]
                     },
                     {
-                        "id": 3310,
+                        "id": 3674,
                         "name": "multiply",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1760,7 +1760,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3311,
+                                "id": 3675,
                                 "name": "multiply",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1777,7 +1777,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3312,
+                                        "id": 3676,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1788,21 +1788,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3307,
+                        "id": 3671,
                         "name": "multiplyScalar",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1816,7 +1816,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3308,
+                                "id": 3672,
                                 "name": "multiplyScalar",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1833,7 +1833,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3309,
+                                        "id": 3673,
                                         "name": "scale",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1850,14 +1850,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3325,
+                        "id": 3689,
                         "name": "negate",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1871,7 +1871,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3326,
+                                "id": 3690,
                                 "name": "negate",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1888,14 +1888,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3323,
+                        "id": 3687,
                         "name": "normalize",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1909,7 +1909,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3324,
+                                "id": 3688,
                                 "name": "normalize",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1927,14 +1927,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3321,
+                        "id": 3685,
                         "name": "squareLength",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1948,7 +1948,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3322,
+                                "id": 3686,
                                 "name": "squareLength",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1971,7 +1971,7 @@
                         ]
                     },
                     {
-                        "id": 3304,
+                        "id": 3668,
                         "name": "subtract",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1985,7 +1985,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3305,
+                                "id": 3669,
                                 "name": "subtract",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -2007,7 +2007,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3306,
+                                        "id": 3670,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2018,21 +2018,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3327,
+                        "id": 3691,
                         "name": "toString",
                         "kind": 2048,
                         "kindString": "Method",
@@ -2046,7 +2046,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3328,
+                                "id": 3692,
                                 "name": "toString",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -2069,7 +2069,7 @@
                         ]
                     },
                     {
-                        "id": 3269,
+                        "id": 3633,
                         "name": "angleBetween",
                         "kind": 2048,
                         "kindString": "Method",
@@ -2085,7 +2085,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3270,
+                                "id": 3634,
                                 "name": "angleBetween",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -2102,7 +2102,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3271,
+                                        "id": 3635,
                                         "name": "first",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2113,12 +2113,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     },
                                     {
-                                        "id": 3272,
+                                        "id": 3636,
                                         "name": "second",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2129,7 +2129,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
@@ -2142,7 +2142,7 @@
                         ]
                     },
                     {
-                        "id": 3264,
+                        "id": 3628,
                         "name": "createNormalized",
                         "kind": 2048,
                         "kindString": "Method",
@@ -2158,7 +2158,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3265,
+                                "id": 3629,
                                 "name": "createNormalized",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -2175,7 +2175,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3266,
+                                        "id": 3630,
                                         "name": "x",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2190,7 +2190,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3267,
+                                        "id": 3631,
                                         "name": "y",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2205,7 +2205,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3268,
+                                        "id": 3632,
                                         "name": "z",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2222,14 +2222,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3273,
+                        "id": 3637,
                         "name": "distanceBetween",
                         "kind": 2048,
                         "kindString": "Method",
@@ -2245,7 +2245,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3274,
+                                "id": 3638,
                                 "name": "distanceBetween",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -2262,7 +2262,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3275,
+                                        "id": 3639,
                                         "name": "first",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2273,12 +2273,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     },
                                     {
-                                        "id": 3276,
+                                        "id": 3640,
                                         "name": "second",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2289,7 +2289,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
@@ -2302,7 +2302,7 @@
                         ]
                     },
                     {
-                        "id": 3282,
+                        "id": 3646,
                         "name": "interpolateDirection",
                         "kind": 2048,
                         "kindString": "Method",
@@ -2318,7 +2318,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3283,
+                                "id": 3647,
                                 "name": "interpolateDirection",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -2336,7 +2336,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3284,
+                                        "id": 3648,
                                         "name": "start",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2347,12 +2347,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     },
                                     {
-                                        "id": 3285,
+                                        "id": 3649,
                                         "name": "finish",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2363,12 +2363,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     },
                                     {
-                                        "id": 3286,
+                                        "id": 3650,
                                         "name": "amount",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2385,14 +2385,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3277,
+                        "id": 3641,
                         "name": "interpolatePosition",
                         "kind": 2048,
                         "kindString": "Method",
@@ -2408,7 +2408,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3278,
+                                "id": 3642,
                                 "name": "interpolatePosition",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -2430,7 +2430,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3279,
+                                        "id": 3643,
                                         "name": "start",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2441,12 +2441,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     },
                                     {
-                                        "id": 3280,
+                                        "id": 3644,
                                         "name": "finish",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2457,12 +2457,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     },
                                     {
-                                        "id": 3281,
+                                        "id": 3645,
                                         "name": "amount",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -2479,7 +2479,7 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
@@ -2491,48 +2491,48 @@
                         "title": "Constructors",
                         "kind": 512,
                         "children": [
-                            3287
+                            3651
                         ]
                     },
                     {
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3292,
-                            3293,
-                            3294
+                            3656,
+                            3657,
+                            3658
                         ]
                     },
                     {
                         "title": "Accessors",
                         "kind": 262144,
                         "children": [
-                            3295,
-                            3297,
-                            3299
+                            3659,
+                            3661,
+                            3663
                         ]
                     },
                     {
                         "title": "Methods",
                         "kind": 2048,
                         "children": [
-                            3301,
-                            3316,
-                            3313,
-                            3329,
-                            3319,
-                            3310,
-                            3307,
-                            3325,
-                            3323,
-                            3321,
-                            3304,
-                            3327,
-                            3269,
-                            3264,
-                            3273,
-                            3282,
-                            3277
+                            3665,
+                            3680,
+                            3677,
+                            3693,
+                            3683,
+                            3674,
+                            3671,
+                            3689,
+                            3687,
+                            3685,
+                            3668,
+                            3691,
+                            3633,
+                            3628,
+                            3637,
+                            3646,
+                            3641
                         ]
                     }
                 ],
@@ -2585,59 +2585,85 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2935": "CasualOSError",
+        "id-3299": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3340": "Quaternion",
+        "id-3704": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3372": "Rotation",
+        "id-3736": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3206": "Vector2",
+        "id-3570": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3263": "Vector3",
+        "id-3627": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2954": "AIChatMessage",
+        "id-3318": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2731": "AIChatOptions",
+        "id-3095": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
         "id-2250": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-2745": "AIGenerateImageOptions",
+        "id-3109": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-2741": "AIGenerateSkyboxOptions",
+        "id-3105": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
         "id-2243": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
         "id-2247": "AIGenerateSkyboxResult",
         "AIGeneratedImage": "types/ai",
         "id-2253": "AIGeneratedImage",
+        "ARSupportedAction": "types/os",
+        "id-2840": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3139": "AddCountFailure",
+        "id-3503": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3134": "AddCountSuccess",
+        "id-3498": "AddCountSuccess",
+        "AddDropSnapAction": "types/os",
+        "id-2469": "AddDropSnapAction",
+        "AddDropSnapPointsAction": "types/os",
+        "id-2473": "AddDropSnapPointsAction",
+        "AnalyticsRecordEventAction": "types/os",
+        "id-3045": "AnalyticsRecordEventAction",
         "AnimateTagOptions": "types/animation",
         "id-1848": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
         "id-2223": "AttachDebuggerOptions",
+        "AuthData": "types/os",
+        "id-2984": "AuthData",
         "CasualOSDevice": "types/os",
-        "id-2922": "CasualOSDevice",
+        "id-3286": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2914": "CasualOSVersion",
+        "id-3278": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3418": "AxisAndAngle",
+        "id-3782": "AxisAndAngle",
+        "BeginRecordingAction": "types/os",
+        "id-2927": "BeginRecordingAction",
         "BotTagMasks": "types/core",
-        "id-2891": "BotTagMasks",
+        "id-3255": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2806": "BotTags",
+        "id-3170": "BotTags",
         "BotState": "types/core",
-        "id-2904": "BotState",
+        "id-3268": "BotState",
+        "BufferFormAddressGLTFAction": "types/os",
+        "id-3052": "BufferFormAddressGLTFAction",
+        "BufferSoundAction": "types/os",
+        "id-2651": "BufferSoundAction",
+        "CalculateRayFromCameraAction": "types/os",
+        "id-3025": "CalculateRayFromCameraAction",
+        "CancelSoundAction": "types/os",
+        "id-2657": "CancelSoundAction",
         "CompiledBotListeners": "types/core",
-        "id-2885": "CompiledBotListeners",
+        "id-3249": "CompiledBotListeners",
+        "ConfigureWakeLockAction": "types/os",
+        "id-3032": "ConfigureWakeLockAction",
+        "ConvertGeolocationToWhat3WordsAction": "types/os",
+        "id-2415": "ConvertGeolocationToWhat3WordsAction",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2372": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2404": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3076": "CreatePublicRecordKeyFailure",
+        "id-3440": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3072": "CreatePublicRecordKeySuccess",
+        "id-3436": "CreatePublicRecordKeySuccess",
+        "CustomAppContainerAvailableAction": "types/os",
+        "id-2884": "CustomAppContainerAvailableAction",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2176": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -2650,40 +2676,60 @@
         "id-2190": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
         "id-2217": "DebuggerVariable",
+        "DefineGlobalBotAction": "types/os",
+        "id-2408": "DefineGlobalBotAction",
+        "DownloadAction": "types/os",
+        "id-2663": "DownloadAction",
         "Easing": "types/animation",
-        "id-2354": "Easing",
+        "id-2386": "Easing",
+        "EnableARAction": "types/os",
+        "id-2836": "EnableARAction",
         "EnableCollaborationAction": "types/os",
-        "id-2682": "EnableCollaborationAction",
+        "id-2795": "EnableCollaborationAction",
+        "EnableCustomDraggingAction": "types/os",
+        "id-2499": "EnableCustomDraggingAction",
+        "EnablePOVAction": "types/os",
+        "id-2854": "EnablePOVAction",
+        "EnableVRAction": "types/os",
+        "id-2850": "EnableVRAction",
         "EnableXROptions": "types/os",
-        "id-2626": "EnableXROptions",
+        "id-2706": "EnableXROptions",
+        "EndRecordingAction": "types/os",
+        "id-2935": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3110": "EraseDataFailure",
+        "id-3474": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3106": "EraseDataSuccess",
+        "id-3470": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3129": "EraseFileFailure",
+        "id-3493": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3125": "EraseFileSuccess",
+        "id-3489": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3421": "EulerAnglesRotation",
+        "id-3785": "EulerAnglesRotation",
+        "ExitFullscreenAction": "types/os",
+        "id-2869": "ExitFullscreenAction",
         "FocusOnOptions": "types/os",
-        "id-2406": "FocusOnOptions",
+        "id-2453": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2418": "FocusOnRotation",
+        "id-2465": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2644": "FormAnimationData",
+        "id-2751": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3415": "FromToRotation",
+        "id-3779": "FromToRotation",
         "GenericError": "types/error",
-        "id-2932": "GenericError",
+        "id-3296": "GenericError",
+        "GetAverageFrameRateAction": "types/os",
+        "id-3005": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3150": "GetCountFailure",
+        "id-3514": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3144": "GetCountSuccess",
+        "id-3508": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3101": "GetDataFailure",
+        "id-3465": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3092": "GetDataSuccess",
+        "id-3456": "GetDataSuccess",
+        "GetGeolocationAction": "types/os",
+        "id-2968": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os",
         "id-1938": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
@@ -2696,18 +2742,28 @@
         "id-1957": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
         "id-1952": "GetRoomTrackOptionsSuccess",
+        "GetVoicesAction": "types/os",
+        "id-2963": "GetVoicesAction",
+        "GetWakeLockConfigurationAction": "types/os",
+        "id-3038": "GetWakeLockConfigurationAction",
+        "GoToTagAction": "types/os",
+        "id-2973": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3178": "GrantMarkerPermissionFailure",
+        "id-3542": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3176": "GrantMarkerPermissionSuccess",
+        "id-3540": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3164": "GrantRoleFailure",
+        "id-3528": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3162": "GrantRoleSuccess",
+        "id-3526": "GrantRoleSuccess",
+        "HtmlAppEventAction": "types/os",
+        "id-2315": "HtmlAppEventAction",
+        "HtmlAppMethodCallAction": "types/os",
+        "id-2320": "HtmlAppMethodCallAction",
         "ImageClassifierOptions": "types/os",
-        "id-2424": "ImageClassifierOptions",
+        "id-2504": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2928": "InstUpdate",
+        "id-3292": "InstUpdate",
         "JoinRoomFailure": "types/os",
         "id-1919": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
@@ -2717,29 +2773,53 @@
         "LeaveRoomSuccess": "types/os",
         "id-1925": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3120": "ListDataFailure",
+        "id-3484": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3115": "ListDataSuccess",
+        "id-3479": "ListDataSuccess",
+        "ListFormAnimationsAction": "types/os",
+        "id-2755": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3193": "ListStudiosFailure",
+        "id-3557": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3190": "ListStudiosSuccess",
+        "id-3554": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3197": "ListedStudio",
+        "id-3561": "ListedStudio",
+        "LoadBotsAction": "types/os",
+        "id-2800": "LoadBotsAction",
+        "LoadSpaceAction": "types/os",
+        "id-2696": "LoadSpaceAction",
+        "LocalFormAnimationAction": "types/os",
+        "id-2807": "LocalFormAnimationAction",
+        "LocalPositionTweenAction": "types/os",
+        "id-2821": "LocalPositionTweenAction",
+        "LocalTweenAction": "types/os",
+        "id-2811": "LocalTweenAction",
         "LookRotation": "types/math/rotations",
-        "id-3438": "LookRotation",
+        "id-3802": "LookRotation",
+        "MediaPermissionAction": "types/os",
+        "id-2998": "MediaPermissionAction",
         "MediaPermissionOptions": "types/os",
-        "id-2623": "MediaPermissionOptions",
+        "id-2703": "MediaPermissionOptions",
+        "MeetCommandAction": "types/os",
+        "id-2940": "MeetCommandAction",
+        "MeetFunctionAction": "types/os",
+        "id-2947": "MeetFunctionAction",
         "Debugger": "types/debuggers/debugger",
         "id-1988": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
         "id-2195": "NormalDebuggerOptions",
+        "OpenCircleWipeAction": "types/os",
+        "id-2917": "OpenCircleWipeAction",
+        "OpenCircleWipeOptions": "types/os",
+        "id-2924": "OpenCircleWipeOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2666": "PhotoCameraOptions",
+        "id-2779": "PhotoCameraOptions",
+        "OpenURLAction": "types/os",
+        "id-2640": "OpenURLAction",
         "ParsedBotLink": "types/core",
-        "id-2910": "ParsedBotLink",
+        "id-3274": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2907": "PartialBotState",
+        "id-3271": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
         "id-2044": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
@@ -2749,135 +2829,193 @@
         "PauseTriggerOptions": "types/debuggers/common",
         "id-2171": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2678": "Photo",
+        "id-2791": "Photo",
+        "PlaySoundAction": "types/os",
+        "id-2644": "PlaySoundAction",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
         "id-2158": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
         "id-2232": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3431": "QuaternionRotation",
+        "id-3795": "QuaternionRotation",
+        "RaycastFromCameraAction": "types/os",
+        "id-3010": "RaycastFromCameraAction",
+        "RaycastInPortalAction": "types/os",
+        "id-3017": "RaycastInPortalAction",
         "RaycastRay": "types/os",
         "id-1912": "RaycastRay",
         "RaycastResult": "types/os",
         "id-1909": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2694": "RecordActionOptions",
+        "id-3058": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3086": "RecordDataFailure",
+        "id-3450": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3082": "RecordDataSuccess",
+        "id-3446": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-1879": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
         "id-1875": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2653": "RecordedFile",
+        "id-2766": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2651": "Recording",
+        "id-2764": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2658": "RecordingOptions",
+        "id-2771": "RecordingOptions",
+        "RegisterBuiltinPortalAction": "types/os",
+        "id-2879": "RegisterBuiltinPortalAction",
+        "RegisterCustomAppAction": "types/os",
+        "id-2887": "RegisterCustomAppAction",
+        "RegisterHtmlAppAction": "types/os",
+        "id-2900": "RegisterHtmlAppAction",
         "RegisterPrefixOptions": "types/core",
-        "id-2648": "RegisterPrefixOptions",
+        "id-2761": "RegisterPrefixOptions",
+        "RejectAction": "types/os",
+        "id-2669": "RejectAction",
+        "RequestAuthDataAction": "types/os",
+        "id-2978": "RequestAuthDataAction",
+        "RequestFullscreenAction": "types/os",
+        "id-2867": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3185": "RevokeMarkerPermissionFailure",
+        "id-3549": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3183": "RevokeMarkerPermissionSuccess",
+        "id-3547": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3171": "RevokeRoleFailure",
+        "id-3535": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3169": "RevokeRoleSuccess",
+        "id-3533": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2697": "RoomJoinOptions",
+        "id-3061": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2706": "RoomOptions",
+        "id-3070": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2722": "RoomRemoteOptions",
+        "id-3086": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2710": "RoomTrackOptions",
+        "id-3074": "RoomTrackOptions",
+        "RunScriptAction": "types/os",
+        "id-2683": "RunScriptAction",
         "RuntimeBot": "types/core",
-        "id-2758": "RuntimeBot",
+        "id-3122": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2897": "RuntimeBotLinks",
+        "id-3261": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2894": "RuntimeBotVars",
+        "id-3258": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3429": "SequenceRotation",
+        "id-3793": "SequenceRotation",
+        "SerializableMutationRecord": "types/os",
+        "id-2329": "SerializableMutationRecord",
+        "SetAppOutputAction": "types/os",
+        "id-2912": "SetAppOutputAction",
+        "SetClipboardAction": "types/os",
+        "id-2672": "SetClipboardAction",
         "SetRoomOptionsSuccess": "types/os",
         "id-1943": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2728": "SetRoomTrackOptions",
+        "id-3092": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
         "id-1969": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
         "id-1964": "SetRoomTrackOptionsSuccess",
+        "ShareAction": "types/os",
+        "id-2871": "ShareAction",
         "ShareOptions": "types/os",
-        "id-2402": "ShareOptions",
+        "id-2449": "ShareOptions",
+        "ShowChatBarAction": "types/os",
+        "id-2675": "ShowChatBarAction",
         "ShowChatOptions": "types/os",
-        "id-2396": "ShowChatOptions",
+        "id-2443": "ShowChatOptions",
         "ShowConfirmAction": "types/os",
-        "id-2445": "ShowConfirmAction",
+        "id-2525": "ShowConfirmAction",
         "ShowConfirmOptions": "types/os",
-        "id-2440": "ShowConfirmOptions",
+        "id-2520": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2429": "ShowInputOptions",
+        "id-2509": "ShowInputOptions",
+        "ShowJoinCodeAction": "types/os",
+        "id-2863": "ShowJoinCodeAction",
+        "ShowUploadAuxFileAction": "types/os",
+        "id-2689": "ShowUploadAuxFileAction",
+        "ShowUploadFilesAction": "types/os",
+        "id-2691": "ShowUploadFilesAction",
         "SnapAxis": "types/os",
-        "id-2376": "SnapAxis",
+        "id-2423": "SnapAxis",
+        "SnapGrid": "types/os",
+        "id-2478": "SnapGrid",
         "SnapGridTarget": "types/os",
         "id-1884": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2388": "SnapPoint",
+        "id-2435": "SnapPoint",
+        "SpeakTextAction": "types/os",
+        "id-2954": "SpeakTextAction",
         "SpeakTextOptions": "types/experimental",
         "id-2228": "SpeakTextOptions",
+        "StartFormAnimationAction": "types/os",
+        "id-2732": "StartFormAnimationAction",
         "StartFormAnimationOptions": "types/os",
-        "id-2628": "StartFormAnimationOptions",
+        "id-2708": "StartFormAnimationOptions",
+        "StopFormAnimationAction": "types/os",
+        "id-2721": "StopFormAnimationAction",
         "StopFormAnimationOptions": "types/os",
-        "id-2641": "StopFormAnimationOptions",
+        "id-2729": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2358": "SuccessfulGeolocation",
+        "id-2390": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2662": "SyntheticVoice",
+        "id-2775": "SyntheticVoice",
         "TweenOptions": "types/experimental",
         "id-2225": "TweenOptions",
+        "UnregisterCustomAppAction": "types/os",
+        "id-2894": "UnregisterCustomAppAction",
+        "UnregisterHtmlAppAction": "types/os",
+        "id-2907": "UnregisterHtmlAppAction",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2368": "UnsuccessfulGeolocation",
+        "id-2400": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3157": "UpdateEventRecordFailure",
+        "id-3521": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3155": "UpdateEventRecordSuccess",
+        "id-3519": "UpdateEventRecordSuccess",
+        "UpdateHtmlAppAction": "types/os",
+        "id-2309": "UpdateHtmlAppAction",
         "UploadedFile": "types/os",
         "id-1905": "UploadedFile",
+        "VRSupportedAction": "types/os",
+        "id-2845": "VRSupportedAction",
+        "WakeLockConfiguration": "types/os",
+        "id-3043": "WakeLockConfiguration",
         "WebhookOptions": "types/web",
         "id-1829": "WebhookOptions",
         "WebhookResult": "types/web",
         "id-1841": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3133": "AddCountResult",
+        "id-3497": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2960": "AvailablePermissions",
+        "id-3324": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2423": "BarcodeFormat",
+        "id-2503": "BarcodeFormat",
         "BotFilter": "types/core",
         "id-1863": "BotFilter",
         "BotSpace": "types/core",
-        "id-2881": "BotSpace",
+        "id-3245": "BotSpace",
         "CameraType": "types/os",
-        "id-2422": "CameraType",
+        "id-2502": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3071": "CreatePublicRecordKeyResult",
+        "id-3435": "CreatePublicRecordKeyResult",
+        "CustomAppOutputType": "types/os",
+        "id-2882": "CustomAppOutputType",
+        "CustomPortalOutputMode": "types/os",
+        "id-2883": "CustomPortalOutputMode",
         "EaseMode": "types/animation",
-        "id-2353": "EaseMode",
+        "id-2385": "EaseMode",
         "EaseType": "types/animation",
-        "id-2352": "EaseType",
+        "id-2384": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3105": "EraseDataResult",
+        "id-3469": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3124": "EraseFileResult",
+        "id-3488": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2357": "Geolocation",
+        "id-2389": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3143": "GetCountResult",
+        "id-3507": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3091": "GetDataResult",
+        "id-3455": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
         "id-1933": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
@@ -2885,45 +3023,45 @@
         "GetRoomTrackOptionsResult": "types/os",
         "id-1951": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3175": "GrantMarkerPermissionResult",
+        "id-3539": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3161": "GrantRoleResult",
+        "id-3525": "GrantRoleResult",
         "JoinRoomResult": "types/os",
         "id-1915": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
         "id-1924": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3114": "ListDataResult",
+        "id-3478": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3189": "ListStudiosResult",
+        "id-3553": "ListStudiosResult",
         "Mod": "types/core",
         "id-1858": "Mod",
         "PortalType": "types/core",
-        "id-2913": "PortalType",
+        "id-3277": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2162": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3081": "RecordDataResult",
+        "id-3445": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-1874": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3182": "RevokeMarkerPermissionResult",
+        "id-3546": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3168": "RevokeRoleResult",
+        "id-3532": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
         "id-1942": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
         "id-1963": "SetRoomTrackOptionsResult",
         "ShowInputSuptype": "types/os",
-        "id-2439": "ShowInputSuptype",
+        "id-2519": "ShowInputSuptype",
         "ShowInputType": "types/os",
-        "id-2438": "ShowInputType",
+        "id-2518": "ShowInputType",
         "SnapTarget": "types/os",
-        "id-2395": "SnapTarget",
+        "id-2442": "SnapTarget",
         "TagFilter": "types/core",
         "id-1859": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3154": "UpdateEventRecordResult",
+        "id-3518": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",

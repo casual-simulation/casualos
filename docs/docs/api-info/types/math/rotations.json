@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Rotations",
     "contents": [
         {
-            "id": 3372,
+            "id": 3736,
             "order": 0,
             "name": "Rotation",
             "reflection": {
-                "id": 3372,
+                "id": 3736,
                 "name": "Rotation",
                 "kind": 128,
                 "kindString": "Class",
@@ -51,7 +51,7 @@
                 },
                 "children": [
                     {
-                        "id": 3391,
+                        "id": 3755,
                         "name": "constructor",
                         "kind": 512,
                         "kindString": "Constructor",
@@ -65,7 +65,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3392,
+                                "id": 3756,
                                 "name": "new Rotation",
                                 "kind": 16384,
                                 "kindString": "Constructor signature",
@@ -97,7 +97,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3393,
+                                        "id": 3757,
                                         "name": "rotation",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -113,37 +113,37 @@
                                             "types": [
                                                 {
                                                     "type": "reference",
-                                                    "id": 3340,
+                                                    "id": 3704,
                                                     "name": "Quaternion"
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 3418,
+                                                    "id": 3782,
                                                     "name": "AxisAndAngle"
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 3415,
+                                                    "id": 3779,
                                                     "name": "FromToRotation"
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 3438,
+                                                    "id": 3802,
                                                     "name": "LookRotation"
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 3431,
+                                                    "id": 3795,
                                                     "name": "QuaternionRotation"
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 3429,
+                                                    "id": 3793,
                                                     "name": "SequenceRotation"
                                                 },
                                                 {
                                                     "type": "reference",
-                                                    "id": 3421,
+                                                    "id": 3785,
                                                     "name": "EulerAnglesRotation"
                                                 }
                                             ]
@@ -152,14 +152,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3372,
+                                    "id": 3736,
                                     "name": "Rotation"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3394,
+                        "id": 3758,
                         "name": "_q",
                         "kind": 1024,
                         "kindString": "Property",
@@ -175,12 +175,12 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 3340,
+                            "id": 3704,
                             "name": "Quaternion"
                         }
                     },
                     {
-                        "id": 3395,
+                        "id": 3759,
                         "name": "quaternion",
                         "kind": 262144,
                         "kindString": "Accessor",
@@ -194,7 +194,7 @@
                         ],
                         "getSignature": [
                             {
-                                "id": 3396,
+                                "id": 3760,
                                 "name": "quaternion",
                                 "kind": 524288,
                                 "kindString": "Get signature",
@@ -205,14 +205,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3340,
+                                    "id": 3704,
                                     "name": "Quaternion"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3408,
+                        "id": 3772,
                         "name": "axisAndAngle",
                         "kind": 2048,
                         "kindString": "Method",
@@ -226,7 +226,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3409,
+                                "id": 3773,
                                 "name": "axisAndAngle",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -237,14 +237,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3418,
+                                    "id": 3782,
                                     "name": "AxisAndAngle"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3403,
+                        "id": 3767,
                         "name": "combineWith",
                         "kind": 2048,
                         "kindString": "Method",
@@ -258,7 +258,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3404,
+                                "id": 3768,
                                 "name": "combineWith",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -275,7 +275,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3405,
+                                        "id": 3769,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -286,21 +286,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3372,
+                                            "id": 3736,
                                             "name": "Rotation"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3372,
+                                    "id": 3736,
                                     "name": "Rotation"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3410,
+                        "id": 3774,
                         "name": "equals",
                         "kind": 2048,
                         "kindString": "Method",
@@ -314,7 +314,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3411,
+                                "id": 3775,
                                 "name": "equals",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -325,7 +325,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3412,
+                                        "id": 3776,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -336,7 +336,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3372,
+                                            "id": 3736,
                                             "name": "Rotation"
                                         }
                                     }
@@ -349,7 +349,7 @@
                         ]
                     },
                     {
-                        "id": 3406,
+                        "id": 3770,
                         "name": "invert",
                         "kind": 2048,
                         "kindString": "Method",
@@ -363,7 +363,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3407,
+                                "id": 3771,
                                 "name": "invert",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -380,14 +380,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3372,
+                                    "id": 3736,
                                     "name": "Rotation"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3400,
+                        "id": 3764,
                         "name": "rotateVector2",
                         "kind": 2048,
                         "kindString": "Method",
@@ -401,7 +401,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3401,
+                                "id": 3765,
                                 "name": "rotateVector2",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -418,7 +418,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3402,
+                                        "id": 3766,
                                         "name": "vector",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -429,21 +429,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3206,
+                                            "id": 3570,
                                             "name": "Vector2"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3397,
+                        "id": 3761,
                         "name": "rotateVector3",
                         "kind": 2048,
                         "kindString": "Method",
@@ -457,7 +457,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3398,
+                                "id": 3762,
                                 "name": "rotateVector3",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -474,7 +474,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3399,
+                                        "id": 3763,
                                         "name": "vector",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -485,21 +485,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3263,
+                                            "id": 3627,
                                             "name": "Vector3"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3263,
+                                    "id": 3627,
                                     "name": "Vector3"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3413,
+                        "id": 3777,
                         "name": "toString",
                         "kind": 2048,
                         "kindString": "Method",
@@ -513,7 +513,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3414,
+                                "id": 3778,
                                 "name": "toString",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -536,7 +536,7 @@
                         ]
                     },
                     {
-                        "id": 3382,
+                        "id": 3746,
                         "name": "angleBetween",
                         "kind": 2048,
                         "kindString": "Method",
@@ -552,7 +552,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3383,
+                                "id": 3747,
                                 "name": "angleBetween",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -563,7 +563,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3384,
+                                        "id": 3748,
                                         "name": "first",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -574,12 +574,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3372,
+                                            "id": 3736,
                                             "name": "Rotation"
                                         }
                                     },
                                     {
-                                        "id": 3385,
+                                        "id": 3749,
                                         "name": "second",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -590,7 +590,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3372,
+                                            "id": 3736,
                                             "name": "Rotation"
                                         }
                                     }
@@ -603,7 +603,7 @@
                         ]
                     },
                     {
-                        "id": 3386,
+                        "id": 3750,
                         "name": "interpolate",
                         "kind": 2048,
                         "kindString": "Method",
@@ -619,7 +619,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3387,
+                                "id": 3751,
                                 "name": "interpolate",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -630,7 +630,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3388,
+                                        "id": 3752,
                                         "name": "first",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -641,12 +641,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3372,
+                                            "id": 3736,
                                             "name": "Rotation"
                                         }
                                     },
                                     {
-                                        "id": 3389,
+                                        "id": 3753,
                                         "name": "second",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -657,12 +657,12 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3372,
+                                            "id": 3736,
                                             "name": "Rotation"
                                         }
                                     },
                                     {
-                                        "id": 3390,
+                                        "id": 3754,
                                         "name": "amount",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -679,14 +679,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3372,
+                                    "id": 3736,
                                     "name": "Rotation"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3373,
+                        "id": 3737,
                         "name": "quaternionFromAxisAndAngle",
                         "kind": 2048,
                         "kindString": "Method",
@@ -702,7 +702,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3374,
+                                "id": 3738,
                                 "name": "quaternionFromAxisAndAngle",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -713,7 +713,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3375,
+                                        "id": 3739,
                                         "name": "axisAndAngle",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -724,21 +724,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3418,
+                                            "id": 3782,
                                             "name": "AxisAndAngle"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3340,
+                                    "id": 3704,
                                     "name": "Quaternion"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3376,
+                        "id": 3740,
                         "name": "quaternionFromTo",
                         "kind": 2048,
                         "kindString": "Method",
@@ -754,7 +754,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3377,
+                                "id": 3741,
                                 "name": "quaternionFromTo",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -765,7 +765,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3378,
+                                        "id": 3742,
                                         "name": "fromToRotation",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -776,21 +776,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3415,
+                                            "id": 3779,
                                             "name": "FromToRotation"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3340,
+                                    "id": 3704,
                                     "name": "Quaternion"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3379,
+                        "id": 3743,
                         "name": "quaternionLook",
                         "kind": 2048,
                         "kindString": "Method",
@@ -806,7 +806,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3380,
+                                "id": 3744,
                                 "name": "quaternionLook",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -817,7 +817,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3381,
+                                        "id": 3745,
                                         "name": "look",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -828,14 +828,14 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3438,
+                                            "id": 3802,
                                             "name": "LookRotation"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3340,
+                                    "id": 3704,
                                     "name": "Quaternion"
                                 }
                             }
@@ -847,39 +847,39 @@
                         "title": "Constructors",
                         "kind": 512,
                         "children": [
-                            3391
+                            3755
                         ]
                     },
                     {
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3394
+                            3758
                         ]
                     },
                     {
                         "title": "Accessors",
                         "kind": 262144,
                         "children": [
-                            3395
+                            3759
                         ]
                     },
                     {
                         "title": "Methods",
                         "kind": 2048,
                         "children": [
-                            3408,
-                            3403,
-                            3410,
-                            3406,
-                            3400,
-                            3397,
-                            3413,
-                            3382,
-                            3386,
-                            3373,
-                            3376,
-                            3379
+                            3772,
+                            3767,
+                            3774,
+                            3770,
+                            3764,
+                            3761,
+                            3777,
+                            3746,
+                            3750,
+                            3737,
+                            3740,
+                            3743
                         ]
                     }
                 ],
@@ -930,11 +930,11 @@
             "group": null
         },
         {
-            "id": 3340,
+            "id": 3704,
             "order": 1,
             "name": "Quaternion",
             "reflection": {
-                "id": 3340,
+                "id": 3704,
                 "name": "Quaternion",
                 "kind": 128,
                 "kindString": "Class",
@@ -977,7 +977,7 @@
                 },
                 "children": [
                     {
-                        "id": 3341,
+                        "id": 3705,
                         "name": "constructor",
                         "kind": 512,
                         "kindString": "Constructor",
@@ -991,7 +991,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3342,
+                                "id": 3706,
                                 "name": "new Quaternion",
                                 "kind": 16384,
                                 "kindString": "Constructor signature",
@@ -1002,7 +1002,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3343,
+                                        "id": 3707,
                                         "name": "x",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1018,7 +1018,7 @@
                                         "defaultValue": "0"
                                     },
                                     {
-                                        "id": 3344,
+                                        "id": 3708,
                                         "name": "y",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1034,7 +1034,7 @@
                                         "defaultValue": "0"
                                     },
                                     {
-                                        "id": 3345,
+                                        "id": 3709,
                                         "name": "z",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1050,7 +1050,7 @@
                                         "defaultValue": "0"
                                     },
                                     {
-                                        "id": 3346,
+                                        "id": 3710,
                                         "name": "w",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1068,14 +1068,14 @@
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3340,
+                                    "id": 3704,
                                     "name": "Quaternion"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3350,
+                        "id": 3714,
                         "name": "w",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1097,7 +1097,7 @@
                         }
                     },
                     {
-                        "id": 3347,
+                        "id": 3711,
                         "name": "x",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1119,7 +1119,7 @@
                         }
                     },
                     {
-                        "id": 3348,
+                        "id": 3712,
                         "name": "y",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1141,7 +1141,7 @@
                         }
                     },
                     {
-                        "id": 3349,
+                        "id": 3713,
                         "name": "z",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1163,7 +1163,7 @@
                         }
                     },
                     {
-                        "id": 3364,
+                        "id": 3728,
                         "name": "equals",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1177,7 +1177,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3365,
+                                "id": 3729,
                                 "name": "equals",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1188,7 +1188,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3366,
+                                        "id": 3730,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1199,7 +1199,7 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3340,
+                                            "id": 3704,
                                             "name": "Quaternion"
                                         }
                                     }
@@ -1212,7 +1212,7 @@
                         ]
                     },
                     {
-                        "id": 3354,
+                        "id": 3718,
                         "name": "invert",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1226,7 +1226,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3355,
+                                "id": 3719,
                                 "name": "invert",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1237,14 +1237,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3340,
+                                    "id": 3704,
                                     "name": "Quaternion"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3356,
+                        "id": 3720,
                         "name": "length",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1258,7 +1258,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3357,
+                                "id": 3721,
                                 "name": "length",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1275,7 +1275,7 @@
                         ]
                     },
                     {
-                        "id": 3351,
+                        "id": 3715,
                         "name": "multiply",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1289,7 +1289,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3352,
+                                "id": 3716,
                                 "name": "multiply",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1301,7 +1301,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 3353,
+                                        "id": 3717,
                                         "name": "other",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -1312,21 +1312,21 @@
                                         },
                                         "type": {
                                             "type": "reference",
-                                            "id": 3340,
+                                            "id": 3704,
                                             "name": "Quaternion"
                                         }
                                     }
                                 ],
                                 "type": {
                                     "type": "reference",
-                                    "id": 3340,
+                                    "id": 3704,
                                     "name": "Quaternion"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3360,
+                        "id": 3724,
                         "name": "normalize",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1340,7 +1340,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3361,
+                                "id": 3725,
                                 "name": "normalize",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1352,14 +1352,14 @@
                                 },
                                 "type": {
                                     "type": "reference",
-                                    "id": 3340,
+                                    "id": 3704,
                                     "name": "Quaternion"
                                 }
                             }
                         ]
                     },
                     {
-                        "id": 3358,
+                        "id": 3722,
                         "name": "squareLength",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1373,7 +1373,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3359,
+                                "id": 3723,
                                 "name": "squareLength",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1390,7 +1390,7 @@
                         ]
                     },
                     {
-                        "id": 3362,
+                        "id": 3726,
                         "name": "toString",
                         "kind": 2048,
                         "kindString": "Method",
@@ -1404,7 +1404,7 @@
                         ],
                         "signatures": [
                             {
-                                "id": 3363,
+                                "id": 3727,
                                 "name": "toString",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -1422,30 +1422,30 @@
                         "title": "Constructors",
                         "kind": 512,
                         "children": [
-                            3341
+                            3705
                         ]
                     },
                     {
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3350,
-                            3347,
-                            3348,
-                            3349
+                            3714,
+                            3711,
+                            3712,
+                            3713
                         ]
                     },
                     {
                         "title": "Methods",
                         "kind": 2048,
                         "children": [
-                            3364,
-                            3354,
-                            3356,
-                            3351,
-                            3360,
-                            3358,
-                            3362
+                            3728,
+                            3718,
+                            3720,
+                            3715,
+                            3724,
+                            3722,
+                            3726
                         ]
                     }
                 ],
@@ -1496,11 +1496,11 @@
             "group": null
         },
         {
-            "id": 3418,
+            "id": 3782,
             "order": 2,
             "name": "AxisAndAngle",
             "reflection": {
-                "id": 3418,
+                "id": 3782,
                 "name": "AxisAndAngle",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1542,7 +1542,7 @@
                 },
                 "children": [
                     {
-                        "id": 3420,
+                        "id": 3784,
                         "name": "angle",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1564,7 +1564,7 @@
                         }
                     },
                     {
-                        "id": 3419,
+                        "id": 3783,
                         "name": "axis",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1582,7 +1582,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 3263,
+                            "id": 3627,
                             "name": "Vector3"
                         }
                     }
@@ -1592,8 +1592,8 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3420,
-                            3419
+                            3784,
+                            3783
                         ]
                     }
                 ],
@@ -1644,11 +1644,11 @@
             "group": null
         },
         {
-            "id": 3415,
+            "id": 3779,
             "order": 3,
             "name": "FromToRotation",
             "reflection": {
-                "id": 3415,
+                "id": 3779,
                 "name": "FromToRotation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1690,7 +1690,7 @@
                 },
                 "children": [
                     {
-                        "id": 3416,
+                        "id": 3780,
                         "name": "from",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1708,12 +1708,12 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 3263,
+                            "id": 3627,
                             "name": "Vector3"
                         }
                     },
                     {
-                        "id": 3417,
+                        "id": 3781,
                         "name": "to",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1731,7 +1731,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 3263,
+                            "id": 3627,
                             "name": "Vector3"
                         }
                     }
@@ -1741,8 +1741,8 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3416,
-                            3417
+                            3780,
+                            3781
                         ]
                     }
                 ],
@@ -1793,11 +1793,11 @@
             "group": null
         },
         {
-            "id": 3421,
+            "id": 3785,
             "order": 4,
             "name": "EulerAnglesRotation",
             "reflection": {
-                "id": 3421,
+                "id": 3785,
                 "name": "EulerAnglesRotation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1839,7 +1839,7 @@
                 },
                 "children": [
                     {
-                        "id": 3422,
+                        "id": 3786,
                         "name": "euler",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1854,14 +1854,14 @@
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 3423,
+                                "id": 3787,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 3428,
+                                        "id": 3792,
                                         "name": "extrinsic",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1885,7 +1885,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3427,
+                                        "id": 3791,
                                         "name": "order",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1909,7 +1909,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3424,
+                                        "id": 3788,
                                         "name": "x",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1931,7 +1931,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3425,
+                                        "id": 3789,
                                         "name": "y",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1953,7 +1953,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3426,
+                                        "id": 3790,
                                         "name": "z",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1980,11 +1980,11 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            3428,
-                                            3427,
-                                            3424,
-                                            3425,
-                                            3426
+                                            3792,
+                                            3791,
+                                            3788,
+                                            3789,
+                                            3790
                                         ]
                                     }
                                 ]
@@ -1997,7 +1997,7 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3422
+                            3786
                         ]
                     }
                 ],
@@ -2048,11 +2048,11 @@
             "group": null
         },
         {
-            "id": 3429,
+            "id": 3793,
             "order": 5,
             "name": "SequenceRotation",
             "reflection": {
-                "id": 3429,
+                "id": 3793,
                 "name": "SequenceRotation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2094,7 +2094,7 @@
                 },
                 "children": [
                     {
-                        "id": 3430,
+                        "id": 3794,
                         "name": "sequence",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2114,7 +2114,7 @@
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "id": 3372,
+                                "id": 3736,
                                 "name": "Rotation"
                             }
                         }
@@ -2125,7 +2125,7 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3430
+                            3794
                         ]
                     }
                 ],
@@ -2176,11 +2176,11 @@
             "group": null
         },
         {
-            "id": 3431,
+            "id": 3795,
             "order": 6,
             "name": "QuaternionRotation",
             "reflection": {
-                "id": 3431,
+                "id": 3795,
                 "name": "QuaternionRotation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2222,7 +2222,7 @@
                 },
                 "children": [
                     {
-                        "id": 3432,
+                        "id": 3796,
                         "name": "quaternion",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2237,14 +2237,14 @@
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 3433,
+                                "id": 3797,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 3437,
+                                        "id": 3801,
                                         "name": "w",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -2262,7 +2262,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3434,
+                                        "id": 3798,
                                         "name": "x",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -2280,7 +2280,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3435,
+                                        "id": 3799,
                                         "name": "y",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -2298,7 +2298,7 @@
                                         }
                                     },
                                     {
-                                        "id": 3436,
+                                        "id": 3800,
                                         "name": "z",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -2321,10 +2321,10 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            3437,
-                                            3434,
-                                            3435,
-                                            3436
+                                            3801,
+                                            3798,
+                                            3799,
+                                            3800
                                         ]
                                     }
                                 ]
@@ -2337,7 +2337,7 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3432
+                            3796
                         ]
                     }
                 ],
@@ -2388,11 +2388,11 @@
             "group": null
         },
         {
-            "id": 3438,
+            "id": 3802,
             "order": 7,
             "name": "LookRotation",
             "reflection": {
-                "id": 3438,
+                "id": 3802,
                 "name": "LookRotation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2434,7 +2434,7 @@
                 },
                 "children": [
                     {
-                        "id": 3439,
+                        "id": 3803,
                         "name": "direction",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2452,12 +2452,12 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 3263,
+                            "id": 3627,
                             "name": "Vector3"
                         }
                     },
                     {
-                        "id": 3441,
+                        "id": 3805,
                         "name": "errorHandling",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2489,7 +2489,7 @@
                         }
                     },
                     {
-                        "id": 3440,
+                        "id": 3804,
                         "name": "upwards",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2508,7 +2508,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 3263,
+                            "id": 3627,
                             "name": "Vector3"
                         }
                     }
@@ -2518,9 +2518,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3439,
-                            3441,
-                            3440
+                            3803,
+                            3805,
+                            3804
                         ]
                     }
                 ],
@@ -2573,59 +2573,85 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2935": "CasualOSError",
+        "id-3299": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3340": "Quaternion",
+        "id-3704": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3372": "Rotation",
+        "id-3736": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3206": "Vector2",
+        "id-3570": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3263": "Vector3",
+        "id-3627": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2954": "AIChatMessage",
+        "id-3318": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2731": "AIChatOptions",
+        "id-3095": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
         "id-2250": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-2745": "AIGenerateImageOptions",
+        "id-3109": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-2741": "AIGenerateSkyboxOptions",
+        "id-3105": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
         "id-2243": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
         "id-2247": "AIGenerateSkyboxResult",
         "AIGeneratedImage": "types/ai",
         "id-2253": "AIGeneratedImage",
+        "ARSupportedAction": "types/os",
+        "id-2840": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3139": "AddCountFailure",
+        "id-3503": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3134": "AddCountSuccess",
+        "id-3498": "AddCountSuccess",
+        "AddDropSnapAction": "types/os",
+        "id-2469": "AddDropSnapAction",
+        "AddDropSnapPointsAction": "types/os",
+        "id-2473": "AddDropSnapPointsAction",
+        "AnalyticsRecordEventAction": "types/os",
+        "id-3045": "AnalyticsRecordEventAction",
         "AnimateTagOptions": "types/animation",
         "id-1848": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
         "id-2223": "AttachDebuggerOptions",
+        "AuthData": "types/os",
+        "id-2984": "AuthData",
         "CasualOSDevice": "types/os",
-        "id-2922": "CasualOSDevice",
+        "id-3286": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2914": "CasualOSVersion",
+        "id-3278": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3418": "AxisAndAngle",
+        "id-3782": "AxisAndAngle",
+        "BeginRecordingAction": "types/os",
+        "id-2927": "BeginRecordingAction",
         "BotTagMasks": "types/core",
-        "id-2891": "BotTagMasks",
+        "id-3255": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2806": "BotTags",
+        "id-3170": "BotTags",
         "BotState": "types/core",
-        "id-2904": "BotState",
+        "id-3268": "BotState",
+        "BufferFormAddressGLTFAction": "types/os",
+        "id-3052": "BufferFormAddressGLTFAction",
+        "BufferSoundAction": "types/os",
+        "id-2651": "BufferSoundAction",
+        "CalculateRayFromCameraAction": "types/os",
+        "id-3025": "CalculateRayFromCameraAction",
+        "CancelSoundAction": "types/os",
+        "id-2657": "CancelSoundAction",
         "CompiledBotListeners": "types/core",
-        "id-2885": "CompiledBotListeners",
+        "id-3249": "CompiledBotListeners",
+        "ConfigureWakeLockAction": "types/os",
+        "id-3032": "ConfigureWakeLockAction",
+        "ConvertGeolocationToWhat3WordsAction": "types/os",
+        "id-2415": "ConvertGeolocationToWhat3WordsAction",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2372": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2404": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3076": "CreatePublicRecordKeyFailure",
+        "id-3440": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3072": "CreatePublicRecordKeySuccess",
+        "id-3436": "CreatePublicRecordKeySuccess",
+        "CustomAppContainerAvailableAction": "types/os",
+        "id-2884": "CustomAppContainerAvailableAction",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2176": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -2638,40 +2664,60 @@
         "id-2190": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
         "id-2217": "DebuggerVariable",
+        "DefineGlobalBotAction": "types/os",
+        "id-2408": "DefineGlobalBotAction",
+        "DownloadAction": "types/os",
+        "id-2663": "DownloadAction",
         "Easing": "types/animation",
-        "id-2354": "Easing",
+        "id-2386": "Easing",
+        "EnableARAction": "types/os",
+        "id-2836": "EnableARAction",
         "EnableCollaborationAction": "types/os",
-        "id-2682": "EnableCollaborationAction",
+        "id-2795": "EnableCollaborationAction",
+        "EnableCustomDraggingAction": "types/os",
+        "id-2499": "EnableCustomDraggingAction",
+        "EnablePOVAction": "types/os",
+        "id-2854": "EnablePOVAction",
+        "EnableVRAction": "types/os",
+        "id-2850": "EnableVRAction",
         "EnableXROptions": "types/os",
-        "id-2626": "EnableXROptions",
+        "id-2706": "EnableXROptions",
+        "EndRecordingAction": "types/os",
+        "id-2935": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3110": "EraseDataFailure",
+        "id-3474": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3106": "EraseDataSuccess",
+        "id-3470": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3129": "EraseFileFailure",
+        "id-3493": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3125": "EraseFileSuccess",
+        "id-3489": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3421": "EulerAnglesRotation",
+        "id-3785": "EulerAnglesRotation",
+        "ExitFullscreenAction": "types/os",
+        "id-2869": "ExitFullscreenAction",
         "FocusOnOptions": "types/os",
-        "id-2406": "FocusOnOptions",
+        "id-2453": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2418": "FocusOnRotation",
+        "id-2465": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2644": "FormAnimationData",
+        "id-2751": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3415": "FromToRotation",
+        "id-3779": "FromToRotation",
         "GenericError": "types/error",
-        "id-2932": "GenericError",
+        "id-3296": "GenericError",
+        "GetAverageFrameRateAction": "types/os",
+        "id-3005": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3150": "GetCountFailure",
+        "id-3514": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3144": "GetCountSuccess",
+        "id-3508": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3101": "GetDataFailure",
+        "id-3465": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3092": "GetDataSuccess",
+        "id-3456": "GetDataSuccess",
+        "GetGeolocationAction": "types/os",
+        "id-2968": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os",
         "id-1938": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
@@ -2684,18 +2730,28 @@
         "id-1957": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
         "id-1952": "GetRoomTrackOptionsSuccess",
+        "GetVoicesAction": "types/os",
+        "id-2963": "GetVoicesAction",
+        "GetWakeLockConfigurationAction": "types/os",
+        "id-3038": "GetWakeLockConfigurationAction",
+        "GoToTagAction": "types/os",
+        "id-2973": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3178": "GrantMarkerPermissionFailure",
+        "id-3542": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3176": "GrantMarkerPermissionSuccess",
+        "id-3540": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3164": "GrantRoleFailure",
+        "id-3528": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3162": "GrantRoleSuccess",
+        "id-3526": "GrantRoleSuccess",
+        "HtmlAppEventAction": "types/os",
+        "id-2315": "HtmlAppEventAction",
+        "HtmlAppMethodCallAction": "types/os",
+        "id-2320": "HtmlAppMethodCallAction",
         "ImageClassifierOptions": "types/os",
-        "id-2424": "ImageClassifierOptions",
+        "id-2504": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2928": "InstUpdate",
+        "id-3292": "InstUpdate",
         "JoinRoomFailure": "types/os",
         "id-1919": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
@@ -2705,29 +2761,53 @@
         "LeaveRoomSuccess": "types/os",
         "id-1925": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3120": "ListDataFailure",
+        "id-3484": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3115": "ListDataSuccess",
+        "id-3479": "ListDataSuccess",
+        "ListFormAnimationsAction": "types/os",
+        "id-2755": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3193": "ListStudiosFailure",
+        "id-3557": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3190": "ListStudiosSuccess",
+        "id-3554": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3197": "ListedStudio",
+        "id-3561": "ListedStudio",
+        "LoadBotsAction": "types/os",
+        "id-2800": "LoadBotsAction",
+        "LoadSpaceAction": "types/os",
+        "id-2696": "LoadSpaceAction",
+        "LocalFormAnimationAction": "types/os",
+        "id-2807": "LocalFormAnimationAction",
+        "LocalPositionTweenAction": "types/os",
+        "id-2821": "LocalPositionTweenAction",
+        "LocalTweenAction": "types/os",
+        "id-2811": "LocalTweenAction",
         "LookRotation": "types/math/rotations",
-        "id-3438": "LookRotation",
+        "id-3802": "LookRotation",
+        "MediaPermissionAction": "types/os",
+        "id-2998": "MediaPermissionAction",
         "MediaPermissionOptions": "types/os",
-        "id-2623": "MediaPermissionOptions",
+        "id-2703": "MediaPermissionOptions",
+        "MeetCommandAction": "types/os",
+        "id-2940": "MeetCommandAction",
+        "MeetFunctionAction": "types/os",
+        "id-2947": "MeetFunctionAction",
         "Debugger": "types/debuggers/debugger",
         "id-1988": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
         "id-2195": "NormalDebuggerOptions",
+        "OpenCircleWipeAction": "types/os",
+        "id-2917": "OpenCircleWipeAction",
+        "OpenCircleWipeOptions": "types/os",
+        "id-2924": "OpenCircleWipeOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2666": "PhotoCameraOptions",
+        "id-2779": "PhotoCameraOptions",
+        "OpenURLAction": "types/os",
+        "id-2640": "OpenURLAction",
         "ParsedBotLink": "types/core",
-        "id-2910": "ParsedBotLink",
+        "id-3274": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2907": "PartialBotState",
+        "id-3271": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
         "id-2044": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
@@ -2737,135 +2817,193 @@
         "PauseTriggerOptions": "types/debuggers/common",
         "id-2171": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2678": "Photo",
+        "id-2791": "Photo",
+        "PlaySoundAction": "types/os",
+        "id-2644": "PlaySoundAction",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
         "id-2158": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
         "id-2232": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3431": "QuaternionRotation",
+        "id-3795": "QuaternionRotation",
+        "RaycastFromCameraAction": "types/os",
+        "id-3010": "RaycastFromCameraAction",
+        "RaycastInPortalAction": "types/os",
+        "id-3017": "RaycastInPortalAction",
         "RaycastRay": "types/os",
         "id-1912": "RaycastRay",
         "RaycastResult": "types/os",
         "id-1909": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2694": "RecordActionOptions",
+        "id-3058": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3086": "RecordDataFailure",
+        "id-3450": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3082": "RecordDataSuccess",
+        "id-3446": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-1879": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
         "id-1875": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2653": "RecordedFile",
+        "id-2766": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2651": "Recording",
+        "id-2764": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2658": "RecordingOptions",
+        "id-2771": "RecordingOptions",
+        "RegisterBuiltinPortalAction": "types/os",
+        "id-2879": "RegisterBuiltinPortalAction",
+        "RegisterCustomAppAction": "types/os",
+        "id-2887": "RegisterCustomAppAction",
+        "RegisterHtmlAppAction": "types/os",
+        "id-2900": "RegisterHtmlAppAction",
         "RegisterPrefixOptions": "types/core",
-        "id-2648": "RegisterPrefixOptions",
+        "id-2761": "RegisterPrefixOptions",
+        "RejectAction": "types/os",
+        "id-2669": "RejectAction",
+        "RequestAuthDataAction": "types/os",
+        "id-2978": "RequestAuthDataAction",
+        "RequestFullscreenAction": "types/os",
+        "id-2867": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3185": "RevokeMarkerPermissionFailure",
+        "id-3549": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3183": "RevokeMarkerPermissionSuccess",
+        "id-3547": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3171": "RevokeRoleFailure",
+        "id-3535": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3169": "RevokeRoleSuccess",
+        "id-3533": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2697": "RoomJoinOptions",
+        "id-3061": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2706": "RoomOptions",
+        "id-3070": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2722": "RoomRemoteOptions",
+        "id-3086": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2710": "RoomTrackOptions",
+        "id-3074": "RoomTrackOptions",
+        "RunScriptAction": "types/os",
+        "id-2683": "RunScriptAction",
         "RuntimeBot": "types/core",
-        "id-2758": "RuntimeBot",
+        "id-3122": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2897": "RuntimeBotLinks",
+        "id-3261": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2894": "RuntimeBotVars",
+        "id-3258": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3429": "SequenceRotation",
+        "id-3793": "SequenceRotation",
+        "SerializableMutationRecord": "types/os",
+        "id-2329": "SerializableMutationRecord",
+        "SetAppOutputAction": "types/os",
+        "id-2912": "SetAppOutputAction",
+        "SetClipboardAction": "types/os",
+        "id-2672": "SetClipboardAction",
         "SetRoomOptionsSuccess": "types/os",
         "id-1943": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2728": "SetRoomTrackOptions",
+        "id-3092": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
         "id-1969": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
         "id-1964": "SetRoomTrackOptionsSuccess",
+        "ShareAction": "types/os",
+        "id-2871": "ShareAction",
         "ShareOptions": "types/os",
-        "id-2402": "ShareOptions",
+        "id-2449": "ShareOptions",
+        "ShowChatBarAction": "types/os",
+        "id-2675": "ShowChatBarAction",
         "ShowChatOptions": "types/os",
-        "id-2396": "ShowChatOptions",
+        "id-2443": "ShowChatOptions",
         "ShowConfirmAction": "types/os",
-        "id-2445": "ShowConfirmAction",
+        "id-2525": "ShowConfirmAction",
         "ShowConfirmOptions": "types/os",
-        "id-2440": "ShowConfirmOptions",
+        "id-2520": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2429": "ShowInputOptions",
+        "id-2509": "ShowInputOptions",
+        "ShowJoinCodeAction": "types/os",
+        "id-2863": "ShowJoinCodeAction",
+        "ShowUploadAuxFileAction": "types/os",
+        "id-2689": "ShowUploadAuxFileAction",
+        "ShowUploadFilesAction": "types/os",
+        "id-2691": "ShowUploadFilesAction",
         "SnapAxis": "types/os",
-        "id-2376": "SnapAxis",
+        "id-2423": "SnapAxis",
+        "SnapGrid": "types/os",
+        "id-2478": "SnapGrid",
         "SnapGridTarget": "types/os",
         "id-1884": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2388": "SnapPoint",
+        "id-2435": "SnapPoint",
+        "SpeakTextAction": "types/os",
+        "id-2954": "SpeakTextAction",
         "SpeakTextOptions": "types/experimental",
         "id-2228": "SpeakTextOptions",
+        "StartFormAnimationAction": "types/os",
+        "id-2732": "StartFormAnimationAction",
         "StartFormAnimationOptions": "types/os",
-        "id-2628": "StartFormAnimationOptions",
+        "id-2708": "StartFormAnimationOptions",
+        "StopFormAnimationAction": "types/os",
+        "id-2721": "StopFormAnimationAction",
         "StopFormAnimationOptions": "types/os",
-        "id-2641": "StopFormAnimationOptions",
+        "id-2729": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2358": "SuccessfulGeolocation",
+        "id-2390": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2662": "SyntheticVoice",
+        "id-2775": "SyntheticVoice",
         "TweenOptions": "types/experimental",
         "id-2225": "TweenOptions",
+        "UnregisterCustomAppAction": "types/os",
+        "id-2894": "UnregisterCustomAppAction",
+        "UnregisterHtmlAppAction": "types/os",
+        "id-2907": "UnregisterHtmlAppAction",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2368": "UnsuccessfulGeolocation",
+        "id-2400": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3157": "UpdateEventRecordFailure",
+        "id-3521": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3155": "UpdateEventRecordSuccess",
+        "id-3519": "UpdateEventRecordSuccess",
+        "UpdateHtmlAppAction": "types/os",
+        "id-2309": "UpdateHtmlAppAction",
         "UploadedFile": "types/os",
         "id-1905": "UploadedFile",
+        "VRSupportedAction": "types/os",
+        "id-2845": "VRSupportedAction",
+        "WakeLockConfiguration": "types/os",
+        "id-3043": "WakeLockConfiguration",
         "WebhookOptions": "types/web",
         "id-1829": "WebhookOptions",
         "WebhookResult": "types/web",
         "id-1841": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3133": "AddCountResult",
+        "id-3497": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2960": "AvailablePermissions",
+        "id-3324": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2423": "BarcodeFormat",
+        "id-2503": "BarcodeFormat",
         "BotFilter": "types/core",
         "id-1863": "BotFilter",
         "BotSpace": "types/core",
-        "id-2881": "BotSpace",
+        "id-3245": "BotSpace",
         "CameraType": "types/os",
-        "id-2422": "CameraType",
+        "id-2502": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3071": "CreatePublicRecordKeyResult",
+        "id-3435": "CreatePublicRecordKeyResult",
+        "CustomAppOutputType": "types/os",
+        "id-2882": "CustomAppOutputType",
+        "CustomPortalOutputMode": "types/os",
+        "id-2883": "CustomPortalOutputMode",
         "EaseMode": "types/animation",
-        "id-2353": "EaseMode",
+        "id-2385": "EaseMode",
         "EaseType": "types/animation",
-        "id-2352": "EaseType",
+        "id-2384": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3105": "EraseDataResult",
+        "id-3469": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3124": "EraseFileResult",
+        "id-3488": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2357": "Geolocation",
+        "id-2389": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3143": "GetCountResult",
+        "id-3507": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3091": "GetDataResult",
+        "id-3455": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
         "id-1933": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
@@ -2873,45 +3011,45 @@
         "GetRoomTrackOptionsResult": "types/os",
         "id-1951": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3175": "GrantMarkerPermissionResult",
+        "id-3539": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3161": "GrantRoleResult",
+        "id-3525": "GrantRoleResult",
         "JoinRoomResult": "types/os",
         "id-1915": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
         "id-1924": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3114": "ListDataResult",
+        "id-3478": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3189": "ListStudiosResult",
+        "id-3553": "ListStudiosResult",
         "Mod": "types/core",
         "id-1858": "Mod",
         "PortalType": "types/core",
-        "id-2913": "PortalType",
+        "id-3277": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2162": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3081": "RecordDataResult",
+        "id-3445": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-1874": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3182": "RevokeMarkerPermissionResult",
+        "id-3546": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3168": "RevokeRoleResult",
+        "id-3532": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
         "id-1942": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
         "id-1963": "SetRoomTrackOptionsResult",
         "ShowInputSuptype": "types/os",
-        "id-2439": "ShowInputSuptype",
+        "id-2519": "ShowInputSuptype",
         "ShowInputType": "types/os",
-        "id-2438": "ShowInputType",
+        "id-2518": "ShowInputType",
         "SnapTarget": "types/os",
-        "id-2395": "SnapTarget",
+        "id-2442": "SnapTarget",
         "TagFilter": "types/core",
         "id-1859": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3154": "UpdateEventRecordResult",
+        "id-3518": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",
