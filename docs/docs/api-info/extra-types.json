@@ -5,11 +5,11 @@
     "pageSidebarLabel": null,
     "contents": [
         {
-            "id": 2459,
+            "id": 2738,
             "order": 0,
             "name": "AIGenerateSkyboxOptions",
             "reflection": {
-                "id": 2459,
+                "id": 2738,
                 "name": "AIGenerateSkyboxOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -31,7 +31,7 @@
                 },
                 "children": [
                     {
-                        "id": 2460,
+                        "id": 2739,
                         "name": "blockadeLabs",
                         "kind": 1024,
                         "kindString": "Property",
@@ -51,12 +51,12 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2462,
+                            "id": 2741,
                             "name": "AIGenerateSkyboxOptions"
                         }
                     },
                     {
-                        "id": 2461,
+                        "id": 2740,
                         "name": "endpoint",
                         "kind": 1024,
                         "kindString": "Property",
@@ -80,7 +80,7 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2416,
+                            "id": 2695,
                             "name": "RecordActionOptions.endpoint"
                         }
                     }
@@ -90,8 +90,8 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2460,
-                            2461
+                            2739,
+                            2740
                         ]
                     }
                 ],
@@ -105,7 +105,7 @@
                 "extendedTypes": [
                     {
                         "type": "reference",
-                        "id": 2415,
+                        "id": 2694,
                         "name": "RecordActionOptions"
                     }
                 ]
@@ -129,11 +129,11 @@
             "group": null
         },
         {
-            "id": 2521,
+            "id": 2800,
             "order": 0,
             "name": "Bot",
             "reflection": {
-                "id": 2521,
+                "id": 2800,
                 "name": "Bot",
                 "kind": 256,
                 "kindString": "Interface",
@@ -155,7 +155,7 @@
                 },
                 "children": [
                     {
-                        "id": 2522,
+                        "id": 2801,
                         "name": "id",
                         "kind": 1024,
                         "kindString": "Property",
@@ -177,7 +177,7 @@
                         }
                     },
                     {
-                        "id": 2526,
+                        "id": 2805,
                         "name": "masks",
                         "kind": 1024,
                         "kindString": "Property",
@@ -197,12 +197,12 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2612,
+                            "id": 2891,
                             "name": "TagMasks"
                         }
                     },
                     {
-                        "id": 2525,
+                        "id": 2804,
                         "name": "signatures",
                         "kind": 1024,
                         "kindString": "Property",
@@ -226,7 +226,7 @@
                         }
                     },
                     {
-                        "id": 2523,
+                        "id": 2802,
                         "name": "space",
                         "kind": 1024,
                         "kindString": "Property",
@@ -246,12 +246,12 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2602,
+                            "id": 2881,
                             "name": "Space"
                         }
                     },
                     {
-                        "id": 2524,
+                        "id": 2803,
                         "name": "tags",
                         "kind": 1024,
                         "kindString": "Property",
@@ -269,7 +269,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2527,
+                            "id": 2806,
                             "name": "Tags"
                         }
                     }
@@ -279,11 +279,11 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2522,
-                            2526,
-                            2525,
-                            2523,
-                            2524
+                            2801,
+                            2805,
+                            2804,
+                            2802,
+                            2803
                         ]
                     }
                 ],
@@ -312,29 +312,3521 @@
                 ]
             },
             "group": null
+        },
+        {
+            "id": 2583,
+            "order": 0,
+            "name": "DownloadAction",
+            "reflection": {
+                "id": 2583,
+                "name": "DownloadAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that is used to download a file onto the device.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "DownloadAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2585,
+                        "name": "data",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The data that should be included in the downloaded file.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1288,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    },
+                    {
+                        "id": 2586,
+                        "name": "filename",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The name of the downloaded file. (includes the extension)",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1293,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2587,
+                        "name": "mimeType",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The MIME type of the downloaded file.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1298,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2584,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1283,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "download"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2588,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2585,
+                            2586,
+                            2587,
+                            2584,
+                            2588
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1282,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that is used to download a file onto the device.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "DownloadAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2309,
+            "order": 0,
+            "name": "FocusOnBotAction",
+            "reflection": {
+                "id": 2309,
+                "name": "FocusOnBotAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to focus on a given bot.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "FocusOnBotAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2311,
+                        "name": "botId",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The ID of the bot to focus on.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 533,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2322,
+                        "name": "columnNumber",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The column number that should be selected in the editor.\nOnly supported in the system portal, sheet portal, and tag portals.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 483,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2414,
+                            "name": "FocusOnOptions.columnNumber"
+                        }
+                    },
+                    {
+                        "id": 2317,
+                        "name": "duration",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The duration in seconds that the animation should take.\nDefaults to 1.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 451,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2409,
+                            "name": "FocusOnOptions.duration"
+                        }
+                    },
+                    {
+                        "id": 2318,
+                        "name": "easing",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The options for easing.\nCan be an \"easing type\" or an object that specifies the type and mode.\nIf an easing type is specified, then \"inout\" mode is used.\nIf omitted, then \"quadratic\" \"inout\" is used.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 459,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 2352,
+                                    "name": "EaseType"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2354,
+                                    "name": "Easing"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2410,
+                            "name": "FocusOnOptions.easing"
+                        }
+                    },
+                    {
+                        "id": 2324,
+                        "name": "endIndex",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The index of the last character that should be selected.\nOnly supported in the system portal, sheet portal, and tag portals.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 495,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2416,
+                            "name": "FocusOnOptions.endIndex"
+                        }
+                    },
+                    {
+                        "id": 2321,
+                        "name": "lineNumber",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The line number that should be selected in the editor.\nOnly supported in the system portal, sheet portal, and tag portals.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 477,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2413,
+                            "name": "FocusOnOptions.lineNumber"
+                        }
+                    },
+                    {
+                        "id": 2313,
+                        "name": "playerId",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The ID of the player that created this task.\nSet by remote action handlers when a task is recieved from a remote player.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 186,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 2325,
+                        "name": "portal",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The portal that the bot should be focused in.\nIf not specified, then the bot will be focused in all the portals it is in. (bot, mini and menu)\nUseful if a bot is in two portals but you only want to focus it in one portal.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 502,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2417,
+                            "name": "FocusOnOptions.portal"
+                        }
+                    },
+                    {
+                        "id": 2316,
+                        "name": "rotation",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 445,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "id": 2418,
+                            "name": "FocusOnRotation"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2408,
+                            "name": "FocusOnOptions.rotation"
+                        }
+                    },
+                    {
+                        "id": 2320,
+                        "name": "space",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The tag space that should be focused.\nOnly supported in the system portal, sheet portal, and tag portals.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 471,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2412,
+                            "name": "FocusOnOptions.space"
+                        }
+                    },
+                    {
+                        "id": 2323,
+                        "name": "startIndex",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The index of the first character that should be selected.\nOnly supported in the system portal, sheet portal, and tag portals.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 489,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2415,
+                            "name": "FocusOnOptions.startIndex"
+                        }
+                    },
+                    {
+                        "id": 2319,
+                        "name": "tag",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The tag that should be focused.\nOnly supported in the system portal.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 465,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2411,
+                            "name": "FocusOnOptions.tag"
+                        }
+                    },
+                    {
+                        "id": 2312,
+                        "name": "taskId",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The ID of the async task.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 180,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 2310,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 528,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "focus_on"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 2314,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    },
+                    {
+                        "id": 2315,
+                        "name": "zoom",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 438,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "id": 2407,
+                            "name": "FocusOnOptions.zoom"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2311,
+                            2322,
+                            2317,
+                            2318,
+                            2324,
+                            2321,
+                            2313,
+                            2325,
+                            2316,
+                            2320,
+                            2323,
+                            2319,
+                            2312,
+                            2310,
+                            2314,
+                            2315
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 527,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "AsyncAction"
+                    },
+                    {
+                        "type": "reference",
+                        "id": 2406,
+                        "name": "FocusOnOptions"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to focus on a given bot.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "FocusOnBotAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2550,
+            "order": 0,
+            "name": "GoToDimensionAction",
+            "reflection": {
+                "id": 2550,
+                "name": "GoToDimensionAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that is used to send the player to a dimension.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "GoToDimensionAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2552,
+                        "name": "dimension",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The dimension that should be loaded.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1106,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2551,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1101,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "go_to_dimension"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2553,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2552,
+                            2551,
+                            2553
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1100,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that is used to send the player to a dimension.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "GoToDimensionAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2305,
+            "order": 0,
+            "name": "HideHtmlAction",
+            "reflection": {
+                "id": 2305,
+                "name": "HideHtmlAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to hide the HTML from the user.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "HideHtmlAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2306,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 420,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_html"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2308,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    },
+                    {
+                        "id": 2307,
+                        "name": "visible",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 421,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": false
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2306,
+                            2308,
+                            2307
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 419,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to hide the HTML from the user.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "HideHtmlAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2496,
+            "order": 0,
+            "name": "LoadServerAction",
+            "reflection": {
+                "id": 2496,
+                "name": "LoadServerAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to load a simulation.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "LoadServerAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2498,
+                        "name": "id",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The ID of the simulation to load.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 863,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2497,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 858,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "load_server"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2499,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2498,
+                            2497,
+                            2499
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 857,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to load a simulation.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "LoadServerAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2457,
+            "order": 0,
+            "name": "OpenBarcodeScannerAction",
+            "reflection": {
+                "id": 2457,
+                "name": "OpenBarcodeScannerAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to show or hide the barcode scanner.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "OpenBarcodeScannerAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2460,
+                        "name": "cameraType",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The camera that should be used.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 607,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "id": 2422,
+                            "name": "CameraType"
+                        }
+                    },
+                    {
+                        "id": 2461,
+                        "name": "disallowSwitchingCameras",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether to not allow switching the camera.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 612,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2459,
+                        "name": "open",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the barcode scanner should be visible.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 602,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2458,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 597,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_barcode_scanner"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2462,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2460,
+                            2461,
+                            2459,
+                            2458,
+                            2462
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 596,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to show or hide the barcode scanner.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "OpenBarcodeScannerAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2471,
+            "order": 0,
+            "name": "OpenConsoleAction",
+            "reflection": {
+                "id": 2471,
+                "name": "OpenConsoleAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to toggle whether the console is open.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "OpenConsoleAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2473,
+                        "name": "open",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the console should be open.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 747,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2472,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 742,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "open_console"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2474,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2473,
+                            2472,
+                            2474
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 741,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to toggle whether the console is open.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "OpenConsoleAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2451,
+            "order": 0,
+            "name": "OpenQRCodeScannerAction",
+            "reflection": {
+                "id": 2451,
+                "name": "OpenQRCodeScannerAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to show or hide the QR Code Scanner.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "OpenQRCodeScannerAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2454,
+                        "name": "cameraType",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The camera that should be used.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 584,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "id": 2422,
+                            "name": "CameraType"
+                        }
+                    },
+                    {
+                        "id": 2455,
+                        "name": "disallowSwitchingCameras",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether to not allow switching the camera.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 589,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2453,
+                        "name": "open",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the QR Code scanner should be visible.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 579,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2452,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 574,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_qr_code_scanner"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2456,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2454,
+                            2455,
+                            2453,
+                            2452,
+                            2456
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 573,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to show or hide the QR Code Scanner.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "OpenQRCodeScannerAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2560,
+            "order": 0,
+            "name": "OpenURLAction",
+            "reflection": {
+                "id": 2560,
+                "name": "OpenURLAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that is used to open the given URL.\nThis should be equivalent to clicking a link with rel=\"noreferrer\" and target=\"_blank\".",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "OpenURLAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2561,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1225,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "open_url"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2563,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    },
+                    {
+                        "id": 2562,
+                        "name": "url",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The URL to open.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1230,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2561,
+                            2563,
+                            2562
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1224,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that is used to open the given URL.\nThis should be equivalent to clicking a link with rel=\"noreferrer\" and target=\"_blank\".",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "OpenURLAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2589,
+            "order": 0,
+            "name": "RejectAction",
+            "reflection": {
+                "id": 2589,
+                "name": "RejectAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that prevents the execution of an action.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "RejectAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2591,
+                        "name": "actions",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The actions to prevent.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1419,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reference",
+                                "name": "Action"
+                            }
+                        }
+                    },
+                    {
+                        "id": 2590,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1414,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "reject"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2591,
+                            2590
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1413,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that prevents the execution of an action.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "RejectAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2272,
+            "order": 0,
+            "name": "ReplaceDragBotAction",
+            "reflection": {
+                "id": 2272,
+                "name": "ReplaceDragBotAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to override dragging a bot.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ReplaceDragBotAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2274,
+                        "name": "bot",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The bot that should be used to drag.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 320,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 2758,
+                                    "name": "Bot"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2806,
+                                    "name": "Tags"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 2273,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 315,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "replace_drag_bot"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2275,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2274,
+                            2273,
+                            2275
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 314,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to override dragging a bot.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ReplaceDragBotAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2592,
+            "order": 0,
+            "name": "SetClipboardAction",
+            "reflection": {
+                "id": 2592,
+                "name": "SetClipboardAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that sets some text on the user's clipboard.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "SetClipboardAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2594,
+                        "name": "text",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The text that the clipboard should be set to.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1432,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2593,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1427,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "set_clipboard"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2594,
+                            2593
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1426,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that sets some text on the user's clipboard.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "SetClipboardAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2480,
+            "order": 0,
+            "name": "ShowBarcodeAction",
+            "reflection": {
+                "id": 2480,
+                "name": "ShowBarcodeAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to show or hide a barcode on screen.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ShowBarcodeAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2483,
+                        "name": "code",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The code to display.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 800,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2484,
+                        "name": "format",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The format that the code should be displayed in.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 805,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "id": 2423,
+                            "name": "BarcodeFormat"
+                        }
+                    },
+                    {
+                        "id": 2482,
+                        "name": "open",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the barcode should be visible.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 795,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2481,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 790,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_barcode"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2485,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2483,
+                            2484,
+                            2482,
+                            2481,
+                            2485
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 789,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to show or hide a barcode on screen.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ShowBarcodeAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2595,
+            "order": 0,
+            "name": "ShowChatBarAction",
+            "reflection": {
+                "id": 2595,
+                "name": "ShowChatBarAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that shows the chat bar.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ShowChatBarAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2601,
+                        "name": "backgroundColor",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The color to use for the background.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1465,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2602,
+                        "name": "foregroundColor",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The color to use for the foreground (text).",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1470,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2599,
+                        "name": "placeholder",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The text that the bar should have as the placeholder.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1455,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2600,
+                        "name": "placeholderColor",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The color to use for the placeholder.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1460,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2598,
+                        "name": "prefill",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The text that the bar should be filled with by default.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1450,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2596,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1440,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_chat_bar"
+                        }
+                    },
+                    {
+                        "id": 2597,
+                        "name": "visible",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the chat bar should be visible.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1445,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2601,
+                            2602,
+                            2599,
+                            2600,
+                            2598,
+                            2596,
+                            2597
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1439,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that shows the chat bar.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ShowChatBarAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2300,
+            "order": 0,
+            "name": "ShowHtmlAction",
+            "reflection": {
+                "id": 2300,
+                "name": "ShowHtmlAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to show some HTML to the user.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ShowHtmlAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2303,
+                        "name": "html",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The HTML that should be shown.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 412,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2301,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 402,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_html"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2304,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    },
+                    {
+                        "id": 2302,
+                        "name": "visible",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the HTML should be visible.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 407,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": true
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2303,
+                            2301,
+                            2304,
+                            2302
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 401,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to show some HTML to the user.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ShowHtmlAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2554,
+            "order": 0,
+            "name": "ShowInputForTagAction",
+            "reflection": {
+                "id": 2554,
+                "name": "ShowInputForTagAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that is used to show an input box to edit a tag on a bot.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ShowInputForTagAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2556,
+                        "name": "botId",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The ID of the bot to edit.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1119,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2558,
+                        "name": "options",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The options for the input box.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1129,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "typeArguments": [
+                                {
+                                    "type": "reference",
+                                    "id": 2429,
+                                    "name": "ShowInputOptions"
+                                }
+                            ],
+                            "qualifiedName": "Partial",
+                            "package": "typescript",
+                            "name": "Partial"
+                        }
+                    },
+                    {
+                        "id": 2557,
+                        "name": "tag",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The tag that should be edited on the bot.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1124,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2555,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1114,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_input_for_tag"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2559,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2556,
+                            2558,
+                            2557,
+                            2555,
+                            2559
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1113,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that is used to show an input box to edit a tag on a bot.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ShowInputForTagAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2475,
+            "order": 0,
+            "name": "ShowQRCodeAction",
+            "reflection": {
+                "id": 2475,
+                "name": "ShowQRCodeAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to show or hide a QR Code on screen.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ShowQRCodeAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2478,
+                        "name": "code",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The code to display.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 765,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2477,
+                        "name": "open",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the QR Code should be visible.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 760,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2476,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 755,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_qr_code"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2479,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2478,
+                            2477,
+                            2476,
+                            2479
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 754,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to show or hide a QR Code on screen.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ShowQRCodeAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2280,
+            "order": 0,
+            "name": "ShowToastAction",
+            "reflection": {
+                "id": 2280,
+                "name": "ShowToastAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to show a toast message to the user.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ShowToastAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2283,
+                        "name": "duration",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The duration for the message in miliseconds.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 350,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 2282,
+                        "name": "message",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The message that should be shown.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 345,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "boolean"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "object"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "intrinsic",
+                                        "name": "any"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 2281,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 341,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_toast"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2284,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2283,
+                            2282,
+                            2281,
+                            2284
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 340,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to show a toast message to the user.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ShowToastAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2609,
+            "order": 0,
+            "name": "ShowUploadAuxFileAction",
+            "reflection": {
+                "id": 2609,
+                "name": "ShowUploadAuxFileAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that shows the \"upload AUX file\" dialog.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ShowUploadAuxFileAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2610,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1524,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_upload_aux_file"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2610
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1523,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that shows the \"upload AUX file\" dialog.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ShowUploadAuxFileAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2510,
+            "order": 0,
+            "name": "SuperShoutAction",
+            "reflection": {
+                "id": 2510,
+                "name": "SuperShoutAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event for actions that are shouted to every current loaded simulation.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "SuperShoutAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2513,
+                        "name": "argument",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The argument to pass as the \"that\" variable to scripts.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 907,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    },
+                    {
+                        "id": 2512,
+                        "name": "eventName",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The name of the event.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 902,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2511,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 897,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "super_shout"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2514,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2513,
+                            2512,
+                            2511,
+                            2514
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 896,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event for actions that are shouted to every current loaded simulation.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "SuperShoutAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2500,
+            "order": 0,
+            "name": "UnloadServerAction",
+            "reflection": {
+                "id": 2500,
+                "name": "UnloadServerAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "An event that is used to unload a simulation.",
+                    "tags": [
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "UnloadServerAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2502,
+                        "name": "id",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The ID of the simulation to unload.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 876,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2501,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 871,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "unload_server"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Action.type"
+                        }
+                    },
+                    {
+                        "id": 2503,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Action.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2502,
+                            2501,
+                            2503
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 870,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "Action"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "An event that is used to unload a simulation.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "UnloadServerAction\n"
+                    }
+                ]
+            },
+            "group": null
         }
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2656": "CasualOSError",
+        "id-2935": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3061": "Quaternion",
+        "id-3340": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3093": "Rotation",
+        "id-3372": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-2927": "Vector2",
+        "id-3206": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-2984": "Vector3",
+        "id-3263": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2675": "AIChatMessage",
+        "id-2954": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2452": "AIChatOptions",
+        "id-2731": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
         "id-2250": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-2466": "AIGenerateImageOptions",
+        "id-2745": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-2462": "AIGenerateSkyboxOptions",
+        "id-2741": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
         "id-2243": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
@@ -342,33 +3834,33 @@
         "AIGeneratedImage": "types/ai",
         "id-2253": "AIGeneratedImage",
         "AddCountFailure": "types/records/events",
-        "id-2860": "AddCountFailure",
+        "id-3139": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-2855": "AddCountSuccess",
+        "id-3134": "AddCountSuccess",
         "AnimateTagOptions": "types/animation",
         "id-1848": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
         "id-2223": "AttachDebuggerOptions",
         "CasualOSDevice": "types/os",
-        "id-2643": "CasualOSDevice",
+        "id-2922": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2635": "CasualOSVersion",
+        "id-2914": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3139": "AxisAndAngle",
+        "id-3418": "AxisAndAngle",
         "BotTagMasks": "types/core",
-        "id-2612": "BotTagMasks",
+        "id-2891": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2527": "BotTags",
+        "id-2806": "BotTags",
         "BotState": "types/core",
-        "id-2625": "BotState",
+        "id-2904": "BotState",
         "CompiledBotListeners": "types/core",
-        "id-2606": "CompiledBotListeners",
+        "id-2885": "CompiledBotListeners",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2278": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2372": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2797": "CreatePublicRecordKeyFailure",
+        "id-3076": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2793": "CreatePublicRecordKeySuccess",
+        "id-3072": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2176": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -382,39 +3874,39 @@
         "DebuggerVariable": "types/debuggers/common",
         "id-2217": "DebuggerVariable",
         "Easing": "types/animation",
-        "id-2260": "Easing",
+        "id-2354": "Easing",
         "EnableCollaborationAction": "types/os",
-        "id-2410": "EnableCollaborationAction",
+        "id-2682": "EnableCollaborationAction",
         "EnableXROptions": "types/os",
-        "id-2354": "EnableXROptions",
+        "id-2626": "EnableXROptions",
         "EraseDataFailure": "types/records/data",
-        "id-2831": "EraseDataFailure",
+        "id-3110": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-2827": "EraseDataSuccess",
+        "id-3106": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-2850": "EraseFileFailure",
+        "id-3129": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-2846": "EraseFileSuccess",
+        "id-3125": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3142": "EulerAnglesRotation",
+        "id-3421": "EulerAnglesRotation",
         "FocusOnOptions": "types/os",
-        "id-2312": "FocusOnOptions",
+        "id-2406": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2324": "FocusOnRotation",
+        "id-2418": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2372": "FormAnimationData",
+        "id-2644": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3136": "FromToRotation",
+        "id-3415": "FromToRotation",
         "GenericError": "types/error",
-        "id-2653": "GenericError",
+        "id-2932": "GenericError",
         "GetCountFailure": "types/records/events",
-        "id-2871": "GetCountFailure",
+        "id-3150": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-2865": "GetCountSuccess",
+        "id-3144": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-2822": "GetDataFailure",
+        "id-3101": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-2813": "GetDataSuccess",
+        "id-3092": "GetDataSuccess",
         "GetRoomOptionsFailure": "types/os",
         "id-1938": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
@@ -428,17 +3920,17 @@
         "GetRoomTrackOptionsSuccess": "types/os",
         "id-1952": "GetRoomTrackOptionsSuccess",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-2899": "GrantMarkerPermissionFailure",
+        "id-3178": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-2897": "GrantMarkerPermissionSuccess",
+        "id-3176": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-2885": "GrantRoleFailure",
+        "id-3164": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-2883": "GrantRoleSuccess",
+        "id-3162": "GrantRoleSuccess",
         "ImageClassifierOptions": "types/os",
-        "id-2330": "ImageClassifierOptions",
+        "id-2424": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2649": "InstUpdate",
+        "id-2928": "InstUpdate",
         "JoinRoomFailure": "types/os",
         "id-1919": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
@@ -448,29 +3940,29 @@
         "LeaveRoomSuccess": "types/os",
         "id-1925": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-2841": "ListDataFailure",
+        "id-3120": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-2836": "ListDataSuccess",
+        "id-3115": "ListDataSuccess",
         "ListStudiosFailure": "types/records/studios",
-        "id-2914": "ListStudiosFailure",
+        "id-3193": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-2911": "ListStudiosSuccess",
+        "id-3190": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-2918": "ListedStudio",
+        "id-3197": "ListedStudio",
         "LookRotation": "types/math/rotations",
-        "id-3159": "LookRotation",
+        "id-3438": "LookRotation",
         "MediaPermissionOptions": "types/os",
-        "id-2351": "MediaPermissionOptions",
+        "id-2623": "MediaPermissionOptions",
         "Debugger": "types/debuggers/debugger",
         "id-1988": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
         "id-2195": "NormalDebuggerOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2394": "PhotoCameraOptions",
+        "id-2666": "PhotoCameraOptions",
         "ParsedBotLink": "types/core",
-        "id-2631": "ParsedBotLink",
+        "id-2910": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2628": "PartialBotState",
+        "id-2907": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
         "id-2044": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
@@ -480,99 +3972,101 @@
         "PauseTriggerOptions": "types/debuggers/common",
         "id-2171": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2406": "Photo",
+        "id-2678": "Photo",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
         "id-2158": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
         "id-2232": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3152": "QuaternionRotation",
+        "id-3431": "QuaternionRotation",
         "RaycastRay": "types/os",
         "id-1912": "RaycastRay",
         "RaycastResult": "types/os",
         "id-1909": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2415": "RecordActionOptions",
+        "id-2694": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-2807": "RecordDataFailure",
+        "id-3086": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-2803": "RecordDataSuccess",
+        "id-3082": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-1879": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
         "id-1875": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2381": "RecordedFile",
+        "id-2653": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2379": "Recording",
+        "id-2651": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2386": "RecordingOptions",
+        "id-2658": "RecordingOptions",
         "RegisterPrefixOptions": "types/core",
-        "id-2376": "RegisterPrefixOptions",
+        "id-2648": "RegisterPrefixOptions",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-2906": "RevokeMarkerPermissionFailure",
+        "id-3185": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-2904": "RevokeMarkerPermissionSuccess",
+        "id-3183": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-2892": "RevokeRoleFailure",
+        "id-3171": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-2890": "RevokeRoleSuccess",
+        "id-3169": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2418": "RoomJoinOptions",
+        "id-2697": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2427": "RoomOptions",
+        "id-2706": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2443": "RoomRemoteOptions",
+        "id-2722": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2431": "RoomTrackOptions",
+        "id-2710": "RoomTrackOptions",
         "RuntimeBot": "types/core",
-        "id-2479": "RuntimeBot",
+        "id-2758": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2618": "RuntimeBotLinks",
+        "id-2897": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2615": "RuntimeBotVars",
+        "id-2894": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3150": "SequenceRotation",
+        "id-3429": "SequenceRotation",
         "SetRoomOptionsSuccess": "types/os",
         "id-1943": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2449": "SetRoomTrackOptions",
+        "id-2728": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
         "id-1969": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
         "id-1964": "SetRoomTrackOptionsSuccess",
         "ShareOptions": "types/os",
-        "id-2308": "ShareOptions",
+        "id-2402": "ShareOptions",
         "ShowChatOptions": "types/os",
-        "id-2302": "ShowChatOptions",
+        "id-2396": "ShowChatOptions",
+        "ShowConfirmAction": "types/os",
+        "id-2445": "ShowConfirmAction",
         "ShowConfirmOptions": "types/os",
-        "id-2346": "ShowConfirmOptions",
+        "id-2440": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2335": "ShowInputOptions",
+        "id-2429": "ShowInputOptions",
         "SnapAxis": "types/os",
-        "id-2282": "SnapAxis",
+        "id-2376": "SnapAxis",
         "SnapGridTarget": "types/os",
         "id-1884": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2294": "SnapPoint",
+        "id-2388": "SnapPoint",
         "SpeakTextOptions": "types/experimental",
         "id-2228": "SpeakTextOptions",
         "StartFormAnimationOptions": "types/os",
-        "id-2356": "StartFormAnimationOptions",
+        "id-2628": "StartFormAnimationOptions",
         "StopFormAnimationOptions": "types/os",
-        "id-2369": "StopFormAnimationOptions",
+        "id-2641": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2264": "SuccessfulGeolocation",
+        "id-2358": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2390": "SyntheticVoice",
+        "id-2662": "SyntheticVoice",
         "TweenOptions": "types/experimental",
         "id-2225": "TweenOptions",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2274": "UnsuccessfulGeolocation",
+        "id-2368": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-2878": "UpdateEventRecordFailure",
+        "id-3157": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-2876": "UpdateEventRecordSuccess",
+        "id-3155": "UpdateEventRecordSuccess",
         "UploadedFile": "types/os",
         "id-1905": "UploadedFile",
         "WebhookOptions": "types/web",
@@ -580,33 +4074,33 @@
         "WebhookResult": "types/web",
         "id-1841": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-2854": "AddCountResult",
+        "id-3133": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2681": "AvailablePermissions",
+        "id-2960": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2329": "BarcodeFormat",
+        "id-2423": "BarcodeFormat",
         "BotFilter": "types/core",
         "id-1863": "BotFilter",
         "BotSpace": "types/core",
-        "id-2602": "BotSpace",
+        "id-2881": "BotSpace",
         "CameraType": "types/os",
-        "id-2328": "CameraType",
+        "id-2422": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2792": "CreatePublicRecordKeyResult",
+        "id-3071": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
-        "id-2259": "EaseMode",
+        "id-2353": "EaseMode",
         "EaseType": "types/animation",
-        "id-2258": "EaseType",
+        "id-2352": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-2826": "EraseDataResult",
+        "id-3105": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-2845": "EraseFileResult",
+        "id-3124": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2263": "Geolocation",
+        "id-2357": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-2864": "GetCountResult",
+        "id-3143": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-2812": "GetDataResult",
+        "id-3091": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
         "id-1933": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
@@ -614,45 +4108,45 @@
         "GetRoomTrackOptionsResult": "types/os",
         "id-1951": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-2896": "GrantMarkerPermissionResult",
+        "id-3175": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-2882": "GrantRoleResult",
+        "id-3161": "GrantRoleResult",
         "JoinRoomResult": "types/os",
         "id-1915": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
         "id-1924": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-2835": "ListDataResult",
+        "id-3114": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-2910": "ListStudiosResult",
+        "id-3189": "ListStudiosResult",
         "Mod": "types/core",
         "id-1858": "Mod",
         "PortalType": "types/core",
-        "id-2634": "PortalType",
+        "id-2913": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2162": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-2802": "RecordDataResult",
+        "id-3081": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-1874": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-2903": "RevokeMarkerPermissionResult",
+        "id-3182": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-2889": "RevokeRoleResult",
+        "id-3168": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
         "id-1942": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
         "id-1963": "SetRoomTrackOptionsResult",
         "ShowInputSuptype": "types/os",
-        "id-2345": "ShowInputSuptype",
+        "id-2439": "ShowInputSuptype",
         "ShowInputType": "types/os",
-        "id-2344": "ShowInputType",
+        "id-2438": "ShowInputType",
         "SnapTarget": "types/os",
-        "id-2301": "SnapTarget",
+        "id-2395": "SnapTarget",
         "TagFilter": "types/core",
         "id-1859": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-2875": "UpdateEventRecordResult",
+        "id-3154": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",

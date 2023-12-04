@@ -5,11 +5,11 @@
     "pageSidebarLabel": "OS",
     "contents": [
         {
-            "id": 2263,
+            "id": 2357,
             "order": 0,
             "name": "Geolocation",
             "reflection": {
-                "id": 2263,
+                "id": 2357,
                 "name": "Geolocation",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -57,7 +57,7 @@
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2493,
+                        "line": 2531,
                         "character": 12
                     }
                 ],
@@ -66,12 +66,12 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 2264,
+                            "id": 2358,
                             "name": "SuccessfulGeolocation"
                         },
                         {
                             "type": "reference",
-                            "id": 2274,
+                            "id": 2368,
                             "name": "UnsuccessfulGeolocation"
                         }
                     ]
@@ -121,11 +121,11 @@
             "group": "01-geo"
         },
         {
-            "id": 2264,
+            "id": 2358,
             "order": 1,
             "name": "SuccessfulGeolocation",
             "reflection": {
-                "id": 2264,
+                "id": 2358,
                 "name": "SuccessfulGeolocation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -157,7 +157,7 @@
                 },
                 "children": [
                     {
-                        "id": 2266,
+                        "id": 2360,
                         "name": "altitude",
                         "kind": 1024,
                         "kindString": "Property",
@@ -171,7 +171,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2510,
+                                "line": 2548,
                                 "character": 4
                             }
                         ],
@@ -181,7 +181,7 @@
                         }
                     },
                     {
-                        "id": 2267,
+                        "id": 2361,
                         "name": "altitudeAccuracy",
                         "kind": 1024,
                         "kindString": "Property",
@@ -195,7 +195,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2516,
+                                "line": 2554,
                                 "character": 4
                             }
                         ],
@@ -205,7 +205,7 @@
                         }
                     },
                     {
-                        "id": 2271,
+                        "id": 2365,
                         "name": "heading",
                         "kind": 1024,
                         "kindString": "Property",
@@ -217,7 +217,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2538,
+                                "line": 2576,
                                 "character": 4
                             }
                         ],
@@ -227,7 +227,7 @@
                         }
                     },
                     {
-                        "id": 2268,
+                        "id": 2362,
                         "name": "latitude",
                         "kind": 1024,
                         "kindString": "Property",
@@ -241,7 +241,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2521,
+                                "line": 2559,
                                 "character": 4
                             }
                         ],
@@ -251,7 +251,7 @@
                         }
                     },
                     {
-                        "id": 2269,
+                        "id": 2363,
                         "name": "longitude",
                         "kind": 1024,
                         "kindString": "Property",
@@ -265,7 +265,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2526,
+                                "line": 2564,
                                 "character": 4
                             }
                         ],
@@ -275,7 +275,7 @@
                         }
                     },
                     {
-                        "id": 2270,
+                        "id": 2364,
                         "name": "positionalAccuracy",
                         "kind": 1024,
                         "kindString": "Property",
@@ -289,7 +289,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2531,
+                                "line": 2569,
                                 "character": 4
                             }
                         ],
@@ -299,7 +299,7 @@
                         }
                     },
                     {
-                        "id": 2272,
+                        "id": 2366,
                         "name": "speed",
                         "kind": 1024,
                         "kindString": "Property",
@@ -311,7 +311,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2544,
+                                "line": 2582,
                                 "character": 4
                             }
                         ],
@@ -321,7 +321,7 @@
                         }
                     },
                     {
-                        "id": 2265,
+                        "id": 2359,
                         "name": "success",
                         "kind": 1024,
                         "kindString": "Property",
@@ -329,7 +329,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2504,
+                                "line": 2542,
                                 "character": 4
                             }
                         ],
@@ -339,7 +339,7 @@
                         }
                     },
                     {
-                        "id": 2273,
+                        "id": 2367,
                         "name": "timestamp",
                         "kind": 1024,
                         "kindString": "Property",
@@ -351,7 +351,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2549,
+                                "line": 2587,
                                 "character": 4
                             }
                         ],
@@ -366,22 +366,22 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2266,
-                            2267,
-                            2271,
-                            2268,
-                            2269,
-                            2270,
-                            2272,
-                            2265,
-                            2273
+                            2360,
+                            2361,
+                            2365,
+                            2362,
+                            2363,
+                            2364,
+                            2366,
+                            2359,
+                            2367
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2503,
+                        "line": 2541,
                         "character": 17
                     }
                 ]
@@ -415,11 +415,11 @@
             "group": "01-geo"
         },
         {
-            "id": 2274,
+            "id": 2368,
             "order": 2,
             "name": "UnsuccessfulGeolocation",
             "reflection": {
-                "id": 2274,
+                "id": 2368,
                 "name": "UnsuccessfulGeolocation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -451,7 +451,7 @@
                 },
                 "children": [
                     {
-                        "id": 2276,
+                        "id": 2370,
                         "name": "errorCode",
                         "kind": 1024,
                         "kindString": "Property",
@@ -465,7 +465,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2566,
+                                "line": 2604,
                                 "character": 4
                             }
                         ],
@@ -492,7 +492,7 @@
                         }
                     },
                     {
-                        "id": 2277,
+                        "id": 2371,
                         "name": "errorMessage",
                         "kind": 1024,
                         "kindString": "Property",
@@ -506,7 +506,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2575,
+                                "line": 2613,
                                 "character": 4
                             }
                         ],
@@ -516,7 +516,7 @@
                         }
                     },
                     {
-                        "id": 2275,
+                        "id": 2369,
                         "name": "success",
                         "kind": 1024,
                         "kindString": "Property",
@@ -524,7 +524,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2561,
+                                "line": 2599,
                                 "character": 4
                             }
                         ],
@@ -539,16 +539,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2276,
-                            2277,
-                            2275
+                            2370,
+                            2371,
+                            2369
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2560,
+                        "line": 2598,
                         "character": 17
                     }
                 ]
@@ -582,11 +582,11 @@
             "group": "01-geo"
         },
         {
-            "id": 2278,
+            "id": 2372,
             "order": 3,
             "name": "ConvertGeolocationToWhat3WordsOptions",
             "reflection": {
-                "id": 2278,
+                "id": 2372,
                 "name": "ConvertGeolocationToWhat3WordsOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -618,7 +618,7 @@
                 },
                 "children": [
                     {
-                        "id": 2281,
+                        "id": 2375,
                         "name": "language",
                         "kind": 1024,
                         "kindString": "Property",
@@ -632,7 +632,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2766,
+                                "line": 2804,
                                 "character": 4
                             }
                         ],
@@ -642,7 +642,7 @@
                         }
                     },
                     {
-                        "id": 2279,
+                        "id": 2373,
                         "name": "latitude",
                         "kind": 1024,
                         "kindString": "Property",
@@ -654,7 +654,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2756,
+                                "line": 2794,
                                 "character": 4
                             }
                         ],
@@ -664,7 +664,7 @@
                         }
                     },
                     {
-                        "id": 2280,
+                        "id": 2374,
                         "name": "longitude",
                         "kind": 1024,
                         "kindString": "Property",
@@ -676,7 +676,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2761,
+                                "line": 2799,
                                 "character": 4
                             }
                         ],
@@ -691,16 +691,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2281,
-                            2279,
-                            2280
+                            2375,
+                            2373,
+                            2374
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2752,
+                        "line": 2790,
                         "character": 17
                     }
                 ]
@@ -734,11 +734,11 @@
             "group": "01-geo"
         },
         {
-            "id": 2301,
+            "id": 2395,
             "order": 0,
             "name": "SnapTarget",
             "reflection": {
-                "id": 2301,
+                "id": 2395,
                 "name": "SnapTarget",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -771,7 +771,7 @@
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2209,
+                        "line": 2247,
                         "character": 12
                     }
                 ],
@@ -796,12 +796,12 @@
                         },
                         {
                             "type": "reference",
-                            "id": 2294,
+                            "id": 2388,
                             "name": "SnapPoint"
                         },
                         {
                             "type": "reference",
-                            "id": 2282,
+                            "id": 2376,
                             "name": "SnapAxis"
                         }
                     ]
@@ -836,11 +836,11 @@
             "group": "10-snap"
         },
         {
-            "id": 2294,
+            "id": 2388,
             "order": 1,
             "name": "SnapPoint",
             "reflection": {
-                "id": 2294,
+                "id": 2388,
                 "name": "SnapPoint",
                 "kind": 256,
                 "kindString": "Interface",
@@ -872,7 +872,7 @@
                 },
                 "children": [
                     {
-                        "id": 2300,
+                        "id": 2394,
                         "name": "distance",
                         "kind": 1024,
                         "kindString": "Property",
@@ -884,7 +884,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2164,
+                                "line": 2202,
                                 "character": 4
                             }
                         ],
@@ -894,7 +894,7 @@
                         }
                     },
                     {
-                        "id": 2295,
+                        "id": 2389,
                         "name": "position",
                         "kind": 1024,
                         "kindString": "Property",
@@ -912,21 +912,21 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2159,
+                                "line": 2197,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 2296,
+                                "id": 2390,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 2297,
+                                        "id": 2391,
                                         "name": "x",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -934,7 +934,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2159,
+                                                "line": 2197,
                                                 "character": 16
                                             }
                                         ],
@@ -944,7 +944,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2298,
+                                        "id": 2392,
                                         "name": "y",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -952,7 +952,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2159,
+                                                "line": 2197,
                                                 "character": 27
                                             }
                                         ],
@@ -962,7 +962,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2299,
+                                        "id": 2393,
                                         "name": "z",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -970,7 +970,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2159,
+                                                "line": 2197,
                                                 "character": 38
                                             }
                                         ],
@@ -985,9 +985,9 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            2297,
-                                            2298,
-                                            2299
+                                            2391,
+                                            2392,
+                                            2393
                                         ]
                                     }
                                 ]
@@ -1003,15 +1003,15 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2300,
-                            2295
+                            2394,
+                            2389
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2153,
+                        "line": 2191,
                         "character": 17
                     }
                 ]
@@ -1045,11 +1045,11 @@
             "group": "10-snap"
         },
         {
-            "id": 2282,
+            "id": 2376,
             "order": 2,
             "name": "SnapAxis",
             "reflection": {
-                "id": 2282,
+                "id": 2376,
                 "name": "SnapAxis",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1081,7 +1081,7 @@
                 },
                 "children": [
                     {
-                        "id": 2283,
+                        "id": 2377,
                         "name": "direction",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1099,21 +1099,21 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2182,
+                                "line": 2220,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 2284,
+                                "id": 2378,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 2285,
+                                        "id": 2379,
                                         "name": "x",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1121,7 +1121,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2182,
+                                                "line": 2220,
                                                 "character": 17
                                             }
                                         ],
@@ -1131,7 +1131,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2286,
+                                        "id": 2380,
                                         "name": "y",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1139,7 +1139,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2182,
+                                                "line": 2220,
                                                 "character": 28
                                             }
                                         ],
@@ -1149,7 +1149,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2287,
+                                        "id": 2381,
                                         "name": "z",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1157,7 +1157,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2182,
+                                                "line": 2220,
                                                 "character": 39
                                             }
                                         ],
@@ -1172,9 +1172,9 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            2285,
-                                            2286,
-                                            2287
+                                            2379,
+                                            2380,
+                                            2381
                                         ]
                                     }
                                 ]
@@ -1185,7 +1185,7 @@
                         "references": ""
                     },
                     {
-                        "id": 2293,
+                        "id": 2387,
                         "name": "distance",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1197,7 +1197,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2194,
+                                "line": 2232,
                                 "character": 4
                             }
                         ],
@@ -1207,7 +1207,7 @@
                         }
                     },
                     {
-                        "id": 2288,
+                        "id": 2382,
                         "name": "origin",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1225,21 +1225,21 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2189,
+                                "line": 2227,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 2289,
+                                "id": 2383,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 2290,
+                                        "id": 2384,
                                         "name": "x",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1247,7 +1247,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2189,
+                                                "line": 2227,
                                                 "character": 14
                                             }
                                         ],
@@ -1257,7 +1257,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2291,
+                                        "id": 2385,
                                         "name": "y",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1265,7 +1265,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2189,
+                                                "line": 2227,
                                                 "character": 25
                                             }
                                         ],
@@ -1275,7 +1275,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2292,
+                                        "id": 2386,
                                         "name": "z",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -1283,7 +1283,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2189,
+                                                "line": 2227,
                                                 "character": 36
                                             }
                                         ],
@@ -1298,9 +1298,9 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            2290,
-                                            2291,
-                                            2292
+                                            2384,
+                                            2385,
+                                            2386
                                         ]
                                     }
                                 ]
@@ -1316,16 +1316,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2283,
-                            2293,
-                            2288
+                            2377,
+                            2387,
+                            2382
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2176,
+                        "line": 2214,
                         "character": 17
                     }
                 ]
@@ -1359,11 +1359,11 @@
             "group": "10-snap"
         },
         {
-            "id": 2329,
+            "id": 2423,
             "order": 9999,
             "name": "BarcodeFormat",
             "reflection": {
-                "id": 2329,
+                "id": 2423,
                 "name": "BarcodeFormat",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -1386,7 +1386,7 @@
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 773,
+                        "line": 774,
                         "character": 12
                     }
                 ],
@@ -1451,11 +1451,11 @@
             "group": null
         },
         {
-            "id": 2328,
+            "id": 2422,
             "order": 9999,
             "name": "CameraType",
             "reflection": {
-                "id": 2328,
+                "id": 2422,
                 "name": "CameraType",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -1515,11 +1515,11 @@
             "group": null
         },
         {
-            "id": 2643,
+            "id": 2922,
             "order": 9999,
             "name": "CasualOSDevice",
             "reflection": {
-                "id": 2643,
+                "id": 2922,
                 "name": "AuxDevice",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1541,7 +1541,7 @@
                 },
                 "children": [
                     {
-                        "id": 2648,
+                        "id": 2927,
                         "name": "ab1BootstrapUrl",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1563,7 +1563,7 @@
                         }
                     },
                     {
-                        "id": 2647,
+                        "id": 2926,
                         "name": "allowCollaborationUpgrade",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1585,7 +1585,7 @@
                         }
                     },
                     {
-                        "id": 2646,
+                        "id": 2925,
                         "name": "isCollaborative",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1608,7 +1608,7 @@
                         }
                     },
                     {
-                        "id": 2644,
+                        "id": 2923,
                         "name": "supportsAR",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1630,7 +1630,7 @@
                         }
                     },
                     {
-                        "id": 2645,
+                        "id": 2924,
                         "name": "supportsVR",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1657,11 +1657,11 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2648,
-                            2647,
-                            2646,
-                            2644,
-                            2645
+                            2927,
+                            2926,
+                            2925,
+                            2923,
+                            2924
                         ]
                     }
                 ],
@@ -1692,11 +1692,11 @@
             "group": null
         },
         {
-            "id": 2635,
+            "id": 2914,
             "order": 9999,
             "name": "CasualOSVersion",
             "reflection": {
-                "id": 2635,
+                "id": 2914,
                 "name": "AuxVersion",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1718,7 +1718,7 @@
                 },
                 "children": [
                     {
-                        "id": 2641,
+                        "id": 2920,
                         "name": "alpha",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1749,7 +1749,7 @@
                         }
                     },
                     {
-                        "id": 2636,
+                        "id": 2915,
                         "name": "hash",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1771,7 +1771,7 @@
                         }
                     },
                     {
-                        "id": 2638,
+                        "id": 2917,
                         "name": "major",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1793,7 +1793,7 @@
                         }
                     },
                     {
-                        "id": 2639,
+                        "id": 2918,
                         "name": "minor",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1815,7 +1815,7 @@
                         }
                     },
                     {
-                        "id": 2640,
+                        "id": 2919,
                         "name": "patch",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1837,7 +1837,7 @@
                         }
                     },
                     {
-                        "id": 2642,
+                        "id": 2921,
                         "name": "playerMode",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1869,7 +1869,7 @@
                         }
                     },
                     {
-                        "id": 2637,
+                        "id": 2916,
                         "name": "version",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1896,13 +1896,13 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2641,
-                            2636,
-                            2638,
-                            2639,
-                            2640,
-                            2642,
-                            2637
+                            2920,
+                            2915,
+                            2917,
+                            2918,
+                            2919,
+                            2921,
+                            2916
                         ]
                     }
                 ],
@@ -1933,11 +1933,11 @@
             "group": null
         },
         {
-            "id": 2410,
+            "id": 2682,
             "order": 9999,
             "name": "EnableCollaborationAction",
             "reflection": {
-                "id": 2410,
+                "id": 2682,
                 "name": "EnableCollaborationAction",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1959,7 +1959,7 @@
                 },
                 "children": [
                     {
-                        "id": 2413,
+                        "id": 2685,
                         "name": "playerId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1987,7 +1987,7 @@
                         }
                     },
                     {
-                        "id": 2412,
+                        "id": 2684,
                         "name": "taskId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2022,7 +2022,7 @@
                         }
                     },
                     {
-                        "id": 2411,
+                        "id": 2683,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2030,7 +2030,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1524,
+                                "line": 1560,
                                 "character": 4
                             }
                         ],
@@ -2044,7 +2044,7 @@
                         }
                     },
                     {
-                        "id": 2414,
+                        "id": 2686,
                         "name": "uncopiable",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2077,17 +2077,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2413,
-                            2412,
-                            2411,
-                            2414
+                            2685,
+                            2684,
+                            2683,
+                            2686
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 1523,
+                        "line": 1559,
                         "character": 17
                     }
                 ],
@@ -2117,11 +2117,11 @@
             "group": null
         },
         {
-            "id": 2354,
+            "id": 2626,
             "order": 9999,
             "name": "EnableXROptions",
             "reflection": {
-                "id": 2354,
+                "id": 2626,
                 "name": "EnableXROptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2143,7 +2143,7 @@
                 },
                 "children": [
                     {
-                        "id": 2355,
+                        "id": 2627,
                         "name": "frameBufferScaleFactor",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2157,7 +2157,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1711,
+                                "line": 1749,
                                 "character": 4
                             }
                         ],
@@ -2181,14 +2181,14 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2355
+                            2627
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 1703,
+                        "line": 1741,
                         "character": 17
                     }
                 ]
@@ -2212,11 +2212,11 @@
             "group": null
         },
         {
-            "id": 2312,
+            "id": 2406,
             "order": 9999,
             "name": "FocusOnOptions",
             "reflection": {
-                "id": 2312,
+                "id": 2406,
                 "name": "FocusOnOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2238,7 +2238,7 @@
                 },
                 "children": [
                     {
-                        "id": 2320,
+                        "id": 2414,
                         "name": "columnNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2262,7 +2262,7 @@
                         }
                     },
                     {
-                        "id": 2315,
+                        "id": 2409,
                         "name": "duration",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2286,7 +2286,7 @@
                         }
                     },
                     {
-                        "id": 2316,
+                        "id": 2410,
                         "name": "easing",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2309,19 +2309,19 @@
                             "types": [
                                 {
                                     "type": "reference",
-                                    "id": 2258,
+                                    "id": 2352,
                                     "name": "EaseType"
                                 },
                                 {
                                     "type": "reference",
-                                    "id": 2260,
+                                    "id": 2354,
                                     "name": "Easing"
                                 }
                             ]
                         }
                     },
                     {
-                        "id": 2322,
+                        "id": 2416,
                         "name": "endIndex",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2345,7 +2345,7 @@
                         }
                     },
                     {
-                        "id": 2319,
+                        "id": 2413,
                         "name": "lineNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2369,7 +2369,7 @@
                         }
                     },
                     {
-                        "id": 2323,
+                        "id": 2417,
                         "name": "portal",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2393,7 +2393,7 @@
                         }
                     },
                     {
-                        "id": 2314,
+                        "id": 2408,
                         "name": "rotation",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2409,12 +2409,12 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2324,
+                            "id": 2418,
                             "name": "FocusOnRotation"
                         }
                     },
                     {
-                        "id": 2318,
+                        "id": 2412,
                         "name": "space",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2438,7 +2438,7 @@
                         }
                     },
                     {
-                        "id": 2321,
+                        "id": 2415,
                         "name": "startIndex",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2462,7 +2462,7 @@
                         }
                     },
                     {
-                        "id": 2317,
+                        "id": 2411,
                         "name": "tag",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2486,7 +2486,7 @@
                         }
                     },
                     {
-                        "id": 2313,
+                        "id": 2407,
                         "name": "zoom",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2511,17 +2511,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2320,
-                            2315,
-                            2316,
-                            2322,
-                            2319,
-                            2323,
-                            2314,
-                            2318,
-                            2321,
-                            2317,
-                            2313
+                            2414,
+                            2409,
+                            2410,
+                            2416,
+                            2413,
+                            2417,
+                            2408,
+                            2412,
+                            2415,
+                            2411,
+                            2407
                         ]
                     }
                 ],
@@ -2530,6 +2530,18 @@
                         "fileName": "src/aux-common/bots/BotEvents.ts",
                         "line": 430,
                         "character": 17
+                    }
+                ],
+                "extendedBy": [
+                    {
+                        "type": "reference",
+                        "id": 2309,
+                        "name": "FocusOnBotAction"
+                    },
+                    {
+                        "type": "reference",
+                        "id": 2326,
+                        "name": "FocusOnPositionAction"
                     }
                 ]
             },
@@ -2552,11 +2564,11 @@
             "group": null
         },
         {
-            "id": 2324,
+            "id": 2418,
             "order": 9999,
             "name": "FocusOnRotation",
             "reflection": {
-                "id": 2324,
+                "id": 2418,
                 "name": "FocusOnRotation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2578,7 +2590,7 @@
                 },
                 "children": [
                     {
-                        "id": 2327,
+                        "id": 2421,
                         "name": "normalize",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2602,7 +2614,7 @@
                         }
                     },
                     {
-                        "id": 2325,
+                        "id": 2419,
                         "name": "x",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2620,7 +2632,7 @@
                         }
                     },
                     {
-                        "id": 2326,
+                        "id": 2420,
                         "name": "y",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2643,9 +2655,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2327,
-                            2325,
-                            2326
+                            2421,
+                            2419,
+                            2420
                         ]
                     }
                 ],
@@ -2676,11 +2688,11 @@
             "group": null
         },
         {
-            "id": 2372,
+            "id": 2644,
             "order": 9999,
             "name": "FormAnimationData",
             "reflection": {
-                "id": 2372,
+                "id": 2644,
                 "name": "FormAnimationData",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2702,7 +2714,7 @@
                 },
                 "children": [
                     {
-                        "id": 2375,
+                        "id": 2647,
                         "name": "duration",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2714,7 +2726,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 3033,
+                                "line": 3071,
                                 "character": 4
                             }
                         ],
@@ -2724,7 +2736,7 @@
                         }
                     },
                     {
-                        "id": 2374,
+                        "id": 2646,
                         "name": "index",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2736,7 +2748,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 3028,
+                                "line": 3066,
                                 "character": 4
                             }
                         ],
@@ -2746,7 +2758,7 @@
                         }
                     },
                     {
-                        "id": 2373,
+                        "id": 2645,
                         "name": "name",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2758,7 +2770,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 3023,
+                                "line": 3061,
                                 "character": 4
                             }
                         ],
@@ -2773,16 +2785,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2375,
-                            2374,
-                            2373
+                            2647,
+                            2646,
+                            2645
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 3019,
+                        "line": 3057,
                         "character": 17
                     }
                 ]
@@ -3042,7 +3054,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2427,
+                            "id": 2706,
                             "name": "RoomOptions"
                         }
                     },
@@ -3407,7 +3419,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2443,
+                            "id": 2722,
                             "name": "RoomRemoteOptions"
                         }
                     },
@@ -3817,7 +3829,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2431,
+                            "id": 2710,
                             "name": "RoomTrackOptions"
                         }
                     },
@@ -3901,11 +3913,11 @@
             "group": null
         },
         {
-            "id": 2330,
+            "id": 2424,
             "order": 9999,
             "name": "ImageClassifierOptions",
             "reflection": {
-                "id": 2330,
+                "id": 2424,
                 "name": "ImageClassifierOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3927,7 +3939,7 @@
                 },
                 "children": [
                     {
-                        "id": 2334,
+                        "id": 2428,
                         "name": "cameraType",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3941,18 +3953,18 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 847,
+                                "line": 850,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2328,
+                            "id": 2422,
                             "name": "CameraType"
                         }
                     },
                     {
-                        "id": 2332,
+                        "id": 2426,
                         "name": "modelJsonUrl",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3966,7 +3978,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 836,
+                                "line": 839,
                                 "character": 4
                             }
                         ],
@@ -3976,7 +3988,7 @@
                         }
                     },
                     {
-                        "id": 2333,
+                        "id": 2427,
                         "name": "modelMetadataUrl",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3990,7 +4002,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 842,
+                                "line": 845,
                                 "character": 4
                             }
                         ],
@@ -4000,7 +4012,7 @@
                         }
                     },
                     {
-                        "id": 2331,
+                        "id": 2425,
                         "name": "modelUrl",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4014,7 +4026,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 830,
+                                "line": 833,
                                 "character": 4
                             }
                         ],
@@ -4029,18 +4041,25 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2334,
-                            2332,
-                            2333,
-                            2331
+                            2428,
+                            2426,
+                            2427,
+                            2425
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 826,
+                        "line": 829,
                         "character": 17
+                    }
+                ],
+                "extendedBy": [
+                    {
+                        "type": "reference",
+                        "id": 2486,
+                        "name": "OpenImageClassifierAction"
                     }
                 ]
             },
@@ -4063,11 +4082,11 @@
             "group": null
         },
         {
-            "id": 2649,
+            "id": 2928,
             "order": 9999,
             "name": "InstUpdate",
             "reflection": {
-                "id": 2649,
+                "id": 2928,
                 "name": "InstUpdate",
                 "kind": 256,
                 "kindString": "Interface",
@@ -4089,7 +4108,7 @@
                 },
                 "children": [
                     {
-                        "id": 2650,
+                        "id": 2929,
                         "name": "id",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4111,7 +4130,7 @@
                         }
                     },
                     {
-                        "id": 2652,
+                        "id": 2931,
                         "name": "timestamp",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4133,7 +4152,7 @@
                         }
                     },
                     {
-                        "id": 2651,
+                        "id": 2930,
                         "name": "update",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4160,9 +4179,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2650,
-                            2652,
-                            2651
+                            2929,
+                            2931,
+                            2930
                         ]
                     }
                 ],
@@ -4829,11 +4848,11 @@
             "group": null
         },
         {
-            "id": 2351,
+            "id": 2623,
             "order": 9999,
             "name": "MediaPermissionOptions",
             "reflection": {
-                "id": 2351,
+                "id": 2623,
                 "name": "MediaPermssionOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -4855,7 +4874,7 @@
                 },
                 "children": [
                     {
-                        "id": 2352,
+                        "id": 2624,
                         "name": "audio",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4869,7 +4888,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2788,
+                                "line": 2826,
                                 "character": 4
                             }
                         ],
@@ -4879,7 +4898,7 @@
                         }
                     },
                     {
-                        "id": 2353,
+                        "id": 2625,
                         "name": "video",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4893,7 +4912,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2793,
+                                "line": 2831,
                                 "character": 4
                             }
                         ],
@@ -4908,15 +4927,15 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2352,
-                            2353
+                            2624,
+                            2625
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2784,
+                        "line": 2822,
                         "character": 17
                     }
                 ]
@@ -4984,7 +5003,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2984,
+                            "id": 3263,
                             "name": "Vector3"
                         }
                     },
@@ -5007,7 +5026,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2984,
+                            "id": 3263,
                             "name": "Vector3"
                         }
                     }
@@ -5160,11 +5179,11 @@
             "group": null
         },
         {
-            "id": 2418,
+            "id": 2697,
             "order": 9999,
             "name": "RoomJoinOptions",
             "reflection": {
-                "id": 2418,
+                "id": 2697,
                 "name": "RoomJoinOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -5186,7 +5205,7 @@
                 },
                 "children": [
                     {
-                        "id": 2423,
+                        "id": 2702,
                         "name": "adaptiveStream",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5217,7 +5236,7 @@
                         }
                     },
                     {
-                        "id": 2425,
+                        "id": 2704,
                         "name": "audio",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5239,12 +5258,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2429,
+                            "id": 2708,
                             "name": "RoomOptions.audio"
                         }
                     },
                     {
-                        "id": 2419,
+                        "id": 2698,
                         "name": "audioCaptureDefaults",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5266,7 +5285,7 @@
                         }
                     },
                     {
-                        "id": 2422,
+                        "id": 2701,
                         "name": "dynacast",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5288,7 +5307,7 @@
                         }
                     },
                     {
-                        "id": 2421,
+                        "id": 2700,
                         "name": "publishDefaults",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5310,7 +5329,7 @@
                         }
                     },
                     {
-                        "id": 2426,
+                        "id": 2705,
                         "name": "screen",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5332,12 +5351,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2430,
+                            "id": 2709,
                             "name": "RoomOptions.screen"
                         }
                     },
                     {
-                        "id": 2424,
+                        "id": 2703,
                         "name": "video",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5359,12 +5378,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2428,
+                            "id": 2707,
                             "name": "RoomOptions.video"
                         }
                     },
                     {
-                        "id": 2420,
+                        "id": 2699,
                         "name": "videoCaptureDefaults",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5391,14 +5410,14 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2423,
-                            2425,
-                            2419,
-                            2422,
-                            2421,
-                            2426,
-                            2424,
-                            2420
+                            2702,
+                            2704,
+                            2698,
+                            2701,
+                            2700,
+                            2705,
+                            2703,
+                            2699
                         ]
                     }
                 ],
@@ -5412,7 +5431,7 @@
                 "extendedTypes": [
                     {
                         "type": "reference",
-                        "id": 2427,
+                        "id": 2706,
                         "name": "RoomOptions"
                     }
                 ]
@@ -5436,11 +5455,11 @@
             "group": null
         },
         {
-            "id": 2427,
+            "id": 2706,
             "order": 9999,
             "name": "RoomOptions",
             "reflection": {
-                "id": 2427,
+                "id": 2706,
                 "name": "RoomOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -5462,7 +5481,7 @@
                 },
                 "children": [
                     {
-                        "id": 2429,
+                        "id": 2708,
                         "name": "audio",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5484,7 +5503,7 @@
                         }
                     },
                     {
-                        "id": 2430,
+                        "id": 2709,
                         "name": "screen",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5506,7 +5525,7 @@
                         }
                     },
                     {
-                        "id": 2428,
+                        "id": 2707,
                         "name": "video",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5533,9 +5552,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2429,
-                            2430,
-                            2428
+                            2708,
+                            2709,
+                            2707
                         ]
                     }
                 ],
@@ -5549,7 +5568,7 @@
                 "extendedBy": [
                     {
                         "type": "reference",
-                        "id": 2418,
+                        "id": 2697,
                         "name": "RoomJoinOptions"
                     }
                 ]
@@ -5573,11 +5592,11 @@
             "group": null
         },
         {
-            "id": 2443,
+            "id": 2722,
             "order": 9999,
             "name": "RoomRemoteOptions",
             "reflection": {
-                "id": 2443,
+                "id": 2722,
                 "name": "RoomRemoteOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -5599,7 +5618,7 @@
                 },
                 "children": [
                     {
-                        "id": 2446,
+                        "id": 2725,
                         "name": "audio",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5621,7 +5640,7 @@
                         }
                     },
                     {
-                        "id": 2448,
+                        "id": 2727,
                         "name": "audioLevel",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5643,7 +5662,7 @@
                         }
                     },
                     {
-                        "id": 2444,
+                        "id": 2723,
                         "name": "connectionQuality",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5682,7 +5701,7 @@
                         }
                     },
                     {
-                        "id": 2447,
+                        "id": 2726,
                         "name": "screen",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5704,7 +5723,7 @@
                         }
                     },
                     {
-                        "id": 2445,
+                        "id": 2724,
                         "name": "video",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5731,11 +5750,11 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2446,
-                            2448,
-                            2444,
-                            2447,
-                            2445
+                            2725,
+                            2727,
+                            2723,
+                            2726,
+                            2724
                         ]
                     }
                 ],
@@ -5766,11 +5785,11 @@
             "group": null
         },
         {
-            "id": 2431,
+            "id": 2710,
             "order": 9999,
             "name": "RoomTrackOptions",
             "reflection": {
-                "id": 2431,
+                "id": 2710,
                 "name": "RoomTrackOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -5792,7 +5811,7 @@
                 },
                 "children": [
                     {
-                        "id": 2442,
+                        "id": 2721,
                         "name": "aspectRatio",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5816,7 +5835,7 @@
                         }
                     },
                     {
-                        "id": 2438,
+                        "id": 2717,
                         "name": "dimensions",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5837,14 +5856,14 @@
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 2439,
+                                "id": 2718,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 2441,
+                                        "id": 2720,
                                         "name": "height",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -5862,7 +5881,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2440,
+                                        "id": 2719,
                                         "name": "width",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -5885,8 +5904,8 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            2441,
-                                            2440
+                                            2720,
+                                            2719
                                         ]
                                     }
                                 ]
@@ -5894,7 +5913,7 @@
                         }
                     },
                     {
-                        "id": 2432,
+                        "id": 2711,
                         "name": "isRemote",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5916,7 +5935,7 @@
                         }
                     },
                     {
-                        "id": 2435,
+                        "id": 2714,
                         "name": "kind",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5938,7 +5957,7 @@
                         }
                     },
                     {
-                        "id": 2434,
+                        "id": 2713,
                         "name": "muted",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5960,7 +5979,7 @@
                         }
                     },
                     {
-                        "id": 2433,
+                        "id": 2712,
                         "name": "remoteId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -5982,7 +6001,7 @@
                         }
                     },
                     {
-                        "id": 2436,
+                        "id": 2715,
                         "name": "source",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6004,7 +6023,7 @@
                         }
                     },
                     {
-                        "id": 2437,
+                        "id": 2716,
                         "name": "videoQuality",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6033,14 +6052,14 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2442,
-                            2438,
-                            2432,
-                            2435,
-                            2434,
-                            2433,
-                            2436,
-                            2437
+                            2721,
+                            2717,
+                            2711,
+                            2714,
+                            2713,
+                            2712,
+                            2715,
+                            2716
                         ]
                     }
                 ],
@@ -6240,11 +6259,11 @@
             "group": null
         },
         {
-            "id": 2449,
+            "id": 2728,
             "order": 9999,
             "name": "SetRoomTrackOptions",
             "reflection": {
-                "id": 2449,
+                "id": 2728,
                 "name": "SetRoomTrackOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -6266,7 +6285,7 @@
                 },
                 "children": [
                     {
-                        "id": 2450,
+                        "id": 2729,
                         "name": "muted",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6290,7 +6309,7 @@
                         }
                     },
                     {
-                        "id": 2451,
+                        "id": 2730,
                         "name": "videoQuality",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6319,8 +6338,8 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2450,
-                            2451
+                            2729,
+                            2730
                         ]
                     }
                 ],
@@ -6655,7 +6674,7 @@
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2431,
+                            "id": 2710,
                             "name": "RoomTrackOptions"
                         }
                     },
@@ -6739,11 +6758,11 @@
             "group": null
         },
         {
-            "id": 2308,
+            "id": 2402,
             "order": 9999,
             "name": "ShareOptions",
             "reflection": {
-                "id": 2308,
+                "id": 2402,
                 "name": "ShareOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -6765,7 +6784,7 @@
                 },
                 "children": [
                     {
-                        "id": 2310,
+                        "id": 2404,
                         "name": "text",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6779,7 +6798,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1831,
+                                "line": 1869,
                                 "character": 4
                             }
                         ],
@@ -6789,7 +6808,7 @@
                         }
                     },
                     {
-                        "id": 2309,
+                        "id": 2403,
                         "name": "title",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6803,7 +6822,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1826,
+                                "line": 1864,
                                 "character": 4
                             }
                         ],
@@ -6813,7 +6832,7 @@
                         }
                     },
                     {
-                        "id": 2311,
+                        "id": 2405,
                         "name": "url",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6827,7 +6846,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1836,
+                                "line": 1874,
                                 "character": 4
                             }
                         ],
@@ -6842,16 +6861,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2310,
-                            2309,
-                            2311
+                            2404,
+                            2403,
+                            2405
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 1822,
+                        "line": 1860,
                         "character": 17
                     }
                 ]
@@ -6875,11 +6894,11 @@
             "group": null
         },
         {
-            "id": 2302,
+            "id": 2396,
             "order": 9999,
             "name": "ShowChatOptions",
             "reflection": {
-                "id": 2302,
+                "id": 2396,
                 "name": "ShowChatOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -6901,7 +6920,7 @@
                 },
                 "children": [
                     {
-                        "id": 2306,
+                        "id": 2400,
                         "name": "backgroundColor",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6915,7 +6934,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1466,
+                                "line": 1498,
                                 "character": 4
                             }
                         ],
@@ -6925,7 +6944,7 @@
                         }
                     },
                     {
-                        "id": 2307,
+                        "id": 2401,
                         "name": "foregroundColor",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6939,7 +6958,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1471,
+                                "line": 1503,
                                 "character": 4
                             }
                         ],
@@ -6949,7 +6968,7 @@
                         }
                     },
                     {
-                        "id": 2304,
+                        "id": 2398,
                         "name": "placeholder",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6963,7 +6982,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1456,
+                                "line": 1488,
                                 "character": 4
                             }
                         ],
@@ -6973,7 +6992,7 @@
                         }
                     },
                     {
-                        "id": 2305,
+                        "id": 2399,
                         "name": "placeholderColor",
                         "kind": 1024,
                         "kindString": "Property",
@@ -6987,7 +7006,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1461,
+                                "line": 1493,
                                 "character": 4
                             }
                         ],
@@ -6997,7 +7016,7 @@
                         }
                     },
                     {
-                        "id": 2303,
+                        "id": 2397,
                         "name": "prefill",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7011,7 +7030,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1451,
+                                "line": 1483,
                                 "character": 4
                             }
                         ],
@@ -7026,18 +7045,18 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2306,
-                            2307,
-                            2304,
-                            2305,
-                            2303
+                            2400,
+                            2401,
+                            2398,
+                            2399,
+                            2397
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 1447,
+                        "line": 1479,
                         "character": 17
                     }
                 ]
@@ -7061,11 +7080,219 @@
             "group": null
         },
         {
-            "id": 2346,
+            "id": 2445,
+            "order": 9999,
+            "name": "ShowConfirmAction",
+            "reflection": {
+                "id": 2445,
+                "name": "ShowConfirmAction",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an event that is used to show a confirmation dialog.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/os"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ShowConfirmAction\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2447,
+                        "name": "options",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The options for the confirmation dialog.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1161,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "id": 2440,
+                            "name": "ShowConfirmOptions"
+                        }
+                    },
+                    {
+                        "id": 2449,
+                        "name": "playerId",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The ID of the player that created this task.\nSet by remote action handlers when a task is recieved from a remote player.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 186,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 2448,
+                        "name": "taskId",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The ID of the async task.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 180,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 2446,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1156,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "show_confirm"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 2450,
+                        "name": "uncopiable",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether the action can be structure cloned.\nIf true, then the action should not be passed across message ports.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2447,
+                            2449,
+                            2448,
+                            2446,
+                            2450
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1155,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "AsyncAction"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an event that is used to show a confirmation dialog.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/os"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ShowConfirmAction\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2440,
             "order": 9999,
             "name": "ShowConfirmOptions",
             "reflection": {
-                "id": 2346,
+                "id": 2440,
                 "name": "ShowConfirmOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -7087,7 +7314,7 @@
                 },
                 "children": [
                     {
-                        "id": 2350,
+                        "id": 2444,
                         "name": "cancelText",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7101,7 +7328,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1167,
+                                "line": 1189,
                                 "character": 4
                             }
                         ],
@@ -7111,7 +7338,7 @@
                         }
                     },
                     {
-                        "id": 2349,
+                        "id": 2443,
                         "name": "confirmText",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7125,7 +7352,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1162,
+                                "line": 1184,
                                 "character": 4
                             }
                         ],
@@ -7135,7 +7362,7 @@
                         }
                     },
                     {
-                        "id": 2348,
+                        "id": 2442,
                         "name": "content",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7147,7 +7374,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1157,
+                                "line": 1179,
                                 "character": 4
                             }
                         ],
@@ -7157,7 +7384,7 @@
                         }
                     },
                     {
-                        "id": 2347,
+                        "id": 2441,
                         "name": "title",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7169,7 +7396,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1152,
+                                "line": 1174,
                                 "character": 4
                             }
                         ],
@@ -7184,17 +7411,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2350,
-                            2349,
-                            2348,
-                            2347
+                            2444,
+                            2443,
+                            2442,
+                            2441
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 1148,
+                        "line": 1170,
                         "character": 17
                     }
                 ]
@@ -7218,11 +7445,11 @@
             "group": null
         },
         {
-            "id": 2335,
+            "id": 2429,
             "order": 9999,
             "name": "ShowInputOptions",
             "reflection": {
-                "id": 2335,
+                "id": 2429,
                 "name": "ShowInputOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -7244,7 +7471,7 @@
                 },
                 "children": [
                     {
-                        "id": 2342,
+                        "id": 2436,
                         "name": "autoSelect",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7256,7 +7483,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1312,
+                                "line": 1341,
                                 "character": 4
                             }
                         ],
@@ -7266,7 +7493,7 @@
                         }
                     },
                     {
-                        "id": 2340,
+                        "id": 2434,
                         "name": "backgroundColor",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7278,7 +7505,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1302,
+                                "line": 1331,
                                 "character": 4
                             }
                         ],
@@ -7288,7 +7515,7 @@
                         }
                     },
                     {
-                        "id": 2341,
+                        "id": 2435,
                         "name": "foregroundColor",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7300,7 +7527,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1307,
+                                "line": 1336,
                                 "character": 4
                             }
                         ],
@@ -7310,7 +7537,7 @@
                         }
                     },
                     {
-                        "id": 2343,
+                        "id": 2437,
                         "name": "items",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7324,7 +7551,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1317,
+                                "line": 1346,
                                 "character": 4
                             }
                         ],
@@ -7337,7 +7564,7 @@
                         }
                     },
                     {
-                        "id": 2339,
+                        "id": 2433,
                         "name": "placeholder",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7349,7 +7576,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1297,
+                                "line": 1326,
                                 "character": 4
                             }
                         ],
@@ -7359,7 +7586,7 @@
                         }
                     },
                     {
-                        "id": 2337,
+                        "id": 2431,
                         "name": "subtype",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7371,18 +7598,18 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1287,
+                                "line": 1316,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2345,
+                            "id": 2439,
                             "name": "ShowInputSuptype"
                         }
                     },
                     {
-                        "id": 2338,
+                        "id": 2432,
                         "name": "title",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7394,7 +7621,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1292,
+                                "line": 1321,
                                 "character": 4
                             }
                         ],
@@ -7404,7 +7631,7 @@
                         }
                     },
                     {
-                        "id": 2336,
+                        "id": 2430,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -7416,13 +7643,13 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 1282,
+                                "line": 1311,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2344,
+                            "id": 2438,
                             "name": "ShowInputType"
                         }
                     }
@@ -7432,21 +7659,21 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2342,
-                            2340,
-                            2341,
-                            2343,
-                            2339,
-                            2337,
-                            2338,
-                            2336
+                            2436,
+                            2434,
+                            2435,
+                            2437,
+                            2433,
+                            2431,
+                            2432,
+                            2430
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 1278,
+                        "line": 1307,
                         "character": 17
                     }
                 ]
@@ -7470,11 +7697,11 @@
             "group": null
         },
         {
-            "id": 2345,
+            "id": 2439,
             "order": 9999,
             "name": "ShowInputSuptype",
             "reflection": {
-                "id": 2345,
+                "id": 2439,
                 "name": "ShowInputSubtype",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -7497,7 +7724,7 @@
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 1337,
+                        "line": 1366,
                         "character": 12
                     }
                 ],
@@ -7554,11 +7781,11 @@
             "group": null
         },
         {
-            "id": 2344,
+            "id": 2438,
             "order": 9999,
             "name": "ShowInputType",
             "reflection": {
-                "id": 2344,
+                "id": 2438,
                 "name": "ShowInputType",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -7581,7 +7808,7 @@
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 1330,
+                        "line": 1359,
                         "character": 12
                     }
                 ],
@@ -7761,7 +7988,7 @@
                                 },
                                 {
                                     "type": "reference",
-                                    "id": 2479,
+                                    "id": 2758,
                                     "name": "Bot"
                                 }
                             ]
@@ -8132,11 +8359,11 @@
             "group": null
         },
         {
-            "id": 2356,
+            "id": 2628,
             "order": 9999,
             "name": "StartFormAnimationOptions",
             "reflection": {
-                "id": 2356,
+                "id": 2628,
                 "name": "StartFormAnimationOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -8158,7 +8385,7 @@
                 },
                 "children": [
                     {
-                        "id": 2368,
+                        "id": 2640,
                         "name": "animationAddress",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8172,7 +8399,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2946,
+                                "line": 2984,
                                 "character": 4
                             }
                         ],
@@ -8182,7 +8409,7 @@
                         }
                     },
                     {
-                        "id": 2364,
+                        "id": 2636,
                         "name": "clampWhenFinished",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8196,7 +8423,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2924,
+                                "line": 2962,
                                 "character": 4
                             }
                         ],
@@ -8206,7 +8433,7 @@
                         }
                     },
                     {
-                        "id": 2365,
+                        "id": 2637,
                         "name": "crossFadeDuration",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8220,7 +8447,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2930,
+                                "line": 2968,
                                 "character": 4
                             }
                         ],
@@ -8230,7 +8457,7 @@
                         }
                     },
                     {
-                        "id": 2366,
+                        "id": 2638,
                         "name": "crossFadeWarp",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8244,7 +8471,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2935,
+                                "line": 2973,
                                 "character": 4
                             }
                         ],
@@ -8254,7 +8481,7 @@
                         }
                     },
                     {
-                        "id": 2367,
+                        "id": 2639,
                         "name": "fadeDuration",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8268,7 +8495,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2941,
+                                "line": 2979,
                                 "character": 4
                             }
                         ],
@@ -8278,7 +8505,7 @@
                         }
                     },
                     {
-                        "id": 2358,
+                        "id": 2630,
                         "name": "initialTime",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8292,7 +8519,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2895,
+                                "line": 2933,
                                 "character": 4
                             }
                         ],
@@ -8302,7 +8529,7 @@
                         }
                     },
                     {
-                        "id": 2360,
+                        "id": 2632,
                         "name": "loop",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8316,21 +8543,21 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2909,
+                                "line": 2947,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 2361,
+                                "id": 2633,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 2363,
+                                        "id": 2635,
                                         "name": "count",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -8342,7 +8569,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2918,
+                                                "line": 2956,
                                                 "character": 8
                                             }
                                         ],
@@ -8352,7 +8579,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2362,
+                                        "id": 2634,
                                         "name": "mode",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -8364,7 +8591,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                                "line": 2913,
+                                                "line": 2951,
                                                 "character": 8
                                             }
                                         ],
@@ -8388,8 +8615,8 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            2363,
-                                            2362
+                                            2635,
+                                            2634
                                         ]
                                     }
                                 ]
@@ -8397,7 +8624,7 @@
                         }
                     },
                     {
-                        "id": 2357,
+                        "id": 2629,
                         "name": "startTime",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8411,7 +8638,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2890,
+                                "line": 2928,
                                 "character": 4
                             }
                         ],
@@ -8421,7 +8648,7 @@
                         }
                     },
                     {
-                        "id": 2359,
+                        "id": 2631,
                         "name": "timeScale",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8435,7 +8662,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2903,
+                                "line": 2941,
                                 "character": 4
                             }
                         ],
@@ -8450,22 +8677,22 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2368,
-                            2364,
-                            2365,
-                            2366,
-                            2367,
-                            2358,
-                            2360,
-                            2357,
-                            2359
+                            2640,
+                            2636,
+                            2637,
+                            2638,
+                            2639,
+                            2630,
+                            2632,
+                            2629,
+                            2631
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2886,
+                        "line": 2924,
                         "character": 17
                     }
                 ]
@@ -8489,11 +8716,11 @@
             "group": null
         },
         {
-            "id": 2369,
+            "id": 2641,
             "order": 9999,
             "name": "StopFormAnimationOptions",
             "reflection": {
-                "id": 2369,
+                "id": 2641,
                 "name": "StopFormAnimationOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -8515,7 +8742,7 @@
                 },
                 "children": [
                     {
-                        "id": 2371,
+                        "id": 2643,
                         "name": "fadeDuration",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8529,7 +8756,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2984,
+                                "line": 3022,
                                 "character": 4
                             }
                         ],
@@ -8539,7 +8766,7 @@
                         }
                     },
                     {
-                        "id": 2370,
+                        "id": 2642,
                         "name": "stopTime",
                         "kind": 1024,
                         "kindString": "Property",
@@ -8553,7 +8780,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
-                                "line": 2978,
+                                "line": 3016,
                                 "character": 4
                             }
                         ],
@@ -8568,15 +8795,15 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2371,
-                            2370
+                            2643,
+                            2642
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/bots/BotEvents.ts",
-                        "line": 2974,
+                        "line": 3012,
                         "character": 17
                     }
                 ]
@@ -8743,25 +8970,25 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2656": "CasualOSError",
+        "id-2935": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3061": "Quaternion",
+        "id-3340": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3093": "Rotation",
+        "id-3372": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-2927": "Vector2",
+        "id-3206": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-2984": "Vector3",
+        "id-3263": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2675": "AIChatMessage",
+        "id-2954": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2452": "AIChatOptions",
+        "id-2731": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
         "id-2250": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-2466": "AIGenerateImageOptions",
+        "id-2745": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-2462": "AIGenerateSkyboxOptions",
+        "id-2741": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
         "id-2243": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
@@ -8769,33 +8996,33 @@
         "AIGeneratedImage": "types/ai",
         "id-2253": "AIGeneratedImage",
         "AddCountFailure": "types/records/events",
-        "id-2860": "AddCountFailure",
+        "id-3139": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-2855": "AddCountSuccess",
+        "id-3134": "AddCountSuccess",
         "AnimateTagOptions": "types/animation",
         "id-1848": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
         "id-2223": "AttachDebuggerOptions",
         "CasualOSDevice": "types/os",
-        "id-2643": "CasualOSDevice",
+        "id-2922": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2635": "CasualOSVersion",
+        "id-2914": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3139": "AxisAndAngle",
+        "id-3418": "AxisAndAngle",
         "BotTagMasks": "types/core",
-        "id-2612": "BotTagMasks",
+        "id-2891": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2527": "BotTags",
+        "id-2806": "BotTags",
         "BotState": "types/core",
-        "id-2625": "BotState",
+        "id-2904": "BotState",
         "CompiledBotListeners": "types/core",
-        "id-2606": "CompiledBotListeners",
+        "id-2885": "CompiledBotListeners",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2278": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2372": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2797": "CreatePublicRecordKeyFailure",
+        "id-3076": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2793": "CreatePublicRecordKeySuccess",
+        "id-3072": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2176": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -8809,39 +9036,39 @@
         "DebuggerVariable": "types/debuggers/common",
         "id-2217": "DebuggerVariable",
         "Easing": "types/animation",
-        "id-2260": "Easing",
+        "id-2354": "Easing",
         "EnableCollaborationAction": "types/os",
-        "id-2410": "EnableCollaborationAction",
+        "id-2682": "EnableCollaborationAction",
         "EnableXROptions": "types/os",
-        "id-2354": "EnableXROptions",
+        "id-2626": "EnableXROptions",
         "EraseDataFailure": "types/records/data",
-        "id-2831": "EraseDataFailure",
+        "id-3110": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-2827": "EraseDataSuccess",
+        "id-3106": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-2850": "EraseFileFailure",
+        "id-3129": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-2846": "EraseFileSuccess",
+        "id-3125": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3142": "EulerAnglesRotation",
+        "id-3421": "EulerAnglesRotation",
         "FocusOnOptions": "types/os",
-        "id-2312": "FocusOnOptions",
+        "id-2406": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2324": "FocusOnRotation",
+        "id-2418": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2372": "FormAnimationData",
+        "id-2644": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3136": "FromToRotation",
+        "id-3415": "FromToRotation",
         "GenericError": "types/error",
-        "id-2653": "GenericError",
+        "id-2932": "GenericError",
         "GetCountFailure": "types/records/events",
-        "id-2871": "GetCountFailure",
+        "id-3150": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-2865": "GetCountSuccess",
+        "id-3144": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-2822": "GetDataFailure",
+        "id-3101": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-2813": "GetDataSuccess",
+        "id-3092": "GetDataSuccess",
         "GetRoomOptionsFailure": "types/os",
         "id-1938": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
@@ -8855,17 +9082,17 @@
         "GetRoomTrackOptionsSuccess": "types/os",
         "id-1952": "GetRoomTrackOptionsSuccess",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-2899": "GrantMarkerPermissionFailure",
+        "id-3178": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-2897": "GrantMarkerPermissionSuccess",
+        "id-3176": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-2885": "GrantRoleFailure",
+        "id-3164": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-2883": "GrantRoleSuccess",
+        "id-3162": "GrantRoleSuccess",
         "ImageClassifierOptions": "types/os",
-        "id-2330": "ImageClassifierOptions",
+        "id-2424": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2649": "InstUpdate",
+        "id-2928": "InstUpdate",
         "JoinRoomFailure": "types/os",
         "id-1919": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
@@ -8875,29 +9102,29 @@
         "LeaveRoomSuccess": "types/os",
         "id-1925": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-2841": "ListDataFailure",
+        "id-3120": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-2836": "ListDataSuccess",
+        "id-3115": "ListDataSuccess",
         "ListStudiosFailure": "types/records/studios",
-        "id-2914": "ListStudiosFailure",
+        "id-3193": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-2911": "ListStudiosSuccess",
+        "id-3190": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-2918": "ListedStudio",
+        "id-3197": "ListedStudio",
         "LookRotation": "types/math/rotations",
-        "id-3159": "LookRotation",
+        "id-3438": "LookRotation",
         "MediaPermissionOptions": "types/os",
-        "id-2351": "MediaPermissionOptions",
+        "id-2623": "MediaPermissionOptions",
         "Debugger": "types/debuggers/debugger",
         "id-1988": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
         "id-2195": "NormalDebuggerOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2394": "PhotoCameraOptions",
+        "id-2666": "PhotoCameraOptions",
         "ParsedBotLink": "types/core",
-        "id-2631": "ParsedBotLink",
+        "id-2910": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2628": "PartialBotState",
+        "id-2907": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
         "id-2044": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
@@ -8907,99 +9134,101 @@
         "PauseTriggerOptions": "types/debuggers/common",
         "id-2171": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2406": "Photo",
+        "id-2678": "Photo",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
         "id-2158": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
         "id-2232": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3152": "QuaternionRotation",
+        "id-3431": "QuaternionRotation",
         "RaycastRay": "types/os",
         "id-1912": "RaycastRay",
         "RaycastResult": "types/os",
         "id-1909": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2415": "RecordActionOptions",
+        "id-2694": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-2807": "RecordDataFailure",
+        "id-3086": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-2803": "RecordDataSuccess",
+        "id-3082": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-1879": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
         "id-1875": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2381": "RecordedFile",
+        "id-2653": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2379": "Recording",
+        "id-2651": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2386": "RecordingOptions",
+        "id-2658": "RecordingOptions",
         "RegisterPrefixOptions": "types/core",
-        "id-2376": "RegisterPrefixOptions",
+        "id-2648": "RegisterPrefixOptions",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-2906": "RevokeMarkerPermissionFailure",
+        "id-3185": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-2904": "RevokeMarkerPermissionSuccess",
+        "id-3183": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-2892": "RevokeRoleFailure",
+        "id-3171": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-2890": "RevokeRoleSuccess",
+        "id-3169": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2418": "RoomJoinOptions",
+        "id-2697": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2427": "RoomOptions",
+        "id-2706": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2443": "RoomRemoteOptions",
+        "id-2722": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2431": "RoomTrackOptions",
+        "id-2710": "RoomTrackOptions",
         "RuntimeBot": "types/core",
-        "id-2479": "RuntimeBot",
+        "id-2758": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2618": "RuntimeBotLinks",
+        "id-2897": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2615": "RuntimeBotVars",
+        "id-2894": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3150": "SequenceRotation",
+        "id-3429": "SequenceRotation",
         "SetRoomOptionsSuccess": "types/os",
         "id-1943": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2449": "SetRoomTrackOptions",
+        "id-2728": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
         "id-1969": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
         "id-1964": "SetRoomTrackOptionsSuccess",
         "ShareOptions": "types/os",
-        "id-2308": "ShareOptions",
+        "id-2402": "ShareOptions",
         "ShowChatOptions": "types/os",
-        "id-2302": "ShowChatOptions",
+        "id-2396": "ShowChatOptions",
+        "ShowConfirmAction": "types/os",
+        "id-2445": "ShowConfirmAction",
         "ShowConfirmOptions": "types/os",
-        "id-2346": "ShowConfirmOptions",
+        "id-2440": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2335": "ShowInputOptions",
+        "id-2429": "ShowInputOptions",
         "SnapAxis": "types/os",
-        "id-2282": "SnapAxis",
+        "id-2376": "SnapAxis",
         "SnapGridTarget": "types/os",
         "id-1884": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2294": "SnapPoint",
+        "id-2388": "SnapPoint",
         "SpeakTextOptions": "types/experimental",
         "id-2228": "SpeakTextOptions",
         "StartFormAnimationOptions": "types/os",
-        "id-2356": "StartFormAnimationOptions",
+        "id-2628": "StartFormAnimationOptions",
         "StopFormAnimationOptions": "types/os",
-        "id-2369": "StopFormAnimationOptions",
+        "id-2641": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2264": "SuccessfulGeolocation",
+        "id-2358": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2390": "SyntheticVoice",
+        "id-2662": "SyntheticVoice",
         "TweenOptions": "types/experimental",
         "id-2225": "TweenOptions",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2274": "UnsuccessfulGeolocation",
+        "id-2368": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-2878": "UpdateEventRecordFailure",
+        "id-3157": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-2876": "UpdateEventRecordSuccess",
+        "id-3155": "UpdateEventRecordSuccess",
         "UploadedFile": "types/os",
         "id-1905": "UploadedFile",
         "WebhookOptions": "types/web",
@@ -9007,33 +9236,33 @@
         "WebhookResult": "types/web",
         "id-1841": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-2854": "AddCountResult",
+        "id-3133": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2681": "AvailablePermissions",
+        "id-2960": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2329": "BarcodeFormat",
+        "id-2423": "BarcodeFormat",
         "BotFilter": "types/core",
         "id-1863": "BotFilter",
         "BotSpace": "types/core",
-        "id-2602": "BotSpace",
+        "id-2881": "BotSpace",
         "CameraType": "types/os",
-        "id-2328": "CameraType",
+        "id-2422": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2792": "CreatePublicRecordKeyResult",
+        "id-3071": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
-        "id-2259": "EaseMode",
+        "id-2353": "EaseMode",
         "EaseType": "types/animation",
-        "id-2258": "EaseType",
+        "id-2352": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-2826": "EraseDataResult",
+        "id-3105": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-2845": "EraseFileResult",
+        "id-3124": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2263": "Geolocation",
+        "id-2357": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-2864": "GetCountResult",
+        "id-3143": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-2812": "GetDataResult",
+        "id-3091": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
         "id-1933": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
@@ -9041,45 +9270,45 @@
         "GetRoomTrackOptionsResult": "types/os",
         "id-1951": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-2896": "GrantMarkerPermissionResult",
+        "id-3175": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-2882": "GrantRoleResult",
+        "id-3161": "GrantRoleResult",
         "JoinRoomResult": "types/os",
         "id-1915": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
         "id-1924": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-2835": "ListDataResult",
+        "id-3114": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-2910": "ListStudiosResult",
+        "id-3189": "ListStudiosResult",
         "Mod": "types/core",
         "id-1858": "Mod",
         "PortalType": "types/core",
-        "id-2634": "PortalType",
+        "id-2913": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2162": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-2802": "RecordDataResult",
+        "id-3081": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-1874": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-2903": "RevokeMarkerPermissionResult",
+        "id-3182": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-2889": "RevokeRoleResult",
+        "id-3168": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
         "id-1942": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
         "id-1963": "SetRoomTrackOptionsResult",
         "ShowInputSuptype": "types/os",
-        "id-2345": "ShowInputSuptype",
+        "id-2439": "ShowInputSuptype",
         "ShowInputType": "types/os",
-        "id-2344": "ShowInputType",
+        "id-2438": "ShowInputType",
         "SnapTarget": "types/os",
-        "id-2301": "SnapTarget",
+        "id-2395": "SnapTarget",
         "TagFilter": "types/core",
         "id-1859": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-2875": "UpdateEventRecordResult",
+        "id-3154": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",
