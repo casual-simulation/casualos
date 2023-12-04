@@ -106,6 +106,11 @@ export interface AuxConfigParameters {
      * - "builder" indicates that the instance has been configured for building AUXes.
      */
     playerMode?: 'player' | 'builder';
+
+    /**
+     * Whether privo login is required.
+     */
+    requirePrivoLogin?: boolean;
 }
 
 export interface AuxTimeSyncConfiguration {

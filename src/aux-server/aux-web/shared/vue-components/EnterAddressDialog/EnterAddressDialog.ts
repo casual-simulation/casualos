@@ -29,8 +29,8 @@ export default class EnterAddressDialog extends Vue {
     @Prop()
     status: LoginUIAddressStatus;
 
-    showEnterAddress: boolean;
-    address: string;
+    showEnterAddress: boolean = false;
+    address: string = '';
 
     get emailFieldHint() {
         if (this.status.supportsSms) {

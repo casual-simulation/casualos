@@ -91,6 +91,18 @@ export default class PlayerHome extends Vue {
         return appManager.simulationManager.primary;
     }
 
+    get startButtonLabel() {
+        if (
+            this.biosSelection === 'private inst' ||
+            this.biosSelection === 'public inst' ||
+            this.biosSelection === 'static inst'
+        ) {
+            return 'Load';
+        } else {
+            return 'Start';
+        }
+    }
+
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
         const staticInst = this.query['staticInst'] as string | string[];

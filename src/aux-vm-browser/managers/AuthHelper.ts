@@ -9,6 +9,7 @@ export class AuthHelper {
     private _loginUIStatus: Subject<LoginUIStatus & { endpoint: string }>;
     private _auths: Map<string, AuthHelperInterface>;
     private _useCustomUI: boolean = false;
+    private _requirePrivoLogin: boolean;
     private _factory: (
         primaryAuthOrigin: string,
         primaryRecordsOrigin: string
@@ -47,18 +48,21 @@ export class AuthHelper {
         factory?: (
             primaryAuthOrigin: string,
             primaryRecordsOrigin: string
-        ) => AuthHelperInterface
+        ) => AuthHelperInterface,
+        requirePrivoLogin?: boolean
     ) {
         this._factory =
             factory ??
             ((primaryAuthOrigin, primaryRecordsOrigin) =>
                 new AuthEndpointHelper(
                     primaryAuthOrigin,
-                    primaryRecordsOrigin
+                    primaryRecordsOrigin,
+                    requirePrivoLogin
                 ));
         this._primary = this._factory(primaryAuthOrigin, primaryRecordsOrigin);
         this._auths = new Map();
         this._loginUIStatus = new Subject();
+        this._requirePrivoLogin = requirePrivoLogin ?? false;
         this._primary.loginUIStatus
             .pipe(map((s) => ({ ...s, endpoint: primaryAuthOrigin })))
             .subscribe(this._loginUIStatus);
@@ -89,7 +93,11 @@ export class AuthHelper {
 
     private _createEndpoint(endpoint: string): AuthHelperInterface {
         console.log('[AuthHelper] Creating endpoint', endpoint);
-        const helper = new AuthEndpointHelper(endpoint);
+        const helper = new AuthEndpointHelper(
+            endpoint,
+            undefined,
+            this._requirePrivoLogin
+        );
         helper.loginUIStatus
             .pipe(map((s) => ({ ...s, endpoint })))
             .subscribe(this._loginUIStatus);
