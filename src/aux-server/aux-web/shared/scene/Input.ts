@@ -2421,6 +2421,14 @@ export class InputState {
     }
 
     /**
+     * Is the input up on or after the requested frame.
+     * @param frame The frame to compare against.
+     */
+    isUpByFrame(frame: number): boolean {
+        return frame >= this._upFrame;
+    }
+
+    /**
      * Returns a new InputState with the same values as this one.
      */
     clone(): InputState {

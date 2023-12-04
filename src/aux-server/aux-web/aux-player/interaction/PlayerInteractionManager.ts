@@ -937,7 +937,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             } else if (state.isHeldOnFrame(input.time.frameCount)) {
                 inputUpdate[name] = 'held';
                 return true;
-            } else if (state.isUpOnFrame(input.time.frameCount)) {
+            } else if (state.isUpByFrame(input.time.frameCount)) {
                 inputUpdate[name] = null;
                 return true;
             }
