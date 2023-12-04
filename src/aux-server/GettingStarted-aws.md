@@ -107,6 +107,12 @@ Use the following to configure the records system:
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `ENABLE_SMS_AUTHENTICATION`: Whether SMS phone numbers are allowed to be entered into the front-end and used for authentication. Defaults to `false`.
 
+#### Policies Customization
+
+-   `TERMS_OF_SERVICE`: The Markdown of the terms of service that the sites should use.
+-   `PRIVACY_POLICY`: The Markkdown of the privacy policy that the sites should use.
+-   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
+
 ## Security Note
 
 In the default configuration, CasualOS allows running arbitrary user scripts inside the web server process. Potential capabilities include filesystem access, executing commands, making arbitrary web requests, and reading environment variables.
