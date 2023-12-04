@@ -1,4 +1,4 @@
-import { setLinkMap } from '@site/util/doc';
+import { setLinkMap } from '..//utils/doc';
 
 const RotationsClasses = [
     'Rotation',

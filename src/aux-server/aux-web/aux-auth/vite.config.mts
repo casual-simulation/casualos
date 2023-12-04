@@ -13,7 +13,7 @@ import writeFilesPlugin from '../../plugins/write-files-plugin';
 
 
 // @ts-ignore
-import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats-module';
+import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
 
 const distDir = path.resolve(__dirname, 'dist');
 
@@ -73,29 +73,6 @@ export default defineConfig(({ command, mode }) => {
     const config = process.env.SERVER_CONFIG
         ? JSON.parse(process.env.SERVER_CONFIG)
         : null;
-
-    // const TERMS_OF_SERVICE = process.env.TERMS_OF_SERVICE;
-    // const PRIVACY_POLICY = process.env.PRIVACY_POLICY;
-    // const ACCEPTABLE_USE_POLICY = process.env.ACCEPTABLE_USE_POLICY;
-
-    // const virtualModules: Record<string, string> = {};
-
-    // function loadPolicy(name: string, override: string | undefined) {
-    //     const moduleName = `virtual:policies/${name}`;
-    //     if (override) {
-    //         virtualModules[moduleName] = override;
-    //     } else {
-    //         const defaultTerms = fs.readFileSync(
-    //             path.resolve(defaultPoliciesDir, name),
-    //             'utf8'
-    //         );
-    //         virtualModules[moduleName] = defaultTerms;
-    //     }
-    // }
-
-    // loadPolicy('terms-of-service.md', TERMS_OF_SERVICE);
-    // loadPolicy('privacy-policy.md', PRIVACY_POLICY);
-    // loadPolicy('acceptable-use-policy.md', ACCEPTABLE_USE_POLICY);
 
     const policies = getPolicies();
 

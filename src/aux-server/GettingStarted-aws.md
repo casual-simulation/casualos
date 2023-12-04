@@ -56,7 +56,7 @@ To deploy this project to AWS Lambda, follow these steps:
 
 ## Configuration
 
-The build can be configured using the following environment variables. All the options and defaults are handled in `prerender-web-config.js`.
+The build can be configured using the following environment variables. All the options and defaults are handled in `prerender-web-config.mjs`.
 
 #### ab-1
 
