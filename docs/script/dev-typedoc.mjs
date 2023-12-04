@@ -1,5 +1,5 @@
 import { cleanDirectory, setupWatch } from '../../script/build-helpers.mjs';
-import { createConfigs, cleanDirectories } from './typedoc-configs';
+import { createConfigs, cleanDirectories } from './typedoc-configs.mjs';
 
 cleanDirectories();
 

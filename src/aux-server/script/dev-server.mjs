@@ -1,6 +1,6 @@
 import { cleanDirectory, setupWatch } from '../../../script/build-helpers.mjs';
-import { createConfigs, cleanDirectories } from './server-configs';
-import { createConfigs as interpreterConfigs } from './interpreter-configs';
+import { createConfigs, cleanDirectories } from './server-configs.mjs';
+import { createConfigs as interpreterConfigs } from './interpreter-configs.mjs';
 
 cleanDirectories();
 

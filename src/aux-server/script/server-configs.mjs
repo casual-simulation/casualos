@@ -2,8 +2,6 @@ import path from 'path';
 import {
     paths,
     cleanDirectory,
-    watch,
-    setup,
     getExternals,
     replaceEsbuildPlugin,
     replaceThreePlugin,
@@ -40,19 +38,14 @@ if (process.env.SERVER_CONFIG) {
     SERVER_CONFIG = JSON.parse(process.env.SERVER_CONFIG);
 }
 
-module.exports = {
-    createConfigs,
-    cleanDirectories,
-};
-
-function cleanDirectories() {
+export function cleanDirectories() {
     cleanDirectory(serverDist);
     cleanDirectory(auxWebDist);
     cleanDirectory(serverlessDist);
     cleanDirectory(auxAuthDist);
 }
 
-function createConfigs(dev, version) {
+export function createConfigs(dev, version) {
     const versionVariables = {
         GIT_HASH: JSON.stringify(GIT_HASH),
         GIT_TAG: JSON.stringify(version ?? GIT_TAG),
@@ -63,6 +56,12 @@ function createConfigs(dev, version) {
     const developmentVariables = {
         DEVELOPMENT: dev ? JSON.stringify(true) : JSON.stringify(false),
     };
+
+    const extraVariables = {};
+    if (dev) {
+        extraVariables.S3_ENDPOINT = JSON.stringify('http://s3:4566');
+    }
+
     return [
         [
             'Server',
@@ -92,9 +91,7 @@ function createConfigs(dev, version) {
                     ...versionVariables,
                     ...developmentVariables,
                     ...configVariables,
-                    S3_ENDPOINT: dev
-                        ? JSON.stringify('http://s3:4566')
-                        : JSON.stringify(undefined),
+                    ...extraVariables,
                 },
                 plugins: [
                     copy({
@@ -135,9 +132,7 @@ function createConfigs(dev, version) {
                     ...versionVariables,
                     ...developmentVariables,
                     ...configVariables,
-                    S3_ENDPOINT: dev
-                        ? JSON.stringify('http://s3:4566')
-                        : JSON.stringify(undefined),
+                    ...extraVariables,
                 },
                 minify: !dev,
             },

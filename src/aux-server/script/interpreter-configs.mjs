@@ -1,13 +1,5 @@
 import path from 'path';
-import {
-    paths,
-    cleanDirectory,
-    watch,
-    setup,
-    getExternals,
-    replaceEsbuildPlugin,
-    replaceThreePlugin,
-} from '../../../script/build-helpers.mjs';
+import { paths } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 
 const src = path.resolve(paths.root, 'src');
@@ -23,11 +15,7 @@ const interpreterEntry = path.resolve(
     'interpreter-shim.ts'
 );
 
-module.exports = {
-    createConfigs,
-};
-
-function createConfigs(dev, version) {
+export function createConfigs(dev, version) {
     const versionVariables = {
         GIT_HASH: JSON.stringify(GIT_HASH),
         GIT_TAG: JSON.stringify(version ?? GIT_TAG),

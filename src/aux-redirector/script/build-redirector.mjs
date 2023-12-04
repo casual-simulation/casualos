@@ -1,5 +1,5 @@
 import { build } from '../../../script/build-helpers.mjs';
-import { createConfigs, cleanDirectories } from './redirector-configs';
+import { createConfigs, cleanDirectories } from './redirector-configs.mjs';
 
 cleanDirectories();
 
