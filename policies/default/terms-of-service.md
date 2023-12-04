@@ -1,4 +1,4 @@
-﻿Casual Simulation Web Services Terms of Service
+﻿## Casual Simulation Web Services Terms of Service
 
 Last updated on November 16th, 2022
 

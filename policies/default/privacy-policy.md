@@ -1,4 +1,4 @@
-﻿Casual Simulation Web Services Privacy Policy
+﻿## Casual Simulation Web Services Privacy Policy
 
 Last updated on April 18th, 2022
 
