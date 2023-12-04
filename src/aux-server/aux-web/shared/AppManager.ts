@@ -233,6 +233,7 @@ export class AppManager {
                   }
                 : null,
             playerMode: this._config.playerMode,
+            requirePrivoLogin: this._config.requirePrivoLogin,
         };
     }
 
@@ -403,7 +404,8 @@ export class AppManager {
         this._auth = new AuthHelper(
             this.config.authOrigin,
             this.config.recordsOrigin,
-            factory
+            factory,
+            this.config.requirePrivoLogin
         );
         this._authCoordinator.authHelper = this._auth;
         console.log('[AppManager] Authenticating user in background...');
