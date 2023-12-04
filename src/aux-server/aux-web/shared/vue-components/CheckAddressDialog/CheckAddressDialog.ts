@@ -25,8 +25,8 @@ export default class CheckAddressDialog extends Vue {
     @Prop()
     status: LoginUICheckAddressStatus;
 
-    showCheckAddress: boolean;
-    loginCode: string;
+    showCheckAddress: boolean = false;
+    loginCode: string = '';
 
     get checkAddressTitle() {
         return `Check your ${
