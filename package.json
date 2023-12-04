@@ -5,7 +5,7 @@
     "scripts": {
         "start": "node ./src/aux-server/aux-backend/server/dist/main.js",
         "bootstrap": "lerna bootstrap --hoist -- --legacy-peer-deps && patch-package && npm run bootstrap:aws",
-        "bootstrap:aws": "node src/aux-server/script/bootstrap.js",
+        "bootstrap:aws": "node src/aux-server/script/bootstrap.mjs",
         "cockroach": "cockroach start-single-node --insecure",
         "reset:aws": "node src/aux-server/script/bootstrap.js --reset",
         "watch": "npm run clean && concurrently --names \"Libs,Server\" \"npm run watch:libs\" \"npm run watch:server\"",

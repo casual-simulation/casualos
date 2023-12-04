@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import YAML from 'yaml';
 import { v4 as uuid } from 'uuid';
+import root from '../../../script/root-path.cjs';
 
 const region = 'us-east-1';
 const s3 = new S3({
@@ -23,8 +24,9 @@ async function start() {
 
     const templateSrc = readFileSync(
         path.resolve(
-            __dirname,
-            '..',
+            root,
+            'src',
+            'aux-server',
             'aux-backend',
             'serverless',
             'aws',
