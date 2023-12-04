@@ -11,13 +11,7 @@ export default function writeFilesPlugin(options: Options): Plugin {
         name: 'write-files',
         async buildEnd(buildOptions) {
             for (let file of Object.keys(options.files)) {
-                const moduleName = options.files[file];
-                const fileId = await this.resolve(moduleName);
-                if (!fileId) {
-                    continue;
-                }
-                const loaded = await this.load(fileId);
-                const contents = loaded.code;
+                const contents = options.files[file];
 
                 if (contents) {
                     this.emitFile({

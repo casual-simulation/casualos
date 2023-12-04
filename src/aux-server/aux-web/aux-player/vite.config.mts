@@ -13,6 +13,7 @@ import {
     loadEnvFiles,
 } from '../../script/vite-utils';
 import writeFilesPlugin from '../../plugins/write-files-plugin';
+import md from '../../plugins/markdown-plugin';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
@@ -63,7 +64,11 @@ export default defineConfig(({ command, mode }) => ({
         target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
     },
     plugins: [
+        md(),
         vue(),
+        virtual({
+            ...policies.virtualModules,
+        }),
         createSvgIconsPlugin({
             iconDirs: [
                 path.resolve(
@@ -115,6 +120,11 @@ export default defineConfig(({ command, mode }) => ({
                     '**/*.md',
                 ],
             },
+        }),
+        writeFilesPlugin({
+            files: {
+                ...policies.files,
+            }
         }),
         ...(command === 'build'
             ? [generateDependencyGraphRollupPlugin(distDir)]

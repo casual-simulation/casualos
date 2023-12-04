@@ -101,20 +101,25 @@ export function getPolicies() {
 
     function loadPolicy(name: string, override: string | undefined) {
         const moduleName = `virtual:policies/${name}`;
+        let content: string;
         if (override) {
-            virtualModules[moduleName] = override;
+            console.log(`[Policies] Using override for ${name}`);
+            content = override;
         } else {
             const defaultTerms = readFileSync(
                 path.resolve(defaultPolicies, name),
                 'utf8'
             );
-            virtualModules[moduleName] = defaultTerms;
+            content = defaultTerms;
         }
 
-        const fileName = name.slice(name.lastIndexOf('.'));
-        files[fileName] = moduleName;
-        files[`${fileName}.txt`] = moduleName;
-        files[`${fileName}.md`] = moduleName;
+        virtualModules[moduleName] = content;
+
+        const fileName = name.slice(0, name.lastIndexOf('.'));
+
+        files[fileName] = content;
+        files[`${fileName}.txt`] = content;
+        files[`${fileName}.md`] = content;
     }
 
     const TERMS_OF_SERVICE = process.env.TERMS_OF_SERVICE;
