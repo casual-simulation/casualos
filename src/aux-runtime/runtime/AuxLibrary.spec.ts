@@ -4583,6 +4583,12 @@ describe('AuxLibrary', () => {
                 expect(result).toEqual('inst');
             });
 
+            it('should return first when multiple inst are loaded', () => {
+                player.tags.inst = ['inst', 'secondInst'];
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual('inst');
+            });
+
             it('should return undefined when inst is not set', () => {
                 const result = library.api.os.getCurrentInst();
                 expect(result).toBeUndefined();

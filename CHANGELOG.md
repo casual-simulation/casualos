@@ -90,6 +90,7 @@
 
 ### :bug: Bug Fixes
 
+-   Fixed an issue where `os.getCurrentInst` would not work properly if multiple instances are loaded
 -   Fixed an issue where work state was not retained in systemPortal after switching to diff panel
 -   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
 -   Fixed an issue where labels were broken when setting labelPosition and labelAlignment to left or right

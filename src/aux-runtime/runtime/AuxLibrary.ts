@@ -6699,6 +6699,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (user) {
             let inst = getTag(user, 'inst');
             if (hasValue(inst)) {
+                if (Array.isArray(inst)) {
+                    return inst[0].toString();
+                }
                 return inst.toString();
             }
             return undefined;
