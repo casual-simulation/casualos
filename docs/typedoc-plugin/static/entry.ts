@@ -71,6 +71,8 @@ export {
 
     AIGenerateImageAPISuccess,
     AIGeneratedImageAPI,
+
+    SessionSelector,
 } from '../../../src/aux-runtime/runtime/AuxLibrary';
 export { 
     TransactionAction,
@@ -374,6 +376,9 @@ export {
     ListedStudio,
 
 } from '../../../src/aux-records';
+export {
+    RemoteAction
+} from '../../../src/aux-common/common/RemoteActions';
 
 export {
     isEncrypted,
