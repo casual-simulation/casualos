@@ -3,16 +3,15 @@
 // module.exports = function pluginTypedoc(context: any, options: any) {
 
 import { sortBy } from 'lodash';
-import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment, SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection, DeclarationReflection, ReflectionType, IntrinsicType, ContainerReflection } from 'typedoc';
+import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment, SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection, DeclarationReflection, ReflectionType, IntrinsicType, ContainerReflection, CommentDisplayPart, ReflectionSymbolId, CommentTag } from 'typedoc';
 import { getProject } from './api';
 import { ModelToObject } from 'typedoc/dist/lib/serialization/schema';
 import { CallSignatureDeclaration, Declaration } from 'typescript';
 import { Project, StructureKind } from 'ts-morph';
+import path from 'path';
 
 export type CommentType = {
-    shortText: string;
     text: string;
-    returns: string;
     tags: {
         tagName: string;
         paramName: string;
@@ -20,7 +19,7 @@ export type CommentType = {
     }[];
 };
 
-class CommentSerializer extends SerializerComponent<Comment> {
+class CommentDisplayPartSerializer implements SerializerComponent<CommentDisplayPart> {
     private _app: Application;
     private _project: ProjectReflection;
 
@@ -30,80 +29,99 @@ class CommentSerializer extends SerializerComponent<Comment> {
         return 100;
     }
 
-    constructor(app: Application, project: ProjectReflection, serializer: Serializer) {
-        super(serializer);
+    constructor(app: Application, project: ProjectReflection) {
         this._app = app;
         this._project = project;
         this.references = new Map();
+    }
+
+    supports(item: CommentDisplayPart) {
+        return typeof item === 'object' && (item.kind === 'text' || item.kind === 'code' || item.kind === 'inline-tag');
+    }
+
+    toObject(item: CommentDisplayPart, obj: Partial<ModelToObject<CommentDisplayPart>>, serializer: Serializer) {
+        obj.kind = item.kind;
+        obj.text = item.text;
+
+        if (item.kind === 'inline-tag' && obj.kind === 'inline-tag') {
+            if (item.tag === '@link') {
+                const text = this._getTextForLink(item.text);
+                obj.text = text;
+                (obj as any).kind = 'text';
+            } else if (item.tag === '@tag') {
+                const text = this._getTextForTag(item.text);
+                obj.text = text;
+                (obj as any).kind = 'text';
+            }
+        }
+
+        return obj;
+    }
+
+    // private _getReflection(target: string): Reflection {
+    //     if (target instanceof Reflection) {
+    //         return target;
+    //     } else if (target instanceof ReflectionSymbolId) {
+    //         return getByDocId(this._project, target.getStableKey());
+    //     } else {
+    //         return getByDocId(this._project, target);
+    //     }
+    // }
+
+    private _getTextForLink(text: string) {
+        const target = getByDocId(this._project, text);
+        if (target) {
+            const id = text;
+            const hash = getReflectionHash(target);
+
+            if (hash) {
+                this.references.set(id, hash);
+                return renderLinkToType(target, id);
+            } else {
+                console.warn(`Type is not included in documentation: ${id}`);
+                return renderTypeForComment(target, id);
+            }
+        }  else {
+            console.warn(`Unable to find type for link: ${text}`);
+            return text.toString();
+        }
+    }
+
+    private _getTextForTag(tag: string) {
+        if (tag.startsWith('@')) {
+            return `[\`${tag}\`](tags:${tag})`;
+        } else {
+            return `[\`#${tag}\`](tags:${tag})`;
+        }
+    }
+}
+
+class CommentSerializer implements SerializerComponent<Comment> {
+    private _app: Application;
+    private _project: ProjectReflection;
+    private _commentDisplayPartSerializer: CommentDisplayPartSerializer;
+
+    get priority() {
+        return 100;
+    }
+
+    constructor(app: Application, project: ProjectReflection, commentDisplayPartSerializer: CommentDisplayPartSerializer) {
+        this._app = app;
+        this._project = project;
+        this._commentDisplayPartSerializer = commentDisplayPartSerializer;
     }
 
     supports(item: Comment) {
         return item instanceof Comment;
     }
 
-    toObject(item: Comment, obj: Partial<ModelToObject<Comment>>) {
-        if (item.shortText) {
-            obj.shortText = this._serializeLinks(item.shortText);
-        }
-        if (item.text) {
-            obj.text = this._serializeLinks(item.text);
-        }
-        if (item.returns) {
-            obj.returns = this._serializeLinks(item.returns);
-        }
-        if (item.tags) {
-            obj.tags = item.tags.map(t => ({
-                tag: t.tagName,
-                paramName: t.paramName,
-                text: t.text ? this._serializeLinks(t.text) : ''
-            }));
-        }
-
+    toObject(item: Comment, obj: Partial<ModelToObject<Comment>>, serializer: Serializer) {
+        obj.summary = item.summary.map(s => this._commentDisplayPartSerializer.toObject(s, {}, serializer));
+        obj.blockTags = item.blockTags.map(s => ({
+            tag: s.tag,
+            content: s.content.map(c => this._commentDisplayPartSerializer.toObject(c, {}, serializer))
+        }));
         return obj;
-    }
-
-    serializeGroup(instance: any) {
-        return instance instanceof Comment;
-    }
-
-    /**
-     * Renders all "{{@link }}" tags to markdown links in the given text.
-     * @param str 
-     * @returns 
-     */
-    private _serializeLinks(str: string) {
-        return this._replaceTags(this._replaceReferences(str));
-    }
-
-    private _replaceReferences(str: string) {
-        let regex = /\{@link ([\w-\@\.]+)\}/g;
-        return str.replace(regex, (match, id) => {
-            const type = getByDocId(this._project, id);
-
-            if (type) {
-                const hash = getReflectionHash(type);
-                if (hash) {
-                    this.references.set(id, hash);
-                    return renderLinkToType(type, id);
-                } else {
-                    console.warn(`Type is not included in documentation: ${id}`);
-                    return renderTypeForComment(type, id);
-                }
-            } else {
-                console.warn(`Unable to find type for link: ${id}`);
-                return id;
-            }
-        });
-    }
-
-    private _replaceTags(str: string) {
-        let regex = /\{@tag ([\@\w-\.]+)\}/g;
-        return str.replace(regex, (match, tag) => {
-            if(tag.startsWith('@')) {
-                return `[\`${tag}\`](tags:${tag})`;
-            }
-            return `[\`#${tag}\`](tags:${tag})`;
-        });
     }
 }
 
@@ -112,7 +130,7 @@ function renderLinkToType(type: Reflection, id: string) {
 }
 
 function renderTypeForComment(type: Reflection, id: string): string {
-    if (type.kindString === 'Call signature') {
+    if (type.kind === ReflectionKind.CallSignature) {
         const name = getReflectionTag(type, 'docname') ?? id;
         const sig = type as SignatureReflection;
         const params = sig.parameters.map(p => `${p.flags.isRest ? '...' : ''}${p.name}`).join(', ');
@@ -122,7 +140,7 @@ function renderTypeForComment(type: Reflection, id: string): string {
     }
 }
 
-class IncludeSourceSerializer extends SerializerComponent<Reflection> {
+class IncludeSourceSerializer implements SerializerComponent<Reflection> {
     private _app: Application;
     private _project: ProjectReflection;
     private _morph: Project;
@@ -133,8 +151,7 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
         return 101;
     }
 
-    constructor(app: Application, project: ProjectReflection, serializer: Serializer) {
-        super(serializer);
+    constructor(app: Application, project: ProjectReflection) {
         this._app = app;
         this._project = project;
         this._morph = new Project();
@@ -147,12 +164,12 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
 
     supports(item: Reflection): boolean {
         return item instanceof DeclarationReflection &&
-            item.kindString === 'Property' &&
+            item.kind === ReflectionKind.Property &&
             this._getType(item.type) !== null &&
             getReflectionTag(item, 'docsource') !== null;
     }
 
-    toObject(item: DeclarationReflection, obj?: Partial<ModelToObject<DeclarationReflection>>): Partial<ModelToObject<DeclarationReflection>> {
+    toObject(item: DeclarationReflection, obj: Partial<ModelToObject<DeclarationReflection>>, serializer: Serializer): Partial<ModelToObject<DeclarationReflection>> {
         const file = this._morph.createSourceFile('temp.ts', undefined, { overwrite: true });
         let type = this._getType(item.type);
         const name = getReflectionTag(item, 'docsource') || type.name;
@@ -207,13 +224,13 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
         obj.id = item.id;
         obj.name = item.name;
         obj.kind = item.kind;
-        obj.kindString = item.kindString;
-        obj.type = this.owner.toObject(item.type);
+        (obj as any).kindString = ReflectionKind.singularString(item.kind);
+        obj.type = serializer.toObject(item.type);
         obj.defaultValue = item.defaultValue;
         obj.flags = item.flags;
-        obj.comment = this.owner.toObject(item.comment);
-        obj.children = this.owner.toObject(item.children);
-        obj.typeParameter = this.owner.toObject(item.typeParameters);
+        obj.comment = serializer.toObject(item.comment);
+        obj.children = serializer.toObjectsOptional(item.children);
+        obj.typeParameters = serializer.toObjectsOptional(item.typeParameters);
         (obj as any).typeText = source;
         (obj as any).typeReference = name;
         (obj as any).references = referencesContent;
@@ -246,7 +263,7 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
     }
 }
 
-class ClassReferenceSerializer extends SerializerComponent<Reflection> {
+class ClassReferenceSerializer implements SerializerComponent<Reflection> {
     private _app: Application;
     private _project: ProjectReflection;
 
@@ -256,8 +273,7 @@ class ClassReferenceSerializer extends SerializerComponent<Reflection> {
         return 102;
     }
 
-    constructor(app: Application, project: ProjectReflection, serializer: Serializer) {
-        super(serializer);
+    constructor(app: Application, project: ProjectReflection) {
         this._app = app;
         this._project = project;
         this.references = new Map();
@@ -269,11 +285,11 @@ class ClassReferenceSerializer extends SerializerComponent<Reflection> {
 
     supports(item: Reflection): boolean {
         return item instanceof DeclarationReflection &&
-            (item.kindString === 'Class' || item.kindString === 'Interface') &&
+            (item.kind === ReflectionKind.Class || item.kind === ReflectionKind.Interface) &&
             getReflectionTag(item, 'docreferenceactions') !== null;
     }
 
-    toObject(item: DeclarationReflection, obj?: Partial<ModelToObject<DeclarationReflection>>): Partial<ModelToObject<DeclarationReflection>> {
+    toObject(item: DeclarationReflection, obj: Partial<ModelToObject<DeclarationReflection>>, serializer: Serializer): Partial<ModelToObject<DeclarationReflection>> {
         let references = getReflectionTag(item, 'docreferenceactions');
 
         const childrenIds = new Set<string>(
@@ -284,7 +300,7 @@ class ClassReferenceSerializer extends SerializerComponent<Reflection> {
         if (references) {
             let refs = getByReference(this._project, references);
             for (let r of refs) {
-                if (r.kindString !== 'Call signature') {
+                if (r.kind !== ReflectionKind.CallSignature) {
                     continue;
                 }
 
@@ -314,20 +330,20 @@ class ClassReferenceSerializer extends SerializerComponent<Reflection> {
         obj.id = item.id;
         obj.name = item.name;
         obj.kind = item.kind;
-        obj.kindString = item.kindString;
-        obj.type = this.owner.toObject(item.type);
+        (obj as any).kindString = ReflectionKind.singularString(item.kind);
+        obj.type = serializer.toObject(item.type);
         obj.defaultValue = item.defaultValue;
         obj.flags = item.flags;
-        obj.comment = this.owner.toObject(item.comment);
-        obj.children = this.owner.toObject(item.children);
-        obj.typeParameter = this.owner.toObject(item.typeParameters);
+        obj.comment = serializer.toObject(item.comment);
+        obj.children = serializer.toObjectsOptional(item.children);
+        obj.typeParameters = serializer.toObjectsOptional(item.typeParameters);
         (obj as any).references = referencesContent;
 
         return obj;
     }
 }
 
-class RenameTypeSerializer extends SerializerComponent<ReferenceType> {
+class RenameTypeSerializer implements SerializerComponent<ReferenceType> {
     private _app: Application;
     private _project: ProjectReflection;
 
@@ -337,8 +353,7 @@ class RenameTypeSerializer extends SerializerComponent<ReferenceType> {
         return 101;
     }
 
-    constructor(map: Map<string, string>, app: Application, project: ProjectReflection, serializer: Serializer) {
-        super(serializer);
+    constructor(map: Map<string, string>, app: Application, project: ProjectReflection) {
         this._app = app;
         this._project = project;
         this.map = map;
@@ -358,9 +373,10 @@ class RenameTypeSerializer extends SerializerComponent<ReferenceType> {
         return item instanceof ReferenceType;
     }
 
-    toObject(item: ReferenceType, obj?: Partial<ModelToObject<ReferenceType>>): Partial<ModelToObject<ReferenceType>> {
+    toObject(item: ReferenceType, obj: Partial<ModelToObject<ReferenceType>>, serializer: Serializer): Partial<ModelToObject<ReferenceType>> {
         if (item.reflection) {
-            obj.id = item.reflection.id;
+            obj.target = item.reflection.id;
+            (obj as any).id = item.reflection.id;
         }
 
         const name = getReflectionTag(item.reflection, 'docname') ?? item.name;
@@ -369,7 +385,7 @@ class RenameTypeSerializer extends SerializerComponent<ReferenceType> {
         obj.type = item.type;
         obj.package = item.package;
         obj.qualifiedName = item.qualifiedName;
-        obj.typeArguments = this.owner.toObject(item.typeArguments);
+        obj.typeArguments = serializer.toObjectsOptional(item.typeArguments);
 
         const ref = resolveType(this.map, item, this._project);
         if (ref === item) {
@@ -377,7 +393,8 @@ class RenameTypeSerializer extends SerializerComponent<ReferenceType> {
         }
 
         const finalRef = ref.reflection;
-        obj.id = finalRef.id;
+        obj.target = finalRef.id;
+        (obj as any).id = finalRef.id;
         obj.name = getReflectionTag(finalRef, 'docname') ?? finalRef.name;
 
         return obj;
@@ -403,18 +420,21 @@ function resolveType(renamedTypes: Map<string, string>, item: ReferenceType, pro
     return item;
 }
 
-export function loadContent() {
-    const { app, project } = getProject();
+export async function loadContent() {
+    const { app, project } = await getProject();
     if (!project) {
         console.warn('[docusarus-plugin-typedoc] Unable to load TypeDoc project!');
     }
 
-    let commentSerializer = new CommentSerializer(app, project, app.serializer);
-    let sourceSerializer = new IncludeSourceSerializer(app, project, app.serializer);
-    let classRefSerializer = new ClassReferenceSerializer(app, project, app.serializer);
+    let commentPartSerializer = new CommentDisplayPartSerializer(app, project);
+    let commentSerializer = new CommentSerializer(app, project, commentPartSerializer);
+    let sourceSerializer = new IncludeSourceSerializer(app, project);
+    let classRefSerializer = new ClassReferenceSerializer(app, project);
     app.serializer.addSerializer(commentSerializer);
+    app.serializer.addSerializer(commentPartSerializer);
     app.serializer.addSerializer(sourceSerializer);
     app.serializer.addSerializer(classRefSerializer);
+    app.serializer.projectRoot = path.resolve(__dirname, '..', '..');
 
     let allUsedTypes = new Set<Reflection>();
     let typesWithPages = new Set<Reflection>();
@@ -447,7 +467,7 @@ export function loadContent() {
     const allowedKinds = new Set<ReflectionKind>([
         ReflectionKind.Class,
         ReflectionKind.Interface,
-        ReflectionKind.ObjectLiteral
+        ReflectionKind.TypeLiteral
     ]);
 
     const getPage = (hash: string) => {
@@ -549,11 +569,10 @@ export function loadContent() {
     app.serializer.addSerializer(new RenameTypeSerializer(
         renamedTypes,
         app,
-        project,
-        app.serializer
+        project
     ));
 
-    for(let [id, hash] of commentSerializer.references) {
+    for(let [id, hash] of commentPartSerializer.references) {
         references[id] = hash;
     }
     for (let [id, hash] of sourceSerializer.references) {
@@ -593,16 +612,14 @@ export function loadContent() {
 }
 
 function getReflectionComment(type: Reflection): CommentType {
-    let comment;
+    let comment: CommentType;
     if (type.hasComment()) {
         comment = {
-            shortText: type.comment.shortText,
-            text: type.comment.text,
-            returns: type.comment.returns,
-            tags: type.comment.tags.map(t => ({
-                tagName: t.tagName,
-                paramName: t.paramName,
-                text: t.text
+            text: type.comment.summary.map(s => s.text).join(''),
+            tags: type.comment.blockTags.map(t => ({
+                tagName: t.tag[0] === '@' ? t.tag.substring(1) : t.tag,
+                paramName: t.name,
+                text: t.content.map(s => s.text).join('')
             }))
         };
     }
@@ -620,20 +637,15 @@ function getReflectionOrder(reflection: Reflection): number {
 }
 
 function getReflectionTag(reflection: Reflection, tag: string): string {
-    const tagValue = reflection.comment?.tags.find(t => {
-        return t.tagName === tag;
-    });
+    const tagValue = reflection.comment?.getTag(`@${tag}`);
     if (tagValue) {
-        return tagValue.text.trim();
+        return getTagText(tagValue);
     }
     return null;
 }
 
-function getReflectionTags(reflection: Reflection, tag: string): string[] {
-    const tags = reflection.comment?.tags.filter(t => {
-        return t.tagName === tag;
-    }) ?? [];
-    return tags.map(t => t.text.trim());
+function getTagText(tag: CommentTag) {
+    return tag.content.map(t => t.text).join('').trim();
 }
 
 const builtinTypes = new Set([
@@ -687,7 +699,7 @@ function walkSingle(obj: WalkType, callback: (value: WalkType, parent: WalkType,
     // if (!obj) {
     //     return;
     // }
-    let type = 'kind' in obj ? obj.kindString : 'type' in obj ? obj.type : 'comment';
+    let type = 'kind' in obj ? ReflectionKind.singularString(obj.kind) : 'type' in obj ? obj.type : 'comment';
     let keys = (keysMap as any)[type] || [];
     for(let key of keys) {
         let value = (obj as any)[key];
@@ -751,10 +763,4 @@ function getByReference(type: WalkType, ref: string): Reflection[] {
 
 function getDocId(type: Reflection) {
     return getReflectionTag(type, 'docid') ?? getReflectionTag(type, 'docname');
-}
-
-function isFunctionProperty(property: any) {
-    return property && property.type && property.type.type === 'reflection' &&
-        property.type.declaration && property.type.declaration.signatures &&
-        property.type.declaration.signatures.some(s => s.kindString === 'Call signature');
 }

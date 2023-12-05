@@ -5,37 +5,58 @@
     "pageSidebarLabel": "Files",
     "contents": [
         {
-            "id": 1874,
+            "id": 2102,
             "order": 1,
             "name": "RecordFileResult",
             "reflection": {
-                "id": 1874,
+                "id": 2102,
                 "name": "RecordFileApiResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "variant": "declaration",
+                "kind": 2097152,
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines the possible results of a \"record file\" request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/files"
+                            "kind": "text",
+                            "text": "Defines the possible results of a \"record file\" request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/files"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-create"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-create"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "1"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "1"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RecordFileResult\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RecordFileResult"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -43,7 +64,8 @@
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 2086,
-                        "character": 12
+                        "character": 12,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2086"
                     }
                 ],
                 "type": {
@@ -51,96 +73,124 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 1875,
-                            "name": "RecordFileSuccess"
+                            "target": 2103,
+                            "name": "RecordFileSuccess",
+                            "package": "@casual-simulation/aux-runtime",
+                            "id": 2103,
+                            "qualifiedName": "RecordFileApiSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 1879,
-                            "name": "RecordFileFailure"
+                            "target": 2107,
+                            "name": "RecordFileFailure",
+                            "package": "@casual-simulation/aux-runtime",
+                            "id": 2107,
+                            "qualifiedName": "RecordFileApiFailure"
                         }
                     ]
                 }
             },
             "comment": {
-                "shortText": "Defines the possible results of a \"record file\" request.",
-                "text": "",
+                "text": "Defines the possible results of a \"record file\" request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/files"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-create"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "1"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RecordFileResult\n"
+                        "text": "RecordFileResult"
                     }
                 ]
             },
             "group": "01-create"
         },
         {
-            "id": 1875,
+            "id": 2103,
             "order": 2,
             "name": "RecordFileSuccess",
             "reflection": {
-                "id": 1875,
+                "id": 2103,
                 "name": "RecordFileApiSuccess",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a successful \"record file\" request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/files"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a successful \"record file\" request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/files"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-create"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-create"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "2"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "2"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RecordFileSuccess\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RecordFileSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 1878,
+                        "id": 2106,
                         "name": "sha256Hash",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The SHA-256 hash of the file.\nWhen downloading the URL, the resulting data is guaranteed to have a SHA-256 hash that matches this value.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The SHA-256 hash of the file.\nWhen downloading the URL, the resulting data is guaranteed to have a SHA-256 hash that matches this value."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2108,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2108"
                             }
                         ],
                         "type": {
@@ -149,16 +199,17 @@
                         }
                     },
                     {
-                        "id": 1876,
+                        "id": 2104,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2097,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2097"
                             }
                         ],
                         "type": {
@@ -167,20 +218,26 @@
                         }
                     },
                     {
-                        "id": 1877,
+                        "id": 2105,
                         "name": "url",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The URL that the file can be accessed at.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The URL that the file can be accessed at."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2102,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2102"
                             }
                         ],
                         "type": {
@@ -192,11 +249,10 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            1878,
-                            1876,
-                            1877
+                            2106,
+                            2104,
+                            2105
                         ]
                     }
                 ],
@@ -204,104 +260,139 @@
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 2096,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2096"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a successful \"record file\" request.",
-                "text": "",
+                "text": "Defines an interface that represents a successful \"record file\" request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/files"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-create"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "2"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RecordFileSuccess\n"
+                        "text": "RecordFileSuccess"
                     }
                 ]
             },
             "group": "01-create"
         },
         {
-            "id": 1879,
+            "id": 2107,
             "order": 3,
             "name": "RecordFileFailure",
             "reflection": {
-                "id": 1879,
+                "id": 2107,
                 "name": "RecordFileApiFailure",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a failed \"record file\" request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/files"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a failed \"record file\" request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/files"
+                                }
+                            ]
                         },
                         {
-                            "tag": "doctitle",
-                            "paramName": "",
-                            "text": "File Types"
+                            "tag": "@doctitle",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "File Types"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docsidebar",
-                            "paramName": "",
-                            "text": "Files"
+                            "tag": "@docsidebar",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Files"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docdescription",
-                            "paramName": "",
-                            "text": "File types are used for uploading and downloading files."
+                            "tag": "@docdescription",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "File types are used for uploading and downloading files."
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-create"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-create"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "3"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "3"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RecordFileFailure\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RecordFileFailure"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 1881,
+                        "id": 2109,
                         "name": "errorCode",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error code that describes why the request failed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error code that describes why the request failed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2128,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2128"
                             }
                         ],
                         "type": {
@@ -313,7 +404,7 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "not_logged_in"
+                                    "value": "not_supported"
                                 },
                                 {
                                     "type": "literal",
@@ -321,15 +412,11 @@
                                 },
                                 {
                                     "type": "literal",
+                                    "value": "unacceptable_request"
+                                },
+                                {
+                                    "type": "literal",
                                     "value": "record_not_found"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "file_already_exists"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "action_not_supported"
                                 },
                                 {
                                     "type": "literal",
@@ -337,38 +424,48 @@
                                 },
                                 {
                                     "type": "literal",
+                                    "value": "action_not_supported"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
                                     "value": "subscription_limit_reached"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "unacceptable_request"
+                                    "value": "file_already_exists"
                                 },
                                 {
                                     "type": "literal",
                                     "value": "invalid_file_data"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_supported"
                                 }
                             ]
                         }
                     },
                     {
-                        "id": 1882,
+                        "id": 2110,
                         "name": "errorMessage",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error message that describes why the request failed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error message that describes why the request failed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2136,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2136"
                             }
                         ],
                         "type": {
@@ -377,22 +474,28 @@
                         }
                     },
                     {
-                        "id": 1883,
+                        "id": 2111,
                         "name": "existingFileUrl",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {
                             "isOptional": true
                         },
                         "comment": {
-                            "shortText": "The URL that the file is available at if it has already been uploaded.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The URL that the file is available at if it has already been uploaded."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2141,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2141"
                             }
                         ],
                         "type": {
@@ -401,16 +504,17 @@
                         }
                     },
                     {
-                        "id": 1880,
+                        "id": 2108,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2123,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2123"
                             }
                         ],
                         "type": {
@@ -422,12 +526,11 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            1881,
-                            1882,
-                            1883,
-                            1880
+                            2109,
+                            2110,
+                            2111,
+                            2108
                         ]
                     }
                 ],
@@ -435,85 +538,99 @@
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 2122,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-runtime/runtime/AuxLibrary.ts#L2122"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a failed \"record file\" request.",
-                "text": "",
+                "text": "Defines an interface that represents a failed \"record file\" request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/files"
                     },
                     {
                         "tagName": "doctitle",
-                        "paramName": "",
                         "text": "File Types"
                     },
                     {
                         "tagName": "docsidebar",
-                        "paramName": "",
                         "text": "Files"
                     },
                     {
                         "tagName": "docdescription",
-                        "paramName": "",
                         "text": "File types are used for uploading and downloading files."
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-create"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "3"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RecordFileFailure\n"
+                        "text": "RecordFileFailure"
                     }
                 ]
             },
             "group": "01-create"
         },
         {
-            "id": 3493,
+            "id": 3728,
             "order": 0,
             "name": "EraseFileResult",
             "reflection": {
-                "id": 3493,
+                "id": 3728,
                 "name": "EraseFileResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "variant": "declaration",
+                "kind": 2097152,
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines the possible results of a request to erase a file record.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/files"
+                            "kind": "text",
+                            "text": "Defines the possible results of a request to erase a file record."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/files"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "02-erase"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "02-erase"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "0"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "0"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "EraseFileResult\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "EraseFileResult"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -521,7 +638,8 @@
                     {
                         "fileName": "src/aux-records/FileRecordsController.ts",
                         "line": 821,
-                        "character": 12
+                        "character": 12,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L821"
                     }
                 ],
                 "type": {
@@ -529,96 +647,124 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 3494,
-                            "name": "EraseFileSuccess"
+                            "target": 3729,
+                            "name": "EraseFileSuccess",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3729,
+                            "qualifiedName": "EraseFileSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3498,
-                            "name": "EraseFileFailure"
+                            "target": 3733,
+                            "name": "EraseFileFailure",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3733,
+                            "qualifiedName": "EraseFileFailure"
                         }
                     ]
                 }
             },
             "comment": {
-                "shortText": "Defines the possible results of a request to erase a file record.",
-                "text": "",
+                "text": "Defines the possible results of a request to erase a file record.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/files"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "02-erase"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "0"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "EraseFileResult\n"
+                        "text": "EraseFileResult"
                     }
                 ]
             },
             "group": "02-erase"
         },
         {
-            "id": 3494,
+            "id": 3729,
             "order": 1,
             "name": "EraseFileSuccess",
             "reflection": {
-                "id": 3494,
+                "id": 3729,
                 "name": "EraseFileSuccess",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a successful request to erase a file record.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/files"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a successful request to erase a file record."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/files"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "02-erase"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "02-erase"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "1"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "1"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "EraseFileSuccess\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "EraseFileSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3497,
+                        "id": 3732,
                         "name": "fileName",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The name of the file that was erased.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The name of the file that was erased."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 841,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L841"
                             }
                         ],
                         "type": {
@@ -627,20 +773,26 @@
                         }
                     },
                     {
-                        "id": 3496,
+                        "id": 3731,
                         "name": "recordName",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The name of the record that the file was erased from.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The name of the record that the file was erased from."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 836,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L836"
                             }
                         ],
                         "type": {
@@ -649,16 +801,17 @@
                         }
                     },
                     {
-                        "id": 3495,
+                        "id": 3730,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 832,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L832"
                             }
                         ],
                         "type": {
@@ -670,11 +823,10 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3497,
-                            3496,
-                            3495
+                            3732,
+                            3731,
+                            3730
                         ]
                     }
                 ],
@@ -682,89 +834,112 @@
                     {
                         "fileName": "src/aux-records/FileRecordsController.ts",
                         "line": 831,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L831"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a successful request to erase a file record.",
-                "text": "",
+                "text": "Defines an interface that represents a successful request to erase a file record.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/files"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "02-erase"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "1"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "EraseFileSuccess\n"
+                        "text": "EraseFileSuccess"
                     }
                 ]
             },
             "group": "02-erase"
         },
         {
-            "id": 3498,
+            "id": 3733,
             "order": 2,
             "name": "EraseFileFailure",
             "reflection": {
-                "id": 3498,
+                "id": 3733,
                 "name": "EraseFileFailure",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a failed request to erase a file record.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/files"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a failed request to erase a file record."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/files"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "02-erase"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "02-erase"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "2"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "2"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "EraseFileFailure\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "EraseFileFailure"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3500,
+                        "id": 3735,
                         "name": "errorCode",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error code that indicates why the request failed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error code that indicates why the request failed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 857,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L857"
                             }
                         ],
                         "type": {
@@ -776,11 +951,11 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "not_logged_in"
+                                    "value": "invalid_record_key"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "invalid_record_key"
+                                    "value": "unacceptable_request"
                                 },
                                 {
                                     "type": "literal",
@@ -788,19 +963,19 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "action_not_supported"
-                                },
-                                {
-                                    "type": "literal",
                                     "value": "not_authorized"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "subscription_limit_reached"
+                                    "value": "action_not_supported"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "unacceptable_request"
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "subscription_limit_reached"
                                 },
                                 {
                                     "type": "literal",
@@ -810,20 +985,26 @@
                         }
                     },
                     {
-                        "id": 3501,
+                        "id": 3736,
                         "name": "errorMessage",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error message that indicates why the request failed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error message that indicates why the request failed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 867,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L867"
                             }
                         ],
                         "type": {
@@ -832,16 +1013,17 @@
                         }
                     },
                     {
-                        "id": 3499,
+                        "id": 3734,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 853,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L853"
                             }
                         ],
                         "type": {
@@ -853,11 +1035,10 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3500,
-                            3501,
-                            3499
+                            3735,
+                            3736,
+                            3734
                         ]
                     }
                 ],
@@ -865,33 +1046,29 @@
                     {
                         "fileName": "src/aux-records/FileRecordsController.ts",
                         "line": 852,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/FileRecordsController.ts#L852"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a failed request to erase a file record.",
-                "text": "",
+                "text": "Defines an interface that represents a failed request to erase a file record.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/files"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "02-erase"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "2"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "EraseFileFailure\n"
+                        "text": "EraseFileFailure"
                     }
                 ]
             },
@@ -900,1044 +1077,1044 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3304": "CasualOSError",
+        "id-3539": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3719": "Quaternion",
+        "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3751": "Rotation",
+        "id-154": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3585": "Vector2",
+        "id-1": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3642": "Vector3",
+        "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3323": "AIChatMessage",
+        "id-3558": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-3100": "AIChatOptions",
+        "id-3328": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
-        "id-2250": "AIGenerateImageSuccess",
+        "id-2478": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-3114": "AIGenerateImageOptions",
+        "id-3342": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-3110": "AIGenerateSkyboxOptions",
+        "id-3338": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
-        "id-2243": "AIGenerateSkyboxRequest",
+        "id-2471": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
-        "id-2247": "AIGenerateSkyboxResult",
+        "id-2475": "AIGenerateSkyboxResult",
         "AIGeneratedImage": "types/ai",
-        "id-2253": "AIGeneratedImage",
+        "id-2481": "AIGeneratedImage",
         "ARSupportedAction": "types/os",
-        "id-2845": "ARSupportedAction",
+        "id-3073": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3508": "AddCountFailure",
+        "id-3743": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3503": "AddCountSuccess",
+        "id-3738": "AddCountSuccess",
         "AddDropSnapAction": "types/os",
-        "id-2474": "AddDropSnapAction",
+        "id-2702": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os",
-        "id-2478": "AddDropSnapPointsAction",
+        "id-2706": "AddDropSnapPointsAction",
         "AnalyticsRecordEventAction": "types/os",
-        "id-3050": "AnalyticsRecordEventAction",
+        "id-3278": "AnalyticsRecordEventAction",
         "AnimateTagOptions": "types/animation",
-        "id-1848": "AnimateTagOptions",
+        "id-2075": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2223": "AttachDebuggerOptions",
+        "id-2451": "AttachDebuggerOptions",
         "AuthData": "types/os",
-        "id-2989": "AuthData",
+        "id-3217": "AuthData",
         "CasualOSDevice": "types/os",
-        "id-3291": "CasualOSDevice",
+        "id-3526": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-3283": "CasualOSVersion",
+        "id-3518": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3797": "AxisAndAngle",
+        "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os",
-        "id-2932": "BeginRecordingAction",
+        "id-3160": "BeginRecordingAction",
         "BotTagMasks": "types/core",
-        "id-3260": "BotTagMasks",
+        "id-3495": "BotTagMasks",
         "BotTags": "types/core",
-        "id-3175": "BotTags",
+        "id-3410": "BotTags",
         "BotState": "types/core",
-        "id-3273": "BotState",
+        "id-3508": "BotState",
         "BufferFormAddressGLTFAction": "types/os",
-        "id-3057": "BufferFormAddressGLTFAction",
+        "id-3285": "BufferFormAddressGLTFAction",
         "BufferSoundAction": "types/os",
-        "id-2656": "BufferSoundAction",
+        "id-2884": "BufferSoundAction",
         "CalculateRayFromCameraAction": "types/os",
-        "id-3030": "CalculateRayFromCameraAction",
+        "id-3258": "CalculateRayFromCameraAction",
         "CancelSoundAction": "types/os",
-        "id-2662": "CancelSoundAction",
+        "id-2890": "CancelSoundAction",
         "CompiledBotListeners": "types/core",
-        "id-3254": "CompiledBotListeners",
+        "id-3489": "CompiledBotListeners",
         "ConfigureWakeLockAction": "types/os",
-        "id-3037": "ConfigureWakeLockAction",
+        "id-3265": "ConfigureWakeLockAction",
         "ConvertGeolocationToWhat3WordsAction": "types/os",
-        "id-2420": "ConvertGeolocationToWhat3WordsAction",
+        "id-2648": "ConvertGeolocationToWhat3WordsAction",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2409": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2637": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3445": "CreatePublicRecordKeyFailure",
+        "id-3680": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3441": "CreatePublicRecordKeySuccess",
+        "id-3676": "CreatePublicRecordKeySuccess",
         "CustomAppContainerAvailableAction": "types/os",
-        "id-2889": "CustomAppContainerAvailableAction",
+        "id-3117": "CustomAppContainerAvailableAction",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2176": "DebuggerCallFrame",
+        "id-2404": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2211": "DebuggerFunctionLocation",
+        "id-2439": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2205": "DebuggerPause",
+        "id-2433": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2184": "DebuggerTagMaskUpdate",
+        "id-2412": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2190": "DebuggerTagUpdate",
+        "id-2418": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2217": "DebuggerVariable",
+        "id-2445": "DebuggerVariable",
         "DefineGlobalBotAction": "types/os",
-        "id-2413": "DefineGlobalBotAction",
+        "id-2641": "DefineGlobalBotAction",
         "DownloadAction": "types/os",
-        "id-2668": "DownloadAction",
+        "id-2896": "DownloadAction",
         "Easing": "types/animation",
-        "id-2391": "Easing",
+        "id-2619": "Easing",
         "EnableARAction": "types/os",
-        "id-2841": "EnableARAction",
+        "id-3069": "EnableARAction",
         "EnableCollaborationAction": "types/os",
-        "id-2800": "EnableCollaborationAction",
+        "id-3028": "EnableCollaborationAction",
         "EnableCustomDraggingAction": "types/os",
-        "id-2504": "EnableCustomDraggingAction",
+        "id-2732": "EnableCustomDraggingAction",
         "EnablePOVAction": "types/os",
-        "id-2859": "EnablePOVAction",
+        "id-3087": "EnablePOVAction",
         "EnableVRAction": "types/os",
-        "id-2855": "EnableVRAction",
+        "id-3083": "EnableVRAction",
         "EnableXROptions": "types/os",
-        "id-2711": "EnableXROptions",
+        "id-2939": "EnableXROptions",
         "EndRecordingAction": "types/os",
-        "id-2940": "EndRecordingAction",
+        "id-3168": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3479": "EraseDataFailure",
+        "id-3714": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3475": "EraseDataSuccess",
+        "id-3710": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3498": "EraseFileFailure",
+        "id-3733": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3494": "EraseFileSuccess",
+        "id-3729": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3800": "EulerAnglesRotation",
+        "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os",
-        "id-2874": "ExitFullscreenAction",
+        "id-3102": "ExitFullscreenAction",
         "FocusOnOptions": "types/os",
-        "id-2458": "FocusOnOptions",
+        "id-2686": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2470": "FocusOnRotation",
+        "id-2698": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2756": "FormAnimationData",
+        "id-2984": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3794": "FromToRotation",
+        "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3301": "GenericError",
+        "id-3536": "GenericError",
         "GetAverageFrameRateAction": "types/os",
-        "id-3010": "GetAverageFrameRateAction",
+        "id-3238": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3519": "GetCountFailure",
+        "id-3754": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3513": "GetCountSuccess",
+        "id-3748": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3470": "GetDataFailure",
+        "id-3705": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3461": "GetDataSuccess",
+        "id-3696": "GetDataSuccess",
         "GetGeolocationAction": "types/os",
-        "id-2973": "GetGeolocationAction",
+        "id-3201": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os",
-        "id-1938": "GetRoomOptionsFailure",
+        "id-2166": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
-        "id-1934": "GetRoomOptionsSuccess",
+        "id-2162": "GetRoomOptionsSuccess",
         "GetRoomRemoteOptionsFailure": "types/os",
-        "id-1981": "GetRoomRemoteOptionsFailure",
+        "id-2209": "GetRoomRemoteOptionsFailure",
         "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-1976": "GetRoomRemoteOptionsSuccess",
+        "id-2204": "GetRoomRemoteOptionsSuccess",
         "GetRoomTrackOptionsFailure": "types/os",
-        "id-1957": "GetRoomTrackOptionsFailure",
+        "id-2185": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
-        "id-1952": "GetRoomTrackOptionsSuccess",
+        "id-2180": "GetRoomTrackOptionsSuccess",
         "GetVoicesAction": "types/os",
-        "id-2968": "GetVoicesAction",
+        "id-3196": "GetVoicesAction",
         "GetWakeLockConfigurationAction": "types/os",
-        "id-3043": "GetWakeLockConfigurationAction",
+        "id-3271": "GetWakeLockConfigurationAction",
         "GoToTagAction": "types/os",
-        "id-2978": "GoToTagAction",
+        "id-3206": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3547": "GrantMarkerPermissionFailure",
+        "id-3782": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3545": "GrantMarkerPermissionSuccess",
+        "id-3780": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3533": "GrantRoleFailure",
+        "id-3768": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3531": "GrantRoleSuccess",
+        "id-3766": "GrantRoleSuccess",
         "HtmlAppEventAction": "types/os",
-        "id-2320": "HtmlAppEventAction",
+        "id-2548": "HtmlAppEventAction",
         "HtmlAppMethodCallAction": "types/os",
-        "id-2325": "HtmlAppMethodCallAction",
+        "id-2553": "HtmlAppMethodCallAction",
         "ImageClassifierOptions": "types/os",
-        "id-2509": "ImageClassifierOptions",
+        "id-2737": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-3297": "InstUpdate",
+        "id-3532": "InstUpdate",
         "JoinRoomFailure": "types/os",
-        "id-1919": "JoinRoomFailure",
+        "id-2147": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
-        "id-1916": "JoinRoomSuccess",
+        "id-2144": "JoinRoomSuccess",
         "LeaveRoomFailure": "types/os",
-        "id-1928": "LeaveRoomFailure",
+        "id-2156": "LeaveRoomFailure",
         "LeaveRoomSuccess": "types/os",
-        "id-1925": "LeaveRoomSuccess",
+        "id-2153": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3489": "ListDataFailure",
+        "id-3724": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3484": "ListDataSuccess",
+        "id-3719": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os",
-        "id-2760": "ListFormAnimationsAction",
+        "id-2988": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3562": "ListStudiosFailure",
+        "id-3797": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3559": "ListStudiosSuccess",
+        "id-3794": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3566": "ListedStudio",
+        "id-3801": "ListedStudio",
         "LoadBotsAction": "types/os",
-        "id-2805": "LoadBotsAction",
+        "id-3033": "LoadBotsAction",
         "LoadSpaceAction": "types/os",
-        "id-2701": "LoadSpaceAction",
+        "id-2929": "LoadSpaceAction",
         "LocalFormAnimationAction": "types/os",
-        "id-2812": "LocalFormAnimationAction",
+        "id-3040": "LocalFormAnimationAction",
         "LocalPositionTweenAction": "types/os",
-        "id-2826": "LocalPositionTweenAction",
+        "id-3054": "LocalPositionTweenAction",
         "LocalTweenAction": "types/os",
-        "id-2816": "LocalTweenAction",
+        "id-3044": "LocalTweenAction",
         "LookRotation": "types/math/rotations",
-        "id-3817": "LookRotation",
+        "id-211": "LookRotation",
         "MediaPermissionAction": "types/os",
-        "id-3003": "MediaPermissionAction",
+        "id-3231": "MediaPermissionAction",
         "MediaPermissionOptions": "types/os",
-        "id-2708": "MediaPermissionOptions",
+        "id-2936": "MediaPermissionOptions",
         "MeetCommandAction": "types/os",
-        "id-2945": "MeetCommandAction",
+        "id-3173": "MeetCommandAction",
         "MeetFunctionAction": "types/os",
-        "id-2952": "MeetFunctionAction",
+        "id-3180": "MeetFunctionAction",
         "Debugger": "types/debuggers/debugger",
-        "id-1988": "Debugger",
+        "id-2216": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2195": "NormalDebuggerOptions",
+        "id-2423": "NormalDebuggerOptions",
         "OpenCircleWipeAction": "types/os",
-        "id-2922": "OpenCircleWipeAction",
+        "id-3150": "OpenCircleWipeAction",
         "OpenCircleWipeOptions": "types/os",
-        "id-2929": "OpenCircleWipeOptions",
+        "id-3157": "OpenCircleWipeOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2784": "PhotoCameraOptions",
+        "id-3012": "PhotoCameraOptions",
         "OpenURLAction": "types/os",
-        "id-2645": "OpenURLAction",
+        "id-2873": "OpenURLAction",
         "ParsedBotLink": "types/core",
-        "id-3279": "ParsedBotLink",
+        "id-3514": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-3276": "PartialBotState",
+        "id-3511": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2044": "PausableDebugger",
+        "id-2272": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2200": "PausableDebuggerOptions",
+        "id-2428": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2163": "PauseTrigger",
+        "id-2391": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2171": "PauseTriggerOptions",
+        "id-2399": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2796": "Photo",
+        "id-3024": "Photo",
         "PlaySoundAction": "types/os",
-        "id-2649": "PlaySoundAction",
+        "id-2877": "PlaySoundAction",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2158": "PossiblePauseTriggerLocation",
+        "id-2386": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2232": "PseudoRandomNumberGenerator",
+        "id-2460": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3810": "QuaternionRotation",
+        "id-215": "QuaternionRotation",
         "RaycastFromCameraAction": "types/os",
-        "id-3015": "RaycastFromCameraAction",
+        "id-3243": "RaycastFromCameraAction",
         "RaycastInPortalAction": "types/os",
-        "id-3022": "RaycastInPortalAction",
+        "id-3250": "RaycastInPortalAction",
         "RaycastRay": "types/os",
-        "id-1912": "RaycastRay",
+        "id-2140": "RaycastRay",
         "RaycastResult": "types/os",
-        "id-1909": "RaycastResult",
+        "id-2137": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-3063": "RecordActionOptions",
+        "id-3291": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3455": "RecordDataFailure",
+        "id-3690": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3451": "RecordDataSuccess",
+        "id-3686": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-1879": "RecordFileFailure",
+        "id-2107": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-1875": "RecordFileSuccess",
+        "id-2103": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2771": "RecordedFile",
+        "id-2999": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2769": "Recording",
+        "id-2997": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2776": "RecordingOptions",
+        "id-3004": "RecordingOptions",
         "RegisterBuiltinPortalAction": "types/os",
-        "id-2884": "RegisterBuiltinPortalAction",
+        "id-3112": "RegisterBuiltinPortalAction",
         "RegisterCustomAppAction": "types/os",
-        "id-2892": "RegisterCustomAppAction",
+        "id-3120": "RegisterCustomAppAction",
         "RegisterHtmlAppAction": "types/os",
-        "id-2905": "RegisterHtmlAppAction",
+        "id-3133": "RegisterHtmlAppAction",
         "RegisterPrefixOptions": "types/core",
-        "id-2766": "RegisterPrefixOptions",
+        "id-2994": "RegisterPrefixOptions",
         "RejectAction": "types/os",
-        "id-2674": "RejectAction",
+        "id-2902": "RejectAction",
         "RemoteAction": "types/os",
-        "id-3572": "RemoteAction",
+        "id-3807": "RemoteAction",
         "RequestAuthDataAction": "types/os",
-        "id-2983": "RequestAuthDataAction",
+        "id-3211": "RequestAuthDataAction",
         "RequestFullscreenAction": "types/os",
-        "id-2872": "RequestFullscreenAction",
+        "id-3100": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3554": "RevokeMarkerPermissionFailure",
+        "id-3789": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3552": "RevokeMarkerPermissionSuccess",
+        "id-3787": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3540": "RevokeRoleFailure",
+        "id-3775": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3538": "RevokeRoleSuccess",
+        "id-3773": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-3066": "RoomJoinOptions",
+        "id-3294": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-3075": "RoomOptions",
+        "id-3303": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-3091": "RoomRemoteOptions",
+        "id-3319": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-3079": "RoomTrackOptions",
+        "id-3307": "RoomTrackOptions",
         "RunScriptAction": "types/os",
-        "id-2688": "RunScriptAction",
+        "id-2916": "RunScriptAction",
         "RuntimeBot": "types/core",
-        "id-3127": "RuntimeBot",
+        "id-3355": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-3266": "RuntimeBotLinks",
+        "id-3501": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-3263": "RuntimeBotVars",
+        "id-3498": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3808": "SequenceRotation",
+        "id-222": "SequenceRotation",
         "SerializableMutationRecord": "types/os",
-        "id-2334": "SerializableMutationRecord",
+        "id-2562": "SerializableMutationRecord",
         "SessionSelector": "types/os",
-        "id-2258": "SessionSelector",
+        "id-2486": "SessionSelector",
         "SetAppOutputAction": "types/os",
-        "id-2917": "SetAppOutputAction",
+        "id-3145": "SetAppOutputAction",
         "SetClipboardAction": "types/os",
-        "id-2677": "SetClipboardAction",
+        "id-2905": "SetClipboardAction",
         "SetRoomOptionsSuccess": "types/os",
-        "id-1943": "SetRoomOptionsSuccess",
+        "id-2171": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-3097": "SetRoomTrackOptions",
+        "id-3325": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
-        "id-1969": "SetRoomTrackOptionsFailure",
+        "id-2197": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
-        "id-1964": "SetRoomTrackOptionsSuccess",
+        "id-2192": "SetRoomTrackOptionsSuccess",
         "ShareAction": "types/os",
-        "id-2876": "ShareAction",
+        "id-3104": "ShareAction",
         "ShareOptions": "types/os",
-        "id-2454": "ShareOptions",
+        "id-2682": "ShareOptions",
         "ShowChatBarAction": "types/os",
-        "id-2680": "ShowChatBarAction",
+        "id-2908": "ShowChatBarAction",
         "ShowChatOptions": "types/os",
-        "id-2448": "ShowChatOptions",
+        "id-2676": "ShowChatOptions",
         "ShowConfirmAction": "types/os",
-        "id-2530": "ShowConfirmAction",
+        "id-2758": "ShowConfirmAction",
         "ShowConfirmOptions": "types/os",
-        "id-2525": "ShowConfirmOptions",
+        "id-2753": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2514": "ShowInputOptions",
+        "id-2742": "ShowInputOptions",
         "ShowJoinCodeAction": "types/os",
-        "id-2868": "ShowJoinCodeAction",
+        "id-3096": "ShowJoinCodeAction",
         "ShowUploadAuxFileAction": "types/os",
-        "id-2694": "ShowUploadAuxFileAction",
+        "id-2922": "ShowUploadAuxFileAction",
         "ShowUploadFilesAction": "types/os",
-        "id-2696": "ShowUploadFilesAction",
+        "id-2924": "ShowUploadFilesAction",
         "SnapAxis": "types/os",
-        "id-2428": "SnapAxis",
+        "id-2656": "SnapAxis",
         "SnapGrid": "types/os",
-        "id-2483": "SnapGrid",
+        "id-2711": "SnapGrid",
         "SnapGridTarget": "types/os",
-        "id-1884": "SnapGridTarget",
+        "id-2112": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2440": "SnapPoint",
+        "id-2668": "SnapPoint",
         "SpeakTextAction": "types/os",
-        "id-2959": "SpeakTextAction",
+        "id-3187": "SpeakTextAction",
         "SpeakTextOptions": "types/experimental",
-        "id-2228": "SpeakTextOptions",
+        "id-2456": "SpeakTextOptions",
         "StartFormAnimationAction": "types/os",
-        "id-2737": "StartFormAnimationAction",
+        "id-2965": "StartFormAnimationAction",
         "StartFormAnimationOptions": "types/os",
-        "id-2713": "StartFormAnimationOptions",
+        "id-2941": "StartFormAnimationOptions",
         "StopFormAnimationAction": "types/os",
-        "id-2726": "StopFormAnimationAction",
+        "id-2954": "StopFormAnimationAction",
         "StopFormAnimationOptions": "types/os",
-        "id-2734": "StopFormAnimationOptions",
+        "id-2962": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2395": "SuccessfulGeolocation",
+        "id-2623": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2780": "SyntheticVoice",
+        "id-3008": "SyntheticVoice",
         "TweenOptions": "types/experimental",
-        "id-2225": "TweenOptions",
+        "id-2453": "TweenOptions",
         "UnregisterCustomAppAction": "types/os",
-        "id-2899": "UnregisterCustomAppAction",
+        "id-3127": "UnregisterCustomAppAction",
         "UnregisterHtmlAppAction": "types/os",
-        "id-2912": "UnregisterHtmlAppAction",
+        "id-3140": "UnregisterHtmlAppAction",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2405": "UnsuccessfulGeolocation",
+        "id-2633": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3526": "UpdateEventRecordFailure",
+        "id-3761": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3524": "UpdateEventRecordSuccess",
+        "id-3759": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os",
-        "id-2314": "UpdateHtmlAppAction",
+        "id-2542": "UpdateHtmlAppAction",
         "UploadedFile": "types/os",
-        "id-1905": "UploadedFile",
+        "id-2133": "UploadedFile",
         "VRSupportedAction": "types/os",
-        "id-2850": "VRSupportedAction",
+        "id-3078": "VRSupportedAction",
         "WakeLockConfiguration": "types/os",
-        "id-3048": "WakeLockConfiguration",
+        "id-3276": "WakeLockConfiguration",
         "WebhookOptions": "types/web",
-        "id-1829": "WebhookOptions",
+        "id-2056": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-1841": "WebhookResult",
+        "id-2068": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3502": "AddCountResult",
+        "id-3737": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3329": "AvailablePermissions",
+        "id-3564": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2508": "BarcodeFormat",
+        "id-2736": "BarcodeFormat",
         "BotFilter": "types/core",
-        "id-1863": "BotFilter",
+        "id-2090": "BotFilter",
         "BotSpace": "types/core",
-        "id-3250": "BotSpace",
+        "id-3485": "BotSpace",
         "CameraType": "types/os",
-        "id-2507": "CameraType",
+        "id-2735": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3440": "CreatePublicRecordKeyResult",
+        "id-3675": "CreatePublicRecordKeyResult",
         "CustomAppOutputType": "types/os",
-        "id-2887": "CustomAppOutputType",
+        "id-3115": "CustomAppOutputType",
         "CustomPortalOutputMode": "types/os",
-        "id-2888": "CustomPortalOutputMode",
+        "id-3116": "CustomPortalOutputMode",
         "EaseMode": "types/animation",
-        "id-2390": "EaseMode",
+        "id-2618": "EaseMode",
         "EaseType": "types/animation",
-        "id-2389": "EaseType",
+        "id-2617": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3474": "EraseDataResult",
+        "id-3709": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3493": "EraseFileResult",
+        "id-3728": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2394": "Geolocation",
+        "id-2622": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3512": "GetCountResult",
+        "id-3747": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3460": "GetDataResult",
+        "id-3695": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
-        "id-1933": "GetRoomOptionsResult",
+        "id-2161": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
-        "id-1975": "GetRoomRemoteOptionsResult",
+        "id-2203": "GetRoomRemoteOptionsResult",
         "GetRoomTrackOptionsResult": "types/os",
-        "id-1951": "GetRoomTrackOptionsResult",
+        "id-2179": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3544": "GrantMarkerPermissionResult",
+        "id-3779": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3530": "GrantRoleResult",
+        "id-3765": "GrantRoleResult",
         "JoinRoomResult": "types/os",
-        "id-1915": "JoinRoomResult",
+        "id-2143": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
-        "id-1924": "LeaveRoomResult",
+        "id-2152": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3483": "ListDataResult",
+        "id-3718": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3558": "ListStudiosResult",
+        "id-3793": "ListStudiosResult",
         "Mod": "types/core",
-        "id-1858": "Mod",
+        "id-2085": "Mod",
         "PortalType": "types/core",
-        "id-3282": "PortalType",
+        "id-3517": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2162": "PossiblePauseTriggerStates",
+        "id-2390": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3450": "RecordDataResult",
+        "id-3685": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-1874": "RecordFileResult",
+        "id-2102": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3551": "RevokeMarkerPermissionResult",
+        "id-3786": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3537": "RevokeRoleResult",
+        "id-3772": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
-        "id-1942": "SetRoomOptionsResult",
+        "id-2170": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
-        "id-1963": "SetRoomTrackOptionsResult",
+        "id-2191": "SetRoomTrackOptionsResult",
         "ShowInputSuptype": "types/os",
-        "id-2524": "ShowInputSuptype",
+        "id-2752": "ShowInputSuptype",
         "ShowInputType": "types/os",
-        "id-2523": "ShowInputType",
+        "id-2751": "ShowInputType",
         "SnapTarget": "types/os",
-        "id-2447": "SnapTarget",
+        "id-2675": "SnapTarget",
         "TagFilter": "types/core",
-        "id-1859": "TagFilter",
+        "id-2086": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3523": "UpdateEventRecordResult",
+        "id-3758": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
-        "id-364": "animateTag-byOptions",
+        "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
-        "id-33": "getbot-tag",
+        "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
-        "id-17": "getbots-tag",
+        "id-240": "getbots-tag",
         "animateTag-byTag": "actions/utility",
-        "id-358": "animateTag-byTag",
+        "id-585": "animateTag-byTag",
         "changeState": "actions/data",
-        "id-177": "changeState",
+        "id-401": "changeState",
         "create": "actions/data",
-        "id-162": "create",
+        "id-385": "create",
         "destroy": "actions/data",
-        "id-166": "destroy",
+        "id-389": "destroy",
         "getbot-filters": "actions/data",
-        "id-26": "getbot-filters",
+        "id-249": "getbot-filters",
         "getbots-filters": "actions/data",
-        "id-10": "getbots-filters",
+        "id-233": "getbots-filters",
         "priorityShout": "actions/event",
-        "id-225": "priorityShout",
+        "id-450": "priorityShout",
         "shout": "actions/event",
-        "id-237": "shout",
+        "id-463": "shout",
         "updateBotLinks": "actions/data",
-        "id-198": "updateBotLinks",
+        "id-423": "updateBotLinks",
         "whisper": "actions/event",
-        "id-263": "whisper",
+        "id-489": "whisper",
         "action.perform": "actions/event",
-        "id-1364": "action.perform",
+        "id-1591": "action.perform",
         "action.reject": "actions/event",
-        "id-1368": "action.reject",
+        "id-1595": "action.reject",
         "ai.chat-string": "actions/ai",
-        "id-423": "ai.chat-string",
+        "id-650": "ai.chat-string",
         "ai.chat-message": "actions/ai",
-        "id-426": "ai.chat-message",
+        "id-653": "ai.chat-message",
         "ai.chat-messages": "actions/ai",
-        "id-429": "ai.chat-messages",
+        "id-656": "ai.chat-messages",
         "ai.generateImage-string": "actions/ai",
-        "id-442": "ai.generateImage-string",
+        "id-669": "ai.generateImage-string",
         "ai.generateImage-request": "actions/ai",
-        "id-446": "ai.generateImage-request",
+        "id-673": "ai.generateImage-request",
         "ai.generateSkybox-string": "actions/ai",
-        "id-434": "ai.generateSkybox-string",
+        "id-661": "ai.generateSkybox-string",
         "ai.generateSkybox-request": "actions/ai",
-        "id-438": "ai.generateSkybox-request",
+        "id-665": "ai.generateSkybox-request",
         "applyDiffToSnapshot": "actions/data",
-        "id-83": "applyDiffToSnapshot",
+        "id-306": "applyDiffToSnapshot",
         "applyMod": "actions/mods",
-        "id-152": "applyMod",
+        "id-375": "applyMod",
         "assert": "actions/debuggers",
-        "id-407": "assert",
+        "id-634": "assert",
         "assertEqual": "actions/debuggers",
-        "id-412": "assertEqual",
+        "id-639": "assertEqual",
         "atPosition": "actions/bot-filters",
-        "id-293": "atPosition",
+        "id-520": "atPosition",
         "byCreator": "actions/bot-filters",
-        "id-314": "byCreator",
+        "id-541": "byCreator",
         "byID": "actions/bot-filters",
-        "id-281": "byID",
+        "id-508": "byID",
         "byMod": "actions/bot-filters",
-        "id-285": "byMod",
+        "id-512": "byMod",
         "bySpace": "actions/bot-filters",
-        "id-310": "bySpace",
+        "id-537": "bySpace",
         "byTag": "actions/bot-filters",
-        "id-276": "byTag",
+        "id-503": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1577": "bytes.fromBase64String",
+        "id-1804": "bytes.fromBase64String",
         "bytes.fromBase64Url": "actions/bytes",
-        "id-1594": "bytes.fromBase64Url",
+        "id-1821": "bytes.fromBase64Url",
         "bytes.fromHexString": "actions/bytes",
-        "id-1585": "bytes.fromHexString",
+        "id-1812": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1573": "bytes.toBase64String",
+        "id-1800": "bytes.toBase64String",
         "bytes.toBase64Url": "actions/bytes",
-        "id-1589": "bytes.toBase64Url",
+        "id-1816": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
-        "id-1581": "bytes.toHexString",
+        "id-1808": "bytes.toHexString",
         "clearAnimations": "actions/utility",
-        "id-378": "clearAnimations",
+        "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
-        "id-106": "clearTagMasks",
+        "id-329": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1600": "crypto.hash-raw",
+        "id-1827": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1606": "crypto.hash-string",
+        "id-1833": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1637": "crypto.hmac-raw",
+        "id-1864": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1630": "crypto.hmac-string",
+        "id-1857": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1695": "crypto.asymmetric.decrypt",
+        "id-1922": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1690": "crypto.asymmetric.encrypt",
+        "id-1917": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1701": "crypto.asymmetric.isEncrypted",
+        "id-1928": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1686": "crypto.asymmetric.isKeypair",
+        "id-1913": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1682": "crypto.asymmetric.keypair",
+        "id-1909": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1666": "crypto.encrypt",
+        "id-1893": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1656": "crypto.hmacSha256",
+        "id-1883": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1661": "crypto.hmacSha512",
+        "id-1888": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1676": "crypto.isEncrypted",
+        "id-1903": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1705": "crypto.keypair",
+        "id-1932": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1622": "crypto.sha256",
+        "id-1849": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1626": "crypto.sha512",
+        "id-1853": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1709": "crypto.sign",
+        "id-1936": "crypto.sign",
         "deleteTagMaskText": "actions/data",
-        "id-133": "deleteTagMaskText",
+        "id-356": "deleteTagMaskText",
         "deleteTagText": "actions/data",
-        "id-126": "deleteTagText",
+        "id-349": "deleteTagText",
         "diffSnapshots": "actions/data",
-        "id-78": "diffSnapshots",
+        "id-301": "diffSnapshots",
         "either": "actions/bot-filters",
-        "id-318": "either",
+        "id-545": "either",
         "os.beginAudioRecording": "actions/audio",
-        "id-1411": "os.beginAudioRecording",
+        "id-1638": "os.beginAudioRecording",
         "experiment.beginRecording": "actions/experimental",
-        "id-1418": "experiment.beginRecording",
+        "id-1645": "experiment.beginRecording",
         "os.endAudioRecording": "actions/audio",
-        "id-1415": "os.endAudioRecording",
+        "id-1642": "os.endAudioRecording",
         "experiment.endRecording": "actions/experimental",
-        "id-1422": "experiment.endRecording",
+        "id-1649": "experiment.endRecording",
         "experiment.getAnchorPointPosition": "actions/experimental",
-        "id-1401": "experiment.getAnchorPointPosition",
+        "id-1628": "experiment.getAnchorPointPosition",
         "experiment.getVoices": "actions/experimental",
-        "id-1430": "experiment.getVoices",
+        "id-1657": "experiment.getVoices",
         "experiment.localFormAnimation": "actions/experimental",
-        "id-1374": "experiment.localFormAnimation",
+        "id-1601": "experiment.localFormAnimation",
         "experiment.localPositionTween": "actions/experimental",
-        "id-1379": "experiment.localPositionTween",
+        "id-1606": "experiment.localPositionTween",
         "experiment.localRotationTween": "actions/experimental",
-        "id-1390": "experiment.localRotationTween",
+        "id-1617": "experiment.localRotationTween",
         "experiment.speakText": "actions/experimental",
-        "id-1425": "experiment.speakText",
+        "id-1652": "experiment.speakText",
         "getBotLinks": "actions/data",
-        "id-194": "getBotLinks",
+        "id-419": "getBotLinks",
         "getBotPosition": "actions/data",
-        "id-52": "getBotPosition",
+        "id-275": "getBotPosition",
         "getBotRotation": "actions/data",
-        "id-57": "getBotRotation",
+        "id-280": "getBotRotation",
         "getBotTagValues": "actions/data",
-        "id-42": "getBotTagValues",
+        "id-265": "getBotTagValues",
         "getFormattedJSON": "actions/data",
-        "id-70": "getFormattedJSON",
+        "id-293": "getFormattedJSON",
         "getID": "actions/data",
-        "id-62": "getID",
+        "id-285": "getID",
         "getJSON": "actions/data",
-        "id-66": "getJSON",
+        "id-289": "getJSON",
         "getLink": "actions/data",
-        "id-190": "getLink",
+        "id-415": "getLink",
         "getMod": "actions/mods",
-        "id-47": "getMod",
+        "id-270": "getMod",
         "getSnapshot": "actions/data",
-        "id-74": "getSnapshot",
+        "id-297": "getSnapshot",
         "getTag": "actions/data",
-        "id-88": "getTag",
+        "id-311": "getTag",
         "inDimension": "actions/bot-filters",
-        "id-289": "inDimension",
+        "id-516": "inDimension",
         "inStack": "actions/bot-filters",
-        "id-299": "inStack",
+        "id-526": "inStack",
         "insertTagMaskText": "actions/data",
-        "id-118": "insertTagMaskText",
+        "id-341": "insertTagMaskText",
         "insertTagText": "actions/data",
-        "id-111": "insertTagText",
+        "id-334": "insertTagText",
         "math.abs": "actions/math",
-        "id-1447": "math.abs",
+        "id-1674": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1517": "math.addVectors",
+        "id-1744": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1548": "math.areClose",
+        "id-1775": "math.areClose",
         "math.avg": "actions/math",
-        "id-1439": "math.avg",
+        "id-1666": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1473": "math.degreesToRadians",
+        "id-1700": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1513": "math.getAnchorPointOffset",
+        "id-1740": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1481": "math.getForwardDirection",
+        "id-1708": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1455": "math.getSeededRandomNumberGenerator",
+        "id-1682": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1490": "math.intersectPlane",
+        "id-1717": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1527": "math.negateVector",
+        "id-1754": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1532": "math.normalizeVector",
+        "id-1759": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1477": "math.radiansToDegrees",
+        "id-1704": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1468": "math.random",
+        "id-1695": "math.random",
         "math.randomInt": "actions/math",
-        "id-1463": "math.randomInt",
+        "id-1690": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1542": "math.scaleVector",
+        "id-1769": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1459": "math.setRandomSeed",
+        "id-1686": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1443": "math.sqrt",
+        "id-1670": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1451": "math.stdDev",
+        "id-1678": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1522": "math.subtractVectors",
+        "id-1749": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1435": "math.sum",
+        "id-1662": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1537": "math.vectorLength",
+        "id-1764": "math.vectorLength",
         "neighboring": "actions/bot-filters",
-        "id-304": "neighboring",
+        "id-531": "neighboring",
         "not": "actions/bot-filters",
-        "id-325": "not",
+        "id-552": "not",
         "os.attachDebugger": "actions/debuggers",
-        "id-1320": "os.attachDebugger",
+        "id-1547": "os.attachDebugger",
         "os.createDebugger-normal": "actions/debuggers",
-        "id-1309": "os.createDebugger-normal",
+        "id-1536": "os.createDebugger-normal",
         "os.createDebugger-pausable": "actions/debuggers",
-        "id-1313": "os.createDebugger-pausable",
+        "id-1540": "os.createDebugger-pausable",
         "os.focusOn-bot": "actions/portals",
-        "id-510": "os.focusOn-bot",
+        "id-737": "os.focusOn-bot",
         "os.focusOn-position": "actions/portals",
-        "id-515": "os.focusOn-position",
+        "id-742": "os.focusOn-position",
         "os.getExecutingDebugger": "actions/debuggers",
-        "id-1317": "os.getExecutingDebugger",
+        "id-1544": "os.getExecutingDebugger",
         "showChat-options": "actions/os",
-        "id-537": "showChat-options",
+        "id-764": "showChat-options",
         "showChat-placeholder": "actions/os",
-        "id-533": "showChat-placeholder",
+        "id-760": "showChat-placeholder",
         "os.showInput": "actions/portals",
-        "id-756": "os.showInput",
+        "id-983": "os.showInput",
         "os.addBotDropGrid": "actions/portals",
-        "id-826": "os.addBotDropGrid",
+        "id-1053": "os.addBotDropGrid",
         "os.addBotDropSnap": "actions/portals",
-        "id-817": "os.addBotDropSnap",
+        "id-1044": "os.addBotDropSnap",
         "os.addDropGrid": "actions/portals",
-        "id-822": "os.addDropGrid",
+        "id-1049": "os.addDropGrid",
         "os.addDropSnap": "actions/portals",
-        "id-813": "os.addDropSnap",
+        "id-1040": "os.addDropSnap",
         "os.applyUpdatesToInst": "actions/os",
-        "id-1272": "os.applyUpdatesToInst",
+        "id-1499": "os.applyUpdatesToInst",
         "os.arSupported": "actions/xr",
-        "id-581": "os.arSupported",
+        "id-808": "os.arSupported",
         "os.bufferFormAddressGLTF": "actions/animations",
-        "id-1230": "os.bufferFormAddressGLTF",
+        "id-1457": "os.bufferFormAddressGLTF",
         "os.bufferSound": "actions/audio",
-        "id-789": "os.bufferSound",
+        "id-1016": "os.bufferSound",
         "os.calculateRayFromCamera": "actions/portals",
-        "id-1225": "os.calculateRayFromCamera",
+        "id-1452": "os.calculateRayFromCamera",
         "os.cancelSound": "actions/audio",
-        "id-793": "os.cancelSound",
+        "id-1020": "os.cancelSound",
         "os.capturePhoto": "actions/camera",
-        "id-676": "os.capturePhoto",
+        "id-903": "os.capturePhoto",
         "os.closeBarcodeScanner": "actions/barcodes",
-        "id-654": "os.closeBarcodeScanner",
+        "id-881": "os.closeBarcodeScanner",
         "os.closeCircleWipe": "actions/portals",
-        "id-805": "os.closeCircleWipe",
+        "id-1032": "os.closeCircleWipe",
         "os.closeImageClassifier": "actions/image-classification",
-        "id-669": "os.closeImageClassifier",
+        "id-896": "os.closeImageClassifier",
         "os.closePhotoCamera": "actions/camera",
-        "id-680": "os.closePhotoCamera",
+        "id-907": "os.closePhotoCamera",
         "os.closeQRCodeScanner": "actions/barcodes",
-        "id-640": "os.closeQRCodeScanner",
+        "id-867": "os.closeQRCodeScanner",
         "os.compileApp": "actions/app",
-        "id-940": "os.compileApp",
+        "id-1167": "os.compileApp",
         "os.convertGeolocationToWhat3Words": "actions/os",
-        "id-1210": "os.convertGeolocationToWhat3Words",
+        "id-1437": "os.convertGeolocationToWhat3Words",
         "os.countEvents": "actions/records",
-        "id-1200": "os.countEvents",
+        "id-1427": "os.countEvents",
         "os.createInitializationUpdate": "actions/os",
-        "id-1268": "os.createInitializationUpdate",
+        "id-1495": "os.createInitializationUpdate",
         "os.device": "actions/os",
-        "id-555": "os.device",
+        "id-782": "os.device",
         "os.disableAR": "actions/xr",
-        "id-571": "os.disableAR",
+        "id-798": "os.disableAR",
         "os.disablePointOfView": "actions/portals",
-        "id-596": "os.disablePointOfView",
+        "id-823": "os.disablePointOfView",
         "os.disableVR": "actions/xr",
-        "id-578": "os.disableVR",
+        "id-805": "os.disableVR",
         "os.disableWakeLock": "actions/os",
-        "id-602": "os.disableWakeLock",
+        "id-829": "os.disableWakeLock",
         "os.download": "actions/files",
-        "id-608": "os.download",
+        "id-835": "os.download",
         "os.downloadBots": "actions/files",
-        "id-614": "os.downloadBots",
+        "id-841": "os.downloadBots",
         "os.downloadBotsAsInitialzationUpdate": "actions/files",
-        "id-619": "os.downloadBotsAsInitialzationUpdate",
+        "id-846": "os.downloadBotsAsInitialzationUpdate",
         "os.downloadInst": "actions/files",
-        "id-627": "os.downloadInst",
+        "id-854": "os.downloadInst",
         "os.enableAR": "actions/xr",
-        "id-567": "os.enableAR",
+        "id-794": "os.enableAR",
         "os.enableCollaboration": "actions/os",
-        "id-561": "os.enableCollaboration",
+        "id-788": "os.enableCollaboration",
         "os.enableCustomDragging": "actions/portals",
-        "id-831": "os.enableCustomDragging",
+        "id-1058": "os.enableCustomDragging",
         "os.enablePointOfView": "actions/portals",
-        "id-587": "os.enablePointOfView",
+        "id-814": "os.enablePointOfView",
         "os.enableVR": "actions/xr",
-        "id-574": "os.enableVR",
+        "id-801": "os.enableVR",
         "os.eraseData": "actions/records",
-        "id-1143": "os.eraseData",
+        "id-1370": "os.eraseData",
         "os.eraseManualApprovalData": "actions/records",
-        "id-1149": "os.eraseManualApprovalData",
+        "id-1376": "os.eraseManualApprovalData",
         "os.exitFullscreenMode": "actions/portals",
-        "id-481": "os.exitFullscreenMode",
+        "id-708": "os.exitFullscreenMode",
         "os.getAverageFrameRate": "actions/os",
-        "id-888": "os.getAverageFrameRate",
+        "id-1115": "os.getAverageFrameRate",
         "os.getCameraPosition": "actions/portals",
-        "id-844": "os.getCameraPosition",
+        "id-1071": "os.getCameraPosition",
         "os.getCameraRotation": "actions/portals",
-        "id-848": "os.getCameraRotation",
+        "id-1075": "os.getCameraRotation",
         "os.getCurrentDimension": "actions/portals",
-        "id-727": "os.getCurrentDimension",
+        "id-954": "os.getCurrentDimension",
         "os.getCurrentInst": "actions/portals",
-        "id-733": "os.getCurrentInst",
+        "id-960": "os.getCurrentInst",
         "os.getCurrentInstUpdate": "actions/os",
-        "id-1276": "os.getCurrentInstUpdate",
+        "id-1503": "os.getCurrentInstUpdate",
         "os.getData": "actions/records",
-        "id-1125": "os.getData",
+        "id-1352": "os.getData",
         "os.getDimensionalDepth": "actions/portals",
-        "id-746": "os.getDimensionalDepth",
+        "id-973": "os.getDimensionalDepth",
         "os.getFocusPoint": "actions/portals",
-        "id-856": "os.getFocusPoint",
+        "id-1083": "os.getFocusPoint",
         "os.getGeolocation": "actions/os",
-        "id-838": "os.getGeolocation",
+        "id-1065": "os.getGeolocation",
         "os.getInputList": "actions/portals",
-        "id-881": "os.getInputList",
+        "id-1108": "os.getInputList",
         "os.getInputState": "actions/portals",
-        "id-876": "os.getInputState",
+        "id-1103": "os.getInputState",
         "os.getInstStateFromUpdates": "actions/os",
-        "id-1264": "os.getInstStateFromUpdates",
+        "id-1491": "os.getInstStateFromUpdates",
         "os.getManualApprovalData": "actions/records",
-        "id-1131": "os.getManualApprovalData",
+        "id-1358": "os.getManualApprovalData",
         "os.getMediaPermission": "actions/os",
-        "id-884": "os.getMediaPermission",
+        "id-1111": "os.getMediaPermission",
         "os.getMenuDimension": "actions/portals",
-        "id-736": "os.getMenuDimension",
+        "id-963": "os.getMenuDimension",
         "os.getMiniPortalDimension": "actions/portals",
-        "id-739": "os.getMiniPortalDimension",
+        "id-966": "os.getMiniPortalDimension",
         "os.getPointerDirection": "actions/portals",
-        "id-872": "os.getPointerDirection",
+        "id-1099": "os.getPointerDirection",
         "os.getPointerPosition": "actions/portals",
-        "id-860": "os.getPointerPosition",
+        "id-1087": "os.getPointerPosition",
         "os.getPointerRotation": "actions/portals",
-        "id-864": "os.getPointerRotation",
+        "id-1091": "os.getPointerRotation",
         "os.getPortalDimension": "actions/portals",
-        "id-742": "os.getPortalDimension",
+        "id-969": "os.getPortalDimension",
         "os.getPublicRecordKey": "actions/records",
-        "id-1050": "os.getPublicRecordKey",
+        "id-1277": "os.getPublicRecordKey",
         "os.getRoomOptions": "actions/rooms",
-        "id-906": "os.getRoomOptions",
+        "id-1133": "os.getRoomOptions",
         "os.getRoomRemoteOptions": "actions/rooms",
-        "id-921": "os.getRoomRemoteOptions",
+        "id-1148": "os.getRoomRemoteOptions",
         "os.getRoomTrackOptions": "actions/rooms",
-        "id-910": "os.getRoomTrackOptions",
+        "id-1137": "os.getRoomTrackOptions",
         "os.getSubjectlessPublicRecordKey": "actions/records",
-        "id-1054": "os.getSubjectlessPublicRecordKey",
+        "id-1281": "os.getSubjectlessPublicRecordKey",
         "os.getWakeLockConfiguration": "actions/os",
-        "id-605": "os.getWakeLockConfiguration",
+        "id-832": "os.getWakeLockConfiguration",
         "os.goToDimension": "actions/portals",
-        "id-770": "os.goToDimension",
+        "id-997": "os.goToDimension",
         "os.goToURL": "actions/portals",
-        "id-774": "os.goToURL",
+        "id-1001": "os.goToURL",
         "os.grantInstAdminPermission": "actions/records",
-        "id-1072": "os.grantInstAdminPermission",
+        "id-1299": "os.grantInstAdminPermission",
         "os.grantInstRole": "actions/records",
-        "id-1092": "os.grantInstRole",
+        "id-1319": "os.grantInstRole",
         "os.grantRecordMarkerPermission": "actions/records",
-        "id-1058": "os.grantRecordMarkerPermission",
+        "id-1285": "os.grantRecordMarkerPermission",
         "os.grantUserRole": "actions/records",
-        "id-1077": "os.grantUserRole",
+        "id-1304": "os.grantUserRole",
         "os.hasBotInMiniPortal": "actions/portals",
-        "id-797": "os.hasBotInMiniPortal",
+        "id-1024": "os.hasBotInMiniPortal",
         "os.hideBarcode": "actions/barcodes",
-        "id-662": "os.hideBarcode",
+        "id-889": "os.hideBarcode",
         "os.hideChat": "actions/os",
-        "id-545": "os.hideChat",
+        "id-772": "os.hideChat",
         "os.hideHtml": "actions/os",
-        "id-488": "os.hideHtml",
+        "id-715": "os.hideHtml",
         "os.hideQRCode": "actions/barcodes",
-        "id-647": "os.hideQRCode",
+        "id-874": "os.hideQRCode",
         "os.hideTips": "actions/portals",
-        "id-469": "os.hideTips",
+        "id-696": "os.hideTips",
         "os.importAUX": "actions/files",
-        "id-711": "os.importAUX",
+        "id-938": "os.importAUX",
         "os.inSheet": "actions/portals",
-        "id-841": "os.inSheet",
+        "id-1068": "os.inSheet",
         "os.isCollaborative": "actions/os",
-        "id-558": "os.isCollaborative",
+        "id-785": "os.isCollaborative",
         "os.isInDimension": "actions/portals",
-        "id-723": "os.isInDimension",
+        "id-950": "os.isInDimension",
         "os.isRecordKey": "actions/records",
-        "id-1107": "os.isRecordKey",
+        "id-1334": "os.isRecordKey",
         "os.joinRoom": "actions/rooms",
-        "id-891": "os.joinRoom",
+        "id-1118": "os.joinRoom",
         "os.leaveRoom": "actions/rooms",
-        "id-896": "os.leaveRoom",
+        "id-1123": "os.leaveRoom",
         "os.listBuiltinTags": "actions/app",
-        "id-1041": "os.listBuiltinTags",
+        "id-1268": "os.listBuiltinTags",
         "os.listData": "actions/records",
-        "id-1137": "os.listData",
+        "id-1364": "os.listData",
         "os.listFormAnimations": "actions/animations",
-        "id-1245": "os.listFormAnimations",
+        "id-1472": "os.listFormAnimations",
         "os.listInstUpdates": "actions/os",
-        "id-1261": "os.listInstUpdates",
+        "id-1488": "os.listInstUpdates",
         "os.listUserStudios": "actions/records",
-        "id-1206": "os.listUserStudios",
+        "id-1433": "os.listUserStudios",
         "os.loadInst": "actions/os",
-        "id-703": "os.loadInst",
+        "id-930": "os.loadInst",
         "os.log": "actions/os",
-        "id-834": "os.log",
+        "id-1061": "os.log",
         "os.meetCommand": "actions/os",
-        "id-1297": "os.meetCommand",
+        "id-1524": "os.meetCommand",
         "os.meetFunction": "actions/os",
-        "id-1302": "os.meetFunction",
+        "id-1529": "os.meetFunction",
         "os.openBarcodeScanner": "actions/barcodes",
-        "id-650": "os.openBarcodeScanner",
+        "id-877": "os.openBarcodeScanner",
         "os.openCircleWipe": "actions/portals",
-        "id-809": "os.openCircleWipe",
+        "id-1036": "os.openCircleWipe",
         "os.openDevConsole": "actions/os",
-        "id-782": "os.openDevConsole",
+        "id-1009": "os.openDevConsole",
         "os.openImageClassifier": "actions/image-classification",
-        "id-665": "os.openImageClassifier",
+        "id-892": "os.openImageClassifier",
         "os.openPhotoCamera": "actions/camera",
-        "id-672": "os.openPhotoCamera",
+        "id-899": "os.openPhotoCamera",
         "os.openQRCodeScanner": "actions/barcodes",
-        "id-636": "os.openQRCodeScanner",
+        "id-863": "os.openQRCodeScanner",
         "os.openURL": "actions/portals",
-        "id-778": "os.openURL",
+        "id-1005": "os.openURL",
         "os.parseBotsFromData": "actions/files",
-        "id-715": "os.parseBotsFromData",
+        "id-942": "os.parseBotsFromData",
         "os.playSound": "actions/audio",
-        "id-785": "os.playSound",
+        "id-1012": "os.playSound",
         "os.raycast": "actions/portals",
-        "id-1219": "os.raycast",
+        "id-1446": "os.raycast",
         "os.raycastFromCamera": "actions/portals",
-        "id-1214": "os.raycastFromCamera",
+        "id-1441": "os.raycastFromCamera",
         "os.recordData": "actions/records",
-        "id-1111": "os.recordData",
+        "id-1338": "os.recordData",
         "os.recordEvent": "actions/records",
-        "id-1194": "os.recordEvent",
+        "id-1421": "os.recordEvent",
         "os.recordFile": "actions/records",
-        "id-1155": "os.recordFile",
+        "id-1382": "os.recordFile",
         "os.recordManualApprovalData": "actions/records",
-        "id-1118": "os.recordManualApprovalData",
+        "id-1345": "os.recordManualApprovalData",
         "os.registerApp": "actions/app",
-        "id-931": "os.registerApp",
+        "id-1158": "os.registerApp",
         "os.registerTagPrefix": "actions/app",
-        "id-926": "os.registerTagPrefix",
+        "id-1153": "os.registerTagPrefix",
         "os.remoteCount": "actions/os",
-        "id-1283": "os.remoteCount",
+        "id-1510": "os.remoteCount",
         "os.remotes": "actions/os",
-        "id-1258": "os.remotes",
+        "id-1485": "os.remotes",
         "os.replaceDragBot": "actions/portals",
-        "id-719": "os.replaceDragBot",
+        "id-946": "os.replaceDragBot",
         "os.requestAuthBot": "actions/records",
-        "id-1044": "os.requestAuthBot",
+        "id-1271": "os.requestAuthBot",
         "os.requestAuthBotInBackground": "actions/records",
-        "id-1047": "os.requestAuthBotInBackground",
+        "id-1274": "os.requestAuthBotInBackground",
         "os.requestFullscreenMode": "actions/portals",
-        "id-478": "os.requestFullscreenMode",
+        "id-705": "os.requestFullscreenMode",
         "os.requestWakeLock": "actions/os",
-        "id-599": "os.requestWakeLock",
+        "id-826": "os.requestWakeLock",
         "os.revokeInstRole": "actions/records",
-        "id-1100": "os.revokeInstRole",
+        "id-1327": "os.revokeInstRole",
         "os.revokeRecordMarkerPermission": "actions/records",
-        "id-1065": "os.revokeRecordMarkerPermission",
+        "id-1292": "os.revokeRecordMarkerPermission",
         "os.revokeUserRole": "actions/records",
-        "id-1085": "os.revokeUserRole",
+        "id-1312": "os.revokeUserRole",
         "os.run": "actions/os",
-        "id-548": "os.run",
+        "id-775": "os.run",
         "os.setClipboard": "actions/os",
-        "id-491": "os.setClipboard",
+        "id-718": "os.setClipboard",
         "os.setRoomOptions": "actions/rooms",
-        "id-901": "os.setRoomOptions",
+        "id-1128": "os.setRoomOptions",
         "os.setRoomTrackOptions": "actions/rooms",
-        "id-915": "os.setRoomTrackOptions",
+        "id-1142": "os.setRoomTrackOptions",
         "os.share": "actions/os",
-        "id-801": "os.share",
+        "id-1028": "os.share",
         "os.showBarcode": "actions/barcodes",
-        "id-657": "os.showBarcode",
+        "id-884": "os.showBarcode",
         "os.showConfirm": "actions/portals",
-        "id-766": "os.showConfirm",
+        "id-993": "os.showConfirm",
         "os.showHtml": "actions/os",
-        "id-484": "os.showHtml",
+        "id-711": "os.showHtml",
         "os.showInputForTag": "actions/portals",
-        "id-750": "os.showInputForTag",
+        "id-977": "os.showInputForTag",
         "os.showJoinCode": "actions/barcodes",
-        "id-473": "os.showJoinCode",
+        "id-700": "os.showJoinCode",
         "os.showQRCode": "actions/barcodes",
-        "id-643": "os.showQRCode",
+        "id-870": "os.showQRCode",
         "os.showUploadAuxFile": "actions/files",
-        "id-630": "os.showUploadAuxFile",
+        "id-857": "os.showUploadAuxFile",
         "os.showUploadFiles": "actions/files",
-        "id-633": "os.showUploadFiles",
+        "id-860": "os.showUploadFiles",
         "os.sleep": "actions/os",
-        "id-453": "os.sleep",
+        "id-680": "os.sleep",
         "os.startFormAnimation": "actions/animations",
-        "id-1234": "os.startFormAnimation",
+        "id-1461": "os.startFormAnimation",
         "os.stopFormAnimation": "actions/animations",
-        "id-1240": "os.stopFormAnimation",
+        "id-1467": "os.stopFormAnimation",
         "os.tip": "actions/portals",
-        "id-462": "os.tip",
+        "id-689": "os.tip",
         "os.toast": "actions/os",
-        "id-457": "os.toast",
+        "id-684": "os.toast",
         "os.totalRemoteCount": "actions/os",
-        "id-1287": "os.totalRemoteCount",
+        "id-1514": "os.totalRemoteCount",
         "os.unloadInst": "actions/os",
-        "id-707": "os.unloadInst",
+        "id-934": "os.unloadInst",
         "os.unregisterApp": "actions/app",
-        "id-936": "os.unregisterApp",
+        "id-1163": "os.unregisterApp",
         "os.version": "actions/os",
-        "id-552": "os.version",
+        "id-779": "os.version",
         "os.vrSupported": "actions/xr",
-        "id-584": "os.vrSupported",
+        "id-811": "os.vrSupported",
         "os.agreedUponTime": "actions/time",
-        "id-684": "os.agreedUponTime",
+        "id-911": "os.agreedUponTime",
         "os.deadReckoningTime": "actions/time",
-        "id-692": "os.deadReckoningTime",
+        "id-919": "os.deadReckoningTime",
         "os.instLatency": "actions/time",
-        "id-686": "os.instLatency",
+        "id-913": "os.instLatency",
         "os.instTimeOffset": "actions/time",
-        "id-688": "os.instTimeOffset",
+        "id-915": "os.instTimeOffset",
         "os.instTimeOffsetSpread": "actions/time",
-        "id-690": "os.instTimeOffsetSpread",
+        "id-917": "os.instTimeOffsetSpread",
         "os.localTime": "actions/time",
-        "id-682": "os.localTime",
+        "id-909": "os.localTime",
         "remote": "actions/event",
-        "id-332": "remote",
+        "id-559": "remote",
         "sendRemoteData": "actions/event",
-        "id-344": "sendRemoteData",
+        "id-571": "sendRemoteData",
         "removeTags": "actions/data",
-        "id-141": "removeTags",
+        "id-364": "removeTags",
         "renameTag": "actions/data",
-        "id-146": "renameTag",
+        "id-369": "renameTag",
         "setTag": "actions/data",
-        "id-93": "setTag",
+        "id-316": "setTag",
         "setTagMask": "actions/data",
-        "id-99": "setTagMask",
+        "id-322": "setTagMask",
         "subtractMods": "actions/mods",
-        "id-157": "subtractMods",
+        "id-380": "subtractMods",
         "superShout": "actions/event",
-        "id-220": "superShout",
+        "id-445": "superShout",
         "uuid": "actions/data",
-        "id-355": "uuid",
+        "id-582": "uuid",
         "web.get": "actions/web",
-        "id-1728": "web.get",
+        "id-1955": "web.get",
         "web.hook": "actions/web",
-        "id-1739": "web.hook",
+        "id-1966": "web.hook",
         "web.post": "actions/web",
-        "id-1733": "web.post",
+        "id-1960": "web.post",
         "configBot": "actions/os",
-        "id-418": "configBot"
+        "id-645": "configBot"
     }
 }

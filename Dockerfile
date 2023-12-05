@@ -5,10 +5,10 @@ WORKDIR /usr/src/app
 # Install Deno Version v1.4.0
 RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v1.4.0
 
-COPY ./script/remove-dev-dependencies.js ./script/remove-dev-dependencies.js
+COPY ./script/remove-dev-dependencies.mjs ./script/remove-dev-dependencies.mjs
 COPY ./src/aux-server/package*.json ./
 
-RUN node ./script/remove-dev-dependencies.js ./package.json
+RUN node ./script/remove-dev-dependencies.mjs ./package.json
 RUN npm install
 
 COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/

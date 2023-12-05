@@ -2,11 +2,11 @@ FROM arm64v8/node:16
 
 WORKDIR /usr/src/app
 
-COPY ./script/remove-dev-dependencies.js ./script/remove-dev-dependencies.js
+COPY ./script/remove-dev-dependencies.mjs ./script/remove-dev-dependencies.mjs
 COPY ./src/aux-server/package*.json ./
 COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 
-RUN node ./script/remove-dev-dependencies.js ./package.json
+RUN node ./script/remove-dev-dependencies.mjs ./package.json
 RUN npm install
 RUN npx prisma generate
 

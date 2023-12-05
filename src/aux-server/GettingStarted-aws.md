@@ -56,7 +56,7 @@ To deploy this project to AWS Lambda, follow these steps:
 
 ## Configuration
 
-The build can be configured using the following environment variables. All the options and defaults are handled in `prerender-web-config.js`.
+The build can be configured using the following environment variables. All the options and defaults are handled in `prerender-web-config.mjs`.
 
 #### ab-1
 
@@ -106,6 +106,12 @@ Use the following to configure the records system:
 -   `AUTH_ORIGIN`: The HTTP Origin that the player should use for auth. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `ENABLE_SMS_AUTHENTICATION`: Whether SMS phone numbers are allowed to be entered into the front-end and used for authentication. Defaults to `false`.
+
+#### Policies Customization
+
+-   `TERMS_OF_SERVICE`: The Markdown of the terms of service that the sites should use.
+-   `PRIVACY_POLICY`: The Markkdown of the privacy policy that the sites should use.
+-   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
 
 ## Security Note
 
