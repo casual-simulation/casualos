@@ -71,8 +71,29 @@ export {
 
     AIGenerateImageAPISuccess,
     AIGeneratedImageAPI,
+
+    SessionSelector,
 } from '../../../src/aux-runtime/runtime/AuxLibrary';
 export { 
+    TransactionAction,
+    PasteStateOptions,
+    PasteStateAction,
+    ReplaceDragBotAction,
+    ShellAction,
+    ShowToastAction,
+    ShowTooltipAction,
+    HideTooltipAction,
+    ShowHtmlAction,
+    HideHtmlAction,
+    UpdateHtmlAppAction,
+    HtmlAppEventAction,
+    HtmlAppMethodCallAction,
+    SerializableMutationRecord,
+
+    FocusOnBotAction,
+    FocusOnPositionAction,
+    CancelAnimationAction,
+
     EaseType,
     EaseMode,
     Easing,
@@ -81,6 +102,8 @@ export {
     SuccessfulGeolocation,
     UnsuccessfulGeolocation,
     ConvertGeolocationToWhat3WordsOptions,
+    DefineGlobalBotAction,
+    ConvertGeolocationToWhat3WordsAction,
     SnapAxis,
     SnapPoint,
     SnapTarget,
@@ -88,18 +111,62 @@ export {
     ShareOptions,
     FocusOnOptions,
     FocusOnRotation,
+    AddDropSnapAction,
+    AddDropSnapTargetsAction,
+    SnapGrid,
+    EnableCustomDraggingAction,
 
     CameraType,
     BarcodeFormat,
     ImageClassifierOptions,
     ShowInputOptions,
+    ShowInputType,
+    ShowInputSubtype,
     ShowConfirmOptions,
+    ShowConfirmAction,
+    OpenQRCodeScannerAction,
+    OpenBarcodeScannerAction,
+    OpenPhotoCameraAction,
+
+    OpenConsoleAction,
+    ShowQRCodeAction,
+    ShowBarcodeAction,
+    OpenImageClassifierAction,
+    LoadServerAction,
+    UnloadServerAction,
+    ImportAUXAction,
+    SuperShoutAction,
+    SendWebhookAction,
+    AnimateTagAction,
+    GetRemotesAction,
+    ListInstUpdatesAction,
+    GetInstStateFromUpdatesAction,
+    CreateInitializationUpdateAction,
+    ApplyUpdatesToInstAction,
+    GetCurrentInstUpdateAction,
+    GoToDimensionAction,
+    ShowInputForTagAction,
+    OpenURLAction,
+    PlaySoundAction,
+    BufferSoundAction,
+    CancelSoundAction,
+    DownloadAction,
+    RejectAction,
+    SetClipboardAction,
+    ShowChatBarAction,
+    RunScriptAction,
+    ShowUploadAuxFileAction,
+    ShowUploadFilesAction,
+    LoadSpaceAction,
 
     MediaPermssionOptions,
     EnableXROptions,
     StartFormAnimationOptions,
+    StopFormAnimationAction,
     StopFormAnimationOptions,
+    StartFormAnimationAction,
     FormAnimationData,
+    ListFormAnimationsAction,
 
     
     RegisterPrefixOptions,
@@ -111,8 +178,61 @@ export {
     OpenPhotoCameraOptions,
     Photo,
     
-    
     EnableCollaborationAction,
+    LoadBotsAction,
+    LocalFormAnimationAction,
+    LocalTweenAction,
+    LocalPositionTweenAction,
+    EnableARAction,
+    ARSupportedAction,
+    VRSupportedAction,
+    EnableVRAction,
+    EnablePOVAction,
+    ShowJoinCodeAction,
+    RequestFullscreenAction,
+    ExitFullscreenAction,
+    ShareAction,
+    RegisterBuiltinPortalAction,
+
+    CustomAppOutputType,
+    CustomPortalOutputMode,
+    CustomAppContainerAvailableAction,
+
+    RegisterCustomAppAction,
+    UnregisterCustomAppAction,
+    RegisterHtmlAppAction,
+    UnregisterHtmlAppAction,
+
+    SetAppOutputAction,
+
+    OpenCircleWipeAction,
+    OpenCircleWipeOptions,
+
+    BeginRecordingAction,
+    EndRecordingAction,
+
+    MeetCommandAction,
+    MeetFunctionAction,
+    SpeakTextAction,
+    GetVoicesAction,
+    GetGeolocationAction,
+    GoToTagAction,
+
+    RequestAuthDataAction,
+    AuthData,
+
+    MediaPermissionAction,
+    GetAverageFrameRateAction,
+    RaycastFromCameraAction,
+    RaycastInPortalAction,
+    CalculateRayFromCameraAction,
+
+    ConfigureWakeLockAction,
+    GetWakeLockConfigurationAction,
+    WakeLockConfiguration,
+    AnalyticsRecordEventAction,
+
+    BufferFormAddressGLTFAction,
 } from '../../../src/aux-common/bots/BotEvents';
 export {
     RecordActionOptions,
@@ -256,6 +376,9 @@ export {
     ListedStudio,
 
 } from '../../../src/aux-records';
+export {
+    RemoteAction
+} from '../../../src/aux-common/common/RemoteActions';
 
 export {
     isEncrypted,
