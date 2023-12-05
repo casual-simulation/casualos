@@ -2,14 +2,19 @@ import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
     AuthHelperInterface,
     AuxAuth,
+    LoginHint,
     LoginStatus,
     LoginUIStatus,
+    OAuthRedirectRequest,
+    PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { AuthData, hasValue } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
+    IsValidDisplayNameResult,
+    IsValidEmailAddressResult,
     parseRecordKey,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
@@ -32,7 +37,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
     private _protocolVersion: number = 1;
-    private _sub: Subscription = new Subscription();
+    protected _sub: Subscription = new Subscription();
     private _loginStatus: BehaviorSubject<LoginStatus> =
         new BehaviorSubject<LoginStatus>({});
     private _loginUIStatus: BehaviorSubject<LoginUIStatus> =
@@ -41,15 +46,33 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
+    private _newTab: Window;
+    private _tabCloseInterval: any;
+    private _requirePrivoLogin: boolean;
+
+    get currentLoginStatus() {
+        const status = this._loginStatus.value;
+        if (status.authData || status.isLoading || status.isLoggingIn) {
+            return status;
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Creates a new instance of the AuthHelper class.
      * @param iframeOrigin The URL that the auth iframe should be loaded from.
      * @param defaultRecordsOrigin The HTTP Origin that should be used for the records origin if the auth site does not support protocol version 4.
+     * @param requirePrivoLogin Whether to require that the user login with Privo.
      */
-    constructor(iframeOrigin?: string, defaultRecordsOrigin?: string) {
+    constructor(
+        iframeOrigin?: string,
+        defaultRecordsOrigin?: string,
+        requirePrivoLogin?: boolean
+    ) {
         this._origin = iframeOrigin;
         this._defaultRecordsOrigin = defaultRecordsOrigin;
+        this._requirePrivoLogin = requirePrivoLogin;
     }
 
     get origin(): string {
@@ -99,7 +122,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return this._initPromise;
     }
 
-    private async _initCore() {
+    protected async _initCore() {
         if (!hasValue(this._origin)) {
             throw new Error(
                 'Cannot initialize AuthHelper because no iframe origin is set.'
@@ -148,6 +171,13 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 })
             );
         }
+        if (this._protocolVersion >= 9) {
+            await this._proxy.addOAuthRedirectCallback(
+                proxy((request) => {
+                    this._handleOAuthRedirectCallback(request);
+                })
+            );
+        }
 
         if (this._protocolVersion >= 4) {
             this._recordsOrigin = await this._proxy.getRecordsOrigin();
@@ -167,6 +197,16 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         this._initialized = true;
     }
 
+    private _handleOAuthRedirectCallback(request: OAuthRedirectRequest) {
+        if (this._newTab && !this._newTab.closed) {
+            this._newTab.location = request.authorizationUrl;
+        } else {
+            console.error(
+                '[AuthEndpointHelper] Cannot handle oauth redirect callback.'
+            );
+        }
+    }
+
     /**
      * Determines if the user is authenticated.
      */
@@ -177,20 +217,32 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._isAuthenticatedCore();
+    }
+
+    protected async _isAuthenticatedCore() {
         return await this._proxy.isLoggedIn();
     }
 
     /**
      * Requests that the user become authenticated if they are not already.
      */
-    async authenticate() {
+    async authenticate(hint?: LoginHint) {
         if (!hasValue(this._origin)) {
             return null;
         }
         if (!this._initialized) {
             await this._init();
         }
-        const result = await this._proxy.login();
+        return await this._authenticateCore(hint);
+    }
+
+    protected async _authenticateCore(hint?: LoginHint) {
+        if (hint === 'sign in') {
+            this._createNewTab();
+        }
+
+        const result = await this._proxy.login(undefined, hint);
 
         if (this._protocolVersion < 2) {
             this._loginStatus.next({
@@ -214,6 +266,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._authenticateInBackgroundCore();
+    }
+
+    protected async _authenticateInBackgroundCore() {
         const result = await this._proxy.login(true);
         if (this._protocolVersion < 2) {
             this._loginStatus.next({
@@ -238,6 +294,13 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._createPublicRecordKeyCore(recordName, policy);
+    }
+
+    protected async _createPublicRecordKeyCore(
+        recordName: string,
+        policy: PublicRecordKeyPolicy
+    ): Promise<CreatePublicRecordKeyResult> {
         return await this._proxy.createPublicRecordKey(recordName, policy);
     }
 
@@ -271,6 +334,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._getAuthTokenCore();
+    }
+
+    protected async _getAuthTokenCore(): Promise<string> {
         return await this._proxy.getAuthToken();
     }
 
@@ -285,6 +352,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (this._protocolVersion < 6) {
             return null;
         }
+        return await this._getConnectionKeyCore();
+    }
+
+    protected async _getConnectionKeyCore(): Promise<string> {
         return await this._proxy.getConnectionKey();
     }
 
@@ -330,6 +401,43 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         );
     }
 
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                success: true,
+                allowed: true,
+            };
+        }
+        return await this._proxy.isValidEmailAddress(email);
+    }
+
+    async isValidDisplayName(
+        displayName: string,
+        name: string
+    ): Promise<IsValidDisplayNameResult> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                success: true,
+                allowed: true,
+            };
+        }
+        return await this._proxy.isValidDisplayName(displayName, name);
+    }
+
     async provideSmsNumber(
         sms: string,
         acceptedTermsOfService: boolean
@@ -359,6 +467,38 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.provideCode(code);
     }
 
+    async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return;
+        }
+        return await this._proxy.providePrivoSignUpInfo(info);
+    }
+
+    async provideHasAccount(hasAccount: boolean): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+
+        if (hasAccount) {
+            this._createNewTab();
+        }
+
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return;
+        }
+
+        return await this._proxy.provideHasAccount(hasAccount);
+    }
+
     async cancelLogin() {
         if (!hasValue(this._origin)) {
             return;
@@ -382,6 +522,31 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (this._protocolVersion < 8) {
             return;
         }
+        return await this._logoutCore();
+    }
+
+    protected async _logoutCore() {
         return await this._proxy.logout();
+    }
+
+    private _createNewTab() {
+        if (!this._requirePrivoLogin) {
+            return;
+        }
+        this._newTab = window.open('/loading-oauth.html', '_blank');
+        if (this._newTab) {
+            if (this._tabCloseInterval) {
+                clearInterval(this._tabCloseInterval);
+            }
+            this._tabCloseInterval = setInterval(() => {
+                if (!this._newTab || this._newTab.closed) {
+                    clearInterval(this._tabCloseInterval);
+                }
+                if (this._newTab?.closed) {
+                    this._newTab = null;
+                    this._proxy.provideOAuthLoginComplete();
+                }
+            }, 500);
+        }
     }
 }

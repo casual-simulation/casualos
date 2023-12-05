@@ -41,7 +41,9 @@ export function putItem<T>(
     item: T,
     key?: string
 ) {
-    return _transaction<T>(db, store, 'readwrite', (objs) => objs.put(item));
+    return _transaction<T>(db, store, 'readwrite', (objs) =>
+        objs.put(item, key)
+    );
 }
 
 /**

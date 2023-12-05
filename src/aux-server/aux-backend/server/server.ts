@@ -236,6 +236,10 @@ export class Server {
             builder.useAI();
         }
 
+        if (options.privo) {
+            builder.usePrivo();
+        }
+
         const {
             server,
             filesController,

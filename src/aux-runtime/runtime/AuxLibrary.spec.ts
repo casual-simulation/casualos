@@ -139,6 +139,7 @@ import {
     InstUpdate,
     getCurrentInstUpdate,
     openPhotoCamera,
+    enableCollaboration,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -267,6 +268,7 @@ describe('AuxLibrary', () => {
             supportsAR: true,
             supportsVR: false,
             isCollaborative: true,
+            allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'bootstrapURL',
         };
         notifier = {
@@ -3271,6 +3273,7 @@ describe('AuxLibrary', () => {
                     supportsVR: null,
                     isCollaborative: null,
                     ab1BootstrapUrl: null,
+                    allowCollaborationUpgrade: null,
                 });
             });
         });
@@ -3317,6 +3320,63 @@ describe('AuxLibrary', () => {
 
                 const d = library.api.os.isCollaborative();
                 expect(d).toEqual(true);
+            });
+        });
+
+        describe('os.enableCollaboration()', () => {
+            it('should emit a EnableCollaborationAction', () => {
+                context.device = {
+                    isCollaborative: false,
+                    allowCollaborationUpgrade: true,
+                    ab1BootstrapUrl: 'bootstrap',
+                    supportsAR: true,
+                    supportsVR: true,
+                };
+                const promise: any = library.api.os.enableCollaboration();
+                const expected = enableCollaboration(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return a rejected promise if collaboration cannot be enabled', async () => {
+                context.device = {
+                    isCollaborative: false,
+                    allowCollaborationUpgrade: false,
+                    ab1BootstrapUrl: 'bootstrap',
+                    supportsAR: true,
+                    supportsVR: true,
+                };
+                const promise: any = library.api.os.enableCollaboration();
+                expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                await expect(promise).rejects.toEqual(
+                    new Error('Collaboration cannot be enabled on this device')
+                );
+            });
+
+            it('should return a resolved promise if collaboration is already enabled', async () => {
+                context.device = {
+                    isCollaborative: true,
+                    allowCollaborationUpgrade: false,
+                    ab1BootstrapUrl: 'bootstrap',
+                    supportsAR: true,
+                    supportsVR: true,
+                };
+                const promise: any = library.api.os.enableCollaboration();
+                expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                await expect(promise).resolves.toBeUndefined();
+            });
+
+            it('should return a resolved promise if there is no device', async () => {
+                context.device = null;
+                const promise: any = library.api.os.enableCollaboration();
+                expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                await expect(promise).resolves.toBeUndefined();
             });
         });
 
@@ -4523,6 +4583,12 @@ describe('AuxLibrary', () => {
                 expect(result).toEqual('inst');
             });
 
+            it('should return first when multiple inst are loaded', () => {
+                player.tags.inst = ['inst', 'secondInst'];
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual('inst');
+            });
+
             it('should return undefined when inst is not set', () => {
                 const result = library.api.os.getCurrentInst();
                 expect(result).toBeUndefined();
@@ -5408,7 +5474,7 @@ describe('AuxLibrary', () => {
         describe('os.requestAuthBot()', () => {
             it('should send a RequestAuthDataAction', () => {
                 const promise: any = library.api.os.requestAuthBot();
-                const expected = requestAuthData(context.tasks.size);
+                const expected = requestAuthData(false, context.tasks.size);
 
                 expect(context.actions).toEqual([expected]);
             });
@@ -5421,7 +5487,7 @@ describe('AuxLibrary', () => {
                     resultBot = bot;
                 });
 
-                const expected = requestAuthData(context.tasks.size);
+                const expected = requestAuthData(false, context.tasks.size);
 
                 expect(context.actions).toEqual([expected]);
 
@@ -5434,6 +5500,10 @@ describe('AuxLibrary', () => {
                         avatarPortraitUrl: 'portraitUrl',
                         name: 'name',
                         hasActiveSubscription: true,
+                        privacyFeatures: {
+                            publishData: false,
+                            allowPublicData: true,
+                        },
                     } as AuthData,
                     false
                 );
@@ -5452,12 +5522,16 @@ describe('AuxLibrary', () => {
                 );
                 expect(resultBot.tags.name).toEqual('name');
                 expect(resultBot.tags.hasActiveSubscription).toEqual(true);
+                expect(resultBot.tags.privacyFeatures).toEqual({
+                    publishData: false,
+                    allowPublicData: true,
+                });
             });
 
             it('should emit a DefineGlobalBotAction', async () => {
                 const promise: any = library.api.os.requestAuthBot();
 
-                const expected = requestAuthData(context.tasks.size);
+                const expected = requestAuthData(false, context.tasks.size);
 
                 expect(context.actions).toEqual([expected]);
 
@@ -5497,7 +5571,7 @@ describe('AuxLibrary', () => {
                     resultBot = bot;
                 });
 
-                const expected = requestAuthData(context.tasks.size);
+                const expected = requestAuthData(false, context.tasks.size);
 
                 expect(context.actions).toEqual([expected]);
 
@@ -5559,7 +5633,176 @@ describe('AuxLibrary', () => {
                     resultBot = bot;
                 });
 
-                const expected = requestAuthData(context.tasks.size);
+                const expected = requestAuthData(false, context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(1, null as AuthData, false);
+
+                await waitAsync();
+
+                expect(resultBot).toBe(null);
+            });
+        });
+
+        describe('os.requestAuthBotInBackground()', () => {
+            it('should send a RequestAuthDataAction', () => {
+                const promise: any =
+                    library.api.os.requestAuthBotInBackground();
+                const expected = requestAuthData(true, context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create a bot with the given resolved data', async () => {
+                const promise = library.api.os.requestAuthBotInBackground();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(true, context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        avatarUrl: 'myAvatarUrl',
+                        avatarPortraitUrl: 'portraitUrl',
+                        name: 'name',
+                        hasActiveSubscription: true,
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(2, null, false);
+
+                await waitAsync();
+
+                expect(resultBot.id).toEqual('myUserId');
+                expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
+                expect(resultBot.tags.avatarPortraitAddress).toEqual(
+                    'portraitUrl'
+                );
+                expect(resultBot.tags.name).toEqual('name');
+                expect(resultBot.tags.hasActiveSubscription).toEqual(true);
+            });
+
+            it('should emit a DefineGlobalBotAction', async () => {
+                const promise: any =
+                    library.api.os.requestAuthBotInBackground();
+
+                const expected = requestAuthData(true, context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(context.actions).toEqual([
+                    expected,
+                    botAdded(
+                        createBot(
+                            'myUserId',
+                            {
+                                avatarAddress: 'myAvatarUrl',
+                                name: 'name',
+                            },
+                            TEMPORARY_BOT_PARTITION_ID
+                        )
+                    ),
+                    defineGlobalBot('auth', 'myUserId', 2),
+                ]);
+            });
+
+            it('should reuse the existing authBot if the User ID is the same.', async () => {
+                const promise = library.api.os.requestAuthBotInBackground();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(true, context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    1,
+                    {
+                        userId: 'myUserId',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(2, null, false);
+
+                await waitAsync();
+
+                expect(resultBot.id).toEqual('myUserId');
+                expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
+                expect(resultBot.tags.name).toEqual('name');
+
+                const promise2 = library.api.os.requestAuthBotInBackground();
+
+                let resultBot2: Bot;
+                promise2.then((bot) => {
+                    resultBot2 = bot;
+                });
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(
+                    3,
+                    {
+                        userId: 'myUserId',
+                        avatarUrl: 'myAvatarUrl',
+                        name: 'name',
+                    } as AuthData,
+                    false
+                );
+
+                await waitAsync();
+
+                // Resolve DefineGlobalBotAction
+                context.resolveTask(4, null, false);
+
+                await waitAsync();
+
+                expect(resultBot2).toBe(resultBot);
+            });
+
+            it('should return null if the auth data could not be retrieved', async () => {
+                const promise = library.api.os.requestAuthBotInBackground();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(true, context.tasks.size);
 
                 expect(context.actions).toEqual([expected]);
 
@@ -8127,6 +8370,7 @@ describe('AuxLibrary', () => {
                         supportsAR: true,
                         supportsVR: false,
                         isCollaborative: true,
+                        allowCollaborationUpgrade: true,
                         ab1BootstrapUrl: 'bootstrapURL',
                     };
                     notifier = {
@@ -13942,6 +14186,7 @@ describe('AuxLibrary', () => {
 
                 afterAll(() => {
                     globalThis.performance.now = oldNow;
+                    jest.useRealTimers();
                 });
 
                 it('should use performance.now() to track the amount of time the shout takes', () => {

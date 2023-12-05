@@ -55,6 +55,7 @@ export class OpenAIImageInterface implements AIImageInterface {
             const result = await axios.post(
                 'https://api.openai.com/v1/images/generations',
                 {
+                    model: request.model,
                     prompt: request.prompt,
                     n: request.numberOfImages ?? 1,
                     size,

@@ -15,3 +15,11 @@ iframe.auth-helper-iframe {
 .md-dialog.input-dialog ~ .md-overlay.md-fixed.md-dialog-overlay {
     z-index: 19;
 }
+
+.md-datepicker-dialog {
+    z-index: 21;
+}
+
+.md-datepicker.md-field.md-theme-dark > .md-icon:after {
+    background-color: transparent;
+}

@@ -96,6 +96,7 @@ describe('RecordsManager', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: null,
+            logout: jest.fn(),
             getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
@@ -103,6 +104,10 @@ describe('RecordsManager', () => {
             provideCode: jest.fn(),
             authenticateInBackground: jest.fn(),
             getRecordKeyPolicy: jest.fn(),
+            isValidDisplayName: jest.fn(),
+            isValidEmailAddress: jest.fn(),
+            provideHasAccount: jest.fn(),
+            providePrivoSignUpInfo: jest.fn(),
             getRecordsOrigin: jest
                 .fn()
                 .mockResolvedValue('http://localhost:3002'),
@@ -114,6 +119,9 @@ describe('RecordsManager', () => {
             },
             get origin() {
                 return 'http://localhost:3002';
+            },
+            get currentLoginStatus(): any {
+                return null;
             },
         };
 
@@ -127,6 +135,7 @@ describe('RecordsManager', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: null,
+            logout: jest.fn(),
             getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
@@ -137,6 +146,10 @@ describe('RecordsManager', () => {
             getRecordsOrigin: jest
                 .fn()
                 .mockResolvedValue('http://localhost:9999'),
+            isValidDisplayName: jest.fn(),
+            isValidEmailAddress: jest.fn(),
+            provideHasAccount: jest.fn(),
+            providePrivoSignUpInfo: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -145,6 +158,9 @@ describe('RecordsManager', () => {
             },
             get origin() {
                 return 'http://localhost:9999';
+            },
+            get currentLoginStatus(): any {
+                return null;
             },
         };
 
@@ -165,7 +181,7 @@ describe('RecordsManager', () => {
     });
 
     function createHelper() {
-        vm = new TestAuxVM(userId);
+        vm = new TestAuxVM(null, userId);
         const helper = new BotHelper(vm);
         helper.userId = 'userId';
 

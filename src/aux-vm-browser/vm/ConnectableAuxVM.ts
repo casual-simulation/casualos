@@ -1,9 +1,11 @@
 import {
     BotAction,
+    PartitionAuthMessage,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
+    AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
@@ -37,13 +39,25 @@ export class ConnectableAuxVM implements AuxVM {
             channel: Remote<AuxChannel>;
         }
     >;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
+    private _id: string;
+    private _configBotId: string;
 
     private _proxy: Remote<AuxChannel>;
     private _port: MessagePort;
     private _sub: Subscription;
 
-    constructor(id: string, port: MessagePort) {
-        this.id = id;
+    get id() {
+        return this._id;
+    }
+
+    get configBotId() {
+        return this._configBotId;
+    }
+
+    constructor(id: string, configBotId: string, port: MessagePort) {
+        this._id = id;
+        this._configBotId = configBotId;
         this._proxy = wrap(port);
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -54,6 +68,7 @@ export class ConnectableAuxVM implements AuxVM {
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
+        this._onAuthMessage = new Subject();
 
         this._sub = new Subscription(() => {
             this._proxy[releaseProxy]();
@@ -72,14 +87,16 @@ export class ConnectableAuxVM implements AuxVM {
         throw new Error('Method not implemented.');
     }
 
-    id: string;
-
     get connectionStateChanged(): Observable<StatusUpdate> {
         return this._connectionStateChanged;
     }
 
     get onError(): Observable<AuxChannelErrorType> {
         return this._onError;
+    }
+
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
     }
 
     async init(): Promise<void> {
@@ -91,7 +108,8 @@ export class ConnectableAuxVM implements AuxVM {
             proxy((state) => this._connectionStateChanged.next(state)),
             proxy((err) => this._onError.next(err)),
             proxy((channel) => this._handleAddedSubChannel(channel)),
-            proxy((id) => this._handleRemovedSubChannel(id))
+            proxy((id) => this._handleRemovedSubChannel(id)),
+            proxy((message) => this._onAuthMessage.next(message))
         );
     }
 
@@ -179,19 +197,31 @@ export class ConnectableAuxVM implements AuxVM {
         return await this._proxy.getTags();
     }
 
-    protected _createSubVM(channel: Remote<AuxChannel>): AuxVM {
-        return new RemoteAuxVM(channel);
+    async updateDevice(device: AuxDevice): Promise<void> {
+        if (!this._proxy) return null;
+        return await this._proxy.updateDevice(device);
+    }
+
+    protected _createSubVM(
+        id: string,
+        configBotId: string,
+        channel: Remote<AuxChannel>
+    ): AuxVM {
+        return new RemoteAuxVM(id, configBotId, channel);
+    }
+
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        return this._proxy.sendAuthMessage(message);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, indicator } = await subChannel.getInfo();
+        const { id, configBotId } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id,
-            indicator,
-            vm: this._createSubVM(channel),
+            vm: this._createSubVM(id, configBotId, channel),
             channel,
         };
 

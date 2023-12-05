@@ -11060,10 +11060,62 @@ interface Os {
     listBuiltinTags(): string[];
 
     /**
-     * Requests that the current session be authorized and for a global bot to be created
-     * to contain information about the authorized user. Resovles with a null bot if unable to login.
+     * Requests that an "authentication" bot be added to the inst for the current browser tab.
+     * Auth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.
+     *
+     * Returns a promise that resolves with a bot that contains information about the signed in user session.
+     * Resolves with `null` if the user was unable to sign in.
+     *
+     * On success, the `authBot` global variable will reference the bot that was returned by the promise.
+     *
+     * See [Auth Bot Tags](page:tags#auth-bot-tags) for more information.
+     * 
+     * See {@link os.requestAuthBotInBackground} for a version of this function that does not show a popup if the user is not signed in.
+     * 
+     * @example Request an auth bot for the user
+     * await os.requestAuthBot();
+     * os.toast("Logged in!");
+     *
+     * @dochash actions/records
+     * @doctitle Records Actions
+     * @docsidebar Records
+     * @docdescription Records are a way to store permenent data in CasualOS.
+     * @docgroup 01-records
+     * @docname os.requestAuthBot
      */
     requestAuthBot(): Promise<Bot>;
+
+    /**
+     * Requests that an "authentication" bot be added to the inst for the current browser tab.
+     * Works similarly to {@link os.requestAuthBot}, except that the request will not show a popup if the user is not signed in.
+     * 
+     * Auth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.
+     *
+     * Returns a promise that resolves with a bot that contains information about the signed in user session.
+     * Resolves with `null` if the user is not already signed in.
+     *
+     * On success, the `authBot` global variable will reference the bot that was returned by the promise.
+     *
+     * See [Auth Bot Tags](page:tags#auth-bot-tags) for more information.
+     * 
+     * See {@link os.requestAuthBot} for a version of this function that shows a popup if the user is not signed in.
+     *
+     * @example Request the auth bot in the background.
+     * const authBot = await os.requestAuthBotInBackground();
+     * if (authBot) {
+     *     os.toast("Logged in!");
+     * } else {
+     *     os.toast("Not logged in.");
+     * }
+     *
+     * @dochash actions/records
+     * @doctitle Records Actions
+     * @docsidebar Records
+     * @docdescription Records are a way to store permenent data in CasualOS.
+     * @docgroup 01-records
+     * @docname os.requestAuthBotInBackground
+     */
+    requestAuthBotInBackground(): Promise<Bot>;
 
     /**
      * Gets an access key for the given public record.

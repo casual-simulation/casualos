@@ -32,6 +32,11 @@ export interface ReconnectableSocketInterface {
     onMessage: Observable<MessageEvent>;
     onError: Observable<Event>;
 
+    /**
+     * The HTTP origin that the connection is for.
+     */
+    get origin(): string;
+
     send(data: string | ArrayBuffer | ArrayBufferView): void;
     open(): void;
     close(): void;
@@ -41,7 +46,7 @@ export interface ReconnectableSocketInterface {
  * Defines a websocket connection that will automatically try to reconnect if the connection is lost.
  */
 export class ReconnectableSocket implements ReconnectableSocketInterface {
-    private _url: string;
+    private _url: URL;
     private _socket: WebSocket;
     private _closing: boolean;
 
@@ -70,12 +75,20 @@ export class ReconnectableSocket implements ReconnectableSocketInterface {
         return this._socket;
     }
 
+    get origin() {
+        return this._url.origin;
+    }
+
     send(data: string | ArrayBuffer | ArrayBufferView) {
         this._socket.send(data);
     }
 
-    constructor(url: string) {
-        this._url = url;
+    constructor(url: string | URL) {
+        if (typeof url === 'string') {
+            this._url = new URL(url);
+        } else {
+            this._url = url;
+        }
     }
 
     open() {

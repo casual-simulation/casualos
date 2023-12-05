@@ -25,8 +25,10 @@ import {
     AuxConfig,
     parseVersionNumber,
     SimulationOrigin,
+    AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
 import {
+    AuthCoordinator,
     AuthHelper,
     AuxVMImpl,
     BotManager,
@@ -37,9 +39,11 @@ import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
-import { merge } from 'lodash';
+import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
+import { PrivacyFeatures } from '@casual-simulation/aux-records';
+import { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -67,34 +71,68 @@ export enum AppType {
     Player = 'player',
 }
 
+interface StoredInst {
+    id: string;
+    origin: SimulationOrigin;
+    isStatic: boolean;
+}
+
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
+
+const STATIC_INSTS_STORE = 'staticInsts';
+const INSTS_STORE = 'publicInsts';
+
+/**
+ * The owner
+ */
+export const PLAYER_OWNER = 'player';
+
+/**
+ *
+ */
+export const PUBLIC_OWNER = 'public';
 
 export class AppManager {
     public appType: AppType;
     private _updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
+    private _arSupported: boolean;
+    private _vrSupported: boolean;
+    private _ab1BootstrapUrl: string;
 
     get loadingProgress(): Observable<ProgressMessage> {
         return this._progress;
     }
 
+    get authCoordinator() {
+        return this._authCoordinator;
+    }
+
+    get auth() {
+        return this._auth;
+    }
+
+    private _initPromise: Promise<void>;
     private _auth: AuthHelper;
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<BotManager>;
     private _config: WebConfig;
-    private _deviceConfig: AuxConfig['config']['device'];
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
     private _systemPortal: SystemPortalCoordinator<BotManager>;
+    private _authCoordinator: AuthCoordinator<BotManager>;
     private _db: IDBDatabase;
-    private _primarySimulationAvailableSubject: Subject<void> = new Subject();
+    private _primarySimulationAvailableSubject: Subject<boolean> =
+        new BehaviorSubject(false);
     private _startLoadTime: number = Date.now();
     private _defaultStudioId: string;
+    private _defaultPrivacyFeatures: PrivacyFeatures;
 
     private _simulationFactory: (
         id: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config']
+        config: AuxConfig['config'],
+        isStatic: boolean
     ) => Promise<BotManager>;
 
     get systemPortal() {
@@ -104,25 +142,38 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
-        this._simulationFactory = async (id, origin, config) => {
-            const indicator = await this.getConnectionIndicator(
-                origin.recordName,
-                origin.inst,
-                origin.host
+        this._simulationFactory = async (id, origin, config, isStatic) => {
+            const configBotId = uuid();
+            const partitions = isStatic
+                ? BotManager.createStaticPartitions(
+                      id,
+                      configBotId,
+                      origin,
+                      config
+                  )
+                : BotManager.createPartitions(
+                      id,
+                      configBotId,
+                      origin,
+                      config,
+                      this._config.causalRepoConnectionUrl
+                  );
+
+            putItem<StoredInst>(
+                this._db,
+                isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
+                {
+                    id: id,
+                    origin,
+                    isStatic: isStatic,
+                }
             );
-            const partitions = BotManager.createPartitions(
-                id,
-                origin,
-                indicator,
-                config,
-                this._config.causalRepoConnectionUrl
-            );
+
             return new BotManager(
-                indicator,
                 origin,
-                id,
                 config,
-                new AuxVMImpl(indicator, {
+                new AuxVMImpl(id, {
+                    configBotId: configBotId,
                     config,
                     partitions,
                 }),
@@ -136,36 +187,43 @@ export class AppManager {
             if (forceSignedScripts) {
                 console.log('[AppManager] Forcing signed scripts for ' + id);
             }
-            const { ...origin } = config;
+            const { isStatic, ...origin } = config;
             return await this._simulationFactory(
                 id,
                 origin,
-                this.createSimulationConfig({ forceSignedScripts })
+                this.createSimulationConfig({ forceSignedScripts, isStatic }),
+                isStatic
             );
         });
         this._systemPortal = new SystemPortalCoordinator(
             this._simulationManager
         );
+        this._authCoordinator = new AuthCoordinator(this._simulationManager);
     }
 
     createSimulationConfig(options: {
         forceSignedScripts: boolean;
+        isStatic: boolean;
     }): AuxConfig['config'] {
+        const device = this._calculateDeviceConfig(options.isStatic);
         return {
             version: this.version.latestTaggedVersion,
             versionHash: this.version.gitCommit,
-            device: this._deviceConfig,
+            device: device,
             bootstrapState: bootstrap,
             forceSignedScripts: options.forceSignedScripts,
             causalRepoConnectionProtocol:
                 this._config.causalRepoConnectionProtocol,
             causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
+            collaborativeRepLocalPersistence:
+                this._config.collaborativeRepoLocalPersistence,
+            staticRepoLocalPersistence: this._config.staticRepoLocalPersistence,
             sharedPartitionsVersion: this._config.sharedPartitionsVersion,
             vmOrigin: this._config.vmOrigin,
             authOrigin: this._config.authOrigin,
             recordsOrigin: this._config.recordsOrigin,
             builtinPortals: KNOWN_PORTALS,
-            timesync: this._deviceConfig.isCollaborative
+            timesync: device.isCollaborative
                 ? {
                       host:
                           this._config.causalRepoConnectionUrl ??
@@ -175,6 +233,7 @@ export class AppManager {
                   }
                 : null,
             playerMode: this._config.playerMode,
+            requirePrivoLogin: this._config.requirePrivoLogin,
         };
     }
 
@@ -208,14 +267,22 @@ export class AppManager {
         factory: (
             id: string,
             origin: SimulationOrigin,
-            config: AuxConfig['config']
+            config: AuxConfig['config'],
+            isStatic: boolean
         ) => Promise<BotManager>
     ) {
         this._simulationFactory = factory;
     }
 
-    get defaultStudioId() {
+    get defaultPlayerId() {
         return this._defaultStudioId;
+    }
+
+    /**
+     * Gets the privacy features that are set by default.
+     */
+    get defaultPrivacyFeatures() {
+        return this._defaultPrivacyFeatures;
     }
 
     /**
@@ -276,6 +343,7 @@ export class AppManager {
     ): SubscriptionLike {
         return this._primarySimulationAvailableSubject
             .pipe(
+                filter((available) => available),
                 scan((subs: SubscriptionLike[]) => {
                     if (subs) {
                         subs.forEach((s) => s.unsubscribe());
@@ -290,7 +358,14 @@ export class AppManager {
             .subscribe();
     }
 
-    async init() {
+    init(): Promise<void> {
+        if (!this._initPromise) {
+            this._initPromise = this._initCore();
+        }
+        return this._initPromise;
+    }
+
+    private async _initCore() {
         console.log('[AppManager] Starting init...');
         this._reportTime('Time to start');
         console.log(
@@ -303,8 +378,8 @@ export class AppManager {
         await this._initConfig();
         this._reportTime('Time to config');
         await Promise.all([
-            this._initDeviceConfig().then(() => {
-                this._reportTime('Time to device config');
+            this._loadDeviceInfo().then(() => {
+                this._reportTime('Time to device info');
             }),
             this._initAuth().then(() => {
                 this._reportTime('Time to auth');
@@ -321,12 +396,21 @@ export class AppManager {
     }
 
     private async _initAuth() {
+        let factory: (
+            primaryAuthOrigin: string,
+            recordsAuthOrigin: string
+        ) => AuthHelperInterface;
+
         this._auth = new AuthHelper(
             this.config.authOrigin,
-            this.config.recordsOrigin
+            this.config.recordsOrigin,
+            factory,
+            this.config.requirePrivoLogin
         );
+        this._authCoordinator.authHelper = this._auth;
         console.log('[AppManager] Authenticating user in background...');
         const authData = await this._auth.primary.authenticateInBackground();
+
         if (authData) {
             console.log('[AppManager] User is authenticated.');
             this._defaultStudioId = authData.userId;
@@ -334,21 +418,62 @@ export class AppManager {
             console.log('[AppManager] User is not authenticated.');
             this._defaultStudioId = null;
         }
-        console.log(`[AppManager] defaultStudioId: ${this._defaultStudioId}`);
+
+        if (this._config.requirePrivoLogin) {
+            this._defaultPrivacyFeatures = {
+                allowPublicData: false,
+                publishData: false,
+                allowAI: false,
+                allowPublicInsts: false,
+            };
+        } else {
+            this._defaultPrivacyFeatures = {
+                allowPublicData: true,
+                publishData: true,
+                allowAI: true,
+                allowPublicInsts: true,
+            };
+        }
+        console.log(`[AppManager] defaultPlayerId: ${this._defaultStudioId}`);
+        console.log(
+            `[AppManager] defaultPrivacyFeatures: `,
+            this._defaultPrivacyFeatures
+        );
+
+        this._auth.primary.loginStatus.subscribe((status) => {
+            if (status.authData) {
+                this._defaultStudioId = status.authData.userId;
+            }
+
+            if (status?.authData?.privacyFeatures) {
+                console.log(
+                    'App Manager: New privacy features',
+                    status.authData.privacyFeatures
+                );
+            }
+        });
     }
 
     private async _initIndexedDB() {
-        this._db = await openIDB('Aux', 20, (db, oldVersion) => {
+        this._db = await openIDB('Aux', 21, (db, oldVersion) => {
             if (oldVersion < 20) {
                 let keyval = db.createObjectStore('keyval', { keyPath: 'key' });
                 let users = db.createObjectStore('users', {
                     keyPath: 'username',
                 });
             }
+            if (oldVersion < 21) {
+                let staticInsts = db.createObjectStore(STATIC_INSTS_STORE, {
+                    keyPath: 'id',
+                });
+                let insts = db.createObjectStore(INSTS_STORE, {
+                    keyPath: 'id',
+                });
+            }
         });
     }
 
-    private async _initDeviceConfig() {
+    private async _loadDeviceInfo() {
         console.log('[AppManager] Initializing Device Config');
         const nav: any = navigator;
         let arSupported = false;
@@ -383,13 +508,20 @@ export class AppManager {
             }
         }
 
-        console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
+        this._arSupported = arSupported;
+        this._vrSupported = vrSupported;
+        this._ab1BootstrapUrl = ab1Bootstrap;
 
-        this._deviceConfig = {
-            supportsAR: arSupported,
-            supportsVR: vrSupported,
-            isCollaborative: !this._config.disableCollaboration,
-            ab1BootstrapUrl: ab1Bootstrap,
+        console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
+    }
+
+    private _calculateDeviceConfig(isStatic: boolean): AuxDevice {
+        return {
+            supportsAR: this._arSupported,
+            supportsVR: this._vrSupported,
+            isCollaborative: !isStatic,
+            allowCollaborationUpgrade: false,
+            ab1BootstrapUrl: this._ab1BootstrapUrl,
         };
     }
 
@@ -434,7 +566,27 @@ export class AppManager {
         }
     }
 
-    async setPrimarySimulation(recordName: string | null, inst: string) {
+    /**
+     * Gets the name of the record that the given owner should be loaded from.
+     * @param owner The owner of the record.
+     */
+    getRecordName(owner: string): string {
+        if (owner === PLAYER_OWNER) {
+            return (
+                this.auth.primary.currentLoginStatus.authData?.userId ?? null
+            );
+        } else if (owner === PUBLIC_OWNER) {
+            return null;
+        } else {
+            return owner;
+        }
+    }
+
+    async setPrimarySimulation(
+        recordName: string | null,
+        inst: string,
+        isStatic: boolean
+    ) {
         const simulationId = getSimulationId(recordName, inst);
         if (
             (this.simulationManager.primary &&
@@ -447,7 +599,8 @@ export class AppManager {
         this._primaryPromise = this._setPrimarySimulation(
             simulationId,
             recordName,
-            inst
+            inst,
+            isStatic
         );
 
         return await this._primaryPromise;
@@ -456,7 +609,8 @@ export class AppManager {
     private async _setPrimarySimulation(
         id: string,
         recordName: string | null,
-        inst: string
+        inst: string,
+        isStatic: boolean
     ) {
         this._sendProgress('Requesting inst...', 0.1);
 
@@ -470,11 +624,12 @@ export class AppManager {
         await this.simulationManager.setPrimary(id, {
             recordName,
             inst,
+            isStatic,
         });
 
         this._initOffline();
         this._reportTime('Time to primary simulation');
-        this._primarySimulationAvailableSubject.next();
+        this._primarySimulationAvailableSubject.next(true);
 
         const sim = this.simulationManager.primary;
 
@@ -501,12 +656,12 @@ export class AppManager {
     }
 
     async getConnectionIndicator(
+        connectionId: string,
         recordName: string | null,
         inst: string,
         host: string
     ): Promise<ConnectionIndicator> {
         try {
-            const connectionId = uuid();
             const endpoint = !host
                 ? this._auth.primary
                 : this._auth.getEndpoint(host);
@@ -553,6 +708,14 @@ export class AppManager {
     logout() {
         console.log('[AppManager] Logout');
         this.simulationManager.clear();
+    }
+
+    /**
+     * Lists the static insts that have been created.
+     */
+    async listStaticInsts(): Promise<string[]> {
+        const insts = await getItems<StoredInst>(this._db, STATIC_INSTS_STORE);
+        return insts.map((i) => i.origin.inst);
     }
 
     private async _getConfig(): Promise<WebConfig> {

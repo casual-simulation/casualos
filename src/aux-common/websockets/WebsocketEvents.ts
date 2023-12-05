@@ -186,6 +186,7 @@ export const websocketDownloadRequestEventSchema = z.tuple([
 
 export type WebsocketResponseMessage =
     | LoginResultMessage
+    | WatchBranchResultMessage
     | TimeSyncResponseMessage
     | UpdatesReceivedMessage
     | ReceiveDeviceActionMessage
@@ -237,22 +238,41 @@ type ZodLoginMessageAssertion = HasType<ZodLoginMessage, LoginMessage>;
 /**
  * Defines a login result message.
  */
-export interface LoginResultMessage {
+export type LoginResultMessage =
+    | LoginResultSuccessMessage
+    | LoginResultFailureMessage;
+
+export interface LoginResultBaseMessage {
     type: 'login_result';
+}
+
+export interface LoginResultSuccessMessage extends LoginResultBaseMessage {
+    success: true;
 
     /**
      * The info for the connection.
      */
     info: ConnectionInfo;
 }
-export const loginResultMessageSchema = z.object({
-    type: z.literal('login_result'),
-});
-type ZodLoginResultMessage = z.infer<typeof loginResultMessageSchema>;
-type ZodLoginResultMessageAssertion = HasType<
-    ZodLoginResultMessage,
-    LoginResultMessage
->;
+
+export interface LoginResultFailureMessage extends LoginResultBaseMessage {
+    success: false;
+
+    /**
+     * The error code that occurred.
+     */
+    errorCode: WebsocketErrorCode;
+
+    /**
+     * The error message that occurred.
+     */
+    errorMessage: string;
+
+    /**
+     * The authorization denial reason.
+     */
+    reason?: DenialReason;
+}
 
 /**
  * Defines an event which indicates that a branch should be watched.
@@ -302,6 +322,67 @@ type ZodWatchBranchMessageAssertion = HasType<
     ZodWatchBranchMessage,
     WatchBranchMessage
 >;
+
+export type WatchBranchResultMessage =
+    | WatchBranchResultSuccessMessage
+    | WatchBranchResultFailureMessage;
+
+export interface WatchBranchResultSuccessMessage {
+    type: 'repo/watch_branch_result';
+    success: true;
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch to watch.
+     */
+    branch: string;
+}
+
+export interface WatchBranchResultFailureMessage {
+    type: 'repo/watch_branch_result';
+    success: false;
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch to watch.
+     */
+    branch: string;
+
+    /**
+     * The error code that occurred.
+     */
+    errorCode: WebsocketErrorCode;
+
+    /**
+     * The error message that occurred.
+     */
+    errorMessage: string;
+
+    /**
+     * The authorization denial reason.
+     */
+    reason?: DenialReason;
+}
 
 /**
  * Defines an event which indicates that a branch should be unwatched.
@@ -1028,42 +1109,6 @@ type ZodWebsocketRequestMessage = z.infer<typeof websocketRequestMessageSchema>;
 type ZodWebsocketRequestMessageAssertion = HasType<
     ZodWebsocketRequestMessage,
     WebsocketRequestMessage
->;
-
-export const websocketMessageSchema = z.discriminatedUnion('type', [
-    loginMessageSchema,
-    loginResultMessageSchema,
-    watchBranchMessageSchema,
-    unwatchBranchMessageSchema,
-    addUpdatesMessageSchema,
-    updatesReceivedMessageSchema,
-    sendActionMessageSchema,
-    receiveDeviceActionMessageSchema,
-    watchBranchDevicesMessageSchema,
-    unwatchBranchDevicesMessageSchema,
-    connectedToBranchMessageSchema,
-    disconnectedFromBranchMessageSchema,
-    connectionCountMessageSchema,
-    timeSyncRequestMessageSchema,
-    timeSyncResponseMessageSchema,
-    rateLimitExceededMessageSchema,
-    getUpdatesMessageSchema,
-]);
-type ZodWebsocketMessage = z.infer<typeof websocketMessageSchema>;
-type ZodWebsocketMessageAssertion = HasType<
-    ZodWebsocketMessage,
-    WebsocketRequestMessage
->;
-
-export const websocketMessageEventSchema = z.tuple([
-    z.literal(WebsocketEventTypes.Message),
-    z.number(),
-    websocketMessageSchema,
-]);
-type ZodWebsocketMessageEvent = z.infer<typeof websocketMessageEventSchema>;
-type ZodWebsocketMessageEventAssertion = HasType<
-    ZodWebsocketMessageEvent,
-    WebsocketMessageEvent
 >;
 
 type HasType<T, Q extends T> = Q;

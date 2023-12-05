@@ -5,6 +5,8 @@ import {
     isClientEvent,
     isClientUpdates,
     DEFAULT_BRANCH_NAME,
+    isWatchBranchResult,
+    SyncUpdatesEvent,
 } from './InstRecordsClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -18,6 +20,7 @@ import {
     ReceiveDeviceActionMessage,
     TimeSyncResponseMessage,
     UpdatesReceivedMessage,
+    WatchBranchResultMessage,
 } from './WebsocketEvents';
 import { filter, map } from 'rxjs/operators';
 import {
@@ -226,6 +229,57 @@ describe('InstRecordsClient', () => {
             expect(connection.sentMessages).toEqual([
                 {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+                {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should unwatch and then rewatch if a second connection event is sent', async () => {
+            const onResult = new Subject<WatchBranchResultMessage>();
+            connection.events.set('repo/watch_branch_result', onResult);
+
+            connection.connect();
+            client.watchBranchUpdates('abc').subscribe();
+
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+
+            onResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            await waitAsync();
+
+            connection.connect();
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+                {
+                    type: 'repo/unwatch_branch',
                     recordName: null,
                     inst: 'abc',
                     branch: DEFAULT_BRANCH_NAME,
@@ -522,6 +576,48 @@ describe('InstRecordsClient', () => {
                     branch: DEFAULT_BRANCH_NAME,
                     updateId: 1,
                     updates: ['111', '222'],
+                },
+            ]);
+        });
+
+        it('should relay watch_branch_result events that are for the branch', async () => {
+            const onResult = new Subject<WatchBranchResultMessage>();
+            connection.events.set('repo/watch_branch_result', onResult);
+
+            let results = [] as WatchBranchResultMessage[];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(filter(isWatchBranchResult))
+                .subscribe((a) => results.push(a));
+
+            await waitAsync();
+
+            onResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            onResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'other',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            await waitAsync();
+
+            expect(results).toEqual([
+                {
+                    type: 'repo/watch_branch_result',
+                    success: true,
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
         });
@@ -948,6 +1044,43 @@ describe('InstRecordsClient', () => {
             await waitAsync();
 
             expect(connection.sentMessages.slice(1)).toEqual([]);
+        });
+
+        it('should unwatch and rewatch when a second connection event is sent', async () => {
+            const sub = client
+                .watchBranchDevices('myRecord', 'inst', 'testBranch')
+                .subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/watch_branch_devices',
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                },
+            ]);
+
+            connection.connect();
+
+            await waitAsync();
+
+            expect(connection.sentMessages.slice(1)).toEqual([
+                {
+                    type: 'repo/unwatch_branch_devices',
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                },
+                {
+                    type: 'repo/watch_branch_devices',
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                },
+            ]);
         });
 
         it('should send device disconnected events for all connected devices when the connection is lost', async () => {
@@ -1633,6 +1766,200 @@ describe('InstRecordsClient', () => {
                     recordName: 'haha',
                     inst: 'abc',
                     branch: 'def',
+                },
+            ]);
+        });
+    });
+
+    describe('reliability', () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        it('should resend updates that were not acknowledged after a set amount of time', async () => {
+            // Set the resend time to 5 seconds.
+            client.resendUpdatesAfterMs = 5000;
+            client.resendUpdatesIntervalMs = 5000;
+
+            const updatesReceived = new Subject<UpdatesReceivedMessage>();
+            connection.events.set('repo/updates_received', updatesReceived);
+            connection.connect();
+            client.watchBranchUpdates('abc').subscribe();
+
+            client.addUpdates(null, 'abc', DEFAULT_BRANCH_NAME, ['111', '222']);
+
+            // connection.disconnect();
+            // await waitAsync();
+            jest.advanceTimersByTime(1000);
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+                {
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                    updates: ['111', '222'],
+                    updateId: 1,
+                },
+            ]);
+
+            jest.advanceTimersByTime(3000);
+            expect(connection.sentMessages.length).toEqual(2);
+
+            // Shoult emit the updates again
+            jest.advanceTimersByTime(1000);
+            expect(connection.sentMessages.slice(2)).toEqual([
+                {
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                    updateId: 1,
+                    updates: ['111', '222'],
+                },
+            ]);
+
+            updatesReceived.next({
+                type: 'repo/updates_received',
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+                updateId: 1,
+            });
+
+            jest.advanceTimersByTime(10000);
+            expect(connection.sentMessages.slice(3)).toEqual([]);
+        });
+
+        it('should double the resend time up to a limit of 3 times the regular resend time', async () => {
+            // Set the resend time to 5 seconds.
+            client.resendUpdatesAfterMs = 5000;
+            client.resendUpdatesIntervalMs = 5000;
+
+            const updatesReceived = new Subject<UpdatesReceivedMessage>();
+            connection.events.set('repo/updates_received', updatesReceived);
+            connection.connect();
+            client.watchBranchUpdates('abc').subscribe();
+
+            client.addUpdates(null, 'abc', DEFAULT_BRANCH_NAME, ['111', '222']);
+
+            // connection.disconnect();
+            // await waitAsync();
+            jest.advanceTimersByTime(1000);
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+                {
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                    updates: ['111', '222'],
+                    updateId: 1,
+                },
+            ]);
+
+            jest.advanceTimersByTime(4000);
+
+            // Shoult emit the updates again
+            expect(connection.sentMessages.length).toEqual(3);
+
+            jest.advanceTimersByTime(10000);
+
+            expect(connection.sentMessages.length).toEqual(4);
+
+            jest.advanceTimersByTime(20000);
+
+            expect(connection.sentMessages.length).toEqual(5);
+
+            jest.advanceTimersByTime(40000);
+
+            expect(connection.sentMessages.length).toEqual(6);
+
+            jest.advanceTimersByTime(80000);
+
+            expect(connection.sentMessages.length).toEqual(8);
+
+            updatesReceived.next({
+                type: 'repo/updates_received',
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+                updateId: 1,
+            });
+
+            jest.advanceTimersByTime(100000);
+            expect(connection.sentMessages.slice(8)).toEqual([]);
+        });
+    });
+
+    describe('onSyncUpdatesEvent', () => {
+        it('should send a syncing events that match whether the client has any unacknowledged updates left for the branch', async () => {
+            const updatesReceived = new Subject<UpdatesReceivedMessage>();
+            connection.events.set('repo/updates_received', updatesReceived);
+            connection.connect();
+
+            let syncEvents: SyncUpdatesEvent[] = [];
+            client.onSyncUpdatesEvent.subscribe((event) =>
+                syncEvents.push(event)
+            );
+
+            client
+                .watchBranchUpdates({
+                    type: 'repo/watch_branch',
+                    recordName: 'record',
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                })
+                .subscribe();
+
+            client.addUpdates('record', 'abc', DEFAULT_BRANCH_NAME, [
+                '111',
+                '222',
+            ]);
+
+            await waitAsync();
+
+            expect(syncEvents).toEqual([
+                {
+                    type: 'syncing',
+                    recordName: 'record',
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+
+            updatesReceived.next({
+                type: 'repo/updates_received',
+                recordName: 'record',
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+                updateId: 1,
+            });
+
+            await waitAsync();
+
+            expect(syncEvents.slice(1)).toEqual([
+                {
+                    type: 'synced',
+                    recordName: 'record',
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
         });

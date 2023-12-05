@@ -1,5 +1,5 @@
 import { InstRecordsClient } from '../websockets';
-import { BotsState } from '../bots';
+import { BotsState, RemoteBotActions } from '../bots';
 import {
     AuxPartition,
     ProxyBridgePartition,
@@ -173,6 +173,11 @@ export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
      * Defaults to causal_repo_client.
      */
     childPartitionType?: YjsClientPartitionConfig['type'];
+
+    /**
+     * Whether the partition should skip the initial load until the partition is upgraded to a realtime connection.
+     */
+    skipInitialLoad?: boolean;
 }
 
 /**
@@ -206,6 +211,23 @@ export interface OtherPlayersClientPartitionConfig extends PartitionConfigBase {
      * Defaults to causal_repo_client.
      */
     childPartitionType?: YjsClientPartitionConfig['type'];
+
+    /**
+     * Whether the partition should skip the initial load until the partition is upgraded to a realtime connection.
+     */
+    skipInitialLoad?: boolean;
+}
+
+export interface PartitionRemoteEvents {
+    /**
+     * The type of the remote action's event and whether it should be supported.
+     */
+    [key: string]: boolean;
+
+    /**
+     * Whether all other remote actions should be supported. (Default is false)
+     */
+    remoteActions?: boolean;
 }
 
 /**
@@ -213,6 +235,31 @@ export interface OtherPlayersClientPartitionConfig extends PartitionConfigBase {
  */
 export interface YjsPartitionConfig extends PartitionConfigBase {
     type: 'yjs';
+
+    /**
+     * The options for local persistence for the partition.
+     */
+    localPersistence?: {
+        /**
+         * Whether to save partition updates to indexed db.
+         */
+        saveToIndexedDb: boolean;
+
+        /**
+         * The database that updates should be saved under.
+         */
+        database: string;
+
+        /**
+         * The encryption key that should be used.
+         */
+        encryptionKey?: string;
+    };
+
+    /**
+     * The options for handling remote events.
+     */
+    remoteEvents?: PartitionRemoteEvents | boolean;
 }
 
 /**
@@ -247,10 +294,15 @@ export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
     readOnly?: boolean;
 
     /**
-     * Whether the partition should be loaded without realtime updates.
+     * Whether the partition should be loaded without realtime updates and in a read-only mode.
      * Basically this means that all you get is the initial state.
      */
     static?: boolean;
+
+    /**
+     * Whether the partition should skip the initial load until the partition is upgraded to a realtime connection.
+     */
+    skipInitialLoad?: boolean;
 
     /**
      * Whether the partition should be temporary.
@@ -260,12 +312,27 @@ export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
     /**
      * Whether to support remote events. (Default is true)
      */
-    remoteEvents?: boolean;
+    remoteEvents?: PartitionRemoteEvents | boolean;
 
     /**
      * Whether to use websocket or the apiary protocol to connect. (Default is websocket)
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
+
+    /**
+     * The options for local persistence for the partition.
+     */
+    localPersistence?: {
+        /**
+         * Whether to save partition updates to indexed db.
+         */
+        saveToIndexedDb?: boolean;
+
+        /**
+         * The encryption key that should be used.
+         */
+        encryptionKey?: string;
+    };
 }
 
 /**
@@ -300,10 +367,15 @@ export interface YjsClientPartitionConfig extends PartitionConfigBase {
     readOnly?: boolean;
 
     /**
-     * Whether the partition should be loaded without realtime updates.
+     * Whether the partition should be loaded without realtime updates and in a read-only mode.
      * Basically this means that all you get is the initial state.
      */
     static?: boolean;
+
+    /**
+     * Whether the partition should skip the initial load until the partition is upgraded to a realtime connection.
+     */
+    skipInitialLoad?: boolean;
 
     /**
      * Whether the partition should be temporary.
@@ -313,5 +385,20 @@ export interface YjsClientPartitionConfig extends PartitionConfigBase {
     /**
      * Whether to support remote events. (Default is true)
      */
-    remoteEvents?: boolean;
+    remoteEvents?: PartitionRemoteEvents | boolean;
+
+    /**
+     * The options for local persistence for the partition.
+     */
+    localPersistence?: {
+        /**
+         * Whether to save partition updates to indexed db.
+         */
+        saveToIndexedDb?: boolean;
+
+        /**
+         * The encryption key that should be used.
+         */
+        encryptionKey?: string;
+    };
 }

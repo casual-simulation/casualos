@@ -11,6 +11,14 @@ import { AuxDevice } from '@casual-simulation/aux-runtime';
  * Defines the possible configuration options for a simulation.
  */
 export interface AuxConfig {
+    /**
+     * The ID of the config bot.
+     */
+    configBotId: string;
+
+    /**
+     * The configuration parameters for the simulation.
+     */
     config: AuxConfigParameters;
 
     /**
@@ -47,6 +55,18 @@ export interface AuxConfigParameters {
      * The URL that causal repo partitions should connect to.
      */
     causalRepoConnectionUrl?: string;
+
+    /**
+     * Whether collaborative repositories should be persisted locally.
+     * Defaults to false.
+     */
+    collaborativeRepLocalPersistence?: boolean;
+
+    /**
+     * Whether static repositories should be persisted locally.
+     * Defaults to true.
+     */
+    staticRepoLocalPersistence?: boolean;
 
     /**
      * The version of the shared partitions that should be used.
@@ -86,6 +106,11 @@ export interface AuxConfigParameters {
      * - "builder" indicates that the instance has been configured for building AUXes.
      */
     playerMode?: 'player' | 'builder';
+
+    /**
+     * Whether privo login is required.
+     */
+    requirePrivoLogin?: boolean;
 }
 
 export interface AuxTimeSyncConfiguration {

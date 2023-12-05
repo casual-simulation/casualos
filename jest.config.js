@@ -12,6 +12,7 @@ module.exports = {
         '/__tests__/setPrettyPrint',
     ],
     watchPathIgnorePatterns: ['/node_modules/'],
+    setupFiles: ['fake-indexeddb/auto'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
     moduleNameMapper: {
         '^aux-common/(.*)$': '<rootDir>/src/aux-common/$1',

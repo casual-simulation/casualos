@@ -2565,11 +2565,17 @@ export class AuxRuntime
 
         // Copy existing tag masks to the new bot
         if (!fromFactory && this._existingMasks[bot.id]) {
+            bot = { ...bot };
+            if (bot.masks) {
+                bot.masks = { ...bot.masks };
+            }
             const existing = this._existingMasks[bot.id];
             delete this._existingMasks[bot.id];
             for (let space in existing) {
                 if (!bot.masks) {
                     bot.masks = {};
+                } else if (bot.masks[space]) {
+                    bot.masks[space] = { ...bot.masks[space] };
                 }
                 for (let tag in existing[space]) {
                     if (hasValue(bot.masks?.[space]?.[tag])) {

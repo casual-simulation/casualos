@@ -39,6 +39,7 @@ import {
     getExpireTime,
     GetUserPolicyFailure,
     ListedUserPolicy,
+    ListMarkerPoliciesResult,
     PolicyStore,
     RoleAssignment,
     UpdateUserPolicyFailure,
@@ -4476,6 +4477,7 @@ export class PolicyController {
 
         const markers = await this._listPermissionsForMarkers(
             context.recordName,
+            request.userId,
             resourceMarkers
         );
 
@@ -4636,39 +4638,26 @@ export class PolicyController {
 
     private async _listPermissionsForMarkers(
         recordName: string,
+        userId: string,
         resourceMarkers: string[]
     ): Promise<MarkerPermission[]> {
         const promises = resourceMarkers.map(async (m) => {
-            const policies = await this._policies.listPoliciesForMarker(
+            const result = await this._policies.listPoliciesForMarkerAndUser(
                 recordName,
+                userId,
                 m
             );
 
             return {
                 marker: m,
-                policies,
+                result,
             };
         });
 
         const markerPolicies = await Promise.all(promises);
 
-        const markers: MarkerPermission[] = [];
-        for (let { marker, policies } of markerPolicies) {
-            let permissions: PossiblePermission[] = [];
-            for (let policy of policies) {
-                for (let permission of policy.permissions) {
-                    permissions.push({
-                        policy,
-                        permission,
-                    });
-                }
-            }
-            markers.push({
-                marker,
-                permissions,
-            });
-        }
-
+        const markers: MarkerPermission[] =
+            filterAndMergeMarkerPermissions(markerPolicies);
         return markers;
     }
 
@@ -5156,6 +5145,90 @@ export function returnAuthorizationResult(a: AuthorizeDenied): {
         ...rest,
         errorCode: a.errorCode,
     };
+}
+
+/**
+ * Merges the permissions from the given marker policies and filters out any permissions that are not allowed according to
+ * the privacy settings of the record owner and the user.
+ * @param markerPolicies The marker policies that should be merged.
+ */
+export function filterAndMergeMarkerPermissions(
+    markerPolicies: { marker: string; result: ListMarkerPoliciesResult }[]
+): MarkerPermission[] {
+    const markers: MarkerPermission[] = [];
+    for (let { marker, result } of markerPolicies) {
+        let permissions: PossiblePermission[] = [];
+        let valid = true;
+        const denyPublicInsts =
+            !result.recordOwnerPrivacyFeatures.allowPublicInsts ||
+            !result.userPrivacyFeatures.allowPublicInsts;
+        let instsValid = true;
+
+        if (
+            !result.recordOwnerPrivacyFeatures.publishData ||
+            !result.userPrivacyFeatures.publishData
+        ) {
+            valid = false;
+        }
+
+        if (valid) {
+            for (let policy of result.policies) {
+                if (
+                    !result.recordOwnerPrivacyFeatures.allowPublicData ||
+                    !result.userPrivacyFeatures.allowPublicData
+                ) {
+                    if (policy.permissions.some((p) => p.role === true)) {
+                        // policy contains a permission that allows everyone to access the data, but the user should not be able to publish public data.
+                        // skip all the policies for this marker.
+                        valid = false;
+                        break;
+                    }
+                }
+
+                for (let permission of policy.permissions) {
+                    if (denyPublicInsts) {
+                        if (permission.type.startsWith('inst.')) {
+                            if (!instsValid) {
+                                // Skip all inst permissions if any inst permissions are invalid.
+                                continue;
+                            } else if (permission.role === true) {
+                                // Mark all insts permissions for this marker as invalid if public insts
+                                // are not allowed and this permission is public.
+                                instsValid = false;
+                                continue;
+                            }
+                        }
+                    }
+
+                    permissions.push({
+                        policy,
+                        permission,
+                    });
+                }
+            }
+        }
+
+        if (!instsValid) {
+            // Filter out any inst permissions if insts are invalid
+            permissions = permissions.filter(
+                (p) => !p.permission.type.startsWith('inst.')
+            );
+        }
+
+        if (valid) {
+            markers.push({
+                marker,
+                permissions,
+            });
+        } else {
+            markers.push({
+                marker,
+                permissions: [],
+            });
+        }
+    }
+
+    return markers;
 }
 
 export interface MarkerPermission {

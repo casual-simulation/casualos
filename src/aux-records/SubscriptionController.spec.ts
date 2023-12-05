@@ -271,6 +271,89 @@ describe('SubscriptionController', () => {
                 });
             });
 
+            it('should list the default subscription even though it may not be purchasable', async () => {
+                store.subscriptionConfiguration.subscriptions = [
+                    ...store.subscriptionConfiguration.subscriptions,
+                    {
+                        id: 'sub_3',
+                        eligibleProducts: ['product_99_id'],
+                        product: 'product_99_id',
+                        studioOnly: true,
+                        featureList: ['Feature 1'],
+                    },
+                    {
+                        id: 'sub_4',
+                        eligibleProducts: ['product_1000_id'],
+                        product: 'product_1000_id',
+                        userOnly: true,
+                        featureList: ['Feature 1'],
+                    },
+                    {
+                        id: 'sub_5',
+                        name: 'Default Product',
+                        description: 'A default product.',
+                        featureList: ['Feature 1'],
+                        defaultSubscription: true,
+                    },
+                ];
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                        {
+                            id: 'sub_4',
+                            name: 'Product 1000',
+                            description: 'A product named 1000.',
+                            featureList: ['Feature 1'],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 9999,
+                                },
+                            ],
+                        },
+                        {
+                            id: 'sub_5',
+                            name: 'Default Product',
+                            description: 'A default product.',
+                            featureList: ['Feature 1'],
+                            prices: [],
+                            defaultSubscription: true,
+                        },
+                    ],
+                });
+            });
+
             it('should be able list subscriptions when the user has a customer ID', async () => {
                 await store.saveUser({
                     ...user,
@@ -1020,6 +1103,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1112,7 +1196,6 @@ describe('SubscriptionController', () => {
                                     'Feature 2',
                                     'Feature 3',
                                 ],
-                                defaultSubscription: true,
                             },
                             {
                                 id: 'sub_2',
@@ -1198,6 +1281,68 @@ describe('SubscriptionController', () => {
                     });
                 });
 
+                it('should return a unacceptable_request if given a subscription that does not have a product', async () => {
+                    store.subscriptionConfiguration.subscriptions[1].product =
+                        null;
+                    const result =
+                        await controller.createManageSubscriptionLink({
+                            sessionKey,
+                            userId,
+                            subscriptionId: 'sub_2',
+                        });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The given subscription is not purchasable.',
+                    });
+                    expect(stripeMock.createCustomer).toHaveBeenCalledTimes(1);
+                    expect(stripeMock.createCustomer).toHaveBeenCalledWith({
+                        name: 'test name',
+                        email: 'test@example.com',
+                        phone: null,
+                        metadata: {
+                            role: 'user',
+                            userId,
+                        },
+                    });
+                    expect(
+                        stripeMock.createCheckoutSession
+                    ).not.toHaveBeenCalled();
+                });
+
+                it('should return a unacceptable_request if given a subscription that is not purchasable', async () => {
+                    store.subscriptionConfiguration.subscriptions[1].purchasable =
+                        false;
+                    const result =
+                        await controller.createManageSubscriptionLink({
+                            sessionKey,
+                            userId,
+                            subscriptionId: 'sub_2',
+                        });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The given subscription is not purchasable.',
+                    });
+                    expect(stripeMock.createCustomer).toHaveBeenCalledTimes(1);
+                    expect(stripeMock.createCustomer).toHaveBeenCalledWith({
+                        name: 'test name',
+                        email: 'test@example.com',
+                        phone: null,
+                        metadata: {
+                            role: 'user',
+                            userId,
+                        },
+                    });
+                    expect(
+                        stripeMock.createCheckoutSession
+                    ).not.toHaveBeenCalled();
+                });
+
                 it('should return a price_does_not_match if the expected price does not match the subscription', async () => {
                     const result =
                         await controller.createManageSubscriptionLink({
@@ -1209,6 +1354,7 @@ describe('SubscriptionController', () => {
                                 interval: 'month',
                                 intervalLength: 1,
                             },
+                            subscriptionId: 'sub_1',
                         });
 
                     expect(result).toEqual({
@@ -1337,6 +1483,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1420,6 +1567,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1503,6 +1651,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1586,6 +1735,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -1672,6 +1822,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     userId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2255,6 +2406,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2353,7 +2505,6 @@ describe('SubscriptionController', () => {
                                     'Feature 2',
                                     'Feature 3',
                                 ],
-                                defaultSubscription: true,
                             },
                             {
                                 id: 'sub_2',
@@ -2451,6 +2602,7 @@ describe('SubscriptionController', () => {
                                 interval: 'month',
                                 intervalLength: 1,
                             },
+                            subscriptionId: 'sub_1',
                         });
 
                     expect(result).toEqual({
@@ -2579,6 +2731,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2666,6 +2819,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2753,6 +2907,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2840,6 +2995,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({
@@ -2926,6 +3082,7 @@ describe('SubscriptionController', () => {
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
                     studioId,
+                    subscriptionId: 'sub_1',
                 });
 
                 expect(result).toEqual({

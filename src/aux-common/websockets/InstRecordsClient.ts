@@ -9,12 +9,13 @@ import {
     first,
     scan,
 } from 'rxjs/operators';
-import { merge, Observable, of } from 'rxjs';
+import { merge, Observable, of, Subject } from 'rxjs';
 import {
     AddUpdatesMessage,
     ConnectedToBranchMessage,
     DisconnectedFromBranchMessage,
     WatchBranchMessage,
+    WatchBranchResultMessage,
     WebsocketErrorInfo,
 } from './WebsocketEvents';
 import {
@@ -35,13 +36,94 @@ export const DEFAULT_BRANCH_NAME = 'default';
  */
 export class InstRecordsClient {
     private _client: ConnectionClient;
-    private _sentUpdates: Map<string, Map<number, string[]>>;
+    private _sentUpdates: Map<string, Map<number, SentUpdates>>;
     private _updateCounter: number = 0;
     private _watchedBranches: Set<string>;
+    private _connectedBranches: Set<string>;
     private _connectedDevices: Map<string, Map<string, ConnectionInfo>>;
+    private _connectedDeviceBranches: Set<string>;
     private _forcedOffline: boolean;
     private _timeSyncCounter: number = 0;
-    private _info: ConnectionInfo;
+    private _resendUpdatesAfter: number = null;
+    private _resendUpdatesInterval: number = null;
+    private _resendUpdatesIntervalId: number = null;
+
+    private _onSyncUpdatesEvent: Subject<SyncUpdatesEvent> = new Subject();
+
+    get onSyncUpdatesEvent(): Observable<SyncUpdatesEvent> {
+        return this._onSyncUpdatesEvent;
+    }
+
+    /**
+     * Gets the amount of time in miliseconds that the client should wait before resending updates that were never acknowledged.
+     * If null, then the client will never resend updates based on time.
+     */
+    get resendUpdatesAfterMs(): number | null {
+        return this._resendUpdatesAfter;
+    }
+
+    /**
+     * Sets the amount of time in miliseconds that the client should wait before resending updates that were never acknowledged.
+     * If null, then the client will never resend updates based on time.
+     */
+    set resendUpdatesAfterMs(value: number | null) {
+        this._resendUpdatesAfter = value;
+    }
+
+    get resendUpdatesIntervalMs(): number | null {
+        return this._resendUpdatesInterval;
+    }
+
+    set resendUpdatesIntervalMs(value: number | null) {
+        this._resendUpdatesInterval = value;
+
+        if (this._resendUpdatesInterval) {
+            this._startResendUpdatesInterval();
+        } else {
+            this._stopResendUpdatesInterval();
+        }
+    }
+
+    private _stopResendUpdatesInterval() {
+        if (this._resendUpdatesIntervalId) {
+            clearInterval(this._resendUpdatesIntervalId);
+        }
+    }
+
+    private _startResendUpdatesInterval() {
+        this._stopResendUpdatesInterval();
+        this._resendUpdatesIntervalId = setInterval(() => {
+            this._resendUpdates();
+        }, this._resendUpdatesInterval) as unknown as number;
+    }
+
+    private _resendUpdates() {
+        for (let [branchKey, updates] of this._sentUpdates) {
+            for (let [updateId, sentUpdate] of updates) {
+                const lastTryTime = sentUpdate.lastTryTimeMs;
+                const retryAfter =
+                    this._resendUpdatesAfter *
+                    Math.pow(2, Math.min(sentUpdate.tryCount - 1, 3));
+
+                const now = Date.now();
+                if (lastTryTime + retryAfter <= now) {
+                    sentUpdate.tryCount += 1;
+                    sentUpdate.lastTryTimeMs = now;
+                    let [recordName, inst, branch] = branchKey.split('/');
+                    if (!recordName) {
+                        recordName = null;
+                    }
+                    this._sendAddUpdates(
+                        recordName,
+                        inst,
+                        branch,
+                        sentUpdate.updates,
+                        updateId
+                    );
+                }
+            }
+        }
+    }
 
     constructor(connection: ConnectionClient) {
         this._client = connection;
@@ -49,6 +131,8 @@ export class InstRecordsClient {
         this._sentUpdates = new Map();
         this._connectedDevices = new Map();
         this._watchedBranches = new Set();
+        this._connectedBranches = new Set();
+        this._connectedDeviceBranches = new Set();
     }
 
     /**
@@ -109,16 +193,46 @@ export class InstRecordsClient {
         this._watchedBranches.add(watchedBranchKey);
         return this._whenConnected().pipe(
             tap((connected) => {
+                if (
+                    connected &&
+                    this._connectedBranches.has(watchedBranchKey)
+                ) {
+                    this._connectedBranches.delete(watchedBranchKey);
+                    this._client.send({
+                        type: 'repo/unwatch_branch',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+                }
+
                 this._client.send(branchEvent);
 
                 let list = this._getSentUpdates(recordName, inst, branch);
 
                 for (let [key, value] of list) {
-                    this._sendAddUpdates(recordName, inst, branch, value, key);
+                    this._sendAddUpdates(
+                        recordName,
+                        inst,
+                        branch,
+                        value.updates,
+                        key
+                    );
                 }
             }),
             switchMap((connected) =>
                 merge(
+                    this._client.event('repo/watch_branch_result').pipe(
+                        filter(
+                            (event) =>
+                                event.recordName === recordName &&
+                                event.inst === inst &&
+                                event.branch === branch
+                        ),
+                        tap(() => {
+                            this._connectedBranches.add(watchedBranchKey);
+                        })
+                    ),
                     this._client.event('repo/add_updates').pipe(
                         filter(
                             (event) =>
@@ -221,6 +335,14 @@ export class InstRecordsClient {
                                 branch
                             );
                             list.delete(event.updateId);
+                            if (list.size === 0) {
+                                this._onSyncUpdatesEvent.next({
+                                    type: 'synced',
+                                    recordName,
+                                    inst,
+                                    branch,
+                                });
+                            }
                         }),
                         map((event) => {
                             if (event.errorCode === 'max_size_reached') {
@@ -273,6 +395,7 @@ export class InstRecordsClient {
             ),
             finalize(() => {
                 this._watchedBranches.delete(watchedBranchKey);
+                this._connectedBranches.delete(watchedBranchKey);
 
                 if (this._client.isConnected) {
                     this._client.send({
@@ -378,8 +501,21 @@ export class InstRecordsClient {
         inst: string,
         branch: string
     ) {
+        const watchedBranchKey = branchKey(recordName, inst, branch);
         return of(true).pipe(
             tap((connected) => {
+                if (
+                    connected &&
+                    this._connectedDeviceBranches.has(watchedBranchKey)
+                ) {
+                    this._client.send({
+                        type: 'repo/unwatch_branch_devices',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+                }
+                this._connectedDeviceBranches.add(watchedBranchKey);
                 this._client.send({
                     type: 'repo/watch_branch_devices',
                     recordName,
@@ -455,6 +591,7 @@ export class InstRecordsClient {
                 )
             ),
             finalize(() => {
+                this._connectedDeviceBranches.delete(watchedBranchKey);
                 if (this._client.isConnected) {
                     this._client.send({
                         type: 'repo/unwatch_branch_devices',
@@ -487,7 +624,13 @@ export class InstRecordsClient {
         let list = this._getSentUpdates(recordName, inst, branch);
 
         this._updateCounter += 1;
-        list.set(this._updateCounter, updates);
+        list.set(this._updateCounter, {
+            updates,
+            updateId: this._updateCounter,
+            sentTimeMs: Date.now(),
+            lastTryTimeMs: Date.now(),
+            tryCount: 1,
+        });
         this._sendAddUpdates(
             recordName,
             inst,
@@ -495,6 +638,14 @@ export class InstRecordsClient {
             updates,
             this._updateCounter
         );
+        if (list.size === 1) {
+            this._onSyncUpdatesEvent.next({
+                type: 'syncing',
+                recordName,
+                inst,
+                branch,
+            });
+        }
     }
 
     /**
@@ -701,9 +852,14 @@ export type ClientWatchBranchUpdatesEvents =
     | ClientUpdates
     | ClientUpdatesReceived
     | ClientEvent
-    | ClientError;
+    | ClientError
+    | WatchBranchResultMessage;
 
-export type ClientUpdatesOrEvent = ClientUpdates | ClientEvent | ClientError;
+export type ClientUpdatesOrEvent =
+    | ClientUpdates
+    | ClientEvent
+    | ClientError
+    | WatchBranchResultMessage;
 
 export function isClientEvent(
     event: ClientWatchBranchMessages | ClientWatchBranchUpdatesEvents
@@ -723,7 +879,8 @@ export function isClientUpdatesOrEvents(
     return (
         event.type === 'updates' ||
         event.type === 'event' ||
-        event.type === 'error'
+        event.type === 'error' ||
+        event.type === 'repo/watch_branch_result'
     );
 }
 
@@ -733,13 +890,18 @@ export function isClientError(
     return event.type === 'error';
 }
 
+export function isWatchBranchResult(
+    event: ClientWatchBranchUpdatesEvents
+): event is WatchBranchResultMessage {
+    return event.type === 'repo/watch_branch_result';
+}
+
 function whenConnected(
     observable: Observable<ClientConnectionState>,
     filterConnected: boolean = true
 ): Observable<boolean> {
     return observable.pipe(
         map((s) => s.connected),
-        distinctUntilChanged(),
         filterConnected ? filter((connected) => connected) : (a) => a
     );
 }
@@ -750,4 +912,28 @@ function branchKey(
     branch: string
 ): string {
     return `${recordName ?? ''}/${inst}/${branch}`;
+}
+
+interface SentUpdates {
+    updates: string[];
+    updateId: number;
+    sentTimeMs: number;
+    lastTryTimeMs: number;
+    tryCount: number;
+}
+
+export type SyncUpdatesEvent = SyncingUpdatesEvent | SyncedUpdatesEvent;
+
+export interface SyncingUpdatesEvent {
+    type: 'syncing';
+    recordName: string | null;
+    inst: string;
+    branch: string;
+}
+
+export interface SyncedUpdatesEvent {
+    type: 'synced';
+    recordName: string | null;
+    inst: string;
+    branch: string;
 }

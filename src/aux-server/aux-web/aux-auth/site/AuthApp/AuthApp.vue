@@ -1,12 +1,12 @@
 <template>
-    <div id="app">
-        <md-app>
+    <div id="app" class="app-container">
+        <md-app class="app">
             <md-app-toolbar>
                 <a class="title-link md-title" href="/" style="flex: 1">
                     <svg-icon name="PersonPinCircle" class="title-img"></svg-icon>
                     <strong>{{ title }}</strong>
                 </a>
-                <md-button v-if="showLogout" @click="logout">Logout</md-button>
+                <md-button v-if="showLogout" @click="logout">Sign Out</md-button>
             </md-app-toolbar>
             <md-app-drawer v-if="showLogout" md-permanent="clipped">
                 <md-list>
@@ -20,7 +20,7 @@
                         @click="onExpandRecords"
                     >
                         <md-icon>description</md-icon>
-                        <span class="md-list-item-text">My AUXStudio</span>
+                        <span class="md-list-item-text">Player Studio</span>
 
                         <md-list slot="md-expand">
                             <md-list-item
@@ -48,7 +48,7 @@
                                 <strong class="md-list-item-text">No Records</strong>
                             </md-list-item>
                             <md-button class="md-raised md-primary" @click="startCreateRecord()"
-                                >Create Record</md-button
+                                >Add Record</md-button
                             >
                         </md-list>
                     </md-list-item>
@@ -108,7 +108,7 @@
                             <md-button
                                 class="md-raised md-primary"
                                 @click="startCreateRecord(studio.studioId)"
-                                >Create Record</md-button
+                                >Add Record</md-button
                             >
                         </md-list>
                     </md-list-item>
@@ -117,7 +117,7 @@
                             v-if="allowCreateStudio"
                             class="md-raised md-primary"
                             @click="startCreateStudio()"
-                            >Create Shared AUXStudio</md-button
+                            >Add Studio</md-button
                         >
                     </md-list-item>
                 </md-list>
@@ -128,11 +128,11 @@
         </md-app>
 
         <md-dialog :md-active.sync="showCreateStudio">
-            <md-dialog-title>Create Shared AUXStudio</md-dialog-title>
+            <md-dialog-title>Add Studio</md-dialog-title>
 
             <md-dialog-content>
                 <md-field>
-                    <label>AUXStudio Name</label>
+                    <label>Studio Name</label>
                     <md-input v-model="studioName"></md-input>
                 </md-field>
             </md-dialog-content>
@@ -143,7 +143,7 @@
         </md-dialog>
 
         <md-dialog :md-active.sync="showCreateRecord">
-            <md-dialog-title>Create Record</md-dialog-title>
+            <md-dialog-title>Add Record</md-dialog-title>
             <md-dialog-content>
                 <form @submit.prevent="createRecord()">
                     <md-field>
@@ -152,7 +152,7 @@
                     </md-field>
 
                     <md-field>
-                        <label>AUXStudio</label>
+                        <label>Studio</label>
                         <md-select v-model="createRecordStudioId">
                             <md-option :value="''"> My Studio </md-option>
                             <md-option
@@ -170,6 +170,13 @@
                 <md-button class="md-primary" @click="createRecord()">Create</md-button>
             </md-dialog-actions>
         </md-dialog>
+
+        <footer>
+            <ul class="footer-links">
+                <li><a href="/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/terms">Terms of Service</a></li>
+            </ul>
+        </footer>
     </div>
 </template>
 <script src="./AuthApp.ts"></script>

@@ -11,7 +11,10 @@ import {
     PUBLIC_WRITE_MARKER,
     PolicyDocument,
 } from '@casual-simulation/aux-common';
-import { createTestSubConfiguration } from './TestUtils';
+import {
+    createTestPrivoConfiguration,
+    createTestSubConfiguration,
+} from './TestUtils';
 
 describe('CachingPolicyStore', () => {
     let inner: MemoryStore;
@@ -28,11 +31,13 @@ describe('CachingPolicyStore', () => {
 
         inner = new MemoryStore({
             subscriptions: createTestSubConfiguration(),
+            privo: createTestPrivoConfiguration(),
         });
         cache = new MemoryCache();
         store = new CachingConfigStore(inner, cache, 1);
 
         jest.spyOn(inner, 'getSubscriptionConfiguration');
+        jest.spyOn(inner, 'getPrivoConfiguration');
     });
 
     afterEach(() => {
@@ -72,6 +77,40 @@ describe('CachingPolicyStore', () => {
 
             expect(result).toEqual(createTestSubConfiguration());
             expect(inner.getSubscriptionConfiguration).toBeCalledTimes(0);
+        });
+    });
+
+    describe('getPrivoConfiguration()', () => {
+        it('should store the configuration in the cache', async () => {
+            const result = await store.getPrivoConfiguration();
+
+            expect(result).toEqual(inner.privoConfiguration);
+
+            const cached = await cache.retrieve<PolicyDocument[]>(`privo`);
+
+            expect(cached).toEqual(createTestPrivoConfiguration());
+            expect(cache.items).toEqual(
+                new Map([
+                    [
+                        `privo`,
+                        {
+                            data: createTestPrivoConfiguration(),
+                            expireTimeMs: 1000,
+                        },
+                    ],
+                ])
+            );
+            expect(inner.getPrivoConfiguration).toBeCalledTimes(1);
+        });
+
+        it('should retrieve the value from the cache', async () => {
+            await cache.store(`privo`, createTestPrivoConfiguration(), 1);
+
+            inner.subscriptionConfiguration = null;
+            const result = await store.getPrivoConfiguration();
+
+            expect(result).toEqual(createTestPrivoConfiguration());
+            expect(inner.getPrivoConfiguration).toBeCalledTimes(0);
         });
     });
 });

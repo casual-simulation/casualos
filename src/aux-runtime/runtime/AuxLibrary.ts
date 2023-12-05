@@ -232,6 +232,7 @@ import {
     OpenPhotoCameraOptions,
     Photo,
     getEasing,
+    enableCollaboration as calcEnableCollaboration,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3033,6 +3034,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 version,
                 device,
                 isCollaborative,
+                enableCollaboration,
                 getAB1BootstrapURL,
                 enableAR,
                 disableAR,
@@ -3228,6 +3230,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 appHooks: { ...hooks, render },
                 listBuiltinTags,
                 requestAuthBot,
+                requestAuthBotInBackground,
 
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
@@ -5618,6 +5621,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
             isCollaborative: null as boolean,
+            allowCollaborationUpgrade: null as boolean,
             ab1BootstrapUrl: null as string,
         };
     }
@@ -5642,6 +5646,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return true;
+    }
+
+    /**
+     * Attempts to enable collaboration features on the device.
+     *
+     * @example Enable collaboration on this device.
+     * await os.enableCollaboration();
+     *
+     * @dochash actions/os
+     * @docname os.enableCollaboration
+     * @docgroup 10-os-info
+     */
+    function enableCollaboration(): Promise<void> {
+        if (context.device) {
+            if (!context.device.isCollaborative) {
+                if (!context.device.allowCollaborationUpgrade) {
+                    return Promise.reject(
+                        new Error(
+                            'Collaboration cannot be enabled on this device'
+                        )
+                    );
+                }
+                const task = context.createTask();
+                const event = calcEnableCollaboration(task.taskId);
+                return addAsyncAction(task, event);
+            }
+        }
+
+        return Promise.resolve();
     }
 
     /**
@@ -6666,6 +6699,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (user) {
             let inst = getTag(user, 'inst');
             if (hasValue(inst)) {
+                if (Array.isArray(inst)) {
+                    return inst[0].toString();
+                }
                 return inst.toString();
             }
             return undefined;
@@ -7814,6 +7850,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * See [Auth Bot Tags](page:tags#auth-bot-tags) for more information.
      *
+     * See {@link os.requestAuthBotInBackground} for a version of this function that does not show a popup if the user is not signed in.
+     *
      * @example Request an auth bot for the user
      * await os.requestAuthBot();
      * os.toast("Logged in!");
@@ -7825,8 +7863,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docgroup 01-records
      * @docname os.requestAuthBot
      */
-    async function requestAuthBot(): Promise<Bot> {
-        const data = await requestAuthData();
+    function requestAuthBot(): Promise<Bot> {
+        return _requestAuthBot(false);
+    }
+
+    /**
+     * Requests that an "authentication" bot be added to the inst for the current browser tab.
+     * Works similarly to {@link os.requestAuthBot}, except that the request will not show a popup if the user is not signed in.
+     *
+     * Auth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.
+     *
+     * Returns a promise that resolves with a bot that contains information about the signed in user session.
+     * Resolves with `null` if the user is not already signed in.
+     *
+     * On success, the `authBot` global variable will reference the bot that was returned by the promise.
+     *
+     * See [Auth Bot Tags](page:tags#auth-bot-tags) for more information.
+     *
+     * See {@link os.requestAuthBot} for a version of this function that shows a popup if the user is not signed in.
+     *
+     * @example Request the auth bot in the background.
+     * const authBot = await os.requestAuthBotInBackground();
+     * if (authBot) {
+     *     os.toast("Logged in!");
+     * } else {
+     *     os.toast("Not logged in.");
+     * }
+     *
+     * @dochash actions/records
+     * @doctitle Records Actions
+     * @docsidebar Records
+     * @docdescription Records are a way to store permenent data in CasualOS.
+     * @docgroup 01-records
+     * @docname os.requestAuthBotInBackground
+     */
+    function requestAuthBotInBackground(): Promise<Bot> {
+        return _requestAuthBot(true);
+    }
+
+    async function _requestAuthBot(background: boolean) {
+        const data = await requestAuthData(background);
 
         if (!data) {
             return null;
@@ -7844,6 +7920,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         name: data.name,
                         hasActiveSubscription: data.hasActiveSubscription,
                         subscriptionTier: data.subscriptionTier,
+                        privacyFeatures: data.privacyFeatures,
                     },
                     TEMPORARY_BOT_PARTITION_ID
                 )
@@ -7854,9 +7931,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return bot;
     }
 
-    function requestAuthData(): Promise<AuthData> {
+    function requestAuthData(background: boolean): Promise<AuthData> {
         const task = context.createTask();
-        const event = calcRequestAuthData(task.taskId);
+        const event = calcRequestAuthData(background, task.taskId);
         return addAsyncAction(task, event);
     }
 

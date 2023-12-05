@@ -1,8 +1,10 @@
 import {
+    APISubscription,
     SubscriptionConfiguration,
     allowAllFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
+    subscriptionMatchesRole,
 } from './SubscriptionConfiguration';
 
 describe('getSubscriptionFeatures()', () => {
@@ -241,6 +243,68 @@ describe('getSubscriptionFeatures()', () => {
         expect(features === config.tiers.beta.features).toBe(true);
     });
 
+    it('should return the features for the default subscription for the user subscriber type', () => {
+        config.subscriptions = [
+            {
+                id: 'default',
+                tier: 'beta',
+                featureList: [],
+                defaultSubscription: true,
+            },
+        ];
+
+        const features = getSubscriptionFeatures(config, null, null, 'user');
+
+        expect(features === config.tiers.beta.features).toBe(true);
+    });
+
+    it('should return the features for the default subscription for the studio subscriber type', () => {
+        config.subscriptions = [
+            {
+                id: 'default',
+                tier: 'beta',
+                featureList: [],
+                defaultSubscription: true,
+            },
+        ];
+
+        const features = getSubscriptionFeatures(config, null, null, 'studio');
+
+        expect(features === config.tiers.beta.features).toBe(true);
+    });
+
+    it('should ignore default features if they are for the wrong subscriber type for users', () => {
+        config.subscriptions = [
+            {
+                id: 'default',
+                tier: 'beta',
+                featureList: [],
+                studioOnly: true,
+                defaultSubscription: true,
+            },
+        ];
+
+        const features = getSubscriptionFeatures(config, null, null, 'user');
+
+        expect(features === config.defaultFeatures.user).toBe(true);
+    });
+
+    it('should ignore default features if they are for the wrong subscriber type for studios', () => {
+        config.subscriptions = [
+            {
+                id: 'default',
+                tier: 'beta',
+                featureList: [],
+                userOnly: true,
+                defaultSubscription: true,
+            },
+        ];
+
+        const features = getSubscriptionFeatures(config, null, null, 'studio');
+
+        expect(features === config.defaultFeatures.studio).toBe(true);
+    });
+
     it('should return the default features for the user subscriber type', () => {
         const features = getSubscriptionFeatures(
             config,
@@ -270,6 +334,31 @@ describe('getSubscriptionFeatures()', () => {
             'active',
             'missing',
             'studio'
+        );
+
+        expect(features).toEqual(allowAllFeatures());
+    });
+
+    it('should return the default features if there are no tiers', () => {
+        delete (config as any).tiers;
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'subId',
+            'user'
+        );
+
+        expect(features).toEqual(config.defaultFeatures.user);
+    });
+
+    it('should return all features if there are no tiers and no default features', () => {
+        delete (config as any).tiers;
+        delete (config as any).defaultFeatures;
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'subId',
+            'user'
         );
 
         expect(features).toEqual(allowAllFeatures());
@@ -332,6 +421,48 @@ describe('getSubscriptionFeatures()', () => {
                 expect(features === config.defaultFeatures.studio).toBe(true);
             });
         }
+    });
+});
+
+describe('subscriptionMatchesRole()', () => {
+    const cases = [['user'] as const, ['studio'] as const];
+
+    describe.each(cases)('%s', (role) => {
+        const subscriptionCases: [string, APISubscription, boolean][] = [
+            [
+                'user only',
+                {
+                    id: 'sub',
+                    userOnly: true,
+                    featureList: [],
+                },
+                role === 'user',
+            ],
+            [
+                'studio only',
+                {
+                    id: 'sub',
+                    studioOnly: true,
+                    featureList: [],
+                },
+                role === 'studio',
+            ],
+            [
+                'any',
+                {
+                    id: 'sub',
+                    featureList: [],
+                },
+                true,
+            ],
+        ];
+
+        it.each(subscriptionCases)(
+            'should support %s subscriptions',
+            (desc, sub, expected) => {
+                expect(subscriptionMatchesRole(sub, role)).toBe(expected);
+            }
+        );
     });
 });
 

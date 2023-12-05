@@ -3,23 +3,25 @@ import { AuxVMImpl, BotManager } from '@casual-simulation/aux-vm-browser';
 import { Subscription } from 'rxjs';
 import { appManager } from '../shared/AppManager';
 import { PlaywrightSimulation } from './PlaywrightSimulation';
+import { v4 as uuid } from 'uuid';
 
 appManager.simulationFactory = async (id, origin, config) => {
+    const configBotId = uuid();
     const indicator = await appManager.getConnectionIndicator(
+        configBotId,
         origin.recordName,
         origin.inst,
         origin.host
     );
     const partitions = PlaywrightSimulation.createPartitions(id, indicator);
     return new PlaywrightSimulation(
-        indicator,
         {
             recordName: null,
             inst: null,
         },
-        id,
         config,
-        new AuxVMImpl(indicator, {
+        new AuxVMImpl(id, {
+            configBotId,
             config,
             partitions,
         })

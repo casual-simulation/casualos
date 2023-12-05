@@ -1,4 +1,12 @@
-import { AuxAuth, LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm';
+import {
+    AuxAuth,
+    LoginHint,
+    LoginStatus,
+    LoginUIAddressStatus,
+    LoginUIStatus,
+    OAuthRedirectRequest,
+    PrivoSignUpInfo,
+} from '@casual-simulation/aux-vm';
 import { AuthData } from '@casual-simulation/aux-common';
 import {
     listenForChannel,
@@ -8,11 +16,31 @@ import {
 } from '../../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/index';
 import {
+    CompleteOpenIDLoginSuccess,
     CreatePublicRecordKeyResult,
+    IsValidDisplayNameResult,
+    IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
+    getFormErrors,
+    CODE_FIELD,
+    DATE_OF_BIRTH_FIELD,
+    DISPLAY_NAME_FIELD,
+    EMAIL_FIELD,
+    FormError,
+    TERMS_OF_SERVICE_FIELD,
+    NAME_FIELD,
+    PARENT_EMAIL_FIELD,
+    ADDRESS_FIELD,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
-import { BehaviorSubject, Subject, merge, from, NEVER } from 'rxjs';
+import {
+    BehaviorSubject,
+    Subject,
+    merge,
+    from,
+    NEVER,
+    firstValueFrom,
+} from 'rxjs';
 import {
     first,
     map,
@@ -22,6 +50,8 @@ import {
     switchMap,
     mergeAll,
 } from 'rxjs/operators';
+import { DateTime } from 'luxon';
+import { OAUTH_LOGIN_CHANNEL_NAME } from '../shared/AuthManager';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
@@ -42,11 +72,31 @@ export class AuthHandler implements AuxAuth {
     );
     private _loginUIStatus: BehaviorSubject<LoginUIStatus> =
         new BehaviorSubject({ page: false });
+    private _oauthRedirect: Subject<OAuthRedirectRequest> = new Subject();
     private _useCustomUI: boolean = false;
     private _providedEmails: Subject<string> = new Subject();
     private _providedSms: Subject<string> = new Subject();
     private _canceledLogins: Subject<void> = new Subject();
     private _providedCodes: Subject<string> = new Subject();
+    private _providedHasAccount: Subject<boolean> = new Subject();
+    private _providedPrivoSignUpInfo: Subject<PrivoSignUpInfo> = new Subject();
+    private _oauthRedirectComplete: Subject<void> = new Subject();
+    private _oauthChannel: BroadcastChannel = new BroadcastChannel(
+        OAUTH_LOGIN_CHANNEL_NAME
+    );
+
+    constructor() {
+        this._oauthChannel.addEventListener('message', (event) => {
+            if (event.data === 'login') {
+                console.log('[AuthHandler] Got oauth login message.');
+                this._oauthRedirectComplete.next();
+            }
+        });
+    }
+
+    async provideOAuthLoginComplete(): Promise<void> {
+        this._oauthRedirectComplete.next();
+    }
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
@@ -58,7 +108,10 @@ export class AuthHandler implements AuxAuth {
         return false;
     }
 
-    async login(backgroundLogin?: boolean): Promise<AuthData> {
+    async login(
+        backgroundLogin?: boolean,
+        hint?: 'sign in' | 'sign up' | null
+    ): Promise<AuthData> {
         if (await this.isLoggedIn()) {
             return this._loginData;
         }
@@ -74,7 +127,7 @@ export class AuthHandler implements AuxAuth {
             let userId: string;
             if (this._useCustomUI) {
                 console.log('[AuthHandler] Attempting login with Custom UI.');
-                userId = await this._loginWithCustomUI();
+                userId = await this._loginWithCustomUI(hint);
             } else {
                 console.log('[AuthHandler] Attempting login with new tab.');
                 userId = await this._loginWithNewTab();
@@ -173,7 +226,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 8;
+        return 9;
     }
 
     async getRecordsOrigin(): Promise<string> {
@@ -195,6 +248,12 @@ export class AuthHandler implements AuxAuth {
         this._loginUIStatus.subscribe((status) => callback(status));
     }
 
+    async addOAuthRedirectCallback(
+        callback: (request: OAuthRedirectRequest) => void
+    ): Promise<void> {
+        this._oauthRedirect.subscribe((request) => callback(request));
+    }
+
     async setUseCustomUI(useCustomUI: boolean) {
         this._useCustomUI = !!useCustomUI;
     }
@@ -203,39 +262,37 @@ export class AuthHandler implements AuxAuth {
         email: string,
         acceptedTermsOfService: boolean
     ): Promise<void> {
+        const errors: FormError[] = [];
+
         if (!acceptedTermsOfService) {
-            this._loginUIStatus.next({
-                page: 'enter_address',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                showAcceptTermsOfServiceError: true,
+            errors.push({
+                for: TERMS_OF_SERVICE_FIELD,
                 errorCode: 'terms_not_accepted',
                 errorMessage: 'You must accept the terms of service.',
-                supportsSms: this._supportsSms,
             });
-            return;
         }
         if (!email) {
-            this._loginUIStatus.next({
-                page: 'enter_address',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                showEnterEmailError: true,
+            errors.push({
+                for: ADDRESS_FIELD,
                 errorCode: 'email_not_provided',
                 errorMessage: 'You must provide an email address.',
-                supportsSms: this._supportsSms,
             });
-            return;
+        } else if (!(await authManager.validateEmail(email))) {
+            errors.push({
+                for: ADDRESS_FIELD,
+                errorCode: 'invalid_email',
+                errorMessage: 'The provided email is not accepted.',
+            });
         }
-        if (!(await authManager.validateEmail(email))) {
+
+        if (errors.length > 0) {
             this._loginUIStatus.next({
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
-                showInvalidEmailError: true,
-                errorCode: 'invalid_email',
-                errorMessage: 'The provided email is not accepted.',
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 supportsSms: this._supportsSms,
+                errors: errors,
             });
             return;
         }
@@ -248,54 +305,48 @@ export class AuthHandler implements AuxAuth {
         sms: string,
         acceptedTermsOfService: boolean
     ): Promise<void> {
+        const errors: FormError[] = [];
+
         if (!acceptedTermsOfService) {
-            this._loginUIStatus.next({
-                page: 'enter_address',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                showAcceptTermsOfServiceError: true,
+            errors.push({
+                for: TERMS_OF_SERVICE_FIELD,
                 errorCode: 'terms_not_accepted',
                 errorMessage: 'You must accept the terms of service.',
-                supportsSms: this._supportsSms,
             });
-            return;
         }
         if (!sms) {
-            this._loginUIStatus.next({
-                page: 'enter_address',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                showEnterSmsError: true,
+            errors.push({
+                for: ADDRESS_FIELD,
                 errorCode: 'sms_not_provided',
                 errorMessage: 'You must provide an SMS number.',
-                supportsSms: this._supportsSms,
             });
             return;
+        } else {
+            sms = sms.trim();
+            if (!sms.startsWith('+')) {
+                errors.push({
+                    for: ADDRESS_FIELD,
+                    errorCode: 'invalid_sms',
+                    errorMessage:
+                        'The phone number must include the country code.',
+                });
+            } else if (!(await authManager.validateSmsNumber(sms))) {
+                errors.push({
+                    for: ADDRESS_FIELD,
+                    errorCode: 'invalid_sms',
+                    errorMessage: 'The provided phone number is not accepted.',
+                });
+            }
         }
 
-        sms = sms.trim();
-        if (!sms.startsWith('+')) {
+        if (errors.length > 0) {
             this._loginUIStatus.next({
                 page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
-                showInvalidSmsError: true,
-                errorCode: 'invalid_sms',
-                errorMessage: 'The phone number must include the country code.',
+                privacyPolicyUrl: this.privacyPolicyUrl,
                 supportsSms: this._supportsSms,
-            });
-            return;
-        }
-
-        if (!(await authManager.validateSmsNumber(sms))) {
-            this._loginUIStatus.next({
-                page: 'enter_address',
-                siteName: this.siteName,
-                termsOfServiceUrl: this.termsOfServiceUrl,
-                showInvalidSmsError: true,
-                errorCode: 'invalid_sms',
-                errorMessage: 'The provided phone number is not accepted.',
-                supportsSms: this._supportsSms,
+                errors: errors,
             });
             return;
         }
@@ -304,9 +355,123 @@ export class AuthHandler implements AuxAuth {
         this._providedSms.next(sms);
     }
 
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
+        return await authManager.isValidEmailAddress(email);
+    }
+
+    async isValidDisplayName(
+        displayName: string,
+        name: string
+    ): Promise<IsValidDisplayNameResult> {
+        return await authManager.isValidDisplayName(displayName, name);
+    }
+
     async provideCode(code: string): Promise<void> {
         console.log('[AuthHandler] Got login code.');
         this._providedCodes.next(code);
+    }
+
+    async provideHasAccount(hasAccount: boolean): Promise<void> {
+        console.log('[AuthHandler] Has account:', hasAccount);
+        this._providedHasAccount.next(hasAccount);
+    }
+
+    async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {
+        const errors: FormError[] = [];
+
+        if (!info.displayName) {
+            errors.push({
+                for: DISPLAY_NAME_FIELD,
+                errorCode: 'display_name_not_provided',
+                errorMessage: 'You must provide a display name.',
+            });
+        }
+        if (!info.name) {
+            errors.push({
+                for: NAME_FIELD,
+                errorCode: 'name_not_provided',
+                errorMessage: 'You must provide a name.',
+            });
+        }
+        if (!info.dateOfBirth) {
+            errors.push({
+                for: DATE_OF_BIRTH_FIELD,
+                errorCode: 'date_of_birth_not_provided',
+                errorMessage: 'You must provide a Birth Date.',
+            });
+        } else {
+            const dob = DateTime.fromJSDate(info.dateOfBirth);
+            if (dob > DateTime.now()) {
+                errors.push({
+                    for: DATE_OF_BIRTH_FIELD,
+                    errorCode: 'invalid_date_of_birth',
+                    errorMessage: 'Your Birth Date cannot be in the future.',
+                });
+            }
+            if (Math.abs(dob.diffNow('years').as('years')) < 18) {
+                if (!info.parentEmail) {
+                    errors.push({
+                        for: PARENT_EMAIL_FIELD,
+                        errorCode: 'parent_email_required',
+                        errorMessage: 'You must enter a parent email address.',
+                    });
+                }
+            } else {
+                if (!info.email) {
+                    errors.push({
+                        for: EMAIL_FIELD,
+                        errorCode: 'email_not_provided',
+                        errorMessage: 'You must provide an email address.',
+                    });
+                }
+
+                if (!info.acceptedTermsOfService) {
+                    errors.push({
+                        for: TERMS_OF_SERVICE_FIELD,
+                        errorCode: 'terms_not_accepted',
+                        errorMessage: 'You must accept the terms of service.',
+                    });
+                }
+            }
+        }
+
+        if (info.email) {
+            if (!(await authManager.validateEmail(info.email))) {
+                errors.push({
+                    for: EMAIL_FIELD,
+                    errorCode: 'invalid_email',
+                    errorMessage: 'The provided email is not accepted.',
+                });
+            }
+        }
+
+        if (info.parentEmail) {
+            if (!(await authManager.validateEmail(info.parentEmail))) {
+                errors.push({
+                    for: PARENT_EMAIL_FIELD,
+                    errorCode: 'invalid_parent_email',
+                    errorMessage: 'The provided email is not accepted.',
+                });
+            }
+        }
+
+        if (errors.length > 0) {
+            this._loginUIStatus.next({
+                page: 'enter_privo_account_info',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                privacyPolicyUrl: this.privacyPolicyUrl,
+                errors: errors,
+            });
+            return;
+        }
+
+        console.log('[AuthHandler] Got Privo sign up info.');
+        this._providedPrivoSignUpInfo.next({
+            ...info,
+        });
     }
 
     async cancelLogin() {
@@ -343,8 +508,10 @@ export class AuthHandler implements AuxAuth {
             avatarUrl: authManager.avatarUrl,
             avatarPortraitUrl: authManager.avatarPortraitUrl,
             name: authManager.name,
+            displayName: authManager.displayName,
             hasActiveSubscription: authManager.hasActiveSubscription,
             subscriptionTier: authManager.subscriptionTier,
+            privacyFeatures: authManager.privacyFeatures,
         };
 
         this._queueTokenRefresh(this._token);
@@ -356,7 +523,7 @@ export class AuthHandler implements AuxAuth {
         });
     }
 
-    private async _loginWithCustomUI(): Promise<string> {
+    private async _loginWithCustomUI(hint: LoginHint): Promise<string> {
         try {
             let canceled = this._canceledLogins
                 .pipe(
@@ -372,25 +539,48 @@ export class AuthHandler implements AuxAuth {
                 return null;
             });
 
-            return await Promise.race<string>([
+            const userId = await Promise.race<string>([
                 canceled,
-                this._tryLoginWithCustomUI(cancelSignal),
+                this._tryLoginWithCustomUI(hint, cancelSignal),
             ]);
-        } finally {
+
+            if (!userId) {
+                this._loginUIStatus.next({
+                    page: false,
+                });
+            }
+
+            return userId;
+        } catch {
             this._loginUIStatus.next({
                 page: false,
             });
         }
     }
 
-    private async _tryLoginWithCustomUI(cancelSignal: {
+    private async _tryLoginWithCustomUI(
+        hint: LoginHint,
+        cancelSignal: {
+            canceled: boolean;
+        }
+    ): Promise<string> {
+        if (authManager.usePrivoLogin) {
+            return this._privoLoginWithCustomUI(hint, cancelSignal);
+        } else {
+            return this._regularLoginWithCustomUI(cancelSignal);
+        }
+    }
+
+    private async _regularLoginWithCustomUI(cancelSignal: {
         canceled: boolean;
     }): Promise<string> {
         this._loginUIStatus.next({
             page: 'enter_address',
             termsOfServiceUrl: this.termsOfServiceUrl,
+            privacyPolicyUrl: this.privacyPolicyUrl,
             siteName: this.siteName,
             supportsSms: this._supportsSms,
+            errors: [],
         });
 
         const loginRequests = merge(
@@ -415,6 +605,7 @@ export class AuthHandler implements AuxAuth {
                         address: result.address,
                         addressType: result.addressType,
                         enterCode: true,
+                        errors: [],
                     });
 
                     return this._providedCodes.pipe(
@@ -433,7 +624,14 @@ export class AuthHandler implements AuxAuth {
                                         address: address,
                                         addressType: addressType,
                                         enterCode: true,
-                                        showInvalidCodeError: true,
+                                        errors: [
+                                            {
+                                                for: CODE_FIELD,
+                                                errorCode: result.errorCode,
+                                                errorMessage:
+                                                    result.errorMessage,
+                                            },
+                                        ],
                                     });
                                 }
                             }
@@ -441,40 +639,15 @@ export class AuthHandler implements AuxAuth {
                     );
                 } else {
                     console.log('[AuthHandler] Unable to send email.');
-                    if (result.errorCode === 'unacceptable_address') {
-                        this._loginUIStatus.next({
-                            page: 'enter_address',
-                            siteName: this.siteName,
-                            termsOfServiceUrl: this.termsOfServiceUrl,
-                            showInvalidEmailError: true,
-                            errorCode: 'invalid_email',
-                            errorMessage:
-                                'Unable to send an email to the provided email address.',
-                            supportsSms: this._supportsSms,
-                        });
-                    } else if (
-                        result.errorCode === 'address_type_not_supported'
-                    ) {
-                        this._loginUIStatus.next({
-                            page: 'enter_address',
-                            siteName: this.siteName,
-                            termsOfServiceUrl: this.termsOfServiceUrl,
-                            showInvalidEmailError: true,
-                            errorCode: 'invalid_email',
-                            errorMessage: 'Email addresses are not supported',
-                            supportsSms: this._supportsSms,
-                        });
-                    } else if (result.errorCode === 'user_is_banned') {
-                        this._loginUIStatus.next({
-                            page: 'enter_address',
-                            siteName: this.siteName,
-                            termsOfServiceUrl: this.termsOfServiceUrl,
-                            showBannedUserError: true,
-                            errorCode: 'user_is_banned',
-                            errorMessage: result.errorMessage,
-                            supportsSms: this._supportsSms,
-                        });
-                    }
+                    const errors = getFormErrors(result);
+                    this._loginUIStatus.next({
+                        page: 'enter_address',
+                        siteName: this.siteName,
+                        termsOfServiceUrl: this.termsOfServiceUrl,
+                        privacyPolicyUrl: this.privacyPolicyUrl,
+                        errors: errors,
+                        supportsSms: this._supportsSms,
+                    });
 
                     return NEVER;
                 }
@@ -491,7 +664,141 @@ export class AuthHandler implements AuxAuth {
         await authManager.loadUserInfo();
         await this._loadUserInfo();
 
+        this._loginUIStatus.next({
+            page: false,
+        });
+
         return authManager.userId;
+    }
+
+    private async _privoLoginWithCustomUI(
+        hint: LoginHint,
+        cancelSignal: {
+            canceled: boolean;
+        }
+    ): Promise<string> {
+        if (hint === 'sign in') {
+            console.log(
+                '[AuthHandler] Hint: sign in. Logging in with Privo...'
+            );
+            return await this._loginWithPrivo(cancelSignal);
+        } else if (hint === 'sign up') {
+            console.log(
+                '[AuthHandler] Hint: sign up. Registering with Privo...'
+            );
+            return await this._registerWithPrivo(cancelSignal);
+        } else {
+            this._loginUIStatus.next({
+                page: 'has_account',
+                privacyPolicyUrl: this.privacyPolicyUrl,
+            });
+
+            const hasAccount = await firstValueFrom(
+                this._providedHasAccount.pipe(
+                    filter(() => !cancelSignal.canceled)
+                )
+            );
+
+            if (hasAccount) {
+                // redirect to privo login
+                return await this._loginWithPrivo(cancelSignal);
+            } else {
+                return await this._registerWithPrivo(cancelSignal);
+            }
+        }
+    }
+
+    private async _loginWithPrivo(cancelSignal: {
+        canceled: boolean;
+    }): Promise<string> {
+        const result = await authManager.loginWithPrivo();
+        if (result.success) {
+            const requestId = result.requestId;
+
+            this._oauthRedirect.next({
+                authorizationUrl: result.authorizationUrl,
+            });
+
+            await firstValueFrom(this._oauthRedirectComplete);
+
+            const loginResult = await authManager.completeOAuthLogin(requestId);
+
+            if (loginResult.success === false) {
+                if (loginResult.errorCode === 'not_completed') {
+                    throw new Error('Login canceled.');
+                } else {
+                    throw new Error('Login failed.');
+                }
+            }
+
+            await authManager.loadUserInfo();
+            await this._loadUserInfo();
+
+            this._loginUIStatus.next({
+                page: false,
+            });
+
+            return authManager.userId;
+        }
+        return null;
+    }
+
+    private async _registerWithPrivo(cancelSignal: {
+        canceled: boolean;
+    }): Promise<string> {
+        // ask for registration info
+        this._loginUIStatus.next({
+            page: 'enter_privo_account_info',
+            termsOfServiceUrl: this.termsOfServiceUrl,
+            privacyPolicyUrl: this.privacyPolicyUrl,
+            siteName: this.siteName,
+            errors: [],
+        });
+
+        while (!cancelSignal.canceled) {
+            const info = await firstValueFrom(
+                this._providedPrivoSignUpInfo.pipe(
+                    filter(() => !cancelSignal.canceled)
+                )
+            );
+
+            const result = await authManager.signUpWithPrivo({
+                acceptedTermsOfService: info.acceptedTermsOfService,
+                displayName: info.displayName,
+                email: info.email,
+                name: info.name,
+                dateOfBirth: info.dateOfBirth,
+                parentEmail: info.parentEmail,
+            });
+
+            if (result.success === false) {
+                console.log(
+                    '[AuthHandler] Failed to sign up with Privo.',
+                    result
+                );
+
+                const errors = getFormErrors(result);
+
+                this._loginUIStatus.next({
+                    page: 'enter_privo_account_info',
+                    termsOfServiceUrl: this.termsOfServiceUrl,
+                    privacyPolicyUrl: this.privacyPolicyUrl,
+                    siteName: this.siteName,
+                    errors: errors,
+                });
+                continue;
+            }
+
+            await authManager.loadUserInfo();
+            await this._loadUserInfo();
+
+            this._loginUIStatus.next({
+                page: 'show_update_password_link',
+                updatePasswordUrl: result.updatePasswordUrl,
+            });
+
+            return authManager.userId;
+        }
     }
 
     private _loginWithNewTab(): Promise<string> {
@@ -578,7 +885,17 @@ export class AuthHandler implements AuxAuth {
         return new URL('/terms', location.origin).href;
     }
 
+    private get privacyPolicyUrl() {
+        return new URL('/privacy-policy', location.origin).href;
+    }
+
     private get _supportsSms() {
         return ENABLE_SMS_AUTHENTICATION === true;
     }
+}
+
+interface ProvidedPrivoInfo {
+    email: string;
+    name: string | undefined | null;
+    dateOfBirth: Date | undefined | null;
 }

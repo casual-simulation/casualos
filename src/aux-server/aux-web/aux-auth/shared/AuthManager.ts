@@ -37,6 +37,13 @@ import type {
     RevokeAllSessionsResult,
     ListedSession,
     ReplaceSessionResult,
+    PrivoSignUpRequestResult,
+    OpenIDLoginRequestResult,
+    ProcessOpenIDAuthorizationCodeRequest,
+    ProcessOpenIDAuthorizationCodeResult,
+    CompleteOpenIDLoginResult,
+    IsValidEmailAddressResult,
+    IsValidDisplayNameResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -48,11 +55,13 @@ import type {
     GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
+import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 const SESSION_KEY = 'sessionKey';
 const CONNECTION_KEY = 'connectionKey';
+export const OAUTH_LOGIN_CHANNEL_NAME = 'aux-login-oauth';
 
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 
@@ -60,11 +69,27 @@ if (typeof (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED === 'undefined') {
     (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED = false;
 }
 
+console.log(
+    `[AppManager] Assume subscriptions supported: ${ASSUME_SUBSCRIPTIONS_SUPPORTED}`
+);
+
 declare const ASSUME_STUDIOS_SUPPORTED: boolean;
 
 if (typeof (globalThis as any).ASSUME_STUDIOS_SUPPORTED === 'undefined') {
     (globalThis as any).ASSUME_STUDIOS_SUPPORTED = false;
 }
+
+console.log(
+    `[AppManager] Assume studios supported: ${ASSUME_STUDIOS_SUPPORTED}`
+);
+
+declare const USE_PRIVO_LOGIN: boolean;
+
+if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
+    (globalThis as any).USE_PRIVO_LOGIN = false;
+}
+
+console.log(`[AppManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
 
 export class AuthManager {
     private _userId: string;
@@ -72,6 +97,7 @@ export class AuthManager {
     private _appMetadata: AppMetadata;
     private _subscriptionsSupported: boolean;
     private _studiosSupported: boolean;
+    private _usePrivoLogin: boolean;
 
     private _loginState: Subject<boolean>;
     private _apiEndpoint: string;
@@ -83,6 +109,7 @@ export class AuthManager {
         this._loginState = new BehaviorSubject<boolean>(false);
         this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
         this._studiosSupported = ASSUME_STUDIOS_SUPPORTED;
+        this._usePrivoLogin = USE_PRIVO_LOGIN;
     }
 
     get userId() {
@@ -113,6 +140,14 @@ export class AuthManager {
         return this._appMetadata?.name;
     }
 
+    get displayName() {
+        return this._appMetadata?.displayName;
+    }
+
+    get privacyFeatures() {
+        return this._appMetadata?.privacyFeatures;
+    }
+
     get subscriptionsSupported() {
         return this._subscriptionsSupported;
     }
@@ -129,6 +164,10 @@ export class AuthManager {
         return this._studiosSupported;
     }
 
+    get usePrivoLogin() {
+        return this._usePrivoLogin;
+    }
+
     get userInfoLoaded() {
         return !!this._userId && !!this.savedSessionKey && !!this._appMetadata;
     }
@@ -138,13 +177,57 @@ export class AuthManager {
     }
 
     async validateEmail(email: string): Promise<boolean> {
+        const result = await this.isValidEmailAddress(email);
+
+        if (result.success) {
+            return result.allowed;
+        } else {
+            // Return true so that the server can validate when we get a server error.
+            return true;
+        }
+    }
+
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
         // Validation is handled on the server
         const indexOfAt = email.indexOf('@');
         if (indexOfAt < 0 || indexOfAt >= email.length) {
-            return false;
+            return {
+                success: true,
+                allowed: false,
+            };
         }
 
-        return true;
+        const result = await axios.post<IsValidEmailAddressResult>(
+            `${this.apiEndpoint}/api/v2/email/valid`,
+            {
+                email,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return result.data;
+    }
+
+    async isValidDisplayName(
+        displayName: string,
+        name: string
+    ): Promise<IsValidDisplayNameResult> {
+        const result = await axios.post<IsValidDisplayNameResult>(
+            `${this.apiEndpoint}/api/v2/displayName/valid`,
+            {
+                displayName,
+                name,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return result.data;
     }
 
     async validateSmsNumber(sms: string): Promise<boolean> {
@@ -732,6 +815,97 @@ export class AuthManager {
         return this._login(phoneNumber, 'phone');
     }
 
+    async loginWithPrivo() {
+        const response = await axios.post<OpenIDLoginRequestResult>(
+            `${this.apiEndpoint}/api/v2/login/privo`,
+            {},
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        const result = response.data;
+        // if (result.success === true) {
+        //     this.savedSessionKey = result.sessionKey;
+        //     this.savedConnectionKey = result.connectionKey;
+        //     this._userId = result.userId;
+        // }
+
+        return result;
+    }
+
+    async signUpWithPrivo(info: PrivoSignUpInfo) {
+        return await this._privoRegister(info);
+    }
+
+    async processAuthCode(
+        params: object
+    ): Promise<ProcessOpenIDAuthorizationCodeResult> {
+        const response = await axios.post<ProcessOpenIDAuthorizationCodeResult>(
+            `${this.apiEndpoint}/api/v2/oauth/code`,
+            {
+                ...params,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return response.data;
+    }
+
+    async completeOAuthLogin(
+        requestId: string
+    ): Promise<CompleteOpenIDLoginResult> {
+        const response = await axios.post<CompleteOpenIDLoginResult>(
+            `${this.apiEndpoint}/api/v2/oauth/complete`,
+            {
+                requestId,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        const result = response.data;
+
+        if (result.success === true) {
+            this.savedSessionKey = result.sessionKey;
+            this.savedConnectionKey = result.connectionKey;
+            this._userId = result.userId;
+        }
+
+        return result;
+    }
+
+    private async _privoRegister(
+        info: PrivoSignUpInfo
+    ): Promise<PrivoSignUpRequestResult> {
+        const response = await axios.post<PrivoSignUpRequestResult>(
+            `${this.apiEndpoint}/api/v2/register/privo`,
+            {
+                email: !!info.email ? info.email : undefined,
+                displayName: info.displayName,
+                name: info.name,
+                dateOfBirth: info.dateOfBirth.toJSON(),
+                parentEmail: info.parentEmail || undefined,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        const result = response.data;
+
+        if (result.success === true) {
+            this.savedSessionKey = result.sessionKey;
+            this.savedConnectionKey = result.connectionKey;
+            this._userId = result.userId;
+        }
+
+        return result;
+    }
+
     async completeLogin(
         userId: string,
         requestId: string,
@@ -917,6 +1091,7 @@ export class AuthManager {
         await this._putAppMetadata({
             avatarUrl: this.avatarUrl,
             avatarPortraitUrl: this.avatarPortraitUrl,
+            displayName: this.displayName,
             name: this.name,
             email: this.email,
             phoneNumber: this.phone,
@@ -969,7 +1144,7 @@ export class AuthManager {
     private async _putAppMetadata(
         metadata: Omit<
             AppMetadata,
-            'hasActiveSubscription' | 'subscriptionTier'
+            'hasActiveSubscription' | 'subscriptionTier' | 'privacyFeatures'
         >
     ): Promise<AppMetadata> {
         const response = await axios.put(

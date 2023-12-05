@@ -1,16 +1,22 @@
 import {
-    GenericHttpHeaders,
-    GenericHttpRequest,
-    GenericPathParameters,
-    GenericQueryStringParameters,
     parseAuthorization,
     RecordsServer,
     validateOrigin,
     getSessionKey,
-    GenericHttpResponse,
-    GenericWebsocketRequest,
 } from './RecordsServer';
-import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
+import {
+    GenericHttpHeaders,
+    GenericHttpRequest,
+    GenericHttpResponse,
+    GenericPathParameters,
+    GenericQueryStringParameters,
+    GenericWebsocketRequest,
+} from './GenericHttpInterface';
+import {
+    AuthController,
+    INVALID_KEY_ERROR_MESSAGE,
+    PRIVO_OPEN_ID_PROVIDER,
+} from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
     formatV1OpenAiKey,
@@ -87,6 +93,8 @@ import {
     YjsPartitionImpl,
     constructInitializationUpdate,
 } from '@casual-simulation/aux-common';
+import { PrivoClientInterface } from './PrivoClient';
+import { DateTime } from 'luxon';
 
 console.log = jest.fn();
 
@@ -182,6 +190,26 @@ describe('RecordsServer', () => {
     const accountOrigin = 'https://account-origin.com';
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
+    let privoClient: PrivoClientInterface;
+    let privoClientMock: {
+        createChildAccount: jest.Mock<
+            ReturnType<PrivoClientInterface['createChildAccount']>
+        >;
+        createAdultAccount: jest.Mock<
+            ReturnType<PrivoClientInterface['createAdultAccount']>
+        >;
+        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
+        generateAuthorizationUrl: jest.Mock<
+            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
+        >;
+        processAuthorizationCallback: jest.Mock<
+            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
+        >;
+        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
+        checkDisplayName: jest.Mock<
+            ReturnType<PrivoClientInterface['checkDisplayName']>
+        >;
+    };
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -196,7 +224,6 @@ describe('RecordsServer', () => {
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
-                        defaultSubscription: true,
                     },
                 ],
                 webhookSecret: 'webhook_secret',
@@ -215,7 +242,22 @@ describe('RecordsServer', () => {
         });
 
         authMessenger = new MemoryAuthMessenger();
-        authController = new AuthController(store, authMessenger, store);
+        privoClient = privoClientMock = {
+            createAdultAccount: jest.fn(),
+            createChildAccount: jest.fn(),
+            getUserInfo: jest.fn(),
+            generateAuthorizationUrl: jest.fn(),
+            processAuthorizationCallback: jest.fn(),
+            checkEmail: jest.fn(),
+            checkDisplayName: jest.fn(),
+        };
+        authController = new AuthController(
+            store,
+            authMessenger,
+            store,
+            undefined,
+            privoClient
+        );
         livekitController = new LivekitController(
             livekitApiKey,
             livekitSecretKey,
@@ -286,6 +328,7 @@ describe('RecordsServer', () => {
             tempInstStore,
             authController,
             policyController,
+            store,
             store,
             store
         );
@@ -506,6 +549,13 @@ describe('RecordsServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    displayName: null,
                 },
                 headers: accountCorsHeaders,
             });
@@ -571,6 +621,13 @@ describe('RecordsServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     subscriptionTier: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    displayName: null,
                 },
                 headers: accountCorsHeaders,
             });
@@ -1172,7 +1229,7 @@ describe('RecordsServer', () => {
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     JSON.stringify({
-                        subscriptionId: 'sub-1',
+                        subscriptionId: 'sub_id',
                         expectedPrice: {
                             currency: 'usd',
                             cost: 100,
@@ -1215,7 +1272,7 @@ describe('RecordsServer', () => {
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     JSON.stringify({
-                        subscriptionId: 'sub-1',
+                        subscriptionId: 'sub_id',
                         expectedPrice: {
                             currency: 'usd',
                             cost: 1000,
@@ -1516,6 +1573,94 @@ describe('RecordsServer', () => {
                 },
             });
         });
+    });
+
+    describe('POST /api/v2/email/valid', () => {
+        let accountHeaders: GenericHttpHeaders;
+        beforeEach(() => {
+            accountHeaders = {
+                origin: accountOrigin,
+            };
+        });
+
+        it('should return whether the email is valid', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/email/valid',
+                    JSON.stringify({
+                        email: 'test@example.com',
+                    }),
+                    accountHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    allowed: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/email/valid', () =>
+            JSON.stringify({
+                email: 'test@example.com',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/email/valid', body, accountHeaders)
+        );
+        testRateLimit('POST', `/api/v2/email/valid`, () =>
+            JSON.stringify({
+                email: 'test@example.com',
+            })
+        );
+    });
+
+    describe('POST /api/v2/displayName/valid', () => {
+        let accountHeaders: GenericHttpHeaders;
+        beforeEach(() => {
+            accountHeaders = {
+                origin: accountOrigin,
+            };
+        });
+
+        it('should return whether the email is valid', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/displayName/valid',
+                    JSON.stringify({
+                        displayName: 'test123',
+                    }),
+                    accountHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    allowed: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/displayName/valid', () =>
+            JSON.stringify({
+                displayName: 'test123',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/displayName/valid', body, accountHeaders)
+        );
+        testRateLimit('POST', `/api/v2/displayName/valid`, () =>
+            JSON.stringify({
+                displayName: 'test123',
+            })
+        );
     });
 
     describe('GET /api/v2/sessions', () => {
@@ -1927,6 +2072,413 @@ describe('RecordsServer', () => {
             JSON.stringify({
                 address: 'test@example.com',
                 addressType: 'email',
+            })
+        );
+    });
+
+    describe('POST /api/v2/login/privo', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return a login request with the authorization URL', async () => {
+            privoClientMock.generateAuthorizationUrl.mockResolvedValueOnce({
+                authorizationUrl: 'https://authorization_url',
+                codeMethod: 'method',
+                codeVerifier: 'verifier',
+                redirectUrl: 'https://redirect_url',
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/privo`,
+                    JSON.stringify({}),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/login/privo', () => JSON.stringify({}));
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/login/privo', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/login/privo`, () => JSON.stringify({}));
+    });
+
+    describe('POST /api/v2/oauth/code', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should save the authorization code', async () => {
+            privoClientMock.processAuthorizationCallback.mockResolvedValueOnce({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+                tokenType: 'Bearer',
+                idToken: 'idToken',
+                expiresIn: 1000,
+                userInfo: {
+                    roleIdentifier: 'roleIdentifier',
+                    serviceId: 'serviceId',
+                    email: 'test@example.com',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    permissions: [],
+                    displayName: 'displayName',
+                },
+            });
+            const expireTime = Date.now() + 10000000;
+
+            await store.saveOpenIDLoginRequest({
+                requestId: 'requestId',
+                state: 'state',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/oauth/code`,
+                    JSON.stringify({
+                        code: 'code',
+                        state: 'state',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(await store.findOpenIDLoginRequest('requestId')).toEqual({
+                requestId: 'requestId',
+                state: 'state',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                authorizationCode: 'code',
+                authorizationTimeMs: expect.any(Number),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+        });
+
+        testOrigin('POST', '/api/v2/oauth/code', () =>
+            JSON.stringify({
+                code: 'code',
+                state: 'requestId',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/oauth/code', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/oauth/code`, () =>
+            JSON.stringify({
+                code: 'code',
+                state: 'requestId',
+            })
+        );
+    });
+
+    describe('POST /api/v2/oauth/complete', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return the session key', async () => {
+            privoClientMock.processAuthorizationCallback.mockResolvedValueOnce({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+                tokenType: 'Bearer',
+                idToken: 'idToken',
+                expiresIn: 1000,
+                userInfo: {
+                    roleIdentifier: 'roleIdentifier',
+                    serviceId: 'serviceId',
+                    email: 'test@example.com',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    permissions: [],
+                    displayName: 'displayName',
+                },
+            });
+
+            const expireTime = Date.now() + 10000000;
+            await store.saveOpenIDLoginRequest({
+                requestId: 'requestId',
+                state: 'state',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                authorizationCode: 'code',
+                authorizationTimeMs: DateTime.utc(
+                    2023,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0
+                ).toMillis(),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/oauth/complete`,
+                    JSON.stringify({
+                        requestId: 'requestId',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId,
+                    sessionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    connectionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/oauth/complete', () =>
+            JSON.stringify({
+                requestId: 'requestId',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/oauth/complete', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/oauth/complete`, () =>
+            JSON.stringify({
+                requestId: 'requestId',
+            })
+        );
+    });
+
+    describe('POST /api/v2/register/privo', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(() => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                // verificationIntegration: 'verificationIntegration',
+                // verificationServiceId: 'verificationServiceId',
+                // verificationSiteId: 'verificationSiteId',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+        });
+
+        it('should return a 200 status code with the registration results', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: 'Test',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: 'displayName',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    updatePasswordUrl: 'link',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/register/privo', () =>
+            JSON.stringify({
+                name: 'Test',
+                email: 'child@example.com',
+                dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                parentEmail: 'parent@example.com',
+                displayName: 'displayName',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/register/privo', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/register/privo`, () =>
+            JSON.stringify({
+                name: 'Test',
+                email: 'child@example.com',
+                dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                parentEmail: 'parent@example.com',
+                displayName: 'displayName',
             })
         );
     });
@@ -10062,6 +10614,71 @@ describe('RecordsServer', () => {
                 });
             });
 
+            it('should include default subscriptions in the list of purchasable subscriptions', async () => {
+                (store.subscriptionConfiguration.subscriptions = [
+                    {
+                        id: 'sub_id',
+                        eligibleProducts: ['product_id'],
+                        featureList: ['Feature 1', 'Feature 2'],
+                        product: 'product_id',
+                    },
+                    {
+                        id: 'default',
+                        name: 'name',
+                        description: 'description',
+                        defaultSubscription: true,
+                        featureList: ['default feature 1'],
+                    },
+                ]),
+                    stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                        {
+                            subscriptions: [],
+                        }
+                    );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [],
+                        purchasableSubscriptions: [
+                            {
+                                id: 'sub_id',
+                                name: 'Product Name',
+                                description: 'Product Description',
+                                featureList: ['Feature 1', 'Feature 2'],
+                                prices: [
+                                    {
+                                        id: 'default',
+                                        cost: 100,
+                                        currency: 'usd',
+                                        interval: 'month',
+                                        intervalLength: 1,
+                                    },
+                                ],
+                            },
+                            {
+                                id: 'default',
+                                name: 'name',
+                                description: 'description',
+                                featureList: ['default feature 1'],
+                                prices: [],
+                                defaultSubscription: true,
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
             it('should return a 403 status code if the origin is invalid', async () => {
                 authenticatedHeaders['origin'] = 'https://wrong.origin.com';
                 const result = await server.handleHttpRequest(
@@ -10287,6 +10904,71 @@ describe('RecordsServer', () => {
                 });
             });
 
+            it('should include default subscriptions in the list of purchasable subscriptions', async () => {
+                (store.subscriptionConfiguration.subscriptions = [
+                    {
+                        id: 'sub_id',
+                        eligibleProducts: ['product_id'],
+                        featureList: ['Feature 1', 'Feature 2'],
+                        product: 'product_id',
+                    },
+                    {
+                        id: 'default',
+                        name: 'name',
+                        description: 'description',
+                        defaultSubscription: true,
+                        featureList: ['default feature 1'],
+                    },
+                ]),
+                    stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                        {
+                            subscriptions: [],
+                        }
+                    );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [],
+                        purchasableSubscriptions: [
+                            {
+                                id: 'sub_id',
+                                name: 'Product Name',
+                                description: 'Product Description',
+                                featureList: ['Feature 1', 'Feature 2'],
+                                prices: [
+                                    {
+                                        id: 'default',
+                                        cost: 100,
+                                        currency: 'usd',
+                                        interval: 'month',
+                                        intervalLength: 1,
+                                    },
+                                ],
+                            },
+                            {
+                                id: 'default',
+                                name: 'name',
+                                description: 'description',
+                                featureList: ['default feature 1'],
+                                prices: [],
+                                defaultSubscription: true,
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
             it('should return a 403 status code if the origin is invalid', async () => {
                 authenticatedHeaders['origin'] = 'https://wrong.origin.com';
                 const result = await server.handleHttpRequest(
@@ -10471,7 +11153,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             userId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 100,
@@ -10515,7 +11197,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             userId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 1000,
@@ -10771,7 +11453,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             studioId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 100,
@@ -10815,7 +11497,7 @@ describe('RecordsServer', () => {
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
                             studioId,
-                            subscriptionId: 'sub-1',
+                            subscriptionId: 'sub_id',
                             expectedPrice: {
                                 currency: 'usd',
                                 cost: 1000,
@@ -11133,20 +11815,18 @@ describe('RecordsServer', () => {
                     )
                 );
 
+                expect(websocketMessenger.getMessages(connectionId)).toEqual([
+                    {
+                        type: 'login_result',
+                        success: false,
+                        errorCode: 'unacceptable_connection_id',
+                        errorMessage:
+                            'A connection ID must be specified when logging in without a connection token.',
+                    },
+                ]);
                 const errors = getWebSockerErrors(connectionId);
 
-                expect(errors).toEqual([
-                    [
-                        WebsocketEventTypes.Error,
-                        1,
-                        {
-                            success: false,
-                            errorCode: 'unacceptable_connection_id',
-                            errorMessage:
-                                'A connection ID must be specified when logging in without a connection token.',
-                        },
-                    ],
-                ]);
+                expect(errors).toEqual([]);
             });
 
             it('should return an error if the login message is improperly formattted', async () => {
@@ -11206,6 +11886,7 @@ describe('RecordsServer', () => {
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
                     {
                         type: 'login_result',
+                        success: true,
                         info: {
                             connectionId: 'clientConnectionId',
                             sessionId: null,
@@ -11393,6 +12074,13 @@ describe('RecordsServer', () => {
                             updates: [],
                             initial: true,
                         },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName,
+                            inst,
+                            branch,
+                        },
                     ]);
                 });
 
@@ -11430,6 +12118,13 @@ describe('RecordsServer', () => {
                             branch,
                             updates: ['abc'],
                             initial: true,
+                        },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName,
+                            inst,
+                            branch,
                         },
                     ]);
                 });
@@ -11471,6 +12166,13 @@ describe('RecordsServer', () => {
                             branch,
                             updates: [],
                             initial: true,
+                        },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName,
+                            inst,
+                            branch,
                         },
                         {
                             type: 'repo/add_updates',
@@ -11525,6 +12227,54 @@ describe('RecordsServer', () => {
                         timestamps: [expect.any(Number)],
                         instSizeInBytes: 3,
                     });
+                });
+            });
+
+            describe('repo/get_updates', () => {
+                it('should get the updates for the branch', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    if (recordName) {
+                        await instStore.saveInst({
+                            recordName,
+                            inst,
+                            markers: [PRIVATE_MARKER],
+                        });
+                    }
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        branch,
+                        ['abc'],
+                        3
+                    );
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/get_updates',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: ['abc'],
+                            timestamps: [expect.any(Number)],
+                        },
+                    ]);
                 });
             });
 
@@ -11597,6 +12347,13 @@ describe('RecordsServer', () => {
                             initial: true,
                         },
                         {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            recordName,
+                            inst,
+                            branch,
+                        },
+                        {
                             type: 'repo/add_updates',
                             recordName,
                             inst,
@@ -11637,7 +12394,7 @@ describe('RecordsServer', () => {
                     expectNoWebSocketErrors(connectionId);
 
                     expect(
-                        websocketMessenger.getMessages(connection2).slice(1)
+                        websocketMessenger.getMessages(connection2).slice(2)
                     ).toEqual([
                         {
                             type: 'repo/receive_action',
@@ -11678,7 +12435,7 @@ describe('RecordsServer', () => {
                     expectNoWebSocketErrors(connectionId);
 
                     expect(
-                        websocketMessenger.getMessages(connection2).slice(1)
+                        websocketMessenger.getMessages(connection2).slice(2)
                     ).toEqual([]);
                 });
             });
@@ -11937,6 +12694,7 @@ describe('RecordsServer', () => {
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
                     {
                         type: 'login_result',
+                        success: true,
                         info: {
                             connectionId: 'clientConnectionId',
                             sessionId: null,

@@ -1,3 +1,5 @@
+export * from './GenericHttpInterface';
+
 export * from './AuthController';
 export * from './AuthStore';
 
@@ -45,3 +47,4 @@ export * from './CachingPolicyStore';
 export * from './CachingConfigStore';
 
 export * from './websockets';
+export * from './forms';

@@ -1,5 +1,7 @@
 <template>
     <div id="app">
+        <auth-ui></auth-ui>
+        <login-ui @visible="onLoginUIVisible()" @hidden="onLoginUIHidden()"></login-ui>
         <load-app>
             <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <bot-portal>
@@ -27,7 +29,7 @@
             </bot-portal>
 
             <html-portals v-show="showCustomApps"></html-portals>
-            <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui>
+            <records-ui @visible="onRecordsUIVisible()" @hidden="onRecordsUIHidden()"></records-ui>
 
             <upload-files></upload-files>
             <show-input></show-input>
@@ -130,7 +132,7 @@
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
 
-            <md-dialog
+            <!-- <md-dialog
                 :md-active.sync="showNotAuthorized"
                 class="not-authorized-dialog"
                 @md-closed="onBarcodeScannerClosed()"
@@ -144,7 +146,7 @@
                     <md-button v-else @click="login()">Login</md-button>
                     <md-button @click="newInst()">New Inst</md-button>
                 </md-dialog-actions>
-            </md-dialog>
+            </md-dialog> -->
 
             <md-snackbar
                 md-position="center"

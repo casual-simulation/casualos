@@ -47,6 +47,7 @@ export default defineConfig(({ command, mode }) => ({
                 player: path.resolve(__dirname, 'player.html'),
                 vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
                 playwright: path.resolve(__dirname, 'playwright.html'),
+                'loading-oauth': path.resolve(__dirname, 'loading-oauth.html'),
             },
         },
         sourcemap: true,

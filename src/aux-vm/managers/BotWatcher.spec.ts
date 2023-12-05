@@ -28,7 +28,7 @@ describe('BotWatcher', () => {
     let userId = 'user';
 
     beforeEach(async () => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('id');
         helper = new BotHelper(vm);
         helper.userId = userId;
 

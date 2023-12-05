@@ -49,6 +49,7 @@ describe('CustomAppHelper', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
@@ -82,10 +83,11 @@ describe('CustomAppHelper', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
-        const helper = new AuxHelper(partitions, runtime);
+        const helper = new AuxHelper('user', partitions, runtime);
 
         for (let [, partition] of iteratePartitions(partitions)) {
             sub.add(

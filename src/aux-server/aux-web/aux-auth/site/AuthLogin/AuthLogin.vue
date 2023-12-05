@@ -1,9 +1,9 @@
 <template>
     <div class="login-container">
-        <form @submit.prevent="login">
+        <form v-if="!usePrivoLogin" @submit.prevent="login">
             <md-card>
                 <md-card-header>
-                    <div class="md-title">Login</div>
+                    <div class="md-title">Sign In</div>
                 </md-card-header>
                 <md-card-content>
                     <div class="md-layout md-gutter">
@@ -65,6 +65,9 @@
                 </md-card-actions>
             </md-card>
         </form>
+        <div v-else>
+            <has-account-card @hasAccount="hasAccount"> </has-account-card>
+        </div>
     </div>
 </template>
 <script src="./AuthLogin.ts"></script>

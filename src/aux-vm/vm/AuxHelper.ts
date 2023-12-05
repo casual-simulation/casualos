@@ -79,10 +79,16 @@ export class AuxHelper extends BaseHelper<Bot> {
 
     /**
      * Creates a new bot helper.
+     * @param configBotId The ID of the config bot.
      * @param partitions The partitions that the helper should use.
+     * @param runtime The runtime that the helper should use.
      */
-    constructor(partitions: AuxPartitions, runtime: AuxRuntime) {
-        super();
+    constructor(
+        configBotId: string,
+        partitions: AuxPartitions,
+        runtime: AuxRuntime
+    ) {
+        super(configBotId);
         this._localEvents = new Subject<RuntimeActions[]>();
         this._remoteEvents = new Subject<RemoteAction[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -287,15 +293,14 @@ export class AuxHelper extends BaseHelper<Bot> {
 
     /**
      * Creates or updates the user bot for the given user.
-     * @param user The user that the bot is for.
+     * @param botId The ID of the bot.
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
-    async createOrUpdateUserBot(indicator: ConnectionIndicator, userBot: Bot) {
+    async createOrUpdateUserBot(botId: string, userBot: Bot) {
         if (!userBot) {
-            const connectionId = getConnectionId(indicator);
             this._log('[AuxHelper] Create user bot');
             await this.createBot(
-                connectionId,
+                botId,
                 {},
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
                     ? TEMPORARY_BOT_PARTITION_ID

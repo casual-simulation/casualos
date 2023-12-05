@@ -1,11 +1,16 @@
 import {
     AddressType,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthUser,
+    PrivacyFeatures,
 } from './AuthStore';
-import { ServerError } from '@casual-simulation/aux-common/Errors';
+import {
+    NotSupportedError,
+    ServerError,
+} from '@casual-simulation/aux-common/Errors';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import {
@@ -33,11 +38,24 @@ import {
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
 import { parseConnectionToken } from '@casual-simulation/aux-common';
+import {
+    PrivoClientInterface,
+    PrivoFeatureStatus,
+    PrivoPermission,
+} from './PrivoClient';
+import { DateTime } from 'luxon';
+import { PrivoConfiguration } from './PrivoConfiguration';
+import { ZodIssue } from 'zod';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
  */
 export const LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 5; // 5 minutes
+
+/**
+ * The number of miliseconds that an Open ID login request should be valid for before expiration.
+ */
+export const OPEN_ID_LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 20; // 20 minutes
 
 /**
  * The number of bytes that should be used for login request IDs.
@@ -63,6 +81,12 @@ export const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24 * 14; // 2 weeks
  * The error message that should be used for invalid_request error messages.
  */
 export const INVALID_REQUEST_ERROR_MESSAGE = 'The login request is invalid.';
+
+/**
+ * The error message that should be used for invalid_request error messages.
+ */
+export const INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE =
+    'The authorization request is invalid.';
 
 /**
  * The maximum allowed number of attempts for completing a login request.
@@ -95,6 +119,11 @@ export const MAX_SMS_ADDRESS_LENGTH = 30;
 export const MAX_OPEN_AI_API_KEY_LENGTH = 100;
 
 /**
+ * The name of the Privo Open ID provider.
+ */
+export const PRIVO_OPEN_ID_PROVIDER = 'privo';
+
+/**
  * Defines a class that is able to authenticate users.
  */
 export class AuthController {
@@ -102,18 +131,20 @@ export class AuthController {
     private _messenger: AuthMessenger;
     private _forceAllowSubscriptionFeatures: boolean;
     private _config: ConfigurationStore;
-    // private _subscriptionConfig: SubscriptionConfiguration | null;
+    private _privoClient: PrivoClientInterface = null;
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
         configStore: ConfigurationStore,
-        forceAllowSubscriptionFeatures: boolean = false
+        forceAllowSubscriptionFeatures: boolean = false,
+        privoClient: PrivoClientInterface = null
     ) {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
+        this._privoClient = privoClient;
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -517,6 +548,607 @@ export class AuthController {
         }
     }
 
+    async requestOpenIDLogin(
+        request: OpenIDLoginRequest
+    ): Promise<OpenIDLoginRequestResult> {
+        try {
+            if (request.provider !== PRIVO_OPEN_ID_PROVIDER) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given provider is not supported.',
+                };
+            }
+
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const requestId = uuid();
+            const state = uuid();
+            const result = await this._privoClient.generateAuthorizationUrl(
+                state
+            );
+
+            const loginRequest: AuthOpenIDLoginRequest = {
+                requestId: requestId,
+                state: state,
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                codeMethod: result.codeMethod,
+                codeVerifier: result.codeVerifier,
+                authorizationUrl: result.authorizationUrl,
+                redirectUrl: result.redirectUrl,
+                completedTimeMs: null,
+                ipAddress: request.ipAddress,
+                scope: result.scope,
+                requestTimeMs: Date.now(),
+                expireTimeMs: Date.now() + OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
+            };
+
+            await this._store.saveOpenIDLoginRequest(loginRequest);
+
+            return {
+                success: true,
+                authorizationUrl: result.authorizationUrl,
+                requestId: requestId,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error occurred while requesting Privo login',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async processOpenIDAuthorizationCode(
+        request: ProcessOpenIDAuthorizationCodeRequest
+    ): Promise<ProcessOpenIDAuthorizationCodeResult> {
+        try {
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const state = request.state;
+            const loginRequest =
+                await this._store.findOpenIDLoginRequestByState(state);
+
+            if (!loginRequest) {
+                console.log('[AuthController] Could not find login request.');
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            let validRequest = true;
+            if (Date.now() >= loginRequest.expireTimeMs) {
+                validRequest = false;
+            } else if (loginRequest.completedTimeMs > 0) {
+                validRequest = false;
+            } else if (loginRequest.authorizationTimeMs > 0) {
+                validRequest = false;
+            } else if (loginRequest.ipAddress !== request.ipAddress) {
+                validRequest = false;
+            }
+
+            if (!validRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (loginRequest.provider !== PRIVO_OPEN_ID_PROVIDER) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            await this._store.saveOpenIDLoginRequestAuthorizationCode(
+                loginRequest.requestId,
+                request.authorizationCode,
+                Date.now()
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error occurred while processing Privo authorization code',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async completeOpenIDLogin(
+        request: CompleteOpenIDLoginRequest
+    ): Promise<CompleteOpenIDLoginResult> {
+        try {
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const requestId = request.requestId;
+            const loginRequest = await this._store.findOpenIDLoginRequest(
+                requestId
+            );
+
+            if (!loginRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            let validRequest = true;
+            if (Date.now() >= loginRequest.expireTimeMs) {
+                validRequest = false;
+            } else if (loginRequest.completedTimeMs > 0) {
+                validRequest = false;
+            } else if (loginRequest.ipAddress !== request.ipAddress) {
+                validRequest = false;
+            }
+
+            if (!validRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (loginRequest.provider !== PRIVO_OPEN_ID_PROVIDER) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (
+                !loginRequest.authorizationTimeMs ||
+                !loginRequest.authorizationCode
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'not_completed',
+                    errorMessage: 'The login request has not been completed.',
+                };
+            }
+
+            const result = await this._privoClient.processAuthorizationCallback(
+                {
+                    code: loginRequest.authorizationCode,
+                    state: loginRequest.state,
+                    codeVerifier: loginRequest.codeVerifier,
+                    redirectUrl: loginRequest.redirectUrl,
+                }
+            );
+
+            const serviceId = result.userInfo.serviceId;
+            const email = result.userInfo.email;
+
+            let user: AuthUser;
+            if (serviceId) {
+                user = await this._store.findUserByPrivoServiceId(
+                    result.userInfo.serviceId
+                );
+            }
+
+            if (!user && email) {
+                user = await this._store.findUserByAddress(email, 'email');
+            }
+
+            if (!user) {
+                console.log(
+                    '[AuthController] [completeOpenIDLogin] Could not find user.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (!user.privoServiceId) {
+                console.log(
+                    `[AuthController] [completeOpenIDLogin] Updating user service ID.`
+                );
+                user = {
+                    ...user,
+                    privoServiceId: serviceId,
+                };
+                await this._store.saveUser({
+                    ...user,
+                });
+            } else if (user.privoServiceId !== serviceId) {
+                console.log(
+                    `[AuthController] [completeOpenIDLogin] User\'s service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            const privacyFeatures = getPrivacyFeaturesFromPermissions(
+                config.featureIds,
+                result.userInfo.permissions
+            );
+
+            if (
+                user.privacyFeatures?.publishData !==
+                    privacyFeatures.publishData ||
+                user.privacyFeatures?.allowPublicData !==
+                    privacyFeatures.allowPublicData
+            ) {
+                console.log(
+                    `[AuthController] [completeOpenIDLogin] Updating user privacy features.`
+                );
+
+                user = {
+                    ...user,
+                    privacyFeatures,
+                };
+                await this._store.saveUser({
+                    ...user,
+                });
+            }
+
+            const sessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const sessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const now = Date.now();
+            const userId = user.id;
+
+            const expiry = now + result.expiresIn * 1000;
+
+            const session: AuthSession = {
+                userId: user.id,
+                sessionId: sessionId,
+
+                requestId: null,
+                oidRequestId: loginRequest.requestId,
+
+                // sessionSecret and sessionId are high-entropy (128 bits of random data)
+                // so we should use a hash that is optimized for high-entropy inputs.
+                secretHash: hashHighEntropyPasswordWithSalt(
+                    sessionSecret,
+                    sessionId
+                ),
+                connectionSecret: connectionSecret,
+                grantedTimeMs: now,
+                revokeTimeMs: null,
+                expireTimeMs: now + SESSION_LIFETIME_MS,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+
+                oidAccessToken: result.accessToken,
+                oidRefreshToken: result.refreshToken,
+                oidIdToken: result.idToken,
+                oidScope: loginRequest.scope,
+                oidTokenType: result.tokenType,
+                oidExpiresAtMs: expiry,
+                oidProvider: loginRequest.provider,
+            };
+            await this._store.markOpenIDLoginRequestComplete(
+                loginRequest.requestId,
+                now
+            );
+            await this._store.saveSession(session);
+
+            return {
+                success: true,
+                userId: session.userId,
+                sessionKey: formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    sessionSecret,
+                    session.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    connectionSecret,
+                    session.expireTimeMs
+                ),
+                expireTimeMs: session.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error occurred while completing Privo login',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async requestPrivoSignUp(
+        request: PrivoSignUpRequest
+    ): Promise<PrivoSignUpRequestResult> {
+        try {
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const lowercaseName = request.name.trim().toLowerCase();
+            const lowercaseDisplayName = request.displayName
+                .trim()
+                .toLowerCase();
+
+            if (lowercaseDisplayName.includes(lowercaseName)) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_display_name',
+                    errorMessage: 'The display name cannot contain your name.',
+                };
+            }
+
+            const now = new Date(Date.now());
+            const years = Math.floor(
+                -DateTime.fromJSDate(request.dateOfBirth)
+                    .diff(DateTime.fromJSDate(now), 'years')
+                    .as('years')
+            );
+            let updatePasswordUrl: string;
+            let serviceId: string;
+            let parentServiceId: string;
+            const email: string = request.email;
+            if (years < 0) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given date of birth cannot be in the future.',
+                };
+            }
+
+            let privacyFeatures: PrivacyFeatures;
+            if (years < config.ageOfConsent) {
+                if (!request.parentEmail) {
+                    return {
+                        success: false,
+                        errorCode: 'parent_email_required',
+                        errorMessage:
+                            'A parent email is required to sign up a child.',
+                    };
+                }
+
+                const result = await this._privoClient.createChildAccount({
+                    childFirstName: request.name,
+                    childDateOfBirth: request.dateOfBirth,
+                    childEmail: request.email,
+                    childDisplayName: request.displayName,
+                    parentEmail: request.parentEmail,
+                    featureIds: [
+                        config.featureIds.childPrivoSSO,
+                        config.featureIds.joinAndCollaborate,
+                        config.featureIds.projectDevelopment,
+                        config.featureIds.publishProjects,
+                        config.featureIds.buildAIEggs,
+                    ],
+                });
+
+                serviceId = result.childServiceId;
+                parentServiceId = result.parentServiceId;
+                updatePasswordUrl = result.updatePasswordLink;
+                privacyFeatures = getPrivacyFeaturesFromPermissions(
+                    config.featureIds,
+                    result.features
+                );
+            } else {
+                if (!request.email) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'An email is required to sign up an adult.',
+                    };
+                }
+
+                const result = await this._privoClient.createAdultAccount({
+                    adultFirstName: request.name,
+                    adultEmail: request.email,
+                    adultDateOfBirth: request.dateOfBirth,
+                    adultDisplayName: request.displayName,
+                    featureIds: [
+                        config.featureIds.adultPrivoSSO,
+                        config.featureIds.joinAndCollaborate,
+                        config.featureIds.projectDevelopment,
+                        config.featureIds.publishProjects,
+                        config.featureIds.buildAIEggs,
+                    ],
+                });
+
+                serviceId = result.adultServiceId;
+                updatePasswordUrl = result.updatePasswordLink;
+                privacyFeatures = getPrivacyFeaturesFromPermissions(
+                    config.featureIds,
+                    result.features
+                );
+            }
+
+            const user: AuthUser = {
+                id: uuid(),
+                email: email,
+                phoneNumber: null,
+                name: request.name,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privoServiceId: serviceId,
+                privoParentServiceId: parentServiceId,
+                privacyFeatures,
+            };
+
+            // TODO: Add user to DB
+            const saveUserResult = await this._store.saveNewUser(user);
+
+            if (saveUserResult.success === false) {
+                console.error(
+                    '[AuthController] Error saving new user',
+                    saveUserResult
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            const userId = user.id;
+            const nowMs = Date.now();
+
+            const newSessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const newSessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const newConnectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+
+            const session: AuthSession = {
+                userId: userId,
+                sessionId: newSessionId,
+                requestId: null,
+                secretHash: hashPasswordWithSalt(
+                    newSessionSecret,
+                    newSessionId
+                ),
+                connectionSecret: newConnectionSecret,
+                grantedTimeMs: nowMs,
+                revokeTimeMs: null,
+                expireTimeMs: nowMs + SESSION_LIFETIME_MS,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+            };
+            await this._store.saveSession(session);
+
+            return {
+                success: true,
+                userId: user.id,
+                updatePasswordUrl,
+                sessionKey: formatV1SessionKey(
+                    user.id,
+                    newSessionId,
+                    newSessionSecret,
+                    session.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    user.id,
+                    newSessionId,
+                    newConnectionSecret,
+                    session.expireTimeMs
+                ),
+                expireTimeMs: session.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while requesting Privo sign up`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     async validateSessionKey(key: string): Promise<ValidateSessionKeyResult> {
         if (typeof key !== 'string' || key === '') {
             return {
@@ -637,6 +1269,7 @@ export class AuthController {
 
                 subscriptionId: subscriptionId ?? undefined,
                 subscriptionTier: subscriptionTier ?? undefined,
+                privacyFeatures: userInfo.privacyFeatures,
             };
         } catch (err) {
             console.error(
@@ -773,6 +1406,7 @@ export class AuthController {
                 allSessionsRevokedTimeMs: userInfo.allSessionRevokeTimeMs,
                 subscriptionId: subscriptionId ?? undefined,
                 subscriptionTier: subscriptionTier ?? undefined,
+                privacyFeatures: userInfo.privacyFeatures,
             };
         } catch (err) {
             console.error(
@@ -1185,16 +1819,61 @@ export class AuthController {
             const { hasActiveSubscription, subscriptionTier: tier } =
                 await this._getSubscriptionInfo(result);
 
+            let privacyFeatures: PrivacyFeatures;
+            let displayName: string = null;
+            const privoConfig = await this._config.getPrivoConfiguration();
+            if (privoConfig && result.privoServiceId) {
+                const userInfo = await this._privoClient.getUserInfo(
+                    result.privoServiceId
+                );
+                privacyFeatures = getPrivacyFeaturesFromPermissions(
+                    privoConfig.featureIds,
+                    userInfo.permissions
+                );
+                displayName = userInfo.displayName;
+
+                if (
+                    result.privacyFeatures?.publishData !==
+                        privacyFeatures.publishData ||
+                    result.privacyFeatures?.allowPublicData !==
+                        privacyFeatures.allowPublicData ||
+                    result.privacyFeatures?.allowAI !==
+                        privacyFeatures.allowAI ||
+                    result.privacyFeatures?.allowPublicInsts !==
+                        privacyFeatures.allowPublicInsts
+                ) {
+                    await this._store.saveUser({
+                        ...result,
+                        privacyFeatures: {
+                            ...privacyFeatures,
+                        },
+                    });
+                }
+            } else if (result.privacyFeatures) {
+                privacyFeatures = {
+                    ...result.privacyFeatures,
+                };
+            } else {
+                privacyFeatures = {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                };
+            }
+
             return {
                 success: true,
                 userId: result.id,
                 name: result.name,
+                displayName,
                 email: result.email,
                 phoneNumber: result.phoneNumber,
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
                 hasActiveSubscription: hasActiveSubscription,
-                subscriptionTier: hasActiveSubscription ? tier : null,
+                subscriptionTier: tier ?? null,
+                privacyFeatures: privacyFeatures,
             };
         } catch (err) {
             console.error(
@@ -1216,23 +1895,13 @@ export class AuthController {
 
         let tier: string = null;
         let sub: SubscriptionConfiguration['subscriptions'][0] = null;
+        const subscriptionConfig: SubscriptionConfiguration =
+            await this._config.getSubscriptionConfiguration();
         if (hasActiveSubscription) {
-            const subscriptionConfig =
-                await this._config.getSubscriptionConfiguration();
             if (user.subscriptionId) {
                 sub = subscriptionConfig?.subscriptions.find(
                     (s) => s.id === user.subscriptionId
                 );
-            }
-            if (!sub) {
-                sub = subscriptionConfig?.subscriptions.find(
-                    (s) => s.defaultSubscription
-                );
-                if (sub) {
-                    console.log(
-                        '[AuthController] [getUserInfo] Using default subscription for user.'
-                    );
-                }
             }
 
             if (!sub) {
@@ -1245,9 +1914,21 @@ export class AuthController {
             }
 
             tier = 'beta';
-            if (sub && sub.tier) {
-                tier = sub.tier;
+        }
+
+        if (!sub) {
+            sub = subscriptionConfig?.subscriptions.find(
+                (s) => s.defaultSubscription
+            );
+            if (sub) {
+                console.log(
+                    '[AuthController] [getUserInfo] Using default subscription for user.'
+                );
             }
+        }
+
+        if (sub) {
+            tier = sub.tier || 'beta';
         }
 
         return {
@@ -1394,6 +2075,313 @@ export class AuthController {
             };
         }
     }
+
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
+        try {
+            const valid = await this._validateAddress(email, 'email');
+
+            if (!valid) {
+                return {
+                    success: true,
+                    allowed: false,
+                };
+            }
+
+            if (this._privoClient) {
+                const config = await this._config.getPrivoConfiguration();
+                if (config) {
+                    const result = await this._privoClient.checkEmail(email);
+                    const allowed = result.available && !result.profanity;
+
+                    return {
+                        success: true,
+                        allowed,
+                        suggestions: result.suggestions,
+                        profanity: result.profanity,
+                    };
+                }
+            }
+
+            return {
+                success: true,
+                allowed: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while checking if email address is valid',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async isValidDisplayName(
+        displayName: string,
+        name?: string
+    ): Promise<IsValidDisplayNameResult> {
+        try {
+            if (this._privoClient) {
+                if (name) {
+                    const lowercaseName = name.trim().toLowerCase();
+                    const lowercaseDisplayName = displayName
+                        .trim()
+                        .toLowerCase();
+                    if (lowercaseDisplayName.includes(lowercaseName)) {
+                        return {
+                            success: true,
+                            allowed: false,
+                            containsName: true,
+                        };
+                    }
+                }
+
+                const config = await this._config.getPrivoConfiguration();
+                if (config) {
+                    const result = await this._privoClient.checkDisplayName(
+                        displayName
+                    );
+                    const allowed = result.available && !result.profanity;
+
+                    return {
+                        success: true,
+                        allowed,
+                        suggestions: result.suggestions,
+                        profanity: result.profanity,
+                    };
+                }
+            }
+
+            return {
+                success: true,
+                allowed: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while checking if display name is valid',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+}
+
+export interface PrivoSignUpRequest {
+    /**
+     * The email address of the user.
+     */
+    email: string | null;
+
+    /**
+     * The display name of the user.
+     */
+    displayName: string;
+
+    /**
+     * The name of the user.
+     */
+    name: string;
+
+    /**
+     * The date of birth of the user.
+     */
+    dateOfBirth: Date;
+
+    /**
+     * The email address of the user's parent.
+     * Null if none was provided in the request.
+     */
+    parentEmail: string | null;
+
+    /**
+     * The IP address that the sign up is from.
+     */
+    ipAddress: string;
+}
+
+export interface OpenIDLoginRequest {
+    /**
+     * The Open ID provider that the login request is for.
+     */
+    provider: string;
+
+    /**
+     * The IP address that the request is from.
+     */
+    ipAddress: string;
+}
+
+export type OpenIDLoginRequestResult =
+    | OpenIDLoginRequestSuccess
+    | OpenIDLoginRequestFailure;
+
+export interface OpenIDLoginRequestSuccess {
+    success: true;
+
+    /**
+     * The URL that should be presented to the user in order for them to login.
+     */
+    authorizationUrl: string;
+
+    /**
+     * The ID of the request that was made.
+     */
+    requestId: string;
+}
+
+export interface OpenIDLoginRequestFailure {
+    success: false;
+    errorCode: ServerError | 'not_supported';
+    errorMessage: string;
+}
+
+export interface ProcessOpenIDAuthorizationCodeRequest {
+    /**
+     * The state that was included in the callback.
+     */
+    state: string;
+
+    /**
+     * The authorization code that was included in the callback.
+     */
+    authorizationCode: string;
+
+    /**
+     * The IP address that the request is from.
+     */
+    ipAddress: string;
+}
+
+export type ProcessOpenIDAuthorizationCodeResult =
+    | ProcessOpenIDAuthorizationCodeSuccess
+    | ProcessOpenIDAuthorizationCodeFailure;
+
+export interface ProcessOpenIDAuthorizationCodeSuccess {
+    success: true;
+}
+
+export interface ProcessOpenIDAuthorizationCodeFailure {
+    success: false;
+    errorCode: ServerError | 'not_supported' | 'invalid_request';
+    errorMessage: string;
+}
+
+export interface CompleteOpenIDLoginRequest {
+    /**
+     * The ID of the login request.
+     */
+    requestId: string;
+
+    /**
+     * The IP address that the request is from.
+     */
+    ipAddress: string;
+}
+
+export type CompleteOpenIDLoginResult =
+    | CompleteOpenIDLoginSuccess
+    | CompleteOpenIDLoginFailure;
+
+export interface CompleteOpenIDLoginSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that the session is for.
+     */
+    userId: string;
+
+    /**
+     * The secret key that provides access for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The connection key that provides websocket access for the session.
+     */
+    connectionKey: string;
+
+    /**
+     * The unix timestamp in miliseconds that the session will expire at.
+     */
+    expireTimeMs: number;
+}
+
+export interface CompleteOpenIDLoginFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | 'not_supported'
+        | 'invalid_request'
+        | 'not_completed';
+    errorMessage: string;
+}
+
+export type PrivoSignUpRequestResult =
+    | PrivoSignUpRequestSuccess
+    | PrivoSignUpRequestFailure;
+
+export interface PrivoSignUpRequestSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that was created.
+     */
+    userId: string;
+
+    /**
+     * The URL that the user can be sent to in order to complete the sign up and set their password.
+     */
+    updatePasswordUrl: string;
+
+    /**
+     * The session key that was issued for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The connection key that was issued for the session.
+     */
+    connectionKey: string;
+
+    /**
+     * The expiration time of the session in miliseconds in Unix time.
+     */
+    expireTimeMs: number;
+}
+
+export interface PrivoSignUpRequestFailure {
+    success: false;
+
+    /**
+     * The code of the error.
+     */
+    errorCode:
+        | 'unacceptable_request'
+        | 'email_already_exists'
+        | 'parent_email_already_exists'
+        | 'parent_email_required'
+        | 'invalid_display_name'
+        | NotSupportedError
+        | ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+
+    /**
+     * The issues that were found with the request.
+     */
+    issues?: ZodIssue[];
 }
 
 export interface LoginRequest {
@@ -1442,6 +2430,12 @@ export interface LoginRequestSuccess {
      * The unix timestamp in miliseconds that the login request will expire at.
      */
     expireTimeMs: number;
+
+    /**
+     * The URL that the user should be redirected to in order to complete the login.
+     * If null, then the user should be shown a code input.
+     */
+    redirectUrl?: string | null;
 }
 
 export interface LoginRequestFailure {
@@ -1558,6 +2552,12 @@ export interface ValidateSessionKeySuccess {
      * The ID of the subscription that the user is subscribed to.
      */
     subscriptionId?: string;
+
+    /**
+     * The privacy features that the user has specified.
+     * If null or omitted, then all features are enabled.
+     */
+    privacyFeatures?: PrivacyFeatures;
 }
 
 export interface ValidateSessionKeyFailure {
@@ -1615,6 +2615,12 @@ export interface ValidateConnectionTokenSuccess {
      * The ID of the subscription that the user is subscribed to.
      */
     subscriptionId?: string;
+
+    /**
+     * The privacy features that the user has specified.
+     * If null or omitted, then all features are enabled.
+     */
+    privacyFeatures?: PrivacyFeatures;
 }
 
 export interface ValidateConnectionTokenFailure {
@@ -1876,6 +2882,11 @@ export interface GetUserInfoSuccess {
     avatarPortraitUrl: string;
 
     /**
+     * The public display name of the user.
+     */
+    displayName: string;
+
+    /**
      * The email address of the user.
      */
     email: string;
@@ -1894,6 +2905,11 @@ export interface GetUserInfoSuccess {
      * The subscription tier that the user is subscribed to.
      */
     subscriptionTier: string;
+
+    /**
+     * The privacy-related features that the user has enabled.
+     */
+    privacyFeatures: PrivacyFeatures;
 }
 
 export interface GetUserInfoFailure {
@@ -1978,4 +2994,98 @@ export interface ListSmsRulesFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;
+}
+
+export type IsValidEmailAddressResult =
+    | IsValidEmailAddressSuccess
+    | IsValidEmailAddressFailure;
+
+export interface IsValidEmailAddressSuccess {
+    success: true;
+    /**
+     * Whether the email address can be used.
+     */
+    allowed: boolean;
+
+    /**
+     * The suggestions for alternate email addresses.
+     */
+    suggestions?: string[];
+
+    /**
+     * Whether the email contains profanity.
+     */
+    profanity?: boolean;
+}
+
+export interface IsValidEmailAddressFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type IsValidDisplayNameResult =
+    | IsValidDisplayNameSuccess
+    | IsValidDisplayNameFailure;
+
+export interface IsValidDisplayNameSuccess {
+    success: true;
+    /**
+     * Whether the email address can be used.
+     */
+    allowed: boolean;
+
+    /**
+     * The suggestions for alternate email addresses.
+     */
+    suggestions?: string[];
+
+    /**
+     * Whether the email contains profanity.
+     */
+    profanity?: boolean;
+
+    /**
+     * Whether the display name contains the user's name.
+     */
+    containsName?: boolean;
+}
+
+export interface IsValidDisplayNameFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export function getPrivacyFeaturesFromPermissions(
+    featureIds: PrivoConfiguration['featureIds'],
+    permissions: (PrivoPermission | PrivoFeatureStatus)[]
+): PrivacyFeatures {
+    const publishData = permissions.some(
+        (p) => p.on && p.featureId === featureIds.projectDevelopment
+    );
+    const allowPublicData =
+        publishData &&
+        permissions.some(
+            (p) => p.on && p.featureId === featureIds.publishProjects
+        );
+
+    // TODO:
+    // Whether the AI features are enabled.
+    const allowAI = permissions.some(
+        (p) => p.on && p.featureId === featureIds.buildAIEggs
+    );
+
+    // Whether the public insts features are enabled.
+    const allowPublicInsts =
+        publishData &&
+        permissions.some(
+            (p) => p.on && p.featureId === featureIds.joinAndCollaborate
+        );
+    return {
+        publishData,
+        allowPublicData,
+        allowAI,
+        allowPublicInsts,
+    };
 }

@@ -20,17 +20,13 @@ describe('BotManager', () => {
     let localEvents: Subject<LocalActions[]>;
 
     beforeEach(() => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('sim');
         localEvents = vm.localEvents = new Subject();
         sim = new BotManager(
-            {
-                connectionId: 'userId',
-            },
             {
                 recordName: null,
                 inst: 'sim',
             },
-            'sim',
             {
                 version: 'v1.0.0',
                 versionHash: 'hash',

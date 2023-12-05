@@ -1489,7 +1489,7 @@ export class RecordsManager {
                 );
             }
         } catch (e) {
-            console.error('[RecordsManager] Error generating skybox:', e);
+            console.error('[RecordsManager] Error generating image:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())

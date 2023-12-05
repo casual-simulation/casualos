@@ -71,7 +71,7 @@ export {
 
     AIGenerateImageAPISuccess,
     AIGeneratedImageAPI,
-} from '../../../src/aux-common/runtime/AuxLibrary';
+} from '../../../src/aux-runtime/runtime/AuxLibrary';
 export { 
     TransactionAction,
     PasteStateOptions,
@@ -95,7 +95,7 @@ export {
     EaseType,
     EaseMode,
     Easing,
-    RecordActionOptions,
+    
     Geolocation,
     SuccessfulGeolocation,
     UnsuccessfulGeolocation,
@@ -166,12 +166,7 @@ export {
     FormAnimationData,
     ListFormAnimationsAction,
 
-    JoinRoomActionOptions,
-    RoomJoinOptions,
-    RoomOptions,
-    RoomTrackOptions,
-    RoomRemoteOptions,
-    SetRoomTrackOptions,
+    
     RegisterPrefixOptions,
 
     Recording,
@@ -181,7 +176,6 @@ export {
     OpenPhotoCameraOptions,
     Photo,
     
-
     EnableCollaborationAction,
     LoadBotsAction,
     LocalFormAnimationAction,
@@ -237,7 +231,6 @@ export {
     AnalyticsRecordEventAction,
 
     BufferFormAddressGLTFAction,
-
 } from '../../../src/aux-common/bots/BotEvents';
 export {
     RecordActionOptions,
@@ -248,12 +241,11 @@ export {
     RoomRemoteOptions,
     SetRoomTrackOptions,
     AIChatOptions,
-
     AIGenerateSkyboxOptions,
     AIGenerateSkyboxBlockadeLabsOptions,
 
-    AIGenerateImageOptions
-} from '../../../src/aux-common/bots/BotEvents';
+    AIGenerateImageOptions,
+} from '../../../src/aux-runtime/runtime/RecordsEvents';
 export { 
     RuntimeBot,
     Bot,
@@ -272,24 +264,20 @@ export {
 } from '../../../src/aux-common/bots/Bot';
 export { 
     AuxVersion
-} from '../../../src/aux-common/runtime/AuxVersion';
+} from '../../../src/aux-runtime/runtime/AuxVersion';
 export { 
     AuxDevice
-} from '../../../src/aux-common/runtime/AuxDevice';
+} from '../../../src/aux-runtime/runtime/AuxDevice';
 export { InstUpdate } from '../../../src/aux-common/bots/StoredAux';
 export {
     GenericError,
     CasualOSError
-} from '../../../src/aux-common/runtime/CasualOSError';
+} from '../../../src/aux-runtime/runtime/CasualOSError';
 
 export {
     AIChatMessage,
 } from '../../../src/aux-records/AIChatInterface';
 export {
-    CreatePublicRecordKeyResult,
-    CreatePublicRecordKeySuccess,
-    CreatePublicRecordKeyFailure,
-
     AvailablePermissions,
     CreateDataPermission,
     ReadDataPermission,
@@ -320,6 +308,11 @@ export {
     UnassignPolicyPermission,
     ReadPolicyPermission,
     ListPoliciesPermission,
+} from '../../../src/aux-common';
+export {
+    CreatePublicRecordKeyResult,
+    CreatePublicRecordKeySuccess,
+    CreatePublicRecordKeyFailure,
 
     RecordDataResult,
     RecordDataSuccess,

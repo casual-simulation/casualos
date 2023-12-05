@@ -90,6 +90,7 @@ import {
     DATE_TAG_PREFIX,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
+    Bot,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import {
@@ -180,6 +181,7 @@ describe('AuxRuntime', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
             };
 
@@ -4200,6 +4202,221 @@ describe('AuxRuntime', () => {
                             removedBots: [],
                             updatedBots: [],
                             version: null,
+                        });
+                    });
+
+                    it('should not mutate the original bot object when adding buffered tag masks', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update1).toEqual({
+                            state: {},
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        let originalBot: Bot = {
+                            id: 'test',
+                            space: 'shared',
+                            tags: {
+                                abc: 'def',
+                            },
+                        };
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: originalBot,
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                        def: 123,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(originalBot).toEqual({
+                            id: 'test',
+                            space: 'shared',
+                            tags: {
+                                abc: 'def',
+                            },
+                        });
+                    });
+
+                    it('should not mutate the original bot tag masks object when adding buffered tag masks', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update1).toEqual({
+                            state: {},
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        let originalBot: Bot = {
+                            id: 'test',
+                            space: 'shared',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {},
+                        };
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: originalBot,
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                        def: 123,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(originalBot).toEqual({
+                            id: 'test',
+                            space: 'shared',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {},
+                        });
+                    });
+
+                    it('should not mutate the original bot tag masks space object when adding buffered tag masks', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update1).toEqual({
+                            state: {},
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        let originalBot: Bot = {
+                            id: 'test',
+                            space: 'shared',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                shared: {},
+                            },
+                        };
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: originalBot,
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                        def: 123,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(originalBot).toEqual({
+                            id: 'test',
+                            space: 'shared',
+                            tags: {
+                                abc: 'def',
+                            },
+                            masks: {
+                                shared: {},
+                            },
                         });
                     });
 
@@ -11367,6 +11584,7 @@ describe('AuxRuntime', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
             };
 
@@ -15833,6 +16051,7 @@ describe('original action tests', () => {
                 supportsAR: true,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
             });
 
@@ -15843,6 +16062,7 @@ describe('original action tests', () => {
                             supportsAR: true,
                             supportsVR: false,
                             isCollaborative: true,
+                            allowCollaborationUpgrade: true,
                             ab1BootstrapUrl: 'bootstrap',
                         },
                     },
@@ -15872,6 +16092,7 @@ describe('original action tests', () => {
                             supportsAR: null,
                             supportsVR: null,
                             isCollaborative: null,
+                            allowCollaborationUpgrade: null,
                             ab1BootstrapUrl: null,
                         },
                     },

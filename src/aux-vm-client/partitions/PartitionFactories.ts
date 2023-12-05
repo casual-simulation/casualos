@@ -1,8 +1,10 @@
 import {
     AuthenticatedConnectionClient,
+    ConnectionClient,
     ConnectionIndicator,
     InstRecordsClient,
     InstRecordsClientTimeSyncConnection,
+    PartitionAuthSource,
     connectionCountMessageSchema,
 } from '@casual-simulation/aux-common';
 import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
@@ -20,6 +22,9 @@ import {
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
 import { TimeSyncController } from '@casual-simulation/timesync';
+
+const DEFAULT_RESEND_UPDATES_INTERVAL_MS = 1000;
+const DEFAULT_RETRY_UPDATES_AFTER_MS = 5000;
 
 /**
  * A map of hostnames to CausalRepoClients.
@@ -39,14 +44,23 @@ let websocketClientCache = new Map<string, InstRecordsClient>();
  */
 export function getClientForHostAndProtocol(
     host: string,
-    indicator: ConnectionIndicator,
+    authSource: PartitionAuthSource,
     protocol: RemoteCausalRepoProtocol
 ): InstRecordsClient {
     if (protocol === 'apiary-aws') {
-        return getAWSApiaryClientForHostAndProtocol(host, indicator);
+        return getAWSApiaryClientForHostAndProtocol(host, authSource);
     } else {
-        return getWebSocketClientForHost(host, indicator);
+        return getWebSocketClientForHost(host, authSource);
     }
+}
+
+function constructInstRecordsClientWithRetry(
+    connection: ConnectionClient
+): InstRecordsClient {
+    const client = new InstRecordsClient(connection);
+    client.resendUpdatesAfterMs = DEFAULT_RETRY_UPDATES_AFTER_MS;
+    client.resendUpdatesIntervalMs = DEFAULT_RESEND_UPDATES_INTERVAL_MS;
+    return client;
 }
 
 /**
@@ -56,7 +70,7 @@ export function getClientForHostAndProtocol(
  */
 export function getAWSApiaryClientForHostAndProtocol(
     host: string,
-    indicator: ConnectionIndicator
+    authSource: PartitionAuthSource
 ): InstRecordsClient {
     let client = awsApiaryClientCache.get(host);
     if (!client) {
@@ -68,7 +82,7 @@ export function getAWSApiaryClientForHostAndProtocol(
             url.protocol = 'wss:';
         }
 
-        const manager = new WebSocketManager(url.href);
+        const manager = new WebSocketManager(url);
         manager.init();
 
         const awsConnection = new ApiGatewayWebsocketConnectionClient(
@@ -76,9 +90,9 @@ export function getAWSApiaryClientForHostAndProtocol(
         );
         const connection = new AuthenticatedConnectionClient(
             awsConnection,
-            indicator
+            authSource
         );
-        client = new InstRecordsClient(connection);
+        client = constructInstRecordsClientWithRetry(connection);
         awsApiaryClientCache.set(host, client);
 
         connection.connect();
@@ -93,7 +107,7 @@ export function getAWSApiaryClientForHostAndProtocol(
  */
 export function getWebSocketClientForHost(
     host: string,
-    indicator: ConnectionIndicator
+    authSource: PartitionAuthSource
 ): InstRecordsClient {
     let client = websocketClientCache.get(host);
     if (!client) {
@@ -105,11 +119,11 @@ export function getWebSocketClientForHost(
             url.protocol = 'wss:';
         }
 
-        const manager = new WebSocketManager(url.href);
+        const manager = new WebSocketManager(url);
         manager.init();
         const inner = new WebsocketConnectionClient(manager.socket);
-        const connection = new AuthenticatedConnectionClient(inner, indicator);
-        client = new InstRecordsClient(connection);
+        const connection = new AuthenticatedConnectionClient(inner, authSource);
+        client = constructInstRecordsClientWithRetry(connection);
         websocketClientCache.set(host, client);
 
         connection.connect();
@@ -124,16 +138,20 @@ export function getWebSocketClientForHost(
  */
 export async function createRemoteYjsPartition(
     config: PartitionConfig,
-    indicator: ConnectionIndicator,
+    authSource: PartitionAuthSource,
     useCache: boolean = true
 ): Promise<YjsPartition> {
     if (config.type === 'remote_yjs') {
         const client = getClientForHostAndProtocol(
             config.host,
-            indicator,
+            authSource,
             config.connectionProtocol
         );
-        const partition = new RemoteYjsPartitionImpl(client, config);
+        const partition = new RemoteYjsPartitionImpl(
+            client,
+            authSource,
+            config
+        );
         await partition.init();
         return partition;
     }
@@ -146,16 +164,20 @@ export async function createRemoteYjsPartition(
  */
 export async function createOtherPlayersRepoPartition(
     config: PartitionConfig,
-    indicator: ConnectionIndicator,
+    authSource: PartitionAuthSource,
     useCache: boolean = true
 ): Promise<OtherPlayersPartition> {
     if (config.type === 'other_players_repo') {
         const client = getClientForHostAndProtocol(
             config.host,
-            indicator,
+            authSource,
             config.connectionProtocol
         );
-        const partition = new OtherPlayersPartitionImpl(client, config);
+        const partition = new OtherPlayersPartitionImpl(
+            client,
+            authSource,
+            config
+        );
         return partition;
     }
     return undefined;
@@ -163,12 +185,12 @@ export async function createOtherPlayersRepoPartition(
 
 export function createTimeSyncController(
     config: AuxTimeSyncConfiguration,
-    indicator: ConnectionIndicator
+    authSource: PartitionAuthSource
 ): TimeSyncController {
     if (config.host) {
         const client = getClientForHostAndProtocol(
             config.host,
-            indicator,
+            authSource,
             config.connectionProtocol
         );
         return new TimeSyncController(

@@ -25,6 +25,11 @@ model User {
     banTime DateTime?
     banReason String?
 
+    privoServiceId String? @unique
+    privoParentServiceId String?
+
+    // oidLoginProvider String?
+
     subscriptionInfoId String? @unique @db.Uuid
     subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
 
@@ -33,6 +38,11 @@ model User {
     subscriptionId String?
     subscriptionPeriodStart DateTime?
     subscriptionPeriodEnd DateTime?
+
+    allowPublishData Boolean?
+    allowPublicData Boolean?
+    allowAI Boolean?
+    allowPublicInsts Boolean?
 
     loginRequests LoginRequest[]
     sessions AuthSession[]
@@ -62,14 +72,23 @@ model LoginRequest {
     requestId String @id
     userId String
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "LoginRequest_userId_fkey1")
-    secretHash String
+    
+    secretHash String?
+
     requestTime DateTime
     expireTime DateTime
     completedTime DateTime?
+    
     attemptCount Int
     address String
     addressType String
     ipAddress String
+
+    // oidCodeVerifier String?
+    // oidCodeMethod String?
+    // oidProvider String?
+    // oidRedirectUrl String?
+    // oidScope String?
     
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -85,12 +104,24 @@ model AuthSession {
 
     secretHash String
     connectionSecret String?
+
+    oidProvider String?
+    oidAccessToken String?
+    oidTokenType String?
+    oidIdToken String?
+    oidRefreshToken String?
+    oidScope String?
+    oidExpiresAtMs Int?
+
     grantedTime DateTime
     expireTime DateTime
     revokeTime DateTime?
 
     requestId String?
     request LoginRequest? @relation(fields: [requestId], references: [requestId])
+
+    oidRequestId String? @db.Uuid
+    oidRequest OpenIDLoginRequest? @relation(fields: [oidRequestId], references: [requestId], map: "AuthSession_oidRequestId_fkey1")
 
     previousSessionId String? @unique
     previousSession AuthSession? @relation("PreviousSession", fields: [previousSessionId], references: [sessionId])
@@ -104,6 +135,31 @@ model AuthSession {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model OpenIDLoginRequest {
+    requestId String @id @db.Uuid
+    state String? @unique @db.Uuid
+
+    provider String
+    codeVerifier String
+    codeMethod String
+    authorizationUrl String
+    redirectUrl String
+    scope String
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    ipAddress String
+
+    authorizationCode String?
+    authorizationTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    authSessions AuthSession[]
 }
 
 model EmailRule {
@@ -502,4 +558,17 @@ model AiSkyboxMetrics {
 
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSkyboxMetrics_studioId_fkey1")
+}
+
+model PrivoClientCredentials {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+    expiresAt DateTime
+
+    accessToken String
+    refreshToken String
+    expiresAtSeconds Int
+    scope String
+
+    @@index([expiresAt])
 }

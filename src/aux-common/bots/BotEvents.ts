@@ -167,7 +167,16 @@ export type AsyncActions =
     | GetWakeLockConfigurationAction
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
-    | OpenPhotoCameraAction;
+    | OpenPhotoCameraAction
+    | EnableCollaborationAction;
+
+export type RemoteBotActions =
+    | GetRemoteCountAction
+    | ListInstUpdatesAction
+    | GetInstStateFromUpdatesAction
+    | CreateInitializationUpdateAction
+    | ApplyUpdatesToInstAction
+    | GetCurrentInstUpdateAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1573,6 +1582,16 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
 }
 
 /**
+ * An event that is used to enable collaboration features.
+ *
+ * @dochash types/os
+ * @docname EnableCollaborationAction
+ */
+export interface EnableCollaborationAction extends AsyncAction {
+    type: 'enable_collaboration';
+}
+
+/**
  * Defines an event that loads bots from the given space that match the given tags and values.
  *
  * @dochash types/os
@@ -2814,6 +2833,12 @@ export interface GoToTagAction {
  */
 export interface RequestAuthDataAction extends AsyncAction {
     type: 'request_auth_data';
+
+    /**
+     * Whether the request should be limited to the background.
+     * Defaults to false.
+     */
+    requestInBackground?: boolean;
 }
 
 /**
@@ -2835,6 +2860,11 @@ export interface AuthData {
     name: string;
 
     /**
+     * The display name of the user.
+     */
+    displayName: string;
+
+    /**
      * The URL of the user's avatar.
      * Null if the user does not have an avatar.
      */
@@ -2847,14 +2877,42 @@ export interface AuthData {
     avatarPortraitUrl: string;
 
     /**
-     * Whether the user has an active subscription to the beta program.
+     * Whether the user has an active subscription that they are paying for.
+     * If false, then the user either has no subscription or has a default subscription.
      */
     hasActiveSubscription: boolean;
 
     /**
      * The subscription tier that is currently active for the user.
+     * If null, then the user has no subscription tier.
+     * Otherwise, then the user is paying for a subscription for has a default subscription.
      */
     subscriptionTier: string | null;
+
+    /**
+     * The privacy features that the user has enabled.
+     */
+    privacyFeatures: {
+        /**
+         * Whether the user is allowed to publish any data.
+         */
+        publishData: boolean;
+
+        /**
+         * Whether the user is allowed to access or publish public data.
+         */
+        allowPublicData: boolean;
+
+        /**
+         * Whether AI is allowed.
+         */
+        allowAI: boolean;
+
+        /**
+         * Whether public insts are allowed.
+         */
+        allowPublicInsts: boolean;
+    };
 }
 
 /**
@@ -4095,6 +4153,19 @@ export function loadSpace(
 }
 
 /**
+ * Creates a EnableCollaborationAction.
+ * @param taskId The ID of the async task.
+ */
+export function enableCollaboration(
+    taskId?: number | string
+): EnableCollaborationAction {
+    return {
+        type: 'enable_collaboration',
+        taskId,
+    };
+}
+
+/**
  * Creates a EnableARAction.
  */
 export function enableAR(options: EnableXROptions = {}): EnableARAction {
@@ -4829,12 +4900,15 @@ export function htmlAppMethod(
 
 /**
  * Creates a RequestAuthDataAction.
+ * @param requestInBackground Whether the request should be made in the background.
  */
 export function requestAuthData(
+    requestInBackground?: boolean,
     taskId?: string | number
 ): RequestAuthDataAction {
     return {
         type: 'request_auth_data',
+        requestInBackground,
         taskId,
     };
 }

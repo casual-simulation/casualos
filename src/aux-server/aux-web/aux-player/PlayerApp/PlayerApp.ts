@@ -88,6 +88,8 @@ import PhotoCamera from '../../shared/vue-components/PhotoCamera/PhotoCamera';
 import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
 import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
 import WakeLock from '../../shared/vue-components/WakeLock/WakeLock';
+import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
+import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -113,6 +115,8 @@ declare function sa_event(name: string, callback: Function): void;
 
 @Component({
     components: {
+        'auth-ui': AuthUI,
+        'login-ui': LoginUI,
         'load-app': LoadApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
@@ -265,7 +269,12 @@ export default class PlayerApp extends Vue {
 
     streamImu: boolean = false;
 
-    showCustomApps: boolean = true;
+    loginUIVisible: boolean = false;
+    recordsUIVisible: boolean = false;
+
+    get showCustomApps(): boolean {
+        return !this.loginUIVisible && !this.recordsUIVisible;
+    }
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -438,12 +447,20 @@ export default class PlayerApp extends Vue {
         });
     }
 
-    hideCustomApps() {
-        this.showCustomApps = false;
+    onRecordsUIVisisble() {
+        this.recordsUIVisible = false;
     }
 
-    displayCustomApps() {
-        this.showCustomApps = true;
+    onRecordsUIHidden() {
+        this.recordsUIVisible = false;
+    }
+
+    onLoginUIVisible() {
+        this.loginUIVisible = true;
+    }
+
+    onLoginUIHidden() {
+        this.loginUIVisible = false;
     }
 
     copy(text: string) {
@@ -1123,7 +1140,9 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'request_auth_data') {
                     try {
-                        const id = await simulation.auth.primary.authenticate();
+                        const id = e.requestInBackground
+                            ? await simulation.auth.primary.authenticateInBackground()
+                            : await simulation.auth.primary.authenticate();
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, id, false)

@@ -1,4 +1,5 @@
 import {
+    KnownErrorCodes,
     getStatusCode,
     parseInstancesList,
     tryDecodeUriComponent,
@@ -11,6 +12,7 @@ import {
     MAX_EMAIL_ADDRESS_LENGTH,
     MAX_OPEN_AI_API_KEY_LENGTH,
     MAX_SMS_ADDRESS_LENGTH,
+    PRIVO_OPEN_ID_PROVIDER,
     ValidateSessionKeyResult,
 } from './AuthController';
 import { parseSessionKey } from './AuthUtils';
@@ -46,106 +48,12 @@ import {
     websocketRequestMessageSchema,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { DEFAULT_BRANCH_NAME } from '@casual-simulation/aux-common';
-
-/**
- * Defines an interface for a generic HTTP request.
- */
-export interface GenericHttpRequest {
-    /**
-     * The path that the HTTP request is for.
-     * Does not include the query string parameters.
-     */
-    path: string;
-
-    /**
-     * The query string parameters.
-     */
-    query: GenericQueryStringParameters;
-
-    /**
-     * The path parameters.
-     * i.e. These are parameters that are calculated from the path of the
-     */
-    pathParams: GenericPathParameters;
-
-    /**
-     * The method that the HTTP request uses.
-     *
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
-     */
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
-
-    /**
-     * The headers for the request.
-     */
-    headers: GenericHttpHeaders;
-
-    /**
-     * The body of the HTTP request.
-     */
-    body: string | Uint8Array | null;
-
-    /**
-     * The IP address that the request is from.
-     */
-    ipAddress: string;
-}
-
-/**
- * Defines an interface for a generic HTTP response.
- */
-export interface GenericHttpResponse {
-    /**
-     * The status code for the response.
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-     *
-     */
-    statusCode: number;
-
-    /**
-     * The list of headers to include in the response.
-     */
-    headers?: GenericHttpHeaders;
-
-    /**
-     * The body of the response.
-     */
-    body?: string | null;
-}
-
-export interface GenericHttpHeaders {
-    [key: string]: string;
-}
-
-export interface GenericQueryStringParameters {
-    [key: string]: string;
-}
-
-export interface GenericPathParameters {
-    [key: string]: string;
-}
-
-/**
- * Defines an interface for a generic Websocket request.
- */
-export interface GenericWebsocketRequest {
-    type: 'connect' | 'disconnect' | 'message';
-
-    /**
-     * The ID of the connection that the server has associated with this request.
-     */
-    connectionId: string;
-
-    /**
-     * The body of the websocket request.
-     */
-    body?: string | Uint8Array | null;
-
-    /**
-     * The IP address of the request.
-     */
-    ipAddress: string;
-}
+import {
+    GenericHttpHeaders,
+    GenericHttpRequest,
+    GenericHttpResponse,
+    GenericWebsocketRequest,
+} from './GenericHttpInterface';
 
 const NOT_LOGGED_IN_RESULT = {
     success: false as const,
@@ -156,52 +64,52 @@ const NOT_LOGGED_IN_RESULT = {
 
 const UNACCEPTABLE_SESSION_KEY = {
     success: false,
-    errorCode: 'unacceptable_session_key',
+    errorCode: 'unacceptable_session_key' as const,
     errorMessage:
         'The given session key is invalid. It must be a correctly formatted string.',
 };
 
 const UNACCEPTABLE_USER_ID = {
     success: false,
-    errorCode: 'unacceptable_user_id',
+    errorCode: 'unacceptable_user_id' as const,
     errorMessage:
         'The given user ID is invalid. It must be a correctly formatted string.',
 };
 
 const INVALID_ORIGIN_RESULT = {
     success: false,
-    errorCode: 'invalid_origin',
+    errorCode: 'invalid_origin' as const,
     errorMessage: 'The request must be made from an authorized origin.',
 };
 
 const OPERATION_NOT_FOUND_RESULT = {
     success: false,
-    errorCode: 'operation_not_found',
+    errorCode: 'operation_not_found' as const,
     errorMessage: 'An operation could not be found for the given request.',
 };
 
 const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
     success: false,
-    errorCode: 'unacceptable_request',
+    errorCode: 'unacceptable_request' as const,
     errorMessage:
         'The request body was not properly formatted. It should be valid JSON.',
 };
 
 const SUBSCRIPTIONS_NOT_SUPPORTED_RESULT = {
     success: false,
-    errorCode: 'not_supported',
+    errorCode: 'not_supported' as const,
     errorMessage: 'Subscriptions are not supported by this server.',
 };
 
 const AI_NOT_SUPPORTED_RESULT = {
     success: false,
-    errorCode: 'not_supported',
+    errorCode: 'not_supported' as const,
     errorMessage: 'AI features are not supported by this server.',
 };
 
 const INSTS_NOT_SUPPORTED_RESULT = {
     success: false,
-    errorCode: 'not_supported',
+    errorCode: 'not_supported' as const,
     errorMessage: 'Inst features are not supported by this server.',
 };
 
@@ -403,6 +311,24 @@ export class RecordsServer {
                 true
             );
         } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/email/valid'
+        ) {
+            return formatResponse(
+                request,
+                await this._isEmailValid(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/displayName/valid'
+        ) {
+            return formatResponse(
+                request,
+                await this._isDisplayNameValid(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'GET' &&
             request.path === '/api/v2/sessions'
         ) {
@@ -454,6 +380,42 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._postLogin(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/login/privo'
+        ) {
+            return formatResponse(
+                request,
+                await this._privoLogin(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/oauth/code'
+        ) {
+            return formatResponse(
+                request,
+                await this._oauthProvideCode(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/oauth/complete'
+        ) {
+            return formatResponse(
+                request,
+                await this._oauthCompleteLogin(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/register/privo'
+        ) {
+            return formatResponse(
+                request,
+                await this._registerPrivo(request),
                 this._allowedAccountOrigins
             );
         } else if (
@@ -1014,6 +976,13 @@ export class RecordsServer {
                 request.connectionId,
                 data as AddUpdatesMessage
             );
+        } else if (data.type === 'repo/get_updates') {
+            await this._websocketController.getUpdates(
+                request.connectionId,
+                data.recordName,
+                data.inst,
+                data.branch
+            );
         } else if (data.type === 'repo/send_action') {
             await this._websocketController.sendAction(
                 request.connectionId,
@@ -1135,6 +1104,71 @@ export class RecordsServer {
             signature,
         });
 
+        return returnResult(result);
+    }
+
+    private async _isEmailValid(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            email: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { email } = parseResult.data;
+        const result = await this._auth.isValidEmailAddress(email);
+        return returnResult(result);
+    }
+
+    private async _isDisplayNameValid(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            displayName: z.string().trim(),
+            name: z.string().trim().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { displayName, name } = parseResult.data;
+        const result = await this._auth.isValidDisplayName(displayName, name);
         return returnResult(result);
     }
 
@@ -3595,6 +3629,153 @@ export class RecordsServer {
         return returnResult(result);
     }
 
+    private async _privoLogin(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const result = await this._auth.requestOpenIDLogin({
+            provider: PRIVO_OPEN_ID_PROVIDER,
+            ipAddress: request.ipAddress,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _oauthProvideCode(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            code: z.string().nonempty(),
+            state: z.string().nonempty(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { code, state } = parseResult.data;
+
+        const result = await this._auth.processOpenIDAuthorizationCode({
+            ipAddress: request.ipAddress,
+            authorizationCode: code,
+            state,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _oauthCompleteLogin(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            requestId: z.string().nonempty(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { requestId } = parseResult.data;
+
+        const result = await this._auth.completeOpenIDLogin({
+            ipAddress: request.ipAddress,
+            requestId,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _registerPrivo(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            email: z.string().nonempty().email().optional(),
+            parentEmail: z.string().nonempty().email().optional(),
+            name: z.string().nonempty(),
+            dateOfBirth: z.coerce.date(),
+            displayName: z.string().nonempty(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { email, parentEmail, name, dateOfBirth, displayName } =
+            parseResult.data;
+
+        const result = await this._auth.requestPrivoSignUp({
+            email,
+            parentEmail,
+            name,
+            dateOfBirth,
+            displayName,
+            ipAddress: request.ipAddress,
+        });
+
+        return returnResult(result);
+    }
+
     private async _postCompleteLogin(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
@@ -3847,6 +4028,7 @@ export class RecordsServer {
                     description: s.description,
                     featureList: s.featureList,
                     prices: s.prices,
+                    defaultSubscription: s.defaultSubscription,
                 })
             ),
         });
@@ -3930,6 +4112,7 @@ export class RecordsServer {
                     description: s.description,
                     featureList: s.featureList,
                     prices: s.prices,
+                    defaultSubscription: s.defaultSubscription,
                 })
             ),
         });
@@ -4280,6 +4463,8 @@ export class RecordsServer {
             phoneNumber: result.phoneNumber,
             hasActiveSubscription: result.hasActiveSubscription,
             subscriptionTier: result.subscriptionTier,
+            privacyFeatures: result.privacyFeatures,
+            displayName: result.displayName,
         });
     }
 
@@ -4376,7 +4561,7 @@ export class RecordsServer {
 }
 
 export function returnResult<
-    T extends { success: false; errorCode: string } | { success: true }
+    T extends { success: false; errorCode: KnownErrorCodes } | { success: true }
 >(result: T): GenericHttpResponse {
     return {
         statusCode: getStatusCode(result),

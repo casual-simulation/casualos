@@ -6,6 +6,7 @@ import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
 import { injectHtml } from 'vite-plugin-html';
+import { listEnvironmentFiles, loadEnvFiles } from '../../script/vite-utils';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
@@ -22,10 +23,6 @@ const casualOsPackages = fs
     .map((folder) => `@casual-simulation/${folder}`);
 
 const allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com https://auxplayer.org https://static.auxplayer.org`;
-
-const config = process.env.SERVER_CONFIG
-    ? JSON.parse(process.env.SERVER_CONFIG)
-    : null;
 
 export default defineConfig(({ command, mode }) => {
     let apiEndpoint: string | null = null;
@@ -46,6 +43,32 @@ export default defineConfig(({ command, mode }) => {
     } else if (command === 'serve') {
         frontendOrigin = 'http://localhost:3000';
     }
+
+    const env = process.env.NODE_ENV;
+    const DEVELOPMENT = command === 'serve' && env !== 'production';
+
+    const auxServerDir = path.resolve(__dirname, '..', '..');
+    const serverDir = path.resolve(auxServerDir, 'aux-backend', 'server');
+
+    const envFiles = [
+        ...listEnvironmentFiles(serverDir),
+        ...listEnvironmentFiles(auxServerDir),
+    ];
+
+    loadEnvFiles(
+        envFiles.filter(
+            (file) => !file.endsWith('.dev.env.json') || DEVELOPMENT
+        )
+    );
+
+    if (envFiles.length < 0) {
+        console.log('[Env] No environment files found.');
+    }
+
+    const config = process.env.SERVER_CONFIG
+        ? JSON.parse(process.env.SERVER_CONFIG)
+        : null;
+
     return {
         cacheDir: path.resolve(
             __dirname,
@@ -108,11 +131,12 @@ export default defineConfig(({ command, mode }) => {
                         command !== 'build')
             ),
             ASSUME_SUBSCRIPTIONS_SUPPORTED: JSON.stringify(
-                command === 'serve' || (config && config.subscriptions)
+                !!(config && config.subscriptions)
             ),
             ASSUME_STUDIOS_SUPPORTED: JSON.stringify(
-                command === 'serve' || (config && config.subscriptions)
+                !!(config && !!config.subscriptions)
             ),
+            USE_PRIVO_LOGIN: JSON.stringify(!!(config && config.privo)),
         },
         publicDir,
         resolve: {
