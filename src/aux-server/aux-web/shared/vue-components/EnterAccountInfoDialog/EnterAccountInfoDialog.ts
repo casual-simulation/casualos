@@ -82,7 +82,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get displayNameFieldClass() {
         const hasDisplayNameError = this.errors.some(
-            (e) => e.for === DATE_OF_BIRTH_FIELD
+            (e) => e.for === DISPLAY_NAME_FIELD
         );
         return hasDisplayNameError ? 'md-invalid' : '';
     }

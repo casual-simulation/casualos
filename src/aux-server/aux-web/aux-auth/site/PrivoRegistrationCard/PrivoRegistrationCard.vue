@@ -20,12 +20,7 @@
                                     :disabled="processing"
                                     @blur="checkDisplayName()"
                                 />
-                                <span v-if="showDisplayNameError" class="md-error"
-                                    >This display name is not allowed</span
-                                >
-                                <span v-if="showDisplayNameContainsNameError" class="md-error"
-                                    >The display name cannot contain your name.</span
-                                >
+                                <field-errors field="displayName" :errors="errors" />
                             </md-field>
 
                             <md-field :class="nameFieldClass">
@@ -38,9 +33,7 @@
                                     :disabled="processing"
                                     @blur="checkDisplayName()"
                                 />
-                                <span v-if="showNameError" class="md-error"
-                                    >This name is not allowed</span
-                                >
+                                <field-errors field="name" :errors="errors" />
                             </md-field>
 
                             <md-datepicker
@@ -51,13 +44,11 @@
                             >
                                 <label>Date of Birth</label>
 
-                                <span v-if="showDateOfBirthError" class="md-error">
-                                    This Date of Birth is not allowed
-                                </span>
+                                <field-errors field="dateOfBirth" :errors="errors" />
                             </md-datepicker>
 
                             <md-field v-if="showEmail" :class="emailFieldClass">
-                                <label for="email">Email</label>
+                                <label for="email">{{ registerEmailFieldHint }}</label>
                                 <md-input
                                     name="email"
                                     id="email"
@@ -66,18 +57,7 @@
                                     :disabled="processing"
                                     @blur="checkEmail()"
                                 />
-                                <span v-if="showEmailError" class="md-error"
-                                    >This email is not allowed</span
-                                >
-                                <span v-else-if="showInvalidAddressError" class="md-error"
-                                    >This value is not recognized as an email address</span
-                                >
-                                <span v-else-if="showEnterAddressError" class="md-error"
-                                    >Please enter an email address</span
-                                >
-                                <span v-else-if="showBannedUserError" class="md-error"
-                                    >This user has been banned</span
-                                >
+                                <field-errors field="email" :errors="errors" />
                             </md-field>
 
                             <md-field v-if="requireParentEmail" :class="parentEmailFieldClass">
@@ -89,22 +69,12 @@
                                     v-model="parentEmail"
                                     :disabled="processing"
                                 />
-                                <span v-if="showParentEmailError" class="md-error"
-                                    >This email is not allowed</span
-                                >
-                                <span v-else-if="showEnterParentEmailError" class="md-error">
-                                    Please enter an email address
-                                </span>
-                                <span v-else-if="showInvalidParentEmailError" class="md-error"
-                                    >This value is not recognized as an email address</span
-                                >
+                                <field-errors field="parentEmail" :errors="errors" />
                             </md-field>
                         </div>
                     </div>
                     <div class="terms-of-service-container" v-if="requireTermsOfService">
-                        <div v-show="showTermsOfServiceError" class="terms-of-service-error">
-                            Please accept the terms of service.
-                        </div>
+                        <field-errors field="termsOfService" :errors="errors" />
                         <div class="terms-of-service-wrapper">
                             <md-checkbox v-model="acceptedTerms" id="terms-of-service">
                             </md-checkbox>

@@ -887,7 +887,7 @@ export class AuthManager {
                 email: !!info.email ? info.email : undefined,
                 displayName: info.displayName,
                 name: info.name,
-                dateOfBirth: info.dateOfBirth.toJSON(),
+                dateOfBirth: info.dateOfBirth?.toJSON(),
                 parentEmail: info.parentEmail || undefined,
             },
             {
