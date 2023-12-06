@@ -157,7 +157,8 @@
         "remark-parse": "11.0.0",
         "remark-rehype": "11.0.0",
         "rehype-stringify": "10.0.0",
-        "remark-toc": "9.0.0"
+        "remark-toc": "9.0.0",
+        "rollup-plugin-visualizer": "5.10.0"
     },
     "dependencies": {},
     "prisma": {

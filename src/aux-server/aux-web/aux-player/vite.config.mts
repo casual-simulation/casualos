@@ -14,6 +14,7 @@ import {
 } from '../../script/vite-utils';
 import writeFilesPlugin from '../../plugins/write-files-plugin';
 import md from '../../plugins/markdown-plugin';
+import { visualizer } from "rollup-plugin-visualizer";
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
@@ -130,7 +131,7 @@ export default defineConfig(({ command, mode }) => ({
             }
         }),
         ...(command === 'build'
-            ? [generateDependencyGraphRollupPlugin(distDir)]
+            ? [generateDependencyGraphRollupPlugin(distDir), visualizer()]
             : []),
     ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
