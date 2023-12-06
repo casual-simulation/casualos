@@ -60,6 +60,8 @@ export function createConfigs(dev, version) {
     const extraVariables = {};
     if (dev) {
         extraVariables.S3_ENDPOINT = JSON.stringify('http://s3:4566');
+    } else {
+        extraVariables.S3_ENDPOINT = 'undefined';
     }
 
     return [
