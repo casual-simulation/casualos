@@ -41,12 +41,19 @@
                 <md-field v-if="instOptions.length > 0">
                     <label for="instOption">staticInst=</label>
                     <md-select v-model="instSelection" name="instOption" id="instOption">
-                        <md-option value="new-inst">new inst</md-option>
+                        <md-option value="new-inst">(new inst)</md-option>
                         <md-option v-for="option in instOptions" :key="option" :value="option">{{
                             option
                         }}</md-option>
                     </md-select>
                 </md-field>
+
+                <p v-if="privacyPolicyUrl">
+                    <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
+                </p>
+                <p v-if="termsOfServiceUrl">
+                    <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
+                </p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button

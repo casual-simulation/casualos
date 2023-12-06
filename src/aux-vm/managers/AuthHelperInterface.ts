@@ -10,6 +10,7 @@ import {
     LoginHint,
     LoginStatus,
     LoginUIStatus,
+    PolicyUrls,
     PrivoSignUpInfo,
 } from '../auth/AuxAuth';
 
@@ -169,4 +170,9 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Logs the user out.
      */
     logout(): Promise<void>;
+
+    /**
+     * Gets the URLs for the different policies (privacy policy, terms of service, etc.).
+     */
+    getPolicyUrls(): Promise<PolicyUrls>;
 }

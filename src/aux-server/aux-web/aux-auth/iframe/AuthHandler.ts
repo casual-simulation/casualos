@@ -5,6 +5,7 @@ import {
     LoginUIAddressStatus,
     LoginUIStatus,
     OAuthRedirectRequest,
+    PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { AuthData } from '@casual-simulation/aux-common';
@@ -92,6 +93,13 @@ export class AuthHandler implements AuxAuth {
                 this._oauthRedirectComplete.next();
             }
         });
+    }
+
+    async getPolicyUrls(): Promise<PolicyUrls> {
+        return {
+            privacyPolicyUrl: this.privacyPolicyUrl,
+            termsOfServiceUrl: this.termsOfServiceUrl,
+        };
     }
 
     async provideOAuthLoginComplete(): Promise<void> {

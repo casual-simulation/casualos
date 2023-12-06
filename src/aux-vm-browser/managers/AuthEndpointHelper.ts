@@ -6,6 +6,7 @@ import {
     LoginStatus,
     LoginUIStatus,
     OAuthRedirectRequest,
+    PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
@@ -527,6 +528,25 @@ export class AuthEndpointHelper implements AuthHelperInterface {
 
     protected async _logoutCore() {
         return await this._proxy.logout();
+    }
+
+    async getPolicyUrls(): Promise<PolicyUrls> {
+        if (!hasValue(this._origin)) {
+            return {
+                privacyPolicyUrl: null,
+                termsOfServiceUrl: null,
+            };
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                privacyPolicyUrl: null,
+                termsOfServiceUrl: null,
+            };
+        }
+        return await this._proxy.getPolicyUrls();
     }
 
     private _createNewTab() {
