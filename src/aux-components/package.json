@@ -79,12 +79,12 @@
         "useragent": "^2.3.0",
         "uuid": "^8.3.2",
         "vue": "^2.7.15",
-        "vue-class-component": "^6.3.2",
+        "vue-class-component": "7.2.6",
         "vue-clipboard2": "0.3.1",
         "vue-color": "^2.7.0",
         "vue-filepond": "^4.0.3",
         "vue-material": "1.0.0-beta-15",
-        "vue-property-decorator": "^7.2.0",
+        "vue-property-decorator": "9.1.2",
         "vue-router": "3.5.4"
     },
     "devDependencies": {
