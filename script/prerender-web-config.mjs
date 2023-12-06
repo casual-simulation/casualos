@@ -1,14 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import root from './root-path.cjs';
 
-const outputFolder = path.resolve(__dirname, '..', './temp');
+const outputFolder = path.resolve(root, './temp');
 const output = path.join(outputFolder, 'config.json');
 
-const distFolder = path.resolve(
-    __dirname,
-    '..',
-    './src/aux-server/aux-web/dist/api'
-);
+const distFolder = path.resolve(root, './src/aux-server/aux-web/dist/api');
 const distOutput = path.join(distFolder, 'config');
 
 const webConfig = {
