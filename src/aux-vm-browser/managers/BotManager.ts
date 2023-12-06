@@ -278,6 +278,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                         origin.inst
                     }/${DEFAULT_BRANCH_NAME}`,
                 },
+                connectionId: configBotId,
             };
         }
 

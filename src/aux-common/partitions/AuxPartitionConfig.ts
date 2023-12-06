@@ -260,6 +260,11 @@ export interface YjsPartitionConfig extends PartitionConfigBase {
      * The options for handling remote events.
      */
     remoteEvents?: PartitionRemoteEvents | boolean;
+
+    /**
+     * The ID of the user's connection.
+     */
+    connectionId?: string;
 }
 
 /**
