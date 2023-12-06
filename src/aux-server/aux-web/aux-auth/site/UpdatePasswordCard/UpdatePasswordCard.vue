@@ -1,7 +1,7 @@
 <template>
     <div>
         <md-card>
-            <md-card-header>Account Created</md-card-header>
+            <md-card-header><div class="md-title">Account Created</div></md-card-header>
             <md-card-content class="input-dialog-content">
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">

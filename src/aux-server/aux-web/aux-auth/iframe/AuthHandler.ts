@@ -448,11 +448,12 @@ export class AuthHandler implements AuxAuth {
         }
 
         if (info.parentEmail) {
-            if (!(await authManager.validateEmail(info.parentEmail))) {
+            if (!(await authManager.validateEmail(info.parentEmail, true))) {
                 errors.push({
                     for: PARENT_EMAIL_FIELD,
                     errorCode: 'invalid_parent_email',
-                    errorMessage: 'The provided email is not accepted.',
+                    errorMessage:
+                        'The provided email must be a valid email address.',
                 });
             }
         }

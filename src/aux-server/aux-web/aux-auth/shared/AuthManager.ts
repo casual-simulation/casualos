@@ -176,8 +176,17 @@ export class AuthManager {
         return this._loginState;
     }
 
-    async validateEmail(email: string): Promise<boolean> {
-        const result = await this.isValidEmailAddress(email);
+    /**
+     * Determines if the given email address is valid.
+     * @param email The email address to check.
+     * @param structureOnly Whether to only check that the email address is structured correctly.
+     * @returns
+     */
+    async validateEmail(
+        email: string,
+        structureOnly?: boolean
+    ): Promise<boolean> {
+        const result = await this.isValidEmailAddress(email, structureOnly);
 
         if (result.success) {
             return result.allowed;
@@ -187,8 +196,15 @@ export class AuthManager {
         }
     }
 
+    /**
+     * Determines if the given email address is valid.
+     * @param email The email address to check.
+     * @param structureOnly Whether to only check that the email address is structured correctly.
+     * @returns
+     */
     async isValidEmailAddress(
-        email: string
+        email: string,
+        structureOnly?: boolean
     ): Promise<IsValidEmailAddressResult> {
         // Validation is handled on the server
         const indexOfAt = email.indexOf('@');
@@ -196,6 +212,13 @@ export class AuthManager {
             return {
                 success: true,
                 allowed: false,
+            };
+        }
+
+        if (structureOnly) {
+            return {
+                success: true,
+                allowed: true,
             };
         }
 
