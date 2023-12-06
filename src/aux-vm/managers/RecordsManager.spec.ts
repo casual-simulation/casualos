@@ -108,6 +108,7 @@ describe('RecordsManager', () => {
             isValidEmailAddress: jest.fn(),
             provideHasAccount: jest.fn(),
             providePrivoSignUpInfo: jest.fn(),
+            getPolicyUrls: jest.fn(),
             getRecordsOrigin: jest
                 .fn()
                 .mockResolvedValue('http://localhost:3002'),
@@ -150,6 +151,7 @@ describe('RecordsManager', () => {
             isValidEmailAddress: jest.fn(),
             provideHasAccount: jest.fn(),
             providePrivoSignUpInfo: jest.fn(),
+            getPolicyUrls: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },

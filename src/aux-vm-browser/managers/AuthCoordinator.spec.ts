@@ -101,6 +101,7 @@ describe('AuthCoordinator', () => {
             isValidEmailAddress: jest.fn(),
             provideHasAccount: jest.fn(),
             providePrivoSignUpInfo: jest.fn(),
+            getPolicyUrls: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
