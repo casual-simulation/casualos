@@ -10,6 +10,7 @@ import {
     getCurrentInstUpdate,
     getInstStateFromUpdates,
     getRemoteCount,
+    getRemotes,
     listInstUpdates,
 } from '../bots';
 import { Action, remote } from '../common';
@@ -53,6 +54,7 @@ describe('YjsPartition', () => {
             partition = new YjsPartitionImpl({
                 type: 'yjs',
                 remoteEvents: {
+                    get_remotes: true,
                     get_remote_count: true,
                     list_inst_updates: true,
                     get_inst_state_from_updates: true,
@@ -60,6 +62,7 @@ describe('YjsPartition', () => {
                     apply_updates_to_inst: true,
                     get_current_inst_update: true,
                 },
+                connectionId: 'connectionId',
             });
 
             sub = partition.onEvents.subscribe((e) => events.push(...e));
@@ -67,6 +70,49 @@ describe('YjsPartition', () => {
 
         afterEach(() => {
             sub.unsubscribe();
+        });
+
+        describe('get_remotes', () => {
+            it(`should return the configured connection ID`, async () => {
+                const events = [] as Action[];
+                partition.onEvents.subscribe((e) => events.push(...e));
+
+                await waitAsync();
+
+                await partition.sendRemoteEvents([
+                    remote(getRemotes(), undefined, undefined, 'task1'),
+                ]);
+
+                expect(events).toEqual([
+                    asyncResult('task1', ['connectionId']),
+                ]);
+            });
+
+            it(`should return an empty list if there is no connection ID`, async () => {
+                partition = new YjsPartitionImpl({
+                    type: 'yjs',
+                    remoteEvents: {
+                        get_remotes: true,
+                        get_remote_count: true,
+                        list_inst_updates: true,
+                        get_inst_state_from_updates: true,
+                        create_initialization_update: true,
+                        apply_updates_to_inst: true,
+                        get_current_inst_update: true,
+                    },
+                });
+
+                const events = [] as Action[];
+                partition.onEvents.subscribe((e) => events.push(...e));
+
+                await waitAsync();
+
+                await partition.sendRemoteEvents([
+                    remote(getRemotes(), undefined, undefined, 'task1'),
+                ]);
+
+                expect(events).toEqual([asyncResult('task1', [])]);
+            });
         });
 
         describe('get_remote_count', () => {

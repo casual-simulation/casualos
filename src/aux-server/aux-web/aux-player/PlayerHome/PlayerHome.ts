@@ -75,6 +75,8 @@ export default class PlayerHome extends Vue {
     recordSelection: string = null;
     instSelection: string = null;
     joinCode: string = null;
+    privacyPolicyUrl: string = null;
+    termsOfServiceUrl: string = null;
 
     errors: FormError[] = [];
 
@@ -89,6 +91,24 @@ export default class PlayerHome extends Vue {
 
     get botManager() {
         return appManager.simulationManager.primary;
+    }
+
+    get startButtonLabel() {
+        if (
+            this.biosSelection === 'private inst' ||
+            this.biosSelection === 'public inst' ||
+            this.biosSelection === 'static inst'
+        ) {
+            return 'Load';
+        } else if (
+            this.biosSelection === 'sign in' ||
+            this.biosSelection === 'sign up' ||
+            this.biosSelection === 'sign out'
+        ) {
+            return 'Continue';
+        } else {
+            return 'Start';
+        }
     }
 
     @Watch('query')
@@ -216,6 +236,11 @@ export default class PlayerHome extends Vue {
                 }
             }
         }
+
+        appManager.auth.primary.getPolicyUrls().then((urls) => {
+            this.privacyPolicyUrl = urls.privacyPolicyUrl;
+            this.termsOfServiceUrl = urls.termsOfServiceUrl;
+        });
     }
 
     private async _showBiosOptions() {
@@ -255,6 +280,8 @@ export default class PlayerHome extends Vue {
             this._loadPublicInst();
         } else if (option === 'enter join code') {
             this._loadJoinCode(joinCode);
+        } else {
+            this.showBios = true;
         }
     }
 

@@ -28,9 +28,9 @@
     "exclude": [
         "**/node_modules/**",
         "./aux-web/aux-player/sw.ts",
-        "./aux-web/aux-player/vite.config.ts",
+        "./aux-web/aux-player/vite.config.mts",
         "./aux-web/aux-auth/sw.ts",
-        "./aux-web/aux-auth/vite.config.ts"
+        "./aux-web/aux-auth/vite.config.mts"
     ],
     "references": [
         { "path": "../aux-common" },

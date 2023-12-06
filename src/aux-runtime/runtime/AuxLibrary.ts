@@ -513,6 +513,9 @@ export type Mod = BotTags | Bot;
 
 /**
  * An interface that is used to say which user/device/session an event should be sent to.
+ *
+ * @dochash types/os
+ * @docname SessionSelector
  */
 export interface SessionSelector {
     userId?: string;
@@ -6699,6 +6702,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (user) {
             let inst = getTag(user, 'inst');
             if (hasValue(inst)) {
+                if (Array.isArray(inst)) {
+                    return inst[0].toString();
+                }
                 return inst.toString();
             }
             return undefined;
@@ -9813,9 +9819,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @dochash actions/event
      * @docgroup 01-event-actions
      * @docname remote
-     *
-     * // TODO: Enable documentation for the remote function
-     * @hidden
      */
     function remote(
         action: BotAction,
@@ -9872,9 +9875,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @dochash actions/event
      * @docgroup 01-event-actions
      * @docname sendRemoteData
-     *
-     * // TODO: Enable documentation for the remoteWhisper function
-     * @hidden
      */
     function remoteWhisper(
         remoteId: string | string[],

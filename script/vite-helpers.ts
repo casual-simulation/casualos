@@ -11,7 +11,7 @@ export function generateDependencyGraphRollupPlugin(
     return {
         name: 'casualos:generate_dependency_graph',
         buildEnd() {
-            const deps = [];
+            const deps = [] as any[];
             for (const id of this.getModuleIds()) {
                 const m = this.getModuleInfo(id);
                 if (m != null && !m.isExternal) {
@@ -30,3 +30,10 @@ export function generateDependencyGraphRollupPlugin(
         },
     };
 }
+
+export const root = path.resolve(__dirname, '..');
+export const src = path.resolve(root, 'src');
+export const nodeModules = path.resolve(root, 'node_modules');
+
+export const auxServerDir = path.resolve(src, 'aux-server');
+export const defaultPolicies = path.resolve(root, 'policies', 'default');

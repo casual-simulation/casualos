@@ -345,12 +345,13 @@ export const subscriptionConfigSchema = z.object({
                 .optional(),
             defaultPeriodLength: z
                 .object({
-                    days: z.number().int().positive().optional(),
-                    months: z.number().int().positive().optional(),
+                    days: z.number().int().nonnegative().optional(),
+                    months: z.number().int().nonnegative().optional(),
                 })
                 .describe(
                     'The length of the period for users that do not have a subscription. Defaults to 1 month and 0 days.'
                 )
+                .optional()
                 .default({
                     days: 0,
                     months: 1,

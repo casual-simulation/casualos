@@ -278,6 +278,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                         origin.inst
                     }/${DEFAULT_BRANCH_NAME}`,
                 },
+                connectionId: configBotId,
             };
         }
 
@@ -299,7 +300,13 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._origin = origin;
         this._config = config;
         this._authHelper =
-            auth ?? new AuthHelper(config.authOrigin, config.recordsOrigin);
+            auth ??
+            new AuthHelper(
+                config.authOrigin,
+                config.recordsOrigin,
+                undefined,
+                config.requirePrivoLogin
+            );
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
     }

@@ -64,11 +64,13 @@ export class PrismaPolicyStore implements PolicyStore {
         if (policy) {
             policies.push(policy.document as unknown as PolicyDocument);
         }
-        const userResult = await this._client.user.findUnique({
-            where: {
-                id: userId,
-            },
-        });
+        const userResult = userId
+            ? await this._client.user.findUnique({
+                  where: {
+                      id: userId,
+                  },
+              })
+            : null;
 
         return {
             policies,

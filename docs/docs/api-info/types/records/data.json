@@ -5,56 +5,83 @@
     "pageSidebarLabel": "Data",
     "contents": [
         {
-            "id": 3104,
+            "id": 3690,
             "order": 9999,
             "name": "RecordDataFailure",
             "reflection": {
-                "id": 3104,
+                "id": 3690,
                 "name": "RecordDataFailure",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a failed \"record data\" result.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a failed \"record data\" result."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-create"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-create"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "2"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "2"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RecordDataFailure\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RecordDataFailure"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3106,
+                        "id": 3692,
                         "name": "errorCode",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error code for the failure.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error code for the failure."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 642,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L642"
                             }
                         ],
                         "type": {
@@ -66,11 +93,15 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "not_logged_in"
+                                    "value": "not_supported"
                                 },
                                 {
                                     "type": "literal",
                                     "value": "invalid_record_key"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "unacceptable_request"
                                 },
                                 {
                                     "type": "literal",
@@ -82,15 +113,11 @@
                                 },
                                 {
                                     "type": "literal",
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
                                     "value": "subscription_limit_reached"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "unacceptable_request"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_supported"
                                 },
                                 {
                                     "type": "literal",
@@ -108,20 +135,26 @@
                         }
                     },
                     {
-                        "id": 3107,
+                        "id": 3693,
                         "name": "errorMessage",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error message for the failure.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error message for the failure."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 657,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L657"
                             }
                         ],
                         "type": {
@@ -130,22 +163,28 @@
                         }
                     },
                     {
-                        "id": 3108,
+                        "id": 3694,
                         "name": "errorReason",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {
                             "isOptional": true
                         },
                         "comment": {
-                            "shortText": "The reason for the error.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The reason for the error."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 662,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L662"
                             }
                         ],
                         "type": {
@@ -163,16 +202,17 @@
                         }
                     },
                     {
-                        "id": 3105,
+                        "id": 3691,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 637,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L637"
                             }
                         ],
                         "type": {
@@ -184,12 +224,11 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3106,
-                            3107,
-                            3108,
-                            3105
+                            3692,
+                            3693,
+                            3694,
+                            3691
                         ]
                     }
                 ],
@@ -197,85 +236,114 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 636,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L636"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a failed \"record data\" result.",
-                "text": "",
+                "text": "Defines an interface that represents a failed \"record data\" result.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-create"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "2"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RecordDataFailure\n"
+                        "text": "RecordDataFailure"
                     }
                 ]
             },
             "group": "01-create"
         },
         {
-            "id": 3099,
+            "id": 3685,
             "order": 9999,
             "name": "RecordDataResult",
             "reflection": {
-                "id": 3099,
+                "id": 3685,
                 "name": "RecordDataResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "variant": "declaration",
+                "kind": 2097152,
                 "flags": {},
                 "comment": {
-                    "shortText": "The possible results of a record data request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "The possible results of a record data request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "doctitle",
-                            "paramName": "",
-                            "text": "Data Types"
+                            "tag": "@doctitle",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Data Types"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docsidebar",
-                            "paramName": "",
-                            "text": "Data"
+                            "tag": "@docsidebar",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docdescription",
-                            "paramName": "",
-                            "text": "Data records are used to store key/value pairs of data."
+                            "tag": "@docdescription",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Data records are used to store key/value pairs of data."
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-create"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-create"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "0"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "0"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RecordDataResult\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RecordDataResult"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -283,7 +351,8 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 605,
-                        "character": 12
+                        "character": 12,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L605"
                     }
                 ],
                 "type": {
@@ -291,111 +360,136 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 3100,
-                            "name": "RecordDataSuccess"
+                            "target": 3686,
+                            "name": "RecordDataSuccess",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3686,
+                            "qualifiedName": "RecordDataSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3104,
-                            "name": "RecordDataFailure"
+                            "target": 3690,
+                            "name": "RecordDataFailure",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3690,
+                            "qualifiedName": "RecordDataFailure"
                         }
                     ]
                 }
             },
             "comment": {
-                "shortText": "The possible results of a record data request.",
-                "text": "",
+                "text": "The possible results of a record data request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "doctitle",
-                        "paramName": "",
                         "text": "Data Types"
                     },
                     {
                         "tagName": "docsidebar",
-                        "paramName": "",
                         "text": "Data"
                     },
                     {
                         "tagName": "docdescription",
-                        "paramName": "",
                         "text": "Data records are used to store key/value pairs of data."
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-create"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "0"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RecordDataResult\n"
+                        "text": "RecordDataResult"
                     }
                 ]
             },
             "group": "01-create"
         },
         {
-            "id": 3100,
+            "id": 3686,
             "order": 9999,
             "name": "RecordDataSuccess",
             "reflection": {
-                "id": 3100,
+                "id": 3686,
                 "name": "RecordDataSuccess",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a successful \"record data\" result.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a successful \"record data\" result."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-create"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-create"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "1"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "1"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RecordDataSuccess\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RecordDataSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3103,
+                        "id": 3689,
                         "name": "address",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The address that the data is stored at.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The address that the data is stored at."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 625,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L625"
                             }
                         ],
                         "type": {
@@ -404,20 +498,26 @@
                         }
                     },
                     {
-                        "id": 3102,
+                        "id": 3688,
                         "name": "recordName",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The name of the record that the data was recorded to.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The name of the record that the data was recorded to."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 620,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L620"
                             }
                         ],
                         "type": {
@@ -426,16 +526,17 @@
                         }
                     },
                     {
-                        "id": 3101,
+                        "id": 3687,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 616,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L616"
                             }
                         ],
                         "type": {
@@ -447,11 +548,10 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3103,
-                            3102,
-                            3101
+                            3689,
+                            3688,
+                            3687
                         ]
                     }
                 ],
@@ -459,89 +559,112 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 615,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L615"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a successful \"record data\" result.",
-                "text": "",
+                "text": "Defines an interface that represents a successful \"record data\" result.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-create"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "1"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RecordDataSuccess\n"
+                        "text": "RecordDataSuccess"
                     }
                 ]
             },
             "group": "01-create"
         },
         {
-            "id": 3119,
+            "id": 3705,
             "order": 9999,
             "name": "GetDataFailure",
             "reflection": {
-                "id": 3119,
+                "id": 3705,
                 "name": "GetDataFailure",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that repeesents a failed \"get data\" result.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "Defines an interface that repeesents a failed \"get data\" result."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "02-get"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "02-get"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "3"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "3"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "GetDataFailure\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "GetDataFailure"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3121,
+                        "id": 3707,
                         "name": "errorCode",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error code for the failure.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error code for the failure."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 735,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L735"
                             }
                         ],
                         "type": {
@@ -553,7 +676,7 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "not_logged_in"
+                                    "value": "not_supported"
                                 },
                                 {
                                     "type": "literal",
@@ -561,11 +684,11 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "record_not_found"
+                                    "value": "unacceptable_request"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "action_not_supported"
+                                    "value": "record_not_found"
                                 },
                                 {
                                     "type": "literal",
@@ -573,15 +696,15 @@
                                 },
                                 {
                                     "type": "literal",
+                                    "value": "action_not_supported"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
                                     "value": "subscription_limit_reached"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "unacceptable_request"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_supported"
                                 },
                                 {
                                     "type": "literal",
@@ -591,20 +714,26 @@
                         }
                     },
                     {
-                        "id": 3122,
+                        "id": 3708,
                         "name": "errorMessage",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error message for the failure.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error message for the failure."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 744,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L744"
                             }
                         ],
                         "type": {
@@ -613,16 +742,17 @@
                         }
                     },
                     {
-                        "id": 3120,
+                        "id": 3706,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 731,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L731"
                             }
                         ],
                         "type": {
@@ -634,11 +764,10 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3121,
-                            3122,
-                            3120
+                            3707,
+                            3708,
+                            3706
                         ]
                     }
                 ],
@@ -646,70 +775,87 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 730,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L730"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that repeesents a failed \"get data\" result.",
-                "text": "",
+                "text": "Defines an interface that repeesents a failed \"get data\" result.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "02-get"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "3"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "GetDataFailure\n"
+                        "text": "GetDataFailure"
                     }
                 ]
             },
             "group": "02-get"
         },
         {
-            "id": 3109,
+            "id": 3695,
             "order": 9999,
             "name": "GetDataResult",
             "reflection": {
-                "id": 3109,
+                "id": 3695,
                 "name": "GetDataResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "variant": "declaration",
+                "kind": 2097152,
                 "flags": {},
                 "comment": {
-                    "shortText": "The possible results of a get data request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "The possible results of a get data request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "02-get"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "02-get"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "0"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "0"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "GetDataResult\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "GetDataResult"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -717,7 +863,8 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 673,
-                        "character": 12
+                        "character": 12,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L673"
                     }
                 ],
                 "type": {
@@ -725,96 +872,124 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 3110,
-                            "name": "GetDataSuccess"
+                            "target": 3696,
+                            "name": "GetDataSuccess",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3696,
+                            "qualifiedName": "GetDataSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3119,
-                            "name": "GetDataFailure"
+                            "target": 3705,
+                            "name": "GetDataFailure",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3705,
+                            "qualifiedName": "GetDataFailure"
                         }
                     ]
                 }
             },
             "comment": {
-                "shortText": "The possible results of a get data request.",
-                "text": "",
+                "text": "The possible results of a get data request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "02-get"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "0"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "GetDataResult\n"
+                        "text": "GetDataResult"
                     }
                 ]
             },
             "group": "02-get"
         },
         {
-            "id": 3110,
+            "id": 3696,
             "order": 9999,
             "name": "GetDataSuccess",
             "reflection": {
-                "id": 3110,
+                "id": 3696,
                 "name": "GetDataSuccess",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a successful \"get data\" result.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a successful \"get data\" result."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "02-get"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "02-get"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "1"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "1"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "GetDataSuccess\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "GetDataSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3112,
+                        "id": 3698,
                         "name": "data",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The data that was stored.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The data that was stored."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 689,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L689"
                             }
                         ],
                         "type": {
@@ -823,42 +998,59 @@
                         }
                     },
                     {
-                        "id": 3117,
+                        "id": 3703,
                         "name": "deletePolicy",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The delete policy that the data uses.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The delete policy that the data uses."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 714,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L714"
                             }
                         ],
                         "type": {
                             "type": "reference",
-                            "name": "UserPolicy"
+                            "target": {
+                                "sourceFileName": "../src/aux-records/DataRecordsStore.ts",
+                                "qualifiedName": "UserPolicy"
+                            },
+                            "name": "UserPolicy",
+                            "package": "@casual-simulation/aux-records"
                         }
                     },
                     {
-                        "id": 3118,
+                        "id": 3704,
                         "name": "markers",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The list of markers that have been applied to the data.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The list of markers that have been applied to the data."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 719,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L719"
                             }
                         ],
                         "type": {
@@ -870,20 +1062,26 @@
                         }
                     },
                     {
-                        "id": 3114,
+                        "id": 3700,
                         "name": "publisherId",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The ID of the user that owns the record.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the user that owns the record."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 699,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L699"
                             }
                         ],
                         "type": {
@@ -892,20 +1090,26 @@
                         }
                     },
                     {
-                        "id": 3113,
+                        "id": 3699,
                         "name": "recordName",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The name of the record.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The name of the record."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 694,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L694"
                             }
                         ],
                         "type": {
@@ -914,20 +1118,26 @@
                         }
                     },
                     {
-                        "id": 3115,
+                        "id": 3701,
                         "name": "subjectId",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The ID of the user that sent the data.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the user that sent the data."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 704,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L704"
                             }
                         ],
                         "type": {
@@ -936,16 +1146,17 @@
                         }
                     },
                     {
-                        "id": 3111,
+                        "id": 3697,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 684,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L684"
                             }
                         ],
                         "type": {
@@ -954,41 +1165,51 @@
                         }
                     },
                     {
-                        "id": 3116,
+                        "id": 3702,
                         "name": "updatePolicy",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The update policy that the data uses.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The update policy that the data uses."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 709,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L709"
                             }
                         ],
                         "type": {
                             "type": "reference",
-                            "name": "UserPolicy"
+                            "target": {
+                                "sourceFileName": "../src/aux-records/DataRecordsStore.ts",
+                                "qualifiedName": "UserPolicy"
+                            },
+                            "name": "UserPolicy",
+                            "package": "@casual-simulation/aux-records"
                         }
                     }
                 ],
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3112,
-                            3117,
-                            3118,
-                            3114,
-                            3113,
-                            3115,
-                            3111,
-                            3116
+                            3698,
+                            3703,
+                            3704,
+                            3700,
+                            3699,
+                            3701,
+                            3697,
+                            3702
                         ]
                     }
                 ],
@@ -996,89 +1217,112 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 683,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L683"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a successful \"get data\" result.",
-                "text": "",
+                "text": "Defines an interface that represents a successful \"get data\" result.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "02-get"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "1"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "GetDataSuccess\n"
+                        "text": "GetDataSuccess"
                     }
                 ]
             },
             "group": "02-get"
         },
         {
-            "id": 3128,
+            "id": 3714,
             "order": 9999,
             "name": "EraseDataFailure",
             "reflection": {
-                "id": 3128,
+                "id": 3714,
                 "name": "EraseDataFailure",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a failed result for an erase data request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a failed result for an erase data request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "03-erase"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "03-erase"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "2"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "2"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "EraseDataFailure\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "EraseDataFailure"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3130,
+                        "id": 3716,
                         "name": "errorCode",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error code for the failure.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error code for the failure."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 793,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L793"
                             }
                         ],
                         "type": {
@@ -1090,11 +1334,11 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "not_logged_in"
+                                    "value": "invalid_record_key"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "invalid_record_key"
+                                    "value": "unacceptable_request"
                                 },
                                 {
                                     "type": "literal",
@@ -1102,19 +1346,19 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "action_not_supported"
-                                },
-                                {
-                                    "type": "literal",
                                     "value": "not_authorized"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "subscription_limit_reached"
+                                    "value": "action_not_supported"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "unacceptable_request"
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "subscription_limit_reached"
                                 },
                                 {
                                     "type": "literal",
@@ -1124,20 +1368,26 @@
                         }
                     },
                     {
-                        "id": 3131,
+                        "id": 3717,
                         "name": "errorMessage",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error message for the failure.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error message for the failure."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 804,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L804"
                             }
                         ],
                         "type": {
@@ -1146,16 +1396,17 @@
                         }
                     },
                     {
-                        "id": 3129,
+                        "id": 3715,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 788,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L788"
                             }
                         ],
                         "type": {
@@ -1167,11 +1418,10 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3130,
-                            3131,
-                            3129
+                            3716,
+                            3717,
+                            3715
                         ]
                     }
                 ],
@@ -1179,70 +1429,87 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 787,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L787"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a failed result for an erase data request.",
-                "text": "",
+                "text": "Defines an interface that represents a failed result for an erase data request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "03-erase"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "2"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "EraseDataFailure\n"
+                        "text": "EraseDataFailure"
                     }
                 ]
             },
             "group": "03-erase"
         },
         {
-            "id": 3123,
+            "id": 3709,
             "order": 9999,
             "name": "EraseDataResult",
             "reflection": {
-                "id": 3123,
+                "id": 3709,
                 "name": "EraseDataResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "variant": "declaration",
+                "kind": 2097152,
                 "flags": {},
                 "comment": {
-                    "shortText": "The possible results of an erase data request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "The possible results of an erase data request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "03-erase"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "03-erase"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "0"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "0"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "EraseDataResult\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "EraseDataResult"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -1250,7 +1517,8 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 755,
-                        "character": 12
+                        "character": 12,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L755"
                     }
                 ],
                 "type": {
@@ -1258,96 +1526,124 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 3124,
-                            "name": "EraseDataSuccess"
+                            "target": 3710,
+                            "name": "EraseDataSuccess",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3710,
+                            "qualifiedName": "EraseDataSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3128,
-                            "name": "EraseDataFailure"
+                            "target": 3714,
+                            "name": "EraseDataFailure",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3714,
+                            "qualifiedName": "EraseDataFailure"
                         }
                     ]
                 }
             },
             "comment": {
-                "shortText": "The possible results of an erase data request.",
-                "text": "",
+                "text": "The possible results of an erase data request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "03-erase"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "0"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "EraseDataResult\n"
+                        "text": "EraseDataResult"
                     }
                 ]
             },
             "group": "03-erase"
         },
         {
-            "id": 3124,
+            "id": 3710,
             "order": 9999,
             "name": "EraseDataSuccess",
             "reflection": {
-                "id": 3124,
+                "id": 3710,
                 "name": "EraseDataSuccess",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a successful result for an erase data request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a successful result for an erase data request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "03-erase"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "03-erase"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "1"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "1"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "EraseDataSuccess\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "EraseDataSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3127,
+                        "id": 3713,
                         "name": "address",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The address of the data that was erased.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The address of the data that was erased."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 776,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L776"
                             }
                         ],
                         "type": {
@@ -1356,20 +1652,26 @@
                         }
                     },
                     {
-                        "id": 3126,
+                        "id": 3712,
                         "name": "recordName",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The name of the record that the data was erased from.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The name of the record that the data was erased from."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 771,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L771"
                             }
                         ],
                         "type": {
@@ -1378,16 +1680,17 @@
                         }
                     },
                     {
-                        "id": 3125,
+                        "id": 3711,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 766,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L766"
                             }
                         ],
                         "type": {
@@ -1399,11 +1702,10 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3127,
-                            3126,
-                            3125
+                            3713,
+                            3712,
+                            3711
                         ]
                     }
                 ],
@@ -1411,85 +1713,103 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 765,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L765"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a successful result for an erase data request.",
-                "text": "",
+                "text": "Defines an interface that represents a successful result for an erase data request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "03-erase"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "1"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "EraseDataSuccess\n"
+                        "text": "EraseDataSuccess"
                     }
                 ]
             },
             "group": "03-erase"
         },
         {
-            "id": 3138,
+            "id": 3724,
             "order": 9999,
             "name": "ListDataFailure",
             "reflection": {
-                "id": 3138,
+                "id": 3724,
                 "name": "ListDataFailure",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a failed result for a list data request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a failed result for a list data request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "04-list"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "04-list"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "2"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "2"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "ListDataFailure\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "ListDataFailure"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3140,
+                        "id": 3726,
                         "name": "errorCode",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 860,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L860"
                             }
                         ],
                         "type": {
@@ -1501,7 +1821,7 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "not_logged_in"
+                                    "value": "not_supported"
                                 },
                                 {
                                     "type": "literal",
@@ -1509,11 +1829,11 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "record_not_found"
+                                    "value": "unacceptable_request"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "action_not_supported"
+                                    "value": "record_not_found"
                                 },
                                 {
                                     "type": "literal",
@@ -1521,30 +1841,31 @@
                                 },
                                 {
                                     "type": "literal",
+                                    "value": "action_not_supported"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
                                     "value": "subscription_limit_reached"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "unacceptable_request"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_supported"
                                 }
                             ]
                         }
                     },
                     {
-                        "id": 3141,
+                        "id": 3727,
                         "name": "errorMessage",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 865,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L865"
                             }
                         ],
                         "type": {
@@ -1553,16 +1874,17 @@
                         }
                     },
                     {
-                        "id": 3139,
+                        "id": 3725,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 859,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L859"
                             }
                         ],
                         "type": {
@@ -1574,11 +1896,10 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3140,
-                            3141,
-                            3139
+                            3726,
+                            3727,
+                            3725
                         ]
                     }
                 ],
@@ -1586,70 +1907,87 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 858,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L858"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a failed result for a list data request.",
-                "text": "",
+                "text": "Defines an interface that represents a failed result for a list data request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "04-list"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "2"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "ListDataFailure\n"
+                        "text": "ListDataFailure"
                     }
                 ]
             },
             "group": "04-list"
         },
         {
-            "id": 3132,
+            "id": 3718,
             "order": 9999,
             "name": "ListDataResult",
             "reflection": {
-                "id": 3132,
+                "id": 3718,
                 "name": "ListDataResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "variant": "declaration",
+                "kind": 2097152,
                 "flags": {},
                 "comment": {
-                    "shortText": "The possible results of a list data request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "The possible results of a list data request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "04-list"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "04-list"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "0"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "0"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "ListDataResult\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "ListDataResult"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -1657,7 +1995,8 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 815,
-                        "character": 12
+                        "character": 12,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L815"
                     }
                 ],
                 "type": {
@@ -1665,121 +2004,160 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 3133,
-                            "name": "ListDataSuccess"
+                            "target": 3719,
+                            "name": "ListDataSuccess",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3719,
+                            "qualifiedName": "ListDataSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3138,
-                            "name": "ListDataFailure"
+                            "target": 3724,
+                            "name": "ListDataFailure",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3724,
+                            "qualifiedName": "ListDataFailure"
                         }
                     ]
                 }
             },
             "comment": {
-                "shortText": "The possible results of a list data request.",
-                "text": "",
+                "text": "The possible results of a list data request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "04-list"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "0"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "ListDataResult\n"
+                        "text": "ListDataResult"
                     }
                 ]
             },
             "group": "04-list"
         },
         {
-            "id": 3133,
+            "id": 3719,
             "order": 9999,
             "name": "ListDataSuccess",
             "reflection": {
-                "id": 3133,
+                "id": 3719,
                 "name": "ListDataSuccess",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a successful result for a list data request.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/data"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a successful result for a list data request."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/data"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "04-list"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "04-list"
+                                }
+                            ]
                         },
                         {
-                            "tag": "order",
-                            "paramName": "",
-                            "text": "1"
+                            "tag": "@order",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "1"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "ListDataSuccess\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "ListDataSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3136,
+                        "id": 3722,
                         "name": "items",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The items that were listed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The items that were listed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 836,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L836"
                             }
                         ],
                         "type": {
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "name": "ListedData"
+                                "target": {
+                                    "sourceFileName": "../src/aux-records/DataRecordsController.ts",
+                                    "qualifiedName": "ListedData"
+                                },
+                                "name": "ListedData",
+                                "package": "@casual-simulation/aux-records"
                             }
                         }
                     },
                     {
-                        "id": 3135,
+                        "id": 3721,
                         "name": "recordName",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The name of the record that the data was listed from.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The name of the record that the data was listed from."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 831,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L831"
                             }
                         ],
                         "type": {
@@ -1788,16 +2166,17 @@
                         }
                     },
                     {
-                        "id": 3134,
+                        "id": 3720,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 826,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L826"
                             }
                         ],
                         "type": {
@@ -1806,20 +2185,26 @@
                         }
                     },
                     {
-                        "id": 3137,
+                        "id": 3723,
                         "name": "totalCount",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The total number of items in the record.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The total number of items in the record."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 841,
-                                "character": 4
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L841"
                             }
                         ],
                         "type": {
@@ -1831,12 +2216,11 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3136,
-                            3135,
-                            3134,
-                            3137
+                            3722,
+                            3721,
+                            3720,
+                            3723
                         ]
                     }
                 ],
@@ -1844,33 +2228,29 @@
                     {
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 825,
-                        "character": 17
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-records/DataRecordsController.ts#L825"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a successful result for a list data request.",
-                "text": "",
+                "text": "Defines an interface that represents a successful result for a list data request.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/data"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "04-list"
                     },
                     {
                         "tagName": "order",
-                        "paramName": "",
                         "text": "1"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "ListDataSuccess\n"
+                        "text": "ListDataSuccess"
                     }
                 ]
             },
@@ -1879,890 +2259,1044 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2953": "CasualOSError",
+        "id-3539": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3358": "Quaternion",
+        "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3390": "Rotation",
+        "id-154": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3224": "Vector2",
+        "id-1": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3281": "Vector3",
+        "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2972": "AIChatMessage",
+        "id-3558": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2750": "AIChatOptions",
+        "id-3328": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
-        "id-2555": "AIGenerateImageSuccess",
+        "id-2478": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-2764": "AIGenerateImageOptions",
+        "id-3342": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-2760": "AIGenerateSkyboxOptions",
+        "id-3338": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
-        "id-2548": "AIGenerateSkyboxRequest",
+        "id-2471": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
-        "id-2552": "AIGenerateSkyboxResult",
+        "id-2475": "AIGenerateSkyboxResult",
         "AIGeneratedImage": "types/ai",
-        "id-2558": "AIGeneratedImage",
+        "id-2481": "AIGeneratedImage",
+        "ARSupportedAction": "types/os",
+        "id-3073": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3157": "AddCountFailure",
+        "id-3743": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3152": "AddCountSuccess",
+        "id-3738": "AddCountSuccess",
+        "AddDropSnapAction": "types/os",
+        "id-2702": "AddDropSnapAction",
+        "AddDropSnapPointsAction": "types/os",
+        "id-2706": "AddDropSnapPointsAction",
+        "AnalyticsRecordEventAction": "types/os",
+        "id-3278": "AnalyticsRecordEventAction",
         "AnimateTagOptions": "types/animation",
-        "id-2153": "AnimateTagOptions",
+        "id-2075": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2528": "AttachDebuggerOptions",
+        "id-2451": "AttachDebuggerOptions",
+        "AuthData": "types/os",
+        "id-3217": "AuthData",
         "CasualOSDevice": "types/os",
-        "id-2941": "CasualOSDevice",
+        "id-3526": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2933": "CasualOSVersion",
+        "id-3518": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3436": "AxisAndAngle",
+        "id-200": "AxisAndAngle",
+        "BeginRecordingAction": "types/os",
+        "id-3160": "BeginRecordingAction",
         "BotTagMasks": "types/core",
-        "id-2910": "BotTagMasks",
+        "id-3495": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2825": "BotTags",
+        "id-3410": "BotTags",
         "BotState": "types/core",
-        "id-2923": "BotState",
+        "id-3508": "BotState",
+        "BufferFormAddressGLTFAction": "types/os",
+        "id-3285": "BufferFormAddressGLTFAction",
+        "BufferSoundAction": "types/os",
+        "id-2884": "BufferSoundAction",
+        "CalculateRayFromCameraAction": "types/os",
+        "id-3258": "CalculateRayFromCameraAction",
+        "CancelSoundAction": "types/os",
+        "id-2890": "CancelSoundAction",
         "CompiledBotListeners": "types/core",
-        "id-2904": "CompiledBotListeners",
+        "id-3489": "CompiledBotListeners",
+        "ConfigureWakeLockAction": "types/os",
+        "id-3265": "ConfigureWakeLockAction",
+        "ConvertGeolocationToWhat3WordsAction": "types/os",
+        "id-2648": "ConvertGeolocationToWhat3WordsAction",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2585": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2637": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2983": "CreatePublicRecordKeyFailure",
+        "id-3680": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2979": "CreatePublicRecordKeySuccess",
+        "id-3676": "CreatePublicRecordKeySuccess",
+        "CustomAppContainerAvailableAction": "types/os",
+        "id-3117": "CustomAppContainerAvailableAction",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2481": "DebuggerCallFrame",
+        "id-2404": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2516": "DebuggerFunctionLocation",
+        "id-2439": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2510": "DebuggerPause",
+        "id-2433": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2489": "DebuggerTagMaskUpdate",
+        "id-2412": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2495": "DebuggerTagUpdate",
+        "id-2418": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2522": "DebuggerVariable",
+        "id-2445": "DebuggerVariable",
+        "DefineGlobalBotAction": "types/os",
+        "id-2641": "DefineGlobalBotAction",
+        "DownloadAction": "types/os",
+        "id-2896": "DownloadAction",
         "Easing": "types/animation",
-        "id-2565": "Easing",
+        "id-2619": "Easing",
+        "EnableARAction": "types/os",
+        "id-3069": "EnableARAction",
+        "EnableCollaborationAction": "types/os",
+        "id-3028": "EnableCollaborationAction",
+        "EnableCustomDraggingAction": "types/os",
+        "id-2732": "EnableCustomDraggingAction",
+        "EnablePOVAction": "types/os",
+        "id-3087": "EnablePOVAction",
+        "EnableVRAction": "types/os",
+        "id-3083": "EnableVRAction",
         "EnableXROptions": "types/os",
-        "id-2659": "EnableXROptions",
+        "id-2939": "EnableXROptions",
+        "EndRecordingAction": "types/os",
+        "id-3168": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3128": "EraseDataFailure",
+        "id-3714": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3124": "EraseDataSuccess",
+        "id-3710": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3147": "EraseFileFailure",
+        "id-3733": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3143": "EraseFileSuccess",
+        "id-3729": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3439": "EulerAnglesRotation",
+        "id-203": "EulerAnglesRotation",
+        "ExitFullscreenAction": "types/os",
+        "id-3102": "ExitFullscreenAction",
         "FocusOnOptions": "types/os",
-        "id-2619": "FocusOnOptions",
+        "id-2686": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2631": "FocusOnRotation",
+        "id-2698": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2677": "FormAnimationData",
+        "id-2984": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3433": "FromToRotation",
+        "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-2950": "GenericError",
+        "id-3536": "GenericError",
+        "GetAverageFrameRateAction": "types/os",
+        "id-3238": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3168": "GetCountFailure",
+        "id-3754": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3162": "GetCountSuccess",
+        "id-3748": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3119": "GetDataFailure",
+        "id-3705": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3110": "GetDataSuccess",
+        "id-3696": "GetDataSuccess",
+        "GetGeolocationAction": "types/os",
+        "id-3201": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os",
-        "id-2243": "GetRoomOptionsFailure",
+        "id-2166": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
-        "id-2239": "GetRoomOptionsSuccess",
+        "id-2162": "GetRoomOptionsSuccess",
         "GetRoomRemoteOptionsFailure": "types/os",
-        "id-2286": "GetRoomRemoteOptionsFailure",
+        "id-2209": "GetRoomRemoteOptionsFailure",
         "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-2281": "GetRoomRemoteOptionsSuccess",
+        "id-2204": "GetRoomRemoteOptionsSuccess",
         "GetRoomTrackOptionsFailure": "types/os",
-        "id-2262": "GetRoomTrackOptionsFailure",
+        "id-2185": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
-        "id-2257": "GetRoomTrackOptionsSuccess",
+        "id-2180": "GetRoomTrackOptionsSuccess",
+        "GetVoicesAction": "types/os",
+        "id-3196": "GetVoicesAction",
+        "GetWakeLockConfigurationAction": "types/os",
+        "id-3271": "GetWakeLockConfigurationAction",
+        "GoToTagAction": "types/os",
+        "id-3206": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3196": "GrantMarkerPermissionFailure",
+        "id-3782": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3194": "GrantMarkerPermissionSuccess",
+        "id-3780": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3182": "GrantRoleFailure",
+        "id-3768": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3180": "GrantRoleSuccess",
+        "id-3766": "GrantRoleSuccess",
+        "HtmlAppEventAction": "types/os",
+        "id-2548": "HtmlAppEventAction",
+        "HtmlAppMethodCallAction": "types/os",
+        "id-2553": "HtmlAppMethodCallAction",
         "ImageClassifierOptions": "types/os",
-        "id-2637": "ImageClassifierOptions",
+        "id-2737": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2946": "InstUpdate",
+        "id-3532": "InstUpdate",
         "JoinRoomFailure": "types/os",
-        "id-2224": "JoinRoomFailure",
+        "id-2147": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
-        "id-2221": "JoinRoomSuccess",
+        "id-2144": "JoinRoomSuccess",
         "LeaveRoomFailure": "types/os",
-        "id-2233": "LeaveRoomFailure",
+        "id-2156": "LeaveRoomFailure",
         "LeaveRoomSuccess": "types/os",
-        "id-2230": "LeaveRoomSuccess",
+        "id-2153": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3138": "ListDataFailure",
+        "id-3724": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3133": "ListDataSuccess",
+        "id-3719": "ListDataSuccess",
+        "ListFormAnimationsAction": "types/os",
+        "id-2988": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3211": "ListStudiosFailure",
+        "id-3797": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3208": "ListStudiosSuccess",
+        "id-3794": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3215": "ListedStudio",
+        "id-3801": "ListedStudio",
+        "LoadBotsAction": "types/os",
+        "id-3033": "LoadBotsAction",
+        "LoadSpaceAction": "types/os",
+        "id-2929": "LoadSpaceAction",
+        "LocalFormAnimationAction": "types/os",
+        "id-3040": "LocalFormAnimationAction",
+        "LocalPositionTweenAction": "types/os",
+        "id-3054": "LocalPositionTweenAction",
+        "LocalTweenAction": "types/os",
+        "id-3044": "LocalTweenAction",
         "LookRotation": "types/math/rotations",
-        "id-3456": "LookRotation",
+        "id-211": "LookRotation",
+        "MediaPermissionAction": "types/os",
+        "id-3231": "MediaPermissionAction",
         "MediaPermissionOptions": "types/os",
-        "id-2656": "MediaPermissionOptions",
+        "id-2936": "MediaPermissionOptions",
+        "MeetCommandAction": "types/os",
+        "id-3173": "MeetCommandAction",
+        "MeetFunctionAction": "types/os",
+        "id-3180": "MeetFunctionAction",
         "Debugger": "types/debuggers/debugger",
-        "id-2293": "Debugger",
+        "id-2216": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2500": "NormalDebuggerOptions",
+        "id-2423": "NormalDebuggerOptions",
+        "OpenCircleWipeAction": "types/os",
+        "id-3150": "OpenCircleWipeAction",
+        "OpenCircleWipeOptions": "types/os",
+        "id-3157": "OpenCircleWipeOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2734": "PhotoCameraOptions",
+        "id-3012": "PhotoCameraOptions",
+        "OpenURLAction": "types/os",
+        "id-2873": "OpenURLAction",
         "ParsedBotLink": "types/core",
-        "id-2929": "ParsedBotLink",
+        "id-3514": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2926": "PartialBotState",
+        "id-3511": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2349": "PausableDebugger",
+        "id-2272": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2505": "PausableDebuggerOptions",
+        "id-2428": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2468": "PauseTrigger",
+        "id-2391": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2476": "PauseTriggerOptions",
+        "id-2399": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2746": "Photo",
+        "id-3024": "Photo",
+        "PlaySoundAction": "types/os",
+        "id-2877": "PlaySoundAction",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2463": "PossiblePauseTriggerLocation",
+        "id-2386": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2537": "PseudoRandomNumberGenerator",
+        "id-2460": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3449": "QuaternionRotation",
+        "id-215": "QuaternionRotation",
+        "RaycastFromCameraAction": "types/os",
+        "id-3243": "RaycastFromCameraAction",
+        "RaycastInPortalAction": "types/os",
+        "id-3250": "RaycastInPortalAction",
         "RaycastRay": "types/os",
-        "id-2217": "RaycastRay",
+        "id-2140": "RaycastRay",
         "RaycastResult": "types/os",
-        "id-2214": "RaycastResult",
+        "id-2137": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2568": "RecordActionOptions",
+        "id-3291": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3104": "RecordDataFailure",
+        "id-3690": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3100": "RecordDataSuccess",
+        "id-3686": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-2184": "RecordFileFailure",
+        "id-2107": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-2180": "RecordFileSuccess",
+        "id-2103": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2721": "RecordedFile",
+        "id-2999": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2719": "Recording",
+        "id-2997": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2726": "RecordingOptions",
+        "id-3004": "RecordingOptions",
+        "RegisterBuiltinPortalAction": "types/os",
+        "id-3112": "RegisterBuiltinPortalAction",
+        "RegisterCustomAppAction": "types/os",
+        "id-3120": "RegisterCustomAppAction",
+        "RegisterHtmlAppAction": "types/os",
+        "id-3133": "RegisterHtmlAppAction",
         "RegisterPrefixOptions": "types/core",
-        "id-2716": "RegisterPrefixOptions",
+        "id-2994": "RegisterPrefixOptions",
+        "RejectAction": "types/os",
+        "id-2902": "RejectAction",
+        "RemoteAction": "types/os",
+        "id-3807": "RemoteAction",
+        "RequestAuthDataAction": "types/os",
+        "id-3211": "RequestAuthDataAction",
+        "RequestFullscreenAction": "types/os",
+        "id-3100": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3203": "RevokeMarkerPermissionFailure",
+        "id-3789": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3201": "RevokeMarkerPermissionSuccess",
+        "id-3787": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3189": "RevokeRoleFailure",
+        "id-3775": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3187": "RevokeRoleSuccess",
+        "id-3773": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2682": "RoomJoinOptions",
+        "id-3294": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2691": "RoomOptions",
+        "id-3303": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2707": "RoomRemoteOptions",
+        "id-3319": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2695": "RoomTrackOptions",
+        "id-3307": "RoomTrackOptions",
+        "RunScriptAction": "types/os",
+        "id-2916": "RunScriptAction",
         "RuntimeBot": "types/core",
-        "id-2777": "RuntimeBot",
+        "id-3355": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2916": "RuntimeBotLinks",
+        "id-3501": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2913": "RuntimeBotVars",
+        "id-3498": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3447": "SequenceRotation",
+        "id-222": "SequenceRotation",
+        "SerializableMutationRecord": "types/os",
+        "id-2562": "SerializableMutationRecord",
+        "SessionSelector": "types/os",
+        "id-2486": "SessionSelector",
+        "SetAppOutputAction": "types/os",
+        "id-3145": "SetAppOutputAction",
+        "SetClipboardAction": "types/os",
+        "id-2905": "SetClipboardAction",
         "SetRoomOptionsSuccess": "types/os",
-        "id-2248": "SetRoomOptionsSuccess",
+        "id-2171": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2713": "SetRoomTrackOptions",
+        "id-3325": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
-        "id-2274": "SetRoomTrackOptionsFailure",
+        "id-2197": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
-        "id-2269": "SetRoomTrackOptionsSuccess",
+        "id-2192": "SetRoomTrackOptionsSuccess",
+        "ShareAction": "types/os",
+        "id-3104": "ShareAction",
         "ShareOptions": "types/os",
-        "id-2615": "ShareOptions",
+        "id-2682": "ShareOptions",
+        "ShowChatBarAction": "types/os",
+        "id-2908": "ShowChatBarAction",
         "ShowChatOptions": "types/os",
-        "id-2609": "ShowChatOptions",
+        "id-2676": "ShowChatOptions",
+        "ShowConfirmAction": "types/os",
+        "id-2758": "ShowConfirmAction",
         "ShowConfirmOptions": "types/os",
-        "id-2651": "ShowConfirmOptions",
+        "id-2753": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2642": "ShowInputOptions",
+        "id-2742": "ShowInputOptions",
+        "ShowJoinCodeAction": "types/os",
+        "id-3096": "ShowJoinCodeAction",
+        "ShowUploadAuxFileAction": "types/os",
+        "id-2922": "ShowUploadAuxFileAction",
+        "ShowUploadFilesAction": "types/os",
+        "id-2924": "ShowUploadFilesAction",
         "SnapAxis": "types/os",
-        "id-2589": "SnapAxis",
+        "id-2656": "SnapAxis",
+        "SnapGrid": "types/os",
+        "id-2711": "SnapGrid",
         "SnapGridTarget": "types/os",
-        "id-2189": "SnapGridTarget",
+        "id-2112": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2601": "SnapPoint",
+        "id-2668": "SnapPoint",
+        "SpeakTextAction": "types/os",
+        "id-3187": "SpeakTextAction",
         "SpeakTextOptions": "types/experimental",
-        "id-2533": "SpeakTextOptions",
+        "id-2456": "SpeakTextOptions",
+        "StartFormAnimationAction": "types/os",
+        "id-2965": "StartFormAnimationAction",
         "StartFormAnimationOptions": "types/os",
-        "id-2661": "StartFormAnimationOptions",
+        "id-2941": "StartFormAnimationOptions",
+        "StopFormAnimationAction": "types/os",
+        "id-2954": "StopFormAnimationAction",
         "StopFormAnimationOptions": "types/os",
-        "id-2674": "StopFormAnimationOptions",
+        "id-2962": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2571": "SuccessfulGeolocation",
+        "id-2623": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2730": "SyntheticVoice",
+        "id-3008": "SyntheticVoice",
         "TweenOptions": "types/experimental",
-        "id-2530": "TweenOptions",
+        "id-2453": "TweenOptions",
+        "UnregisterCustomAppAction": "types/os",
+        "id-3127": "UnregisterCustomAppAction",
+        "UnregisterHtmlAppAction": "types/os",
+        "id-3140": "UnregisterHtmlAppAction",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2581": "UnsuccessfulGeolocation",
+        "id-2633": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3175": "UpdateEventRecordFailure",
+        "id-3761": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3173": "UpdateEventRecordSuccess",
+        "id-3759": "UpdateEventRecordSuccess",
+        "UpdateHtmlAppAction": "types/os",
+        "id-2542": "UpdateHtmlAppAction",
         "UploadedFile": "types/os",
-        "id-2210": "UploadedFile",
+        "id-2133": "UploadedFile",
+        "VRSupportedAction": "types/os",
+        "id-3078": "VRSupportedAction",
+        "WakeLockConfiguration": "types/os",
+        "id-3276": "WakeLockConfiguration",
         "WebhookOptions": "types/web",
-        "id-2134": "WebhookOptions",
+        "id-2056": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-2146": "WebhookResult",
+        "id-2068": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3151": "AddCountResult",
+        "id-3737": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2988": "AvailablePermissions",
+        "id-3564": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2636": "BarcodeFormat",
+        "id-2736": "BarcodeFormat",
         "BotFilter": "types/core",
-        "id-2168": "BotFilter",
+        "id-2090": "BotFilter",
         "BotSpace": "types/core",
-        "id-2900": "BotSpace",
+        "id-3485": "BotSpace",
         "CameraType": "types/os",
-        "id-2635": "CameraType",
+        "id-2735": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2978": "CreatePublicRecordKeyResult",
+        "id-3675": "CreatePublicRecordKeyResult",
+        "CustomAppOutputType": "types/os",
+        "id-3115": "CustomAppOutputType",
+        "CustomPortalOutputMode": "types/os",
+        "id-3116": "CustomPortalOutputMode",
         "EaseMode": "types/animation",
-        "id-2564": "EaseMode",
+        "id-2618": "EaseMode",
         "EaseType": "types/animation",
-        "id-2563": "EaseType",
+        "id-2617": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3123": "EraseDataResult",
+        "id-3709": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3142": "EraseFileResult",
+        "id-3728": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2570": "Geolocation",
+        "id-2622": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3161": "GetCountResult",
+        "id-3747": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3109": "GetDataResult",
+        "id-3695": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
-        "id-2238": "GetRoomOptionsResult",
+        "id-2161": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
-        "id-2280": "GetRoomRemoteOptionsResult",
+        "id-2203": "GetRoomRemoteOptionsResult",
         "GetRoomTrackOptionsResult": "types/os",
-        "id-2256": "GetRoomTrackOptionsResult",
+        "id-2179": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3193": "GrantMarkerPermissionResult",
+        "id-3779": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3179": "GrantRoleResult",
+        "id-3765": "GrantRoleResult",
         "JoinRoomResult": "types/os",
-        "id-2220": "JoinRoomResult",
+        "id-2143": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
-        "id-2229": "LeaveRoomResult",
+        "id-2152": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3132": "ListDataResult",
+        "id-3718": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3207": "ListStudiosResult",
+        "id-3793": "ListStudiosResult",
         "Mod": "types/core",
-        "id-2163": "Mod",
+        "id-2085": "Mod",
         "PortalType": "types/core",
-        "id-2932": "PortalType",
+        "id-3517": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2467": "PossiblePauseTriggerStates",
+        "id-2390": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3099": "RecordDataResult",
+        "id-3685": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-2179": "RecordFileResult",
+        "id-2102": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3200": "RevokeMarkerPermissionResult",
+        "id-3786": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3186": "RevokeRoleResult",
+        "id-3772": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
-        "id-2247": "SetRoomOptionsResult",
+        "id-2170": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
-        "id-2268": "SetRoomTrackOptionsResult",
+        "id-2191": "SetRoomTrackOptionsResult",
+        "ShowInputSuptype": "types/os",
+        "id-2752": "ShowInputSuptype",
+        "ShowInputType": "types/os",
+        "id-2751": "ShowInputType",
         "SnapTarget": "types/os",
-        "id-2608": "SnapTarget",
+        "id-2675": "SnapTarget",
         "TagFilter": "types/core",
-        "id-2164": "TagFilter",
+        "id-2086": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3172": "UpdateEventRecordResult",
+        "id-3758": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
-        "id-364": "animateTag-byOptions",
+        "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
-        "id-33": "getbot-tag",
+        "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
-        "id-17": "getbots-tag",
+        "id-240": "getbots-tag",
         "animateTag-byTag": "actions/utility",
-        "id-358": "animateTag-byTag",
+        "id-585": "animateTag-byTag",
         "changeState": "actions/data",
-        "id-177": "changeState",
+        "id-401": "changeState",
         "create": "actions/data",
-        "id-162": "create",
+        "id-385": "create",
         "destroy": "actions/data",
-        "id-166": "destroy",
+        "id-389": "destroy",
         "getbot-filters": "actions/data",
-        "id-26": "getbot-filters",
+        "id-249": "getbot-filters",
         "getbots-filters": "actions/data",
-        "id-10": "getbots-filters",
+        "id-233": "getbots-filters",
         "priorityShout": "actions/event",
-        "id-225": "priorityShout",
+        "id-450": "priorityShout",
         "shout": "actions/event",
-        "id-237": "shout",
+        "id-463": "shout",
         "updateBotLinks": "actions/data",
-        "id-198": "updateBotLinks",
+        "id-423": "updateBotLinks",
         "whisper": "actions/event",
-        "id-263": "whisper",
+        "id-489": "whisper",
         "action.perform": "actions/event",
-        "id-1634": "action.perform",
+        "id-1591": "action.perform",
         "action.reject": "actions/event",
-        "id-1638": "action.reject",
+        "id-1595": "action.reject",
         "ai.chat-string": "actions/ai",
-        "id-423": "ai.chat-string",
+        "id-650": "ai.chat-string",
         "ai.chat-message": "actions/ai",
-        "id-426": "ai.chat-message",
+        "id-653": "ai.chat-message",
         "ai.chat-messages": "actions/ai",
-        "id-429": "ai.chat-messages",
+        "id-656": "ai.chat-messages",
         "ai.generateImage-string": "actions/ai",
-        "id-442": "ai.generateImage-string",
+        "id-669": "ai.generateImage-string",
         "ai.generateImage-request": "actions/ai",
-        "id-446": "ai.generateImage-request",
+        "id-673": "ai.generateImage-request",
         "ai.generateSkybox-string": "actions/ai",
-        "id-434": "ai.generateSkybox-string",
+        "id-661": "ai.generateSkybox-string",
         "ai.generateSkybox-request": "actions/ai",
-        "id-438": "ai.generateSkybox-request",
+        "id-665": "ai.generateSkybox-request",
         "applyDiffToSnapshot": "actions/data",
-        "id-83": "applyDiffToSnapshot",
+        "id-306": "applyDiffToSnapshot",
         "applyMod": "actions/mods",
-        "id-152": "applyMod",
+        "id-375": "applyMod",
         "assert": "actions/debuggers",
-        "id-407": "assert",
+        "id-634": "assert",
         "assertEqual": "actions/debuggers",
-        "id-412": "assertEqual",
+        "id-639": "assertEqual",
         "atPosition": "actions/bot-filters",
-        "id-293": "atPosition",
+        "id-520": "atPosition",
         "byCreator": "actions/bot-filters",
-        "id-314": "byCreator",
+        "id-541": "byCreator",
         "byID": "actions/bot-filters",
-        "id-281": "byID",
+        "id-508": "byID",
         "byMod": "actions/bot-filters",
-        "id-285": "byMod",
+        "id-512": "byMod",
         "bySpace": "actions/bot-filters",
-        "id-310": "bySpace",
+        "id-537": "bySpace",
         "byTag": "actions/bot-filters",
-        "id-276": "byTag",
+        "id-503": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1858": "bytes.fromBase64String",
+        "id-1804": "bytes.fromBase64String",
         "bytes.fromBase64Url": "actions/bytes",
-        "id-1875": "bytes.fromBase64Url",
+        "id-1821": "bytes.fromBase64Url",
         "bytes.fromHexString": "actions/bytes",
-        "id-1866": "bytes.fromHexString",
+        "id-1812": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1854": "bytes.toBase64String",
+        "id-1800": "bytes.toBase64String",
         "bytes.toBase64Url": "actions/bytes",
-        "id-1870": "bytes.toBase64Url",
+        "id-1816": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
-        "id-1862": "bytes.toHexString",
+        "id-1808": "bytes.toHexString",
         "clearAnimations": "actions/utility",
-        "id-378": "clearAnimations",
+        "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
-        "id-106": "clearTagMasks",
+        "id-329": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1881": "crypto.hash-raw",
+        "id-1827": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1887": "crypto.hash-string",
+        "id-1833": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1918": "crypto.hmac-raw",
+        "id-1864": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1911": "crypto.hmac-string",
+        "id-1857": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1976": "crypto.asymmetric.decrypt",
+        "id-1922": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1971": "crypto.asymmetric.encrypt",
+        "id-1917": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1982": "crypto.asymmetric.isEncrypted",
+        "id-1928": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1967": "crypto.asymmetric.isKeypair",
+        "id-1913": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1963": "crypto.asymmetric.keypair",
+        "id-1909": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1947": "crypto.encrypt",
+        "id-1893": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1937": "crypto.hmacSha256",
+        "id-1883": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1942": "crypto.hmacSha512",
+        "id-1888": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1957": "crypto.isEncrypted",
+        "id-1903": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1986": "crypto.keypair",
+        "id-1932": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1903": "crypto.sha256",
+        "id-1849": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1907": "crypto.sha512",
+        "id-1853": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1990": "crypto.sign",
+        "id-1936": "crypto.sign",
         "deleteTagMaskText": "actions/data",
-        "id-133": "deleteTagMaskText",
+        "id-356": "deleteTagMaskText",
         "deleteTagText": "actions/data",
-        "id-126": "deleteTagText",
+        "id-349": "deleteTagText",
         "diffSnapshots": "actions/data",
-        "id-78": "diffSnapshots",
+        "id-301": "diffSnapshots",
         "either": "actions/bot-filters",
-        "id-318": "either",
+        "id-545": "either",
         "os.beginAudioRecording": "actions/audio",
-        "id-1692": "os.beginAudioRecording",
+        "id-1638": "os.beginAudioRecording",
         "experiment.beginRecording": "actions/experimental",
-        "id-1699": "experiment.beginRecording",
+        "id-1645": "experiment.beginRecording",
         "os.endAudioRecording": "actions/audio",
-        "id-1696": "os.endAudioRecording",
+        "id-1642": "os.endAudioRecording",
         "experiment.endRecording": "actions/experimental",
-        "id-1703": "experiment.endRecording",
+        "id-1649": "experiment.endRecording",
         "experiment.getAnchorPointPosition": "actions/experimental",
-        "id-1682": "experiment.getAnchorPointPosition",
+        "id-1628": "experiment.getAnchorPointPosition",
         "experiment.getVoices": "actions/experimental",
-        "id-1711": "experiment.getVoices",
+        "id-1657": "experiment.getVoices",
         "experiment.localFormAnimation": "actions/experimental",
-        "id-1655": "experiment.localFormAnimation",
+        "id-1601": "experiment.localFormAnimation",
         "experiment.localPositionTween": "actions/experimental",
-        "id-1660": "experiment.localPositionTween",
+        "id-1606": "experiment.localPositionTween",
         "experiment.localRotationTween": "actions/experimental",
-        "id-1671": "experiment.localRotationTween",
+        "id-1617": "experiment.localRotationTween",
         "experiment.speakText": "actions/experimental",
-        "id-1706": "experiment.speakText",
+        "id-1652": "experiment.speakText",
         "getBotLinks": "actions/data",
-        "id-194": "getBotLinks",
+        "id-419": "getBotLinks",
         "getBotPosition": "actions/data",
-        "id-52": "getBotPosition",
+        "id-275": "getBotPosition",
         "getBotRotation": "actions/data",
-        "id-57": "getBotRotation",
+        "id-280": "getBotRotation",
         "getBotTagValues": "actions/data",
-        "id-42": "getBotTagValues",
+        "id-265": "getBotTagValues",
         "getFormattedJSON": "actions/data",
-        "id-70": "getFormattedJSON",
+        "id-293": "getFormattedJSON",
         "getID": "actions/data",
-        "id-62": "getID",
+        "id-285": "getID",
         "getJSON": "actions/data",
-        "id-66": "getJSON",
+        "id-289": "getJSON",
         "getLink": "actions/data",
-        "id-190": "getLink",
+        "id-415": "getLink",
         "getMod": "actions/mods",
-        "id-47": "getMod",
+        "id-270": "getMod",
         "getSnapshot": "actions/data",
-        "id-74": "getSnapshot",
+        "id-297": "getSnapshot",
         "getTag": "actions/data",
-        "id-88": "getTag",
+        "id-311": "getTag",
         "inDimension": "actions/bot-filters",
-        "id-289": "inDimension",
+        "id-516": "inDimension",
         "inStack": "actions/bot-filters",
-        "id-299": "inStack",
+        "id-526": "inStack",
         "insertTagMaskText": "actions/data",
-        "id-118": "insertTagMaskText",
+        "id-341": "insertTagMaskText",
         "insertTagText": "actions/data",
-        "id-111": "insertTagText",
+        "id-334": "insertTagText",
         "math.abs": "actions/math",
-        "id-1728": "math.abs",
+        "id-1674": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1798": "math.addVectors",
+        "id-1744": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1829": "math.areClose",
+        "id-1775": "math.areClose",
         "math.avg": "actions/math",
-        "id-1720": "math.avg",
+        "id-1666": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1754": "math.degreesToRadians",
+        "id-1700": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1794": "math.getAnchorPointOffset",
+        "id-1740": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1762": "math.getForwardDirection",
+        "id-1708": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1736": "math.getSeededRandomNumberGenerator",
+        "id-1682": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1771": "math.intersectPlane",
+        "id-1717": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1808": "math.negateVector",
+        "id-1754": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1813": "math.normalizeVector",
+        "id-1759": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1758": "math.radiansToDegrees",
+        "id-1704": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1749": "math.random",
+        "id-1695": "math.random",
         "math.randomInt": "actions/math",
-        "id-1744": "math.randomInt",
+        "id-1690": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1823": "math.scaleVector",
+        "id-1769": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1740": "math.setRandomSeed",
+        "id-1686": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1724": "math.sqrt",
+        "id-1670": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1732": "math.stdDev",
+        "id-1678": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1803": "math.subtractVectors",
+        "id-1749": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1716": "math.sum",
+        "id-1662": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1818": "math.vectorLength",
+        "id-1764": "math.vectorLength",
         "neighboring": "actions/bot-filters",
-        "id-304": "neighboring",
+        "id-531": "neighboring",
         "not": "actions/bot-filters",
-        "id-325": "not",
+        "id-552": "not",
         "os.attachDebugger": "actions/debuggers",
-        "id-1332": "os.attachDebugger",
+        "id-1547": "os.attachDebugger",
         "os.createDebugger-normal": "actions/debuggers",
-        "id-1321": "os.createDebugger-normal",
+        "id-1536": "os.createDebugger-normal",
         "os.createDebugger-pausable": "actions/debuggers",
-        "id-1325": "os.createDebugger-pausable",
+        "id-1540": "os.createDebugger-pausable",
         "os.focusOn-bot": "actions/portals",
-        "id-510": "os.focusOn-bot",
+        "id-737": "os.focusOn-bot",
         "os.focusOn-position": "actions/portals",
-        "id-515": "os.focusOn-position",
+        "id-742": "os.focusOn-position",
         "os.getExecutingDebugger": "actions/debuggers",
-        "id-1329": "os.getExecutingDebugger",
+        "id-1544": "os.getExecutingDebugger",
         "showChat-options": "actions/os",
-        "id-537": "showChat-options",
+        "id-764": "showChat-options",
         "showChat-placeholder": "actions/os",
-        "id-533": "showChat-placeholder",
+        "id-760": "showChat-placeholder",
         "os.showInput": "actions/portals",
-        "id-753": "os.showInput",
+        "id-983": "os.showInput",
         "os.addBotDropGrid": "actions/portals",
-        "id-827": "os.addBotDropGrid",
+        "id-1053": "os.addBotDropGrid",
         "os.addBotDropSnap": "actions/portals",
-        "id-818": "os.addBotDropSnap",
+        "id-1044": "os.addBotDropSnap",
         "os.addDropGrid": "actions/portals",
-        "id-823": "os.addDropGrid",
+        "id-1049": "os.addDropGrid",
         "os.addDropSnap": "actions/portals",
-        "id-814": "os.addDropSnap",
+        "id-1040": "os.addDropSnap",
         "os.applyUpdatesToInst": "actions/os",
-        "id-1275": "os.applyUpdatesToInst",
+        "id-1499": "os.applyUpdatesToInst",
         "os.arSupported": "actions/xr",
-        "id-578": "os.arSupported",
+        "id-808": "os.arSupported",
         "os.bufferFormAddressGLTF": "actions/animations",
-        "id-1228": "os.bufferFormAddressGLTF",
+        "id-1457": "os.bufferFormAddressGLTF",
         "os.bufferSound": "actions/audio",
-        "id-790": "os.bufferSound",
+        "id-1016": "os.bufferSound",
         "os.calculateRayFromCamera": "actions/portals",
-        "id-1223": "os.calculateRayFromCamera",
+        "id-1452": "os.calculateRayFromCamera",
         "os.cancelSound": "actions/audio",
-        "id-794": "os.cancelSound",
+        "id-1020": "os.cancelSound",
         "os.capturePhoto": "actions/camera",
-        "id-673": "os.capturePhoto",
+        "id-903": "os.capturePhoto",
         "os.closeBarcodeScanner": "actions/barcodes",
-        "id-651": "os.closeBarcodeScanner",
+        "id-881": "os.closeBarcodeScanner",
         "os.closeCircleWipe": "actions/portals",
-        "id-806": "os.closeCircleWipe",
+        "id-1032": "os.closeCircleWipe",
         "os.closeImageClassifier": "actions/image-classification",
-        "id-666": "os.closeImageClassifier",
+        "id-896": "os.closeImageClassifier",
         "os.closePhotoCamera": "actions/camera",
-        "id-677": "os.closePhotoCamera",
+        "id-907": "os.closePhotoCamera",
         "os.closeQRCodeScanner": "actions/barcodes",
-        "id-637": "os.closeQRCodeScanner",
+        "id-867": "os.closeQRCodeScanner",
         "os.compileApp": "actions/app",
-        "id-941": "os.compileApp",
+        "id-1167": "os.compileApp",
         "os.convertGeolocationToWhat3Words": "actions/os",
-        "id-1208": "os.convertGeolocationToWhat3Words",
+        "id-1437": "os.convertGeolocationToWhat3Words",
         "os.countEvents": "actions/records",
-        "id-1198": "os.countEvents",
+        "id-1427": "os.countEvents",
         "os.createInitializationUpdate": "actions/os",
-        "id-1271": "os.createInitializationUpdate",
+        "id-1495": "os.createInitializationUpdate",
         "os.device": "actions/os",
-        "id-555": "os.device",
+        "id-782": "os.device",
         "os.disableAR": "actions/xr",
-        "id-568": "os.disableAR",
+        "id-798": "os.disableAR",
         "os.disablePointOfView": "actions/portals",
-        "id-593": "os.disablePointOfView",
+        "id-823": "os.disablePointOfView",
         "os.disableVR": "actions/xr",
-        "id-575": "os.disableVR",
+        "id-805": "os.disableVR",
         "os.disableWakeLock": "actions/os",
-        "id-599": "os.disableWakeLock",
+        "id-829": "os.disableWakeLock",
         "os.download": "actions/files",
-        "id-605": "os.download",
+        "id-835": "os.download",
         "os.downloadBots": "actions/files",
-        "id-611": "os.downloadBots",
+        "id-841": "os.downloadBots",
         "os.downloadBotsAsInitialzationUpdate": "actions/files",
-        "id-616": "os.downloadBotsAsInitialzationUpdate",
+        "id-846": "os.downloadBotsAsInitialzationUpdate",
         "os.downloadInst": "actions/files",
-        "id-624": "os.downloadInst",
+        "id-854": "os.downloadInst",
         "os.enableAR": "actions/xr",
-        "id-564": "os.enableAR",
+        "id-794": "os.enableAR",
+        "os.enableCollaboration": "actions/os",
+        "id-788": "os.enableCollaboration",
         "os.enableCustomDragging": "actions/portals",
-        "id-832": "os.enableCustomDragging",
+        "id-1058": "os.enableCustomDragging",
         "os.enablePointOfView": "actions/portals",
-        "id-584": "os.enablePointOfView",
+        "id-814": "os.enablePointOfView",
         "os.enableVR": "actions/xr",
-        "id-571": "os.enableVR",
+        "id-801": "os.enableVR",
         "os.eraseData": "actions/records",
-        "id-1141": "os.eraseData",
+        "id-1370": "os.eraseData",
         "os.eraseManualApprovalData": "actions/records",
-        "id-1147": "os.eraseManualApprovalData",
+        "id-1376": "os.eraseManualApprovalData",
         "os.exitFullscreenMode": "actions/portals",
-        "id-481": "os.exitFullscreenMode",
+        "id-708": "os.exitFullscreenMode",
         "os.getAverageFrameRate": "actions/os",
-        "id-889": "os.getAverageFrameRate",
+        "id-1115": "os.getAverageFrameRate",
         "os.getCameraPosition": "actions/portals",
-        "id-845": "os.getCameraPosition",
+        "id-1071": "os.getCameraPosition",
         "os.getCameraRotation": "actions/portals",
-        "id-849": "os.getCameraRotation",
+        "id-1075": "os.getCameraRotation",
         "os.getCurrentDimension": "actions/portals",
-        "id-724": "os.getCurrentDimension",
+        "id-954": "os.getCurrentDimension",
         "os.getCurrentInst": "actions/portals",
-        "id-730": "os.getCurrentInst",
+        "id-960": "os.getCurrentInst",
         "os.getCurrentInstUpdate": "actions/os",
-        "id-1279": "os.getCurrentInstUpdate",
+        "id-1503": "os.getCurrentInstUpdate",
         "os.getData": "actions/records",
-        "id-1123": "os.getData",
+        "id-1352": "os.getData",
         "os.getDimensionalDepth": "actions/portals",
-        "id-743": "os.getDimensionalDepth",
+        "id-973": "os.getDimensionalDepth",
         "os.getFocusPoint": "actions/portals",
-        "id-857": "os.getFocusPoint",
+        "id-1083": "os.getFocusPoint",
         "os.getGeolocation": "actions/os",
-        "id-839": "os.getGeolocation",
+        "id-1065": "os.getGeolocation",
         "os.getInputList": "actions/portals",
-        "id-882": "os.getInputList",
+        "id-1108": "os.getInputList",
         "os.getInputState": "actions/portals",
-        "id-877": "os.getInputState",
+        "id-1103": "os.getInputState",
         "os.getInstStateFromUpdates": "actions/os",
-        "id-1267": "os.getInstStateFromUpdates",
+        "id-1491": "os.getInstStateFromUpdates",
         "os.getManualApprovalData": "actions/records",
-        "id-1129": "os.getManualApprovalData",
+        "id-1358": "os.getManualApprovalData",
         "os.getMediaPermission": "actions/os",
-        "id-885": "os.getMediaPermission",
+        "id-1111": "os.getMediaPermission",
         "os.getMenuDimension": "actions/portals",
-        "id-733": "os.getMenuDimension",
+        "id-963": "os.getMenuDimension",
         "os.getMiniPortalDimension": "actions/portals",
-        "id-736": "os.getMiniPortalDimension",
+        "id-966": "os.getMiniPortalDimension",
         "os.getPointerDirection": "actions/portals",
-        "id-873": "os.getPointerDirection",
+        "id-1099": "os.getPointerDirection",
         "os.getPointerPosition": "actions/portals",
-        "id-861": "os.getPointerPosition",
+        "id-1087": "os.getPointerPosition",
         "os.getPointerRotation": "actions/portals",
-        "id-865": "os.getPointerRotation",
+        "id-1091": "os.getPointerRotation",
         "os.getPortalDimension": "actions/portals",
-        "id-739": "os.getPortalDimension",
+        "id-969": "os.getPortalDimension",
         "os.getPublicRecordKey": "actions/records",
-        "id-1048": "os.getPublicRecordKey",
+        "id-1277": "os.getPublicRecordKey",
         "os.getRoomOptions": "actions/rooms",
-        "id-907": "os.getRoomOptions",
+        "id-1133": "os.getRoomOptions",
         "os.getRoomRemoteOptions": "actions/rooms",
-        "id-922": "os.getRoomRemoteOptions",
+        "id-1148": "os.getRoomRemoteOptions",
         "os.getRoomTrackOptions": "actions/rooms",
-        "id-911": "os.getRoomTrackOptions",
+        "id-1137": "os.getRoomTrackOptions",
         "os.getSubjectlessPublicRecordKey": "actions/records",
-        "id-1052": "os.getSubjectlessPublicRecordKey",
+        "id-1281": "os.getSubjectlessPublicRecordKey",
         "os.getWakeLockConfiguration": "actions/os",
-        "id-602": "os.getWakeLockConfiguration",
+        "id-832": "os.getWakeLockConfiguration",
         "os.goToDimension": "actions/portals",
-        "id-767": "os.goToDimension",
+        "id-997": "os.goToDimension",
         "os.goToURL": "actions/portals",
-        "id-771": "os.goToURL",
+        "id-1001": "os.goToURL",
         "os.grantInstAdminPermission": "actions/records",
-        "id-1070": "os.grantInstAdminPermission",
+        "id-1299": "os.grantInstAdminPermission",
         "os.grantInstRole": "actions/records",
-        "id-1090": "os.grantInstRole",
+        "id-1319": "os.grantInstRole",
         "os.grantRecordMarkerPermission": "actions/records",
-        "id-1056": "os.grantRecordMarkerPermission",
+        "id-1285": "os.grantRecordMarkerPermission",
         "os.grantUserRole": "actions/records",
-        "id-1075": "os.grantUserRole",
+        "id-1304": "os.grantUserRole",
         "os.hasBotInMiniPortal": "actions/portals",
-        "id-798": "os.hasBotInMiniPortal",
+        "id-1024": "os.hasBotInMiniPortal",
         "os.hideBarcode": "actions/barcodes",
-        "id-659": "os.hideBarcode",
+        "id-889": "os.hideBarcode",
         "os.hideChat": "actions/os",
-        "id-545": "os.hideChat",
+        "id-772": "os.hideChat",
         "os.hideHtml": "actions/os",
-        "id-488": "os.hideHtml",
+        "id-715": "os.hideHtml",
         "os.hideQRCode": "actions/barcodes",
-        "id-644": "os.hideQRCode",
+        "id-874": "os.hideQRCode",
         "os.hideTips": "actions/portals",
-        "id-469": "os.hideTips",
+        "id-696": "os.hideTips",
         "os.importAUX": "actions/files",
-        "id-708": "os.importAUX",
+        "id-938": "os.importAUX",
         "os.inSheet": "actions/portals",
-        "id-842": "os.inSheet",
-        "os.instStatuses": "actions/os",
-        "id-1296": "os.instStatuses",
-        "os.instances": "actions/os",
-        "id-1286": "os.instances",
+        "id-1068": "os.inSheet",
         "os.isCollaborative": "actions/os",
-        "id-558": "os.isCollaborative",
+        "id-785": "os.isCollaborative",
         "os.isInDimension": "actions/portals",
-        "id-720": "os.isInDimension",
+        "id-950": "os.isInDimension",
         "os.isRecordKey": "actions/records",
-        "id-1105": "os.isRecordKey",
+        "id-1334": "os.isRecordKey",
         "os.joinRoom": "actions/rooms",
-        "id-892": "os.joinRoom",
+        "id-1118": "os.joinRoom",
         "os.leaveRoom": "actions/rooms",
-        "id-897": "os.leaveRoom",
+        "id-1123": "os.leaveRoom",
         "os.listBuiltinTags": "actions/app",
-        "id-1042": "os.listBuiltinTags",
+        "id-1268": "os.listBuiltinTags",
         "os.listData": "actions/records",
-        "id-1135": "os.listData",
+        "id-1364": "os.listData",
         "os.listFormAnimations": "actions/animations",
-        "id-1243": "os.listFormAnimations",
+        "id-1472": "os.listFormAnimations",
         "os.listInstUpdates": "actions/os",
-        "id-1264": "os.listInstUpdates",
+        "id-1488": "os.listInstUpdates",
         "os.listUserStudios": "actions/records",
-        "id-1204": "os.listUserStudios",
+        "id-1433": "os.listUserStudios",
         "os.loadInst": "actions/os",
-        "id-700": "os.loadInst",
+        "id-930": "os.loadInst",
         "os.log": "actions/os",
-        "id-835": "os.log",
+        "id-1061": "os.log",
         "os.meetCommand": "actions/os",
-        "id-1309": "os.meetCommand",
+        "id-1524": "os.meetCommand",
         "os.meetFunction": "actions/os",
-        "id-1314": "os.meetFunction",
+        "id-1529": "os.meetFunction",
         "os.openBarcodeScanner": "actions/barcodes",
-        "id-647": "os.openBarcodeScanner",
+        "id-877": "os.openBarcodeScanner",
         "os.openCircleWipe": "actions/portals",
-        "id-810": "os.openCircleWipe",
+        "id-1036": "os.openCircleWipe",
         "os.openDevConsole": "actions/os",
-        "id-779": "os.openDevConsole",
+        "id-1009": "os.openDevConsole",
         "os.openImageClassifier": "actions/image-classification",
-        "id-662": "os.openImageClassifier",
+        "id-892": "os.openImageClassifier",
         "os.openPhotoCamera": "actions/camera",
-        "id-669": "os.openPhotoCamera",
+        "id-899": "os.openPhotoCamera",
         "os.openQRCodeScanner": "actions/barcodes",
-        "id-633": "os.openQRCodeScanner",
+        "id-863": "os.openQRCodeScanner",
         "os.openURL": "actions/portals",
-        "id-775": "os.openURL",
+        "id-1005": "os.openURL",
         "os.parseBotsFromData": "actions/files",
-        "id-712": "os.parseBotsFromData",
+        "id-942": "os.parseBotsFromData",
         "os.playSound": "actions/audio",
-        "id-786": "os.playSound",
+        "id-1012": "os.playSound",
         "os.raycast": "actions/portals",
-        "id-1217": "os.raycast",
+        "id-1446": "os.raycast",
         "os.raycastFromCamera": "actions/portals",
-        "id-1212": "os.raycastFromCamera",
+        "id-1441": "os.raycastFromCamera",
         "os.recordData": "actions/records",
-        "id-1109": "os.recordData",
+        "id-1338": "os.recordData",
         "os.recordEvent": "actions/records",
-        "id-1192": "os.recordEvent",
+        "id-1421": "os.recordEvent",
         "os.recordFile": "actions/records",
-        "id-1153": "os.recordFile",
+        "id-1382": "os.recordFile",
         "os.recordManualApprovalData": "actions/records",
-        "id-1116": "os.recordManualApprovalData",
+        "id-1345": "os.recordManualApprovalData",
         "os.registerApp": "actions/app",
-        "id-932": "os.registerApp",
+        "id-1158": "os.registerApp",
         "os.registerTagPrefix": "actions/app",
-        "id-927": "os.registerTagPrefix",
+        "id-1153": "os.registerTagPrefix",
         "os.remoteCount": "actions/os",
-        "id-1289": "os.remoteCount",
+        "id-1510": "os.remoteCount",
         "os.remotes": "actions/os",
-        "id-1261": "os.remotes",
+        "id-1485": "os.remotes",
         "os.replaceDragBot": "actions/portals",
-        "id-716": "os.replaceDragBot",
+        "id-946": "os.replaceDragBot",
         "os.requestAuthBot": "actions/records",
-        "id-1045": "os.requestAuthBot",
+        "id-1271": "os.requestAuthBot",
+        "os.requestAuthBotInBackground": "actions/records",
+        "id-1274": "os.requestAuthBotInBackground",
         "os.requestFullscreenMode": "actions/portals",
-        "id-478": "os.requestFullscreenMode",
+        "id-705": "os.requestFullscreenMode",
         "os.requestWakeLock": "actions/os",
-        "id-596": "os.requestWakeLock",
+        "id-826": "os.requestWakeLock",
         "os.revokeInstRole": "actions/records",
-        "id-1098": "os.revokeInstRole",
+        "id-1327": "os.revokeInstRole",
         "os.revokeRecordMarkerPermission": "actions/records",
-        "id-1063": "os.revokeRecordMarkerPermission",
+        "id-1292": "os.revokeRecordMarkerPermission",
         "os.revokeUserRole": "actions/records",
-        "id-1083": "os.revokeUserRole",
+        "id-1312": "os.revokeUserRole",
         "os.run": "actions/os",
-        "id-548": "os.run",
+        "id-775": "os.run",
         "os.setClipboard": "actions/os",
-        "id-491": "os.setClipboard",
+        "id-718": "os.setClipboard",
         "os.setRoomOptions": "actions/rooms",
-        "id-902": "os.setRoomOptions",
+        "id-1128": "os.setRoomOptions",
         "os.setRoomTrackOptions": "actions/rooms",
-        "id-916": "os.setRoomTrackOptions",
+        "id-1142": "os.setRoomTrackOptions",
         "os.share": "actions/os",
-        "id-802": "os.share",
+        "id-1028": "os.share",
         "os.showBarcode": "actions/barcodes",
-        "id-654": "os.showBarcode",
+        "id-884": "os.showBarcode",
         "os.showConfirm": "actions/portals",
-        "id-763": "os.showConfirm",
+        "id-993": "os.showConfirm",
         "os.showHtml": "actions/os",
-        "id-484": "os.showHtml",
+        "id-711": "os.showHtml",
         "os.showInputForTag": "actions/portals",
-        "id-747": "os.showInputForTag",
+        "id-977": "os.showInputForTag",
         "os.showJoinCode": "actions/barcodes",
-        "id-473": "os.showJoinCode",
+        "id-700": "os.showJoinCode",
         "os.showQRCode": "actions/barcodes",
-        "id-640": "os.showQRCode",
+        "id-870": "os.showQRCode",
         "os.showUploadAuxFile": "actions/files",
-        "id-627": "os.showUploadAuxFile",
+        "id-857": "os.showUploadAuxFile",
         "os.showUploadFiles": "actions/files",
-        "id-630": "os.showUploadFiles",
+        "id-860": "os.showUploadFiles",
         "os.sleep": "actions/os",
-        "id-453": "os.sleep",
+        "id-680": "os.sleep",
         "os.startFormAnimation": "actions/animations",
-        "id-1232": "os.startFormAnimation",
+        "id-1461": "os.startFormAnimation",
         "os.stopFormAnimation": "actions/animations",
-        "id-1238": "os.stopFormAnimation",
+        "id-1467": "os.stopFormAnimation",
         "os.tip": "actions/portals",
-        "id-462": "os.tip",
+        "id-689": "os.tip",
         "os.toast": "actions/os",
-        "id-457": "os.toast",
+        "id-684": "os.toast",
         "os.totalRemoteCount": "actions/os",
-        "id-1293": "os.totalRemoteCount",
+        "id-1514": "os.totalRemoteCount",
         "os.unloadInst": "actions/os",
-        "id-704": "os.unloadInst",
+        "id-934": "os.unloadInst",
         "os.unregisterApp": "actions/app",
-        "id-937": "os.unregisterApp",
+        "id-1163": "os.unregisterApp",
         "os.version": "actions/os",
-        "id-552": "os.version",
+        "id-779": "os.version",
         "os.vrSupported": "actions/xr",
-        "id-581": "os.vrSupported",
+        "id-811": "os.vrSupported",
         "os.agreedUponTime": "actions/time",
-        "id-681": "os.agreedUponTime",
+        "id-911": "os.agreedUponTime",
         "os.deadReckoningTime": "actions/time",
-        "id-689": "os.deadReckoningTime",
+        "id-919": "os.deadReckoningTime",
         "os.instLatency": "actions/time",
-        "id-683": "os.instLatency",
+        "id-913": "os.instLatency",
         "os.instTimeOffset": "actions/time",
-        "id-685": "os.instTimeOffset",
+        "id-915": "os.instTimeOffset",
         "os.instTimeOffsetSpread": "actions/time",
-        "id-687": "os.instTimeOffsetSpread",
+        "id-917": "os.instTimeOffsetSpread",
         "os.localTime": "actions/time",
-        "id-679": "os.localTime",
+        "id-909": "os.localTime",
+        "remote": "actions/event",
+        "id-559": "remote",
+        "sendRemoteData": "actions/event",
+        "id-571": "sendRemoteData",
         "removeTags": "actions/data",
-        "id-141": "removeTags",
+        "id-364": "removeTags",
         "renameTag": "actions/data",
-        "id-146": "renameTag",
+        "id-369": "renameTag",
         "setTag": "actions/data",
-        "id-93": "setTag",
+        "id-316": "setTag",
         "setTagMask": "actions/data",
-        "id-99": "setTagMask",
+        "id-322": "setTagMask",
         "subtractMods": "actions/mods",
-        "id-157": "subtractMods",
+        "id-380": "subtractMods",
         "superShout": "actions/event",
-        "id-220": "superShout",
+        "id-445": "superShout",
         "uuid": "actions/data",
-        "id-355": "uuid",
+        "id-582": "uuid",
         "web.get": "actions/web",
-        "id-2033": "web.get",
+        "id-1955": "web.get",
         "web.hook": "actions/web",
-        "id-2044": "web.hook",
+        "id-1966": "web.hook",
         "web.post": "actions/web",
-        "id-2038": "web.post",
+        "id-1960": "web.post",
         "configBot": "actions/os",
-        "id-418": "configBot"
+        "id-645": "configBot"
     }
 }

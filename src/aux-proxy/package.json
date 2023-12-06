@@ -27,7 +27,7 @@
         "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
-        "build": "node ./script/build-proxy.js",
+        "build": "node ./script/build-proxy.mjs",
         "package": "docker build -t casualsimulation/aux-proxy -f Dockerfile .",
         "start": "node dist/main.js"
     },

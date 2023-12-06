@@ -5,6 +5,7 @@ import {
     LoginUIAddressStatus,
     LoginUIStatus,
     OAuthRedirectRequest,
+    PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { AuthData } from '@casual-simulation/aux-common';
@@ -92,6 +93,13 @@ export class AuthHandler implements AuxAuth {
                 this._oauthRedirectComplete.next();
             }
         });
+    }
+
+    async getPolicyUrls(): Promise<PolicyUrls> {
+        return {
+            privacyPolicyUrl: this.privacyPolicyUrl,
+            termsOfServiceUrl: this.termsOfServiceUrl,
+        };
     }
 
     async provideOAuthLoginComplete(): Promise<void> {
@@ -448,11 +456,12 @@ export class AuthHandler implements AuxAuth {
         }
 
         if (info.parentEmail) {
-            if (!(await authManager.validateEmail(info.parentEmail))) {
+            if (!(await authManager.validateEmail(info.parentEmail, true))) {
                 errors.push({
                     for: PARENT_EMAIL_FIELD,
                     errorCode: 'invalid_parent_email',
-                    errorMessage: 'The provided email is not accepted.',
+                    errorMessage:
+                        'The provided email must be a valid email address.',
                 });
             }
         }

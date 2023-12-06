@@ -5,7 +5,21 @@
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on November 16th, 2022</em></p>
+                <p>
+                    You can find a plain-text version of these terms
+                    <a href="/terms-of-service.txt">here</a>.
+                </p>
+                <p>
+                    By using Our products or services, You agree to these Terms of Service as well
+                    as Our <a href="/acceptable-use-policy">Acceptable Use Policy</a>
+                    and
+                    <a href="/privacy-policy">Privacy Policy</a>.
+                </p>
+
+                <div v-html="termsHtml"></div>
+                <!-- <terms-content></terms-content> -->
+
+                <!-- <p><em>Last updated on November 16th, 2022</em></p>
                 <p>
                     You can find a plain-text version of these terms
                     <a href="/terms-of-service.txt">here</a>.
@@ -868,8 +882,8 @@
                         located in Kent County, Michigan. These Terms of Service, together with Our
                         Privacy Policy, constitute the entire agreement between You and Us
                         concerning Your access to and use of the Services.
-                    </p>
-                </div>
+                    </p> -->
+                <!-- </div> -->
             </md-card-content>
         </md-card>
     </div>

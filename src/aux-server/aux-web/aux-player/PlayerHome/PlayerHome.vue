@@ -16,7 +16,7 @@
             <md-dialog-title>BIOS</md-dialog-title>
             <md-dialog-content>
                 <md-field>
-                    <label for="biosOption">BIOS Option</label>
+                    <label for="biosOption">bios=</label>
                     <md-select v-model="biosSelection" name="biosOption" id="biosOption">
                         <md-option v-for="option in biosOptions" :key="option" :value="option">{{
                             option
@@ -25,11 +25,11 @@
                 </md-field>
 
                 <md-field v-if="biosSelection === 'enter join code'" :class="joinCodeClass">
-                    <label for="joinCode">Join Code</label>
+                    <label for="joinCode">joinCode=</label>
                     <md-input name="joinCode" id="joinCode" v-model="joinCode" />
                     <field-errors field="joinCode" :errors="errors" />
                 </md-field>
-                <md-field v-if="recordsOptions.length > 0">
+                <!-- <md-field v-if="recordsOptions.length > 0">
                     <label for="recordOption">Record</label>
                     <md-select v-model="recordSelection" name="recordOption" id="recordOption">
                         <md-option value="null">My Studio</md-option>
@@ -37,23 +37,30 @@
                             option
                         }}</md-option>
                     </md-select>
-                </md-field>
+                </md-field> -->
                 <md-field v-if="instOptions.length > 0">
-                    <label for="instOption">Inst</label>
+                    <label for="instOption">staticInst=</label>
                     <md-select v-model="instSelection" name="instOption" id="instOption">
-                        <md-option value="new-inst">New Inst</md-option>
+                        <md-option value="new-inst">(new inst)</md-option>
                         <md-option v-for="option in instOptions" :key="option" :value="option">{{
                             option
                         }}</md-option>
                     </md-select>
                 </md-field>
+
+                <p v-if="privacyPolicyUrl">
+                    <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
+                </p>
+                <p v-if="termsOfServiceUrl">
+                    <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
+                </p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button
                     @click="
                         executeBiosOption(biosSelection, recordSelection, instSelection, joinCode)
                     "
-                    >Continue</md-button
+                    >{{ startButtonLabel }}</md-button
                 >
             </md-dialog-actions>
         </md-dialog>

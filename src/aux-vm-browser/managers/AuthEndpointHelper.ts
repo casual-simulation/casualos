@@ -6,6 +6,7 @@ import {
     LoginStatus,
     LoginUIStatus,
     OAuthRedirectRequest,
+    PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
@@ -48,6 +49,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _recordsOrigin: string;
     private _newTab: Window;
     private _tabCloseInterval: any;
+    private _requirePrivoLogin: boolean;
 
     get currentLoginStatus() {
         const status = this._loginStatus.value;
@@ -62,10 +64,16 @@ export class AuthEndpointHelper implements AuthHelperInterface {
      * Creates a new instance of the AuthHelper class.
      * @param iframeOrigin The URL that the auth iframe should be loaded from.
      * @param defaultRecordsOrigin The HTTP Origin that should be used for the records origin if the auth site does not support protocol version 4.
+     * @param requirePrivoLogin Whether to require that the user login with Privo.
      */
-    constructor(iframeOrigin?: string, defaultRecordsOrigin?: string) {
+    constructor(
+        iframeOrigin?: string,
+        defaultRecordsOrigin?: string,
+        requirePrivoLogin?: boolean
+    ) {
         this._origin = iframeOrigin;
         this._defaultRecordsOrigin = defaultRecordsOrigin;
+        this._requirePrivoLogin = requirePrivoLogin;
     }
 
     get origin(): string {
@@ -522,7 +530,29 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.logout();
     }
 
+    async getPolicyUrls(): Promise<PolicyUrls> {
+        if (!hasValue(this._origin)) {
+            return {
+                privacyPolicyUrl: null,
+                termsOfServiceUrl: null,
+            };
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                privacyPolicyUrl: null,
+                termsOfServiceUrl: null,
+            };
+        }
+        return await this._proxy.getPolicyUrls();
+    }
+
     private _createNewTab() {
+        if (!this._requirePrivoLogin) {
+            return;
+        }
         this._newTab = window.open('/loading-oauth.html', '_blank');
         if (this._newTab) {
             if (this._tabCloseInterval) {
