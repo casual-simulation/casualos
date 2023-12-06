@@ -130,7 +130,7 @@
         "@testing-library/jest-dom": "5.11.9",
         "browserslist": ">=4.16.5",
         "sass": "1.56.1",
-        "esbuild": "^0.18.10",
+        "esbuild": "^0.19.8",
         "esbuild-copy-static-files": "0.1.0",
         "chalk": "4.1.2",
         "vue-template-compiler": "^2.6.14",
