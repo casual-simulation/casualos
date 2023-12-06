@@ -98,6 +98,12 @@ export default class PlayerHome extends Vue {
             this.biosSelection === 'static inst'
         ) {
             return 'Load';
+        } else if (
+            this.biosSelection === 'sign in' ||
+            this.biosSelection === 'sign up' ||
+            this.biosSelection === 'sign out'
+        ) {
+            return 'Continue';
         } else {
             return 'Start';
         }
