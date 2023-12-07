@@ -8,8 +8,6 @@ import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, DRIVES_URL } from './config';
 import { hasValue } from '@casual-simulation/aux-common';
-import { CacheControlHeaderValues } from './CacheHelpers';
-import useragent from 'useragent';
 import { WebConfig } from '../../shared/WebConfig';
 import compression from 'compression';
 import { ServerBuilder } from '../shared/ServerBuilder';
@@ -555,56 +553,5 @@ export class Server {
                 );
             });
         }
-    }
-
-    /**
-     * Optimizes the given image.
-     * @param contentType The MIME type of the image.
-     * @param data The data for the image.
-     */
-    private async _optimizeImage(
-        contentType: string,
-        data: Buffer
-    ): Promise<[string, Buffer]> {
-        const optimized = data;
-        return [contentType, optimized];
-    }
-
-    private _getDataForBrowser(
-        req: Request,
-        originalContentType: string,
-        originalData: Buffer,
-        optimizedContentType: string | null,
-        optimizedData: Buffer | null
-    ): [string, Buffer] {
-        const ua = useragent.is(req.header('user-agent'));
-        if (ua.safari || ua.mobile_safari) {
-            console.log(
-                "[Server] Returning original data because safari doesn't support WebP"
-            );
-            return [originalContentType, originalData];
-        } else {
-            return [
-                optimizedContentType || originalContentType,
-                optimizedData || originalData,
-            ];
-        }
-    }
-
-    private _shouldOptimize(contentType: string) {
-        if (contentType === 'image/webp') {
-            return false;
-        }
-        return imageMimeTypes.indexOf(contentType) >= 0;
-    }
-
-    private _shouldCache(
-        contentType: string,
-        cacheControl: CacheControlHeaderValues
-    ) {
-        const isImage = imageMimeTypes.indexOf(contentType) >= 0;
-        return (
-            isImage && !cacheControl['no-cache'] && !cacheControl['no-store']
-        );
     }
 }

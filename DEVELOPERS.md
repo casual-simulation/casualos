@@ -219,7 +219,6 @@ Here's a list of the tools and packages that we're using to build CasualOS.
         -   [three](https://threejs.org/) for 3D WebGL rendering.
             -   [troika-three-text](https://github.com/protectwise/troika/tree/master/packages/troika-three-text) for 3D text rendering.
         -   [express](http://expressjs.com/) for the HTTP server.
-        -   [es6-promise](https://github.com/stefanpenner/es6-promise) for ES6-style promises.
         -   [filepond](https://github.com/pqina/filepond) for file uploads.
             -   [vue-filepond](https://github.com/pqina/vue-filepond) for Vue.js integration.
         -   [downloadjs](https://github.com/rndme/download) for file downloads.

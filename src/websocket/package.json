@@ -35,5 +35,8 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "dependencies": {
+        "rxjs": "7.5.7"
     }
 }

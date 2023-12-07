@@ -30,14 +30,11 @@ export class DirectoryService {
      * @param update The update for the entry.
      */
     async update(update: DirectoryUpdate): Promise<DirectoryResult> {
-        const validation = DirectoryUpdateSchema.validate(update);
-        if (validation.error) {
+        const validation = DirectoryUpdateSchema.safeParse(update);
+        if (validation.success === false) {
             return {
                 type: 'bad_request',
-                errors: validation.error.details.map((d) => ({
-                    path: d.path,
-                    message: d.message,
-                })),
+                errors: validation.error.issues,
             };
         }
 

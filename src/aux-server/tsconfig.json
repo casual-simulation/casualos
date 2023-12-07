@@ -16,7 +16,8 @@
                 "../../node_modules/@casual-simulation/monaco-editor"
             ]
         },
-        "lib": ["es2015", "es5", "dom"]
+        "lib": ["es2015", "es5", "dom"],
+        "skipLibCheck": true
     },
     "include": [
         "./aux-web/**/*",

@@ -38,6 +38,6 @@
         "vue-router": "3.5.4"
     },
     "devDependencies": {
-        "0x": "4.8.2"
+        "0x": "5.7.0"
     }
 }

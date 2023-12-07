@@ -11623,7 +11623,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function _wrapPrng(
         seed: number | string,
-        prng: SeedRandom.prng
+        prng: SeedRandom.PRNG
     ): PseudoRandomNumberGenerator {
         return {
             seed: seed,
@@ -11699,7 +11699,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function randomBase(
         min: number = 0,
         max: number,
-        prng: SeedRandom.prng
+        prng: SeedRandom.PRNG
     ): number {
         const rand = _random(prng);
         if (max) {
@@ -11712,7 +11712,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function randomIntBase(
         min: number,
         max: number,
-        prng: SeedRandom.prng
+        prng: SeedRandom.PRNG
     ): number {
         min = Math.ceil(min);
         max = Math.floor(max);
@@ -11724,7 +11724,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
     }
 
-    function _random(prng: SeedRandom.prng): number {
+    function _random(prng: SeedRandom.PRNG): number {
         if (prng) {
             return prng();
         }

@@ -31,7 +31,7 @@ export function generateDependencyGraphRollupPlugin(
     };
 }
 
-export const root = path.resolve(__dirname, '..');
+export const root = path.resolve(__dirname, '..', '..', '..');
 export const src = path.resolve(root, 'src');
 export const nodeModules = path.resolve(root, 'node_modules');
 

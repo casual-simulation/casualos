@@ -1,4 +1,4 @@
-import Joi from '@hapi/joi';
+import z from 'zod';
 
 export interface DirectoryUpdate {
     /**
@@ -31,10 +31,10 @@ export interface DirectoryUpdate {
 /**
  * The schema for a directory update.
  */
-export const DirectoryUpdateSchema = Joi.object().keys({
-    publicName: Joi.string().required(),
-    key: Joi.string().required(),
-    password: Joi.string().required(),
-    privateIpAddress: Joi.string().required(),
-    publicIpAddress: Joi.string().required(),
+export const DirectoryUpdateSchema = z.object({
+    publicName: z.string(),
+    key: z.string(),
+    password: z.string(),
+    privateIpAddress: z.string(),
+    publicIpAddress: z.string(),
 });
