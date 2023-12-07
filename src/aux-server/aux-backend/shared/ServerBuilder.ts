@@ -90,7 +90,7 @@ import {
     STUDIOS_COLLECTION_NAME,
 } from '../mongo';
 import { sortBy } from 'lodash';
-import { PrismaClient } from './generated';
+import { PrismaClient } from '../prisma/generated';
 import {
     PrismaAuthStore,
     PrismaConfigurationStore,
