@@ -4,7 +4,7 @@
     "version": "0.3.0",
     "scripts": {
         "start": "node ./src/aux-server/aux-backend/server/dist/main.js",
-        "bootstrap": "lerna bootstrap --hoist -- --legacy-peer-deps && patch-package && npm run bootstrap:aws",
+        "bootstrap": "pnpm install && patch-package",
         "bootstrap:aws": "node src/aux-server/script/bootstrap.mjs",
         "cockroach": "cockroach start-single-node --insecure",
         "reset:aws": "node src/aux-server/script/bootstrap.js --reset",
@@ -113,7 +113,7 @@
         "jest-environment-node": "^29.5.0",
         "jest-environment-jsdom": "^29.5.0",
         "js-yaml": "^3.13.1",
-        "lerna": "5.1.8",
+        "lerna": "8.0.0",
         "nodemon": "^2.0.19",
         "precise-commits": "^1.0.2",
         "prettier": "^2.1.1",
@@ -148,7 +148,7 @@
         "vite": "5.0.6",
         "@vitejs/plugin-vue2": "2.3.1",
         "vite-plugin-svg-icons": "2.0.1",
-        "vite-plugin-pwa": "0.16.0",
+        "vite-plugin-pwa": "0.17.4",
         "vite-plugin-html": "2.1.1",
         "rollup-plugin-copy": "3.5.0",
         "@rollup/plugin-virtual": "3.0.2",
@@ -161,7 +161,14 @@
         "rollup-plugin-visualizer": "5.10.0"
     },
     "dependencies": {},
+    "engines": {
+        "node": ">=18",
+        "pnpm": ">=7"
+    },
     "prisma": {
         "schema": "./src/aux-server/aux-backend/schemas/auth.prisma"
+    },
+    "overrides": {
+        "loader-utils@>1.0.0 < 2": "1.4.2"
     }
 }
