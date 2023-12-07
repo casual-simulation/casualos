@@ -151,6 +151,7 @@
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.2.6",
         "@types/aws-lambda": "^8.10.17",
+        "@types/pify": "5.0.4",
         "schema-utils": "^3.0.0",
         "vite": "5.0.6",
         "@vitejs/plugin-vue2": "2.3.1",

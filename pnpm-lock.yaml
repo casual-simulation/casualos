@@ -571,6 +571,7 @@ importers:
             '@tensorflow/tfjs': 4.2.0
             '@tweenjs/tween.js': 18.6.0
             '@types/aws-lambda': ^8.10.17
+            '@types/pify': 5.0.4
             '@uriopass/nosleep.js': 0.12.2
             '@vitejs/plugin-vue2': 2.3.1
             '@webxr-input-profiles/assets': 1.0.9
@@ -750,6 +751,7 @@ importers:
             '@casual-simulation/aux-components': link:../aux-components
             '@rollup/plugin-virtual': 3.0.2_rollup@4.6.1
             '@types/aws-lambda': 8.10.130
+            '@types/pify': 5.0.4
             '@vitejs/plugin-vue2': 2.3.1_vite@5.0.6+vue@2.7.15
             rollup: 4.6.1
             rollup-plugin-copy: 3.5.0
@@ -7345,6 +7347,13 @@ packages:
             {
                 integrity: sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==,
             }
+
+    /@types/pify/5.0.4:
+        resolution:
+            {
+                integrity: sha512-gxKJ1Aw8LbyCsCQWIsip9bYKJCNsKHMoZoQMAe2IWH7U7hgp/l6TvJpbFvu8ZlGBimjZZNvEx2S1ZQlj02ayNQ==,
+            }
+        dev: true
 
     /@types/qs/6.9.10:
         resolution:
