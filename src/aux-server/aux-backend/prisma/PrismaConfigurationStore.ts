@@ -10,7 +10,7 @@ import {
     PrivoConfiguration,
     parsePrivoConfiguration,
 } from '@casual-simulation/aux-records/PrivoConfiguration';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated';
 
 export class PrismaConfigurationStore implements ConfigurationStore {
     private _client: PrismaClient;

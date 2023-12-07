@@ -13,8 +13,7 @@ import {
     SaveInstResult,
     StoredUpdates,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from '@prisma/client';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import { PrismaClient, Prisma } from './generated';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -238,7 +237,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 success: true,
             };
         } catch (err) {
-            if (err instanceof PrismaClientKnownRequestError) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
                 if (err.code === 'P2003') {
                     // Foreign key violation
                     return {
@@ -278,7 +277,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 success: true,
             };
         } catch (err) {
-            if (err instanceof PrismaClientKnownRequestError) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
                 if (err.code === 'P2003') {
                     // Foreign key violation
                     return {

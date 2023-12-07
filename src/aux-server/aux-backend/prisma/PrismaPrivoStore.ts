@@ -2,7 +2,7 @@ import {
     PrivoClientCredentials,
     PrivoStore,
 } from '@casual-simulation/aux-records/PrivoStore';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated';
 
 export class PrismaPrivoStore implements PrivoStore {
     private _client: PrismaClient;

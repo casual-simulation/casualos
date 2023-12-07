@@ -14,7 +14,7 @@ import {
     UserPolicyRecord,
     getExpireTime,
 } from '@casual-simulation/aux-records';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from './generated';
 import { convertMarkers, convertToDate, convertToMillis } from './Utils';
 import {
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,

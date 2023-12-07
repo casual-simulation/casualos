@@ -22,8 +22,8 @@ import {
     AuthSession as PrismaSession,
     Subscription as PrismaSubscription,
     SubscriptionPeriod,
-} from '@prisma/client';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+} from './generated';
+// import { PrismaClientKnownRequestError } from './generated/runtime';
 import { convertToDate, convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
 
@@ -208,7 +208,7 @@ export class PrismaAuthStore implements AuthStore {
                 data: createData,
             });
         } catch (err) {
-            if (err instanceof PrismaClientKnownRequestError) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
                 if (err.code === 'P2002') {
                     return {
                         success: false,

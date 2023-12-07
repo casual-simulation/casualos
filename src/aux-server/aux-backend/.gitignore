@@ -2,3 +2,5 @@ drives
 MAGIC_SECRET_KEY.txt
 secrets.env.json
 secrets.dev.env.json
+
+prisma/generated

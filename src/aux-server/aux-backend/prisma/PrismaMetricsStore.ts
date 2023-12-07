@@ -18,7 +18,7 @@ import {
     SubscriptionFilter,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from './generated';
 import { convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
 import { DateTime } from 'luxon';

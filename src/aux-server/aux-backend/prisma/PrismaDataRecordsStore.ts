@@ -13,7 +13,7 @@ import {
     PrismaClient,
     DataRecord as PrismaDataRecord,
     Prisma,
-} from '@prisma/client';
+} from './generated';
 import z from 'zod';
 import { convertMarkers } from './Utils';
 
