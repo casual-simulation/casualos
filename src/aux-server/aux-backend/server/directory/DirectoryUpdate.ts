@@ -32,9 +32,9 @@ export interface DirectoryUpdate {
  * The schema for a directory update.
  */
 export const DirectoryUpdateSchema = z.object({
-    publicName: z.string(),
-    key: z.string(),
-    password: z.string(),
-    privateIpAddress: z.string(),
-    publicIpAddress: z.string(),
+    publicName: z.string().min(1),
+    key: z.string().min(1),
+    password: z.string().min(1),
+    privateIpAddress: z.string().min(1),
+    publicIpAddress: z.string().min(1),
 });
