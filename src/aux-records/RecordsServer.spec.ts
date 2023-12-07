@@ -11,7 +11,7 @@ import {
     GenericPathParameters,
     GenericQueryStringParameters,
     GenericWebsocketRequest,
-} from './GenericHttpInterface';
+} from '@casual-simulation/aux-common';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
@@ -79,6 +79,7 @@ import {
     LoginMessage,
     WebsocketDownloadRequestEvent,
     WebsocketEventTypes,
+    WebsocketHttpResponseMessage,
     WebsocketMessage,
     WebsocketMessageEvent,
     WebsocketUploadRequestEvent,
@@ -11789,7 +11790,7 @@ describe('RecordsServer', () => {
         });
     });
 
-    describe('handleWebsocketRequest()', () => {
+    describe.only('handleWebsocketRequest()', () => {
         const connectionId = 'connectionId';
 
         describe('connect', () => {
@@ -12727,6 +12728,81 @@ describe('RecordsServer', () => {
                 ]);
             });
         });
+
+        describe('http', () => {
+            it('should send an HTTP request and return the response', async () => {
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'http_request',
+                            id: 1,
+                            request: httpGet(
+                                `/api/v2/sessions`,
+                                authenticatedHeaders
+                            ),
+                        }),
+                        undefined,
+                        authenticatedHeaders['origin']
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                const response = getWebsocketHttpResponse(connectionId, 1);
+                expectWebsocketHttpResponseBodyToEqual(response, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        sessions: [
+                            {
+                                userId: userId,
+                                sessionId: sessionId,
+                                grantedTimeMs: expect.any(Number),
+                                expireTimeMs: expireTimeMs,
+                                revokeTimeMs: null,
+                                ipAddress: '123.456.789',
+                                currentSession: true,
+                                nextSessionId: null,
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should force the origin header to be the one in the websocket request', async () => {
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'http_request',
+                            id: 1,
+                            request: httpGet(
+                                `/api/v2/sessions`,
+                                authenticatedHeaders
+                            ),
+                        }),
+                        undefined,
+                        'https://wrong.origin.com'
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                const response = getWebsocketHttpResponse(connectionId, 1);
+                expectWebsocketHttpResponseBodyToEqual(response, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+        });
     });
 
     function expectNoWebSocketErrors(connectionId: string) {
@@ -12752,6 +12828,31 @@ describe('RecordsServer', () => {
             ...response,
             body: json,
         }).toEqual(expected);
+    }
+
+    function expectWebsocketHttpResponseBodyToEqual(
+        message: WebsocketHttpResponseMessage,
+        expected: any
+    ) {
+        const response = message.response;
+        const json = response.body
+            ? JSON.parse(response.body as string)
+            : undefined;
+
+        expect({
+            ...response,
+            body: json,
+        }).toEqual(expected);
+    }
+
+    function getWebsocketHttpResponse(
+        connectionId: string,
+        id: number
+    ): WebsocketHttpResponseMessage {
+        const messages = websocketMessenger.getMessages(connectionId);
+        return messages.find(
+            (m) => m.type === 'http_response' && m.id === id
+        ) as WebsocketHttpResponseMessage;
     }
 
     function testUrl(
@@ -13057,13 +13158,15 @@ describe('RecordsServer', () => {
     function wsMessage(
         connectionId: string,
         body: string,
-        ipAddress: string = '123.456.789'
+        ipAddress: string = '123.456.789',
+        origin: string = 'https://test.com'
     ): GenericWebsocketRequest {
         return {
             type: 'message',
             connectionId,
             body,
             ipAddress,
+            origin,
         };
     }
 
@@ -13104,25 +13207,29 @@ describe('RecordsServer', () => {
 
     function wsConnect(
         connectionId: string,
-        ipAddress: string = '123.456.789'
+        ipAddress: string = '123.456.789',
+        origin: string = 'https://test.com'
     ): GenericWebsocketRequest {
         return {
             type: 'connect',
             connectionId,
             body: null,
             ipAddress,
+            origin,
         };
     }
 
     function wsDisconnect(
         connectionId: string,
-        ipAddress: string = '123.456.789'
+        ipAddress: string = '123.456.789',
+        origin: string = 'https://test.com'
     ): GenericWebsocketRequest {
         return {
             type: 'disconnect',
             connectionId,
             body: null,
             ipAddress,
+            origin,
         };
     }
 });

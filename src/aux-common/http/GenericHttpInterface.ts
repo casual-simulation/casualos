@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /**
  * Defines an interface for a generic HTTP request.
  */
@@ -34,7 +36,7 @@ export interface GenericHttpRequest {
     /**
      * The body of the HTTP request.
      */
-    body: string | Uint8Array | null;
+    body: string | null;
 
     /**
      * The IP address that the request is from.
@@ -96,4 +98,24 @@ export interface GenericWebsocketRequest {
      * The IP address of the request.
      */
     ipAddress: string;
+
+    /**
+     * The value of the HTTP Origin header when the connection was established.
+     */
+    origin: string;
 }
+
+export const genericHttpRequestSchema = z.object({
+    path: z.string(),
+    method: z.union([
+        z.literal('GET'),
+        z.literal('POST'),
+        z.literal('PUT'),
+        z.literal('DELETE'),
+        z.literal('HEAD'),
+        z.literal('OPTIONS'),
+    ]),
+    query: z.object({}).catchall(z.string()),
+    headers: z.object({}).catchall(z.string()),
+    body: z.union([z.string(), z.null()]),
+});

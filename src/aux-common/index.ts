@@ -34,3 +34,4 @@ export * from './DebugHelpers';
 export * from './Errors';
 export * from './common';
 export * from './websockets';
+export * from './http';

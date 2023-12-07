@@ -53,7 +53,7 @@ import {
     GenericHttpRequest,
     GenericHttpResponse,
     GenericWebsocketRequest,
-} from './GenericHttpInterface';
+} from '@casual-simulation/aux-common';
 
 const NOT_LOGGED_IN_RESULT = {
     success: false as const,
