@@ -448,6 +448,7 @@ export class Server {
             this._wsServer.on('connection', (socket, req) => {
                 const id = websocketMessenger.registerConnection(socket);
                 const ip = req.socket.remoteAddress;
+                const origin = req.headers.origin;
                 console.log('[Server] Got connection:', id, ip);
 
                 socket.on('close', async () => {
@@ -457,6 +458,7 @@ export class Server {
                         connectionId: id,
                         ipAddress: ip,
                         body: null,
+                        origin: origin,
                     });
                     websocketMessenger.removeConnection(id);
                 });
@@ -469,6 +471,7 @@ export class Server {
                         body: isBinary
                             ? new Uint8Array(message as any)
                             : message.toString('utf-8'),
+                        origin: origin,
                     });
                 });
 
@@ -477,6 +480,7 @@ export class Server {
                     connectionId: id,
                     ipAddress: ip,
                     body: null,
+                    origin: origin,
                 });
             });
         } else {
