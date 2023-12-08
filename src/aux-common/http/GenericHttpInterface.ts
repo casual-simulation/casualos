@@ -107,6 +107,7 @@ export interface GenericWebsocketRequest {
 
 export const genericHttpRequestSchema = z.object({
     path: z.string(),
+    pathParams: z.object({}).catchall(z.string()),
     method: z.union([
         z.literal('GET'),
         z.literal('POST'),

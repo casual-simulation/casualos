@@ -1015,6 +1015,30 @@ export class RecordsServer {
                 data as TimeSyncRequestMessage,
                 Date.now()
             );
+        } else if (data.type === 'http_request') {
+            const httpRequest: GenericHttpRequest = {
+                path: data.request.path,
+                method: data.request.method,
+                pathParams: data.request.pathParams,
+                body: data.request.body,
+                query: data.request.query,
+                headers: {
+                    ...data.request.headers,
+                    origin: request.origin,
+                },
+                ipAddress: request.ipAddress,
+            };
+
+            const result = await this.handleHttpRequest(httpRequest);
+
+            await this._websocketController.messenger.sendMessage(
+                [request.connectionId],
+                {
+                    type: 'http_response',
+                    id: data.id,
+                    response: result,
+                }
+            );
         }
     }
 

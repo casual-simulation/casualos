@@ -12799,7 +12799,7 @@ describe('RecordsServer', () => {
                         errorMessage:
                             'The request must be made from an authorized origin.',
                     },
-                    headers: accountCorsHeaders,
+                    headers: {},
                 });
             });
         });
