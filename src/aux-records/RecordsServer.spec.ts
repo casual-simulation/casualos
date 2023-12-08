@@ -11790,7 +11790,7 @@ describe('RecordsServer', () => {
         });
     });
 
-    describe.only('handleWebsocketRequest()', () => {
+    describe('handleWebsocketRequest()', () => {
         const connectionId = 'connectionId';
 
         describe('connect', () => {
