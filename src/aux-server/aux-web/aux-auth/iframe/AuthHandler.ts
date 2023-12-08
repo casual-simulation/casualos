@@ -8,7 +8,10 @@ import {
     PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
-import { AuthData } from '@casual-simulation/aux-common';
+import {
+    AuthData,
+    RemoteCausalRepoProtocol,
+} from '@casual-simulation/aux-common';
 import {
     listenForChannel,
     listenForChannels,
@@ -239,6 +242,14 @@ export class AuthHandler implements AuxAuth {
 
     async getRecordsOrigin(): Promise<string> {
         return Promise.resolve(authManager.apiEndpoint);
+    }
+
+    async getWebsocketOrigin(): Promise<string> {
+        return Promise.resolve(authManager.websocketEndpoint);
+    }
+
+    async getWebsocketProtocol(): Promise<RemoteCausalRepoProtocol> {
+        return Promise.resolve(authManager.websocketProtocol);
     }
 
     async openAccountPage(): Promise<void> {

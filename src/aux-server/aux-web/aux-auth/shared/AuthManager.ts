@@ -56,6 +56,7 @@ import type {
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
+import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -101,10 +102,19 @@ export class AuthManager {
 
     private _loginState: Subject<boolean>;
     private _apiEndpoint: string;
+    private _websocketEndpoint: string;
+    private _websocketProtocol: RemoteCausalRepoProtocol;
     private _gitTag: string;
 
-    constructor(apiEndpoint: string, gitTag: string) {
+    constructor(
+        apiEndpoint: string,
+        websocketEndpoint: string,
+        websocketProtocol: RemoteCausalRepoProtocol,
+        gitTag: string
+    ) {
         this._apiEndpoint = apiEndpoint;
+        this._websocketEndpoint = websocketEndpoint;
+        this._websocketProtocol = websocketProtocol;
         this._gitTag = gitTag;
         this._loginState = new BehaviorSubject<boolean>(false);
         this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
@@ -1190,6 +1200,14 @@ export class AuthManager {
 
     get apiEndpoint(): string {
         return this._apiEndpoint ?? location.origin;
+    }
+
+    get websocketEndpoint(): string {
+        return this._websocketEndpoint ?? location.origin;
+    }
+
+    get websocketProtocol(): RemoteCausalRepoProtocol {
+        return this._websocketProtocol ?? 'websocket';
     }
 }
 

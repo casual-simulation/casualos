@@ -87,6 +87,7 @@
     -   Returns `null` if the user is not signed in.
 -   Added the `REQUIRE_PRIVO_LOGIN` environment variable during build to control whether login with Privo is required.
 -   Added the `DEFAULT_BIOS_OPTION` environment variable during build to control which BIOS option is selected by default.
+-   Added the `AUTH_WEBSOCKET_ENDPOINT` environment variable during build to control the websocket endpoint that the auth site looks for.
 
 ### :bug: Bug Fixes
 

@@ -11790,7 +11790,7 @@ describe('RecordsServer', () => {
         });
     });
 
-    describe('handleWebsocketRequest()', () => {
+    describe.only('handleWebsocketRequest()', () => {
         const connectionId = 'connectionId';
 
         describe('connect', () => {
@@ -12729,7 +12729,7 @@ describe('RecordsServer', () => {
             });
         });
 
-        describe('http', () => {
+        describe.only('http', () => {
             it('should send an HTTP request and return the response', async () => {
                 await server.handleWebsocketRequest(
                     wsMessage(
@@ -12800,6 +12800,51 @@ describe('RecordsServer', () => {
                             'The request must be made from an authorized origin.',
                     },
                     headers: {},
+                });
+            });
+
+            it('should convert all headers to lowercase', async () => {
+                authenticatedHeaders['Authorization'] =
+                    authenticatedHeaders['authorization'];
+                delete authenticatedHeaders['authorization'];
+
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'http_request',
+                            id: 1,
+                            request: httpGet(
+                                `/api/v2/sessions`,
+                                authenticatedHeaders
+                            ),
+                        }),
+                        undefined,
+                        authenticatedHeaders['origin']
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                const response = getWebsocketHttpResponse(connectionId, 1);
+                expectWebsocketHttpResponseBodyToEqual(response, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        sessions: [
+                            {
+                                userId: userId,
+                                sessionId: sessionId,
+                                grantedTimeMs: expect.any(Number),
+                                expireTimeMs: expireTimeMs,
+                                revokeTimeMs: null,
+                                ipAddress: '123.456.789',
+                                currentSession: true,
+                                nextSessionId: null,
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
                 });
             });
         });

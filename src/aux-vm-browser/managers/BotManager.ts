@@ -52,6 +52,9 @@ import {
     SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
 import { LivekitManager } from './LivekitManager';
+import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
+import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
+import { WebsocketConnectionClient } from '@casual-simulation/aux-websocket';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -341,7 +344,34 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._recordsManager = new RecordsManager(
             this._config,
             this._helper,
-            (endpoint) => this._getAuthEndpointHelper(endpoint)
+            (endpoint) => this._getAuthEndpointHelper(endpoint),
+            undefined,
+            (endpoint, protocol) => {
+                if (protocol === 'apiary-aws') {
+                    const url = new URL(endpoint);
+                    if (url.protocol === 'http:') {
+                        url.protocol = 'ws:';
+                    } else if (url.protocol === 'https:') {
+                        url.protocol = 'wss:';
+                    }
+                    const manager = new WebSocketManager(url);
+                    manager.init();
+                    return new ApiGatewayWebsocketConnectionClient(
+                        manager.socket
+                    );
+                } else {
+                    const url = new URL('/websocket', endpoint);
+                    if (url.protocol === 'http:') {
+                        url.protocol = 'ws:';
+                    } else if (url.protocol === 'https:') {
+                        url.protocol = 'wss:';
+                    }
+                    const manager = new WebSocketManager(url);
+                    manager.init();
+
+                    return new WebsocketConnectionClient(manager.socket);
+                }
+            }
         );
         this._livekitManager = new LivekitManager(this._helper);
 

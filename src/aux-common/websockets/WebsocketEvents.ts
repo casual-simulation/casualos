@@ -613,7 +613,7 @@ export interface WebsocketHttpRequestMessage {
     /**
      * The HTTP request.
      */
-    request: GenericHttpRequest;
+    request: Omit<GenericHttpRequest, 'ipAddress'>;
 }
 export const websocketHttpRequestMessageSchema = z.object({
     type: z.literal('http_request'),
