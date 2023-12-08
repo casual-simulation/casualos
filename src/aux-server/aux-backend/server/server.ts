@@ -7,28 +7,18 @@ import cors from 'cors';
 import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, DRIVES_URL } from './config';
-import { hasValue } from '@casual-simulation/aux-common';
+import {
+    hasValue,
+    GenericHttpHeaders,
+    GenericHttpRequest,
+} from '@casual-simulation/aux-common';
 import { WebConfig } from '../../shared/WebConfig';
 import compression from 'compression';
 import { ServerBuilder } from '../shared/ServerBuilder';
-import {
-    GenericHttpHeaders,
-    GenericHttpRequest,
-    getStatusCode,
-} from '@casual-simulation/aux-records';
+import { getStatusCode } from '@casual-simulation/aux-records';
 import { Server as WebsocketServer } from 'ws';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { concatMap, interval } from 'rxjs';
-
-const imageMimeTypes = [
-    'image/png',
-    'image/bmp',
-    'image/gif',
-    'image/jpeg',
-    'image/vnd.microsoft.icon',
-    'image/tiff',
-    'image/webp',
-];
 
 /**
  * Defines a class that represents a fully featured SO4 server.

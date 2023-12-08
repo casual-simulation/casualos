@@ -15,7 +15,12 @@ describe('AuthManager', () => {
 
     beforeEach(() => {
         mockLocalStorage();
-        manager = new AuthManager('http://myendpoint.localhost', 'v9.9.9-dev');
+        manager = new AuthManager(
+            'http://myendpoint.localhost',
+            'http://myendpoint.localhost',
+            'websocket',
+            'v9.9.9-dev'
+        );
     });
 
     afterEach(() => {
