@@ -32,6 +32,7 @@ const webConfig = {
     requirePrivoLogin: process.env.REQUIRE_PRIVO_LOGIN === 'true',
     allowedBiosOptions: process.env.BIOS_OPTIONS?.split(',') || null,
     defaultBiosOption: process.env.DEFAULT_BIOS_OPTION || null,
+    automaticBiosOption: process.env.AUTOMATIC_BIOS_OPTION || null,
 };
 
 // Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.

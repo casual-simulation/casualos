@@ -205,7 +205,9 @@ export default class PlayerHome extends Vue {
                         : joinCode;
                     this._loadJoinCode(code);
                 } else {
-                    const biosOption = this.query['bios'];
+                    const biosOption =
+                        this.query['bios'] ??
+                        appManager.config.automaticBiosOption;
 
                     let hasValidBiosOption = false;
                     if (biosOption) {

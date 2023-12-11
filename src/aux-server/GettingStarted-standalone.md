@@ -102,7 +102,8 @@ Use the following environment variables to configure the inst collaboration feat
 -   `COLLABORATIVE_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for shared inst data. Currently experimental and may not work properly when enabled. Defaults to `false`.
 -   `STATIC_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for static inst data. Defaults to `true`.
 -   `BIOS_OPTIONS`: The comma-separated list of allowed bios options. If omitted, then all options are enabled. Possible options are `enter join code`, `static inst`, `public inst`, `private inst`, `sign in`, `sign up`, `sign out`.
--   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default.
+-   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default when the BIOS is shown.
+-   `AUTOMATIC_BIOS_OPTION`: The BIOS option that should be executed automatically by the BIOS. Setting this to a valid BIOS value will skip the BIOS screen.
 
 #### Privo Features
 

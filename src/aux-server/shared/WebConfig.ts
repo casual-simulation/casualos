@@ -131,23 +131,13 @@ export interface WebConfig {
 
     /**
      * The default BIOS option.
-     * If specified, then
+     * If specified, then the BIOS will automatically select this option when shown.
      */
     defaultBiosOption?: BiosOption;
 
-    // /**
-    //  * Whether to require that age verification runs before the user can access collaboration features.
-    //  * Defaults to false.
-    //  */
-    // requirePrivoAgeVerification?: boolean;
-
-    // /**
-    //  * The URL that the Privo Age Verification API script should be loaded from.
-    //  */
-    // privoAgeVerificationApiScriptUrl?: string;
-
-    // /**
-    //  * The service identifier that should be used for the Privo Age Verification API.
-    //  */
-    // privoAgeVerificationServiceId?: string;
+    /**
+     * The automatic BIOS option.
+     * If specified, then the BIOS will automatically execute this option.
+     */
+    automaticBiosOption?: BiosOption;
 }
