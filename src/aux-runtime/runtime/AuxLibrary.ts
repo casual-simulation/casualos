@@ -4959,8 +4959,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * masks.formAddress = image;
      *
      * @example Generate a image from a prompt and a negative prompt
-     * const image = await ai.generateSkybox("An oil painting of a grassy field.", "realistic");
+     * const image = await ai.generateImage("An oil painting of a grassy field.", "realistic");
      * masks.formAddress = image;
+     *
+     * @example Generate a image and upload it as a file record
+     * const image = await ai.generateImage("An oil painting of a grassy field.");
+     * const blob = bytes.fromBase64Url(image);
+     * const file = await os.recordFile(recordKey, blob);
+     * console.log('file url', file.url);
      *
      * @dochash actions/ai
      * @docname ai.generateImage
@@ -4981,17 +4987,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options the options for the request.
      *
      * @example Generate an image from a prompt.
-     * const image = await ai.generateImage({
+     * const imageResult = await ai.generateImage({
      *     prompt: "An oil painting of a grassy field.",
      * });
-     * masks.formAddress = image;
+     * masks.formAddress = imageResult.images[0].url;
      *
      * @example Generate a image from a prompt and a negative prompt
-     * const image = await ai.generateSkybox({
+     * const imageResult = await ai.generateImage({
      *     prompt: "An oil painting of a grassy field.",
      *     negativePrompt: "realistic"
      * });
-     * masks.formAddress = image;
+     * masks.formAddress = imageResult.images[0].url;
+     *
+     * @example Generate a image and upload it as a file record
+     * const imageResult = await ai.generateImage({
+     *     prompt: "An oil painting of a grassy field.",
+     *     negativePrompt: "realistic"
+     * });
+     * const image = imageResult.images[0];
+     * const blob = bytes.fromBase64Url(image.url);
+     * const file = await os.recordFile(recordKey, blob);
+     * console.log('file url', file.url);
      *
      * @dochash actions/ai
      * @docname ai.generateImage
