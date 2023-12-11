@@ -207,34 +207,7 @@ export default defineConfig(({ command, mode }) => ({
             strict: true,
             allow: [
                 path.resolve(__dirname, '..', '..', '..'), // src folder
-                path.resolve(
-                    __dirname,
-                    '..',
-                    '..',
-                    '..',
-                    '..',
-                    'node_modules',
-                    'monaco-editor'
-                ), // node_modules/monaco-editor
-                path.resolve(
-                    __dirname,
-                    '..',
-                    '..',
-                    '..',
-                    '..',
-                    'node_modules',
-                    '@casual-simulation',
-                    'monaco-editor'
-                ), // node_modules/monaco-editor
-                path.resolve(
-                    __dirname,
-                    '..',
-                    '..',
-                    '..',
-                    '..',
-                    'node_modules',
-                    'rxjs'
-                ), // node_modules/rxjs
+                path.resolve(__dirname, '..', '..', '..', '..', 'node_modules'), // node_modules
             ],
         },
         proxy: {

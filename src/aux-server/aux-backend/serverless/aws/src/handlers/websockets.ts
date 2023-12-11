@@ -25,6 +25,7 @@ export async function connect(
         connectionId: event.requestContext.connectionId as string,
         ipAddress: event.requestContext.identity.sourceIp,
         body: event.body,
+        origin: event.headers['origin'],
     });
 
     return {
@@ -45,6 +46,7 @@ export async function disconnect(
         connectionId: event.requestContext.connectionId as string,
         ipAddress: event.requestContext.identity.sourceIp,
         body: event.body,
+        origin: event.headers['origin'],
     });
 
     return {
@@ -62,6 +64,7 @@ export async function message(
         connectionId: event.requestContext.connectionId as string,
         ipAddress: event.requestContext.identity.sourceIp,
         body: event.body,
+        origin: event.headers['origin'],
     });
 
     return {

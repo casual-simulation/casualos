@@ -1195,12 +1195,21 @@ importers:
             '@casual-simulation/aux-vm-client':
                 specifier: ^3.2.6
                 version: link:../aux-vm-client
+            '@casual-simulation/aux-websocket':
+                specifier: ^3.1.11
+                version: link:../aux-websocket
+            '@casual-simulation/aux-websocket-aws':
+                specifier: ^3.1.11
+                version: link:../aux-websocket-aws
             '@casual-simulation/crypto':
                 specifier: ^3.2.0
                 version: link:../crypto
             '@casual-simulation/crypto-browser':
                 specifier: ^3.2.0
                 version: link:../crypto-browser
+            '@casual-simulation/websocket':
+                specifier: ^3.1.11
+                version: link:../websocket
             axios:
                 specifier: 1.6.2
                 version: 1.6.2

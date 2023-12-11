@@ -8,9 +8,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { injectHtml } from 'vite-plugin-html';
 import md from '../../plugins/markdown-plugin';
 import virtual from '@rollup/plugin-virtual';
-import { getPolicies, listEnvironmentFiles, loadEnvFiles } from '../../script/vite-utils';
+import {
+    getPolicies,
+    listEnvironmentFiles,
+    loadEnvFiles,
+} from '../../script/vite-utils';
 import writeFilesPlugin from '../../plugins/write-files-plugin';
-
+import z from 'zod';
+import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
@@ -32,6 +37,18 @@ export default defineConfig(({ command, mode }) => {
     let apiEndpoint: string | null = null;
     if (process.env.AUTH_API_ENDPOINT) {
         apiEndpoint = process.env.AUTH_API_ENDPOINT;
+    }
+    let websocketEndpoint: string | null = null;
+    if (process.env.AUTH_WEBSOCKET_ENDPOINT) {
+        websocketEndpoint = process.env.AUTH_WEBSOCKET_ENDPOINT;
+    } else if (mode === 'serve') {
+        websocketEndpoint = 'http://localhost:3002';
+    }
+    let websocketProtocol: RemoteCausalRepoProtocol | null = 'websocket';
+    if (process.env.AUTH_WEBSOCKET_PROTOCOL) {
+        websocketProtocol = z
+            .union([z.literal('websocket'), z.literal('apiary-aws')])
+            .parse(process.env.AUTH_WEBSOCKET_PROTOCOL);
     }
     let frontendOrigin: string | null = null;
     if (process.env.FRONTEND_ORIGIN) {
@@ -131,8 +148,8 @@ export default defineConfig(({ command, mode }) => {
             writeFilesPlugin({
                 files: {
                     ...policies.files,
-                }
-            })
+                },
+            }),
         ],
         assetsInclude: ['**/*.gltf', '**/*.glb'],
         define: {
@@ -141,6 +158,8 @@ export default defineConfig(({ command, mode }) => {
                 command === 'serve' ? 'v9.9.9-dev:alpha' : GIT_TAG
             ),
             PRODUCTION: JSON.stringify(command === 'build'),
+            WEBSOCKET_ENDPOINT: JSON.stringify(websocketEndpoint),
+            WEBSOCKET_PROTOCOL: JSON.stringify(websocketProtocol),
             API_ENDPOINT: JSON.stringify(apiEndpoint),
             FRONTEND_ORIGIN: JSON.stringify(frontendOrigin),
             ENABLE_SMS_AUTHENTICATION: JSON.stringify(
@@ -159,7 +178,16 @@ export default defineConfig(({ command, mode }) => {
         },
         publicDir,
         resolve: {
-            extensions: ['.vue', '.ts', '.mjs', '.js', '.tsx', '.jsx', '.json', '.md'],
+            extensions: [
+                '.vue',
+                '.ts',
+                '.mjs',
+                '.js',
+                '.tsx',
+                '.jsx',
+                '.json',
+                '.md',
+            ],
             alias: {},
         },
         server: {
@@ -182,6 +210,10 @@ export default defineConfig(({ command, mode }) => {
                     target: 'http://localhost:4566',
                     changeOrigin: true,
                     rewrite: (path) => path.replace(/^\/s3/, ''),
+                },
+                '/websocket': {
+                    target: 'http://localhost:2998',
+                    ws: true,
                 },
             },
         },

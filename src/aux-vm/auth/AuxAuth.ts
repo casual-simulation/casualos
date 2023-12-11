@@ -1,4 +1,7 @@
-import { AuthData } from '@casual-simulation/aux-common';
+import type {
+    AuthData,
+    RemoteCausalRepoProtocol,
+} from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
     FormError,
@@ -365,6 +368,18 @@ export interface AuxAuth {
      * Only supported on protocol version 4 or more.
      */
     getRecordsOrigin(): Promise<string>;
+
+    /**
+     * Gets the HTTP origin that should be used for Records API requests that are sent over WebSockets.
+     * Only supported on protocol version 9 or more.
+     */
+    getWebsocketOrigin(): Promise<string>;
+
+    /**
+     * Gets the protocol that should be used for the Records API requests that are sent over WebSockets.
+     * Only supported on protocol version 9 or more.
+     */
+    getWebsocketProtocol(): Promise<RemoteCausalRepoProtocol>;
 
     /**
      * Gets the connection key for the user.

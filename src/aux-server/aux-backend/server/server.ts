@@ -7,28 +7,18 @@ import cors from 'cors';
 import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, DRIVES_URL } from './config';
-import { hasValue } from '@casual-simulation/aux-common';
+import {
+    hasValue,
+    GenericHttpHeaders,
+    GenericHttpRequest,
+} from '@casual-simulation/aux-common';
 import { WebConfig } from '../../shared/WebConfig';
 import compression from 'compression';
 import { ServerBuilder } from '../shared/ServerBuilder';
-import {
-    GenericHttpHeaders,
-    GenericHttpRequest,
-    getStatusCode,
-} from '@casual-simulation/aux-records';
+import { getStatusCode } from '@casual-simulation/aux-records';
 import { Server as WebsocketServer } from 'ws';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { concatMap, interval } from 'rxjs';
-
-const imageMimeTypes = [
-    'image/png',
-    'image/bmp',
-    'image/gif',
-    'image/jpeg',
-    'image/vnd.microsoft.icon',
-    'image/tiff',
-    'image/webp',
-];
 
 /**
  * Defines a class that represents a fully featured SO4 server.
@@ -448,6 +438,7 @@ export class Server {
             this._wsServer.on('connection', (socket, req) => {
                 const id = websocketMessenger.registerConnection(socket);
                 const ip = req.socket.remoteAddress;
+                const origin = req.headers.origin;
                 console.log('[Server] Got connection:', id, ip);
 
                 socket.on('close', async () => {
@@ -457,6 +448,7 @@ export class Server {
                         connectionId: id,
                         ipAddress: ip,
                         body: null,
+                        origin: origin,
                     });
                     websocketMessenger.removeConnection(id);
                 });
@@ -469,6 +461,7 @@ export class Server {
                         body: isBinary
                             ? new Uint8Array(message as any)
                             : message.toString('utf-8'),
+                        origin: origin,
                     });
                 });
 
@@ -477,6 +470,7 @@ export class Server {
                     connectionId: id,
                     ipAddress: ip,
                     body: null,
+                    origin: origin,
                 });
             });
         } else {

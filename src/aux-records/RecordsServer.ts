@@ -53,7 +53,7 @@ import {
     GenericHttpRequest,
     GenericHttpResponse,
     GenericWebsocketRequest,
-} from './GenericHttpInterface';
+} from '@casual-simulation/aux-common';
 
 const NOT_LOGGED_IN_RESULT = {
     success: false as const,
@@ -1014,6 +1014,34 @@ export class RecordsServer {
                 request.connectionId,
                 data as TimeSyncRequestMessage,
                 Date.now()
+            );
+        } else if (data.type === 'http_request') {
+            let headers: GenericHttpHeaders = {};
+
+            for (let key in data.request.headers) {
+                headers[key.toLowerCase()] = data.request.headers[key];
+            }
+            headers.origin = request.origin;
+
+            const httpRequest: GenericHttpRequest = {
+                path: data.request.path,
+                method: data.request.method,
+                pathParams: data.request.pathParams,
+                body: data.request.body,
+                query: data.request.query,
+                headers: headers,
+                ipAddress: request.ipAddress,
+            };
+
+            const result = await this.handleHttpRequest(httpRequest);
+
+            await this._websocketController.messenger.sendMessage(
+                [request.connectionId],
+                {
+                    type: 'http_response',
+                    id: data.id,
+                    response: result,
+                }
             );
         }
     }
@@ -2189,6 +2217,7 @@ export class RecordsServer {
             instances,
         } = parseResult.data;
 
+        console.log('got request', request);
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
             if (sessionKeyValidation.errorCode === 'no_session_key') {

@@ -3,6 +3,11 @@ import {
     BotAction,
     approveAction,
     asyncError,
+    RemoteCausalRepoProtocol,
+    ConnectionClient,
+    MemoryConnectionClient,
+    WebsocketHttpResponseMessage,
+    WebsocketHttpRequestMessage,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -80,6 +85,10 @@ describe('RecordsManager', () => {
         provideSmsNumber: jest.fn(),
     };
     let authFactory: (endpoint: string) => AuthHelperInterface;
+    let connectionClientFactory: (
+        endpoint: string,
+        protocol: RemoteCausalRepoProtocol
+    ) => ConnectionClient;
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -112,6 +121,10 @@ describe('RecordsManager', () => {
             getRecordsOrigin: jest
                 .fn()
                 .mockResolvedValue('http://localhost:3002'),
+            getWebsocketOrigin: jest
+                .fn()
+                .mockResolvedValue('http://localhost:2998'),
+            getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
             get supportsAuthentication() {
                 return true;
             },
@@ -147,6 +160,10 @@ describe('RecordsManager', () => {
             getRecordsOrigin: jest
                 .fn()
                 .mockResolvedValue('http://localhost:9999'),
+            getWebsocketOrigin: jest
+                .fn()
+                .mockResolvedValue('http://localhost:2998'),
+            getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
             isValidDisplayName: jest.fn(),
             isValidEmailAddress: jest.fn(),
             provideHasAccount: jest.fn(),
@@ -6445,6 +6462,99 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toBeCalled();
                 expect(authMock.authenticate).toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should use websockets if they are supported', async () => {
+                const client = new MemoryConnectionClient();
+
+                let responses = new Subject<WebsocketHttpResponseMessage>();
+                client.events.set('http_response', responses);
+
+                connectionClientFactory = () => {
+                    return client;
+                };
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                    },
+                    helper,
+                    authFactory,
+                    true,
+                    connectionClientFactory
+                );
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(client.sentMessages).toEqual([
+                    {
+                        type: 'http_request',
+                        id: 0,
+                        request: {
+                            path: '/api/v2/ai/image',
+                            method: 'POST',
+                            body: expect.any(String),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                            query: {},
+                            pathParams: {},
+                        },
+                    },
+                ]);
+
+                const body = JSON.parse(
+                    (client.sentMessages[0] as WebsocketHttpRequestMessage)
+                        .request.body
+                );
+                expect(body).toEqual({
+                    prompt: 'a blue bridge',
+                });
+
+                responses.next({
+                    type: 'http_response',
+                    id: 0,
+                    response: {
+                        statusCode: 200,
+                        body: JSON.stringify({
+                            success: true,
+                            images: [
+                                {
+                                    base64: 'data',
+                                },
+                            ],
+                        }),
+                        headers: {},
+                    },
+                });
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    }),
+                ]);
             });
         });
 
