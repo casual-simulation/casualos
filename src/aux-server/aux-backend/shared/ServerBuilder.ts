@@ -121,7 +121,6 @@ import {
     PrivoConfiguration,
     privoSchema,
 } from '@casual-simulation/aux-records/PrivoConfiguration';
-import { promisify } from 'util';
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
