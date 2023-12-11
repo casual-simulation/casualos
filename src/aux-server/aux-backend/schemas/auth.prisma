@@ -50,6 +50,7 @@ model User {
     records Record[]
     recordKeys RecordKey[]
     roleAssignments RoleAssignment[]
+    permissionAssignments PermissionAssignment[]
 
     publishedDataRecords DataRecord[] @relation("PublishedDataRecords")
     subjectDataRecords DataRecord[] @relation("SubjectDataRecords")
@@ -304,6 +305,94 @@ model RoleAssignment {
 
     @@index([recordName, subjectId])
     @@index([recordName, roleId])
+}
+
+model ResourcePermissionAssignment {
+    // The ID of the assignment
+    id String @db.Uuid @id
+
+    // The name of the record.
+    recordName String
+
+    // The kind of the resource.
+    // If null, then the assignment grants permission for a marker instead.
+    resourceKind String
+
+    // The ID of the resource.
+    // If null, then the assignment is grants permission for a marker instead.
+    resourceId String
+
+    // The action that the assignment grants.
+    // If null, then the assignment grants every action to the resource.
+    action String?
+
+    // The ID of the subject that the assignment grants permission to.
+    // This can be the ID of the user or the ID of the inst that permission is granted to.
+    subjectId String
+
+    // The type of the subject that the assignment grants permission to.
+    // This can be "user", "inst" or "role"
+    subjectType String
+
+    // The ID of the user that the assignment grants permission to.
+    // Null if the subjectType is "role" or "inst"
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    // The time that the assignment expires.
+    // Null means that the assignment never expires.
+    expireTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([subjectId, recordName, resourceKind, resourceId, action])
+}
+
+// Example query:
+// SELECT * FROM "ResourcePermissionAssignment"
+// WHERE "recordName" = recordName AND "resourceKind" = resourceKind
+// AND "resourceId" = resourceId AND "action" = action
+// AND (
+//    ("subjectId" = subjectId AND "subjectType" = subjectType) OR 
+//    ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = recordName AND "subjectId" = subjectId AND "subjectType" = subjectType)))
+
+model MarkerPermissionAssignment {
+    // The ID of the assignment
+    id String @db.Uuid @id
+
+    // The name of the record.
+    recordName String
+
+    // The marker of the resources that the assignment grants.
+    // If null, then the assignment grants permission for a resource instead.
+    marker String
+
+    // The action that the assignment grants.
+    // If null, then the assignment grants every action to the resource.
+    action String?
+
+    // The ID of the subject that the assignment grants permission to.
+    // This can be the ID of the user or the ID of the inst that permission is granted to.
+    subjectId String
+
+    // The type of the subject that the assignment grants permission to.
+    // This can be "user", "inst" or "role"
+    subjectType String
+
+    // The ID of the user that the assignment grants permission to.
+    // Null if the subjectType is "role" or "inst"
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    // The time that the assignment expires.
+    // Null means that the assignment never expires.
+    expireTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([subjectId, recordName, marker, action])
 }
 
 // Data

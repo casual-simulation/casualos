@@ -33785,6 +33785,34 @@ describe('PolicyController', () => {
             ]);
         });
     });
+
+    // Two ways to authorize access:
+    // 1. By Marker
+    //   - This is basically role based access control.
+    //   - Resources have markers, which have policies, which grant permissions to roles.
+    //   - This system allows us to grant default permissions.
+    // 2. By Permission
+    //   - This is basically one-off access control.
+    //   - Users are granted permissions directly to resources - no markers involved.
+    //   - This system allows users to easily manage permissions in an ad-hoc manner.
+
+    // Each resource has an ID: '{resourceKind}/{resourceId}'
+    // Examples:
+    //  - 'data/address'
+    //  - 'file/hash'
+    //  - 'event/name'
+    //  - 'inst/instId'
+    //  - 'policy/policyId'
+    //  - 'user/userId'
+    //  - 'role/roleId'
+
+    // Permissions can be granted to specific users, or to roles.
+    // Examples:
+    //  - subject: 'user/userId', resource: 'data/address', action: 'data.read'
+    //  - subject: 'role/roleId', resource: 'data/address', action: 'data.read'
+
+    // hasPermissionsForSubjectAndResource(subjectType, subjectId, recordName, resourceKind, resourceId, action)
+    // hasPermissionForSubjectAndMarker(subjectType, subjectId, recordName, marker, action)
 });
 
 describe('willMarkersBeRemaining()', () => {
