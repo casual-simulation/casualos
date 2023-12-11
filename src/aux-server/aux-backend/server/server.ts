@@ -307,6 +307,7 @@ export class Server {
             '/api/v2/records/file/*',
             express.raw({
                 type: () => true,
+                limit: '1GB',
             })
         );
 
