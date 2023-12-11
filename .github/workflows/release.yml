@@ -5,7 +5,7 @@ on:
         branches:
             - master
             - staging
-            - 'release/brandplayer'
+            - 'release/**'
 
 jobs:
     build:

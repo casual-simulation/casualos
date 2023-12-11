@@ -5,12 +5,14 @@ on:
         branches-ignore:
             - 'master'
             - 'staging'
+            - 'release/**'
         tags-ignore:
             - '**'
     pull_request:
         branches-ignore:
             - 'master'
             - 'staging'
+            - 'release/**'
         tags-ignore:
             - '**'
 
