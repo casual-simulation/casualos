@@ -447,7 +447,7 @@ export default class PlayerApp extends Vue {
         });
     }
 
-    onRecordsUIVisisble() {
+    onRecordsUIVisible() {
         this.recordsUIVisible = false;
     }
 
