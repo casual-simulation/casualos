@@ -54,13 +54,13 @@
         "htm": "3.1.0",
         "lib0": "0.2.49",
         "lru-cache": "^5.1.1",
-        "luxon": "2.3.0",
+        "luxon": "3.4.4",
         "preact": "10.10.1",
         "rxjs": "7.5.7",
-        "seedrandom": "3.0.5",
-        "stackframe": "^1.2.0",
         "uuid": "^8.3.2",
-        "yjs": "13.6.8"
+        "yjs": "13.6.8",
+        "zod": "3.22.4",
+        "base64-js": "^1.5.1"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

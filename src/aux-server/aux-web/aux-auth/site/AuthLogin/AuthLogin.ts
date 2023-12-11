@@ -93,7 +93,7 @@ export default class AuthLogin extends Vue {
             const codes: CompleteOpenIDLoginSuccess =
                 await new Promise<CompleteOpenIDLoginSuccess>(
                     (resolve, reject) => {
-                        let intervalId: number | NodeJS.Timer;
+                        let intervalId: number | NodeJS.Timeout;
                         const handleClose = async () => {
                             if (intervalId) {
                                 clearInterval(intervalId);

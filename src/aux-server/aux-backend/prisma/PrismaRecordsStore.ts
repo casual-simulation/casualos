@@ -14,7 +14,7 @@ import {
     StudioAssignmentRole,
     CountRecordsFilter,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from './generated';
 
 export class PrismaRecordsStore implements RecordsStore {
     private _client: PrismaClient;

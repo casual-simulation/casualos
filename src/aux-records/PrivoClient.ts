@@ -3,7 +3,7 @@ import { PrivoConfiguration } from './PrivoConfiguration';
 import { PrivoClientCredentials, PrivoStore } from './PrivoStore';
 import { Client, Issuer, TokenSet, generators } from 'openid-client';
 import { v4 as uuid } from 'uuid';
-import axios, { AxiosRequestHeaders } from 'axios';
+import axios, { RawAxiosRequestHeaders } from 'axios';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
 
@@ -562,7 +562,7 @@ export class PrivoClient implements PrivoClientInterface {
 
     private async _getRequestHeaders(
         config: PrivoConfiguration
-    ): Promise<AxiosRequestHeaders> {
+    ): Promise<RawAxiosRequestHeaders> {
         const credentials = await this._getClientCredentials(config);
         if (!credentials) {
             throw new Error('No Privo credentials found.');

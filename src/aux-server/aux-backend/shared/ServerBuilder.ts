@@ -90,7 +90,7 @@ import {
     STUDIOS_COLLECTION_NAME,
 } from '../mongo';
 import { sortBy } from 'lodash';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../prisma/generated';
 import {
     PrismaAuthStore,
     PrismaConfigurationStore,
@@ -121,6 +121,7 @@ import {
     PrivoConfiguration,
     privoSchema,
 } from '@casual-simulation/aux-records/PrivoConfiguration';
+import { promisify } from 'util';
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
