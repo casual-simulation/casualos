@@ -94,10 +94,9 @@ jobs:
                   npm run bootstrap
               env:
                   CI: true
-            - name: yarn install and build docs
+            - name: build docs
               run: |
                   cd docs
-                  yarn install --network-timeout 1000000
-                  yarn build
+                  npm run build
               env:
                   CI: true

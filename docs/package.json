@@ -8,7 +8,7 @@
     "swizzle": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus swizzle",
     "deploy": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus deploy",
     "serve": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus serve -p 3001",
-    "typedoc": "yarn build:plugin && node ./typedoc-plugin/dist/index.js",
+    "typedoc": "npm run build:plugin && node ./typedoc-plugin/dist/index.js",
     "build:plugin": "node ./script/build-typedoc.mjs"
   },
   "dependencies": {
@@ -31,13 +31,15 @@
     "typescript": "^5.3.2",
     "unist-util-visit": "4.1.2",
     "vue": "3.3.4",
-    "webpack-virtual-modules": "0.5.0"
+    "webpack-virtual-modules": "0.5.0",
+    "@mdx-js/react": "^3.0.0"
   },
   "devDependencies": {
     "cross-env": "7.0.3"
   },
   "engines": {
-    "node": ">=18.0"
+    "node": ">=18.0",
+    "pnpm": ">=8"
   },
   "browserslist": {
     "production": [
@@ -50,9 +52,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "packageManager": "yarn@4.0.2",
-  "resolutions": {
-    "@mdx-js/mdx@npm:^3.0.0": "patch:@mdx-js/mdx@npm%3A3.0.0#~/.yarn/patches/@mdx-js-mdx-npm-3.0.0-60c1bb5452.patch"
   }
 }

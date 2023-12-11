@@ -1,7 +1,7 @@
-diff --git a/node_modules/fake-indexeddb/build/cjs/lib/scheduling.js b/node_modules/fake-indexeddb/build/cjs/lib/scheduling.js
-index 2814f51..e6e9219 100644
---- a/node_modules/fake-indexeddb/build/cjs/lib/scheduling.js
-+++ b/node_modules/fake-indexeddb/build/cjs/lib/scheduling.js
+diff --git a/build/cjs/lib/scheduling.js b/build/cjs/lib/scheduling.js
+index 2814f5129414c8feb8a69a888871b5e405011600..e6e92195b5935a33c331efce46eee058b2e4d02b 100644
+--- a/build/cjs/lib/scheduling.js
++++ b/build/cjs/lib/scheduling.js
 @@ -29,4 +29,9 @@ function getSetImmediateFromJsdom() {
  // transactions are marked as not active when the event loop runs. The next
  // tick queue and microtask queue run within the current event loop macrotask,
@@ -15,10 +15,10 @@ index 2814f51..e6e9219 100644
 +    setImmediate(fn);
 +};
 \ No newline at end of file
-diff --git a/node_modules/fake-indexeddb/build/esm/lib/scheduling.js b/node_modules/fake-indexeddb/build/esm/lib/scheduling.js
-index c85f294..1823c3b 100644
---- a/node_modules/fake-indexeddb/build/esm/lib/scheduling.js
-+++ b/node_modules/fake-indexeddb/build/esm/lib/scheduling.js
+diff --git a/build/esm/lib/scheduling.js b/build/esm/lib/scheduling.js
+index c85f294f1d152a226a4ac416f4c8a4a43e84d0e9..1823c3b6649d15dac7b700faf6560cf135ae7358 100644
+--- a/build/esm/lib/scheduling.js
++++ b/build/esm/lib/scheduling.js
 @@ -23,4 +23,9 @@ function getSetImmediateFromJsdom() {
  // transactions are marked as not active when the event loop runs. The next
  // tick queue and microtask queue run within the current event loop macrotask,
@@ -31,4 +31,3 @@ index c85f294..1823c3b 100644
 +        ((fn) => setTimeout(fn, 0));
 +    setImmediate(fn);
 +}
-\ No newline at end of file
