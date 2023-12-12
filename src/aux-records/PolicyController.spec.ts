@@ -7,16 +7,24 @@ import {
     AuthorizeRequest,
     AuthorizeResult,
     PolicyController,
+    ResourceInfo,
     filterAndMergeMarkerPermissions,
+    getResourceInfo,
     willMarkersBeRemaining,
 } from './PolicyController';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
+    DATA_RESOURCE_KIND,
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+    EVENT_RESOURCE_KIND,
+    FILE_RESOURCE_KIND,
+    INST_RESOURCE_KIND,
+    POLICY_RESOURCE_KIND,
     PolicyDocument,
     PUBLIC_READ_MARKER,
+    ROLE_RESOURCE_KIND,
 } from '@casual-simulation/aux-common';
 import {
     CreateRecordSuccess,
@@ -33808,11 +33816,458 @@ describe('PolicyController', () => {
 
     // Permissions can be granted to specific users, or to roles.
     // Examples:
-    //  - subject: 'user/userId', resource: 'data/address', action: 'data.read'
-    //  - subject: 'role/roleId', resource: 'data/address', action: 'data.read'
+    //  - subject: 'user/userId', resourceKind: 'data' resourceId: 'address', action: 'read'
+    //  - subject: 'role/roleId', resourceKind: 'data' resourceId: 'address', action: 'read'
 
-    // hasPermissionsForSubjectAndResource(subjectType, subjectId, recordName, resourceKind, resourceId, action)
-    // hasPermissionForSubjectAndMarker(subjectType, subjectId, recordName, marker, action)
+    // Actions describe the kinds of operations that can be performed on a resource.
+    // For operations that are not resource specific, then permission has to be determined by the marker.
+    // For example, a user cannot be granted permission to list a single resource, they must instead be granted permission to list all resources of a given marker.
+
+    // getPermissionForSubjectAndResource(subjectType, subjectId, recordName, resourceKind, resourceId, action)
+    // getPermissionForSubjectAndMarker(subjectType, subjectId, recordName, marker, action)
+    // assignPermissionToSubjectAndResource(subjectType, subjectId, recordName, resourceKind, resourceId, action, options)
+    // assignPermissionToSubjectAndMarker(subjectType, subjectId, recordName, marker, action, options)
+});
+
+describe('getResourceInfo()', () => {
+    const cases: [string, AuthorizeRequest, ResourceInfo | null][] = [
+        [
+            'data.read',
+            {
+                action: 'data.read',
+                address: 'abc',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: DATA_RESOURCE_KIND,
+                resourceId: 'abc',
+                resourceMarkers: ['marker'],
+                actionKind: 'read',
+            },
+        ],
+        [
+            'data.create',
+            {
+                action: 'data.create',
+                address: 'abc',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: DATA_RESOURCE_KIND,
+                resourceId: 'abc',
+                resourceMarkers: ['marker'],
+                actionKind: 'create',
+            },
+        ],
+        [
+            'data.update',
+            {
+                action: 'data.update',
+                address: 'abc',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                existingMarkers: ['marker'],
+            },
+            {
+                resourceKind: DATA_RESOURCE_KIND,
+                resourceId: 'abc',
+                resourceMarkers: ['marker'],
+                actionKind: 'update',
+            },
+        ],
+        [
+            'data.list',
+            {
+                action: 'data.list',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                dataItems: [],
+            },
+            null,
+        ],
+        [
+            'data.delete',
+            {
+                action: 'data.delete',
+                address: 'abc',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: DATA_RESOURCE_KIND,
+                resourceId: 'abc',
+                resourceMarkers: ['marker'],
+                actionKind: 'delete',
+            },
+        ],
+        [
+            'file.read',
+            {
+                action: 'file.read',
+                fileName: 'test.txt',
+                fileMimeType: 'text/plain',
+                fileSizeInBytes: 100,
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: FILE_RESOURCE_KIND,
+                resourceId: 'test.txt',
+                resourceMarkers: ['marker'],
+                actionKind: 'read',
+            },
+        ],
+        [
+            'file.create',
+            {
+                action: 'file.create',
+                fileName: 'test.txt',
+                fileMimeType: 'text/plain',
+                fileSizeInBytes: 100,
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: FILE_RESOURCE_KIND,
+                resourceId: 'test.txt',
+                resourceMarkers: ['marker'],
+                actionKind: 'create',
+            },
+        ],
+        [
+            'file.delete',
+            {
+                action: 'file.delete',
+                fileName: 'test.txt',
+                fileMimeType: 'text/plain',
+                fileSizeInBytes: 100,
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: FILE_RESOURCE_KIND,
+                resourceId: 'test.txt',
+                resourceMarkers: ['marker'],
+                actionKind: 'delete',
+            },
+        ],
+        [
+            'file.update',
+            {
+                action: 'file.update',
+                fileName: 'test.txt',
+                fileMimeType: 'text/plain',
+                fileSizeInBytes: 100,
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                existingMarkers: ['marker'],
+            },
+            {
+                resourceKind: FILE_RESOURCE_KIND,
+                resourceId: 'test.txt',
+                resourceMarkers: ['marker'],
+                actionKind: 'update',
+            },
+        ],
+        [
+            'file.list',
+            {
+                action: 'file.list',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                fileItems: [],
+            },
+            null,
+        ],
+        [
+            'event.increment',
+            {
+                action: 'event.increment',
+                eventName: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: EVENT_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'increment',
+            },
+        ],
+        [
+            'event.count',
+            {
+                action: 'event.count',
+                eventName: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: EVENT_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'count',
+            },
+        ],
+        [
+            'event.update',
+            {
+                action: 'event.update',
+                eventName: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                existingMarkers: ['marker'],
+            },
+            {
+                resourceKind: EVENT_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'update',
+            },
+        ],
+        [
+            'event.list',
+            {
+                action: 'event.list',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                eventItems: [],
+            },
+            null,
+        ],
+        [
+            'inst.read',
+            {
+                action: 'inst.read',
+                inst: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: INST_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'read',
+            },
+        ],
+        [
+            'inst.create',
+            {
+                action: 'inst.create',
+                inst: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: INST_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'create',
+            },
+        ],
+        [
+            'inst.update',
+            {
+                action: 'inst.update',
+                inst: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                existingMarkers: ['marker'],
+            },
+            {
+                resourceKind: INST_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'update',
+            },
+        ],
+        [
+            'inst.updateData',
+            {
+                action: 'inst.updateData',
+                inst: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: INST_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'updateData',
+            },
+        ],
+        [
+            'inst.delete',
+            {
+                action: 'inst.delete',
+                inst: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: INST_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'delete',
+            },
+        ],
+        [
+            'inst.sendAction',
+            {
+                action: 'inst.sendAction',
+                inst: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                resourceMarkers: ['marker'],
+            },
+            {
+                resourceKind: INST_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: ['marker'],
+                actionKind: 'sendAction',
+            },
+        ],
+        [
+            'inst.list',
+            {
+                action: 'inst.list',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+                insts: [],
+            },
+            null,
+        ],
+        [
+            'policy.read',
+            {
+                action: 'policy.read',
+                policy: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+            },
+            {
+                resourceKind: POLICY_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: [ACCOUNT_MARKER],
+                actionKind: 'read',
+            },
+        ],
+        [
+            'policy.grantPermission',
+            {
+                action: 'policy.grantPermission',
+                policy: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+            },
+            {
+                resourceKind: POLICY_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: [ACCOUNT_MARKER],
+                actionKind: 'grantPermission',
+            },
+        ],
+        [
+            'policy.revokePermission',
+            {
+                action: 'policy.revokePermission',
+                policy: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+            },
+            {
+                resourceKind: POLICY_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: [ACCOUNT_MARKER],
+                actionKind: 'revokePermission',
+            },
+        ],
+        [
+            'policy.list',
+            {
+                action: 'policy.list',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+            },
+            null,
+        ],
+        [
+            'role.grant',
+            {
+                action: 'role.grant',
+                role: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+            },
+            {
+                resourceKind: ROLE_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: [ACCOUNT_MARKER],
+                actionKind: 'grant',
+            },
+        ],
+        [
+            'role.revoke',
+            {
+                action: 'role.revoke',
+                role: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+            },
+            {
+                resourceKind: ROLE_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: [ACCOUNT_MARKER],
+                actionKind: 'revoke',
+            },
+        ],
+        [
+            'role.read',
+            {
+                action: 'role.read',
+                role: 'test',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+            },
+            {
+                resourceKind: ROLE_RESOURCE_KIND,
+                resourceId: 'test',
+                resourceMarkers: [ACCOUNT_MARKER],
+                actionKind: 'read',
+            },
+        ],
+        [
+            'role.list',
+            {
+                action: 'role.list',
+                userId: 'userId',
+                recordKeyOrRecordName: 'recordName',
+            },
+            null,
+        ],
+    ];
+
+    it.each(cases)(
+        'should return the resource info for %s',
+        (desc, request, info) => {
+            const result = getResourceInfo(request);
+            expect(result).toEqual(info);
+        }
+    );
 });
 
 describe('willMarkersBeRemaining()', () => {

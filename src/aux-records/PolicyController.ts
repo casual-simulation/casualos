@@ -28,6 +28,8 @@ import {
     AvailableRolePermissions,
     AvailableInstPermissions,
     DenialReason,
+    ResourceKinds,
+    ActionKinds,
 } from '@casual-simulation/aux-common';
 import {
     ListedStudioAssignment,
@@ -5098,6 +5100,202 @@ export class PolicyController {
 }
 
 /**
+ * Gets the resource info for the given context and request.
+ * Returns null if there is no resource info defined for the request.
+ * @param request The request.
+ */
+export function getResourceInfo(request: AuthorizeRequest): ResourceInfo {
+    if (request.action === 'data.read') {
+        return {
+            resourceKind: 'data',
+            resourceId: request.address,
+            actionKind: 'read',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'data.create') {
+        return {
+            resourceKind: 'data',
+            resourceId: request.address,
+            actionKind: 'create',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'data.delete') {
+        return {
+            resourceKind: 'data',
+            resourceId: request.address,
+            actionKind: 'delete',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'data.update') {
+        return {
+            resourceKind: 'data',
+            resourceId: request.address,
+            actionKind: 'update',
+            resourceMarkers: request.existingMarkers,
+        };
+    } else if (request.action === 'data.list') {
+        return null;
+    } else if (request.action === 'file.read') {
+        if (!request.fileName) {
+            return null;
+        }
+        return {
+            resourceKind: 'file',
+            resourceId: request.fileName,
+            actionKind: 'read',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'file.create') {
+        if (!request.fileName) {
+            return null;
+        }
+        return {
+            resourceKind: 'file',
+            resourceId: request.fileName,
+            actionKind: 'create',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'file.delete') {
+        if (!request.fileName) {
+            return null;
+        }
+        return {
+            resourceKind: 'file',
+            resourceId: request.fileName,
+            actionKind: 'delete',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'file.update') {
+        if (!request.fileName) {
+            return null;
+        }
+        return {
+            resourceKind: 'file',
+            resourceId: request.fileName,
+            actionKind: 'update',
+            resourceMarkers: request.existingMarkers,
+        };
+    } else if (request.action === 'file.list') {
+        return null;
+    } else if (request.action === 'event.increment') {
+        return {
+            resourceKind: 'event',
+            resourceId: request.eventName,
+            actionKind: 'increment',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'event.count') {
+        return {
+            resourceKind: 'event',
+            resourceId: request.eventName,
+            actionKind: 'count',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'event.update') {
+        return {
+            resourceKind: 'event',
+            resourceId: request.eventName,
+            actionKind: 'update',
+            resourceMarkers: request.existingMarkers,
+        };
+    } else if (request.action === 'event.list') {
+        return null;
+    } else if (request.action === 'inst.create') {
+        return {
+            resourceKind: 'inst',
+            resourceId: request.inst,
+            actionKind: 'create',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'inst.update') {
+        return {
+            resourceKind: 'inst',
+            resourceId: request.inst,
+            actionKind: 'update',
+            resourceMarkers: request.existingMarkers,
+        };
+    } else if (request.action === 'inst.delete') {
+        return {
+            resourceKind: 'inst',
+            resourceId: request.inst,
+            actionKind: 'delete',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'inst.read') {
+        return {
+            resourceKind: 'inst',
+            resourceId: request.inst,
+            actionKind: 'read',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'inst.updateData') {
+        return {
+            resourceKind: 'inst',
+            resourceId: request.inst,
+            actionKind: 'updateData',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'inst.sendAction') {
+        return {
+            resourceKind: 'inst',
+            resourceId: request.inst,
+            actionKind: 'sendAction',
+            resourceMarkers: request.resourceMarkers,
+        };
+    } else if (request.action === 'inst.list') {
+        return null;
+    } else if (request.action === 'policy.grantPermission') {
+        return {
+            resourceKind: 'policy',
+            resourceId: request.policy,
+            actionKind: 'grantPermission',
+            resourceMarkers: [ACCOUNT_MARKER],
+        };
+    } else if (request.action === 'policy.revokePermission') {
+        return {
+            resourceKind: 'policy',
+            resourceId: request.policy,
+            actionKind: 'revokePermission',
+            resourceMarkers: [ACCOUNT_MARKER],
+        };
+    } else if (request.action === 'policy.read') {
+        return {
+            resourceKind: 'policy',
+            resourceId: request.policy,
+            actionKind: 'read',
+            resourceMarkers: [ACCOUNT_MARKER],
+        };
+    } else if (request.action === 'policy.list') {
+        return null;
+    } else if (request.action === 'role.grant') {
+        return {
+            resourceKind: 'role',
+            resourceId: request.role,
+            actionKind: 'grant',
+            resourceMarkers: [ACCOUNT_MARKER],
+        };
+    } else if (request.action === 'role.revoke') {
+        return {
+            resourceKind: 'role',
+            resourceId: request.role,
+            actionKind: 'revoke',
+            resourceMarkers: [ACCOUNT_MARKER],
+        };
+    } else if (request.action === 'role.read') {
+        return {
+            resourceKind: 'role',
+            resourceId: request.role,
+            actionKind: 'read',
+            resourceMarkers: [ACCOUNT_MARKER],
+        };
+    } else if (request.action === 'role.list') {
+        return null;
+    }
+
+    return null;
+}
+
+/**
  * Determines if any markers will be remaining after the removal and addition of the specified markers.
  * @param existingMarkers The markers that already exist.
  * @param removedMarkers The markers that will be removed.
@@ -5418,6 +5616,11 @@ export interface AuthorizeListDataRequest extends AuthorizeRequestBase {
 }
 
 export interface AuthorizeFileRequest extends AuthorizeRequestBase {
+    /**
+     * The name of the file.
+     */
+    fileName?: string;
+
     /**
      * The size of the file that is being created in bytes.
      */
@@ -6249,4 +6452,26 @@ export interface RevokeRoleFailure {
      * The error message that indicates why the request failed.
      */
     errorMessage: string;
+}
+
+export interface ResourceInfo {
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The ID of the resource.
+     */
+    resourceId: string;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    resourceMarkers: string[];
+
+    /**
+     * The kind of the action.
+     */
+    actionKind: ActionKinds;
 }

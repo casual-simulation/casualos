@@ -1,5 +1,52 @@
 import { z } from 'zod';
 
+export const DATA_RESOURCE_KIND = 'data';
+export const FILE_RESOURCE_KIND = 'file';
+export const EVENT_RESOURCE_KIND = 'event';
+export const POLICY_RESOURCE_KIND = 'policy';
+export const ROLE_RESOURCE_KIND = 'role';
+export const INST_RESOURCE_KIND = 'inst';
+export type ResourceKinds =
+    | typeof DATA_RESOURCE_KIND
+    | typeof FILE_RESOURCE_KIND
+    | typeof EVENT_RESOURCE_KIND
+    | typeof POLICY_RESOURCE_KIND
+    | typeof ROLE_RESOURCE_KIND
+    | typeof INST_RESOURCE_KIND;
+
+export const READ_ACTION = 'read';
+export const CREATE_ACTION = 'create';
+export const UPDATE_ACTION = 'update';
+export const DELETE_ACTION = 'delete';
+export const ASSIGN_ACTION = 'assign';
+export const UNASSIGN_ACTION = 'unassign';
+export const INCREMENT_ACTION = 'increment';
+export const COUNT_ACTION = 'count';
+export const LIST_ACTION = 'list';
+export const GRANT_PERMISSION_ACTION = 'grantPermission';
+export const REVOKE_PERMISSION_ACTION = 'revokePermission';
+export const GRANT_ACTION = 'grant';
+export const REVOKE_ACTION = 'revoke';
+export const SEND_ACTION_ACTION = 'sendAction';
+export const UPDATE_DATA_ACTION = 'updateData';
+
+export type ActionKinds =
+    | typeof READ_ACTION
+    | typeof CREATE_ACTION
+    | typeof UPDATE_ACTION
+    | typeof DELETE_ACTION
+    | typeof ASSIGN_ACTION
+    | typeof UNASSIGN_ACTION
+    | typeof INCREMENT_ACTION
+    | typeof COUNT_ACTION
+    | typeof LIST_ACTION
+    | typeof GRANT_PERMISSION_ACTION
+    | typeof REVOKE_PERMISSION_ACTION
+    | typeof GRANT_ACTION
+    | typeof REVOKE_ACTION
+    | typeof SEND_ACTION_ACTION
+    | typeof UPDATE_DATA_ACTION;
+
 /**
  * The possible types of permissions that can be added to policies.
  *

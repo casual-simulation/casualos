@@ -326,6 +326,9 @@ model ResourcePermissionAssignment {
     // If null, then the assignment grants every action to the resource.
     action String?
 
+    // The options that the assignment grants.
+    options Json?
+
     // The ID of the subject that the assignment grants permission to.
     // This can be the ID of the user or the ID of the inst that permission is granted to.
     subjectId String
@@ -372,6 +375,9 @@ model MarkerPermissionAssignment {
     // If null, then the assignment grants every action to the resource.
     action String?
 
+    // The options that the assignment grants.
+    options Json?
+
     // The ID of the subject that the assignment grants permission to.
     // This can be the ID of the user or the ID of the inst that permission is granted to.
     subjectId String
@@ -394,6 +400,13 @@ model MarkerPermissionAssignment {
 
     @@index([subjectId, recordName, marker, action])
 }
+
+// Example query:
+// SELECT * FROM "ResourcePermissionAssignment"
+// WHERE "recordName" = recordName AND "marker" = marker AND "action" = action
+// AND (
+//    ("subjectId" = subjectId AND "subjectType" = subjectType) OR 
+//    ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = recordName AND "subjectId" = subjectId AND "subjectType" = subjectType)))
 
 // Data
 model DataRecord {
