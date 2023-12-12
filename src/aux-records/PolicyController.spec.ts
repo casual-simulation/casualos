@@ -33794,6 +33794,8 @@ describe('PolicyController', () => {
         });
     });
 
+    // describe('')
+
     // Two ways to authorize access:
     // 1. By Marker
     //   - This is basically role based access control.
@@ -33814,19 +33816,26 @@ describe('PolicyController', () => {
     //  - 'user/userId'
     //  - 'role/roleId'
 
-    // Permissions can be granted to specific users, or to roles.
-    // Examples:
-    //  - subject: 'user/userId', resourceKind: 'data' resourceId: 'address', action: 'read'
-    //  - subject: 'role/roleId', resourceKind: 'data' resourceId: 'address', action: 'read'
+    // Example permissions:
+    // - subject: 'user/userId', resourceKind: 'data', resourceId: 'address', action: null -> grants all actions to 'data/address' for 'user/userId'
+    // - subject: 'user/userId', resourceKind: 'data', marker: 'theMarker', action: null -> grants all actions to 'data#theMarker' for 'user/userId'
+    // - subject: 'user/userId', resourceKind: 'file', marker: 'theMarker', action: null, options: { "maxFileSizeInBytes": 1000 } -> grants all actions to 'file#theMarker' for 'user/userId' with a max file size of 1000 bytes
+
+    // Examples checks:
+    // - subject: 'user/userId', resourceKind: 'data' resourceId: 'address', action: 'read' -> boolean
+    // - subject: 'user/userId', resourceKind: 'data' resourceId: 'address', action: 'update' -> boolean
+    // - subject: 'user/userId', resourceKind: 'marker' resourceId: 'theMarker', action: 'assign' -> boolean
+    // - subject: 'user/userId', resourceKind: 'marker' resourceId: 'theMarker', action: 'revoke' -> boolean
+    // - subject: 'user/userId', resourceKind: 'data', marker: 'theMarker', action: 'list' -> boolean
 
     // Actions describe the kinds of operations that can be performed on a resource.
     // For operations that are not resource specific, then permission has to be determined by the marker.
     // For example, a user cannot be granted permission to list a single resource, they must instead be granted permission to list all resources of a given marker.
 
     // getPermissionForSubjectAndResource(subjectType, subjectId, recordName, resourceKind, resourceId, action)
-    // getPermissionForSubjectAndMarker(subjectType, subjectId, recordName, marker, action)
+    // getPermissionForSubjectAndMarker(subjectType, subjectId, recordName, resourceKind, marker, action)
     // assignPermissionToSubjectAndResource(subjectType, subjectId, recordName, resourceKind, resourceId, action, options)
-    // assignPermissionToSubjectAndMarker(subjectType, subjectId, recordName, marker, action, options)
+    // assignPermissionToSubjectAndMarker(subjectType, subjectId, recordName, resourceKind, marker, action, options)
 });
 
 describe('getResourceInfo()', () => {

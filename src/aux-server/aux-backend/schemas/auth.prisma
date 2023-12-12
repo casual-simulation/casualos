@@ -371,6 +371,10 @@ model MarkerPermissionAssignment {
     // If null, then the assignment grants permission for a resource instead.
     marker String
 
+    // The resource kind that this assignment is for.
+    // If null, then the assignment is for all resource kinds.
+    resourceKind String?
+
     // The action that the assignment grants.
     // If null, then the assignment grants every action to the resource.
     action String?
