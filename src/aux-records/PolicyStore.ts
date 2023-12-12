@@ -1,11 +1,33 @@
 import { ServerError } from '@casual-simulation/aux-common/Errors';
-import { PolicyDocument } from '@casual-simulation/aux-common';
+import {
+    ActionKinds,
+    PolicyDocument,
+    ResourceKinds,
+} from '@casual-simulation/aux-common';
 import { PrivacyFeatures } from './AuthStore';
 
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.
  */
 export interface PolicyStore {
+    /**
+     * Gets the permission for the given subject, resource, and action.
+     * @param subjectType The type of the subject. Must be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param recordName The name of the record that the resource belongs to.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     * @param action The action that the subject is attempting to perform.
+     */
+    getPermissionForSubjectAndResource(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds
+    ): Promise<GetResourcePermissionResult>;
+
     /**
      * Gets the list of policy documents that apply to the given marker and user.
      * @param recordName The name of the record that the policies belong to.
@@ -264,4 +286,127 @@ export interface ListMarkerPoliciesResult {
  */
 export function getExpireTime(expireTimeMs: number | null): number {
     return expireTimeMs ?? Infinity;
+}
+
+export const USER_SUBJECT_TYPE = 'user';
+export const INST_SUBJECT_TYPE = 'inst';
+export const ROLE_SUBJECT_TYPE = 'role';
+
+export type SubjectType =
+    | typeof USER_SUBJECT_TYPE
+    | typeof INST_SUBJECT_TYPE
+    | typeof ROLE_SUBJECT_TYPE;
+
+export type GetResourcePermissionResult =
+    | GetResourcePermissionSuccess
+    | GetResourcePermissionFailure;
+
+export interface GetResourcePermissionSuccess {
+    success: true;
+
+    /**
+     * The permission that was assigned to the subject.
+     * Null if no permission was found.
+     */
+    permissionAssignment: ResourcePermissionAssignment | null;
+}
+
+export interface GetResourcePermissionFailure {
+    success: false;
+
+    /**
+     * The error code.
+     */
+    errorCode: ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+export interface PermissionAssignment {
+    /**
+     * The ID of the marker permission assignment.
+     */
+    id: string;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The kind of the actions that the subject is allowed to perform.
+     * Null if the subject is allowed to perform any action.
+     */
+    action: ActionKinds | null;
+
+    /**
+     * The options for the permission assignment.
+     */
+    options: any;
+
+    /**
+     * The ID of the subject.
+     */
+    subjectId: string;
+
+    /**
+     * The type of the subject.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the user that the assignment grants permission to.
+     * Null if the subject type is not "user".
+     */
+    userId: string | null;
+
+    /**
+     * The time that the permission expires.
+     * Null if the permission never expires.
+     */
+    expireTimeMs: number | null;
+}
+
+/**
+ * Defines an interface that represents a resource permission assignment.
+ */
+export interface ResourcePermissionAssignment extends PermissionAssignment {
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The ID of the resource.
+     */
+    resourceId: string;
+}
+
+/**
+ * Defines an interface that represents a marker permission assignment.
+ */
+export interface MarkerPermissionAssignment {
+    /**
+     * The ID of the marker permission assignment.
+     */
+    id: string;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The marker that the permission applies to.
+     */
+    marker: string;
+
+    /**
+     * The kind of the resource.
+     * Null if the permission applies to all resources.
+     */
+    resourceKind: ResourceKinds | null;
 }
