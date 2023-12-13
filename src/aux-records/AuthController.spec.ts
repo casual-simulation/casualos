@@ -1379,6 +1379,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('userId');
 
             privoClientMock.createChildAccount.mockResolvedValueOnce({
+                success: true,
                 parentServiceId: 'parentServiceId',
                 childServiceId: 'childServiceId',
                 features: [],
@@ -1456,10 +1457,36 @@ describe('AuthController', () => {
             });
         });
 
+        it('should return the error from the privo client', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The request is unacceptable.',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'parent@example.com',
+                name: 'test name',
+                displayName: 'displayName',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The request is unacceptable.',
+            });
+        });
+
         it('should support child sign ups without an email address', async () => {
             uuidMock.mockReturnValueOnce('userId');
 
             privoClientMock.createChildAccount.mockResolvedValueOnce({
+                success: true,
                 parentServiceId: 'parentServiceId',
                 childServiceId: 'childServiceId',
                 features: [],
@@ -1541,6 +1568,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('userId');
 
             privoClientMock.createChildAccount.mockResolvedValueOnce({
+                success: true,
                 parentServiceId: 'parentServiceId',
                 childServiceId: 'childServiceId',
                 features: [
@@ -1639,6 +1667,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('userId');
 
             privoClientMock.createChildAccount.mockResolvedValueOnce({
+                success: true,
                 parentServiceId: 'parentServiceId',
                 childServiceId: 'childServiceId',
                 features: [],
@@ -1668,6 +1697,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('userId');
 
             privoClientMock.createChildAccount.mockResolvedValueOnce({
+                success: true,
                 parentServiceId: 'parentServiceId',
                 childServiceId: 'childServiceId',
                 features: [],
@@ -1697,6 +1727,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('userId');
 
             privoClientMock.createAdultAccount.mockResolvedValueOnce({
+                success: true,
                 adultServiceId: 'serviceId',
                 features: [],
                 updatePasswordLink: 'link',
@@ -1775,6 +1806,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('userId');
 
             privoClientMock.createAdultAccount.mockResolvedValueOnce({
+                success: true,
                 adultServiceId: 'serviceId',
                 features: [
                     {
