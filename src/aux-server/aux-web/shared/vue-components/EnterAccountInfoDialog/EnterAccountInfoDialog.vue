@@ -25,10 +25,10 @@
                         </md-field>
 
                         <md-field :class="nameFieldClass">
-                            <label for="name">Name</label>
+                            <label for="firstName">First Name</label>
                             <md-input
-                                name="name"
-                                id="name"
+                                name="firstName"
+                                id="firstName"
                                 autocomplete="given-name"
                                 v-model="name"
                                 :disabled="processing"
