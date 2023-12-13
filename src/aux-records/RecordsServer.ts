@@ -1207,7 +1207,7 @@ export class RecordsServer {
 
         const schema = z.object({
             displayName: DISPLAY_NAME_VALIDATION,
-            name: NAME_VALIDATION,
+            name: NAME_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);

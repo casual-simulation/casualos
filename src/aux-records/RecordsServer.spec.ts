@@ -1628,7 +1628,7 @@ describe('RecordsServer', () => {
             };
         });
 
-        it('should return whether the email is valid', async () => {
+        it('should return whether the display name is valid', async () => {
             const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/displayName/valid',
