@@ -1,6 +1,7 @@
 import { ServerError } from '@casual-simulation/aux-common/Errors';
 import {
     ActionKinds,
+    PermissionOptions,
     PolicyDocument,
     ResourceKinds,
 } from '@casual-simulation/aux-common';
@@ -10,24 +11,6 @@ import { PrivacyFeatures } from './AuthStore';
  * Defines an interface for objects that are able to store and retrieve policy documents.
  */
 export interface PolicyStore {
-    /**
-     * Gets the permission for the given subject, resource, and action.
-     * @param subjectType The type of the subject. Must be either a user, inst, or role.
-     * @param subjectId The ID of the subject.
-     * @param recordName The name of the record that the resource belongs to.
-     * @param resourceKind The kind of the resource.
-     * @param resourceId The ID of the resource.
-     * @param action The action that the subject is attempting to perform.
-     */
-    getPermissionForSubjectAndResource(
-        subjectType: SubjectType,
-        subjectId: string,
-        recordName: string,
-        resourceKind: ResourceKinds,
-        resourceId: string,
-        action: ActionKinds
-    ): Promise<GetResourcePermissionResult>;
-
     /**
      * Gets the list of policy documents that apply to the given marker and user.
      * @param recordName The name of the record that the policies belong to.
@@ -108,6 +91,176 @@ export interface PolicyStore {
         marker: string,
         policy: UserPolicyRecord
     ): Promise<UpdateUserPolicyResult>;
+
+    /**
+     * Gets the privacy features that are enabled for the given user.
+     * @param userId The ID of the user.
+     */
+    getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures>;
+
+    /**
+     * Gets the permission for the given subject, resource, and action.
+     * @param subjectType The type of the subject. Must be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param recordName The name of the record that the resource belongs to.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     * @param action The action that the subject is attempting to perform on the resource.
+     * @param currentTimeMs The current unix time in milliseconds.
+     */
+    getPermissionForSubjectAndResource(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetResourcePermissionResult>;
+
+    /**
+     * Gets the permission for the given subject, markers, and action.
+     * @param subjectType The type of the subject. Must be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param recordName The name of the record that the resource belongs to.
+     * @param resourceKind The kind of the resource.
+     * @param markers The markers that are applied to the resource.
+     * @param action The action that the subject is attempting to perform on the resource.
+     * @param currentTimeMs The current unix time in milliseconds.
+     */
+    getPermissionForSubjectAndMarkers(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        markers: string[],
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetMarkerPermissionResult>;
+
+    /**
+     * Assigns the given permission to the given subject for the given resource.
+     * @param recordName The name of the record that the resource exists in.
+     * @param subjectType The type of the subject. This can be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
+     * @param options The options for the permission.
+     * @param expireTimeMs The time that the permission expires. If null, then the permission never expires.
+     */
+    assignPermissionToSubjectAndResource(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number | null
+    ): Promise<AssignPermissionToSubjectAndResourceResult>;
+
+    /**
+     * Assigns the given permission to the given subject for the given resource.
+     * @param recordName The name of the record that the resource exists in.
+     * @param subjectType The type of the subject. This can be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
+     * @param options The options for the permission.
+     * @param expireTimeMs The time that the permission expires. If null, then the permission never expires.
+     */
+    assignPermissionToSubjectAndResource(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number | null
+    ): Promise<AssignPermissionToSubjectAndResourceResult>;
+
+    /**
+     * Assigns the given permission to the given subject for the given resource.
+     * @param recordName The name of the record that the resource exists in.
+     * @param subjectType The type of the subject. This can be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param resourceKind The kind of the resource.
+     * @param marker The ID of the marker.
+     * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
+     * @param options The options for the permission.
+     * @param expireTimeMs The time that the permission expires. If null, then the permission never expires.
+     */
+    assignPermissionToSubjectAndMarker(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        marker: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number | null
+    ): Promise<AssignPermissionToSubjectAndMarkerResult>;
+
+    /**
+     * Deletes the given resource permission assignment from the store.
+     * @param assigment The assignment that should be deleted.
+     */
+    deleteResourcePermissionAssignment(
+        assigment: ResourcePermissionAssignment
+    ): Promise<DeletePermissionAssignmentResult>;
+
+    /**
+     * Deletes the given marker permission assignment from the store.
+     * @param assigment The assignment that should be deleted.
+     */
+    deleteMarkerPermissionAssignment(
+        assigment: MarkerPermissionAssignment
+    ): Promise<DeletePermissionAssignmentResult>;
+
+    /**
+     * Lists the resource permission assignments for the given record and subject.
+     * @param recordName The name of the record.
+     * @param subjectType The type of the subject.
+     * @param subjectId The ID of the subject.
+     */
+    listPermissionsInRecordForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordForSubjectResult>;
+
+    /**
+     * Lists the resource permission assignments for the given record.
+     * @param recordName The name of the record.
+     */
+    listPermissionsInRecord(
+        recordName: string
+    ): Promise<ListPermissionsInRecordResult>;
+
+    /**
+     * Lists the resource permission assignments for the given record and resource.
+     * @param recordName The name of the record.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     */
+    listPermissionsForResource(
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string
+    ): Promise<ResourcePermissionAssignment[]>;
+
+    /**
+     * Lists the marker permission assignments for the given record and marker.
+     * @param recordName The record that the permission assignments should be listed for.
+     * @param marker The marker that the permission assignments should be listed for.
+     */
+    listPermissionsForMarker(
+        recordName: string,
+        marker: string
+    ): Promise<MarkerPermissionAssignment[]>;
 
     /**
      * Assigns the given role to the given subject.
@@ -345,7 +498,7 @@ export interface PermissionAssignment {
     /**
      * The options for the permission assignment.
      */
-    options: any;
+    options: PermissionOptions;
 
     /**
      * The ID of the subject.
@@ -409,4 +562,118 @@ export interface MarkerPermissionAssignment {
      * Null if the permission applies to all resources.
      */
     resourceKind: ResourceKinds | null;
+}
+
+export type GetMarkerPermissionResult =
+    | GetMarkerPermissionSuccess
+    | GetMarkerPermissionFailure;
+
+export interface GetMarkerPermissionSuccess {
+    success: true;
+
+    /**
+     * The permission that was assigned to the subject.
+     * Null if no permission was found.
+     */
+    permissionAssignment: MarkerPermissionAssignment | null;
+}
+
+export interface GetMarkerPermissionFailure {
+    success: false;
+
+    /**
+     * The error code.
+     */
+    errorCode: ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+export type AssignPermissionToSubjectAndResourceResult =
+    | AssignPermissionToSubjectAndResourceSuccess
+    | AssignPermissionToSubjectAndResourceFailure;
+
+export interface AssignPermissionToSubjectAndResourceSuccess {
+    success: true;
+
+    /**
+     * The assignment that was created or updated.
+     */
+    permissionAssignment: ResourcePermissionAssignment;
+}
+
+export interface AssignPermissionToSubjectAndResourceFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type AssignPermissionToSubjectAndMarkerResult =
+    | AssignPermissionToSubjectAndMarkerSuccess
+    | AssignPermissionToSubjectAndMarkerFailure;
+
+export interface AssignPermissionToSubjectAndMarkerSuccess {
+    success: true;
+
+    /**
+     * The assignment that was created or updated.
+     */
+    permissionAssignment: MarkerPermissionAssignment;
+}
+
+export interface AssignPermissionToSubjectAndMarkerFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type DeletePermissionAssignmentResult =
+    | DeletePermissionAssignmentSuccess
+    | DeletePermissionAssignmentFailure;
+
+export interface DeletePermissionAssignmentSuccess {
+    success: true;
+}
+
+export interface DeletePermissionAssignmentFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type ListPermissionsInRecordForSubjectResult =
+    | ListPermissionsInRecordForSubjectSuccess
+    | ListPermissionsInRecordForSubjectFailure;
+
+export interface ListPermissionsInRecordForSubjectSuccess {
+    success: true;
+
+    resourceAssignments: ResourcePermissionAssignment[];
+    markerAssignments: MarkerPermissionAssignment[];
+}
+
+export interface ListPermissionsInRecordForSubjectFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type ListPermissionsInRecordResult =
+    | ListPermissionsInRecordSuccess
+    | ListPermissionsInRecordFailure;
+
+export interface ListPermissionsInRecordSuccess {
+    success: true;
+
+    resourceAssignments: ResourcePermissionAssignment[];
+    markerAssignments: MarkerPermissionAssignment[];
+}
+
+export interface ListPermissionsInRecordFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
 }

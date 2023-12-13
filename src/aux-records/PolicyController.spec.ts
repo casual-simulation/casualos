@@ -33833,7 +33833,7 @@ describe('PolicyController', () => {
     // For example, a user cannot be granted permission to list a single resource, they must instead be granted permission to list all resources of a given marker.
 
     // getPermissionForSubjectAndResource(subjectType, subjectId, recordName, resourceKind, resourceId, action)
-    // getPermissionForSubjectAndMarker(subjectType, subjectId, recordName, resourceKind, marker, action)
+    // getPermissionForSubjectAndMarkers(subjectType, subjectId, recordName, resourceKind, markers, action)
     // assignPermissionToSubjectAndResource(subjectType, subjectId, recordName, resourceKind, resourceId, action, options)
     // assignPermissionToSubjectAndMarker(subjectType, subjectId, recordName, resourceKind, marker, action, options)
 });

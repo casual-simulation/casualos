@@ -982,6 +982,32 @@ export interface PolicyDocument {
 }
 
 /**
+ * The possible options for a permission.
+ */
+export interface PermissionOptions {
+    /**
+     * The maximum size that file resources are allowed to be in bytes.
+     * If not specified, then the default is Infinity.
+     */
+    maxFileSizeInBytes?: number;
+
+    /**
+     * The list of allowed MIME types that are allowed for file resources.
+     * If not specified, then the default is all MIME types.
+     */
+    allowedMimeTypes?: string[];
+}
+export const PERMISSION_OPTIONS_VALIDATION = z.object({
+    maxFileSizeInBytes: z.number().nonnegative().optional(),
+    allowedMimeTypes: z.array(z.string()).optional(),
+});
+type ZodPermissionOptions = z.infer<typeof PERMISSION_OPTIONS_VALIDATION>;
+type ZodPermissionOptionsAssertion = HasType<
+    ZodPermissionOptions,
+    PermissionOptions
+>;
+
+/**
  * The name of the admin role.
  */
 export const ADMIN_ROLE_NAME = 'admin';

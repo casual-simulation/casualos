@@ -349,7 +349,8 @@ model ResourcePermissionAssignment {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@index([subjectId, recordName, resourceKind, resourceId, action])
+    @@index([subjectType, subjectId, recordName])
+    @@index([recordName, resourceKind, resourceId, action, subjectType, subjectId])
 }
 
 // Example query:
@@ -402,7 +403,8 @@ model MarkerPermissionAssignment {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@index([subjectId, recordName, marker, action])
+    @@index([subjectType, subjectId, recordName])
+    @@index([recordName, marker, action, subjectType, subjectId])
 }
 
 // Example query:
