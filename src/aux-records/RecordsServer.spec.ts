@@ -2424,6 +2424,7 @@ describe('RecordsServer', () => {
 
         it('should return a 200 status code with the registration results', async () => {
             privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
                 childServiceId: 'childServiceId',
                 parentServiceId: 'parentServiceId',
                 features: [],
@@ -2463,6 +2464,7 @@ describe('RecordsServer', () => {
 
         it('should return a 400 status code if the display name contains spaces', async () => {
             privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
                 childServiceId: 'childServiceId',
                 parentServiceId: 'parentServiceId',
                 features: [],
@@ -2508,6 +2510,7 @@ describe('RecordsServer', () => {
 
         it('should return a 400 status code if the name contains spaces', async () => {
             privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
                 childServiceId: 'childServiceId',
                 parentServiceId: 'parentServiceId',
                 features: [],
