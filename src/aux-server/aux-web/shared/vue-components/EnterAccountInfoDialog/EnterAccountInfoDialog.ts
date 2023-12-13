@@ -23,6 +23,7 @@ import {
     FormError,
     NAME_FIELD,
     PARENT_EMAIL_FIELD,
+    getFormErrors,
 } from '@casual-simulation/aux-records';
 import FieldErrors from '../FieldErrors/FieldErrors';
 
