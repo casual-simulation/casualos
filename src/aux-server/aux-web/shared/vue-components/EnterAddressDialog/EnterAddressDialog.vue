@@ -34,10 +34,10 @@
                     </label>
                 </div>
             </div>
+            <field-errors :field="null" :errors="formErrors" />
             <p>
                 <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
             </p>
-            <field-errors :field="null" :errors="formErrors" />
         </md-dialog-content>
         <md-dialog-actions>
             <md-button type="button" class="md-primary" @click="login()" :disabled="processing">

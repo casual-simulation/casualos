@@ -7,12 +7,12 @@
                 <h2 class="md-title">Profile</h2>
                 <div>
                     <md-field>
-                        <label for="name">Name</label>
+                        <label for="firstName">First Name</label>
                         <md-input
-                            id="name"
+                            id="firstName"
                             v-model="metadata.name"
                             type="text"
-                            placeholder="Name"
+                            placeholder="First Name"
                         ></md-input>
                     </md-field>
                 </div>

@@ -161,7 +161,26 @@ const MARKERS_VALIDATION = z
     )
     .nonempty('markers must not be empty.');
 
-const NO_WHITESPACE_MESSAGE = 'The value must not contain spaces.';
+const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
+const NO_WHITESPACE_REGEX = /^\S+$/g;
+const NO_SPECIAL_CHARACTERS_MESSAGE =
+    'The value cannot not contain special characters.';
+const NO_SPECIAL_CHARACTERS_REGEX =
+    /^[^!@#$%\^&*()\[\]{}\-_=+`~,./?;:'"\\<>|]+$/g;
+
+const DISPLAY_NAME_VALIDATION = z
+    .string()
+    .trim()
+    .min(1)
+    .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
+    .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
+
+const NAME_VALIDATION = z
+    .string()
+    .trim()
+    .min(1)
+    .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
+    .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
 
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
@@ -1187,8 +1206,8 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            displayName: z.string().trim(),
-            name: z.string().trim().optional(),
+            displayName: DISPLAY_NAME_VALIDATION,
+            name: NAME_VALIDATION,
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -3781,17 +3800,9 @@ export class RecordsServer {
         const schema = z.object({
             email: z.string().min(1).email().optional(),
             parentEmail: z.string().min(1).email().optional(),
-            name: z
-                .string()
-                .trim()
-                .min(1)
-                .regex(/^\S+$/g, NO_WHITESPACE_MESSAGE),
+            name: NAME_VALIDATION,
             dateOfBirth: z.coerce.date(),
-            displayName: z
-                .string()
-                .trim()
-                .min(1)
-                .regex(/^\S+$/g, NO_WHITESPACE_MESSAGE),
+            displayName: DISPLAY_NAME_VALIDATION,
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
