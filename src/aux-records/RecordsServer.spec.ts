@@ -2461,6 +2461,96 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should return a 400 status code if the display name contains spaces', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: 'Test',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: 'display name',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_string',
+                            message: 'The value must not contain spaces.',
+                            path: ['displayName'],
+                            validation: 'regex',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if the name contains spaces', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: 'Test Name',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: 'displayName',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_string',
+                            message: 'The value must not contain spaces.',
+                            path: ['name'],
+                            validation: 'regex',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         testOrigin('POST', '/api/v2/register/privo', () =>
             JSON.stringify({
                 name: 'Test',

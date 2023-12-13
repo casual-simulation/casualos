@@ -161,6 +161,8 @@ const MARKERS_VALIDATION = z
     )
     .nonempty('markers must not be empty.');
 
+const NO_WHITESPACE_MESSAGE = 'The value must not contain spaces.';
+
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
@@ -3777,11 +3779,19 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            email: z.string().nonempty().email().optional(),
-            parentEmail: z.string().nonempty().email().optional(),
-            name: z.string().nonempty(),
+            email: z.string().min(1).email().optional(),
+            parentEmail: z.string().min(1).email().optional(),
+            name: z
+                .string()
+                .trim()
+                .min(1)
+                .regex(/^\S+$/g, NO_WHITESPACE_MESSAGE),
             dateOfBirth: z.coerce.date(),
-            displayName: z.string().nonempty(),
+            displayName: z
+                .string()
+                .trim()
+                .min(1)
+                .regex(/^\S+$/g, NO_WHITESPACE_MESSAGE),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
