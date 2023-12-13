@@ -11790,7 +11790,7 @@ describe('RecordsServer', () => {
         });
     });
 
-    describe.only('handleWebsocketRequest()', () => {
+    describe('handleWebsocketRequest()', () => {
         const connectionId = 'connectionId';
 
         describe('connect', () => {
@@ -12729,7 +12729,7 @@ describe('RecordsServer', () => {
             });
         });
 
-        describe.only('http', () => {
+        describe('http', () => {
             it('should send an HTTP request and return the response', async () => {
                 await server.handleWebsocketRequest(
                     wsMessage(
