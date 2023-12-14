@@ -2554,6 +2554,66 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should return a 400 status code if no name or display name is provided', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: '',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: '',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'too_small',
+                            exact: false,
+                            inclusive: true,
+                            message:
+                                'String must contain at least 1 character(s)',
+                            minimum: 1,
+                            path: ['name'],
+                            type: 'string',
+                        },
+                        {
+                            code: 'too_small',
+                            exact: false,
+                            inclusive: true,
+                            message:
+                                'String must contain at least 1 character(s)',
+                            minimum: 1,
+                            path: ['displayName'],
+                            type: 'string',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         testOrigin('POST', '/api/v2/register/privo', () =>
             JSON.stringify({
                 name: 'Test',

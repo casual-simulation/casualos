@@ -162,11 +162,11 @@ const MARKERS_VALIDATION = z
     .nonempty('markers must not be empty.');
 
 const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
-const NO_WHITESPACE_REGEX = /^\S+$/g;
+const NO_WHITESPACE_REGEX = /^\S*$/g;
 const NO_SPECIAL_CHARACTERS_MESSAGE =
     'The value cannot not contain special characters.';
 const NO_SPECIAL_CHARACTERS_REGEX =
-    /^[^!@#$%\^&*()\[\]{}\-_=+`~,./?;:'"\\<>|]+$/g;
+    /^[^!@#$%\^&*()\[\]{}\-_=+`~,./?;:'"\\<>|]*$/g;
 
 const DISPLAY_NAME_VALIDATION = z
     .string()
