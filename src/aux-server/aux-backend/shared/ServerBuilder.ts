@@ -122,6 +122,26 @@ import {
     privoSchema,
 } from '@casual-simulation/aux-records/PrivoConfiguration';
 
+export interface BuildReturn {
+    server: RecordsServer;
+    authController: AuthController;
+    recordsController: RecordsController;
+    eventsController: EventRecordsController;
+    dataController: DataRecordsController;
+    manualDataController: DataRecordsController;
+    filesController: FileRecordsController;
+    filesStore: FileRecordsStore;
+    subscriptionController: SubscriptionController;
+    rateLimitController: RateLimitController;
+    policyController: PolicyController;
+    websocketController: WebsocketController;
+    dynamodbClient: DocumentClient;
+    mongoClient: MongoClient;
+    mongoDatabase: Db;
+    websocketMessenger: WebsocketMessenger;
+    redisClient: RedisClientType;
+}
+
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
     private _mongoClient: MongoClient;
@@ -867,7 +887,7 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    async buildAsync() {
+    async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
 
         for (let action of actions) {
@@ -877,7 +897,7 @@ export class ServerBuilder implements SubscriptionLike {
         return this.build();
     }
 
-    build() {
+    build(): BuildReturn {
         if (this._actions.length > 0) {
             throw new Error(
                 'Some setup actions require async setup. Use buildAsync() instead.'
