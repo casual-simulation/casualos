@@ -159,6 +159,8 @@ export class PrismaAuthStore implements AuthStore {
             privoParentServiceId: user.privoParentServiceId as string,
             allowPublishData: user.privacyFeatures?.publishData ?? true,
             allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
+            allowAI: user.privacyFeatures?.allowAI ?? true,
+            allowPublicInsts: user.privacyFeatures?.allowPublicInsts ?? true,
         };
 
         await this._client.user.upsert({
