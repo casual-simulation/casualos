@@ -28,19 +28,7 @@ export default class PrivoRegistrationCard extends Vue {
     dateOfBirth: Date = null;
     parentEmail: string = null;
     updatePasswordUrl: string = '';
-
-    // showEmailError: boolean = false;
-    // showNameError: boolean = false;
-    // showDateOfBirthError: boolean = false;
-    // showEnterAddressError: boolean = false;
-    // showInvalidAddressError: boolean = false;
-    // showTermsOfServiceError: boolean = false;
-    // showBannedUserError: boolean = false;
-    // showDisplayNameError: boolean = false;
-    // showDisplayNameContainsNameError: boolean = false;
-    // showParentEmailError: boolean = false;
-    // showInvalidParentEmailError: boolean = false;
-    // showEnterParentEmailError: boolean = false;
+    enterDateOfBirth: boolean = true;
 
     errors: FormError[] = [];
 
@@ -113,7 +101,16 @@ export default class PrivoRegistrationCard extends Vue {
         return !!this.dateOfBirth;
     }
 
+    get dateOfBirthText() {
+        if (this.dateOfBirth) {
+            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            return dob.toLocaleString(DateTime.DATE_MED);
+        }
+        return '';
+    }
+
     created() {
+        this.enterDateOfBirth = true;
         this.resetFields();
         this.resetErrors();
     }
@@ -202,6 +199,22 @@ export default class PrivoRegistrationCard extends Vue {
         this.displayName = '';
         this.dateOfBirth = null;
         this.parentEmail = null;
+    }
+
+    async provideDateOfBirth() {
+        if (!this.dateOfBirth) {
+            this.errors = [
+                {
+                    for: DATE_OF_BIRTH_FIELD,
+                    errorCode: 'invalid_date_of_birth',
+                    errorMessage: 'Please enter a valid date of birth.',
+                },
+            ];
+            return;
+        }
+
+        this.errors = [];
+        this.enterDateOfBirth = false;
     }
 
     async register() {
