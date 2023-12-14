@@ -19,4 +19,11 @@ export default class RegisterDialog extends Vue {
         }
         return this.errors.filter((e) => e.for === this.field);
     }
+
+    get errorText() {
+        if (!this.fieldErrors) {
+            return '';
+        }
+        return this.fieldErrors.map((e) => e.errorMessage).join(', ');
+    }
 }

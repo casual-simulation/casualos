@@ -6,7 +6,40 @@
             @close="goHome()"
         ></update-password-card>
         <md-card v-else>
-            <form @submit.prevent="register">
+            <form v-if="enterDateOfBirth" @submit.prevent="provideDateOfBirth()">
+                <md-card-header><div class="md-title">Register</div></md-card-header>
+                <md-card-content>
+                    <div class="md-layout md-gutter">
+                        <div class="md-layout-item">
+                            <md-datepicker
+                                v-model="dateOfBirth"
+                                :class="dateOfBirthFieldClass"
+                                :md-model-type="Date"
+                                :md-disabled-dates="disabledDates"
+                            >
+                                <label>Date of Birth</label>
+
+                                <field-errors field="dateOfBirth" :errors="errors" />
+                            </md-datepicker>
+                        </div>
+                    </div>
+                    <field-errors :field="null" :errors="errors" />
+                    <p>
+                        <a target="_blank" href="/privacy-policy">Privacy Policy</a>
+                    </p>
+                </md-card-content>
+                <md-card-actions>
+                    <md-button
+                        type="button"
+                        class="md-primary"
+                        @click="provideDateOfBirth()"
+                        :disabled="processing"
+                    >
+                        <span>Continue</span>
+                    </md-button>
+                </md-card-actions>
+            </form>
+            <form v-else @submit.prevent="register">
                 <md-card-header><div class="md-title">Register</div></md-card-header>
                 <md-card-content class="input-dialog-content">
                     <div class="md-layout md-gutter">
@@ -36,16 +69,16 @@
                                 <field-errors field="name" :errors="errors" />
                             </md-field>
 
-                            <md-datepicker
-                                v-model="dateOfBirth"
-                                :class="dateOfBirthFieldClass"
-                                :md-model-type="Date"
-                                :md-disabled-dates="disabledDates"
-                            >
-                                <label>Date of Birth</label>
-
+                            <md-field :class="dateOfBirthFieldClass">
+                                <label for="dateOfBirth">Date of Birth</label>
+                                <md-input
+                                    name="dateOfBirth"
+                                    id="dateOfBirth"
+                                    :value="dateOfBirthText"
+                                    disabled
+                                />
                                 <field-errors field="dateOfBirth" :errors="errors" />
-                            </md-datepicker>
+                            </md-field>
 
                             <md-field v-if="showEmail" :class="emailFieldClass">
                                 <label for="email">{{ registerEmailFieldHint }}</label>

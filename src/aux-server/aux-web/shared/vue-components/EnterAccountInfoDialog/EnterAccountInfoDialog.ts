@@ -42,6 +42,8 @@ export default class EnterAccountInfoDialog extends Vue {
     @Prop({ required: true })
     status: LoginUIPrivoSignUp;
 
+    enterDateOfBirth: boolean = true;
+
     get termsOfServiceUrl(): string {
         return this.status.termsOfServiceUrl;
     }
@@ -131,6 +133,14 @@ export default class EnterAccountInfoDialog extends Vue {
         return false;
     }
 
+    get dateOfBirthText() {
+        if (this.dateOfBirth) {
+            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            return dob.toLocaleString(DateTime.DATE_MED);
+        }
+        return '';
+    }
+
     @Watch('status')
     onStatusChanged() {
         this.processing = false;
@@ -149,6 +159,7 @@ export default class EnterAccountInfoDialog extends Vue {
         this._endpoint = appManager.authCoordinator.authEndpoints.get(
             this.endpoint
         );
+        this.enterDateOfBirth = true;
         this.email = '';
         this.acceptedTerms = false;
         this.name = '';
@@ -165,7 +176,7 @@ export default class EnterAccountInfoDialog extends Vue {
     }
 
     async checkDisplayName() {
-        if (!this.displayName) {
+        if (!this.displayName || !this.name) {
             return;
         }
         const result = await this._endpoint.isValidDisplayName(
@@ -179,12 +190,15 @@ export default class EnterAccountInfoDialog extends Vue {
             this.errors = getFormErrors(result);
         } else if (valid) {
             this.errors = this.errors.filter(
-                (e) => e.for !== DISPLAY_NAME_FIELD
+                (e) => e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
             );
         } else {
             if (result.containsName) {
                 this.errors = [
-                    ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
+                    ...this.errors.filter(
+                        (e) =>
+                            e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
+                    ),
                     {
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',
@@ -194,7 +208,10 @@ export default class EnterAccountInfoDialog extends Vue {
                 ];
             } else {
                 this.errors = [
-                    ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
+                    ...this.errors.filter(
+                        (e) =>
+                            e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
+                    ),
                     {
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',
@@ -235,6 +252,22 @@ export default class EnterAccountInfoDialog extends Vue {
 
     async cancelRegistration() {
         await this._endpoint.cancelLogin();
+    }
+
+    async provideDateOfBirth() {
+        if (!this.dateOfBirth) {
+            this.errors = [
+                {
+                    for: DATE_OF_BIRTH_FIELD,
+                    errorCode: 'invalid_date_of_birth',
+                    errorMessage: 'Please enter a valid date of birth.',
+                },
+            ];
+            return;
+        }
+
+        this.errors = [];
+        this.enterDateOfBirth = false;
     }
 
     async register() {
