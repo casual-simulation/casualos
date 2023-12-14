@@ -2498,7 +2498,7 @@ describe('RecordsServer', () => {
                     issues: [
                         {
                             code: 'invalid_string',
-                            message: 'The value must not contain spaces.',
+                            message: 'The value cannot not contain spaces.',
                             path: ['displayName'],
                             validation: 'regex',
                         },
@@ -2544,7 +2544,7 @@ describe('RecordsServer', () => {
                     issues: [
                         {
                             code: 'invalid_string',
-                            message: 'The value must not contain spaces.',
+                            message: 'The value cannot not contain spaces.',
                             path: ['name'],
                             validation: 'regex',
                         },
