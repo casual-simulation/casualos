@@ -632,6 +632,9 @@ importers:
             http-proxy:
                 specifier: 1.18.1
                 version: 1.18.1
+            jsonwebtoken:
+                specifier: 9.0.2
+                version: 9.0.2
             sshpk:
                 specifier: 1.16.1
                 version: 1.16.1

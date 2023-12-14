@@ -1,4 +1,4 @@
-FROM node:16
+FROM node:18
 
 WORKDIR /usr/src/app
 
@@ -7,9 +7,10 @@ RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v1.4.0
 
 COPY ./script/remove-dev-dependencies.mjs ./script/remove-dev-dependencies.mjs
 COPY ./src/aux-server/package*.json ./
+COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 
 RUN node ./script/remove-dev-dependencies.mjs ./package.json
-RUN npm install
+RUN npm install --force
 
 COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
 COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
