@@ -32,6 +32,7 @@ const serverlessSrc = path.resolve(serverless, 'aws', 'src');
 const serverlessHandlers = path.resolve(serverlessSrc, 'handlers');
 
 const schema = path.resolve(auxBackend, 'schemas', 'auth.prisma');
+const generatedPrisma = path.resolve(auxBackend, 'prisma', 'generated');
 
 let SERVER_CONFIG = null;
 if (process.env.SERVER_CONFIG) {
@@ -107,9 +108,7 @@ export function createConfigs(dev, version) {
                     }),
                     copy({
                         src: path.resolve(
-                            paths.nodeModules,
-                            '.prisma',
-                            'client',
+                            generatedPrisma,
                             'libquery_engine-rhel-openssl-1.0.x.so.node'
                         ),
                         dest: path.resolve(
