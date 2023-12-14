@@ -924,7 +924,7 @@ export class AuthManager {
                 parentEmail: info.parentEmail || undefined,
             },
             {
-                validateStatus: (status) => status < 500,
+                validateStatus: (status) => true,
             }
         );
 

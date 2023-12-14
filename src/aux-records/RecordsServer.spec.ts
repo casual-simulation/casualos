@@ -1628,7 +1628,7 @@ describe('RecordsServer', () => {
             };
         });
 
-        it('should return whether the email is valid', async () => {
+        it('should return whether the display name is valid', async () => {
             const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/displayName/valid',
@@ -2424,6 +2424,7 @@ describe('RecordsServer', () => {
 
         it('should return a 200 status code with the registration results', async () => {
             privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
                 childServiceId: 'childServiceId',
                 parentServiceId: 'parentServiceId',
                 features: [],
@@ -2456,6 +2457,98 @@ describe('RecordsServer', () => {
                     connectionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
                     updatePasswordUrl: 'link',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if the display name contains spaces', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: 'Test',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: 'display name',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_string',
+                            message: 'The value cannot not contain spaces.',
+                            path: ['displayName'],
+                            validation: 'regex',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if the name contains spaces', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: 'Test Name',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: 'displayName',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_string',
+                            message: 'The value cannot not contain spaces.',
+                            path: ['name'],
+                            validation: 'regex',
+                        },
+                    ],
                 },
                 headers: accountCorsHeaders,
             });
@@ -11790,7 +11883,7 @@ describe('RecordsServer', () => {
         });
     });
 
-    describe.only('handleWebsocketRequest()', () => {
+    describe('handleWebsocketRequest()', () => {
         const connectionId = 'connectionId';
 
         describe('connect', () => {
@@ -12729,7 +12822,7 @@ describe('RecordsServer', () => {
             });
         });
 
-        describe.only('http', () => {
+        describe('http', () => {
             it('should send an HTTP request and return the response', async () => {
                 await server.handleWebsocketRequest(
                     wsMessage(

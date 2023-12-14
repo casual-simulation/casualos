@@ -23,6 +23,7 @@ import {
     FormError,
     NAME_FIELD,
     PARENT_EMAIL_FIELD,
+    getFormErrors,
 } from '@casual-simulation/aux-records';
 import FieldErrors from '../FieldErrors/FieldErrors';
 
@@ -174,7 +175,9 @@ export default class EnterAccountInfoDialog extends Vue {
 
         const valid = !result.success || result.allowed;
 
-        if (valid) {
+        if (result.success === false) {
+            this.errors = getFormErrors(result);
+        } else if (valid) {
             this.errors = this.errors.filter(
                 (e) => e.for !== DISPLAY_NAME_FIELD
             );
@@ -210,7 +213,9 @@ export default class EnterAccountInfoDialog extends Vue {
 
         const valid = !result.success || result.allowed;
 
-        if (valid) {
+        if (result.success === false) {
+            this.errors = getFormErrors(result);
+        } else if (valid) {
             this.errors = this.errors.filter((e) => e.for !== EMAIL_FIELD);
         } else {
             this.errors = [

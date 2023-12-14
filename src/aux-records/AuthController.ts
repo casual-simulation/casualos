@@ -1021,6 +1021,10 @@ export class AuthController {
                     ],
                 });
 
+                if (result.success === false) {
+                    return result;
+                }
+
                 serviceId = result.childServiceId;
                 parentServiceId = result.parentServiceId;
                 updatePasswordUrl = result.updatePasswordLink;
@@ -1051,6 +1055,10 @@ export class AuthController {
                         config.featureIds.buildAIEggs,
                     ],
                 });
+
+                if (result.success === false) {
+                    return result;
+                }
 
                 serviceId = result.adultServiceId;
                 updatePasswordUrl = result.updatePasswordLink;

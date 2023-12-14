@@ -1,0 +1,4 @@
+.md-error {
+    color: #ff1744;
+    color: var(--md-theme-default-fieldvariant, #ff1744);
+}

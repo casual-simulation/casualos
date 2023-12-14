@@ -134,7 +134,9 @@ export default class PrivoRegistrationCard extends Vue {
 
         const valid = !result.success || result.allowed;
 
-        if (valid) {
+        if (result.success === false) {
+            this.errors = getFormErrors(result);
+        } else if (valid) {
             this.errors = this.errors.filter((e) => e.for !== EMAIL_FIELD);
         } else {
             this.errors = [
@@ -159,7 +161,9 @@ export default class PrivoRegistrationCard extends Vue {
 
         const valid = !result.success || result.allowed;
 
-        if (valid) {
+        if (result.success === false) {
+            this.errors = getFormErrors(result);
+        } else if (valid) {
             this.errors = this.errors.filter(
                 (e) => e.for !== DISPLAY_NAME_FIELD
             );

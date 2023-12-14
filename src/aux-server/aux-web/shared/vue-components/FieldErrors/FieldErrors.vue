@@ -6,4 +6,4 @@
     </div>
 </template>
 <script src="./FieldErrors.ts"></script>
-<style src="./FieldErrors.css"></style>
+<style src="./FieldErrors.css" scoped></style>
