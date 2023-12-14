@@ -89,6 +89,9 @@
 -   Added the `DEFAULT_BIOS_OPTION` environment variable during build to control which BIOS option is selected by default.
 -   Added the `AUTOMATIC_BIOS_OPTION` environment variable during build to specify the BIOS option that should be executed by default. Setting this to a valid BIOS value will skip the BIOS screen.
 -   Added the `AUTH_WEBSOCKET_ENDPOINT` environment variable during build to control the websocket endpoint that the auth site looks for.
+-   Added the ability to limit how large data records can be in `tiers.data.maxItemSizeInBytes`.
+    -   If no value is specified, then `500000` (500KB) is used.
+    -   `null` can be used to remove the limit.
 
 ### :bug: Bug Fixes
 
