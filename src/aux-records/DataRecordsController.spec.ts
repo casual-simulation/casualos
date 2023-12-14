@@ -711,6 +711,75 @@ describe('DataRecordsController', () => {
             });
         });
 
+        it('should reject the request if the item is over the maximum size', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                data: {
+                                    maxItemSizeInBytes: 5,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = (await manager.recordData(
+                key,
+                'address2',
+                'data123',
+                'subjectId',
+                null,
+                null
+            )) as RecordDataFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The size of the item is larger than the subscription allows.',
+                errorReason: 'data_too_large',
+                issues: [
+                    {
+                        code: 'too_big',
+                        exact: false,
+                        inclusive: true,
+                        maximum: 5,
+                        message: 'Number must be less than or equal to 5',
+                        path: ['data', 'sizeInBytes'],
+                        type: 'number',
+                    },
+                ],
+            });
+
+            await expect(
+                store.getData('testRecord', 'address2')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
         it('should reject the request if data features are disabled', async () => {
             store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
