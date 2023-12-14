@@ -122,6 +122,7 @@ import {
     StoredUpdates,
 } from './websockets';
 import { PrivoConfiguration } from './PrivoConfiguration';
+import { ModerationStore, UserInstReport } from './ModerationStore';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -138,7 +139,8 @@ export class MemoryStore
         PolicyStore,
         MetricsStore,
         ConfigurationStore,
-        InstRecordsStore
+        InstRecordsStore,
+        ModerationStore
 {
     private _users: AuthUser[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
@@ -165,6 +167,7 @@ export class MemoryStore
 
     private _emailRules: RegexRule[] = [];
     private _smsRules: RegexRule[] = [];
+    private _userInstReports: UserInstReport[] = [];
 
     private _instRecords: Map<string, Map<string, InstWithUpdates>> = new Map();
 
@@ -259,6 +262,17 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async saveUserInstReport(report: UserInstReport): Promise<void> {
+        const existingReportIndex = this._userInstReports.findIndex(
+            (r) => r.id === report.id
+        );
+        if (existingReportIndex >= 0) {
+            this._userInstReports[existingReportIndex] = report;
+        } else {
+            this._userInstReports.push(report);
+        }
     }
 
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null> {
