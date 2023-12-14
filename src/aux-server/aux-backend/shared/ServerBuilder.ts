@@ -1040,6 +1040,7 @@ export class ServerBuilder implements SubscriptionLike {
             mongoClient: this._mongoClient,
             mongoDatabase: this._mongoDb,
             websocketMessenger: this._websocketMessenger,
+            redisClient: this._redis,
         };
     }
 
