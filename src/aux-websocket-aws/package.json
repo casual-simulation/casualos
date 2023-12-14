@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-websocket-aws",
-    "version": "3.1.11",
+    "version": "3.2.7-alpha.7203795135",
     "description": "AWS API Gateway Websocket integration with AUX services",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -37,9 +37,9 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.2.6",
-        "@casual-simulation/websocket": "^3.1.11",
-        "rxjs": "7.5.7",
-        "axios": "1.6.2"
+        "@casual-simulation/aux-common": "^3.2.7-alpha.7203795135",
+        "@casual-simulation/websocket": "^3.2.7-alpha.7203795135",
+        "axios": "1.6.2",
+        "rxjs": "7.5.7"
     }
 }

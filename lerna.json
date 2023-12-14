@@ -1,5 +1,7 @@
 {
-    "packages": ["src/*"],
-    "version": "3.2.6",
-    "npmClient": "pnpm"
+  "packages": [
+    "src/*"
+  ],
+  "version": "3.2.7-alpha.7203795135",
+  "npmClient": "pnpm"
 }
