@@ -176,7 +176,7 @@ export default class EnterAccountInfoDialog extends Vue {
     }
 
     async checkDisplayName() {
-        if (!this.displayName) {
+        if (!this.displayName || !this.name) {
             return;
         }
         const result = await this._endpoint.isValidDisplayName(
@@ -190,12 +190,15 @@ export default class EnterAccountInfoDialog extends Vue {
             this.errors = getFormErrors(result);
         } else if (valid) {
             this.errors = this.errors.filter(
-                (e) => e.for !== DISPLAY_NAME_FIELD
+                (e) => e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
             );
         } else {
             if (result.containsName) {
                 this.errors = [
-                    ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
+                    ...this.errors.filter(
+                        (e) =>
+                            e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
+                    ),
                     {
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',
@@ -205,7 +208,10 @@ export default class EnterAccountInfoDialog extends Vue {
                 ];
             } else {
                 this.errors = [
-                    ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
+                    ...this.errors.filter(
+                        (e) =>
+                            e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
+                    ),
                     {
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',

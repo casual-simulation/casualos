@@ -25,7 +25,7 @@
                     </div>
                     <field-errors :field="null" :errors="errors" />
                     <p>
-                        <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
+                        <a target="_blank" href="/privacy-policy">Privacy Policy</a>
                     </p>
                 </md-card-content>
                 <md-card-actions>
