@@ -1053,6 +1053,9 @@ importers:
             jsqr:
                 specifier: 1.2.0
                 version: 1.2.0
+            lambda-stream:
+                specifier: 0.5.0
+                version: 0.5.0
             livekit-client:
                 specifier: 1.4.2
                 version: 1.4.2
@@ -19430,6 +19433,13 @@ packages:
             inherits: 2.0.4
             stream-splicer: 2.0.1
         dev: true
+
+    /lambda-stream@0.5.0:
+        resolution:
+            {
+                integrity: sha512-AaMXqUM+GcJ2OpNF2LI78jzbZ84rSckH+uKfstMQFqXDn+ZBLIkJgkUk+L0fuCGzw+LP5VToUxJKDfAbtLXSGw==,
+            }
+        dev: false
 
     /latest-version@7.0.0:
         resolution:

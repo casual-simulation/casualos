@@ -10,6 +10,7 @@ import type {
     S3Event,
 } from 'aws-lambda';
 import { constructServerBuilder, FILES_BUCKET } from '../LoadServer';
+import { streamifyResponse, ResponseStream } from 'lambda-stream';
 
 const builder = constructServerBuilder();
 
@@ -89,7 +90,7 @@ export async function handleApiEvent(
     };
 }
 
-export async function handleRecords(
+async function handleRecordsCore(
     event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>
 ) {
     await builder.ensureInitialized();
@@ -101,6 +102,21 @@ export async function handleRecords(
         return handleS3Event(event);
     }
 }
+
+async function handleRecordsStream(
+    event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>,
+    stream: ResponseStream
+): Promise<void> {
+    const response = await handleRecordsCore(event);
+
+    if (typeof response !== 'undefined') {
+        stream.write(JSON.stringify(response));
+    }
+
+    stream.end();
+}
+
+export const handleRecords = streamifyResponse(handleRecordsStream as any);
 
 export async function savePermanentBranches() {
     await builder.ensureInitialized();
