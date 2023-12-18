@@ -1,4 +1,4 @@
-import { ServerError } from '@casual-simulation/aux-common';
+import { NotLoggedInError, ServerError } from '@casual-simulation/aux-common';
 import {
     ModerationStore,
     ReportReason,
@@ -7,16 +7,23 @@ import {
 import { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
 import { NotificationMessenger } from './NotificationMessenger';
+import { ConfigurationStore } from './ConfigurationStore';
 
 /**
  * Defines a class that implements various moderation tasks.
  */
 export class ModerationController {
     private _store: ModerationStore;
-    private _messenger: NotificationMessenger;
+    private _config: ConfigurationStore;
+    private _messenger: NotificationMessenger | null;
 
-    constructor(store: ModerationStore, messenger: NotificationMessenger) {
+    constructor(
+        store: ModerationStore,
+        config: ConfigurationStore,
+        messenger: NotificationMessenger | null
+    ) {
         this._store = store;
+        this._config = config;
         this._messenger = messenger;
     }
 
@@ -26,6 +33,28 @@ export class ModerationController {
      */
     async reportInst(request: ReportInstRequest): Promise<ReportInstResult> {
         try {
+            const config = await this._config.getModerationConfig();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            if (
+                !config.allowUnauthenticatedReports &&
+                !request.reportingUserId
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in to report an inst.',
+                };
+            }
+
             const id = uuid();
             const now = Date.now();
 
@@ -45,15 +74,16 @@ export class ModerationController {
             };
             await this._store.saveUserInstReport(userInstReport);
 
-            await this._messenger.sendRecordNotification({
-                timeMs: now,
-                resource: 'user_inst_report',
-                action: 'created',
-                resourceId: id,
-                recordName: request.recordName,
-                inst: request.inst,
-                report: userInstReport,
-            });
+            if (this._messenger) {
+                await this._messenger.sendRecordNotification({
+                    timeMs: now,
+                    resource: 'user_inst_report',
+                    action: 'created',
+                    recordName: request.recordName,
+                    resourceId: request.inst,
+                    report: userInstReport,
+                });
+            }
 
             return {
                 success: true,
@@ -137,7 +167,11 @@ export interface ReportInstFailure {
     /**
      * The error code for the failure.
      */
-    errorCode: ServerError | 'unacceptable_request';
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | 'unacceptable_request'
+        | 'not_supported';
 
     /**
      * The error message for the failure.

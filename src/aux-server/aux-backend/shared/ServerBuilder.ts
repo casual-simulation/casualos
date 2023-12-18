@@ -31,6 +31,11 @@ import {
     MultiCache,
     CachingPolicyStore,
     CachingConfigStore,
+    notificationsSchema,
+    NotificationMessenger,
+    MultiNotificationMessenger,
+    ModerationController,
+    ModerationStore,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -116,11 +121,14 @@ import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
 import { RedisMultiCache } from '../redis/RedisMultiCache';
 import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
-import { PrismaPrivoStore } from 'aux-backend/prisma/PrismaPrivoStore';
+import { PrismaPrivoStore } from '../prisma/PrismaPrivoStore';
 import {
     PrivoConfiguration,
     privoSchema,
 } from '@casual-simulation/aux-records/PrivoConfiguration';
+import { SlackNotificationMessenger } from '../notifications/SlackNotificationMessenger';
+import { TelegramNotificationMessenger } from '../notifications/TelegramNotificationMessenger';
+import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
 
 export interface BuildReturn {
     server: RecordsServer;
@@ -191,6 +199,11 @@ export class ServerBuilder implements SubscriptionLike {
     private _chatInterface: AIChatInterface = null;
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
+
+    private _moderationStore: ModerationStore = null;
+    private _moderationController: ModerationController;
+
+    private _notificationMessenger: MultiNotificationMessenger;
 
     private _redis: RedisClientType | null = null;
     private _s3: S3;
@@ -397,6 +410,7 @@ export class ServerBuilder implements SubscriptionLike {
             undefined
         );
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
 
         return this;
     }
@@ -438,6 +452,7 @@ export class ServerBuilder implements SubscriptionLike {
         this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
 
         this._actions.push({
             priority: 0,
@@ -754,6 +769,36 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useNotifications(
+        options: Pick<BuilderOptions, 'notifications'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using notifications.');
+        if (!options.notifications) {
+            throw new Error('Notifications options must be provided.');
+        }
+
+        const notifications = options.notifications;
+        this._notificationMessenger = new MultiNotificationMessenger(
+            notifications
+        );
+
+        if (notifications.slack) {
+            console.log('[ServerBuilder] Using Slack notifications.');
+            this._notificationMessenger.addMessenger(
+                new SlackNotificationMessenger(notifications.slack)
+            );
+        }
+
+        if (notifications.telegram) {
+            console.log('[ServerBuilder] Using Telegram notifications.');
+            this._notificationMessenger.addMessenger(
+                new TelegramNotificationMessenger(notifications.telegram)
+            );
+        }
+
+        return this;
+    }
+
     usePrivo(options: Pick<BuilderOptions, 'privo'> = this._options): this {
         console.log('[ServerBuilder] Using Privo.');
         if (!options.privo) {
@@ -1006,6 +1051,14 @@ export class ServerBuilder implements SubscriptionLike {
             this._aiController = new AIController(this._aiConfiguration);
         }
 
+        if (this._moderationStore) {
+            this._moderationController = new ModerationController(
+                this._moderationStore,
+                this._configStore,
+                this._notificationMessenger
+            );
+        }
+
         if (
             this._websocketConnectionStore &&
             this._websocketMessenger &&
@@ -1039,7 +1092,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._rateLimitController,
             this._policyController,
             this._aiController,
-            this._websocketController
+            this._websocketController,
+            this._moderationController
         );
 
         return {
@@ -1762,6 +1816,11 @@ export const optionsSchema = z.object({
     stripe: stripeSchema
         .describe(
             'Stripe options. If omitted, then Stripe features will be disabled.'
+        )
+        .optional(),
+    notifications: notificationsSchema
+        .describe(
+            'Notification configuration options. If omitted, then server notifications will be disabled.'
         )
         .optional(),
 });

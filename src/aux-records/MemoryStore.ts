@@ -127,10 +127,12 @@ import {
     NotificationMessenger,
     RecordsNotification,
 } from './NotificationMessenger';
+import { ModerationConfiguration } from './ModerationConfiguration';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
     privo?: PrivoConfiguration;
+    moderation?: ModerationConfiguration;
 }
 
 export class MemoryStore
@@ -178,6 +180,7 @@ export class MemoryStore
 
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
     private _privoConfiguration: PrivoConfiguration | null = null;
+    private _moderationConfiguration: ModerationConfiguration | null = null;
     private _recordNotifications: RecordsNotification[] = [];
 
     maxAllowedInstSize: number = Infinity;
@@ -262,6 +265,14 @@ export class MemoryStore
         this._privoConfiguration = value;
     }
 
+    get moderationConfiguration() {
+        return this._moderationConfiguration;
+    }
+
+    set moderationConfiguration(value: ModerationConfiguration | null) {
+        this._moderationConfiguration = value;
+    }
+
     get userInstReports() {
         return this._userInstReports;
     }
@@ -273,6 +284,7 @@ export class MemoryStore
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
+        this._moderationConfiguration = config.moderation ?? null;
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
@@ -301,6 +313,10 @@ export class MemoryStore
 
     async getPrivoConfiguration(): Promise<PrivoConfiguration | null> {
         return this._privoConfiguration;
+    }
+
+    async getModerationConfig(): Promise<ModerationConfiguration | null> {
+        return this._moderationConfiguration;
     }
 
     async getRecordByName(name: string): Promise<Record> {

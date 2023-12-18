@@ -16,8 +16,11 @@ describe('ModerationController', () => {
         nowMock = Date.now = jest.fn();
         store = new MemoryStore({
             subscriptions: null,
+            moderation: {
+                allowUnauthenticatedReports: true,
+            },
         });
-        controller = new ModerationController(store, store);
+        controller = new ModerationController(store, store, store);
     });
 
     afterEach(() => {
@@ -89,9 +92,8 @@ describe('ModerationController', () => {
                 {
                     resource: 'user_inst_report',
                     action: 'created',
-                    resourceId: 'test_id',
+                    resourceId: 'test_inst',
                     recordName: 'test_record',
-                    inst: 'test_inst',
                     timeMs: 123,
                     report: {
                         id: 'test_id',
@@ -109,6 +111,56 @@ describe('ModerationController', () => {
                     },
                 },
             ]);
+        });
+
+        it('should return a not_supported error if moderation is not configured', async () => {
+            store.moderationConfiguration = null;
+            uuidMock.mockReturnValueOnce('test_id');
+            nowMock.mockReturnValueOnce(123);
+
+            const response = await controller.reportInst({
+                recordName: 'test_record',
+                inst: 'test_inst',
+                reportedPermalink: 'test_permalink',
+                reportedUrl: 'test_url',
+                reportReason: 'harassment',
+                reportingIpAddress: '127.0.0.1',
+                automaticReport: false,
+                reportingUserId: null,
+                reportReasonText: 'test_reason',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should return a not_logged_in error if unauthenticated reports are not supported', async () => {
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: false,
+            };
+            uuidMock.mockReturnValueOnce('test_id');
+            nowMock.mockReturnValueOnce(123);
+
+            const response = await controller.reportInst({
+                recordName: 'test_record',
+                inst: 'test_inst',
+                reportedPermalink: 'test_permalink',
+                reportedUrl: 'test_url',
+                reportReason: 'harassment',
+                reportingIpAddress: '127.0.0.1',
+                automaticReport: false,
+                reportingUserId: null,
+                reportReasonText: 'test_reason',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage: 'The user must be logged in to report an inst.',
+            });
         });
     });
 });
