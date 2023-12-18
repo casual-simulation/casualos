@@ -3762,6 +3762,37 @@ On deployments that do not support subscriptions, this is always `true`.
 
 The subscription tier that is currently active for the user. It is a string containing the feature level that should be active for the user.
 
+### `privacyFeatures`
+
+The privacy features that are currently active for the user. If is an object with the following properties:
+
+```typescript
+/**
+ * The privacy-related features that a user can have access to.
+ */
+let privacyFeatures: {
+    /**
+     * Whether the user is allowed to publish data.
+     */
+    publishData: boolean;
+
+    /**
+     * Whether the user is allowed to publish or access public data.
+     */
+    allowPublicData: boolean;
+
+    /**
+     * Whether the user is allowed to access AI features.
+     */
+    allowAI: boolean;
+
+    /**
+     * Whether the user is allowed to access public insts.
+     */
+    allowPublicInsts: boolean;
+}
+```
+
 ## Hidden Tags
 
 Hidden tags are tags that are hidden in the sheet by default.
