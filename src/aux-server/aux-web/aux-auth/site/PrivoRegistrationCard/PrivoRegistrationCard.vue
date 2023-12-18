@@ -29,12 +29,7 @@
                     </p>
                 </md-card-content>
                 <md-card-actions>
-                    <md-button
-                        type="button"
-                        class="md-primary"
-                        @click="provideDateOfBirth()"
-                        :disabled="processing"
-                    >
+                    <md-button type="button" @click="provideDateOfBirth()" :disabled="processing">
                         <span>Continue</span>
                     </md-button>
                 </md-card-actions>
@@ -123,12 +118,7 @@
                     </p>
                 </md-card-content>
                 <md-card-actions>
-                    <md-button
-                        type="button"
-                        class="md-primary"
-                        @click="register()"
-                        :disabled="processing"
-                    >
+                    <md-button type="button" @click="register()" :disabled="processing">
                         <md-progress-spinner
                             v-if="processing"
                             md-mode="indeterminate"
