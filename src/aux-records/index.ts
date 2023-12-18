@@ -46,6 +46,7 @@ export * from './CachingConfigStore';
 
 export * from './ModerationController';
 export * from './ModerationStore';
+export * from './NotificationMessenger';
 
 export * from './websockets';
 export * from './forms';

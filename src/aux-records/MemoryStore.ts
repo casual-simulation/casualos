@@ -123,6 +123,10 @@ import {
 } from './websockets';
 import { PrivoConfiguration } from './PrivoConfiguration';
 import { ModerationStore, UserInstReport } from './ModerationStore';
+import {
+    NotificationMessenger,
+    RecordsNotification,
+} from './NotificationMessenger';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -140,7 +144,8 @@ export class MemoryStore
         MetricsStore,
         ConfigurationStore,
         InstRecordsStore,
-        ModerationStore
+        ModerationStore,
+        NotificationMessenger
 {
     private _users: AuthUser[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
@@ -173,6 +178,7 @@ export class MemoryStore
 
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
     private _privoConfiguration: PrivoConfiguration | null = null;
+    private _recordNotifications: RecordsNotification[] = [];
 
     maxAllowedInstSize: number = Infinity;
 
@@ -256,12 +262,26 @@ export class MemoryStore
         this._privoConfiguration = value;
     }
 
+    get userInstReports() {
+        return this._userInstReports;
+    }
+
+    get recordsNotifications() {
+        return this._recordNotifications;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async sendRecordNotification(
+        notification: RecordsNotification
+    ): Promise<void> {
+        this._recordNotifications.push(notification);
     }
 
     async saveUserInstReport(report: UserInstReport): Promise<void> {
