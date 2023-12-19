@@ -1,4 +1,4 @@
-import { UserInstReport } from 'ModerationStore';
+import { UserInstReport } from './ModerationStore';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
 

@@ -9,6 +9,8 @@ export const DISPLAY_NAME_FIELD = 'displayName';
 export const TERMS_OF_SERVICE_FIELD = 'termsOfService';
 export const ADDRESS_FIELD = 'address';
 export const CODE_FIELD = 'code';
+export const REPORT_REASON_FIELD = 'reportReason';
+export const REPORT_REASON_TEXT_FIELD = 'reportReasonText';
 
 /**
  * Defines a basic interface for a form error.

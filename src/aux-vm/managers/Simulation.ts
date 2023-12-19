@@ -31,6 +31,11 @@ export interface SimulationOrigin {
      * The host for the simulation.
      */
     host?: string;
+
+    /**
+     * Whether the simulation is static.
+     */
+    isStatic: boolean;
 }
 
 /**

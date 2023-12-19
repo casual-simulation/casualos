@@ -61,6 +61,7 @@ export function nodeSimulationForBranch(
         {
             recordName: null,
             inst: null,
+            isStatic: false,
         },
         new AuxVMNode(
             id,
@@ -92,6 +93,7 @@ export function nodeSimulationForLocalRepo(
         {
             recordName: null,
             inst: null,
+            isStatic: false,
         },
         new AuxVMNode(
             id,
@@ -119,6 +121,7 @@ export function nodeSimulationWithConfig(
         {
             recordName: null,
             inst: null,
+            isStatic: false,
         },
         new AuxVMNode(id, configBotId, new RemoteAuxChannel(config, {}))
     );

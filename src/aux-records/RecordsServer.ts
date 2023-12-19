@@ -4467,7 +4467,7 @@ export class RecordsServer {
                 z.literal('illegal'),
                 z.literal('other'),
             ]),
-            reportReasonText: z.string().nonempty(),
+            reportReasonText: z.string().nonempty().trim(),
             reportedUrl: z.string().url(),
             reportedPermalink: z.string().url(),
         });

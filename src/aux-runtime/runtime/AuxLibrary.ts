@@ -233,6 +233,7 @@ import {
     Photo,
     getEasing,
     enableCollaboration as calcEnableCollaboration,
+    reportInst as calcReportInst,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -375,6 +376,7 @@ import {
 import type {
     AIChatMessage,
     ListStudiosResult,
+    ReportInstResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3232,6 +3234,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 compileApp: setAppContent,
                 appHooks: { ...hooks, render },
                 listBuiltinTags,
+                reportInst,
                 requestAuthBot,
                 requestAuthBotInBackground,
 
@@ -7856,6 +7859,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function listBuiltinTags(): string[] {
         return KNOWN_TAGS.slice();
+    }
+
+    /**
+     * Shows the "report inst" dialog to the user.
+     *
+     * Returns a promise that resolves once the dialog has been closed.
+     *
+     * @example Show the "report inst" dialog.
+     * await os.reportInst();
+     *
+     * @dochash actions/os
+     * @docname os.reportInst
+     */
+    function reportInst(): Promise<void> {
+        const task = context.createTask();
+        const event = calcReportInst(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

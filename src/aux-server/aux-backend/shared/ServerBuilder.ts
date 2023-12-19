@@ -129,6 +129,10 @@ import {
 import { SlackNotificationMessenger } from '../notifications/SlackNotificationMessenger';
 import { TelegramNotificationMessenger } from '../notifications/TelegramNotificationMessenger';
 import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
+import {
+    ModerationConfiguration,
+    moderationSchema,
+} from '@casual-simulation/aux-records/ModerationConfiguration';
 
 export interface BuildReturn {
     server: RecordsServer;
@@ -279,8 +283,10 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useMongoDB(
-        options: Pick<BuilderOptions, 'mongodb' | 'subscriptions'> = this
-            ._options
+        options: Pick<
+            BuilderOptions,
+            'mongodb' | 'subscriptions' | 'moderation'
+        > = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB.');
 
@@ -322,6 +328,8 @@ export class ServerBuilder implements SubscriptionLike {
                     {
                         subscriptions:
                             options.subscriptions as SubscriptionConfiguration,
+                        moderation:
+                            options.moderation as ModerationConfiguration,
                     },
                     configuration
                 );
@@ -365,8 +373,10 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     usePrismaWithS3(
-        options: Pick<BuilderOptions, 'prisma' | 's3' | 'subscriptions'> = this
-            ._options
+        options: Pick<
+            BuilderOptions,
+            'prisma' | 's3' | 'subscriptions' | 'moderation'
+        > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with S3.');
         if (!options.prisma) {
@@ -1245,11 +1255,15 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _ensurePrismaConfigurationStore(
         prismaClient: PrismaClient,
-        options: Pick<BuilderOptions, 'prisma' | 'subscriptions' | 'privo'>
+        options: Pick<
+            BuilderOptions,
+            'prisma' | 'subscriptions' | 'moderation' | 'privo'
+        >
     ): ConfigurationStore {
         const configStore = new PrismaConfigurationStore(prismaClient, {
             subscriptions: options.subscriptions as SubscriptionConfiguration,
             privo: options.privo as PrivoConfiguration,
+            moderation: options.moderation as ModerationConfiguration,
         });
         if (this._multiCache && options.prisma.configurationCacheSeconds) {
             const cache = this._multiCache.getCache('config');
@@ -1821,6 +1835,11 @@ export const optionsSchema = z.object({
     notifications: notificationsSchema
         .describe(
             'Notification configuration options. If omitted, then server notifications will be disabled.'
+        )
+        .optional(),
+    moderation: moderationSchema
+        .describe(
+            'Moderation configuration options. If omitted, then moderation features will be disabled unless overridden in the database.'
         )
         .optional(),
 });
