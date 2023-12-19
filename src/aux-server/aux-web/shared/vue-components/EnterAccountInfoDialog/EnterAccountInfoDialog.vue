@@ -114,7 +114,6 @@
             <md-button
                 v-if="enterDateOfBirth"
                 type="button"
-                class="md-primary"
                 @click="provideDateOfBirth()"
                 :disabled="processing"
             >
@@ -127,13 +126,7 @@
                 >
                 <span v-else>Continue</span>
             </md-button>
-            <md-button
-                v-else
-                type="button"
-                class="md-primary"
-                @click="register()"
-                :disabled="processing"
-            >
+            <md-button v-else type="button" @click="register()" :disabled="processing">
                 <md-progress-spinner
                     v-if="processing"
                     md-mode="indeterminate"

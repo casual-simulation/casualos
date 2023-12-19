@@ -92,6 +92,11 @@
 -   Added the ability to limit how large data records can be in `tiers.data.maxItemSizeInBytes`.
     -   If no value is specified, then `500000` (500KB) is used.
     -   `null` can be used to remove the limit.
+-   Added the `privacyFeatures` tag to the `authBot`. It is an object with the following properties:
+    -   `publishData` - A boolean that specifies whether the user is allowed to publish any data at all.
+    -   `allowPublicData` - A boolean that specifies whether the user is allowed to publish or access public data.
+    -   `allowAI` - A boolean that specifies whether the user is allowed to access AI features.
+    -   `allowPublicInsts` - A boolean that specifies whether the user is allowed to access public insts.
 
 ### :bug: Bug Fixes
 

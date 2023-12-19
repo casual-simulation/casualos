@@ -1,7 +1,7 @@
 <template>
     <md-dialog
         :md-active.sync="showHasAccount"
-        @md-closed="cancelRegistration()"
+        @md-closed="cancelHasAccount()"
         :md-close-on-esc="true"
         :md-click-outside-to-close="true"
         :md-fullscreen="true"
