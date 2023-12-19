@@ -3,6 +3,7 @@
         <update-password-card
             v-if="updatePasswordUrl"
             :updatePasswordUrl="updatePasswordUrl"
+            :requireParentEmail="requireParentEmail"
             @close="goHome()"
         ></update-password-card>
         <md-card v-else>

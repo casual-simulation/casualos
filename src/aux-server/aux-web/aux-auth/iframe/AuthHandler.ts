@@ -815,6 +815,7 @@ export class AuthHandler implements AuxAuth {
             this._loginUIStatus.next({
                 page: 'show_update_password_link',
                 updatePasswordUrl: result.updatePasswordUrl,
+                providedParentEmail: !!info.parentEmail,
             });
 
             return authManager.userId;
