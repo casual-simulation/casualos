@@ -179,6 +179,7 @@ export function formatUserInstReportNotificationAsString(
     return `A user inst report was ${notification.action} for ${
         notification.recordName ?? '(null)'
     }/${notification.resourceId}:
+Report ID: ${notification.report.id}
 Time: ${time}
 Reporting User: ${notification.report.reportingUserId ?? '(null)'}
 Reporting IP: ${notification.report.reportingIpAddress ?? '(null)'}
