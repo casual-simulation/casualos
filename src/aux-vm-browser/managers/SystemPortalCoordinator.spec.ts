@@ -15,6 +15,7 @@ import {
 import {
     AuxConfigParameters,
     SimulationManager,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import {
     createBot,

@@ -144,6 +144,7 @@ export type AsyncActions =
     | RegisterCustomAppAction
     | UnregisterCustomAppAction
     | RegisterHtmlAppAction
+    | ReportInstAction
     | RequestAuthDataAction
     | DefineGlobalBotAction
     | ConvertGeolocationToWhat3WordsAction
@@ -2826,6 +2827,16 @@ export interface GoToTagAction {
 }
 
 /**
+ * Defines an event that requests to report the current inst.
+ *
+ * @dochash types/os
+ * @docname ReportInstAction
+ */
+export interface ReportInstAction extends AsyncAction {
+    type: 'report_inst';
+}
+
+/**
  * Defines an event that requests a Auth data from the OS.
  *
  * @dochash types/os
@@ -4894,6 +4905,17 @@ export function htmlAppMethod(
         nodeId,
         methodName,
         args,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ReportInstAction.
+ * @param taskId The ID of the async task.
+ */
+export function reportInst(taskId?: string | number): ReportInstAction {
+    return {
+        type: 'report_inst',
         taskId,
     };
 }

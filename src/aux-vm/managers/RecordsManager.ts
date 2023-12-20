@@ -56,6 +56,8 @@ import {
     GetFileRecordResult,
     ReadFileResult,
     ReadFileFailure,
+    ReportInstRequest,
+    ReportInstResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -217,6 +219,38 @@ export class RecordsManager {
                 this._listUserStudios(event);
             }
         }
+    }
+
+    /**
+     * Reports the given inst to the server.
+     * @param request The request to send to the server.
+     */
+    async reportInst(
+        request: Omit<
+            ReportInstRequest,
+            'reportingUserId' | 'reportingIpAddress'
+        >
+    ): Promise<ReportInstResult> {
+        const auth = this._getAuth(null);
+        const token = await this._getAuthToken(auth, false);
+
+        let headers: { [key: string]: string } = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const result: AxiosResponse<ReportInstResult> = await axios.post(
+            await this._publishUrl(auth, '/api/v2/records/insts/report'),
+            {
+                ...request,
+            },
+            {
+                ...this._axiosOptions,
+                headers,
+            }
+        );
+
+        return result.data;
     }
 
     private async _recordData(event: RecordDataAction) {

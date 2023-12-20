@@ -104,7 +104,16 @@ export function getPolicies() {
         let content: string;
         if (override) {
             console.log(`[Policies] Using override for ${name}`);
-            content = override;
+            const jsonResult = tryParseJson(override);
+
+            if (!jsonResult.success) {
+                console.warn(
+                    `[Policies] ${name} override was not valid JSON. Using string, but this might be bad if your system does not allow line breaks in environment variables.`
+                );
+                content = override;
+            } else {
+                content = String(jsonResult.value);
+            }
         } else {
             const defaultTerms = readFileSync(
                 path.resolve(defaultPolicies, name),
