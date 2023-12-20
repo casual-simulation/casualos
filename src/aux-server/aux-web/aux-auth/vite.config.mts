@@ -91,7 +91,7 @@ export default defineConfig(({ command, mode }) => {
         ? JSON.parse(process.env.SERVER_CONFIG)
         : null;
 
-    const policies = getPolicies();
+    const policies = getPolicies(false);
 
     return {
         cacheDir: path.resolve(

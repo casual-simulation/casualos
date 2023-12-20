@@ -95,7 +95,7 @@ export function listEnvironmentFiles(directory: string): string[] {
         .map((f) => path.join(directory, f.name));
 }
 
-export function getPolicies() {
+export function getPolicies(includeExtensionlessFiles: boolean) {
     const virtualModules: Record<string, string> = {};
     const files: any = {};
 
@@ -126,7 +126,9 @@ export function getPolicies() {
 
         const fileName = name.slice(0, name.lastIndexOf('.'));
 
-        files[fileName] = content;
+        if (includeExtensionlessFiles) {
+            files[fileName] = content;
+        }
         files[`${fileName}.txt`] = content;
         files[`${fileName}.md`] = content;
     }
