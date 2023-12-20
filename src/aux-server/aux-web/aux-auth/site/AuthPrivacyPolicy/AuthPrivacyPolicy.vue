@@ -13,8 +13,8 @@
                 <p>
                     By using our products or services, you agree to this Privacy Policy as well as
                     our
-                    <a href="/acceptable-use-policy">Acceptable Use Policy</a> and
-                    <a href="/terms">Terms of Service</a>.
+                    <router-link to="/acceptable-use-policy">Acceptable Use Policy</router-link> and
+                    <router-link to="/terms">Terms of Service</router-link>.
                 </p>
 
                 <div v-html="privacyPolicyHtml"></div>
