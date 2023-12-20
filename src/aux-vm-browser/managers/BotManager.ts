@@ -416,7 +416,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             {
                 recordName: null,
                 inst: null,
-                isStatic: this._origin.isStatic,
+                isStatic: !!this._origin.isStatic,
             },
             {
                 version: this._config.version,

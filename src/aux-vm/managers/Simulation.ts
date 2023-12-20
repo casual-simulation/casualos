@@ -34,8 +34,9 @@ export interface SimulationOrigin {
 
     /**
      * Whether the simulation is static.
+     * Defaults to false.
      */
-    isStatic: boolean;
+    isStatic?: boolean;
 }
 
 /**
