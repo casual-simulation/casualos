@@ -228,6 +228,10 @@ export class Server {
             builder.usePrivo();
         }
 
+        if (options.notifications) {
+            builder.useNotifications();
+        }
+
         const {
             server,
             filesController,

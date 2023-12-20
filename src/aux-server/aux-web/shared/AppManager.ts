@@ -190,7 +190,7 @@ export class AppManager {
             const { isStatic, ...origin } = config;
             return await this._simulationFactory(
                 id,
-                origin,
+                { ...origin, isStatic: !!isStatic },
                 this.createSimulationConfig({ forceSignedScripts, isStatic }),
                 isStatic
             );

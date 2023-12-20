@@ -27,6 +27,10 @@ export default class UpdatePasswordLinkDialog extends Vue {
         return this.status.updatePasswordUrl;
     }
 
+    get providedParentEmail() {
+        return this.status.providedParentEmail;
+    }
+
     @Watch('endpoint')
     onEndpointChanged() {
         this._endpoint = appManager.authCoordinator.authEndpoints.get(

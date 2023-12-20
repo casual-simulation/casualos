@@ -173,7 +173,11 @@ import {
     getFile,
     listUserStudios,
 } from './RecordsEvents';
-import { DEFAULT_BRANCH_NAME, remote } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_BRANCH_NAME,
+    remote,
+    reportInst,
+} from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import {
     TestScriptBotFactory,
@@ -3801,7 +3805,7 @@ describe('AuxLibrary', () => {
 
         describe('os.downloadBotsAsInitalizationUpdate()', () => {
             let dateNowMock: jest.Mock<number>;
-            let originalDateNow: typeof Date['now'];
+            let originalDateNow: (typeof Date)['now'];
 
             beforeEach(() => {
                 originalDateNow = Date.now;
@@ -5468,6 +5472,16 @@ describe('AuxLibrary', () => {
 
                 expect(result).toEqual(KNOWN_TAGS);
                 expect(result === KNOWN_TAGS).toBe(false);
+            });
+        });
+
+        describe('os.reportInst()', () => {
+            it('should emit a ReportInstAction', () => {
+                const promise: any = library.api.os.reportInst();
+                const expected = reportInst(context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -12017,7 +12031,7 @@ describe('AuxLibrary', () => {
         describe.each(interpretableCases)('%s', (desc) => {
             let create:
                 | typeof library.tagSpecificApi.create
-                | typeof library.tagSpecificApi.create[typeof INTERPRETABLE_FUNCTION];
+                | (typeof library.tagSpecificApi.create)[typeof INTERPRETABLE_FUNCTION];
 
             beforeEach(() => {
                 if (desc === 'normal') {
@@ -12793,7 +12807,7 @@ describe('AuxLibrary', () => {
         describe.each(interpretableCases)('%s', (desc) => {
             let destroy:
                 | typeof library.api.destroy
-                | typeof library.api.destroy[typeof INTERPRETABLE_FUNCTION];
+                | (typeof library.api.destroy)[typeof INTERPRETABLE_FUNCTION];
 
             beforeEach(() => {
                 if (desc === 'normal') {
@@ -13000,7 +13014,7 @@ describe('AuxLibrary', () => {
         describe.each(interpretableCases)('%s', (desc) => {
             let changeState:
                 | typeof library.api.changeState
-                | typeof library.api.changeState[typeof INTERPRETABLE_FUNCTION];
+                | (typeof library.api.changeState)[typeof INTERPRETABLE_FUNCTION];
 
             beforeEach(() => {
                 if (desc === 'normal') {
@@ -13662,7 +13676,7 @@ describe('AuxLibrary', () => {
         describe.each(interpretableCases)('%s', (desc) => {
             let priorityShout:
                 | typeof library.api.priorityShout
-                | typeof library.api.priorityShout[typeof INTERPRETABLE_FUNCTION];
+                | (typeof library.api.priorityShout)[typeof INTERPRETABLE_FUNCTION];
 
             beforeEach(() => {
                 if (desc === 'normal') {
@@ -13826,7 +13840,7 @@ describe('AuxLibrary', () => {
         describe.each(interpretableCases)('%s', (desc) => {
             let shout:
                 | typeof library.api.shout
-                | typeof library.api.shout[typeof INTERPRETABLE_FUNCTION];
+                | (typeof library.api.shout)[typeof INTERPRETABLE_FUNCTION];
 
             beforeEach(() => {
                 if (desc === 'normal') {
@@ -14314,7 +14328,7 @@ describe('AuxLibrary', () => {
         describe.each(interpretableCases)('%s', (desc) => {
             let whisper:
                 | typeof library.api.whisper
-                | typeof library.api.whisper[typeof INTERPRETABLE_FUNCTION];
+                | (typeof library.api.whisper)[typeof INTERPRETABLE_FUNCTION];
 
             beforeEach(() => {
                 if (desc === 'normal') {

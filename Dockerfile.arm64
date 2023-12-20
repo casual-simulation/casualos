@@ -1,4 +1,4 @@
-FROM arm64v8/node:16
+FROM arm64v8/node:18
 
 WORKDIR /usr/src/app
 
@@ -7,8 +7,7 @@ COPY ./src/aux-server/package*.json ./
 COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 
 RUN node ./script/remove-dev-dependencies.mjs ./package.json
-RUN npm install
-RUN npx prisma generate
+RUN npm install --force
 
 COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
 COPY ./src/aux-server/aux-web/dist ./aux-web/dist/

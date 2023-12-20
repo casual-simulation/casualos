@@ -175,6 +175,7 @@
             <image-classifier></image-classifier>
             <photo-camera></photo-camera>
             <bot-tooltips></bot-tooltips>
+            <report-inst-dialog></report-inst-dialog>
             <wake-lock></wake-lock>
 
             <div ref="livekitTracks" class="hidden-livekit-tracks"></div>

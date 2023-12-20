@@ -6948,4 +6948,51 @@ describe('RecordsManager', () => {
             });
         });
     });
+
+    describe('reportInst()', () => {
+        beforeEach(() => {
+            require('axios').__reset();
+        });
+
+        it('should send a POST request to /api/v2/records/insts/report', async () => {
+            setResponse({
+                data: {
+                    success: true,
+                    id: 'reportId',
+                },
+            });
+
+            authMock.isAuthenticated.mockResolvedValueOnce(true);
+            authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+            await records.reportInst({
+                recordName: null,
+                inst: 'inst',
+                automaticReport: false,
+                reportReason: 'spam',
+                reportReasonText: 'description',
+                reportedUrl: 'url',
+                reportedPermalink: 'permalink',
+            });
+
+            expect(getLastPost()).toEqual([
+                'http://localhost:3002/api/v2/records/insts/report',
+                {
+                    recordName: null,
+                    inst: 'inst',
+                    automaticReport: false,
+                    reportReason: 'spam',
+                    reportReasonText: 'description',
+                    reportedUrl: 'url',
+                    reportedPermalink: 'permalink',
+                },
+                {
+                    validateStatus: expect.any(Function),
+                    headers: {
+                        Authorization: 'Bearer authToken',
+                    },
+                },
+            ]);
+        });
+    });
 });

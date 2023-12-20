@@ -272,9 +272,6 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!hasValue(this._origin)) {
             return null;
         }
-        this._loginStatus.next({
-            isLoggingIn: true,
-        });
         if (!this._initialized) {
             await this._init();
         }

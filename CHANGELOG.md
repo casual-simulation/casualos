@@ -2,7 +2,7 @@
 
 ## V3.2.7
 
-#### Date: 12/14/2023
+#### Date: 12/20/2023
 
 ### :boom: Breaking Changes
 
@@ -89,6 +89,17 @@
 -   Added the `DEFAULT_BIOS_OPTION` environment variable during build to control which BIOS option is selected by default.
 -   Added the `AUTOMATIC_BIOS_OPTION` environment variable during build to specify the BIOS option that should be executed by default. Setting this to a valid BIOS value will skip the BIOS screen.
 -   Added the `AUTH_WEBSOCKET_ENDPOINT` environment variable during build to control the websocket endpoint that the auth site looks for.
+-   Added the ability to limit how large data records can be in `tiers.data.maxItemSizeInBytes`.
+    -   If no value is specified, then `500000` (500KB) is used.
+    -   `null` can be used to remove the limit.
+-   Added the `privacyFeatures` tag to the `authBot`. It is an object with the following properties:
+    -   `publishData` - A boolean that specifies whether the user is allowed to publish any data at all.
+    -   `allowPublicData` - A boolean that specifies whether the user is allowed to publish or access public data.
+    -   `allowAI` - A boolean that specifies whether the user is allowed to access AI features.
+    -   `allowPublicInsts` - A boolean that specifies whether the user is allowed to access public insts.
+-   Added the `os.reportInst()` function.
+    -   Opens the "Report Inst" dialog that gives the user an opportunity to describe what they are seeing and report it.
+    -   Returns a promise that resolves when the inst has been reported.
 
 ### :bug: Bug Fixes
 

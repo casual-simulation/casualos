@@ -11060,6 +11060,19 @@ interface Os {
     listBuiltinTags(): string[];
 
     /**
+     * Shows the "report inst" dialog to the user.
+     * 
+     * Returns a promise that resolves once the dialog has been closed.
+     * 
+     * @example Show the "report inst" dialog.
+     * await os.reportInst();
+     * 
+     * @dochash actions/os
+     * @docname os.reportInst
+     */
+    reportInst(): Promise<void>;
+
+    /**
      * Requests that an "authentication" bot be added to the inst for the current browser tab.
      * Auth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.
      *

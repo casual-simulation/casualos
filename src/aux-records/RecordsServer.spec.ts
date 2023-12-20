@@ -96,6 +96,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { PrivoClientInterface } from './PrivoClient';
 import { DateTime } from 'luxon';
+import { ModerationController } from './ModerationController';
 
 console.log = jest.fn();
 
@@ -118,6 +119,7 @@ describe('RecordsServer', () => {
     let tempInstStore: TemporaryInstRecordsStore;
     let websocketMessenger: MemoryWebsocketMessenger;
     let websocketController: WebsocketController;
+    let moderationController: ModerationController;
 
     let policyController: PolicyController;
 
@@ -420,6 +422,7 @@ describe('RecordsServer', () => {
             config: store,
             metrics: store,
         });
+        moderationController = new ModerationController(store, store, store);
 
         server = new RecordsServer(
             allowedAccountOrigins,
@@ -435,7 +438,8 @@ describe('RecordsServer', () => {
             rateLimitController,
             policyController,
             aiController,
-            websocketController
+            websocketController,
+            moderationController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -2547,6 +2551,66 @@ describe('RecordsServer', () => {
                             message: 'The value cannot not contain spaces.',
                             path: ['name'],
                             validation: 'regex',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if no name or display name is provided', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/register/privo`,
+                    JSON.stringify({
+                        name: '',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: '',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'too_small',
+                            exact: false,
+                            inclusive: true,
+                            message:
+                                'String must contain at least 1 character(s)',
+                            minimum: 1,
+                            path: ['name'],
+                            type: 'string',
+                        },
+                        {
+                            code: 'too_small',
+                            exact: false,
+                            inclusive: true,
+                            message:
+                                'String must contain at least 1 character(s)',
+                            minimum: 1,
+                            path: ['displayName'],
+                            type: 'string',
                         },
                     ],
                 },
@@ -9400,6 +9464,7 @@ describe('RecordsServer', () => {
                 null as any,
                 policyController,
                 null,
+                null,
                 null
             );
 
@@ -9636,6 +9701,207 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/insts/report', () => {
+        beforeEach(() => {
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: false,
+            };
+        });
+
+        it('should return a 200 status code if the report is successfully submitted', async () => {
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/insts/report',
+                    JSON.stringify({
+                        recordName: null,
+                        inst: 'myInst',
+                        reportReason: 'spam',
+                        reportReasonText: 'This is spam',
+                        reportedUrl: 'https://example.com',
+                        reportedPermalink: 'https://example.com',
+                        automaticReport: false,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    id: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.userInstReports).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: null,
+                    inst: 'myInst',
+                    reportReason: 'spam',
+                    reportReasonText: 'This is spam',
+                    reportedUrl: 'https://example.com',
+                    reportedPermalink: 'https://example.com',
+                    automaticReport: false,
+                    reportingIpAddress: '123.456.789',
+                    reportingUserId: userId,
+                    createdAtMs: expect.any(Number),
+                    updatedAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        it('should return a 501 status code if moderation is disabled', async () => {
+            store.moderationConfiguration = null;
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/insts/report',
+                    JSON.stringify({
+                        recordName: null,
+                        inst: 'myInst',
+                        reportReason: 'spam',
+                        reportReasonText: 'This is spam',
+                        reportedUrl: 'https://example.com',
+                        reportedPermalink: 'https://example.com',
+                        automaticReport: false,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if unauthenticated reports are not allowed', async () => {
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: false,
+            };
+
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/insts/report',
+                    JSON.stringify({
+                        recordName: null,
+                        inst: 'myInst',
+                        reportReason: 'spam',
+                        reportReasonText: 'This is spam',
+                        reportedUrl: 'https://example.com',
+                        reportedPermalink: 'https://example.com',
+                        automaticReport: false,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in to report an inst.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should support unauthenticated reports', async () => {
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+            };
+
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/insts/report',
+                    JSON.stringify({
+                        recordName: null,
+                        inst: 'myInst',
+                        reportReason: 'spam',
+                        reportReasonText: 'This is spam',
+                        reportedUrl: 'https://example.com',
+                        reportedPermalink: 'https://example.com',
+                        automaticReport: false,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    id: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.userInstReports).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: null,
+                    inst: 'myInst',
+                    reportReason: 'spam',
+                    reportReasonText: 'This is spam',
+                    reportedUrl: 'https://example.com',
+                    reportedPermalink: 'https://example.com',
+                    automaticReport: false,
+                    reportingIpAddress: '123.456.789',
+                    reportingUserId: null,
+                    createdAtMs: expect.any(Number),
+                    updatedAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        testOrigin('POST', '/api/v2/records/insts/report', () =>
+            JSON.stringify({
+                recordName: null,
+                inst: 'myInst',
+                reportReason: 'spam',
+                reportReasonText: 'This is spam',
+                reportedUrl: 'https://example.com',
+                reportedPermalink: 'https://example.com',
+                automaticReport: false,
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/records/insts/report', body, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/records/insts/report',
+                JSON.stringify({
+                    recordName: null,
+                    inst: 'myInst',
+                    reportReason: 'spam',
+                    reportReasonText: 'This is spam',
+                    reportedUrl: 'https://example.com',
+                    reportedPermalink: 'https://example.com',
+                    automaticReport: false,
+                }),
+                apiHeaders
+            )
+        );
+    });
+
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);
@@ -9670,6 +9936,7 @@ describe('RecordsServer', () => {
                 subscriptionController,
                 null as any,
                 policyController,
+                null,
                 null,
                 null
             );
@@ -9858,6 +10125,7 @@ describe('RecordsServer', () => {
                 null as any,
                 policyController,
                 null,
+                null,
                 null
             );
 
@@ -9976,6 +10244,7 @@ describe('RecordsServer', () => {
                 null as any,
                 policyController,
                 null,
+                null,
                 null
             );
 
@@ -10055,6 +10324,7 @@ describe('RecordsServer', () => {
                 subscriptionController,
                 null as any,
                 policyController,
+                null,
                 null,
                 null
             );
@@ -13226,7 +13496,8 @@ describe('RecordsServer', () => {
                 null as any,
                 policyController,
                 aiController,
-                websocketController
+                websocketController,
+                moderationController
             );
 
             await rateLimiter.increment(ip, 100);
