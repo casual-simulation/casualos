@@ -1,7 +1,7 @@
 {
     "name": "@casual-simulation/aux-proxy",
     "private": true,
-    "version": "3.2.7-alpha.7203795135",
+    "version": "3.2.7-alpha.7278679536",
     "description": "A simple web service that can initiate a reverse-reverse proxy session.",
     "keywords": [
         "aux"
@@ -38,14 +38,13 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/tunnel": "^3.2.7-alpha.7203795135",
+        "@casual-simulation/tunnel": "^3.2.7-alpha.7278679536",
         "body-parser": "1.20.2",
         "express": "^4.16.4",
         "http-proxy": "1.18.1",
+        "jsonwebtoken": "9.0.2",
         "sshpk": "1.16.1",
         "uuid": "^8.3.2",
-        "ws": "7.4.6",
-        "body-parser": "1.20.2",
-        "jsonwebtoken": "9.0.2"
+        "ws": "7.4.6"
     }
 }

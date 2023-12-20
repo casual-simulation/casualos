@@ -343,7 +343,7 @@ importers:
   src/aux-benchmarks:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       benchmark:
         specifier: 2.1.4
@@ -371,7 +371,7 @@ importers:
   src/aux-common:
     dependencies:
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/engine262':
         specifier: 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
@@ -386,7 +386,7 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../js-interpreter
       '@casual-simulation/stacktrace':
         specifier: ^3.1.11
@@ -395,7 +395,7 @@ importers:
         specifier: ^0.140.3
         version: 0.140.3
       '@casual-simulation/timesync':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../timesync
       '@tweenjs/tween.js':
         specifier: 18.6.0
@@ -465,37 +465,164 @@ importers:
         specifier: 1.3.5
         version: 1.3.5
 
-    src/aux-proxy:
-        dependencies:
-            '@casual-simulation/tunnel':
-                specifier: ^3.1.28
-                version: link:../tunnel
-            body-parser:
-                specifier: 1.20.2
-                version: 1.20.2
-            express:
-                specifier: ^4.16.4
-                version: 4.18.2
-            http-proxy:
-                specifier: 1.18.1
-                version: 1.18.1
-            jsonwebtoken:
-                specifier: 9.0.2
-                version: 9.0.2
-            sshpk:
-                specifier: 1.16.1
-                version: 1.16.1
-            uuid:
-                specifier: ^8.3.2
-                version: 8.3.2
-            ws:
-                specifier: 7.4.6
-                version: 7.4.6
+  src/aux-components:
+    dependencies:
+      '@casual-simulation/aux-common':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../aux-common
+      '@casual-simulation/aux-vm':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../aux-vm
+      '@casual-simulation/aux-vm-browser':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../aux-vm-browser
+      '@casual-simulation/aux-vm-client':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../aux-vm-client
+      '@casual-simulation/aux-vm-deno':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../aux-vm-deno
+      '@casual-simulation/aux-vm-node':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../aux-vm-node
+      '@casual-simulation/crypto':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../crypto
+      '@casual-simulation/crypto-browser':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../crypto-browser
+      '@casual-simulation/crypto-node':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../crypto-node
+      '@casual-simulation/three':
+        specifier: ^0.140.3
+        version: 0.140.3
+      '@casual-simulation/tunnel':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../tunnel
+      '@casual-simulation/vue-shortkey':
+        specifier: ^3.2.7-alpha.7278679536
+        version: link:../vue-shortkey
+      '@chenfengyuan/vue-qrcode':
+        specifier: ^1.0.0
+        version: 1.0.2(vue@2.7.15)
+      '@juggle/resize-observer':
+        specifier: 2.3.0
+        version: 2.3.0
+      '@octokit/rest':
+        specifier: 16.35.2
+        version: 16.35.2
+      '@tweenjs/tween.js':
+        specifier: 18.6.0
+        version: 18.6.0
+      '@webxr-input-profiles/assets':
+        specifier: 1.0.9
+        version: 1.0.9
+      '@webxr-input-profiles/motion-controllers':
+        specifier: 1.0.0
+        version: 1.0.0
+      acorn:
+        specifier: ^8.0.1
+        version: 8.11.2
+      astring:
+        specifier: 1.7.5
+        version: 1.7.5
+      axios:
+        specifier: 1.6.2
+        version: 1.6.2
+      bcryptjs:
+        specifier: 2.4.3
+        version: 2.4.3
+      cassandra-driver:
+        specifier: 4.5.1
+        version: 4.5.1
+      compression:
+        specifier: 1.7.4
+        version: 1.7.4
+      cors:
+        specifier: 2.8.5
+        version: 2.8.5
+      downloadjs:
+        specifier: ^1.4.7
+        version: 1.4.7
+      event-stream:
+        specifier: ^4.0.1
+        version: 4.0.1
+      filepond:
+        specifier: ^3.8.2
+        version: 3.9.0
+      filepond-plugin-file-validate-type:
+        specifier: ^1.2.1
+        version: 1.2.8(filepond@3.9.0)
+      helmet-csp:
+        specifier: 2.9.3
+        version: 2.9.3
+      howler:
+        specifier: 2.1.3
+        version: 2.1.3
+      http-proxy:
+        specifier: 1.18.1
+        version: 1.18.1
+      inherits:
+        specifier: 2.0.4
+        version: 2.0.4
+      jsbarcode:
+        specifier: 3.11.0
+        version: 3.11.0
+      jsqr:
+        specifier: 1.2.0
+        version: 1.2.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
+      mime:
+        specifier: 2.4.6
+        version: 2.4.6
+      mongodb:
+        specifier: 3.6.2
+        version: 3.6.2
+      rxjs:
+        specifier: 7.5.7
+        version: 7.5.7
+      uuid:
+        specifier: ^8.3.2
+        version: 8.3.2
+      vue:
+        specifier: ^2.7.15
+        version: 2.7.15
+      vue-class-component:
+        specifier: 7.2.6
+        version: 7.2.6(vue@2.7.15)
+      vue-clipboard2:
+        specifier: 0.3.1
+        version: 0.3.1
+      vue-color:
+        specifier: ^2.7.0
+        version: 2.8.1
+      vue-filepond:
+        specifier: ^4.0.3
+        version: 4.0.3(filepond@3.9.0)(vue@2.7.15)
+      vue-material:
+        specifier: 1.0.0-beta-15
+        version: 1.0.0-beta-15(vue@2.7.15)
+      vue-property-decorator:
+        specifier: 9.1.2
+        version: 9.1.2(vue-class-component@7.2.6)(vue@2.7.15)
+      vue-router:
+        specifier: 3.5.4
+        version: 3.5.4(vue@2.7.15)
+    devDependencies:
+      benchmark:
+        specifier: 2.1.4
+        version: 2.1.4
+      platform:
+        specifier: 1.3.5
+        version: 1.3.5
 
   src/aux-proxy:
     dependencies:
       '@casual-simulation/tunnel':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../tunnel
       body-parser:
         specifier: 1.20.2
@@ -506,6 +633,9 @@ importers:
       http-proxy:
         specifier: 1.18.1
         version: 1.18.1
+      jsonwebtoken:
+        specifier: 9.0.2
+        version: 9.0.2
       sshpk:
         specifier: 1.16.1
         version: 1.16.1
@@ -519,16 +649,16 @@ importers:
   src/aux-records:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/rate-limit-redis':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../rate-limit-redis
       '@casual-simulation/timesync':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../timesync
       axios:
         specifier: 1.6.2
@@ -582,10 +712,10 @@ importers:
         specifier: ^3.359.0
         version: 3.468.0
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-records
       axios:
         specifier: 1.6.2
@@ -603,13 +733,13 @@ importers:
   src/aux-runtime:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-records
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/engine262':
         specifier: 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
@@ -624,7 +754,7 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../js-interpreter
       '@casual-simulation/stacktrace':
         specifier: ^3.1.11
@@ -742,40 +872,40 @@ importers:
         specifier: ^3.359.0
         version: 3.468.0
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/crypto-browser':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto-browser
       '@casual-simulation/crypto-node':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto-node
       '@casual-simulation/engine262':
         specifier: 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
@@ -784,7 +914,7 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../js-interpreter
       '@casual-simulation/monaco-editor':
         specifier: 0.35.3
@@ -793,19 +923,19 @@ importers:
         specifier: ^3.1.18
         version: link:../multi-streams-mixer
       '@casual-simulation/rate-limit-redis':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../rate-limit-redis
       '@casual-simulation/three':
         specifier: ^0.140.3
         version: 0.140.3
       '@casual-simulation/tunnel':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../tunnel
       '@casual-simulation/vue-shortkey':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../vue-shortkey
       '@casual-simulation/websocket':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../websocket
       '@chenfengyuan/vue-qrcode':
         specifier: ^1.0.0
@@ -1013,7 +1143,7 @@ importers:
         version: 3.22.4
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1079,22 +1209,22 @@ importers:
   src/aux-vm:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-runtime
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/fast-json-stable-stringify':
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/timesync':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../timesync
       '@casual-simulation/undom':
         specifier: ^3.1.22
@@ -1130,34 +1260,34 @@ importers:
   src/aux-vm-browser:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/crypto-browser':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto-browser
       '@casual-simulation/websocket':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../websocket
       axios:
         specifier: 1.6.2
@@ -1184,28 +1314,28 @@ importers:
   src/aux-vm-client:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/timesync':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../timesync
       '@casual-simulation/websocket':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../websocket
       axios:
         specifier: 1.6.2
@@ -1226,22 +1356,22 @@ importers:
   src/aux-vm-deno:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/crypto-browser':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto-browser
       comlink:
         specifier: 4.3.1
@@ -1262,22 +1392,22 @@ importers:
   src/aux-vm-node:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@casual-simulation/crypto-node':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto-node
       lodash:
         specifier: 4.17.21
@@ -1292,10 +1422,10 @@ importers:
   src/aux-websocket:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/websocket':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../websocket
       rxjs:
         specifier: 7.5.7
@@ -1304,10 +1434,10 @@ importers:
   src/aux-websocket-aws:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../aux-common
       '@casual-simulation/websocket':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../websocket
       axios:
         specifier: 1.6.2
@@ -1342,7 +1472,7 @@ importers:
   src/crypto-browser:
     dependencies:
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       bowser:
         specifier: ^2.4.0
@@ -1351,7 +1481,7 @@ importers:
   src/crypto-node:
     dependencies:
       '@casual-simulation/crypto':
-        specifier: ^3.2.7-alpha.7203795135
+        specifier: ^3.2.7-alpha.7278679536
         version: link:../crypto
       '@types/bn.js':
         specifier: ^5.1.0
@@ -4977,7 +5107,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       jest-message-util: 29.7.0
       jest-util: 29.7.0
@@ -5093,7 +5223,7 @@ packages:
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
       '@jridgewell/trace-mapping': 0.3.20
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
       exit: 0.1.2
@@ -5825,7 +5955,7 @@ packages:
   /@octokit/types@2.16.2:
     resolution: {integrity: sha512-O75k56TYvJ8WpAakWwYRN8Bgu60KrmX0z1KqFp1kNiFNkgW+JW+9EBKZ+S33PU6SLvbihqd+3drvPxKK68Ee8Q==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: false
 
   /@octokit/types@6.41.0:
@@ -7395,7 +7525,7 @@ packages:
   /@types/graceful-fs@4.1.9:
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: true
 
   /@types/gtag.js@0.0.12:
@@ -7562,7 +7692,7 @@ packages:
   /@types/node-fetch@2.6.9:
     resolution: {integrity: sha512-bQVlnMLFJ2d35DkPNjEPmd9ueO/rh5EiaZt2bhqiSarPjZIuIV6bPQVqcrEyvNo+AfTrRGVazle1tl597w3gfA==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       form-data: 4.0.0
     dev: false
 
@@ -7670,7 +7800,7 @@ packages:
   /@types/resolve@1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: true
 
   /@types/retry@0.12.0:
@@ -7748,7 +7878,7 @@ packages:
   /@types/svgo@2.6.4:
     resolution: {integrity: sha512-l4cmyPEckf8moNYHdJ+4wkHvFxjyW6ulm9l4YGaOxeyBWPhBOT0gvni1InpFPdzx1dKf/2s62qGITwxNWnPQng==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: true
 
   /@types/three@0.140.0:
@@ -13225,7 +13355,7 @@ packages:
       mute-stream: 0.0.8
       ora: 5.4.1
       run-async: 2.4.1
-      rxjs: 7.8.1
+      rxjs: 7.5.7
       string-width: 4.2.3
       strip-ansi: 6.0.1
       through: 2.3.8
@@ -13794,7 +13924,7 @@ packages:
       '@jest/expect': 29.7.0
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       co: 4.6.0
       dedent: 1.5.1
@@ -14012,7 +14142,7 @@ packages:
     dependencies:
       '@jest/types': 29.6.3
       '@types/graceful-fs': 4.1.9
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -14169,7 +14299,7 @@ packages:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       emittery: 0.13.1
       graceful-fs: 4.2.11
@@ -14200,7 +14330,7 @@ packages:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       cjs-module-lexer: 1.2.3
       collect-v8-coverage: 1.0.2
@@ -14276,7 +14406,7 @@ packages:
     dependencies:
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.13.1
@@ -14288,7 +14418,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: true
@@ -14306,7 +14436,7 @@ packages:
     resolution: {integrity: sha512-eIz2msL/EzL9UFTFFx7jBTkeZfku0yUAyZZZmJ93H2TYEiroIx2PQjEXcwYtYl8zXCxb+PAmA2hLIt/6ZEkPHw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -17992,7 +18122,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       long: 4.0.0
     dev: false
 
@@ -18011,7 +18141,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       long: 5.2.3
     dev: false
 
@@ -19096,7 +19226,6 @@ packages:
     resolution: {integrity: sha512-z9MzKh/UcOqB3i20H6rtrlaE/CgjLOvheWK/9ILrbhROGTweAi1BaFsTT9FbwZi5Trr1qNRs+MXkhmR06awzQA==}
     dependencies:
       tslib: 2.6.2
-    dev: false
 
   /rxjs@7.8.1:
     resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
