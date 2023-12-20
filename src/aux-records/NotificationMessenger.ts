@@ -175,18 +175,18 @@ export function formatUserInstReportNotificationAsString(
 ): string {
     const time = DateTime.fromMillis(notification.timeMs, {
         zone: 'utc',
-    }).toFormat('yyyy-MM-dd HH:mm:ss');
+    }).toISO();
     return `A user inst report was ${notification.action} for ${
         notification.recordName ?? '(null)'
     }/${notification.resourceId}:
 Time: ${time}
-User: ${notification.report.reportingUserId ?? '(null)'}
-IP: ${notification.report.reportingIpAddress ?? '(null)'}
-URL: ${notification.report.reportedUrl}
-Permalink: ${notification.report.reportedPermalink}
-Automatic: ${notification.report.automaticReport}
+Reporting User: ${notification.report.reportingUserId ?? '(null)'}
+Reporting IP: ${notification.report.reportingIpAddress ?? '(null)'}
+Reported URL: ${notification.report.reportedUrl}
+Reported Permalink: ${notification.report.reportedPermalink}
+Is Automatic Report?: ${notification.report.automaticReport}
 
-Reason:${notification.report.reportReason}
+Reason: ${notification.report.reportReason}
 
 Text:
 ${notification.report.reportReasonText}`;
