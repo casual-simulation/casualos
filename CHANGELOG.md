@@ -97,6 +97,9 @@
     -   `allowPublicData` - A boolean that specifies whether the user is allowed to publish or access public data.
     -   `allowAI` - A boolean that specifies whether the user is allowed to access AI features.
     -   `allowPublicInsts` - A boolean that specifies whether the user is allowed to access public insts.
+-   Added the `os.reportInst()` function.
+    -   Opens the "Report Inst" dialog that gives the user an opportunity to describe what they are seeing and report it.
+    -   Returns a promise that resolves when the inst has been reported.
 
 ### :bug: Bug Fixes
 
