@@ -73,7 +73,6 @@ export function createConfigs(dev, version) {
                 outfile: path.resolve(serverDist, 'main.js'),
                 platform: 'node',
                 target: ['node14.16'],
-                external: serverExternals,
                 define: {
                     ...versionVariables,
                     ...developmentVariables,
