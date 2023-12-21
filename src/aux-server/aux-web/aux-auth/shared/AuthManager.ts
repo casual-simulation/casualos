@@ -71,7 +71,7 @@ if (typeof (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED === 'undefined') {
 }
 
 console.log(
-    `[AppManager] Assume subscriptions supported: ${ASSUME_SUBSCRIPTIONS_SUPPORTED}`
+    `[AuthManager] Assume subscriptions supported: ${ASSUME_SUBSCRIPTIONS_SUPPORTED}`
 );
 
 declare const ASSUME_STUDIOS_SUPPORTED: boolean;
@@ -81,7 +81,7 @@ if (typeof (globalThis as any).ASSUME_STUDIOS_SUPPORTED === 'undefined') {
 }
 
 console.log(
-    `[AppManager] Assume studios supported: ${ASSUME_STUDIOS_SUPPORTED}`
+    `[AuthManager] Assume studios supported: ${ASSUME_STUDIOS_SUPPORTED}`
 );
 
 declare const USE_PRIVO_LOGIN: boolean;
@@ -90,7 +90,7 @@ if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
     (globalThis as any).USE_PRIVO_LOGIN = false;
 }
 
-console.log(`[AppManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
+console.log(`[AuthManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
 
 export class AuthManager {
     private _userId: string;
