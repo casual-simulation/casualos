@@ -65,8 +65,7 @@ export class StripeIntegration implements StripeInterface {
         request: StripePortalRequest
     ): Promise<StripePortalResponse> {
         const result = await this._stripe.billingPortal.sessions.create({
-            customer: request.customer,
-            return_url: request.return_url,
+            ...request,
         });
 
         return {

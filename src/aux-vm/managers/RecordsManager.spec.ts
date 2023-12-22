@@ -1,20 +1,19 @@
 import {
     asyncResult,
-    AuxPartitions,
-    AuxRuntime,
     BotAction,
-    botAdded,
-    createBot,
-    createMemoryPartition,
-    eraseRecordData,
-    getRecordData,
-    iteratePartitions,
-    LocalActions,
-    MemoryPartition,
-    recordData,
-    recordFile,
-    eraseFile,
     approveAction,
+    asyncError,
+    RemoteCausalRepoProtocol,
+    ConnectionClient,
+    MemoryConnectionClient,
+    WebsocketHttpResponseMessage,
+    WebsocketHttpRequestMessage,
+} from '@casual-simulation/aux-common';
+import {
+    aiChat,
+    aiGenerateSkybox,
+    aiGenerateImage,
+    listUserStudios,
     listDataRecord,
     recordEvent,
     getEventCount,
@@ -30,12 +29,13 @@ import {
     revokeUserRole,
     revokeInstRole,
     getFile,
-    asyncError,
-    aiChat,
-    aiGenerateSkybox,
-    aiGenerateImage,
-    listUserStudios,
-} from '@casual-simulation/aux-common';
+    recordData,
+    recordFile,
+    eraseFile,
+    eraseRecordData,
+    getRecordData,
+    AuxRuntime,
+} from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
@@ -85,6 +85,10 @@ describe('RecordsManager', () => {
         provideSmsNumber: jest.fn(),
     };
     let authFactory: (endpoint: string) => AuthHelperInterface;
+    let connectionClientFactory: (
+        endpoint: string,
+        protocol: RemoteCausalRepoProtocol
+    ) => ConnectionClient;
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -101,15 +105,26 @@ describe('RecordsManager', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: null,
+            logout: jest.fn(),
+            getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
             provideSmsNumber: jest.fn(),
             provideCode: jest.fn(),
             authenticateInBackground: jest.fn(),
             getRecordKeyPolicy: jest.fn(),
+            isValidDisplayName: jest.fn(),
+            isValidEmailAddress: jest.fn(),
+            provideHasAccount: jest.fn(),
+            providePrivoSignUpInfo: jest.fn(),
+            getPolicyUrls: jest.fn(),
             getRecordsOrigin: jest
                 .fn()
                 .mockResolvedValue('http://localhost:3002'),
+            getWebsocketOrigin: jest
+                .fn()
+                .mockResolvedValue('http://localhost:2998'),
+            getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
             get supportsAuthentication() {
                 return true;
             },
@@ -118,6 +133,9 @@ describe('RecordsManager', () => {
             },
             get origin() {
                 return 'http://localhost:3002';
+            },
+            get currentLoginStatus(): any {
+                return null;
             },
         };
 
@@ -131,6 +149,8 @@ describe('RecordsManager', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: null,
+            logout: jest.fn(),
+            getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
             provideSmsNumber: jest.fn(),
@@ -140,6 +160,15 @@ describe('RecordsManager', () => {
             getRecordsOrigin: jest
                 .fn()
                 .mockResolvedValue('http://localhost:9999'),
+            getWebsocketOrigin: jest
+                .fn()
+                .mockResolvedValue('http://localhost:2998'),
+            getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
+            isValidDisplayName: jest.fn(),
+            isValidEmailAddress: jest.fn(),
+            provideHasAccount: jest.fn(),
+            providePrivoSignUpInfo: jest.fn(),
+            getPolicyUrls: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -148,6 +177,9 @@ describe('RecordsManager', () => {
             },
             get origin() {
                 return 'http://localhost:9999';
+            },
+            get currentLoginStatus(): any {
+                return null;
             },
         };
 
@@ -168,7 +200,7 @@ describe('RecordsManager', () => {
     });
 
     function createHelper() {
-        vm = new TestAuxVM(userId);
+        vm = new TestAuxVM(null, userId);
         const helper = new BotHelper(vm);
         helper.userId = 'userId';
 
@@ -6431,6 +6463,99 @@ describe('RecordsManager', () => {
                 expect(authMock.authenticate).toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
             });
+
+            it('should use websockets if they are supported', async () => {
+                const client = new MemoryConnectionClient();
+
+                let responses = new Subject<WebsocketHttpResponseMessage>();
+                client.events.set('http_response', responses);
+
+                connectionClientFactory = () => {
+                    return client;
+                };
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                    },
+                    helper,
+                    authFactory,
+                    true,
+                    connectionClientFactory
+                );
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(client.sentMessages).toEqual([
+                    {
+                        type: 'http_request',
+                        id: 0,
+                        request: {
+                            path: '/api/v2/ai/image',
+                            method: 'POST',
+                            body: expect.any(String),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                            query: {},
+                            pathParams: {},
+                        },
+                    },
+                ]);
+
+                const body = JSON.parse(
+                    (client.sentMessages[0] as WebsocketHttpRequestMessage)
+                        .request.body
+                );
+                expect(body).toEqual({
+                    prompt: 'a blue bridge',
+                });
+
+                responses.next({
+                    type: 'http_response',
+                    id: 0,
+                    response: {
+                        statusCode: 200,
+                        body: JSON.stringify({
+                            success: true,
+                            images: [
+                                {
+                                    base64: 'data',
+                                },
+                            ],
+                        }),
+                        headers: {},
+                    },
+                });
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    }),
+                ]);
+            });
         });
 
         describe('list_user_studios', () => {
@@ -6448,6 +6573,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     },
@@ -6480,6 +6606,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     }),
@@ -6496,6 +6623,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     },
@@ -6530,6 +6658,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     }),
@@ -6570,6 +6699,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     },
@@ -6603,6 +6733,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     }),
@@ -6619,6 +6750,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     },
@@ -6653,6 +6785,7 @@ describe('RecordsManager', () => {
                                 displayName: 'Studio',
                                 role: 'member',
                                 isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
                             } as ListedStudio,
                         ],
                     }),
@@ -6813,6 +6946,53 @@ describe('RecordsManager', () => {
                     expect(factory).toBeCalledWith('http://localhost:999');
                 });
             });
+        });
+    });
+
+    describe('reportInst()', () => {
+        beforeEach(() => {
+            require('axios').__reset();
+        });
+
+        it('should send a POST request to /api/v2/records/insts/report', async () => {
+            setResponse({
+                data: {
+                    success: true,
+                    id: 'reportId',
+                },
+            });
+
+            authMock.isAuthenticated.mockResolvedValueOnce(true);
+            authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+            await records.reportInst({
+                recordName: null,
+                inst: 'inst',
+                automaticReport: false,
+                reportReason: 'spam',
+                reportReasonText: 'description',
+                reportedUrl: 'url',
+                reportedPermalink: 'permalink',
+            });
+
+            expect(getLastPost()).toEqual([
+                'http://localhost:3002/api/v2/records/insts/report',
+                {
+                    recordName: null,
+                    inst: 'inst',
+                    automaticReport: false,
+                    reportReason: 'spam',
+                    reportReasonText: 'description',
+                    reportedUrl: 'url',
+                    reportedPermalink: 'permalink',
+                },
+                {
+                    validateStatus: expect.any(Function),
+                    headers: {
+                        Authorization: 'Bearer authToken',
+                    },
+                },
+            ]);
         });
     });
 });

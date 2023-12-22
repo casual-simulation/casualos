@@ -21,10 +21,13 @@ import {
     getTagValueForSpace,
     getUpdateForTagAndSpace,
     getBotsStateFromStoredAux,
+    BotActions,
+    BotAction,
+    ConnectionIndicator,
+    getConnectionId,
+    DEFAULT_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
-
 import {
-    AuxUser,
     AuxVM,
     BaseSimulation,
     LoginManager,
@@ -38,14 +41,20 @@ import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
-import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { ConsoleMessages } from '@casual-simulation/aux-common';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
-import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
+import {
+    AuthHelperInterface,
+    SimulationOrigin,
+} from '@casual-simulation/aux-vm/managers';
 import { LivekitManager } from './LivekitManager';
+import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
+import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
+import { WebsocketConnectionClient } from '@casual-simulation/aux-websocket';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -61,12 +70,25 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _recordsManager: RecordsManager;
     private _livekitManager: LivekitManager;
     private _config: AuxConfig['config'];
+    private _origin: SimulationOrigin;
 
     /**
      * Gets the bots panel manager.
      */
     get botPanel() {
         return this._botPanel;
+    }
+
+    get origin() {
+        return this._origin;
+    }
+
+    get inst() {
+        return this._origin.inst ?? this.id;
+    }
+
+    get recordName() {
+        return this._origin.recordName;
     }
 
     get idePortal() {
@@ -110,102 +132,32 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         return this._portals;
     }
 
-    static createPartitions(
+    static createDefaultPartitions(
         id: string,
-        user: AuxUser,
-        config: AuxConfig['config'],
-        defaultHost: string = location.origin
-    ): AuxPartitionConfig {
-        const parsedId = parseSimulationId(id);
-        const host = getFinalUrl(defaultHost, parsedId.host);
-        const causalRepoHost = getFinalUrl(
-            config.causalRepoConnectionUrl || defaultHost,
-            parsedId.host
-        );
-        const protocol = config.causalRepoConnectionProtocol;
-        const versions = config.sharedPartitionsVersion;
-        const isV2 = versions === 'v2';
-        const isCollaborative = !!config.device?.isCollaborative;
-
-        if (!isCollaborative) {
-            console.log('[BotManager] Disabling Collaboration Features');
-        } else {
-            if (isV2) {
-                console.log('[BotManager] Using v2 shared partitions');
-            }
-        }
-
-        let partitions: AuxPartitionConfig = {
-            // Use a memory partition instead of a shared partition
-            // when collaboration is disabled.
-            shared: isCollaborative
-                ? isV2
-                    ? {
-                          type: 'remote_yjs',
-                          branch: parsedId.channel,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                      }
-                    : {
-                          type: 'remote_causal_repo',
-                          branch: parsedId.channel,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                      }
-                : {
-                      type: 'memory',
-                      initialState: {},
-                  },
-            [COOKIE_BOT_PARTITION_ID]: {
-                type: 'proxy',
-                partition: new LocalStoragePartitionImpl({
-                    type: 'local_storage',
-                    namespace: `aux/${parsedId.channel}`,
-                    private: true,
-                }),
-            },
+        configBotId: string,
+        origin: SimulationOrigin,
+        config: AuxConfig['config']
+    ): Partial<AuxPartitionConfig> {
+        const defaultPartitions: Partial<AuxPartitionConfig> = {
             [TEMPORARY_BOT_PARTITION_ID]: {
                 type: 'memory',
                 private: true,
                 initialState: {
-                    [user.id]: createBot(user.id, {
-                        inst: id,
+                    [configBotId]: createBot(configBotId, {
+                        inst: origin.inst ?? id,
                     }),
                 },
             },
-            [TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
-                ? isV2
-                    ? {
-                          type: 'remote_yjs',
-                          branch: `${parsedId.channel}-player-${user.id}`,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                          temporary: true,
-                          remoteEvents: false,
-                      }
-                    : {
-                          type: 'remote_causal_repo',
-                          branch: `${parsedId.channel}-player-${user.id}`,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                          temporary: true,
-                          remoteEvents: false,
-                      }
-                : {
-                      type: 'memory',
-                      initialState: {},
-                  },
-            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
-                ? {
-                      type: 'other_players_repo',
-                      branch: parsedId.channel,
-                      host: causalRepoHost,
-                      connectionProtocol: protocol,
-                      childPartitionType: isV2
-                          ? 'yjs_client'
-                          : 'causal_repo_client',
-                  }
-                : null,
+            [COOKIE_BOT_PARTITION_ID]: {
+                type: 'proxy',
+                partition: new LocalStoragePartitionImpl({
+                    type: 'local_storage',
+                    namespace: !origin.recordName
+                        ? `aux/${origin.inst}`
+                        : `aux/${origin.recordName}/${origin.inst}`,
+                    private: true,
+                }),
+            },
             [BOOTSTRAP_PARTITION_ID]: {
                 type: 'memory',
                 initialState: config.bootstrapState
@@ -215,39 +167,149 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             },
         };
 
-        // Enable the admin partition and error partition when using the websocket protocol.
-        if (
-            !config.causalRepoConnectionProtocol ||
-            config.causalRepoConnectionProtocol === 'websocket'
-        ) {
-            partitions[ADMIN_PARTITION_ID] = isCollaborative
-                ? {
-                      type: 'remote_causal_repo',
-                      branch: ADMIN_BRANCH_NAME,
-                      host: causalRepoHost,
-                      connectionProtocol: protocol,
-                      private: true,
-                      static: true,
-                  }
-                : null;
+        return defaultPartitions;
+    }
+
+    static createPartitions(
+        id: string,
+        configBotId: string,
+        origin: SimulationOrigin,
+        config: AuxConfig['config'],
+        defaultHost: string = location.origin
+    ): AuxPartitionConfig {
+        const host = origin.host ?? defaultHost;
+        const protocol = config.causalRepoConnectionProtocol;
+        const versions = config.sharedPartitionsVersion;
+        const localPersistence =
+            config.collaborativeRepLocalPersistence ?? false;
+
+        console.log('[BotManager] Using v2 shared partitions');
+        if (localPersistence) {
+            console.log('[BotManager] Enabling local persistence.');
         }
 
-        return partitions;
+        const defaultPartitions = BotManager.createDefaultPartitions(
+            id,
+            configBotId,
+            origin,
+            config
+        );
+
+        const partitions: AuxPartitionConfig = {
+            shared: {
+                type: 'remote_yjs',
+                recordName: origin.recordName,
+                inst: origin.inst,
+                branch: DEFAULT_BRANCH_NAME,
+                host: host,
+                connectionProtocol: protocol,
+                localPersistence: localPersistence
+                    ? {
+                          saveToIndexedDb: true,
+                      }
+                    : null,
+            },
+
+            [TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'remote_yjs',
+                recordName: origin.recordName,
+                inst: origin.inst,
+                branch: `${DEFAULT_BRANCH_NAME}-player-${configBotId}`,
+                host: host,
+                connectionProtocol: protocol,
+                temporary: true,
+                remoteEvents: false,
+            },
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'other_players_repo',
+                recordName: origin.recordName,
+                inst: origin.inst,
+                branch: DEFAULT_BRANCH_NAME,
+                host: host,
+                connectionProtocol: protocol,
+                childPartitionType: 'yjs_client',
+            },
+        };
+
+        const finalPartitions = Object.assign(
+            {},
+            defaultPartitions,
+            partitions
+        );
+        return finalPartitions;
+    }
+
+    static createStaticPartitions(
+        id: string,
+        configBotId: string,
+        origin: SimulationOrigin,
+        config: AuxConfig['config']
+    ): AuxPartitionConfig {
+        const localPersistence = config.staticRepoLocalPersistence ?? true;
+        console.log('[BotManager] Using static partitions');
+
+        if (localPersistence) {
+            console.log('[BotManager] Enabling local persistence.');
+        }
+
+        const defaultPartitions = BotManager.createDefaultPartitions(
+            id,
+            configBotId,
+            origin,
+            config
+        );
+
+        let partitions: AuxPartitionConfig = {
+            shared: {
+                type: 'memory',
+                initialState: {},
+            },
+            [TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'memory',
+                initialState: {},
+            },
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: null,
+        };
+
+        if (localPersistence) {
+            partitions.shared = {
+                type: 'yjs',
+                remoteEvents: true,
+                localPersistence: {
+                    saveToIndexedDb: true,
+                    database: `${origin.recordName ?? ''}/${
+                        origin.inst
+                    }/${DEFAULT_BRANCH_NAME}`,
+                },
+                connectionId: configBotId,
+            };
+        }
+
+        const finalPartitions = Object.assign(
+            {},
+            defaultPartitions,
+            partitions
+        );
+        return finalPartitions;
     }
 
     constructor(
-        user: AuxUser,
-        id: string,
+        origin: SimulationOrigin,
         config: AuxConfig['config'],
-        vm: AuxVM
+        vm: AuxVM,
+        auth?: AuthHelper
     ) {
-        super(id, vm);
+        super(vm);
+        this._origin = origin;
         this._config = config;
-        this.helper.userId = user ? user.id : null;
-        this._authHelper = new AuthHelper(
-            config.authOrigin,
-            config.recordsOrigin
-        );
+        this._authHelper =
+            auth ??
+            new AuthHelper(
+                config.authOrigin,
+                config.recordsOrigin,
+                undefined,
+                config.requirePrivoLogin
+            );
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
     }
@@ -282,7 +344,34 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._recordsManager = new RecordsManager(
             this._config,
             this._helper,
-            (endpoint) => this._getAuthEndpointHelper(endpoint)
+            (endpoint) => this._getAuthEndpointHelper(endpoint),
+            undefined,
+            (endpoint, protocol) => {
+                if (protocol === 'apiary-aws') {
+                    const url = new URL(endpoint);
+                    if (url.protocol === 'http:') {
+                        url.protocol = 'ws:';
+                    } else if (url.protocol === 'https:') {
+                        url.protocol = 'wss:';
+                    }
+                    const manager = new WebSocketManager(url);
+                    manager.init();
+                    return new ApiGatewayWebsocketConnectionClient(
+                        manager.socket
+                    );
+                } else {
+                    const url = new URL('/websocket', endpoint);
+                    if (url.protocol === 'http:') {
+                        url.protocol = 'ws:';
+                    } else if (url.protocol === 'https:') {
+                        url.protocol = 'wss:';
+                    }
+                    const manager = new WebSocketManager(url);
+                    manager.init();
+
+                    return new WebsocketConnectionClient(manager.socket);
+                }
+            }
         );
         this._livekitManager = new LivekitManager(this._helper);
 
@@ -291,7 +380,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._subscriptions.push(this._idePortal);
         this._subscriptions.push(
             this._vm.localEvents
-                .pipe(tap((e) => this._recordsManager.handleEvents(e)))
+                .pipe(
+                    tap((e) =>
+                        this._recordsManager.handleEvents(e as BotAction[])
+                    )
+                )
                 .subscribe()
         );
         this._subscriptions.push(
@@ -309,15 +402,22 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 this._livekitManager.getRoomOptions(set)
             ),
             this._vm.localEvents
-                .pipe(tap((e) => this._livekitManager.handleEvents(e)))
+                .pipe(
+                    tap((e) =>
+                        this._livekitManager.handleEvents(e as BotAction[])
+                    )
+                )
                 .subscribe()
         );
     }
 
-    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
+    protected _createSubSimulation(vm: AuxVM) {
         return new BotManager(
-            user,
-            id,
+            {
+                recordName: null,
+                inst: null,
+                isStatic: !!this._origin.isStatic,
+            },
             {
                 version: this._config.version,
                 versionHash: this._config.versionHash,
@@ -333,7 +433,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         if (endpoint === this._authHelper.primaryAuthOrigin) {
             return this._authHelper.primary;
         } else {
-            const helper = this._authHelper.createEndpoint(endpoint);
+            const helper = this._authHelper.getOrCreateEndpoint(endpoint);
             this._subscriptions.push(helper);
             return helper;
         }

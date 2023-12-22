@@ -35,9 +35,7 @@ import {
     KNOWN_TAG_PREFIXES,
     DNA_TAG_PREFIX,
     SHEET_PORTAL,
-    createBotLink,
     formatValue,
-    calculateIndexFromLocation,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '@casual-simulation/aux-components';
 
@@ -59,9 +57,10 @@ import { sumBy } from 'lodash';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 import { getModelUriFromId } from '../../MonacoUtils';
 // import {} from 'vue-material/dist/'
-import type monaco from 'monaco-editor';
+import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime';
 
 export interface TableBot {
     /**

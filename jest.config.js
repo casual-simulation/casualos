@@ -12,13 +12,14 @@ module.exports = {
         '/__tests__/setPrettyPrint',
     ],
     watchPathIgnorePatterns: ['/node_modules/'],
+    setupFiles: ['fake-indexeddb/auto'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
     moduleNameMapper: {
         '^aux-common/(.*)$': '<rootDir>/src/aux-common/$1',
         '^@casual-simulation/three/examples/js/renderers/CSS3DRenderer$':
             '<rootDir>/__mocks__/CSS3DRendererMock.js',
-        '^three\\-examples$': '<rootDir>/node_modules/three/examples/js',
-        '^three$': '<rootDir>/node_modules/@casual-simulation/three',
+        '^three$':
+            '<rootDir>/src/aux-server/node_modules/@casual-simulation/three',
         '^esbuild-wasm/esbuild.wasm\\?url$':
             '<rootDir>/__mocks__/esbuild.wasm.js',
         '^aux-jest-matchers$': '<rootDir>/jest/jest-matchers.ts',

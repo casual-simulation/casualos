@@ -2,8 +2,6 @@ import {
     asyncResult,
     Bot,
     BotAction,
-    GetRoomRemoteOptionsAction,
-    GetRoomTrackOptionsAction,
     hasValue,
     ON_ROOM_JOINED,
     ON_ROOM_LEAVE,
@@ -15,12 +13,17 @@ import {
     ON_ROOM_STREAM_LOST,
     ON_ROOM_TRACK_SUBSCRIBED,
     ON_ROOM_TRACK_UNSUBSCRIBED,
+} from '@casual-simulation/aux-common';
+import {
+    GetRoomRemoteOptionsAction,
+    GetRoomTrackOptionsAction,
     RoomJoinOptions,
     RoomOptions,
     RoomRemoteOptions,
+    RuntimeActions,
     SetRoomTrackOptionsAction,
     TrackVideoQuality,
-} from '@casual-simulation/aux-common';
+} from '@casual-simulation/aux-runtime';
 import {
     BotHelper,
     GetRoomOptions,
@@ -360,7 +363,7 @@ export class LivekitManager implements SubscriptionLike {
         return options;
     }
 
-    handleEvents(events: BotAction[]): void {
+    handleEvents(events: RuntimeActions[]): void {
         for (let event of events) {
             if (event.type === 'get_room_track_options') {
                 this._getRoomTrackOptions(event);

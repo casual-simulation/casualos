@@ -5,12 +5,14 @@ on:
         branches-ignore:
             - 'master'
             - 'staging'
+            - 'release/**'
         tags-ignore:
             - '**'
     pull_request:
         branches-ignore:
             - 'master'
             - 'staging'
+            - 'release/**'
         tags-ignore:
             - '**'
 
@@ -36,7 +38,7 @@ jobs:
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: npm install and test
               run: |
-                  npm ci
+                  corepack enable
                   npm run bootstrap
                   npx --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
               env:
@@ -62,7 +64,7 @@ jobs:
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: npm install and build
               run: |
-                  npm ci
+                  corepack enable
                   npm run bootstrap
                   npm run build
               env:
@@ -88,14 +90,13 @@ jobs:
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: npm install
               run: |
-                  npm ci
+                  corepack enable
                   npm run bootstrap
               env:
                   CI: true
-            - name: yarn install and build docs
+            - name: build docs
               run: |
                   cd docs
-                  yarn install --network-timeout 1000000
-                  yarn build
+                  npm run build
               env:
                   CI: true

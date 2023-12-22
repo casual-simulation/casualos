@@ -22,7 +22,7 @@ import {
     MemoryFileRecordsLookup,
 } from '@casual-simulation/aux-records';
 import '../../jest/jest-matchers';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import {
     AwsCredentialIdentityProvider,
     AwsCredentialIdentity,

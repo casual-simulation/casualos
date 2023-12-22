@@ -7,12 +7,12 @@
                 <h2 class="md-title">Profile</h2>
                 <div>
                     <md-field>
-                        <label for="name">Name</label>
+                        <label for="firstName">First Name</label>
                         <md-input
-                            id="name"
+                            id="firstName"
                             v-model="metadata.name"
                             type="text"
-                            placeholder="Name"
+                            placeholder="First Name"
                         ></md-input>
                     </md-field>
                 </div>
@@ -50,6 +50,31 @@
 
                 <p v-show="updating">Updating...</p>
                 <p v-show="updated">Updated!</p>
+
+                <div v-if="showPrivacyFeatures">
+                    <h2 class="md-title">Privacy</h2>
+                    <md-card class="privacy-card">
+                        <md-card-header>
+                            <h3 class="md-title">Features</h3>
+                        </md-card-header>
+                        <md-card-content>
+                            <ul class="privacy-list">
+                                <privacy-item :value="privacyFeatures.publishData"
+                                    >Build Private Eggs</privacy-item
+                                >
+                                <privacy-item :value="privacyFeatures.allowPublicData"
+                                    >Publish Public Eggs</privacy-item
+                                >
+                                <privacy-item :value="privacyFeatures.allowPublicInsts"
+                                    >Join & Collaborate</privacy-item
+                                >
+                                <privacy-item :value="privacyFeatures.allowAI"
+                                    >Build AI Eggs</privacy-item
+                                >
+                            </ul>
+                        </md-card-content>
+                    </md-card>
+                </div>
 
                 <subscription />
                 <security />

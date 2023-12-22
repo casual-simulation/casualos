@@ -4,7 +4,7 @@ import {
     StoredAuxVersion2,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { remote } from '@casual-simulation/causal-trees';
+import { remote } from '@casual-simulation/aux-common';
 
 /**
  * Pads the given string with zeros up to the given length.

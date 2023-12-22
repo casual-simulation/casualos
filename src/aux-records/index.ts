@@ -13,7 +13,7 @@ export * from './EventRecordsController';
 export * from './EventRecordsStore';
 
 export * from './LivekitEvents';
-export * from './RecordsHttpServer';
+export * from './RecordsServer';
 
 export * from './SubscriptionController';
 export * from './StripeInterface';
@@ -22,7 +22,6 @@ export * from './MemoryRateLimiter';
 export * from './RateLimitController';
 
 export * from './PolicyController';
-export * from './PolicyPermissions';
 export * from './PolicyStore';
 
 export * from './AIChatInterface';
@@ -40,3 +39,14 @@ export * from './SubscriptionConfiguration';
 export * from './MetricsStore';
 export * from './MemoryStore';
 export * from './MemoryFileRecordsLookup';
+
+export * from './Cache';
+export * from './CachingPolicyStore';
+export * from './CachingConfigStore';
+
+export * from './ModerationController';
+export * from './ModerationStore';
+export * from './NotificationMessenger';
+
+export * from './websockets';
+export * from './forms';

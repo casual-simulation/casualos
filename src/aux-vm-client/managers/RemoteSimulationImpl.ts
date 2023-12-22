@@ -1,13 +1,9 @@
-import {
-    AuxUser,
-    AuxVM,
-    BaseSimulation,
-    LoginManager,
-    AuxConfig,
-} from '@casual-simulation/aux-vm';
+import { AuxVM, BaseSimulation, LoginManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from './RemoteSimulation';
-import { AuxPartitionConfig } from '@casual-simulation/aux-common';
-import { PortalManager } from '@casual-simulation/aux-vm/managers';
+import {
+    PortalManager,
+    SimulationOrigin,
+} from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a class that provides an implementation of RemoteSimulation.
@@ -18,6 +14,7 @@ export class RemoteSimulationImpl
 {
     private _login: LoginManager;
     private _portals: PortalManager;
+    private _origin: SimulationOrigin;
 
     get login() {
         return this._login;
@@ -27,9 +24,22 @@ export class RemoteSimulationImpl
         return this._portals;
     }
 
-    constructor(id: string, vm: AuxVM) {
-        super(id, vm);
+    constructor(id: string, origin: SimulationOrigin, vm: AuxVM) {
+        super(vm);
+        this._origin = origin;
         this._login = new LoginManager(this._vm);
+    }
+
+    get origin(): SimulationOrigin {
+        return this._origin;
+    }
+
+    get recordName(): string {
+        return this.origin.recordName;
+    }
+
+    get inst(): string {
+        return this.origin.inst ?? this.id;
     }
 
     protected _beforeVmInit() {

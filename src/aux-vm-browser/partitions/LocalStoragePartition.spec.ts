@@ -9,7 +9,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { first, skip } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { CurrentVersion } from '@casual-simulation/causal-trees';
+import { CurrentVersion } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 
 console.error = jest.fn();

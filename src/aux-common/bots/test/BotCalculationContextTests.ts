@@ -77,6 +77,7 @@ import {
     getSystemPortalPane,
     getOpenSystemPortalPane,
     getBotTheme,
+    getMenuBotSubtype,
 } from '../BotCalculations';
 import {
     Bot,
@@ -875,6 +876,7 @@ export function botCalculationContextTests(
             ['codeButton'],
             ['codeHint'],
             ['spherePortal'],
+            ['light'],
         ];
         const tagCases = ['auxForm', 'form'];
 
@@ -943,6 +945,31 @@ export function botCalculationContextTests(
             const shape = getMenuBotForm(calc, bot);
 
             expect(shape).toBe('button');
+        });
+    });
+
+    describe('getMenuBotSubtype()', () => {
+        const cases = [['input'], ['password']];
+        const tagCases = ['auxFormSubtype', 'formSubtype'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (shape: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>shape,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getMenuBotSubtype(calc, bot)).toBe(shape);
+            });
+        });
+        it('should default to input', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const shape = getMenuBotSubtype(calc, bot);
+
+            expect(shape).toBe('input');
         });
     });
 
@@ -2120,6 +2147,39 @@ export function botCalculationContextTests(
 
             expect(getBotScale(calc, bot)).toBe(getBotScale(calc, bot));
             expect(getBotScale(calc, bot)).not.toBe(getBotScale(calc2, bot));
+        });
+
+        it('should use min scale if 0', () => {
+            const bot = createBot('test', {
+                scaleX: 0,
+                scaleY: 0,
+                scaleZ: 0,
+                scale: 0,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotScale(calc, bot)).toEqual({
+                x: 0.000000000000000001,
+                y: 0.000000000000000001,
+                z: 0.000000000000000001,
+            });
+        });
+
+        it('should support negitive numbers', () => {
+            const bot = createBot('test', {
+                scaleX: -1,
+                scaleY: -1,
+                scaleZ: -1,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotScale(calc, bot)).toEqual({
+                x: -1,
+                y: -1,
+                z: -1,
+            });
         });
     });
 

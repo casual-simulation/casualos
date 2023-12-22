@@ -1,12 +1,13 @@
-FROM arm32v7/node:16
+FROM arm32v7/node:18
 
 WORKDIR /usr/src/app
 
-COPY ./script/remove-dev-dependencies.js ./script/remove-dev-dependencies.js
+COPY ./script/remove-dev-dependencies.mjs ./script/remove-dev-dependencies.mjs
 COPY ./src/aux-server/package*.json ./
+COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 
-RUN node ./script/remove-dev-dependencies.js ./package.json
-RUN npm install
+RUN node ./script/remove-dev-dependencies.mjs ./package.json
+RUN npm install --force
 
 COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
 COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
@@ -16,9 +17,6 @@ ENV PRODUCTION 1
 
 # Specify no sandbox since Deno doesn't support Arm32
 ENV SANDBOX_TYPE "none"
-
-# Specify GPIO is enabled by default
-ENV GPIO "true"
 
 # HTTP
 EXPOSE 3000

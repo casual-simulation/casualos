@@ -13,13 +13,9 @@ import {
     SystemPortalUpdate,
 } from './SystemPortalCoordinator';
 import {
-    AuxConfig,
     AuxConfigParameters,
-    AuxUser,
-    BotHelper,
-    BotWatcher,
-    PortalManager,
     SimulationManager,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import {
     createBot,
@@ -50,6 +46,7 @@ import {
     SystemPortalPane,
     SHEET_PORTAL,
     SYSTEM_PORTAL_PANE,
+    ConnectionInfo,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { firstValueFrom, Subject, Subscription } from 'rxjs';
@@ -64,7 +61,7 @@ console.log = jest.fn();
 
 describe('SystemPortalCoordinator', () => {
     let manager: SystemPortalCoordinator<BotManager>;
-    let userId = 'user';
+    let connectionId = 'connectionId';
     let updates: SystemPortalUpdate[];
     let selectionUpdates: SystemPortalSelectionUpdate[];
     let recentsUpdates: SystemPortalRecentsUpdate[];
@@ -78,9 +75,14 @@ describe('SystemPortalCoordinator', () => {
     let simManager: SimulationManager<BotManager>;
 
     async function addSimulation(id: string) {
-        const sim = await simManager.addSimulation(id);
+        const sim = await simManager.addSimulation(id, {
+            recordName: null,
+            inst: id,
+        });
 
-        simManager.primary.helper.transaction(botAdded(createBot('user', {})));
+        simManager.primary.helper.transaction(
+            botAdded(createBot(connectionId, {}))
+        );
 
         await waitAsync();
 
@@ -91,11 +93,10 @@ describe('SystemPortalCoordinator', () => {
         sub = new Subscription();
         vms = new Map();
 
-        const user: AuxUser = {
-            id: userId,
-            name: 'userName',
-            token: 'userToken',
-            username: 'username',
+        const connection: ConnectionInfo = {
+            connectionId: connectionId,
+            userId: 'userId',
+            sessionId: 'sessionId',
         };
 
         const config: AuxConfigParameters = {
@@ -103,15 +104,18 @@ describe('SystemPortalCoordinator', () => {
             versionHash: 'hash',
         };
 
-        simManager = new SimulationManager((id) => {
-            const vm = new TestAuxVM(user.id);
+        simManager = new SimulationManager((id, options) => {
+            const vm = new TestAuxVM(id, connection.connectionId);
             vm.processEvents = true;
             vm.localEvents = new Subject();
             vms.set(id, vm);
-            return new BotManager(user, id, config, vm);
+            return new BotManager(options, config, vm);
         });
 
-        await simManager.setPrimary('sim-1');
+        await simManager.setPrimary('sim-1', {
+            recordName: null,
+            inst: 'sim-1',
+        });
         sim = await addSimulation('sim-1');
 
         updates = [];
@@ -161,7 +165,7 @@ describe('SystemPortalCoordinator', () => {
     describe('onItemsUpdated', () => {
         it('should resolve when the user bot is updated with the portal tag', async () => {
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
@@ -169,7 +173,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
@@ -228,7 +232,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'different.core.test6',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
@@ -330,7 +334,7 @@ describe('SystemPortalCoordinator', () => {
                         system: false,
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                     },
@@ -397,7 +401,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 456,
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                     },
@@ -474,7 +478,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -547,7 +551,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: '🔗test2',
@@ -620,7 +624,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.other',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -723,7 +727,7 @@ describe('SystemPortalCoordinator', () => {
                         notSystem: 'value',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                     },
@@ -860,7 +864,7 @@ describe('SystemPortalCoordinator', () => {
                         test: 'different.core.test6',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_TAG_NAME]: 'test',
@@ -989,7 +993,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1068,7 +1072,7 @@ describe('SystemPortalCoordinator', () => {
                         },
                     },
                 }),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1137,7 +1141,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1190,7 +1194,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1201,7 +1205,7 @@ describe('SystemPortalCoordinator', () => {
             await waitAsync();
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_TAG]: 'onClick',
                     },
@@ -1253,7 +1257,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1305,7 +1309,7 @@ describe('SystemPortalCoordinator', () => {
                         test: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1360,7 +1364,7 @@ describe('SystemPortalCoordinator', () => {
                         onClick: '@os.toast("Cool!");',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1418,7 +1422,7 @@ describe('SystemPortalCoordinator', () => {
                         onClick: '@os.toast("Cool!");',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1483,7 +1487,7 @@ describe('SystemPortalCoordinator', () => {
                         onClick: '@os.toast("Cool!");',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1576,7 +1580,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.game.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1591,7 +1595,7 @@ describe('SystemPortalCoordinator', () => {
             await waitAsync();
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test3',
@@ -1623,7 +1627,7 @@ describe('SystemPortalCoordinator', () => {
                         onClick: '@os.toast("Cool!");',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1670,7 +1674,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.game.test2',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1736,7 +1740,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.game.test2',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1827,7 +1831,7 @@ describe('SystemPortalCoordinator', () => {
                         onClick: '@os.toast("Cool!");',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1889,7 +1893,7 @@ describe('SystemPortalCoordinator', () => {
                         onClick: '@os.toast("Cool!");',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
@@ -1922,7 +1926,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.game.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
@@ -1933,7 +1937,7 @@ describe('SystemPortalCoordinator', () => {
             await waitAsync();
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'color',
@@ -2007,7 +2011,7 @@ describe('SystemPortalCoordinator', () => {
                         color: 'blue',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test1',
                         [EDITING_TAG]: 'onClick',
@@ -2018,7 +2022,7 @@ describe('SystemPortalCoordinator', () => {
             await waitAsync();
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'color',
@@ -2091,7 +2095,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.game.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: '🔗test2',
                         [EDITING_TAG]: 'onClick',
@@ -2102,7 +2106,7 @@ describe('SystemPortalCoordinator', () => {
             await waitAsync();
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: '🔗test2',
                         [EDITING_TAG]: 'color',
@@ -2175,7 +2179,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.game.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
@@ -2220,7 +2224,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.game.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'link',
@@ -2265,7 +2269,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.game.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
@@ -2274,7 +2278,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
@@ -2349,7 +2353,7 @@ describe('SystemPortalCoordinator', () => {
                         onClick: '@os.toast("Test!");',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
@@ -2358,7 +2362,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test1',
                         [EDITING_TAG]: 'onClick',
@@ -2427,7 +2431,7 @@ describe('SystemPortalCoordinator', () => {
                         onClick: '@os.toast("Cool!");',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
@@ -2436,7 +2440,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'color',
@@ -2447,7 +2451,7 @@ describe('SystemPortalCoordinator', () => {
             await waitAsync();
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
@@ -2551,7 +2555,7 @@ describe('SystemPortalCoordinator', () => {
 
             for (let tag in tags) {
                 await sim.helper.transaction(
-                    botUpdated('user', {
+                    botUpdated(connectionId, {
                         tags: {
                             [EDITING_BOT]: 'test2',
                             [EDITING_TAG]: tag,
@@ -2583,7 +2587,7 @@ describe('SystemPortalCoordinator', () => {
                         test: 'core.game.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
@@ -2595,7 +2599,7 @@ describe('SystemPortalCoordinator', () => {
             await waitAsync();
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'color',
@@ -2683,14 +2687,14 @@ describe('SystemPortalCoordinator', () => {
                         normal1: 'abcdef',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
                 })
             );
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
@@ -2883,14 +2887,14 @@ describe('SystemPortalCoordinator', () => {
                         normal1: 'abcdef',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
                 })
             );
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
@@ -2898,7 +2902,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'nothing',
                     },
@@ -2943,7 +2947,7 @@ describe('SystemPortalCoordinator', () => {
                         system: 'core.other.test3',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
@@ -2983,7 +2987,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
@@ -3216,14 +3220,14 @@ describe('SystemPortalCoordinator', () => {
                         script3: '@abcdefghi\nabcdefghi',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
                 })
             );
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
@@ -3354,14 +3358,14 @@ describe('SystemPortalCoordinator', () => {
                         script3: '@abcdefghi\nabcdefghi',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
                 })
             );
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'test2',
                     },
@@ -3433,14 +3437,14 @@ describe('SystemPortalCoordinator', () => {
                         script3: '@abcdefghi\nabcdefghi',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
                 })
             );
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'shared',
                     },
@@ -3510,14 +3514,14 @@ describe('SystemPortalCoordinator', () => {
                         script3: '@abcdefghi\nabcdefghi',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
                 })
             );
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'script',
                     },
@@ -3634,7 +3638,7 @@ describe('SystemPortalCoordinator', () => {
                         system: false,
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
@@ -3658,7 +3662,7 @@ describe('SystemPortalCoordinator', () => {
                 })
             );
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'script',
                     },
@@ -3818,7 +3822,7 @@ describe('SystemPortalCoordinator', () => {
                         normal1: 'abcdef',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_TAG_NAME]: 'test',
@@ -3826,7 +3830,7 @@ describe('SystemPortalCoordinator', () => {
                 })
             );
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
@@ -4001,7 +4005,7 @@ describe('SystemPortalCoordinator', () => {
     describe('onDiffUpdated', () => {
         it('should resolve when the user bot is updated with the portal tag', async () => {
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                         [SYSTEM_PORTAL_DIFF]: 'core',
@@ -4010,7 +4014,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                         [SYSTEM_PORTAL_DIFF]: null,
@@ -4073,7 +4077,7 @@ describe('SystemPortalCoordinator', () => {
                         test: 'different.core.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                         [SYSTEM_PORTAL_DIFF]: 'test',
@@ -4225,7 +4229,7 @@ describe('SystemPortalCoordinator', () => {
                         test: 'different.core.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_DIFF]: 'test',
@@ -4308,7 +4312,7 @@ describe('SystemPortalCoordinator', () => {
                         test: 'core.game.test1',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_DIFF]: 'test',
@@ -4362,7 +4366,7 @@ describe('SystemPortalCoordinator', () => {
                         test: 'core.test',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                         [SYSTEM_PORTAL_DIFF]: 'test',
@@ -4463,7 +4467,7 @@ describe('SystemPortalCoordinator', () => {
                         sameTag: 'hello',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_DIFF]: 'test',
@@ -4525,7 +4529,7 @@ describe('SystemPortalCoordinator', () => {
                         sameTag: 'hello',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_DIFF]: 'test',
@@ -4578,7 +4582,7 @@ describe('SystemPortalCoordinator', () => {
                         sameTag: 'hello',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_DIFF]: 'test',
@@ -4639,7 +4643,7 @@ describe('SystemPortalCoordinator', () => {
                         sameTag: 'hello',
                     })
                 ),
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_DIFF]: 'test',
@@ -4710,7 +4714,7 @@ describe('SystemPortalCoordinator', () => {
 
         it('should resolve with bots when the system portal is opened', async () => {
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
@@ -4718,7 +4722,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
@@ -4732,7 +4736,7 @@ describe('SystemPortalCoordinator', () => {
 
         it('should resolve with sheet when bot the system portal and sheet portal are opened', async () => {
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SHEET_PORTAL]: 'home',
@@ -4741,7 +4745,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
@@ -4755,7 +4759,7 @@ describe('SystemPortalCoordinator', () => {
 
         it('should resolve with search when bot the system portal has a search', async () => {
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_PORTAL_SEARCH]: 'home',
@@ -4764,7 +4768,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
@@ -4778,7 +4782,7 @@ describe('SystemPortalCoordinator', () => {
 
         it('should resolve with diff when bot the system portal has a diff', async () => {
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_PORTAL_DIFF]: 'home',
@@ -4787,7 +4791,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
@@ -4801,7 +4805,7 @@ describe('SystemPortalCoordinator', () => {
 
         it('should resolve with the selected pane', async () => {
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_PORTAL_PANE]: 'search',
@@ -4810,7 +4814,7 @@ describe('SystemPortalCoordinator', () => {
             );
 
             await sim.helper.transaction(
-                botUpdated('user', {
+                botUpdated(connectionId, {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },

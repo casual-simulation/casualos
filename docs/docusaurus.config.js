@@ -1,6 +1,7 @@
-const path = require('path');
+import path from 'path';
+import { themes } from 'prism-react-renderer';
 
-module.exports = {
+export default {
   title: 'CasualOS',
   tagline: 'Problem Solving For People',
   url: 'https://docs.casualos.com',
@@ -11,7 +12,8 @@ module.exports = {
   deploymentBranch: 'master',
   themeConfig: {
     prism: {
-      theme: require('prism-react-renderer/themes/vsDark')
+      theme: themes.vsDark,
+      darkTheme: themes.vsDark,
     },
     algolia: {
       appId: 'TNXB2QF2YB',
@@ -106,15 +108,15 @@ module.exports = {
             items: [
                 {
                     label: 'Terms of Service',
-                    to: 'https://ab1.link/terms'
+                    to: 'https://publicos.link/terms'
                 },
                 {
                     label: 'Acceptable Use Policy',
-                    to: 'https://ab1.link/acceptable-use-policy'
+                    to: 'https://publicos.link/acceptable-use-policy'
                 },
                 {
                     label: 'Privacy Policy',
-                    to: 'https://ab1.link/privacy-policy'
+                    to: 'https://publicos.link/privacy-policy'
                 },
             ]
         }
@@ -132,7 +134,7 @@ module.exports = {
       {
         docs: {
           routeBasePath: '/', // Serve the docs at the site's root
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: path.resolve('./sidebars.js'),
           tagsBasePath: 'labels',
           // Please change this to your repo.
           editUrl:
@@ -151,7 +153,7 @@ module.exports = {
         },
         blog: false, // Disable the blog plugin
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: path.resolve('./src/css/custom.css'),
         },
       },
     ],

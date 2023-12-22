@@ -1,0 +1,20 @@
+---
+id: studios
+title: Studio Types
+sidebar_label: Studios
+description: Types that are used for actions that manage studios.
+---
+
+import Doc from '../../api-info/types/records/studios.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

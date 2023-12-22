@@ -1,3 +1,4 @@
+import { fromByteArray, toByteArray } from 'base64-js';
 import { union, keys, every, some, isObject, mapValues } from 'lodash';
 import { v4 as uuid } from 'uuid';
 
@@ -97,14 +98,6 @@ export function shortUuid() {
 }
 
 /**
- * Parses the given RealtimeChannelInfo ID to the ID of the aux.
- * @param id The id to parse.
- */
-export function parseRealtimeChannelId(id: string): string {
-    return id.substring(4);
-}
-
-/**
  * Converts the given string from dot case (dot.case) to camel case (camelCase).
  * @param dotCase The string to convert.
  */
@@ -185,4 +178,24 @@ export function cleanPhoneNumber(value: string): string {
     }
 
     return sms;
+}
+
+/**
+ * Converts the given string into a base64 string.
+ * @param str The string to convert.
+ */
+export function toBase64String(str: string): string {
+    const encoder = new TextEncoder();
+    const array = encoder.encode(str);
+    return fromByteArray(array);
+}
+
+/**
+ * Converts the given string from a base64 string.
+ * @param base64
+ */
+export function fromBase64String(base64: string): string {
+    const decoder = new TextDecoder();
+    const array = toByteArray(base64);
+    return decoder.decode(array);
 }

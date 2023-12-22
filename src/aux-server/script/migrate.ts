@@ -1,10 +1,10 @@
-const dynamodb = require('aws-sdk/clients/dynamodb');
-const { PrismaClient } = require('@prisma/client');
-const AWS = require('aws-sdk');
-const prompts = require('prompts');
-const path = require('path');
-const fs = require('fs/promises');
-const fsOld = require('fs');
+import dynamodb from 'aws-sdk/clients/dynamodb';
+import { PrismaClient } from '../aux-backend/prisma/generated';
+import AWS from 'aws-sdk';
+import prompts from 'prompts';
+import path from 'path';
+import fs from 'fs/promises';
+import fsOld from 'fs';
 const responsesFile = path.join(__dirname, 'responses.json');
 
 async function start() {
@@ -40,74 +40,62 @@ async function collectResponses() {
             type: 'text',
             name: 'databaseUrl',
             message: 'Please enter the Database URL',
-            required: true,
         },
         {
             type: 'text',
             name: 'awsRegion',
             message: 'Please enter the AWS Region',
-            required: true,
         },
         {
             type: 'text',
             name: 'UsersTable',
             message: 'Please enter the name of the DynamoDB Users Table',
-            required: true,
         },
         {
             type: 'text',
             name: 'UserAddressesTable',
             message: 'Please enter the name of the DynamoDB UserAddressesTable',
-            required: true,
         },
         {
             type: 'text',
             name: 'EmailRulesTable',
             message: 'Please enter the name of the DynamoDB EmailRulesTable',
-            required: true,
         },
         {
             type: 'text',
             name: 'SmsRulesTable',
             message: 'Please enter the name of the DynamoDB SmsRulesTable',
-            required: true,
         },
         {
             type: 'text',
             name: 'PublicRecordsTable',
             message: 'Please enter the name of the DynamoDB PublicRecordsTable',
-            required: true,
         },
         {
             type: 'text',
             name: 'PublicRecordsKeysTable',
             message:
                 'Please enter the name of the DynamoDB PublicRecordsKeysTable',
-            required: true,
         },
         {
             type: 'text',
             name: 'DataTable',
             message: 'Please enter the name of the DynamoDB DataTable',
-            required: true,
         },
         {
             type: 'text',
             name: 'ManualDataTable',
             message: 'Please enter the name of the DynamoDB ManualDataTable',
-            required: true,
         },
         {
             type: 'text',
             name: 'FilesTable',
             message: 'Please enter the name of the DynamoDB FilesTable',
-            required: true,
         },
         {
             type: 'text',
             name: 'EventsTable',
             message: 'Please enter the name of the DynamoDB EventsTable',
-            required: true,
         },
     ]);
 }

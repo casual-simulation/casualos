@@ -1,4 +1,5 @@
 import { Bot, BotAction } from '@casual-simulation/aux-common';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 import { Observable } from 'rxjs';
 
 /**
@@ -23,7 +24,7 @@ export interface AppBackend {
     /**
      * Handles the given events.
      */
-    handleEvents(events: BotAction[]): void;
+    handleEvents(events: RuntimeActions[]): void;
 
     /**
      * Releases any dynamic resources used by this app.

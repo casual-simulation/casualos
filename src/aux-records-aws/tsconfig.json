@@ -9,5 +9,9 @@
         "incremental": true
     },
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [{ "path": "../crypto" }, { "path": "../aux-records" }]
+    "references": [
+        { "path": "../crypto" },
+        { "path": "../aux-records" },
+        { "path": "../aux-common" }
+    ]
 }

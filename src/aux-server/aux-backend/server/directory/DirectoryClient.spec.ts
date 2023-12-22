@@ -9,12 +9,19 @@ console.log = jest.fn();
 
 jest.mock('axios');
 jest.mock('os');
-jest.useFakeTimers();
 
 describe('DirectoryClient', () => {
     let tunnel: TestClient;
     let client: DirectoryClient;
     let store: DirectoryStore;
+
+    beforeAll(() => {
+        jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
 
     beforeEach(async () => {
         require('os').__setHostname('testHostname');

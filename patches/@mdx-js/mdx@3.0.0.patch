@@ -1,0 +1,13 @@
+diff --git a/lib/plugin/recma-jsx-rewrite.js b/lib/plugin/recma-jsx-rewrite.js
+index f945a7d9ba9703359e1f2d6ac6fdcd6cb01fe54b..2762a6e2230b3f53a5589d1d9d3ae5ca43d0d0da 100644
+--- a/lib/plugin/recma-jsx-rewrite.js
++++ b/lib/plugin/recma-jsx-rewrite.js
+@@ -160,7 +160,7 @@ export function recmaJsxRewrite(options) {
+                 // If the parent scope is `_createMdxContent`, then this
+                 // references a component we can add a check statement for.
+                 (parentScope &&
+-                  parentScope.node.type === 'FunctionDeclaration' &&
++                  parentScope.node?.type === 'FunctionDeclaration' &&
+                   isNamedFunction(parentScope.node, '_createMdxContent'))
+               ) {
+                 fnScope.references[fullId] = {component: true, node}

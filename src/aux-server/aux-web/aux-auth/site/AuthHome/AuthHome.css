@@ -16,3 +16,18 @@
 .button-field > .md-button {
     flex: 0 0 auto;
 }
+
+.privacy-card {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.privacy-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}

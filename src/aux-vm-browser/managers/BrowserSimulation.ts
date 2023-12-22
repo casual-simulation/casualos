@@ -1,7 +1,7 @@
 import { BotPanelManager } from './BotPanelManager';
 import { ProgressManager, RecordsManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
-import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { ConsoleMessages } from '@casual-simulation/aux-common';
 import { Bot } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 import { IdePortalManager } from './IdePortalManager';

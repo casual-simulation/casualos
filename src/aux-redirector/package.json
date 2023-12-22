@@ -27,7 +27,7 @@
         "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
-        "build": "node ./script/build-redirector.js",
+        "build": "node ./script/build-redirector.mjs",
         "package": "docker build -t casualsimulation/aux-redirector -f Dockerfile .",
         "start": "node dist/main.js"
     },
@@ -38,6 +38,7 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "express": "^4.16.4"
+        "express": "^4.16.4",
+        "body-parser": "1.20.2"
     }
 }

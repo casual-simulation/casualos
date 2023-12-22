@@ -3,6 +3,7 @@ import {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
+    AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthSubscription,
@@ -21,8 +22,8 @@ import {
     AuthSession as PrismaSession,
     Subscription as PrismaSubscription,
     SubscriptionPeriod,
-} from '@prisma/client';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+} from './generated';
+// import { PrismaClientKnownRequestError } from './generated/runtime';
 import { convertToDate, convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
 
@@ -50,6 +51,9 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async findUser(userId: string): Promise<AuthUser | null> {
+        if (!userId) {
+            return null;
+        }
         const user = await this._client.user.findUnique({
             where: {
                 id: userId,
@@ -62,9 +66,25 @@ export class PrismaAuthStore implements AuthStore {
     async findUserByStripeCustomerId(
         customerId: string
     ): Promise<AuthUser | null> {
+        if (!customerId) {
+            return null;
+        }
         const user = await this._client.user.findUnique({
             where: {
                 stripeCustomerId: customerId,
+            },
+        });
+
+        return this._convertToAuthUser(user);
+    }
+
+    async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
+        if (!serviceId) {
+            return null;
+        }
+        const user = await this._client.user.findUnique({
+            where: {
+                privoServiceId: serviceId,
             },
         });
 
@@ -103,6 +123,9 @@ export class PrismaAuthStore implements AuthStore {
         address: string,
         addressType: AddressType
     ): Promise<AuthUser | null> {
+        if (!address) {
+            return null;
+        }
         const user = await this._client.user.findUnique({
             where:
                 addressType === 'email'
@@ -118,7 +141,7 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async saveUser(user: AuthUser): Promise<void> {
-        const userData = {
+        const userData: Prisma.UserUncheckedCreateInput = {
             id: user.id,
             name: user.name as string,
             email: user.email,
@@ -132,6 +155,12 @@ export class PrismaAuthStore implements AuthStore {
             subscriptionId: user.subscriptionId as string,
             banTime: convertToDate(user.banTimeMs),
             banReason: user.banReason as string,
+            privoServiceId: user.privoServiceId as string,
+            privoParentServiceId: user.privoParentServiceId as string,
+            allowPublishData: user.privacyFeatures?.publishData ?? true,
+            allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
+            allowAI: user.privacyFeatures?.allowAI ?? true,
+            allowPublicInsts: user.privacyFeatures?.allowPublicInsts ?? true,
         };
 
         await this._client.user.upsert({
@@ -160,6 +189,13 @@ export class PrismaAuthStore implements AuthStore {
                 subscriptionId: user.subscriptionId as string,
                 banTime: convertToDate(user.banTimeMs),
                 banReason: user.banReason as string,
+                privoServiceId: user.privoServiceId as string,
+                privoParentServiceId: user.privoParentServiceId as string,
+                allowPublishData: user.privacyFeatures?.publishData ?? true,
+                allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
+                allowAI: user.privacyFeatures?.allowAI ?? true,
+                allowPublicInsts:
+                    user.privacyFeatures?.allowPublicInsts ?? true,
             };
 
             if (!!user.currentLoginRequestId) {
@@ -174,7 +210,7 @@ export class PrismaAuthStore implements AuthStore {
                 data: createData,
             });
         } catch (err) {
-            if (err instanceof PrismaClientKnownRequestError) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
                 if (err.code === 'P2002') {
                     return {
                         success: false,
@@ -195,6 +231,9 @@ export class PrismaAuthStore implements AuthStore {
         userId: string,
         requestId: string
     ): Promise<AuthLoginRequest | null> {
+        if (!requestId) {
+            return null;
+        }
         const request = await this._client.loginRequest.findUnique({
             where: {
                 requestId: requestId,
@@ -219,10 +258,154 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    async findOpenIDLoginRequest(
+        requestId: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        if (!requestId) {
+            return null;
+        }
+        const request = await this._client.openIDLoginRequest.findUnique({
+            where: {
+                requestId: requestId,
+            },
+        });
+
+        if (!request) {
+            return null;
+        }
+
+        return {
+            requestId: request.requestId,
+            state: request.state,
+            authorizationUrl: request.authorizationUrl,
+            redirectUrl: request.redirectUrl,
+            codeMethod: request.codeMethod,
+            codeVerifier: request.codeVerifier,
+            provider: request.provider,
+            scope: request.scope,
+            requestTimeMs: convertToMillis(request.requestTime) as number,
+            expireTimeMs: convertToMillis(request.expireTime) as number,
+            completedTimeMs: convertToMillis(request.completedTime),
+            authorizationTimeMs: convertToMillis(request.authorizationTime),
+            authorizationCode: request.authorizationCode,
+            ipAddress: request.ipAddress,
+        };
+    }
+
+    async findOpenIDLoginRequestByState(
+        state: string
+    ): Promise<AuthOpenIDLoginRequest> {
+        if (!state) {
+            return null;
+        }
+        const request = await this._client.openIDLoginRequest.findUnique({
+            where: {
+                state: state,
+            },
+        });
+
+        if (!request) {
+            return null;
+        }
+
+        return {
+            requestId: request.requestId,
+            state: request.state,
+            authorizationUrl: request.authorizationUrl,
+            redirectUrl: request.redirectUrl,
+            codeMethod: request.codeMethod,
+            codeVerifier: request.codeVerifier,
+            provider: request.provider,
+            scope: request.scope,
+            requestTimeMs: convertToMillis(request.requestTime) as number,
+            expireTimeMs: convertToMillis(request.expireTime) as number,
+            completedTimeMs: convertToMillis(request.completedTime),
+            authorizationTimeMs: convertToMillis(request.authorizationTime),
+            authorizationCode: request.authorizationCode,
+            ipAddress: request.ipAddress,
+        };
+    }
+
+    async saveOpenIDLoginRequest(
+        request: AuthOpenIDLoginRequest
+    ): Promise<AuthOpenIDLoginRequest> {
+        await this._client.openIDLoginRequest.upsert({
+            where: {
+                requestId: request.requestId,
+            },
+            create: {
+                requestId: request.requestId,
+                state: request.state,
+                authorizationUrl: request.authorizationUrl,
+                redirectUrl: request.redirectUrl,
+                codeMethod: request.codeMethod,
+                codeVerifier: request.codeVerifier,
+                provider: request.provider,
+                scope: request.scope,
+                requestTime: convertToDate(request.requestTimeMs),
+                expireTime: convertToDate(request.expireTimeMs),
+                completedTime: convertToDate(request.completedTimeMs),
+                authorizationTime: convertToDate(request.authorizationTimeMs),
+                authorizationCode: request.authorizationCode,
+                ipAddress: request.ipAddress,
+            },
+            update: {
+                authorizationUrl: request.authorizationUrl,
+                state: request.state,
+                redirectUrl: request.redirectUrl,
+                codeMethod: request.codeMethod,
+                codeVerifier: request.codeVerifier,
+                provider: request.provider,
+                scope: request.scope,
+                requestTime: convertToDate(request.requestTimeMs),
+                expireTime: convertToDate(request.expireTimeMs),
+                completedTime: convertToDate(request.completedTimeMs),
+                authorizationTime: convertToDate(request.authorizationTimeMs),
+                authorizationCode: request.authorizationCode,
+                ipAddress: request.ipAddress,
+            },
+        });
+
+        return request;
+    }
+
+    async markOpenIDLoginRequestComplete(
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        await this._client.openIDLoginRequest.update({
+            where: {
+                requestId: requestId,
+            },
+            data: {
+                completedTime: convertToDate(completedTimeMs),
+            },
+        });
+    }
+
+    async saveOpenIDLoginRequestAuthorizationCode(
+        requestId: string,
+        authorizationCode: string,
+        authorizationTimeMs: number
+    ): Promise<void> {
+        await this._client.openIDLoginRequest.update({
+            where: {
+                requestId: requestId,
+            },
+            data: {
+                authorizationCode: authorizationCode,
+                authorizationTime: convertToDate(authorizationTimeMs),
+            },
+        });
+    }
+
     async findSession(
         userId: string,
         sessionId: string
     ): Promise<AuthSession | null> {
+        if (!sessionId) {
+            return null;
+        }
         const session = await this._client.authSession.findUnique({
             where: {
                 sessionId: sessionId,
@@ -304,6 +487,7 @@ export class PrismaAuthStore implements AuthStore {
             previousSessionId: session.previousSessionId,
             nextSessionId: session.nextSessionId,
             ipAddress: session.ipAddress,
+            connectionSecret: session.connectionSecret,
         };
         await this._client.authSession.upsert({
             where: {
@@ -340,6 +524,7 @@ export class PrismaAuthStore implements AuthStore {
                         requestId: newSession.requestId,
                         ipAddress: newSession.ipAddress,
                         previousSessionId: session.sessionId,
+                        connectionSecret: newSession.connectionSecret,
                     },
                 },
             },
@@ -350,6 +535,9 @@ export class PrismaAuthStore implements AuthStore {
         userId: string,
         expireTimeMs: number
     ): Promise<ListSessionsDataResult> {
+        if (!userId) {
+            return null;
+        }
         let where: Prisma.AuthSessionWhereInput = {
             userId: userId,
         };
@@ -388,6 +576,9 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
     async getSubscriptionById(id: string): Promise<AuthSubscription> {
+        if (!id) {
+            return null;
+        }
         const sub = await this._client.subscription.findUnique({
             where: {
                 id: id,
@@ -398,6 +589,9 @@ export class PrismaAuthStore implements AuthStore {
     async getSubscriptionByStripeSubscriptionId(
         id: string
     ): Promise<AuthSubscription> {
+        if (!id) {
+            return null;
+        }
         const sub = await this._client.subscription.findUnique({
             where: {
                 stripeSubscriptionId: id,
@@ -426,6 +620,9 @@ export class PrismaAuthStore implements AuthStore {
     async getSubscriptionPeriodById(
         id: string
     ): Promise<AuthSubscriptionPeriod> {
+        if (!id) {
+            return null;
+        }
         const period = await this._client.subscriptionPeriod.findUnique({
             where: {
                 id: id,
@@ -437,6 +634,9 @@ export class PrismaAuthStore implements AuthStore {
     async listSubscriptionPeriodsBySubscriptionId(
         subscriptionId: string
     ): Promise<AuthSubscriptionPeriod[]> {
+        if (!subscriptionId) {
+            return [];
+        }
         const periods = await this._client.subscriptionPeriod.findMany({
             where: {
                 subscriptionId,
@@ -460,6 +660,9 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async getInvoiceById(id: string): Promise<AuthInvoice> {
+        if (!id) {
+            return null;
+        }
         return await this._client.invoice.findUnique({
             where: {
                 id,
@@ -716,6 +919,16 @@ export class PrismaAuthStore implements AuthStore {
                 banTimeMs: convertToMillis(user.banTime),
                 banReason: user.banReason as AuthUser['banReason'],
                 subscriptionId: user.subscriptionId as string | undefined,
+                privoServiceId: user.privoServiceId as string | undefined,
+                privoParentServiceId: user.privoParentServiceId as
+                    | string
+                    | undefined,
+                privacyFeatures: {
+                    publishData: user.allowPublishData ?? true,
+                    allowPublicData: user.allowPublicData ?? true,
+                    allowAI: user.allowAI ?? true,
+                    allowPublicInsts: user.allowPublicInsts ?? true,
+                },
             };
         }
         return null;
@@ -733,6 +946,7 @@ export class PrismaAuthStore implements AuthStore {
             previousSessionId: session.previousSessionId,
             ipAddress: session.ipAddress,
             nextSessionId: session.nextSessionId,
+            connectionSecret: session.connectionSecret,
         };
     }
 
@@ -761,109 +975,4 @@ export class PrismaAuthStore implements AuthStore {
 
         return null;
     }
-}
-
-export interface MongoDBAuthUser {
-    _id: string;
-    name: string;
-    email: string;
-    phoneNumber: string;
-    avatarPortraitUrl: string;
-    avatarUrl: string;
-    allSessionRevokeTimeMs: number;
-    currentLoginRequestId: string;
-    stripeCustomerId?: string;
-    subscriptionStatus?: string;
-    subscriptionId?: string;
-    banTimeMs?: number;
-    banReason?: AuthUser['banReason'];
-}
-
-export interface MongoDBLoginRequest {
-    _id: string;
-    userId: string;
-    secretHash: string;
-    requestTimeMs: number;
-    expireTimeMs: number;
-    completedTimeMs: number | null;
-    attemptCount: number;
-    address: string;
-    addressType: AddressType;
-    ipAddress: string;
-}
-
-/**
- * Defines an interface that represents a login session for the user.
- */
-export interface MongoDBAuthSession {
-    /**
-     * The ID of the session.
-     */
-    _id: string;
-
-    /**
-     * The ID of the user that the session is for.
-     */
-    userId: string;
-
-    /**
-     * The hash of the token that provides access to this session.
-     */
-    secretHash: string;
-
-    /**
-     * The unix timestamp in miliseconds that the session was granted at.
-     */
-    grantedTimeMs: number;
-
-    /**
-     * The unix timestamp in miliseconds that the session will expire at.
-     */
-    expireTimeMs: number;
-
-    /**
-     * The unix timestamp in miliseconds that the session was revoked at.
-     * If null, then the session has not been revoked.
-     */
-    revokeTimeMs: number | null;
-
-    /**
-     * The ID of the login request that was used to obtain this session.
-     */
-    requestId: string | null;
-
-    /**
-     * The ID of the previous session that was used to obtain this session.
-     */
-    previousSessionId: string | null;
-
-    /**
-     * The ID of the session that replaced this session.
-     */
-    nextSessionId: string | null;
-
-    /**
-     * The IP Address that the session was granted to.
-     */
-    ipAddress: string;
-}
-
-/**
- * Defines an interface that represents an email rule stored in MongoDB.
- */
-export interface MongoDBEmailRule extends RegexRule {
-    /**
-     * The ID of the rule.
-     */
-    _id: string;
-}
-
-/**
- * Defines an interface that represents an sms rule stored in MongoDB.
- */
-export interface MongoDBSmsRule extends RegexRule {
-    /**
-     * The ID of the rule.
-     */
-    _id: string;
 }

@@ -1,3 +1,5 @@
+import { PrivacyFeatures } from '@casual-simulation/aux-records';
+
 export interface UserMetadata {
     email: string;
     name: string;
@@ -10,10 +12,12 @@ export interface AppMetadata {
     avatarUrl: string;
     avatarPortraitUrl: string;
     name: string;
+    displayName: string;
     email: string;
     phoneNumber: string;
     hasActiveSubscription: boolean;
     subscriptionTier: string;
+    privacyFeatures: PrivacyFeatures;
 }
 
 export interface AppService {

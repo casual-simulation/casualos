@@ -1,5 +1,16 @@
 // This file imports all the files that should be included in the API Documentation generation.
-export * from '../../../src/aux-common/math/index';
+export {
+    Vector2,
+    Vector3,
+    Quaternion,
+    Rotation,
+    FromToRotation,
+    AxisAndAngle,
+    EulerAnglesRotation,
+    LookRotation,
+    QuaternionRotation,
+    SequenceRotation,
+} from '../../../src/aux-common/math/index';
 export {
     DefaultLibrary,
     createDefaultLibrary,
@@ -71,16 +82,39 @@ export {
 
     AIGenerateImageAPISuccess,
     AIGeneratedImageAPI,
-} from '../../../src/aux-common/runtime/AuxLibrary';
+
+    SessionSelector,
+} from '../../../src/aux-runtime/runtime/AuxLibrary';
 export { 
+    TransactionAction,
+    PasteStateOptions,
+    PasteStateAction,
+    ReplaceDragBotAction,
+    ShellAction,
+    ShowToastAction,
+    ShowTooltipAction,
+    HideTooltipAction,
+    ShowHtmlAction,
+    HideHtmlAction,
+    UpdateHtmlAppAction,
+    HtmlAppEventAction,
+    HtmlAppMethodCallAction,
+    SerializableMutationRecord,
+
+    FocusOnBotAction,
+    FocusOnPositionAction,
+    CancelAnimationAction,
+
     EaseType,
     EaseMode,
     Easing,
-    RecordActionOptions,
+    
     Geolocation,
     SuccessfulGeolocation,
     UnsuccessfulGeolocation,
     ConvertGeolocationToWhat3WordsOptions,
+    DefineGlobalBotAction,
+    ConvertGeolocationToWhat3WordsAction,
     SnapAxis,
     SnapPoint,
     SnapTarget,
@@ -88,25 +122,64 @@ export {
     ShareOptions,
     FocusOnOptions,
     FocusOnRotation,
+    AddDropSnapAction,
+    AddDropSnapTargetsAction,
+    SnapGrid,
+    EnableCustomDraggingAction,
 
     CameraType,
     BarcodeFormat,
     ImageClassifierOptions,
     ShowInputOptions,
+    ShowInputType,
+    ShowInputSubtype,
     ShowConfirmOptions,
+    ShowConfirmAction,
+    OpenQRCodeScannerAction,
+    OpenBarcodeScannerAction,
+    OpenPhotoCameraAction,
+
+    OpenConsoleAction,
+    ShowQRCodeAction,
+    ShowBarcodeAction,
+    OpenImageClassifierAction,
+    LoadServerAction,
+    UnloadServerAction,
+    ImportAUXAction,
+    SuperShoutAction,
+    SendWebhookAction,
+    AnimateTagAction,
+    GetRemotesAction,
+    ListInstUpdatesAction,
+    GetInstStateFromUpdatesAction,
+    CreateInitializationUpdateAction,
+    ApplyUpdatesToInstAction,
+    GetCurrentInstUpdateAction,
+    GoToDimensionAction,
+    ShowInputForTagAction,
+    OpenURLAction,
+    PlaySoundAction,
+    BufferSoundAction,
+    CancelSoundAction,
+    DownloadAction,
+    RejectAction,
+    SetClipboardAction,
+    ShowChatBarAction,
+    RunScriptAction,
+    ShowUploadAuxFileAction,
+    ShowUploadFilesAction,
+    LoadSpaceAction,
 
     MediaPermssionOptions,
     EnableXROptions,
     StartFormAnimationOptions,
+    StopFormAnimationAction,
     StopFormAnimationOptions,
+    StartFormAnimationAction,
     FormAnimationData,
+    ListFormAnimationsAction,
 
-    JoinRoomActionOptions,
-    RoomJoinOptions,
-    RoomOptions,
-    RoomTrackOptions,
-    RoomRemoteOptions,
-    SetRoomTrackOptions,
+    
     RegisterPrefixOptions,
 
     Recording,
@@ -116,13 +189,76 @@ export {
     OpenPhotoCameraOptions,
     Photo,
     
-    AIChatOptions,
+    EnableCollaborationAction,
+    LoadBotsAction,
+    LocalFormAnimationAction,
+    LocalTweenAction,
+    LocalPositionTweenAction,
+    EnableARAction,
+    ARSupportedAction,
+    VRSupportedAction,
+    EnableVRAction,
+    EnablePOVAction,
+    ShowJoinCodeAction,
+    RequestFullscreenAction,
+    ExitFullscreenAction,
+    ShareAction,
+    RegisterBuiltinPortalAction,
 
+    CustomAppOutputType,
+    CustomPortalOutputMode,
+    CustomAppContainerAvailableAction,
+
+    RegisterCustomAppAction,
+    UnregisterCustomAppAction,
+    RegisterHtmlAppAction,
+    UnregisterHtmlAppAction,
+
+    SetAppOutputAction,
+
+    OpenCircleWipeAction,
+    OpenCircleWipeOptions,
+
+    BeginRecordingAction,
+    EndRecordingAction,
+
+    MeetCommandAction,
+    MeetFunctionAction,
+    SpeakTextAction,
+    GetVoicesAction,
+    GetGeolocationAction,
+    GoToTagAction,
+
+    RequestAuthDataAction,
+    AuthData,
+
+    MediaPermissionAction,
+    GetAverageFrameRateAction,
+    RaycastFromCameraAction,
+    RaycastInPortalAction,
+    CalculateRayFromCameraAction,
+
+    ConfigureWakeLockAction,
+    GetWakeLockConfigurationAction,
+    WakeLockConfiguration,
+    AnalyticsRecordEventAction,
+
+    BufferFormAddressGLTFAction,
+} from '../../../src/aux-common/bots/BotEvents';
+export {
+    RecordActionOptions,
+    JoinRoomActionOptions,
+    RoomJoinOptions,
+    RoomOptions,
+    RoomTrackOptions,
+    RoomRemoteOptions,
+    SetRoomTrackOptions,
+    AIChatOptions,
     AIGenerateSkyboxOptions,
     AIGenerateSkyboxBlockadeLabsOptions,
 
-    AIGenerateImageOptions
-} from '../../../src/aux-common/bots/BotEvents';
+    AIGenerateImageOptions,
+} from '../../../src/aux-runtime/runtime/RecordsEvents';
 export { 
     RuntimeBot,
     Bot,
@@ -141,24 +277,20 @@ export {
 } from '../../../src/aux-common/bots/Bot';
 export { 
     AuxVersion
-} from '../../../src/aux-common/runtime/AuxVersion';
+} from '../../../src/aux-runtime/runtime/AuxVersion';
 export { 
     AuxDevice
-} from '../../../src/aux-common/runtime/AuxDevice';
+} from '../../../src/aux-runtime/runtime/AuxDevice';
 export { InstUpdate } from '../../../src/aux-common/bots/StoredAux';
 export {
     GenericError,
     CasualOSError
-} from '../../../src/aux-common/runtime/CasualOSError';
+} from '../../../src/aux-runtime/runtime/CasualOSError';
 
 export {
     AIChatMessage,
 } from '../../../src/aux-records/AIChatInterface';
 export {
-    CreatePublicRecordKeyResult,
-    CreatePublicRecordKeySuccess,
-    CreatePublicRecordKeyFailure,
-
     AvailablePermissions,
     CreateDataPermission,
     ReadDataPermission,
@@ -189,6 +321,11 @@ export {
     UnassignPolicyPermission,
     ReadPolicyPermission,
     ListPoliciesPermission,
+} from '../../../src/aux-common';
+export {
+    CreatePublicRecordKeyResult,
+    CreatePublicRecordKeySuccess,
+    CreatePublicRecordKeyFailure,
 
     RecordDataResult,
     RecordDataSuccess,
@@ -247,7 +384,12 @@ export {
     ListStudiosSuccess,
     ListStudiosFailure,
 
+    ListedStudio,
+
 } from '../../../src/aux-records';
+export {
+    RemoteAction
+} from '../../../src/aux-common/common/RemoteActions';
 
 export {
     isEncrypted,

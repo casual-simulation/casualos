@@ -28,7 +28,7 @@ import {
     StatusUpdate,
     Action,
     CurrentVersion,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { flatMap, union } from 'lodash';
 import {
     Subject,
@@ -43,11 +43,11 @@ import {
     edits,
     isTagEdit,
     TagEditOp,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import {
     ensureBotIsSerializable,
     ensureTagIsSerializable,
-} from '@casual-simulation/aux-common/runtime/Utils';
+} from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import { v4 as uuid } from 'uuid';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {

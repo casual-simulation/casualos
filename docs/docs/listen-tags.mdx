@@ -20,7 +20,7 @@ import {
   NormalCode,
   ConfigBotBadge,
   ActionLink,
-} from './components.mdx';
+} from './components.jsx';
 
 Listen tags are tags that can receive shouts and whispers from other bots and actions that happen from the user.
 To create a listen tag, you make a normal tag and enter a "@" as the first character of the tag's value.
@@ -1404,17 +1404,6 @@ let that: {
 };
 ```
 
-### `@onSerialData`
-
-A shout that is sent whenever a stream data is received.
-
-#### Arguments:
-```typescript
-let that: {
-  data: any
-};
-```
-
 ### `@onSheetTagClick`
 
 A shout that is sent when a tag name is clicked in the sheet portal.
@@ -2164,3 +2153,14 @@ let that: {
     space: string;
 }
 ```
+### `@onCollaborationEnabled`
+
+A shout that is sent to all bots when collaboration becomes enabled for the current inst.
+
+### `@onAllowCollaborationUpgrade`
+
+A shout that is sent to all bots when <ActionLink action='os.enableCollaboration'/> is able to be called.
+
+### `@onDisallowCollaborationUpgrade`
+
+A shout that is sent to all bots when <ActionLink action='os.enableCollaboration'/> is no longer able to be called.

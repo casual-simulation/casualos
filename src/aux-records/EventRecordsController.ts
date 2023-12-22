@@ -3,7 +3,11 @@ import {
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
-import { NotLoggedInError, NotSupportedError, ServerError } from './Errors';
+import {
+    NotLoggedInError,
+    NotSupportedError,
+    ServerError,
+} from '@casual-simulation/aux-common/Errors';
 import {
     EventRecordsStore,
     AddEventCountStoreResult,
@@ -17,7 +21,7 @@ import {
 } from './RecordsController';
 import { cleanupObject, getMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';

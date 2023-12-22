@@ -2,11 +2,34 @@ import { Initable } from './Initable';
 import { Subject, Observable, Subscription, SubscriptionLike } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { Simulation } from './Simulation';
+import { ConnectionIndicator } from '@casual-simulation/aux-common';
 
 export type SubSimEmitter = Pick<
     Simulation,
     'onSubSimulationAdded' | 'onSubSimulationRemoved'
 >;
+
+export interface SimulationFactoryOptions {
+    /**
+     * The name of the record that the simulation should be loaded from.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the simulation should be loaded from.
+     */
+    inst: string | null;
+
+    /**
+     * The host for the simulation.
+     */
+    host?: string;
+
+    /**
+     * Whether the simulation should be loaded as static.
+     */
+    isStatic?: boolean;
+}
 
 /**
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
@@ -75,19 +98,21 @@ export class SimulationManager<
     /**
      * Updates the list of loaded simulations to
      * contain only the given list of IDs.
-     * @param ids The simulations that should be loaded.
+     * @param sims The simulations that should be loaded.
      */
-    async updateSimulations(ids: string[]) {
-        for (let i = 0; i < ids.length; i++) {
-            const id = ids[i];
+    async updateSimulations(
+        sims: { id: string; options: SimulationFactoryOptions }[]
+    ) {
+        for (let i = 0; i < sims.length; i++) {
+            const sim = sims[i];
 
-            if (!this.simulations.has(id)) {
-                await this.addSimulation(id);
+            if (!this.simulations.has(sim.id)) {
+                await this.addSimulation(sim.id, sim.options);
             }
         }
 
         for (let [id, sim] of this.simulations) {
-            if (!ids.find((i) => i === id)) {
+            if (!sims.find((s) => s.id === id)) {
                 await this.removeSimulation(id);
             }
         }
@@ -98,13 +123,14 @@ export class SimulationManager<
      * @param id The ID to load.
      * @param loadingCallback The loading progress callback to use.
      */
-    async setPrimary(id: string): Promise<TSimulation> {
-        const promise = this.addSimulation(id);
+    async setPrimary(
+        id: string,
+        options: SimulationFactoryOptions
+    ): Promise<TSimulation> {
+        const promise = this.addSimulation(id, options);
         this.primaryId = id;
         this.primaryPromise = promise;
         let added = await promise;
-
-        this.primary = added;
 
         return added;
     }
@@ -113,22 +139,34 @@ export class SimulationManager<
      * Adds a new simulation using the given ID.
      * @param id The ID of the simulation to add.
      */
-    addSimulation(id: string): Promise<TSimulation> {
+    addSimulation(
+        id: string,
+        options: SimulationFactoryOptions
+    ): Promise<TSimulation> {
         if (this._simulationPromises.has(id)) {
             return this._simulationPromises.get(id);
         } else {
-            const promise = this._initSimulation(id);
+            const promise = this._initSimulation(id, options);
             this._simulationPromises.set(id, promise);
             return promise;
         }
     }
 
-    private async _initSimulation(id: string) {
-        const sim = this._factory(id);
+    private async _initSimulation(
+        id: string,
+        options: SimulationFactoryOptions
+    ) {
+        const sim = await this._factory(id, options);
+        if (id === this.primaryId) {
+            this.primary = sim;
+        }
         return this._initSimulationCore(id, sim);
     }
 
-    private async _initSimulationCore(id: string, sim: TSimulation) {
+    private async _initSimulationCore(
+        id: string,
+        sim: TSimulation
+    ): Promise<TSimulation> {
         let sub = new Subscription();
         sub.add(
             sim.onError.subscribe((e) => {
@@ -234,4 +272,7 @@ export class SimulationManager<
     }
 }
 
-export type SimulationFactory<TSimulation> = (id: string) => TSimulation;
+export type SimulationFactory<TSimulation> = (
+    id: string,
+    options: SimulationFactoryOptions
+) => TSimulation | Promise<TSimulation>;

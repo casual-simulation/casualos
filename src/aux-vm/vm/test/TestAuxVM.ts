@@ -12,19 +12,23 @@ import {
     getActiveObjects,
     tagsOnBot,
     StateUpdatedEvent,
-    AuxRuntime,
-    RuntimeStateVersion,
-    isPromise,
     StoredAux,
+    ConnectionIndicator,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,
     DeviceAction,
     CurrentVersion,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { union } from 'lodash';
-import { AuxUser } from '../../AuxUser';
 import { ChannelActionResult } from '../../vm';
+import {
+    AuxDevice,
+    AuxRuntime,
+    RuntimeStateVersion,
+    isPromise,
+} from '@casual-simulation/aux-runtime';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -34,6 +38,7 @@ export class TestAuxVM implements AuxVM {
     formulas: string[];
 
     id: string;
+    configBotId: string;
 
     processEvents: boolean;
     state: BotsState;
@@ -44,17 +49,19 @@ export class TestAuxVM implements AuxVM {
     onError: Subject<AuxChannelErrorType>;
     subVMAdded: Subject<AuxSubVM>;
     subVMRemoved: Subject<AuxSubVM>;
+    onAuthMessage: Subject<PartitionAuthMessage>;
 
     grant: string;
-    user: AuxUser;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
     }
 
-    constructor(userId: string = 'user') {
+    constructor(id: string, configBotId: string = 'user') {
         this.events = [];
         this.formulas = [];
+        this.id = id;
+        this.configBotId = configBotId;
 
         this.processEvents = false;
         this.state = {};
@@ -72,16 +79,18 @@ export class TestAuxVM implements AuxVM {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
-        this._runtime.userId = userId;
+        this._runtime.userId = configBotId;
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
         this.versionUpdated = new Subject<RuntimeStateVersion>();
         this.subVMAdded = new Subject();
         this.subVMRemoved = new Subject();
+        this.onAuthMessage = new Subject();
     }
 
     async shout(
@@ -96,13 +105,6 @@ export class TestAuxVM implements AuxVM {
             actions: final.actions,
             results: await Promise.all(final.results),
         };
-    }
-
-    async setUser(user: AuxUser): Promise<void> {
-        this.user = user;
-    }
-    async setGrant(grant: string): Promise<void> {
-        this.grant = grant;
     }
 
     async sendEvents(events: BotAction[]): Promise<void> {
@@ -174,12 +176,20 @@ export class TestAuxVM implements AuxVM {
         return allTags;
     }
 
+    async updateDevice(device: AuxDevice): Promise<void> {
+        this._runtime.context.device = device;
+    }
+
     sendState(update: StateUpdatedEvent) {
         this._stateUpdated.next(update);
     }
 
     async createEndpoint() {
         return new MessagePort();
+    }
+
+    async sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        this.onAuthMessage.next(message);
     }
 
     unsubscribe(): void {}

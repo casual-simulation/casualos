@@ -9,6 +9,7 @@ import {
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
+    InstSubscriptionMetrics,
     MemoryConfiguration,
     MetricsStore,
     RecordSubscriptionMetrics,
@@ -17,7 +18,7 @@ import {
     SubscriptionFilter,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from './generated';
 import { convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
 import { DateTime } from 'luxon';
@@ -29,6 +30,85 @@ export class PrismaMetricsStore implements MetricsStore {
     constructor(client: PrismaClient, configStore: ConfigurationStore) {
         this._client = client;
         this._config = configStore;
+    }
+
+    async getSubscriptionInstMetrics(
+        filter: SubscriptionFilter
+    ): Promise<InstSubscriptionMetrics> {
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+
+        const where: Prisma.InstRecordWhereInput = {};
+
+        if (filter.ownerId) {
+            where.record = {
+                ownerId: filter.ownerId,
+            };
+        } else if (filter.studioId) {
+            where.record = {
+                studioId: filter.studioId,
+            };
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const instMetrics = await this._client.instRecord.aggregate({
+            where,
+            _count: {
+                _all: true,
+            },
+        });
+
+        return {
+            ...metrics,
+            totalInsts: instMetrics._count._all,
+        };
+    }
+
+    async getSubscriptionInstMetricsByRecordName(
+        recordName: string
+    ): Promise<InstSubscriptionMetrics> {
+        const result = await this._findSubscriptionInfoByRecordName(recordName);
+
+        const where: Prisma.InstRecordWhereInput = {};
+
+        if (result.owner) {
+            where.record = {
+                ownerId: result.owner.id,
+            };
+        } else if (result.studio) {
+            where.record = {
+                studioId: result.studio.id,
+            };
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const totalInsts = await this._client.instRecord.count({
+            where,
+        });
+
+        return {
+            recordName,
+            ownerId: result.owner?.id,
+            studioId: result.studio?.id,
+            subscriptionId:
+                result.owner?.subscriptionId || result.studio?.subscriptionId,
+            subscriptionStatus:
+                result.owner?.subscriptionStatus ||
+                result.studio?.subscriptionStatus,
+            subscriptionType: result.owner ? 'user' : 'studio',
+            totalInsts: totalInsts,
+            ...(await this._getSubscriptionPeriod(
+                convertToMillis(
+                    result.owner?.subscriptionPeriodStart ||
+                        result.studio?.subscriptionPeriodStart
+                ),
+                convertToMillis(
+                    result.owner?.subscriptionPeriodEnd ||
+                        result.studio?.subscriptionPeriodEnd
+                )
+            )),
+        };
     }
 
     async getSubscriptionAiImageMetrics(
@@ -196,6 +276,7 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            subscriptionType: result.owner ? 'user' : 'studio',
             totalItems: totalItems,
             ...(await this._getSubscriptionPeriod(
                 convertToMillis(
@@ -245,6 +326,7 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            subscriptionType: result.owner ? 'user' : 'studio',
             totalFiles: stats._count._all,
             totalFileBytesReserved: Number(stats._sum.sizeInBytes),
             ...(await this._getSubscriptionPeriod(
@@ -292,6 +374,7 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            subscriptionType: result.owner ? 'user' : 'studio',
             totalEventNames: stats._count._all,
             ...(await this._getSubscriptionPeriod(
                 convertToMillis(
@@ -333,6 +416,7 @@ export class PrismaMetricsStore implements MetricsStore {
                 studioId: null,
                 subscriptionId: user.subscriptionId,
                 subscriptionStatus: user.subscriptionStatus,
+                subscriptionType: 'user',
                 totalRecords: user._count.records,
                 ...(await this._getSubscriptionPeriod(
                     convertToMillis(user.subscriptionPeriodStart),
@@ -363,6 +447,7 @@ export class PrismaMetricsStore implements MetricsStore {
                 studioId: null,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                subscriptionType: 'studio',
                 totalRecords: studio._count.records,
                 ...(await this._getSubscriptionPeriod(
                     convertToMillis(studio.subscriptionPeriodStart),

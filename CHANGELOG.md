@@ -1,5 +1,115 @@
 # CasualOS Changelog
 
+## V3.2.7
+
+#### Date: 12/22/2023
+
+### :boom: Breaking Changes
+
+-   The `SessionSelector` parameter for `remote(action, selector?)` has changed.
+    -   Before, `session`, `username`, and `device` were valid properties.
+    -   Now they are `sessionId`, `userId`, and `connectionId`.
+-   The following obsolete functions have been removed:
+    -   `os.checkout()`
+    -   `os.finishCheckout()`
+    -   `os.instances()`
+    -   `os.instStatuses()`
+    -   `server.setupServer()`
+    -   `os.setupInst()`
+    -   `server.backupToGithub()`
+    -   `server.backupAsDownload()`
+    -   `server.finishCheckout()`
+    -   `server.markHistory()`
+    -   `server.browseHistory()`
+    -   `server.restoreHistoryMark()`
+    -   `server.restoreHistoryMarkToServer()`
+    -   `server.restoreHistoryMarkToInst()`
+    -   `server.serverStatuses()`
+    -   `server.servers()`
+    -   `server.stories()`
+    -   `server.loadFile()`
+    -   `server.saveFile()`
+    -   `crypto.createCertificate()`
+    -   `crypto.signTag()`
+    -   `crypto.verifyTag()`
+    -   `crypto.revokeCertificate()`
+    -   All the `server.rpioXYZ` functions.
+    -   All the `server.serialXYZ` functions.
+    -   All the `adminSpace` functions.
+-   `SHARED_PARTITIONS_VERSION` is now always `v2`.
+-   Removed all the `causal-tree` packages.
+    -   They are no longer needed since YJS does such a good job.
+-   Merged all the websocket and data synchronization code into `aux-common`, `aux-records`, and `aux-server`.
+-   Changed `SERVER_CONFIG.subscriptions.subscriptions.defaultSubscription` to be used to indicate that the subscription should be automatically given to users who do not have an active subscription.
+
+### :rocket: Improvements
+
+-   Added a "BIOS" screen at startup.
+    -   This screen only shows when no inst has been specified in the URL.
+    -   It allows the user to select what kind of inst they want to create and sign in.
+    -   The screen can be skippped by providing the `bios` query parameter. It accepts one of the following values:
+        -   `static inst` - Generates a static inst (device only). Static insts support local device storage, but do not sync across devices or browsers.
+        -   `private inst` - Generates a private inst that is synced to the cloud.
+        -   `public inst` - Generates a temporary public inst. This used to be the default.
+        -   `enter join code` - Show the BIOS screen box with the "enter join code" option already selected.
+        -   `sign in` - Show the BIOS screen with the "sign in" option already selected.
+        -   `sign up` - Show the BIOS screen with the "sign up" option already selected.
+        -   `sign out` - Show the BIOS screen with the "sign out" option already selected.
+-   Added private insts.
+    -   It is now possible to load a private inst using the `owner` query parameter. It supports the following values:
+        -   `player` - Use the currently logged in user as the owner.
+        -   `public` - Use the temporary public partition as the owner.
+        -   The name of a record.
+        -   The ID of a user.
+        -   The ID of a studio.
+    -   If the `owner` query parameter is specified but no inst is specified, then the BIOS screen will be shown.
+    -   If the `inst` query parameter is specified but no owner is specified, then a temporary public inst will be loaded.
+-   Added the `permalink` tag to the `configBot`.
+    -   This tag contains a permanent link to the current inst. That is, the `owner` query param is replaced with the actual record that the inst was loaded from.
+    -   This make it useful for sharing an exact link to the current inst.
+-   Added the `record` tag to the `configBot`.
+    -   This tag contains the name of the record that the inst was loaded from.
+    -   If the inst is a temporary public inst, then this tag is omitted from the configBot.
+-   Improved `os.listUserStudios()` to include the subscription tier of each studio.
+-   Added `light` form.
+    -   Added `pointLight`, `ambientLight`, `directionalLight`, `spotLight`, and `hemisphereLight` subtypes.
+    -   Added `formLightIntensity` tag.
+    -   Added `formLightTarget` tag.
+    -   Added `formLightDistance` tag.
+    -   Added `formLightAngle` tag.
+    -   Added `formLightPenumbra` tag.
+    -   Added `formLightDecay` tag.
+    -   Added `formLightGroundColor` tag.
+-   Added menu items `password` subtype.
+-   Added the `os.requestAuthBotInBackground()` function.
+    -   Works just like `os.requestAuthBot()` except that the user will not be prompted to login.
+    -   Returns the user's auth bot if they are signed in.
+    -   Returns `null` if the user is not signed in.
+-   Added the `REQUIRE_PRIVO_LOGIN` environment variable during build to control whether login with Privo is required.
+-   Added the `DEFAULT_BIOS_OPTION` environment variable during build to control which BIOS option is selected by default.
+-   Added the `AUTOMATIC_BIOS_OPTION` environment variable during build to specify the BIOS option that should be executed by default. Setting this to a valid BIOS value will skip the BIOS screen.
+-   Added the `AUTH_WEBSOCKET_ENDPOINT` environment variable during build to control the websocket endpoint that the auth site looks for.
+-   Added the ability to limit how large data records can be in `tiers.data.maxItemSizeInBytes`.
+    -   If no value is specified, then `500000` (500KB) is used.
+    -   `null` can be used to remove the limit.
+-   Added the `privacyFeatures` tag to the `authBot`. It is an object with the following properties:
+    -   `publishData` - A boolean that specifies whether the user is allowed to publish any data at all.
+    -   `allowPublicData` - A boolean that specifies whether the user is allowed to publish or access public data.
+    -   `allowAI` - A boolean that specifies whether the user is allowed to access AI features.
+    -   `allowPublicInsts` - A boolean that specifies whether the user is allowed to access public insts.
+-   Added the `os.reportInst()` function.
+    -   Opens the "Report Inst" dialog that gives the user an opportunity to describe what they are seeing and report it.
+    -   Returns a promise that resolves when the inst has been reported.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.getCurrentInst` would not work properly if multiple instances are loaded
+-   Fixed an issue where work state was not retained in systemPortal after switching to diff panel
+-   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
+-   Fixed an issue where labels were broken when setting labelPosition and labelAlignment to left or right
+-   Attempted to fix an issue where the code editor could get desynced from the actual bot script state.
+-   Fixed an issue where using `os.enablePointOfView()` with IMU data would not produce correct rotations.
+
 ## V3.2.6
 
 #### Date: 9/1/2023

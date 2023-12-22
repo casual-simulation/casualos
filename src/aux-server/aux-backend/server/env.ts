@@ -1,16 +1,20 @@
 import path from 'path';
-import { listEnvironmentFiles, loadEnvFile } from '../shared/EnvUtils';
+import { listEnvironmentFiles, loadEnvFiles } from '../shared/EnvUtils';
 
 const env = process.env.NODE_ENV;
 const DEVELOPMENT = env !== 'production';
 
-const envFiles = listEnvironmentFiles(path.resolve(__dirname, '..'));
+const serverDir = path.resolve(__dirname, '..');
+const auxServerDir = path.resolve(serverDir, '..', '');
 
-for (let file of envFiles) {
-    if (!file.endsWith('.dev.env.json') || DEVELOPMENT) {
-        loadEnvFile(file);
-    }
-}
+const envFiles = [
+    ...listEnvironmentFiles(serverDir),
+    ...listEnvironmentFiles(auxServerDir),
+];
+
+loadEnvFiles(
+    envFiles.filter((file) => !file.endsWith('.dev.env.json') || DEVELOPMENT)
+);
 
 if (envFiles.length < 0) {
     console.log('[Env] No environment files found.');

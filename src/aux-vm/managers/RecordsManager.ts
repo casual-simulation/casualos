@@ -3,13 +3,12 @@ import {
     hasValue,
     asyncResult,
     asyncError,
-    RecordDataAction,
-    GetRecordDataAction,
-    RecordFileAction,
-    FileRecordedResult,
-    EraseRecordDataAction,
-    EraseFileAction,
     APPROVED_SYMBOL,
+    ConnectionClient,
+    RemoteCausalRepoProtocol,
+    GenericHttpRequest,
+} from '@casual-simulation/aux-common';
+import {
     ListRecordDataAction,
     RecordEventAction,
     GetEventCountAction,
@@ -30,7 +29,13 @@ import {
     AIGenerateSkyboxAction,
     AIGenerateImageAction,
     ListUserStudiosAction,
-} from '@casual-simulation/aux-common';
+    RecordDataAction,
+    GetRecordDataAction,
+    RecordFileAction,
+    FileRecordedResult,
+    EraseRecordDataAction,
+    EraseFileAction,
+} from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
@@ -51,11 +56,13 @@ import {
     GetFileRecordResult,
     ReadFileResult,
     ReadFileFailure,
+    ReportInstRequest,
+    ReportInstResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
-import '@casual-simulation/aux-common/runtime/BlobPolyfill';
-import { Observable, Subject } from 'rxjs';
+import '@casual-simulation/aux-common/BlobPolyfill';
+import { Observable, Subject, filter, firstValueFrom } from 'rxjs';
 import { DateTime } from 'luxon';
 import {
     AIChatResponse,
@@ -63,6 +70,7 @@ import {
     AIGenerateSkyboxResponse,
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -91,6 +99,11 @@ export class RecordsManager {
     private _helper: BotHelper;
     private _auths: Map<string, AuthHelperInterface>;
     private _authFactory: (endpoint: string) => AuthHelperInterface;
+    private _connectionClientFactory: (
+        endpoint: string,
+        protocol: RemoteCausalRepoProtocol
+    ) => ConnectionClient;
+    private _connectionClients: Map<string, ConnectionClient> = new Map();
 
     private _roomJoin: Subject<RoomJoin> = new Subject();
     private _roomLeave: Subject<RoomLeave> = new Subject();
@@ -98,6 +111,7 @@ export class RecordsManager {
     private _onGetRoomOptions: Subject<GetRoomOptions> = new Subject();
     private _axiosOptions: AxiosRequestConfig<any>;
     private _skipTimers: boolean = false;
+    private _httpRequestId: number = 0;
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -132,12 +146,17 @@ export class RecordsManager {
      * @param config The AUX Config that should be used.
      * @param helper The Bot Helper that the simulation is using.
      * @param authFactory The function that should be used to instantiate AuthHelperInterface objects for each potential records endpoint. It should return null if the given endpoint is not supported.
+     * @param skipTimers Whether to skip the timers used for skybox requests.
      */
     constructor(
         config: AuxConfigParameters,
         helper: BotHelper,
         authFactory: (endpoint: string) => AuthHelperInterface,
-        skipTimers: boolean = false
+        skipTimers: boolean = false,
+        connectionClientFactory: (
+            endpoint: string,
+            protocol: RemoteCausalRepoProtocol
+        ) => ConnectionClient = null
     ) {
         this._config = config;
         this._helper = helper;
@@ -149,9 +168,10 @@ export class RecordsManager {
             },
         };
         this._skipTimers = skipTimers;
+        this._connectionClientFactory = connectionClientFactory;
     }
 
-    handleEvents(events: BotAction[]): void {
+    handleEvents(events: RuntimeActions[]): void {
         for (let event of events) {
             if (event.type === 'record_data') {
                 this._recordData(event);
@@ -199,6 +219,38 @@ export class RecordsManager {
                 this._listUserStudios(event);
             }
         }
+    }
+
+    /**
+     * Reports the given inst to the server.
+     * @param request The request to send to the server.
+     */
+    async reportInst(
+        request: Omit<
+            ReportInstRequest,
+            'reportingUserId' | 'reportingIpAddress'
+        >
+    ): Promise<ReportInstResult> {
+        const auth = this._getAuth(null);
+        const token = await this._getAuthToken(auth, false);
+
+        let headers: { [key: string]: string } = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const result: AxiosResponse<ReportInstResult> = await axios.post(
+            await this._publishUrl(auth, '/api/v2/records/insts/report'),
+            {
+                ...request,
+            },
+            {
+                ...this._axiosOptions,
+                headers,
+            }
+        );
+
+        return result.data;
     }
 
     private async _recordData(event: RecordDataAction) {
@@ -1467,32 +1519,107 @@ export class RecordsManager {
                 instances = [this._helper.inst];
             }
 
-            const result: AxiosResponse<AIGenerateImageResponse> =
-                await axios.post(
-                    await this._publishUrl(info.auth, '/api/v2/ai/image'),
+            const result =
+                await this._sendWebsocketSupportedRequest<AIGenerateImageResponse>(
+                    info.auth,
+                    'POST',
+                    '/api/v2/ai/image',
+                    {},
                     {
                         ...requestData,
                         instances,
                     },
-                    {
-                        ...this._axiosOptions,
-                        headers: info.headers,
-                    }
+                    info.headers
                 );
 
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
-            console.error('[RecordsManager] Error generating skybox:', e);
+            console.error('[RecordsManager] Error generating image:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
                 );
             }
         }
+    }
+
+    private async _sendWebsocketSupportedRequest<TResponse>(
+        auth: AuthHelperInterface,
+        method: GenericHttpRequest['method'],
+        path: string,
+        query: any,
+        data: any,
+        headers: any
+    ): Promise<TResponse> {
+        const websocketOrigin = await auth.getWebsocketOrigin();
+        const websocketProtocol = await auth.getWebsocketProtocol();
+        const client = this._getConnectionClient(
+            websocketOrigin,
+            websocketProtocol
+        );
+
+        if (!client) {
+            const result: AxiosResponse<TResponse> = await axios.request({
+                url: await this._publishUrl(auth, path, query),
+                method,
+                ...this._axiosOptions,
+                data: data,
+                headers,
+            });
+
+            return result.data;
+        } else {
+            await firstValueFrom(
+                client.connectionState.pipe(filter((c) => c.connected))
+            );
+
+            const id = this._httpRequestId++;
+            const promise = firstValueFrom(
+                client
+                    .event('http_response')
+                    .pipe(filter((response) => response.id === id))
+            );
+
+            client.send({
+                type: 'http_request',
+                id,
+                request: {
+                    path,
+                    method,
+                    headers,
+                    pathParams: {},
+                    query: query,
+                    body: JSON.stringify(data),
+                },
+            });
+
+            const response = await promise;
+            if (response.response.body) {
+                return JSON.parse(response.response.body);
+            }
+            return null;
+        }
+    }
+
+    private _getConnectionClient(
+        origin: string,
+        protocol: RemoteCausalRepoProtocol
+    ): ConnectionClient {
+        if (!origin || !protocol || !this._connectionClientFactory) {
+            return null;
+        }
+
+        let client = this._connectionClients.get(origin);
+        if (!client) {
+            client = this._connectionClientFactory(origin, protocol);
+            if (client) {
+                client.connect();
+                this._connectionClients.set(origin, client);
+            }
+        }
+        return client;
     }
 
     private async _listUserStudios(event: ListUserStudiosAction) {

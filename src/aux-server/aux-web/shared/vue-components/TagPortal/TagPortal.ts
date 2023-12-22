@@ -18,7 +18,6 @@ import {
     FocusOnBotAction,
     formatValue,
     getTagValueForSpace,
-    calculateIndexFromLocation,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -34,8 +33,9 @@ import { TagPortalConfig } from './TagPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
-import type monaco from 'monaco-editor';
+import type monaco from '@casual-simulation/monaco-editor';
 import { getModelUriFromId } from '../../MonacoUtils';
+import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime';
 
 @Component({
     components: {

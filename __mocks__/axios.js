@@ -16,6 +16,15 @@ axios.request = (config) => {
     }
     let { method, url, data, ...rest } = config;
     let lastRequest = [method, url, data, rest];
+
+    if (method.toLowerCase() === 'post') {
+        lastPost = [url, data, rest].filter((val) => !!val);
+    } else if (method.toLowerCase() === 'put') {
+        lastPut = [url, data, rest].filter((val) => !!val);
+    } else if (method.toLowerCase() === 'get') {
+        lastGet = [url];
+    }
+
     requests.push(lastRequest);
     return returnResponse();
 };

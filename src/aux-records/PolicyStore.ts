@@ -1,19 +1,22 @@
-import { ServerError } from './Errors';
-import { PolicyDocument } from './PolicyPermissions';
+import { ServerError } from '@casual-simulation/aux-common/Errors';
+import { PolicyDocument } from '@casual-simulation/aux-common';
+import { PrivacyFeatures } from './AuthStore';
 
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.
  */
 export interface PolicyStore {
     /**
-     * Gets the list of policy documents that apply to the given marker.
+     * Gets the list of policy documents that apply to the given marker and user.
      * @param recordName The name of the record that the policies belong to.
+     * @param userId The ID of the user that is attempting to utilize the markers. Null if the user is not logged in.
      * @param marker The marker.
      */
-    listPoliciesForMarker(
+    listPoliciesForMarkerAndUser(
         recordName: string,
+        userId: string,
         marker: string
-    ): Promise<PolicyDocument[]>;
+    ): Promise<ListMarkerPoliciesResult>;
 
     /**
      * Lists the user-created policices for the given record.
@@ -234,6 +237,23 @@ export interface InstRoleAssignment {
     type: 'inst';
     inst: string;
     role: AssignedRole;
+}
+
+export interface ListMarkerPoliciesResult {
+    /**
+     * The policies that were returned.
+     */
+    policies: PolicyDocument[];
+
+    /**
+     * The privacy features that are enabled for the record owner.
+     */
+    recordOwnerPrivacyFeatures: PrivacyFeatures;
+
+    /**
+     * The privacy features that are enabled for the user.
+     */
+    userPrivacyFeatures: PrivacyFeatures;
 }
 
 /**

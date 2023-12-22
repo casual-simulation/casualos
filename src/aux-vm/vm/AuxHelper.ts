@@ -22,7 +22,6 @@ import {
     AuxPartitions,
     AuxPartition,
     getPartitionState,
-    AuxRuntime,
     createPrecalculatedContext,
     PrecalculatedBot,
     BotCalculationContext,
@@ -32,22 +31,27 @@ import {
     botRemoved,
     BotTagMasks,
     isBot,
-    RanOutOfEnergyError,
     StoredAux,
     getBotsStateFromStoredAux,
     StoredAuxVersion1,
+    ConnectionIndicator,
+    getConnectionId,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
     DeviceAction,
     RemoteActionResult,
     RemoteActions,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { union, sortBy, pick, transform } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
-import { AuxUser } from '../AuxUser';
-import { CompiledBot } from '@casual-simulation/aux-common/runtime/CompiledBot';
+import {
+    AuxRuntime,
+    CompiledBot,
+    RuntimeActions,
+    RanOutOfEnergyError,
+} from '@casual-simulation/aux-runtime';
 import { concatMap, tap } from 'rxjs/operators';
 
 /**
@@ -58,7 +62,7 @@ export class AuxHelper extends BaseHelper<Bot> {
     private static readonly _debug = false;
     private _partitions: AuxPartitions;
     private _runtime: AuxRuntime;
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _remoteEvents: Subject<RemoteActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _partitionStates: Map<string, BotsState>;
@@ -75,11 +79,17 @@ export class AuxHelper extends BaseHelper<Bot> {
 
     /**
      * Creates a new bot helper.
+     * @param configBotId The ID of the config bot.
      * @param partitions The partitions that the helper should use.
+     * @param runtime The runtime that the helper should use.
      */
-    constructor(partitions: AuxPartitions, runtime: AuxRuntime) {
-        super();
-        this._localEvents = new Subject<LocalActions[]>();
+    constructor(
+        configBotId: string,
+        partitions: AuxPartitions,
+        runtime: AuxRuntime
+    ) {
+        super(configBotId);
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._remoteEvents = new Subject<RemoteAction[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._supressLogs = false;
@@ -248,7 +258,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      * That is, they should be performed in a batch.
      * @param events The events to run.
      */
-    async transaction(...events: BotAction[]): Promise<void> {
+    async transaction(...events: RuntimeActions[]): Promise<void> {
         this._runtime.process(events);
     }
 
@@ -283,14 +293,14 @@ export class AuxHelper extends BaseHelper<Bot> {
 
     /**
      * Creates or updates the user bot for the given user.
-     * @param user The user that the bot is for.
+     * @param botId The ID of the bot.
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
-    async createOrUpdateUserBot(user: AuxUser, userBot: Bot) {
+    async createOrUpdateUserBot(botId: string, userBot: Bot) {
         if (!userBot) {
             this._log('[AuxHelper] Create user bot');
             await this.createBot(
-                user.id,
+                botId,
                 {},
                 TEMPORARY_BOT_PARTITION_ID in this._partitions
                     ? TEMPORARY_BOT_PARTITION_ID
@@ -366,7 +376,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         let parsed: StoredAuxVersion1 = JSON.parse(builder);
         let state = getBotsStateFromStoredAux(parsed);
         const objects = getActiveObjects(state);
-        let events = [] as BotActions[];
+        let events = [] as RuntimeActions[];
         for (let bot of objects) {
             const sameBot = this.botsState[bot.id];
             if (sameBot) {
@@ -400,7 +410,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         };
     }
 
-    private async _sendEvents(events: BotAction[]) {
+    private async _sendEvents(events: RuntimeActions[]) {
         let map = new Map<AuxPartition, BotAction[]>();
         let newBotPartitions = new Map<string, AuxPartition>();
         for (let event of events) {
@@ -459,10 +469,10 @@ export class AuxHelper extends BaseHelper<Bot> {
             }
             let batch = map.get(partition);
             if (!batch) {
-                batch = [event];
+                batch = [event as BotAction];
                 map.set(partition, batch);
             } else {
-                batch.push(event);
+                batch.push(event as BotAction);
             }
 
             if (masks) {
@@ -513,7 +523,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      * If undefined is returned, then the event should not be sent anywhere.
      * @param event
      */
-    private _partitionForEvent(event: BotAction): AuxPartition {
+    private _partitionForEvent(event: RuntimeActions): AuxPartition {
         if (event.type === 'remote') {
             return null;
         } else if (event.type === 'remote_result') {
@@ -530,22 +540,12 @@ export class AuxHelper extends BaseHelper<Bot> {
             return this._partitionForBotEvent(event);
         } else if (event.type === 'apply_state') {
             return undefined;
-        } else if (event.type === 'create_certificate') {
-            return this._partitionForBotType('shared');
-        } else if (event.type === 'sign_tag') {
-            return this._partitionForBotType('shared');
-        } else if (event.type === 'revoke_certificate') {
-            return this._partitionForBotType('shared');
         } else if (event.type === 'transaction') {
             return undefined;
         } else if (event.type === 'load_bots') {
             return this._partitionForBotType(event.space);
         } else if (event.type === 'clear_space') {
             return this._partitionForBotType(event.space);
-        } else if (event.type === 'unlock_space') {
-            return this._partitionForBotType(event.space) || undefined;
-        } else if (event.type === 'set_space_password') {
-            return this._partitionForBotType(event.space) || undefined;
         } else {
             return null;
         }
@@ -586,9 +586,9 @@ export class AuxHelper extends BaseHelper<Bot> {
         return getBotSpace(bot);
     }
 
-    private _sendOtherEvents(events: BotAction[]) {
+    private _sendOtherEvents(events: RuntimeActions[]) {
         let remoteEvents: RemoteActions[] = [];
-        let localEvents: LocalActions[] = [];
+        let localEvents: RuntimeActions[] = [];
         let deviceEvents: DeviceAction[] = [];
 
         for (let event of events) {
@@ -601,7 +601,7 @@ export class AuxHelper extends BaseHelper<Bot> {
             } else if (event.type === 'device') {
                 deviceEvents.push(event);
             } else {
-                localEvents.push(<LocalActions>event);
+                localEvents.push(event);
             }
         }
 

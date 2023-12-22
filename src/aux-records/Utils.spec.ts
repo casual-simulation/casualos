@@ -1,7 +1,5 @@
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import {
-    toBase64String,
-    fromBase64String,
     createCanonicalRequest,
     encodeHexUtf8,
     canonicalUriEncode,
@@ -16,21 +14,8 @@ import {
     isActiveSubscription,
     getMarkersOrDefault,
     parseInstancesList,
+    byteLengthOfString,
 } from './Utils';
-
-const cases = [['abc', 'YWJj']];
-
-it.each(cases)('toBase64String(%s) -> %s', (input, output) => {
-    const result = toBase64String(input);
-
-    expect(result).toBe(output);
-});
-
-it.each(cases)('%s <- fromBase64String(%s)', (input, output) => {
-    const result = fromBase64String(output);
-
-    expect(result).toBe(input);
-});
 
 describe('signRequest()', () => {
     it('should return an object containing the information for the request', () => {
@@ -473,7 +458,7 @@ describe('getStatusCode()', () => {
         ['session_already_revoked', 200] as const,
         ['invalid_code', 403] as const,
         ['invalid_key', 403] as const,
-        ['invalid_record_key', 400] as const,
+        ['invalid_record_key', 403] as const,
         ['invalid_request', 403] as const,
         ['session_expired', 401] as const,
         ['unacceptable_address', 400] as const,
@@ -500,13 +485,36 @@ describe('getStatusCode()', () => {
         ['studio_not_found', 404] as const,
         ['user_not_found', 404] as const,
         ['record_already_exists', 403] as const,
+        ['subscription_limit_reached', 403] as const,
+        ['unacceptable_update', 400] as const,
+        ['inst_not_found', 404] as const,
+        ['no_session_key', 400] as const,
+        ['action_not_supported', 500] as const,
+        ['unacceptable_studio_id', 400] as const,
+        ['email_already_exists', 400] as const,
+        ['parent_email_already_exists', 400] as const,
+        ['parent_email_required', 400] as const,
+        ['invalid_room_name', 400] as const,
+        ['invalid_username', 400] as const,
+        ['invalid_update_policy', 400] as const,
+        ['invalid_delete_policy', 400] as const,
+        ['unacceptable_url', 400] as const,
+        ['file_already_exists', 400] as const,
+        ['invalid_file_data', 400] as const,
+        ['invalid_model', 400] as const,
+        ['roles_too_large', 400] as const,
+        ['policy_not_found', 404] as const,
+        ['policy_too_large', 400] as const,
+        ['invalid_policy', 400] as const,
+        ['not_completed', 400] as const,
+        ['invalid_display_name', 400] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
         expect(
             getStatusCode({
                 success: false,
-                errorCode: code,
+                errorCode: code as any,
             })
         ).toBe(expectedStatus);
     });
@@ -646,5 +654,13 @@ describe('getMarkersOrDefault()', () => {
 
     it('should return the default markers if the given list is null', () => {
         expect(getMarkersOrDefault(null)).toEqual([PUBLIC_READ_MARKER]);
+    });
+});
+
+describe('byteLengthOfString()', () => {
+    it('should return the byte length of the given string', () => {
+        expect(byteLengthOfString('abc')).toBe(3);
+        expect(byteLengthOfString('')).toBe(0);
+        expect(byteLengthOfString('😀')).toBe(4);
     });
 });
