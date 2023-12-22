@@ -169,6 +169,7 @@ jobs:
               uses: aws-actions/aws-codebuild-run-build@v1.0.3
               with:
                   project-name: publish-casualos-docker-arm32
+                  disable-github-env-vars: true
     arm64:
         name: ARM64 Docker Build
         needs: build
@@ -184,3 +185,4 @@ jobs:
               uses: aws-actions/aws-codebuild-run-build@v1.0.3
               with:
                   project-name: publish-casualos-docker-arm64
+                  disable-github-env-vars: true
