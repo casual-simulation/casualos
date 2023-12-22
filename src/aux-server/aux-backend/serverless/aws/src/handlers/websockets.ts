@@ -21,6 +21,7 @@ export async function connect(
 `);
     await builder.ensureInitialized();
 
+    console.log('[handler] Headers:', event.headers);
     const origin = event.headers['origin'];
     const connectionId: string = event.requestContext.connectionId as string;
     if (redisClient && origin) {
@@ -50,6 +51,7 @@ export async function disconnect(
     console.log(
         `[handler] Got WebSocket disconnect: ${event.requestContext.connectionId}`
     );
+    console.log('[handler] Headers:', event.headers);
     await builder.ensureInitialized();
 
     const connectionId = event.requestContext.connectionId as string;
@@ -77,6 +79,7 @@ export async function message(
     context: any
 ): Promise<APIGatewayProxyStructuredResultV2> {
     console.log('[handler] Got WebSocket message');
+    console.log('[handler] Headers:', event.headers);
     await builder.ensureInitialized();
     const connectionId = event.requestContext.connectionId as string;
     await server.handleWebsocketRequest({
