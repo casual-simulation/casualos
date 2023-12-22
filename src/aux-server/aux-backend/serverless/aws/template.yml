@@ -345,6 +345,8 @@ Resources:
                 Variables:
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
     HandleConnectPermission:
         Type: AWS::Lambda::Permission
         DependsOn:
@@ -376,6 +378,8 @@ Resources:
                 Variables:
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
     HandleDisconnectPermission:
         Type: AWS::Lambda::Permission
         DependsOn:
@@ -407,6 +411,8 @@ Resources:
                 Variables:
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
     HandleMessagePermission:
         Type: AWS::Lambda::Permission
         DependsOn:
