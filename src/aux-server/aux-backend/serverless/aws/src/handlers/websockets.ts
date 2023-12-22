@@ -5,6 +5,7 @@ import {
     Context,
 } from 'aws-lambda';
 import { constructServerBuilder } from '../LoadServer';
+import { GenericHttpHeaders } from '@casual-simulation/aux-common';
 
 const builder = constructServerBuilder();
 
@@ -22,7 +23,14 @@ export async function connect(
     await builder.ensureInitialized();
 
     console.log('[handler] Headers:', event.headers);
-    const origin = event.headers['origin'];
+    const headers: GenericHttpHeaders = {};
+    for (let key in event.headers) {
+        const value = event.headers[key];
+        headers[key.toLowerCase()] = value;
+    }
+
+    const origin = headers['origin'];
+    console.log(`[handler] Origin: ${origin}`);
     const connectionId: string = event.requestContext.connectionId as string;
     if (redisClient && origin) {
         console.log(`[handler] Origin: ${origin}`);
@@ -51,7 +59,6 @@ export async function disconnect(
     console.log(
         `[handler] Got WebSocket disconnect: ${event.requestContext.connectionId}`
     );
-    console.log('[handler] Headers:', event.headers);
     await builder.ensureInitialized();
 
     const connectionId = event.requestContext.connectionId as string;
@@ -79,7 +86,6 @@ export async function message(
     context: any
 ): Promise<APIGatewayProxyStructuredResultV2> {
     console.log('[handler] Got WebSocket message');
-    console.log('[handler] Headers:', event.headers);
     await builder.ensureInitialized();
     const connectionId = event.requestContext.connectionId as string;
     await server.handleWebsocketRequest({
