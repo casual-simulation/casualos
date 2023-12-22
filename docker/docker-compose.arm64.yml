@@ -1,7 +1,7 @@
 version: '3.7'
 services:
     server:
-        image: 'ghcr.io/casual-simulation/casualos:latest'
+        image: 'ghcr.io/casual-simulation/casualos-arm64:latest'
         restart: always
         ports:
             - '80:3000'
@@ -12,7 +12,7 @@ services:
             - redis
             - cockroach
         env_file:
-            - ./docker-compose.env
+            - ./docker-compose.arm64.env
     mongo:
         image: 'mongo:latest'
         restart: always
