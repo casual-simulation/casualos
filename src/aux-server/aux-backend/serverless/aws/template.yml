@@ -158,7 +158,7 @@ Resources:
                 SaveBranches:
                     Type: ScheduleV2
                     Properties:
-                        Name: '${SavePermanentBranchesFunction}-SaveBranches'
+                        OmitName: true
                         Description: Schedule for saving permanent inst branches.
                         ScheduleExpression: 'rate(1 minute)'
     SavePermanentBranchesLogGroup:
