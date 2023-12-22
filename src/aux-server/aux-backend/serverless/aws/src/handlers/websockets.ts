@@ -106,11 +106,13 @@ async function getOrigin(
     event: APIGatewayProxyEvent
 ): Promise<string> {
     if (redisClient) {
-        return (
+        const origin =
             (await redisClient.get(`origin:${connectionId}`)) ??
             event.headers?.origin ??
-            null
-        );
+            null;
+
+        console.log(`[handler] Origin: ${origin}`);
+        return origin;
     }
     return event.headers?.origin ?? null;
 }
