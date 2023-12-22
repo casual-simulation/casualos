@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.2.8
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fix issues with Docker ARM32 and ARM64 builds.
+
 ## V3.2.7
 
 #### Date: 12/22/2023
