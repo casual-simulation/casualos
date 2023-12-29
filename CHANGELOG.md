@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fix issues with Docker ARM32 and ARM64 builds.
+-   Fixed an issue where objects could not be stored as data if a max data size was set.
 
 ## V3.2.7
 
