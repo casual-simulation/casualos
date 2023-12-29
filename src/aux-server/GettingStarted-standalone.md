@@ -71,15 +71,15 @@ To access CasualOS, simply visit `http://{your_ip_address}` in a web browser.
 
 The CasualOS Docker image can be configured using the following environment variables:
 
-### Required
-
-The following environment variables are required:
-
--   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage. (REQUIRED)
-
 ### Optional
 
 The following environment variables are optional:
+
+#### CockroachDB Support
+
+CockroachDB support can be enabled by providing the following environment variables:
+
+-   `DATABASE_URL`: The URL that the CockroachDB database should be loaded from. See [Client Connection Parameters](https://www.cockroachlabs.com/docs/stable/connection-parameters) for more info.
 
 #### ab-1
 
@@ -122,7 +122,7 @@ To use Redis for inst data storage, use the following:
 
 To configure MongoDB, use the following:
 
--   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage. (REQUIRED)
+-   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage.
 -   `MONGO_USE_NEW_URL_PARSER` - Whether to use the [new MongoDB URL parser](https://stackoverflow.com/q/50448272/1832856). (Defaults to false)
 -   `MONGO_USE_UNIFIED_TOPOLOGY` - Whether to enable the new unified topology layer. (Defaults to false)
 

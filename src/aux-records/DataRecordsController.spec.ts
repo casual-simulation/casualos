@@ -116,6 +116,87 @@ describe('DataRecordsController', () => {
             });
         });
 
+        it('should store objects in the data store', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                { thisIsMyData: true },
+                'subjectId',
+                null,
+                null
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: { thisIsMyData: true },
+                publisherId: userId,
+                subjectId: 'subjectId',
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should store booleans in the data store', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                true,
+                'subjectId',
+                null,
+                null
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: true,
+                publisherId: userId,
+                subjectId: 'subjectId',
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should store numbers in the data store', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                123,
+                'subjectId',
+                null,
+                null
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: 123,
+                publisherId: userId,
+                subjectId: 'subjectId',
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
         it('should reject the request if given an invalid key', async () => {
             const result = (await manager.recordData(
                 'not_a_key',

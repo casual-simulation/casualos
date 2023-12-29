@@ -198,7 +198,10 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
                 success: true,
             };
         } catch (err) {
-            console.error(err);
+            console.error(
+                `[MongoDBFileRecordsStore] A server error occurred while erasing a file record:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',

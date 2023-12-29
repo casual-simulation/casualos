@@ -36,6 +36,7 @@ import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { byteLengthOfString } from './Utils';
 import { ZodIssue, z } from 'zod';
+import stringify from '@casual-simulation/fast-json-stable-stringify';
 
 export interface DataRecordsConfiguration {
     store: DataRecordsStore;
@@ -79,7 +80,7 @@ export class DataRecordsController {
     async recordData(
         recordKeyOrRecordName: string,
         address: string,
-        data: string,
+        data: object | string | boolean | number,
         subjectId: string,
         updatePolicy: UserPolicy,
         deletePolicy: UserPolicy,
@@ -254,7 +255,9 @@ export class DataRecordsController {
             }
 
             if (hasValue(features.data.maxItemSizeInBytes)) {
-                const size = byteLengthOfString(data);
+                const dataString =
+                    typeof data === 'string' ? data : stringify(data);
+                const size = byteLengthOfString(dataString);
                 const schema = z.number().max(features.data.maxItemSizeInBytes);
                 const result = schema.safeParse(size, {
                     path: ['data', 'sizeInBytes'],
@@ -312,10 +315,14 @@ export class DataRecordsController {
                 address: address,
             };
         } catch (err) {
+            console.error(
+                `[DataRecordsController] A server error occurred while recording data:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -603,10 +610,14 @@ export class DataRecordsController {
                 address,
             };
         } catch (err) {
+            console.error(
+                `[DataRecordsController] A server error occurred while erasing data:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
