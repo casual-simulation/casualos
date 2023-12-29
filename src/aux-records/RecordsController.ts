@@ -806,7 +806,7 @@ export class RecordsController {
                 records: records,
             };
         } catch (err) {
-            console.log(
+            console.error(
                 '[RecordsController] [listRecords] Error listing records: ',
                 err
             );
@@ -844,7 +844,7 @@ export class RecordsController {
                 records: records,
             };
         } catch (err) {
-            console.log(
+            console.error(
                 '[RecordsController] [listStudioRecords] Error listing records: ',
                 err
             );

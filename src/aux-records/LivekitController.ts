@@ -74,11 +74,14 @@ export class LivekitController {
                 url: this._endpoint,
             };
         } catch (err) {
-            console.error(err);
+            console.error(
+                `[LivekitController] A server error occurred while issuing a token:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
