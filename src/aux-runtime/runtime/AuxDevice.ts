@@ -2,6 +2,9 @@
  * Contains information about the device that AUX is running on.
  *
  * @dochash types/os/system
+ * @doctitle System Types
+ * @docsidebar System
+ * @docdescription Types that are used in system-related actions.
  * @docname CasualOSDevice
  */
 export interface AuxDevice {

@@ -439,6 +439,9 @@ export interface HideHtmlAction extends Action {
  * Options for {@link os.focusOn-bot}, and {@link os.focusOn-position} actions.
  *
  * @dochash types/os/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
  * @docname FocusOnOptions
  */
 export interface FocusOnOptions {
@@ -842,6 +845,9 @@ export interface OpenImageClassifierAction
  * Defines an interface that represents a set of options for {@link os.openImageClassifier}.
  *
  * @dochash types/os/image-classification
+ * @doctitle Image Classifier Types
+ * @docsidebar Image Classifier
+ * @docdescription Types that are used in image classifier actions.
  * @docname ImageClassifierOptions
  */
 export interface ImageClassifierOptions {
@@ -2849,6 +2855,9 @@ export interface GoToTagAction {
  * Defines an event that requests to report the current inst.
  *
  * @dochash types/os/moderation
+ * @doctitle Moderation Types
+ * @docsidebar Moderation
+ * @docdescription Types that are used in actions that relate to moderation.
  * @docname ReportInstAction
  */
 export interface ReportInstAction extends AsyncAction {

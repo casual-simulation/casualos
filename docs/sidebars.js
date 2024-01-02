@@ -28,19 +28,12 @@ export default {
                     label: 'Actions',
                     items: [
                         'actions/ai',
-                        'actions/animations',
-                        'actions/app',
-                        'actions/audio',
-                        'actions/barcodes',
                         'actions/bot-filters',
                         'actions/bytes',
-                        'actions/camera',
                         'actions/crypto',
                         'actions/data',
                         'actions/debuggers',
-                        'actions/event',
                         'actions/experimental',
-                        'actions/files',
                         'actions/math',
                         'actions/mods',
                         {
@@ -48,6 +41,7 @@ export default {
                             label: 'OS',
                             items: [
                                 'actions/os/animations',
+                                'actions/os/app',
                                 'actions/os/audio',
                                 'actions/os/barcodes',
                                 'actions/os/camera',
@@ -61,14 +55,13 @@ export default {
                                 'actions/os/moderation',
                                 'actions/os/portals',
                                 'actions/os/system',
+                                'actions/os/records',
                                 'actions/os/remotes',
+                                'actions/os/rooms',
+                                'actions/os/time',
                                 'actions/os/xr',
                             ]
                         },
-                        'actions/portals',
-                        'actions/records',
-                        'actions/rooms',
-                        'actions/time',
                         'actions/utility',
                         'actions/web',
                     ]
@@ -78,8 +71,6 @@ export default {
                     label: 'Types',
                     items: [
                         'types/ai',
-                        'types/animation',
-                        'types/camera',
                         'types/core',
                         {
                             type: 'category',
@@ -92,7 +83,6 @@ export default {
                         },
                         'types/error',
                         'types/experimental',
-                        'types/geolocation',
                         {
                             type: 'category',
                             label: 'Math',

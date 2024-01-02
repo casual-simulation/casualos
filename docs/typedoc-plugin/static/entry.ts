@@ -242,6 +242,8 @@ export {
     AnalyticsRecordEventAction,
 
     BufferFormAddressGLTFAction,
+
+    ReportInstAction,
 } from '../../../src/aux-common/bots/BotEvents';
 export {
     RecordActionOptions,

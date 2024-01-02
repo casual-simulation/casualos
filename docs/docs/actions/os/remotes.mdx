@@ -1,0 +1,20 @@
+---
+id: remotes
+title: Remote Actions
+sidebar_label: Remotes
+description: Actions for getting information about other places or devices (remotes).
+---
+
+import Doc from '../../api-info/actions/os/remotes.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

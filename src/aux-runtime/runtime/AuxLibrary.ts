@@ -3083,7 +3083,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                  * @example Toast the number of miliseconds since the Unix Epoch
                  * os.toast(os.localTime);
                  *
-                 * @dochash actions/time
+                 * @dochash actions/os/time
                  * @doctitle Time Actions
                  * @docsidebar Time
                  * @docdescription Time actions make working with time across devices easy.
@@ -3103,7 +3103,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                  * @example Toast the current shared time
                  * os.toast(os.agreedUponTime);
                  *
-                 * @dochash actions/time
+                 * @dochash actions/os/time
                  * @docgroup 01-time
                  * @docname os.agreedUponTime
                  */
@@ -3116,7 +3116,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                  *
                  * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
                  *
-                 * @dochash actions/time
+                 * @dochash actions/os/time
                  * @docgroup 01-time
                  * @docname os.instLatency
                  */
@@ -3129,7 +3129,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                  *
                  * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
                  *
-                 * @dochash actions/time
+                 * @dochash actions/os/time
                  * @docgroup 01-time
                  * @docname os.instTimeOffset
                  */
@@ -3142,7 +3142,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                  *
                  * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
                  *
-                 * @dochash actions/time
+                 * @dochash actions/os/time
                  * @docgroup 01-time
                  * @docname os.instTimeOffsetSpread
                  */
@@ -3156,7 +3156,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                  *
                  * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
                  *
-                 * @dochash actions/time
+                 * @dochash actions/os/time
                  * @docgroup 01-time
                  * @docname os.deadReckoningTime
                  */
@@ -5128,7 +5128,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show a tip and record its ID in a tag mask.
      * masks.tipID = await os.tip("Hello!");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.tip
      * @docgroup 10-tip
      */
@@ -5160,7 +5160,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * await os.sleep(1000);
      * await os.hideTips(id);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.hideTips
      * @docgroup 10-tip
      */
@@ -5189,7 +5189,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show a join QR Code for a inst and dimension.
      * os.showJoinCode("inst", "dimension");
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @docname os.showJoinCode
      * @docgroup 10-qr-code
      */
@@ -5208,7 +5208,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Enter fullscreen mode.
      * os.requestFullscreenMode();
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.requestFullscreenMode
      * @docgroup 10-fullscreen
      */
@@ -5222,7 +5222,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Exit fullscreen mode.
      * os.exitFullscreenMode();
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.exitFullscreenMode
      * @docgroup 10-fullscreen
      */
@@ -5399,7 +5399,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     portal: 'tag'
      * });
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.focusOn
      * @docid os.focusOn-bot
      */
@@ -5433,7 +5433,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     zoom: 10000
      * });
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.focusOn
      * @docid os.focusOn-position
      */
@@ -5738,7 +5738,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     frameBufferScaleFactor: 0.5
      * });
      *
-     * @dochash actions/xr
+     * @dochash actions/os/xr
      * @docname os.enableAR
      * @docgroup 11-ar
      */
@@ -5754,7 +5754,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Disable AR.
      * os.disableAR();
      *
-     * @dochash actions/xr
+     * @dochash actions/os/xr
      * @docname os.disableAR
      * @docgroup 11-ar
      */
@@ -5770,7 +5770,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Check if AR is supported:
      * const supported = await os.arSupported();
      *
-     * @dochash actions/xr
+     * @dochash actions/os/xr
      * @doctitle XR Actions
      * @docsidebar XR
      * @docdescription Actions for enabling and disabling XR (AR & VR) features.
@@ -5799,7 +5799,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     frameBufferScaleFactor: 0.5
      * });
      *
-     * @dochash actions/xr
+     * @dochash actions/os/xr
      * @docname os.enableVR
      * @docgroup 11-vr
      */
@@ -5815,7 +5815,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Disable VR.
      * os.disableVR();
      *
-     * @dochash actions/xr
+     * @dochash actions/os/xr
      * @docname os.disableVR
      * @docgroup 11-vr
      */
@@ -5831,7 +5831,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Check if VR is supported:
      * const supported = await os.vrSupported();
      *
-     * @dochash actions/xr
+     * @dochash actions/os/xr
      * @docname os.vrSupported
      * @docgroup 11-vr
      */
@@ -5864,7 +5864,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Enable POV mode with the IMU.
      * os.enablePointOfView(undefined, true);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.enablePointOfView
      * @docgroup 10-pov
      */
@@ -5881,7 +5881,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Disable POV mode.
      * os.disablePointOfView();
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.disablePointOfView
      * @docgroup 10-pov
      */
@@ -5957,7 +5957,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Download a text file named "test.txt" that contains "abc".
      * os.download("abc", "test.txt");
      *
-     * @dochash actions/files
+     * @dochash actions/os/files
      * @doctitle File Actions
      * @docsidebar Files
      * @docdescription Actions for uploading and downloading files.
@@ -6032,7 +6032,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Download all bots as "myServer.pdf".
      * os.downloadBots(getBots(), "myServer.pdf");
      *
-     * @dochash actions/files
+     * @dochash actions/os/files
      * @docname os.downloadBots
      * @docgroup 10-download
      */
@@ -6079,7 +6079,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Download all bots as "myServer.pdf".
      * os.downloadBotsAsInitialzationUpdate(getBots(), "myServer.pdf");
      *
-     * @dochash actions/files
+     * @dochash actions/os/files
      * @docname os.downloadBotsAsInitialzationUpdate
      * @docgroup 10-download
      */
@@ -6121,7 +6121,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Download the entire inst.
      * os.downloadInst();
      *
-     * @dochash actions/files
+     * @dochash actions/os/files
      * @docname os.downloadInst
      * @docgroup 10-download
      */
@@ -6138,7 +6138,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show the "Upload AUX File" dialog.
      * os.showUploadAuxFile();
      *
-     * @dochash actions/files
+     * @dochash actions/os/files
      * @docname os.showUploadAuxFile
      * @docgroup 10-upload
      */
@@ -6154,7 +6154,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const files = await os.showUploadFiles();
      * os.toast("You uploaded " + files.length + " file(s)!");
      *
-     * @dochash actions/files
+     * @dochash actions/os/files
      * @docname os.showUploadFiles
      * @docgroup 10-upload
      */
@@ -6177,7 +6177,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Open the QR Code scanner for the front-facing camera.
      * os.openQRCodeScanner("front");
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @docname os.openQRCodeScanner
      * @docgroup 10-qr-code-scanner
      */
@@ -6192,7 +6192,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Close the QR Code scanner.
      * os.closeQRCodeScanner();
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @docname os.closeQRCodeScanner
      * @docgroup 10-qr-code-scanner
      */
@@ -6212,7 +6212,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show a QR Code that links to https://example.com
      * os.showQRCode("https://example.com")
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @docname os.showQRCode
      * @docgroup 10-qr-code
      */
@@ -6227,7 +6227,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Hides the QR Code popup modal.
      * os.hideQRCode();
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @docname os.hideQRCode
      * @docgroup 10-qr-code
      */
@@ -6248,7 +6248,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Open the Barcode scanner for the front-facing camera.
      * os.openBarcodeScanner("front");
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @docname os.openBarcodeScanner
      * @docgroup 10-barcode-scanner
      */
@@ -6263,7 +6263,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Close the Barcode scanner.
      * os.closeBarcodeScanner();
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @docname os.closeBarcodeScanner
      * @docgroup 10-barcode-scanner
      */
@@ -6285,7 +6285,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show a UPC Barcode that contains the data "123456".
      * os.showBarcode("123456", 'upc');
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @docname os.showBarcode
      * @docgroup 10-barcode
      * @docorder 0
@@ -6304,7 +6304,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Hides the Barcode popup modal.
      * os.hideBarcode();
      *
-     * @dochash actions/barcodes
+     * @dochash actions/os/barcodes
      * @doctitle Barcode Actions
      * @docsidebar Barcodes
      * @docdescription Actions for scanning and displaying QR Codes and Barcodes.
@@ -6334,7 +6334,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     cameraType: 'front'
      * });
      *
-     * @dochash actions/image-classification
+     * @dochash actions/os/image-classification
      * @doctitle Image Classification Actions
      * @docsidebar Image Classification
      * @docdescription Actions for classifying images using AI.
@@ -6359,7 +6359,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Close the image classifier.
      * await os.closeImageClassifier();
      *
-     * @dochash actions/image-classification
+     * @dochash actions/os/image-classification
      * @docname os.closeImageClassifier
      * @docgroup 10-image-classifier
      */
@@ -6384,7 +6384,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     cameraType: "front"
      * });
      *
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @doctitle Camera Actions
      * @docsidebar Camera
      * @docdescription Actions for taking photos.
@@ -6421,7 +6421,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *    takePhotoAfterSeconds: 3
      * });
      *
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @doctitle Camera Actions
      * @docsidebar Camera
      * @docdescription Actions for taking photos.
@@ -6439,7 +6439,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Close the photo camera
      * await os.closePhotoCamera();
      *
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @docname os.closePhotoCamera
      */
     function closePhotoCamera(): Promise<void> {
@@ -6517,7 +6517,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     }
      * }`);
      *
-     * @dochash actions/files
+     * @dochash actions/os/files
      * @docname os.importAUX
      * @docgroup 10-upload
      */
@@ -6555,7 +6555,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Parse the list of bots in an @onFileUpload
      * let bots = os.parseBotsFromData(that.file.data);
      *
-     * @dochash actions/files
+     * @dochash actions/os/files
      * @docname os.parseBotsFromData
      * @docgroup 10-download
      */
@@ -6660,7 +6660,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * let clone = create(thisBot);
      * os.replaceDragBot(clone);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.replaceDragBot
      */
     function replaceDragBot(bot: RuntimeBot): ReplaceDragBotAction {
@@ -6678,7 +6678,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("In the dimension!");
      * }
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.isInDimension
      * @docgroup 10-config-values
      */
@@ -6698,7 +6698,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const dimension = os.getCurrentDimension();
      * os.toast(dimension);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @doctitle Portal Actions
      * @docsidebar Portals
      * @docdescription Actions for working with portals.
@@ -6724,7 +6724,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const inst = os.getCurrentInst();
      * os.toast(inst);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getCurrentInst
      * @docgroup 10-config-values
      */
@@ -6752,7 +6752,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const dimension = os.getMiniPortalDimension();
      * os.toast(dimension);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getMiniPortalDimension
      * @docgroup 10-config-values
      */
@@ -6778,7 +6778,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const dimension = os.getMenuDimension();
      * os.toast(dimension);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getMenuDimension
      * @docgroup 10-config-values
      */
@@ -6807,7 +6807,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get the dimension that is currently showing in the #miniGridPortal.
      * const dimension = os.getPortalDimension('miniGrid');
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getPortalDimension
      * @docgroup 10-config-values
      */
@@ -6844,7 +6844,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Player cannot access the fun dimension");
      * }
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getDimensionalDepth
      * @docgroup 10-config-values
      */
@@ -6889,7 +6889,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     title: 'Enter a custom color'
      * });
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.showInputForTag
      * @docgroup 10-showInput
      */
@@ -7063,7 +7063,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * });
      * os.toast(selectedItem);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.showInput
      * @docgroup 10-showInput
      */
@@ -7101,7 +7101,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * os.toast('Confirmed: ' + (confirmed ? 'Yes' : 'No'));
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.showConfirm
      * @docgroup 10-showInput
      */
@@ -7123,7 +7123,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Load the abc dimension.
      * os.goToDimension("abc");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.goToDimension
      * @docgroup 10-go-to
      */
@@ -7140,7 +7140,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Send the player to https://example.com.
      * os.goToURL("https://example.com");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.goToURL
      * @docgroup 10-go-to
      */
@@ -7157,7 +7157,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Open https://example.com in a new tab.
      * os.openURL("https://example.com");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.openURL
      * @docgroup 10-go-to
      */
@@ -7192,7 +7192,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Play a MP3 file from another website.
      * os.playSound("https://www.testsounds.com/track06.mp3");
      *
-     * @dochash actions/audio
+     * @dochash actions/os/audio
      * @doctitle Audio Actions
      * @docsidebar Audio
      * @docdescription Actions for working with audio and sound files.
@@ -7215,7 +7215,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Pre-load a MP3 file from another website.
      * os.bufferSound("https://www.testsounds.com/track06.mp3");
      *
-     * @dochash actions/audio
+     * @dochash actions/os/audio
      * @docname os.bufferSound
      * @docgroup 10-sound
      */
@@ -7234,7 +7234,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const id = await os.playSound("https://www.testsounds.com/track06.mp3");
      * os.cancelSound(id);
      *
-     * @dochash actions/audio
+     * @dochash actions/os/audio
      * @docname os.cancelSound
      * @docgroup 10-sound
      */
@@ -7259,7 +7259,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("bob is in the miniGridPortal!");
      * }
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.hasBotInMiniPortal
      * @docgroup 10-config-values
      */
@@ -7325,7 +7325,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     duration: 5
      * });
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.closeCircleWipe
      * @docgroup 10-circle-wipe
      */
@@ -7371,7 +7371,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     duration: 5
      * });
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.openCircleWipe
      * @docgroup 10-circle-wipe
      */
@@ -7438,7 +7438,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     distance: 1
      * }, "face");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.addDropSnap
      */
     function addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction {
@@ -7479,7 +7479,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     distance: 1
      * }, "face");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.addBotDropSnap
      */
     function addBotDropSnap(
@@ -7542,7 +7542,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     showGrid: true
      * });
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.addDropGrid
      */
     function addDropGrid(
@@ -7605,7 +7605,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     showGrid: true
      * });
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.addBotDropGrid
      */
     function addBotDropGrid(
@@ -7643,7 +7643,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Enable custom dragging for the current drag operation
      * os.enableCustomDragging();
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.enableCustomDragging
      */
     function enableCustomDragging(): EnableCustomDraggingAction {
@@ -7715,7 +7715,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     name: 'Triangle'
      * });
      *
-     * @dochash actions/app
+     * @dochash actions/os/app
      * @docname os.registerTagPrefix
      */
     function registerPrefix(
@@ -7795,7 +7795,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     <input onInput={ (e) => { tags.label = e.target.value } }>
      * );
      *
-     * @dochash actions/app
+     * @dochash actions/os/app
      * @doctitle App Actions
      * @docsidebar App
      * @docdescription Actions for working with custom apps.
@@ -7815,7 +7815,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Unregister an app
      * await os.unregisterApp('myApp');
      *
-     * @dochash actions/app
+     * @dochash actions/os/app
      * @docname os.unregisterApp
      */
     function unregisterApp(appId: string): Promise<void> {
@@ -7852,7 +7852,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     <input type="range" min="0" max="100" onInput={ (e) => { tags.label = e.target.value } } />
      * );
      *
-     * @dochash actions/app
+     * @dochash actions/os/app
      * @docname os.compileApp
      */
     function setAppContent(appId: string, content: any): SetAppOutputAction {
@@ -7869,7 +7869,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const builtinTags = os.listBuiltinTags();
      * os.toast(builtinTags);
      *
-     * @dochash actions/app
+     * @dochash actions/os/app
      * @docname os.listBuiltinTags
      */
     function listBuiltinTags(): string[] {
@@ -7913,7 +7913,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * await os.requestAuthBot();
      * os.toast("Logged in!");
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @doctitle Records Actions
      * @docsidebar Records
      * @docdescription Records are a way to store permenent data in CasualOS.
@@ -7947,7 +7947,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Not logged in.");
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @doctitle Records Actions
      * @docsidebar Records
      * @docdescription Records are a way to store permenent data in CasualOS.
@@ -8015,7 +8015,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast('Failed ' + result.errorMessage);
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.getPublicRecordKey
      */
@@ -8036,7 +8036,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @param name the name of the record.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.getSubjectlessPublicRecordKey
      */
@@ -8058,7 +8058,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param permission the permission that should be added.
      * @param options the options for the operation.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.grantRecordMarkerPermission
      */
@@ -8089,7 +8089,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param permission the permission that should be removed.
      * @param options the options for the operation.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.revokeRecordMarkerPermission
      */
@@ -8120,7 +8120,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordName the name of the record.
      * @param options the options for the operation.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.grantInstAdminPermission
      */
@@ -8148,7 +8148,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param expireTimeMs the time that the role grant expires. If `null`, then the role will not expire.
      * @param options the options for the operation.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.grantUserRole
      */
@@ -8181,7 +8181,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param userId the ID of the user.
      * @param options the options for the operation.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.revokeUserRole
      */
@@ -8213,7 +8213,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param expireTimeMs the time that the role grant expires. If null, then the role will not expire.
      * @param options the options for the operation.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.grantInstRole
      */
@@ -8246,7 +8246,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param inst the inst that the role should be revoked from.
      * @param options the options for the operation.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.revokeInstRole
      */
@@ -8278,7 +8278,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const isRecordKey = os.isRecordKey(tags.myRecordKey);
      * os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.isRecordKey
      */
@@ -8312,7 +8312,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed " + result.errorMessage);
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.recordData
      */
@@ -8345,7 +8345,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * If you need to store data larger than 300KB, you can use {@link os.recordFile}.
      * @param endpointOrOptions the options that should be used to record the data.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.recordManualApprovalData
      */
@@ -8425,7 +8425,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed " + result.errorMessage);
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.getData
      */
@@ -8448,7 +8448,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to.
      * If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.getManualApprovalData
      */
@@ -8532,7 +8532,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     }
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.listData
      */
@@ -8580,7 +8580,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed " + result.errorMessage);
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.eraseData
      */
@@ -8602,7 +8602,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to.
      * If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.eraseManualApprovalData
      */
@@ -8729,7 +8729,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed " + result.errorMessage);
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.recordFile
      */
@@ -8819,7 +8819,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Download the file later
      * const fileData = await os.getFile(tags.uploadUrl);
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.getFile
      */
@@ -8892,7 +8892,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * let fileUrl = 'ENTER_FILE_URL_HERE';
      * const fileData = await os.getFile(fileUrl);
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.getPublicFile
      */
@@ -8944,7 +8944,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const fileUrl = 'ENTER_FILE_URL_HERE';
      * const result = await os.getPrivateFile(fileUrl);
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.getPrivateFile
      */
@@ -9034,7 +9034,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed " + result.errorMessage);
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.eraseFile
      */
@@ -9089,7 +9089,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Record that a click event happened
      * await os.recordEvent(myRecordKey, 'click');
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.recordEvent
      */
@@ -9144,7 +9144,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast('Failed to get count ' + result.errorMessage);
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.countEvents
      */
@@ -9200,7 +9200,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *      os.toast('Failed to get studios ' + result.errorMessage);
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.listUserStudios
      */
@@ -9265,7 +9265,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const result = await os.raycastFromCamera("grid", new Vector2(-1, 0));
      * os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.raycastFromCamera
      * @docgroup 10-raycast
      */
@@ -9298,7 +9298,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const result = await os.raycast("grid", os.getPointerPosition("mouse"), os.getPointerDirection("mouse"));
      * os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.raycast
      * @docgroup 10-raycast
      */
@@ -9343,7 +9343,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const ray = await os.raycastFromCamera("grid", new Vector2(-1, 0));
      * os.toast('Calculated ray: ' + ray);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.calculateRayFromCamera
      * @docgroup 10-raycast
      */
@@ -9369,7 +9369,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * await os.bufferFormAddressGLTF('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');
      * os.toast("Buffered!");
      *
-     * @dochash actions/animations
+     * @dochash actions/os/animations
      * @docname os.bufferFormAddressGLTF
      */
     function bufferFormAddressGLTF(address: string): Promise<void> {
@@ -9411,7 +9411,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     timeScale: 0.5
      * });
      *
-     * @dochash actions/animations
+     * @dochash actions/os/animations
      * @doctitle Animation Actions
      * @docsidebar Animations
      * @docdescription Actions for playing animations on bots.
@@ -9462,7 +9462,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     stopTime: os.localTime + 5000
      * });
      *
-     * @dochash actions/animations
+     * @dochash actions/os/animations
      * @docname os.stopFormAnimation
      * @docgroup 10-animations
      * @docorder 1
@@ -9493,7 +9493,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get the list of animations for a specific address
      * const animations = await os.listFormAnimations('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');
      *
-     * @dochash actions/animations
+     * @dochash actions/os/animations
      * @docname os.listFormAnimations
      * @docgroup 10-animations
      * @docorder 2
@@ -9877,7 +9877,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // it is being sent to another remote.
      * remote(toastAction, otherRemoteId);
      *
-     * @dochash actions/event
+     * @dochash actions/os/event
      * @docgroup 01-event-actions
      * @docname remote
      */
@@ -9933,7 +9933,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // that.name === "custom" and that.that === "Hello"
      * sendRemoteData(otherRemotes, "custom", "Hello");
      *
-     * @dochash actions/event
+     * @dochash actions/os/event
      * @docgroup 01-event-actions
      * @docname sendRemoteData
      */
@@ -10739,7 +10739,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     }
      * });
      *
-     * @dochash actions/event
+     * @dochash actions/os/event
      * @docgroup 01-event-actions
      * @docname action.perform
      */
@@ -10806,7 +10806,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const toastAction = os.toast("my message");
      * action.reject(toastAction);
      *
-     * @dochash actions/event
+     * @dochash actions/os/event
      * @docgroup 01-event-actions
      * @docname action.reject
      */
@@ -11067,7 +11067,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * await os.sleep(10000);
      * await os.endAudioRecording();
      *
-     * @dochash actions/audio
+     * @dochash actions/os/audio
      * @docname os.beginAudioRecording
      * @docgroup 11-audio-recording
      */
@@ -11093,7 +11093,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * os.download(data);
      *
-     * @dochash actions/audio
+     * @dochash actions/os/audio
      * @docname os.endAudioRecording
      * @docgroup 11-audio-recording
      */
@@ -13967,7 +13967,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Send a hello super shout to all the loaded instances.
      * superShout("hello");
      *
-     * @dochash actions/event
+     * @dochash actions/os/event
      * @docgroup 01-event-actions
      * @docname superShout
      */
@@ -13995,7 +13995,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Priority shout with a color
      * priorityShout(['myTest', 'mySecondTest'], "blue");
      *
-     * @dochash actions/event
+     * @dochash actions/os/event
      * @docgroup 01-event-actions
      * @docname priorityShout
      */
@@ -14038,7 +14038,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Send a @hello event with your name
      * shout("hello", "Bob");
      *
-     * @dochash actions/event
+     * @dochash actions/os/event
      * @doctitle Event Actions
      * @docsidebar Events
      * @docdescription Event actions are used to send events to bots.
@@ -14071,7 +14071,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Send a @setColor event to ourself
      * whisper(this, "setColor", "red");
      *
-     * @dochash actions/event
+     * @dochash actions/os/event
      * @docgroup 01-event-actions
      * @docname whisper
      */
@@ -14109,7 +14109,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("You are in the sheet!");
      * }
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.inSheet
      * @docgroup 10-config-values
      */
@@ -14128,7 +14128,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get the position of the camera in the miniGridPortal.
      * const position = os.getCameraPosition("mini");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getCameraPosition
      * @docgroup 10-positions
      */
@@ -14156,7 +14156,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get the rotation of the player in the miniGridPortal.
      * const rotation = os.getCameraRotation("mini");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getCameraRotation
      * @docgroup 10-positions
      */
@@ -14194,7 +14194,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get the focus point of the player in the miniGridPortal.
      * const focusPoint = os.getFocusPoint("mini");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getFocusPoint
      * @docgroup 10-positions
      */
@@ -14221,7 +14221,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get the position of the left pointer.
      * const position = os.getPointerPosition("left");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getPointerPosition
      * @docgroup 10-positions
      */
@@ -14250,7 +14250,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get the rotation of the left pointer.
      * const rotation = os.getPointerRotation("left");
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getPointerRotation
      * @docgroup 10-positions
      */
@@ -14291,7 +14291,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const direction = os.getPointerDirection();
      * const groundPosition = math.intersectPlane(position, direction);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getPointerDirection
      * @docgroup 10-positions
      */
@@ -14344,7 +14344,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Shift is down!");
      * }
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getInputState
      * @docgroup 10-input
      */
@@ -14367,7 +14367,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const state = os.getInputList();
      * os.toast(state);
      *
-     * @dochash actions/portals
+     * @dochash actions/os/portals
      * @docname os.getInputList
      * @docgroup 10-input
      */
@@ -14472,7 +14472,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed to join the room: " + result.errorMessage);
      * }
      *
-     * @dochash actions/rooms
+     * @dochash actions/os/rooms
      * @doctitle Room Actions
      * @docsidebar Rooms
      * @docdescription Room actions are actions that make it easy to create your own custom multimedia chat rooms.
@@ -14503,7 +14503,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed to leave the room: " + result.errorMessage);
      * }
      *
-     * @dochash actions/rooms
+     * @dochash actions/os/rooms
      * @docname os.leaveRoom
      */
     function leaveRoom(
@@ -14544,7 +14544,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed to mute microphone: " + result.errorMessage);
      * }
      *
-     * @dochash actions/rooms
+     * @dochash actions/os/rooms
      * @docname os.setRoomOptions
      */
     function setRoomOptions(
@@ -14569,7 +14569,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed to get the options: " + result.errorMessage);
      * }
      *
-     * @dochash actions/rooms
+     * @dochash actions/os/rooms
      * @docname os.getRoomOptions
      */
     function getRoomOptions(roomName: string): Promise<GetRoomOptionsResult> {
@@ -14595,7 +14595,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed to get the options: " + result.errorMessage);
      * }
      *
-     * @dochash actions/rooms
+     * @dochash actions/os/rooms
      * @docname os.getRoomTrackOptions
      */
     function getRoomTrackOptions(
@@ -14636,7 +14636,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed to set video quality on the track: " + result.errorMessage);
      * }
      *
-     * @dochash actions/rooms
+     * @dochash actions/os/rooms
      * @docname os.setRoomTrackOptions
      */
     function setRoomTrackOptions(
@@ -14670,7 +14670,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed to get the options: " + result.errorMessage);
      * }
      *
-     * @dochash actions/rooms
+     * @dochash actions/os/rooms
      * @docname os.getRoomRemoteOptions
      */
     function getRoomRemoteOptions(

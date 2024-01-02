@@ -10541,7 +10541,7 @@ interface Os {
      *     cameraType: "front"
      * });
      *
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @doctitle Camera Actions
      * @docsidebar Camera
      * @docdescription Actions for taking photos.
@@ -10555,7 +10555,7 @@ interface Os {
      * @example Close the photo camera
      * await os.closePhotoCamera();
      * 
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @docname os.closePhotoCamera
      */
     closePhotoCamera(): Promise<void>;
@@ -10575,7 +10575,7 @@ interface Os {
      *     cameraType: "front"
      * });
      *
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @doctitle Camera Actions
      * @docsidebar Camera
      * @docdescription Actions for taking photos.
@@ -11068,7 +11068,7 @@ interface Os {
      * await os.requestAuthBot();
      * os.toast("Logged in!");
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @doctitle Records Actions
      * @docsidebar Records
      * @docdescription Records are a way to store permenent data in CasualOS.
@@ -11100,7 +11100,7 @@ interface Os {
      *     os.toast("Not logged in.");
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @doctitle Records Actions
      * @docsidebar Records
      * @docdescription Records are a way to store permenent data in CasualOS.
@@ -11448,7 +11448,7 @@ interface Os {
      *      os.toast('Failed to get studios ' + result.errorMessage);
      * }
      * 
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.listUserStudios
      */
