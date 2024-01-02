@@ -1,4 +1,10 @@
 import {
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+} from '@casual-simulation/aux-common';
+import {
+    getPublicMarkerPermission,
+    getPublicMarkersPermission,
     getPublicReadPermission,
     getPublicWritePermission,
 } from './PolicyStore';
@@ -120,4 +126,88 @@ describe('getPublicWritePermission()', () => {
             });
         }
     );
+});
+
+describe('getPublicMarkerPermission()', () => {
+    it('should return a permission for publicRead markers', () => {
+        const result = getPublicMarkerPermission(
+            PUBLIC_READ_MARKER,
+            'data',
+            'read'
+        );
+
+        expect(result).toEqual({
+            resourceKind: 'data',
+            action: 'read',
+        });
+    });
+
+    it('should return a permission for publicWrite markers', () => {
+        const result = getPublicMarkerPermission(
+            PUBLIC_WRITE_MARKER,
+            'data',
+            'update'
+        );
+
+        expect(result).toEqual({
+            resourceKind: 'data',
+            action: 'update',
+        });
+    });
+
+    it('should return null if given a non-public marker', () => {
+        const result = getPublicMarkerPermission('secret', 'data', 'update');
+
+        expect(result).toEqual(null);
+    });
+});
+
+describe('getPublicMarkersPermission()', () => {
+    it('should return a permission for publicRead markers', () => {
+        const result = getPublicMarkersPermission(
+            [PUBLIC_READ_MARKER],
+            'data',
+            'read'
+        );
+
+        expect(result).toEqual({
+            marker: PUBLIC_READ_MARKER,
+            resourceKind: 'data',
+            action: 'read',
+        });
+    });
+
+    it('should return a permission for publicWrite markers', () => {
+        const result = getPublicMarkersPermission(
+            [PUBLIC_WRITE_MARKER],
+            'data',
+            'update'
+        );
+
+        expect(result).toEqual({
+            marker: PUBLIC_WRITE_MARKER,
+            resourceKind: 'data',
+            action: 'update',
+        });
+    });
+
+    it('should return the first permission from the list of markers', () => {
+        const result = getPublicMarkersPermission(
+            [PUBLIC_READ_MARKER, PUBLIC_WRITE_MARKER],
+            'data',
+            'update'
+        );
+
+        expect(result).toEqual({
+            marker: PUBLIC_WRITE_MARKER,
+            resourceKind: 'data',
+            action: 'update',
+        });
+    });
+
+    it('should return null if given a non-public marker', () => {
+        const result = getPublicMarkersPermission(['secret'], 'data', 'update');
+
+        expect(result).toEqual(null);
+    });
 });

@@ -1,6 +1,8 @@
 import { ServerError } from '@casual-simulation/aux-common/Errors';
 import {
     ActionKinds,
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
     PermissionOptions,
     PolicyDocument,
     ResourceKinds,
@@ -752,5 +754,46 @@ export function getPublicWritePermission(
         }
     }
 
+    return null;
+}
+
+export function getPublicMarkerPermission(
+    marker: string,
+    resourceKind: ResourceKinds,
+    action: ActionKinds
+) {
+    if (marker === PUBLIC_READ_MARKER) {
+        return getPublicReadPermission(resourceKind, action);
+    } else if (marker === PUBLIC_WRITE_MARKER) {
+        return getPublicWritePermission(resourceKind, action);
+    }
+
+    return null;
+}
+
+export function getPublicMarkersPermission(
+    markers: string[],
+    resourceKind: ResourceKinds,
+    action: ActionKinds
+) {
+    for (let marker of markers) {
+        const result = getPublicMarkerPermission(marker, resourceKind, action);
+        if (result) {
+            return {
+                marker,
+                ...result,
+            };
+        }
+    }
+    return null;
+}
+
+export function getSubjectUserId(
+    subjectType: SubjectType,
+    subjectId: string
+): string | null {
+    if (subjectType === USER_SUBJECT_TYPE) {
+        return subjectId;
+    }
     return null;
 }

@@ -65,27 +65,43 @@ import {
     UpdateEventResult,
 } from './EventRecordsStore';
 import {
+    AssignPermissionToSubjectAndMarkerResult,
+    AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
+    DeletePermissionAssignmentResult,
+    GetMarkerPermissionResult,
+    GetResourcePermissionResult,
     GetUserPolicyResult,
     ListMarkerPoliciesResult,
+    ListPermissionsInRecordForSubjectResult,
+    ListPermissionsInRecordResult,
     ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
+    MarkerPermissionAssignment,
     PolicyStore,
+    ResourcePermissionAssignment,
     RoleAssignment,
+    SubjectType,
     UpdateRolesUpdate,
     UpdateUserPolicyResult,
     UpdateUserRolesResult,
     UserPolicyRecord,
     getExpireTime,
+    getPublicMarkerPermission,
+    getPublicMarkersPermission,
+    getSubjectUserId,
 } from './PolicyStore';
 import {
+    ActionKinds,
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
+    PermissionOptions,
     PolicyDocument,
+    ResourceKinds,
 } from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
@@ -182,6 +198,9 @@ export class MemoryStore
     private _privoConfiguration: PrivoConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
     private _recordNotifications: RecordsNotification[] = [];
+
+    private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
+    private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
 
     maxAllowedInstSize: number = Infinity;
 
@@ -574,6 +593,286 @@ export class MemoryStore
                 role: s.role,
             };
         });
+    }
+
+    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+        return await this._getUserPrivacyFeatures(userId);
+    }
+
+    async getPermissionForSubjectAndResource(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetResourcePermissionResult> {
+        const existingRoles =
+            subjectType === 'user'
+                ? await this.listRolesForUser(recordName, subjectId)
+                : subjectType === 'inst'
+                ? await this.listRolesForInst(recordName, subjectId)
+                : [];
+
+        const roles = existingRoles.map((r) => r.role);
+
+        const assignment = this._resourcePermissionAssignments.find(
+            (p) =>
+                p.recordName === recordName &&
+                ((p.subjectType === 'role' &&
+                    roles.indexOf(p.subjectId) >= 0) ||
+                    (p.subjectType === subjectType &&
+                        p.subjectId === subjectId)) &&
+                p.resourceKind === resourceKind &&
+                p.resourceId === resourceId &&
+                (p.action === null || p.action === action) &&
+                (!p.expireTimeMs || p.expireTimeMs > currentTimeMs)
+        );
+
+        return {
+            success: true,
+            permissionAssignment: assignment,
+        };
+    }
+
+    async getPermissionForSubjectAndMarkers(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        markers: string[],
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetMarkerPermissionResult> {
+        const defaultPermission = getPublicMarkersPermission(
+            markers,
+            resourceKind,
+            action
+        );
+        const userId = getSubjectUserId(subjectType, subjectId);
+
+        if (defaultPermission) {
+            return {
+                success: true,
+                permissionAssignment: {
+                    id: null,
+                    recordName: recordName,
+                    userId,
+                    subjectType,
+                    subjectId,
+                    expireTimeMs: null,
+                    options: {},
+                    ...defaultPermission,
+                },
+            };
+        }
+
+        const existingRoles =
+            subjectType === 'user'
+                ? await this.listRolesForUser(recordName, subjectId)
+                : subjectType === 'inst'
+                ? await this.listRolesForInst(recordName, subjectId)
+                : [];
+        const roles = existingRoles.map((r) => r.role);
+
+        const assignment = this._markerPermissionAssignments.find(
+            (p) =>
+                p.recordName === recordName &&
+                markers.indexOf(p.marker) >= 0 &&
+                ((p.subjectType === 'role' &&
+                    roles.indexOf(p.subjectId) >= 0) ||
+                    (p.subjectType === subjectType &&
+                        p.subjectId === subjectId)) &&
+                p.resourceKind === resourceKind &&
+                (p.action === null || p.action === action) &&
+                (!p.expireTimeMs || p.expireTimeMs > currentTimeMs)
+        );
+
+        return {
+            success: true,
+            permissionAssignment: assignment,
+        };
+    }
+
+    async assignPermissionToSubjectAndResource(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number
+    ): Promise<AssignPermissionToSubjectAndResourceResult> {
+        const userId = getSubjectUserId(subjectType, subjectId);
+        const assignment: ResourcePermissionAssignment = {
+            id: uuid(),
+            recordName,
+            userId,
+            subjectType,
+            subjectId,
+            resourceKind,
+            resourceId,
+            action,
+            options,
+            expireTimeMs,
+        };
+
+        this._resourcePermissionAssignments.push(assignment);
+
+        return {
+            success: true,
+            permissionAssignment: assignment,
+        };
+    }
+
+    async assignPermissionToSubjectAndMarker(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        marker: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number
+    ): Promise<AssignPermissionToSubjectAndMarkerResult> {
+        const userId = getSubjectUserId(subjectType, subjectId);
+        const assignment: MarkerPermissionAssignment = {
+            id: uuid(),
+            recordName,
+            userId,
+            subjectType,
+            subjectId,
+            resourceKind,
+            marker,
+            action,
+            options,
+            expireTimeMs,
+        };
+
+        this._markerPermissionAssignments.push(assignment);
+
+        return {
+            success: true,
+            permissionAssignment: assignment,
+        };
+    }
+
+    async deleteResourcePermissionAssignment(
+        assigment: ResourcePermissionAssignment
+    ): Promise<DeletePermissionAssignmentResult> {
+        this._resourcePermissionAssignments =
+            this._resourcePermissionAssignments.filter(
+                (p) => p.id !== assigment.id
+            );
+        return {
+            success: true,
+        };
+    }
+
+    async deleteMarkerPermissionAssignment(
+        assigment: MarkerPermissionAssignment
+    ): Promise<DeletePermissionAssignmentResult> {
+        this._markerPermissionAssignments =
+            this._markerPermissionAssignments.filter(
+                (p) => p.id !== assigment.id
+            );
+        return {
+            success: true,
+        };
+    }
+
+    async listPermissionsInRecordForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordForSubjectResult> {
+        const resourceAssignments = this._resourcePermissionAssignments.filter(
+            (p) =>
+                p.recordName === recordName &&
+                p.subjectType === subjectType &&
+                p.subjectId === subjectId
+        );
+
+        const markerAssignments = this._markerPermissionAssignments.filter(
+            (p) =>
+                p.recordName === recordName &&
+                p.subjectType === subjectType &&
+                p.subjectId === subjectId
+        );
+
+        return {
+            success: true,
+            resourceAssignments,
+            markerAssignments,
+        };
+    }
+
+    async listPermissionsInRecord(
+        recordName: string
+    ): Promise<ListPermissionsInRecordResult> {
+        const resourceAssignments = this._resourcePermissionAssignments.filter(
+            (p) => p.recordName === recordName
+        );
+
+        const markerAssignments = this._markerPermissionAssignments.filter(
+            (p) => p.recordName === recordName
+        );
+
+        return {
+            success: true,
+            resourceAssignments,
+            markerAssignments,
+        };
+    }
+
+    async listPermissionsForResource(
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string
+    ): Promise<ResourcePermissionAssignment[]> {
+        return this._resourcePermissionAssignments.filter(
+            (p) =>
+                p.recordName === recordName &&
+                p.resourceKind === resourceKind &&
+                p.resourceId === resourceId
+        );
+    }
+
+    async listPermissionsForMarker(
+        recordName: string,
+        marker: string
+    ): Promise<MarkerPermissionAssignment[]> {
+        return this._markerPermissionAssignments.filter(
+            (p) => p.recordName === recordName && p.marker === marker
+        );
+    }
+
+    async listPermissionsForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordResult> {
+        const resourceAssignments = this._resourcePermissionAssignments.filter(
+            (p) =>
+                p.recordName === recordName &&
+                p.subjectType === subjectType &&
+                p.subjectId === subjectId
+        );
+
+        const markerAssignments = this._markerPermissionAssignments.filter(
+            (p) =>
+                p.recordName === recordName &&
+                p.subjectType === subjectType &&
+                p.subjectId === subjectId
+        );
+
+        return {
+            success: true,
+            resourceAssignments,
+            markerAssignments,
+        };
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {
