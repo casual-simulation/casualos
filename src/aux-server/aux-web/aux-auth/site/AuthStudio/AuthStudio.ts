@@ -37,6 +37,11 @@ export default class AuthStudio extends Vue {
         return this.addMemberErrorCode ? 'md-invalid' : '';
     }
 
+    @Watch('studioId')
+    studioIdChanged() {
+        this._loadMembers();
+    }
+
     created() {}
 
     mounted() {
