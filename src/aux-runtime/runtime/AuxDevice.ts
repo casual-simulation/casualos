@@ -1,7 +1,7 @@
 /**
  * Contains information about the device that AUX is running on.
  *
- * @dochash types/os
+ * @dochash types/os/system
  * @docname CasualOSDevice
  */
 export interface AuxDevice {

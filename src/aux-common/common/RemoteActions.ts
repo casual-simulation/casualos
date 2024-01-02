@@ -73,7 +73,7 @@ export type RemoteActions =
 /**
  * An event that is used to send events from this device to a remote device.
  *
- * @dochash types/os
+ * @dochash types/os/event
  * @docname RemoteAction
  */
 export interface RemoteAction extends Action, DeviceSelector {

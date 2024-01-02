@@ -205,8 +205,6 @@ export {
     ShareAction,
     RegisterBuiltinPortalAction,
 
-    CustomAppOutputType,
-    CustomPortalOutputMode,
     CustomAppContainerAvailableAction,
 
     RegisterCustomAppAction,

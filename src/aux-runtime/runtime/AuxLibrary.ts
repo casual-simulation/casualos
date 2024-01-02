@@ -516,7 +516,7 @@ export type Mod = BotTags | Bot;
 /**
  * An interface that is used to say which user/device/session an event should be sent to.
  *
- * @dochash types/os
+ * @dochash types/os/event
  * @docname SessionSelector
  */
 export interface SessionSelector {
@@ -2146,7 +2146,7 @@ export interface RecordFileApiFailure {
 /**
  * Defines an interface that contains options for a snap grid for {@link os.addDropGrid}.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SnapGridTarget
  */
 export interface SnapGridTarget {
@@ -2202,7 +2202,7 @@ export interface SnapGridTarget {
 /**
  * The possible results for a "join room" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname JoinRoomResult
  */
 export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
@@ -2210,7 +2210,7 @@ export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
 /**
  * Defines an interface that represents a successful "join room" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname JoinRoomSuccess
  */
 export interface JoinRoomSuccess {
@@ -2224,7 +2224,7 @@ export interface JoinRoomSuccess {
 /**
  * Defines an interface that represents a failed "join room" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname JoinRoomFailure
  */
 export interface JoinRoomFailure {
@@ -2249,7 +2249,7 @@ export interface JoinRoomFailure {
 /**
  * The possible results for a "leave room" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname LeaveRoomResult
  */
 export type LeaveRoomResult = LeaveRoomSuccess | LeaveRoomFailure;
@@ -2257,7 +2257,7 @@ export type LeaveRoomResult = LeaveRoomSuccess | LeaveRoomFailure;
 /**
  * Defines an interface that represents a successful "leave room" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname LeaveRoomSuccess
  */
 export interface LeaveRoomSuccess {
@@ -2272,7 +2272,7 @@ export interface LeaveRoomSuccess {
 /**
  * Defines an interface that represents a failed "leave room" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname LeaveRoomFailure
  */
 export interface LeaveRoomFailure {
@@ -2296,7 +2296,7 @@ export interface LeaveRoomFailure {
 /**
  * The possible results for a "set room options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SetRoomOptionsResult
  */
 export type SetRoomOptionsResult =
@@ -2306,7 +2306,7 @@ export type SetRoomOptionsResult =
 /**
  * Defines an interface that represents a successful "set room options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SetRoomOptionsSuccess
  */
 export interface SetRoomOptionsSuccess {
@@ -2342,7 +2342,7 @@ export interface SetRoomOptionsFailure {
 /**
  * The possible results for a "get room options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomOptionsResult
  */
 export type GetRoomOptionsResult =
@@ -2352,7 +2352,7 @@ export type GetRoomOptionsResult =
 /**
  * Defines an interface that represents a successful "get room options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomOptionsSuccess
  */
 export interface GetRoomOptionsSuccess {
@@ -2371,7 +2371,7 @@ export interface GetRoomOptionsSuccess {
 /**
  * Defines an interface that represents a failed "get room options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomOptionsFailure
  */
 export interface GetRoomOptionsFailure {
@@ -2391,7 +2391,7 @@ export interface GetRoomOptionsFailure {
 /**
  * The possible results for a "get room track options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomTrackOptionsResult
  */
 export type GetRoomTrackOptionsResult =
@@ -2401,7 +2401,7 @@ export type GetRoomTrackOptionsResult =
 /**
  * Defines an interface that represents a successful "get room track options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomTrackOptionsSuccess
  */
 export interface GetRoomTrackOptionsSuccess {
@@ -2425,7 +2425,7 @@ export interface GetRoomTrackOptionsSuccess {
 /**
  * Defines an interface that represents a failed "get room track options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomTrackOptionsFailure
  */
 export interface GetRoomTrackOptionsFailure {
@@ -2455,7 +2455,7 @@ export interface GetRoomTrackOptionsFailure {
 /**
  * The possible results for a "set room track options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SetRoomTrackOptionsResult
  */
 export type SetRoomTrackOptionsResult =
@@ -2465,7 +2465,7 @@ export type SetRoomTrackOptionsResult =
 /**
  * Defines an interface that represents a successful "set room track options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SetRoomTrackOptionsSuccess
  */
 export interface SetRoomTrackOptionsSuccess {
@@ -2490,7 +2490,7 @@ export interface SetRoomTrackOptionsSuccess {
 /**
  * Defines an interface that represents a failed "set room track options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SetRoomTrackOptionsFailure
  */
 export interface SetRoomTrackOptionsFailure {
@@ -2520,7 +2520,7 @@ export interface SetRoomTrackOptionsFailure {
 /**
  * The possible results for a "get room remote options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomRemoteOptionsResult
  */
 export type GetRoomRemoteOptionsResult =
@@ -2530,7 +2530,7 @@ export type GetRoomRemoteOptionsResult =
 /**
  * Defines an interface that represents a successful "get room remote options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomRemoteOptionsSuccess
  */
 export interface GetRoomRemoteOptionsSuccess {
@@ -2555,7 +2555,7 @@ export interface GetRoomRemoteOptionsSuccess {
 /**
  * Defines an interface that represents a failed "get room remote options" request.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetRoomRemoteOptionsFailure
  */
 export interface GetRoomRemoteOptionsFailure {
@@ -2691,7 +2691,7 @@ export interface RecordFileOptions {
 /**
  * Defines an interface that represents the result of a raycast operation.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RaycastResult
  */
 export interface RaycastResult {
@@ -2754,7 +2754,7 @@ export interface BotIntersection {
 /**
  * Defines an interface that represents a ray. That is, a line that has a start position and a direction, but no end.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RaycastRay
  */
 export interface RaycastRay {
@@ -2772,7 +2772,7 @@ export interface RaycastRay {
 /**
  * Defines an interface that represents a file that was uploaded.
  *
- * @dochash types/os
+ * @dochash types/os/files
  * @docname UploadedFile
  */
 export interface UploadedFile {
@@ -2996,10 +2996,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
              * @example Open the sheetPortal to "testDimension".
              * configBot.tags.sheetPortal = "testDimension";
              *
-             * @dochash actions/os
-             * @doctitle OS Actions
-             * @docsidebar OS
-             * @docdescription OS actions are used to interact with the player's current session.
+             * @dochash actions/os/system
+             * @doctitle System Actions
+             * @docsidebar System
+             * @docdescription System actions are used to get information about the current session.
              * @docname configBot
              * @docgroup 01-os
              */
@@ -5088,7 +5088,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show the player a code for 5 seconds.
      * os.toast("this is the code", 5);
      *
-     * @dochash actions/os
+     * @dochash actions/os/portals
+     * @doctitle Portal Actions
+     * @docsidebar Portals
+     * @docdescription Portal actions are functions that make it easier to work with the player's portals.
      * @docname os.toast
      */
     function toast(
@@ -5249,7 +5252,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   </iframe>
      * `);
      *
-     * @dochash actions/os
+     * @dochash actions/os/portals
      * @docname os.showHtml
      * @docgroup 10-html
      */
@@ -5263,7 +5266,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Hide the HTML popup.
      * os.hideHtml();
      *
-     * @dochash actions/os
+     * @dochash actions/os/portals
      * @docname os.hideHtml
      * @docgroup 10-html
      */
@@ -5280,7 +5283,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Copy "hello" to the player's clipboard.
      * os.setClipboard("hello");
      *
-     * @dochash actions/os
+     * @dochash actions/os/clipboard
+     * @doctitle Clipboard Actions
+     * @docsidebar Clipboard
+     * @docdescription Clipboard actions are functions that make it easier to work with the player's clipboard.
      * @docname os.setClipboard
      */
     function setClipboard(text: string): SetClipboardAction {
@@ -5484,7 +5490,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show the chat bar with some placeholder text.
      * os.showChat("hello");
      *
-     * @dochash actions/os
+     * @dochash actions/os/input
+     * @doctitle Input Actions
+     * @docsidebar Input
+     * @docdescription Input actions are functions that make it easier accept input from the user.
      * @docname os.showChat
      * @docid showChat-placeholder
      * @docgroup 10-chat
@@ -5531,7 +5540,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     foregroundColor: '#531234'
      * });
      *
-     * @dochash actions/os
+     * @dochash actions/os/input
      * @docname os.showChat
      * @docid showChat-options
      * @docgroup 10-chat
@@ -5568,7 +5577,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Hide the chat bar.
      * os.hideChat();
      *
-     * @dochash actions/os
+     * @dochash actions/os/input
      * @docname os.hideChat
      * @docgroup 10-chat
      */
@@ -5595,7 +5604,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const result = await os.run("return 594 + 391");
      * os.toast(result);
      *
-     * @dochash actions/os
+     * @dochash actions/os/system
      * @docname os.run
      */
     function run(script: string) {
@@ -5616,7 +5625,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const isPlayer = info.playerMode === "player";
      * os.toast('Is Player: ' + isPlayer);
      *
-     * @dochash actions/os
+     * @dochash actions/os/system
      * @docname os.version
      * @docgroup 10-os-info
      */
@@ -5631,7 +5640,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const info = os.device();
      * os.toast(info);
      *
-     * @dochash actions/os
+     * @dochash actions/os/system
      * @docname os.device
      * @docgroup 10-os-info
      */
@@ -5658,7 +5667,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const isCollaborative = os.isCollaborative();
      * os.toast(isCollaborative ? "We are collaborative!" : "We are not collaborative!");
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
+     * @doctitle Space Actions
+     * @docsidebar Spaces
+     * @docdescription Space actions are functions that make it easier to work with the spaces in CasualOS.
      * @docname os.isCollaborative
      * @docgroup 10-os-info
      */
@@ -5676,7 +5688,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Enable collaboration on this device.
      * await os.enableCollaboration();
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
      * @docname os.enableCollaboration
      * @docgroup 10-os-info
      */
@@ -5887,7 +5899,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Request a wake lock from the user.
      * await os.requestWakeLock();
      *
-     * @dochash actions/os
+     * @dochash actions/os/portals
      * @docname os.requestWakeLock
      * @docgroup 10-wake-lock
      */
@@ -5903,7 +5915,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Disable the wake lock
      * await os.disableWakeLock();
      *
-     * @dochash actions/os
+     * @dochash actions/os/portals
      * @docname os.disableWakeLock
      * @docgroup 10-wake-lock
      */
@@ -5925,7 +5937,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast('Wake lock is disabled.');
      * }
      *
-     * @dochash actions/os
+     * @dochash actions/os/portals
      * @docname os.getWakeLockConfiguration
      * @docgroup 10-wake-lock
      */
@@ -6451,7 +6463,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Load the "fun" inst.
      * os.loadInst("fun");
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
      * @docname os.loadInst
      * @docgroup 10-load-inst
      */
@@ -6468,7 +6480,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Unload the "fun" inst.
      * os.unloadInst("fun");
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
      * @docname os.unloadInst
      * @docgroup 10-load-inst
      */
@@ -7161,7 +7173,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Open the developer console.
      * os.openDevConsole();
      *
-     * @dochash actions/os
+     * @dochash actions/os/system
      * @docname os.openDevConsole
      * @docgroup 12-dev
      */
@@ -7277,7 +7289,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     text: 'abcdefghijklmnopqrstuvwxyz'
      * });
      *
-     * @dochash actions/os
+     * @dochash actions/os/input
      * @docname os.share
      */
     function share(options: ShareOptions): Promise<void> {
@@ -7646,7 +7658,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Log "Hello, World!" to the browser developer console.
      * os.log("Hello, World!");
      *
-     * @dochash actions/os
+     * @dochash actions/os/system
      * @docname os.log
      */
     function log(...args: any[]) {
@@ -7667,7 +7679,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast(location.errorMessage);
      * }
      *
-     * @dochash actions/os
+     * @dochash actions/os/geolocation
+     * @doctitle Geolocation Actions
+     * @docsidebar Geolocation
+     * @docdescription Actions for working with the device's geolocation.
      * @docname os.getGeolocation
      * @docgroup 10-geolocation
      */
@@ -7869,7 +7884,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show the "report inst" dialog.
      * await os.reportInst();
      *
-     * @dochash actions/os
+     * @dochash actions/os/moderation
+     * @doctitle Moderation Actions
+     * @docsidebar Moderation
+     * @docdescription Actions for working with moderation features.
      * @docname os.reportInst
      */
     function reportInst(): Promise<void> {
@@ -9218,7 +9236,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * });
      * os.toast(address);
      *
-     * @dochash actions/os
+     * @dochash actions/os/geolocation
      * @docname os.convertGeolocationToWhat3Words
      * @docgroup 10-geolocation
      */
@@ -9560,7 +9578,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const numberOfRemotes = await os.remoteCount('test');
      * os.toast("Number of Remotes: " + numberOfRemotes);
      *
-     * @dochash actions/os
+     * @dochash actions/os/remotes
+     * @doctitle Remote Actions
+     * @docsidebar Remotes
+     * @docdescription Actions for getting information about other places or devices (remotes).
      * @docname os.remoteCount
      * @docgroup 10-remotes
      */
@@ -9583,7 +9604,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const numberOfDevices = await os.totalRemoteCount();
      * os.toast("Number of Devices: " + numberOfDevices);
      *
-     * @dochash actions/os
+     * @dochash actions/os/remotes
      * @docname os.totalRemoteCount
      * @docgroup 10-remotes
      */
@@ -9607,7 +9628,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const remotes = await os.remotes();
      * os.toast("Remotes " + remotes.join(','));
      *
-     * @dochash actions/os
+     * @dochash actions/os/remotes
      * @docname os.remotes
      * @docgroup 10-remotes
      */
@@ -9630,7 +9651,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get a list of updates to shared space
      * const updates = await os.listInstUpdates();
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
      * @docname os.listInstUpdates
      * @docgroup 10-updates
      */
@@ -9680,7 +9701,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * }
      * console.log('Deltas: ', deltas);
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
      * @docname os.getInstStateFromUpdates
      * @docgroup 10-updates
      */
@@ -9716,7 +9737,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const update = await os.createInitializationUpdate(getBots(inDimension('home')));
      * tags.savedUpdate = update;
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
      * @docname os.createInitializationUpdate
      * @docgroup 10-updates
      */
@@ -9748,7 +9769,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Apply an update that was saved to a tag
      * await os.applyUpdatesToInst([ tags.savedUpdate ]);
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
      * @docname os.applyUpdatesToInst
      * @docgroup 10-updates
      */
@@ -9789,7 +9810,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Restored!");
      * }
      *
-     * @dochash actions/os
+     * @dochash actions/os/spaces
      * @docname os.getCurrentInstUpdate
      * @docgroup 10-updates
      */
@@ -9813,6 +9834,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example Merge a list of updates
      * const merged = os.mergeInstUpdates(updates);
+     *
+     * @dochash actions/os/spaces
+     * @docname os.mergeInstUpdates
+     * @docgroup 10-updates
      */
     function mergeInstUpdates(updates: InstUpdate[]): InstUpdate {
         return calcMergeInstUpdates(updates);
@@ -10161,7 +10186,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * await os.sleep(2000);
      * os.toast("Hammer Time!");
      *
-     * @dochash actions/os
+     * @dochash actions/os/system
      * @docname os.sleep
      */
     function sleep(time: number): Promise<void> {
@@ -11167,7 +11192,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Close the meet.
      * os.meetCommand('hangup')
      *
-     * @dochash actions/os
+     * @dochash actions/os/meets
+     * @doctitle Meet Actions
+     * @docsidebar Meets
+     * @docdescription Actions that are able to control the meetPortal.
      * @docname os.meetCommand
      * @docgroup 12-meet
      */
@@ -11189,7 +11217,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get a list of available breakout rooms.
      * const rooms = await os.meetFunction('listBreakoutRooms');
      *
-     * @dochash actions/os
+     * @dochash actions/os/meets
      * @docname os.meetFunction
      * @docgroup 12-meet
      */
@@ -14374,7 +14402,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     console.error('Could not get permission for microphone and/or camera:', e);
      * }
      *
-     * @dochash actions/os
+     * @dochash actions/os/media
+     * @doctitle Media Actions
+     * @docsidebar Media
+     * @docdescription Actions that are used to manage media permissions.
      * @docname os.getMediaPermission
      */
     function getMediaPermission(options: MediaPermssionOptions) {
@@ -14395,7 +14426,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     masks.label = await os.getAverageFrameRate();
      * }, 1000);
      *
-     * @dochash actions/os
+     * @dochash actions/os/portals
      * @docname os.getAverageFrameRate
      */
     function getAverageFrameRate(): Promise<number> {

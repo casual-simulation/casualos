@@ -43,7 +43,28 @@ export default {
                         'actions/files',
                         'actions/math',
                         'actions/mods',
-                        'actions/os',
+                        {
+                            type: 'category',
+                            label: 'OS',
+                            items: [
+                                'actions/os/animations',
+                                'actions/os/audio',
+                                'actions/os/barcodes',
+                                'actions/os/camera',
+                                'actions/os/clipboard',
+                                'actions/os/event',
+                                'actions/os/files',
+                                'actions/os/geolocation',
+                                'actions/os/image-classification',
+                                'actions/os/input',
+                                'actions/os/media',
+                                'actions/os/moderation',
+                                'actions/os/portals',
+                                'actions/os/system',
+                                'actions/os/remotes',
+                                'actions/os/xr',
+                            ]
+                        },
                         'actions/portals',
                         'actions/records',
                         'actions/rooms',
@@ -71,6 +92,7 @@ export default {
                         },
                         'types/error',
                         'types/experimental',
+                        'types/geolocation',
                         {
                             type: 'category',
                             label: 'Math',
@@ -79,7 +101,27 @@ export default {
                                 'types/math/rotations'
                             ]
                         },
-                        'types/os',
+                        {
+                            type: 'category',
+                            label: 'OS',
+                            items: [
+                                'types/os/animations',
+                                'types/os/audio',
+                                'types/os/barcodes',
+                                'types/os/camera',
+                                'types/os/clipboard',
+                                'types/os/event',
+                                'types/os/files',
+                                'types/os/geolocation',
+                                'types/os/image-classification',
+                                'types/os/input',
+                                'types/os/media',
+                                'types/os/moderation',
+                                'types/os/portals',
+                                'types/os/system',
+                                'types/os/xr',
+                            ]
+                        },
                         'types/permissions',
                         {
                             type: 'category',
