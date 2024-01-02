@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.2.9
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed some visual issues with studio subscriptions.
+
 ## V3.2.8
 
 #### Date: 12/29/2023
