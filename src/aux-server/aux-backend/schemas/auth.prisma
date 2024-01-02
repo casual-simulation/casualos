@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
   output   = "../prisma/generated"
 }
 
@@ -65,6 +65,8 @@ model User {
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
+
+    instReports UserInstReport[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -240,6 +242,8 @@ model Record {
     instRecords InstRecord[]
     instBranches InstBranch[]
     branchUpdates BranchUpdate[]
+
+    userInstReports UserInstReport[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -516,6 +520,7 @@ model InstRecord {
 
     branches InstBranch[]
     updates BranchUpdate[]
+    userInstReports UserInstReport[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -680,4 +685,30 @@ model PrivoClientCredentials {
     scope String
 
     @@index([expiresAt])
+}
+
+model UserInstReport {
+    id String @id @db.Uuid
+
+    recordName String?
+    record Record? @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "UserInstReport_recordName_fkey1")
+
+    inst String
+    instRecord InstRecord? @relation(fields: [recordName, inst], references: [recordName, name], onDelete: Cascade, map: "UserInstReport_inst_fkey1")
+    
+    reportingUserId String?
+    reportingUser User? @relation(fields: [reportingUserId], references: [id], onDelete: Cascade, map: "UserInstReport_reportingUserId_fkey1")
+
+    reportingIpAddress String?
+    automaticReport Boolean
+    reportReasonText String
+    reportReason String
+    reportedUrl String
+    reportedPermalink String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([automaticReport, createdAt(sort: Desc), recordName, inst])
+    @@index([reportReason, createdAt(sort: Desc), recordName, inst])
 }

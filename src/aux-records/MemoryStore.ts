@@ -122,10 +122,17 @@ import {
     StoredUpdates,
 } from './websockets';
 import { PrivoConfiguration } from './PrivoConfiguration';
+import { ModerationStore, UserInstReport } from './ModerationStore';
+import {
+    NotificationMessenger,
+    RecordsNotification,
+} from './NotificationMessenger';
+import { ModerationConfiguration } from './ModerationConfiguration';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
     privo?: PrivoConfiguration;
+    moderation?: ModerationConfiguration;
 }
 
 export class MemoryStore
@@ -138,7 +145,9 @@ export class MemoryStore
         PolicyStore,
         MetricsStore,
         ConfigurationStore,
-        InstRecordsStore
+        InstRecordsStore,
+        ModerationStore,
+        NotificationMessenger
 {
     private _users: AuthUser[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
@@ -165,11 +174,14 @@ export class MemoryStore
 
     private _emailRules: RegexRule[] = [];
     private _smsRules: RegexRule[] = [];
+    private _userInstReports: UserInstReport[] = [];
 
     private _instRecords: Map<string, Map<string, InstWithUpdates>> = new Map();
 
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
     private _privoConfiguration: PrivoConfiguration | null = null;
+    private _moderationConfiguration: ModerationConfiguration | null = null;
+    private _recordNotifications: RecordsNotification[] = [];
 
     maxAllowedInstSize: number = Infinity;
 
@@ -253,12 +265,46 @@ export class MemoryStore
         this._privoConfiguration = value;
     }
 
+    get moderationConfiguration() {
+        return this._moderationConfiguration;
+    }
+
+    set moderationConfiguration(value: ModerationConfiguration | null) {
+        this._moderationConfiguration = value;
+    }
+
+    get userInstReports() {
+        return this._userInstReports;
+    }
+
+    get recordsNotifications() {
+        return this._recordNotifications;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
+        this._moderationConfiguration = config.moderation ?? null;
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async sendRecordNotification(
+        notification: RecordsNotification
+    ): Promise<void> {
+        this._recordNotifications.push(notification);
+    }
+
+    async saveUserInstReport(report: UserInstReport): Promise<void> {
+        const existingReportIndex = this._userInstReports.findIndex(
+            (r) => r.id === report.id
+        );
+        if (existingReportIndex >= 0) {
+            this._userInstReports[existingReportIndex] = report;
+        } else {
+            this._userInstReports.push(report);
+        }
     }
 
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null> {
@@ -267,6 +313,10 @@ export class MemoryStore
 
     async getPrivoConfiguration(): Promise<PrivoConfiguration | null> {
         return this._privoConfiguration;
+    }
+
+    async getModerationConfig(): Promise<ModerationConfiguration | null> {
+        return this._moderationConfiguration;
     }
 
     async getRecordByName(name: string): Promise<Record> {

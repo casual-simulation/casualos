@@ -90,7 +90,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 36,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L36"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L36"
                             }
                         ],
                         "signatures": [
@@ -113,7 +113,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a new Vector2 object with the position (2, 3).\r\nlet myVector = new Vector2(2, 3);\r\n\r\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}`);\n```"
+                                                    "text": "```ts\nCreate a new Vector2 object with the position (2, 3).\nlet myVector = new Vector2(2, 3);\n\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}`);\n```"
                                                 }
                                             ]
                                         },
@@ -122,7 +122,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nMove this bot to (10, 15) in the home dimension.\r\ntags.homePosition = new Vector2(10, 15);\n```"
+                                                    "text": "```ts\nMove this bot to (10, 15) in the home dimension.\ntags.homePosition = new Vector2(10, 15);\n```"
                                                 }
                                             ]
                                         }
@@ -133,7 +133,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 36,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L36"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L36"
                                     }
                                 ],
                                 "parameters": [
@@ -211,7 +211,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 16,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L16"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L16"
                             }
                         ],
                         "type": {
@@ -239,7 +239,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 21,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L21"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L21"
                             }
                         ],
                         "type": {
@@ -258,7 +258,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 169,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L169"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L169"
                             }
                         ],
                         "signatures": [
@@ -281,7 +281,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nAdd two vectors together.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\nconst added = first.add(second);\r\n\r\nos.toast(added); // Prints (4, 6)\n```"
+                                                    "text": "```ts\nAdd two vectors together.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst added = first.add(second);\n\nos.toast(added); // Prints (4, 6)\n```"
                                                 }
                                             ]
                                         }
@@ -292,7 +292,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 169,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L169"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L169"
                                     }
                                 ],
                                 "parameters": [
@@ -343,7 +343,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 244,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L244"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L244"
                             }
                         ],
                         "signatures": [
@@ -357,7 +357,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the dot product of this vector compared to the given other vector.\r\nReturns a number that is positive if the vectors point in the same direction,\r\nnegative if they point in opposite directions, and zero if they are perpendicular.\r\nFor normalized vectors, this value is clamped to 1 and -1."
+                                            "text": "Calculates the dot product of this vector compared to the given other vector.\nReturns a number that is positive if the vectors point in the same direction,\nnegative if they point in opposite directions, and zero if they are perpendicular.\nFor normalized vectors, this value is clamped to 1 and -1."
                                         }
                                     ],
                                     "blockTags": [
@@ -366,7 +366,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDetermine how two vectors are pointing towards/away from the same direction.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\n\r\nconst dot = first.dot(second);\r\nif (dot < 0) {\r\n    os.toast(\"Vectors are pointing away from each other!\");\r\n} else if (dot === 0) {\r\n    os.toast(\"Vectors 90 degrees away from each other!\");\r\n} else {\r\n    os.toast(\"Vectors are pointing towards from each other!\");\r\n}\n```"
+                                                    "text": "```ts\nDetermine how two vectors are pointing towards/away from the same direction.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\n\nconst dot = first.dot(second);\nif (dot < 0) {\n    os.toast(\"Vectors are pointing away from each other!\");\n} else if (dot === 0) {\n    os.toast(\"Vectors 90 degrees away from each other!\");\n} else {\n    os.toast(\"Vectors are pointing towards from each other!\");\n}\n```"
                                                 }
                                             ]
                                         }
@@ -377,7 +377,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 244,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L244"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L244"
                                     }
                                 ],
                                 "parameters": [
@@ -424,7 +424,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 330,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L330"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L330"
                             }
                         ],
                         "signatures": [
@@ -447,7 +447,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDetermine if two vectors represent the same value.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\nconst third = new Vector2(1, 2);\r\n\r\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n```"
+                                                    "text": "```ts\nDetermine if two vectors represent the same value.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst third = new Vector2(1, 2);\n\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n```"
                                                 }
                                             ]
                                         }
@@ -458,7 +458,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 330,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L330"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L330"
                                     }
                                 ],
                                 "parameters": [
@@ -505,7 +505,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 257,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L257"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L257"
                             }
                         ],
                         "signatures": [
@@ -528,7 +528,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the length of the vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst length = myVector.length();\r\n\r\nos.toast(`Vector is ${length} units long`);\n```"
+                                                    "text": "```ts\nGet the length of the vector.\nconst myVector = new Vector2(1, 2);\nconst length = myVector.length();\n\nos.toast(`Vector is ${length} units long`);\n```"
                                                 }
                                             ]
                                         }
@@ -539,7 +539,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 257,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L257"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L257"
                                     }
                                 ],
                                 "type": {
@@ -560,7 +560,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 220,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L220"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L220"
                             }
                         ],
                         "signatures": [
@@ -583,7 +583,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nMultiply two vectors together.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\nconst multiplied = first.multiply(second);\r\n\r\nos.toast(multiplied); // Prints (3, 8)\n```"
+                                                    "text": "```ts\nMultiply two vectors together.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst multiplied = first.multiply(second);\n\nos.toast(multiplied); // Prints (3, 8)\n```"
                                                 }
                                             ]
                                         }
@@ -594,7 +594,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 220,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L220"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L220"
                                     }
                                 ],
                                 "parameters": [
@@ -645,7 +645,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 205,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L205"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L205"
                             }
                         ],
                         "signatures": [
@@ -668,7 +668,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nScale a vector by 10.\r\nconst myVector = new Vector2(1, 1);\r\nconst scaled = myVector.multiplyScalar(10);\r\nos.toast(scaled); // Prints (10, 10)\n```"
+                                                    "text": "```ts\nScale a vector by 10.\nconst myVector = new Vector2(1, 1);\nconst scaled = myVector.multiplyScalar(10);\nos.toast(scaled); // Prints (10, 10)\n```"
                                                 }
                                             ]
                                         }
@@ -679,7 +679,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 205,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L205"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L205"
                                     }
                                 ],
                                 "parameters": [
@@ -726,7 +726,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 302,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L302"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L302"
                             }
                         ],
                         "signatures": [
@@ -749,7 +749,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nNegate a vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst negated = myVector.negate();\r\n\r\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n```"
+                                                    "text": "```ts\nNegate a vector.\nconst myVector = new Vector2(1, 2);\nconst negated = myVector.negate();\n\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n```"
                                                 }
                                             ]
                                         }
@@ -760,7 +760,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 302,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L302"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L302"
                                     }
                                 ],
                                 "type": {
@@ -785,7 +785,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 288,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L288"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L288"
                             }
                         ],
                         "signatures": [
@@ -799,7 +799,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the normalized version of this vector and returns it.\r\nA normalized vector is a vector whose length equals 1.\r\n\r\nNormalizing a vector preserves its directionality while making the length (i.e. scale) of it 1."
+                                            "text": "Calculates the normalized version of this vector and returns it.\nA normalized vector is a vector whose length equals 1.\n\nNormalizing a vector preserves its directionality while making the length (i.e. scale) of it 1."
                                         }
                                     ],
                                     "blockTags": [
@@ -808,7 +808,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nNormalize a vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst normalized = myVector.normalize();\r\n\r\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n```"
+                                                    "text": "```ts\nNormalize a vector.\nconst myVector = new Vector2(1, 2);\nconst normalized = myVector.normalize();\n\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n```"
                                                 }
                                             ]
                                         }
@@ -819,7 +819,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 288,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L288"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L288"
                                     }
                                 ],
                                 "type": {
@@ -844,7 +844,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 272,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L272"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L272"
                             }
                         ],
                         "signatures": [
@@ -858,7 +858,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the square length of this vector and returns the result.\r\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\r\ncalculating a square root."
+                                            "text": "Calculates the square length of this vector and returns the result.\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\ncalculating a square root."
                                         }
                                     ],
                                     "blockTags": [
@@ -867,7 +867,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the square length of the vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst length = myVector.squareLength();\r\n\r\nos.toast(`Vector is ${length}^2 units long`);\n```"
+                                                    "text": "```ts\nGet the square length of the vector.\nconst myVector = new Vector2(1, 2);\nconst length = myVector.squareLength();\n\nos.toast(`Vector is ${length}^2 units long`);\n```"
                                                 }
                                             ]
                                         }
@@ -878,7 +878,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 272,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L272"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L272"
                                     }
                                 ],
                                 "type": {
@@ -899,7 +899,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 192,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L192"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L192"
                             }
                         ],
                         "signatures": [
@@ -922,7 +922,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nSubtract two vectors.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\nconst subtracted = first.subtract(second);\r\nos.toast(subtracted);\n```"
+                                                    "text": "```ts\nSubtract two vectors.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst subtracted = first.subtract(second);\nos.toast(subtracted);\n```"
                                                 }
                                             ]
                                         },
@@ -931,7 +931,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the direction from one vector to another.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\n\r\nconst directionFromFirstToSecond = second.subtract(first);\r\nconst directionFromSecondToFirst = first.subtract(second);\r\n\r\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n```"
+                                                    "text": "```ts\nFind the direction from one vector to another.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\n\nconst directionFromFirstToSecond = second.subtract(first);\nconst directionFromSecondToFirst = first.subtract(second);\n\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n```"
                                                 }
                                             ]
                                         }
@@ -942,7 +942,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 192,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L192"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L192"
                                     }
                                 ],
                                 "parameters": [
@@ -993,7 +993,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 315,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L315"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L315"
                             }
                         ],
                         "signatures": [
@@ -1016,7 +1016,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet a string of a vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst vectorString = myVector.toString();\r\n\r\nos.toast('My Vector: ' + vectorString);\n```"
+                                                    "text": "```ts\nGet a string of a vector.\nconst myVector = new Vector2(1, 2);\nconst vectorString = myVector.toString();\n\nos.toast('My Vector: ' + vectorString);\n```"
                                                 }
                                             ]
                                         }
@@ -1027,7 +1027,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 315,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L315"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L315"
                                     }
                                 ],
                                 "type": {
@@ -1050,7 +1050,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 78,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L78"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L78"
                             }
                         ],
                         "signatures": [
@@ -1073,7 +1073,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the angle between two vectors.\r\nconst first = new Vector2(\r\n    Math.cos(Math.PI / 3),\r\n    Math.sin(Math.PI / 3)\r\n); // 60 degrees\r\nconst second = new Vector2(\r\n    Math.cos(Math.PI / 2),\r\n    Math.sin(Math.PI / 2)\r\n); // 90 degrees\r\n\r\nconst angle = Vector2.angleBetween(first, second);\r\nos.toast(angle);\n```"
+                                                    "text": "```ts\nFind the angle between two vectors.\nconst first = new Vector2(\n    Math.cos(Math.PI / 3),\n    Math.sin(Math.PI / 3)\n); // 60 degrees\nconst second = new Vector2(\n    Math.cos(Math.PI / 2),\n    Math.sin(Math.PI / 2)\n); // 90 degrees\n\nconst angle = Vector2.angleBetween(first, second);\nos.toast(angle);\n```"
                                                 }
                                             ]
                                         }
@@ -1084,7 +1084,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 78,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L78"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L78"
                                     }
                                 ],
                                 "parameters": [
@@ -1157,7 +1157,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 55,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L55"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L55"
                             }
                         ],
                         "signatures": [
@@ -1180,7 +1180,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a normalized vector\r\nconst vector = Vector2.createNormalized(1, 2);\n```"
+                                                    "text": "```ts\nCreate a normalized vector\nconst vector = Vector2.createNormalized(1, 2);\n```"
                                                 }
                                             ]
                                         }
@@ -1191,7 +1191,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 55,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L55"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L55"
                                     }
                                 ],
                                 "parameters": [
@@ -1260,7 +1260,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 97,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L97"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L97"
                             }
                         ],
                         "signatures": [
@@ -1283,7 +1283,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the distance between two vectors.\r\nconst first = new Vector2(5, 10);\r\nconst second = new Vector2(9, 2);\r\nconst distance = Vector2.distanceBetween(first, second);\r\n\r\nos.toast(`Distance: ${distance}`);\n```"
+                                                    "text": "```ts\nFind the distance between two vectors.\nconst first = new Vector2(5, 10);\nconst second = new Vector2(9, 2);\nconst distance = Vector2.distanceBetween(first, second);\n\nos.toast(`Distance: ${distance}`);\n```"
                                                 }
                                             ]
                                         }
@@ -1294,7 +1294,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 97,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L97"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L97"
                                     }
                                 ],
                                 "parameters": [
@@ -1367,7 +1367,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 150,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L150"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L150"
                             }
                         ],
                         "signatures": [
@@ -1381,7 +1381,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\r\nThe degree that the result is interpolated is determined by the given amount parameter.\r\n\r\nThis function works similarly to interpolatePosition(), except the result is always a normalized vector."
+                                            "text": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter.\n\nThis function works similarly to interpolatePosition(), except the result is always a normalized vector."
                                         }
                                     ],
                                     "blockTags": [
@@ -1390,7 +1390,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the direction that points halfway between the two vectors.\r\nconst start = new Vector2(5, 10);\r\nconst finish = new Vector2(9, 2);\r\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\r\n\r\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the direction that points halfway between the two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         }
@@ -1401,7 +1401,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 150,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L150"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L150"
                                     }
                                 ],
                                 "parameters": [
@@ -1498,7 +1498,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 123,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L123"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L123"
                             }
                         ],
                         "signatures": [
@@ -1512,7 +1512,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new vector that is the linear interpolation between the given start and end positions.\r\nThe degree that the result is interpolated is determined by the given amount parameter."
+                                            "text": "Constructs a new vector that is the linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter."
                                         }
                                     ],
                                     "blockTags": [
@@ -1521,7 +1521,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the position that is halfway between two vectors.\r\nconst start = new Vector2(5, 10);\r\nconst finish = new Vector2(9, 2);\r\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\r\n\r\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the position that is halfway between two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         },
@@ -1530,7 +1530,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the position that is 1/4 between two vectors.\r\nconst start = new Vector2(5, 10);\r\nconst finish = new Vector2(9, 2);\r\nconst halfway = Vector2.interpolatePosition(start, finish, 0.25);\r\n\r\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the position that is 1/4 between two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.25);\n\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         }
@@ -1541,7 +1541,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 123,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L123"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L123"
                                     }
                                 ],
                                 "parameters": [
@@ -1667,7 +1667,7 @@
                         "fileName": "src/aux-common/math/Vector2.ts",
                         "line": 12,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector2.ts#L12"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L12"
                     }
                 ]
             },
@@ -1788,7 +1788,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 65,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L65"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L65"
                             }
                         ],
                         "signatures": [
@@ -1811,7 +1811,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a new Vector3 object with the position (2, 3, 4).\r\nlet myVector = new Vector3(2, 3, 4);\r\n\r\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}, Z: ${myVector.z}`);\n```"
+                                                    "text": "```ts\nCreate a new Vector3 object with the position (2, 3, 4).\nlet myVector = new Vector3(2, 3, 4);\n\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}, Z: ${myVector.z}`);\n```"
                                                 }
                                             ]
                                         },
@@ -1820,7 +1820,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nMove this bot to (1, 2, 3) in the home dimension.\r\ntags.homePosition = new Vector3(1, 2, 3);\n```"
+                                                    "text": "```ts\nMove this bot to (1, 2, 3) in the home dimension.\ntags.homePosition = new Vector3(1, 2, 3);\n```"
                                                 }
                                             ]
                                         }
@@ -1831,7 +1831,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 65,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L65"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L65"
                                     }
                                 ],
                                 "parameters": [
@@ -1930,7 +1930,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 18,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L18"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L18"
                             }
                         ],
                         "type": {
@@ -1958,7 +1958,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 23,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L23"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L23"
                             }
                         ],
                         "type": {
@@ -1986,7 +1986,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 28,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L28"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L28"
                             }
                         ],
                         "type": {
@@ -2005,7 +2005,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 33,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L33"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L33"
                             }
                         ],
                         "getSignature": {
@@ -2028,7 +2028,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 33,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L33"
+                                    "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L33"
                                 }
                             ],
                             "type": {
@@ -2052,7 +2052,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 40,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L40"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L40"
                             }
                         ],
                         "getSignature": {
@@ -2075,7 +2075,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 40,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L40"
+                                    "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L40"
                                 }
                             ],
                             "type": {
@@ -2099,7 +2099,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 47,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L47"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L47"
                             }
                         ],
                         "getSignature": {
@@ -2122,7 +2122,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 47,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L47"
+                                    "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L47"
                                 }
                             ],
                             "type": {
@@ -2146,7 +2146,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 208,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L208"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L208"
                             }
                         ],
                         "signatures": [
@@ -2169,7 +2169,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nAdd two vectors together.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\nconst added = first.add(second);\r\n\r\nos.toast(added); // Prints (4, 6, 8)\n```"
+                                                    "text": "```ts\nAdd two vectors together.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst added = first.add(second);\n\nos.toast(added); // Prints (4, 6, 8)\n```"
                                                 }
                                             ]
                                         }
@@ -2180,7 +2180,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 208,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L208"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L208"
                                     }
                                 ],
                                 "parameters": [
@@ -2231,7 +2231,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 312,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L312"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L312"
                             }
                         ],
                         "signatures": [
@@ -2245,7 +2245,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the cross product of this vector with the given other vector.\r\nReturns a new vector that is perpendicular to both vectors.\r\nNote that the order of the vectors greatly matters. For example, (1, 0, 0).cross(0, 1, 0) === (0, 0, 1) but (0, 1, 0).cross(1, 0, 0) === (0, 0, -1)."
+                                            "text": "Calculates the cross product of this vector with the given other vector.\nReturns a new vector that is perpendicular to both vectors.\nNote that the order of the vectors greatly matters. For example, (1, 0, 0).cross(0, 1, 0) === (0, 0, 1) but (0, 1, 0).cross(1, 0, 0) === (0, 0, -1)."
                                         }
                                     ],
                                     "blockTags": [
@@ -2254,7 +2254,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCalculate a vector that is perpendicular to two vectors.\r\nconst first = new Vector3(1, 0, 0);\r\nconst second = new Vector3(0, 1, 0);\r\n\r\nconst result = first.cross(second);\r\nos.toast(`Result: ${result}`); // Prints (0, 0, 1)\n```"
+                                                    "text": "```ts\nCalculate a vector that is perpendicular to two vectors.\nconst first = new Vector3(1, 0, 0);\nconst second = new Vector3(0, 1, 0);\n\nconst result = first.cross(second);\nos.toast(`Result: ${result}`); // Prints (0, 0, 1)\n```"
                                                 }
                                             ]
                                         }
@@ -2265,7 +2265,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 312,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L312"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L312"
                                     }
                                 ],
                                 "parameters": [
@@ -2316,7 +2316,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 295,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L295"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L295"
                             }
                         ],
                         "signatures": [
@@ -2330,7 +2330,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the dot product of this vector compared to the given other vector.\r\nReturns a number that is positive if the vectors point in the same direction,\r\nnegative if they point in opposite directions, and zero if they are perpendicular.\r\nFor normalized vectors, this value is clamped to 1 and -1."
+                                            "text": "Calculates the dot product of this vector compared to the given other vector.\nReturns a number that is positive if the vectors point in the same direction,\nnegative if they point in opposite directions, and zero if they are perpendicular.\nFor normalized vectors, this value is clamped to 1 and -1."
                                         }
                                     ],
                                     "blockTags": [
@@ -2339,7 +2339,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDetermine how two vectors are pointing towards/away from the same direction.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\n\r\nconst dot = first.dot(second);\r\nif (dot < 0) {\r\n    os.toast(\"Vectors are pointing away from each other!\");\r\n} else if (dot === 0) {\r\n    os.toast(\"Vectors 90 degrees away from each other!\");\r\n} else {\r\n    os.toast(\"Vectors are pointing towards from each other!\");\r\n}\n```"
+                                                    "text": "```ts\nDetermine how two vectors are pointing towards/away from the same direction.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\n\nconst dot = first.dot(second);\nif (dot < 0) {\n    os.toast(\"Vectors are pointing away from each other!\");\n} else if (dot === 0) {\n    os.toast(\"Vectors 90 degrees away from each other!\");\n} else {\n    os.toast(\"Vectors are pointing towards from each other!\");\n}\n```"
                                                 }
                                             ]
                                         }
@@ -2350,7 +2350,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 295,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L295"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L295"
                                     }
                                 ],
                                 "parameters": [
@@ -2397,7 +2397,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 405,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L405"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L405"
                             }
                         ],
                         "signatures": [
@@ -2420,7 +2420,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDetermine if two vectors represent the same value.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\nconst third = new Vector3(1, 2, 3);\r\n\r\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n```"
+                                                    "text": "```ts\nDetermine if two vectors represent the same value.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst third = new Vector3(1, 2, 3);\n\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n```"
                                                 }
                                             ]
                                         }
@@ -2431,7 +2431,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 405,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L405"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L405"
                                     }
                                 ],
                                 "parameters": [
@@ -2478,7 +2478,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 329,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L329"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L329"
                             }
                         ],
                         "signatures": [
@@ -2501,7 +2501,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the length of the vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst length = myVector.length();\r\n\r\nos.toast(`Vector is ${length} units long`);\n```"
+                                                    "text": "```ts\nGet the length of the vector.\nconst myVector = new Vector3(1, 2, 3);\nconst length = myVector.length();\n\nos.toast(`Vector is ${length} units long`);\n```"
                                                 }
                                             ]
                                         }
@@ -2512,7 +2512,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 329,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L329"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L329"
                                     }
                                 ],
                                 "type": {
@@ -2533,7 +2533,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 267,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L267"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L267"
                             }
                         ],
                         "signatures": [
@@ -2556,7 +2556,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nMultiply two vectors together.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\nconst multiplied = first.multiply(second);\r\n\r\nos.toast(multiplied); // Prints (3, 8, 15)\n```"
+                                                    "text": "```ts\nMultiply two vectors together.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst multiplied = first.multiply(second);\n\nos.toast(multiplied); // Prints (3, 8, 15)\n```"
                                                 }
                                             ]
                                         }
@@ -2567,7 +2567,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 267,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L267"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L267"
                                     }
                                 ],
                                 "parameters": [
@@ -2618,7 +2618,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 252,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L252"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L252"
                             }
                         ],
                         "signatures": [
@@ -2641,7 +2641,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nScale a vector by 10.\r\nconst myVector = new Vector3(1, 1, 1);\r\nconst scaled = myVector.multiplyScalar(10);\r\nos.toast(scaled); // Prints (10, 10, 10)\n```"
+                                                    "text": "```ts\nScale a vector by 10.\nconst myVector = new Vector3(1, 1, 1);\nconst scaled = myVector.multiplyScalar(10);\nos.toast(scaled); // Prints (10, 10, 10)\n```"
                                                 }
                                             ]
                                         }
@@ -2652,7 +2652,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 252,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L252"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L252"
                                     }
                                 ],
                                 "parameters": [
@@ -2699,7 +2699,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 377,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L377"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L377"
                             }
                         ],
                         "signatures": [
@@ -2722,7 +2722,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nNegate a vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst negated = myVector.negate();\r\n\r\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n```"
+                                                    "text": "```ts\nNegate a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst negated = myVector.negate();\n\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n```"
                                                 }
                                             ]
                                         }
@@ -2733,7 +2733,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 377,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L377"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L377"
                                     }
                                 ],
                                 "type": {
@@ -2758,7 +2758,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 360,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L360"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L360"
                             }
                         ],
                         "signatures": [
@@ -2772,7 +2772,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the normalized version of this vector and returns it.\r\nA normalized vector is a vector whose length equals 1.\r\n\r\nNormalizing a vector preserves its directionality while making the length (i.e. scale) of it 1."
+                                            "text": "Calculates the normalized version of this vector and returns it.\nA normalized vector is a vector whose length equals 1.\n\nNormalizing a vector preserves its directionality while making the length (i.e. scale) of it 1."
                                         }
                                     ],
                                     "blockTags": [
@@ -2781,7 +2781,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nNormalize a vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst normalized = myVector.normalize();\r\n\r\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n```"
+                                                    "text": "```ts\nNormalize a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst normalized = myVector.normalize();\n\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n```"
                                                 }
                                             ]
                                         }
@@ -2792,7 +2792,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 360,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L360"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L360"
                                     }
                                 ],
                                 "type": {
@@ -2817,7 +2817,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 344,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L344"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L344"
                             }
                         ],
                         "signatures": [
@@ -2831,7 +2831,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the square length of this vector and returns the result.\r\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\r\ncalculating a square root."
+                                            "text": "Calculates the square length of this vector and returns the result.\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\ncalculating a square root."
                                         }
                                     ],
                                     "blockTags": [
@@ -2840,7 +2840,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the square length of the vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst length = myVector.squareLength();\r\n\r\nos.toast(`Vector is ${length}^2 units long`);\n```"
+                                                    "text": "```ts\nGet the square length of the vector.\nconst myVector = new Vector3(1, 2, 3);\nconst length = myVector.squareLength();\n\nos.toast(`Vector is ${length}^2 units long`);\n```"
                                                 }
                                             ]
                                         }
@@ -2851,7 +2851,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 344,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L344"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L344"
                                     }
                                 ],
                                 "type": {
@@ -2872,7 +2872,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 235,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L235"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L235"
                             }
                         ],
                         "signatures": [
@@ -2895,7 +2895,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nSubtract two vectors.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\nconst subtracted = first.subtract(second);\r\nos.toast(subtracted);\n```"
+                                                    "text": "```ts\nSubtract two vectors.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst subtracted = first.subtract(second);\nos.toast(subtracted);\n```"
                                                 }
                                             ]
                                         },
@@ -2904,7 +2904,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the direction from one vector to another.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\n\r\nconst directionFromFirstToSecond = second.subtract(first);\r\nconst directionFromSecondToFirst = first.subtract(second);\r\n\r\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n```"
+                                                    "text": "```ts\nFind the direction from one vector to another.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\n\nconst directionFromFirstToSecond = second.subtract(first);\nconst directionFromSecondToFirst = first.subtract(second);\n\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n```"
                                                 }
                                             ]
                                         }
@@ -2915,7 +2915,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 235,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L235"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L235"
                                     }
                                 ],
                                 "parameters": [
@@ -2966,7 +2966,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 390,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L390"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L390"
                             }
                         ],
                         "signatures": [
@@ -2989,7 +2989,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet a string of a vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst vectorString = myVector.toString();\r\n\r\nos.toast('My Vector: ' + vectorString);\n```"
+                                                    "text": "```ts\nGet a string of a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst vectorString = myVector.toString();\n\nos.toast('My Vector: ' + vectorString);\n```"
                                                 }
                                             ]
                                         }
@@ -3000,7 +3000,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 390,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L390"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L390"
                                     }
                                 ],
                                 "type": {
@@ -3023,7 +3023,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 111,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L111"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L111"
                             }
                         ],
                         "signatures": [
@@ -3046,7 +3046,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the angle between two vectors.\r\nconst first = new Vector3(\r\n    Math.cos(Math.PI / 3),\r\n    Math.sin(Math.PI / 3),\r\n    0,\r\n); // 60 degrees\r\nconst second = new Vector3(\r\n    Math.cos(Math.PI / 2),\r\n    Math.sin(Math.PI / 2),\r\n    0\r\n); // 90 degrees\r\n\r\nconst angle = Vector3.angleBetween(first, second);\r\nos.toast(angle);\n```"
+                                                    "text": "```ts\nFind the angle between two vectors.\nconst first = new Vector3(\n    Math.cos(Math.PI / 3),\n    Math.sin(Math.PI / 3),\n    0,\n); // 60 degrees\nconst second = new Vector3(\n    Math.cos(Math.PI / 2),\n    Math.sin(Math.PI / 2),\n    0\n); // 90 degrees\n\nconst angle = Vector3.angleBetween(first, second);\nos.toast(angle);\n```"
                                                 }
                                             ]
                                         }
@@ -3057,7 +3057,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 111,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L111"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L111"
                                     }
                                 ],
                                 "parameters": [
@@ -3130,7 +3130,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 86,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L86"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L86"
                             }
                         ],
                         "signatures": [
@@ -3153,7 +3153,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a normalized vector\r\nconst vector = Vector3.createNormalized(1, 2, 3);\n```"
+                                                    "text": "```ts\nCreate a normalized vector\nconst vector = Vector3.createNormalized(1, 2, 3);\n```"
                                                 }
                                             ]
                                         }
@@ -3164,7 +3164,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 86,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L86"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L86"
                                     }
                                 ],
                                 "parameters": [
@@ -3253,7 +3253,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 136,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L136"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L136"
                             }
                         ],
                         "signatures": [
@@ -3276,7 +3276,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the distance between two vectors.\r\nconst first = new Vector3(5, 10, 3);\r\nconst second = new Vector3(9, 2, 6);\r\nconst distance = Vector3.distanceBetween(first, second);\r\n\r\nos.toast(`Distance: ${distance}`);\n```"
+                                                    "text": "```ts\nFind the distance between two vectors.\nconst first = new Vector3(5, 10, 3);\nconst second = new Vector3(9, 2, 6);\nconst distance = Vector3.distanceBetween(first, second);\n\nos.toast(`Distance: ${distance}`);\n```"
                                                 }
                                             ]
                                         }
@@ -3287,7 +3287,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 136,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L136"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L136"
                                     }
                                 ],
                                 "parameters": [
@@ -3360,7 +3360,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 189,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L189"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L189"
                             }
                         ],
                         "signatures": [
@@ -3374,7 +3374,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\r\nThe degree that the result is interpolated is determined by the given amount parameter.\r\n\r\nThis function works similarly to interpolatePosition(), except the result is always a normalized vector."
+                                            "text": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter.\n\nThis function works similarly to interpolatePosition(), except the result is always a normalized vector."
                                         }
                                     ],
                                     "blockTags": [
@@ -3383,7 +3383,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the direction that points halfway between the two vectors.\r\nconst start = new Vector3(5, 10, 16);\r\nconst finish = new Vector3(9, 2, 6);\r\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\r\n\r\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the direction that points halfway between the two vectors.\nconst start = new Vector3(5, 10, 16);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         }
@@ -3394,7 +3394,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 189,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L189"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L189"
                                     }
                                 ],
                                 "parameters": [
@@ -3491,7 +3491,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 162,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L162"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L162"
                             }
                         ],
                         "signatures": [
@@ -3505,7 +3505,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new vector that is the linear interpolation between the given start and end positions.\r\nThe degree that the result is interpolated is determined by the given amount parameter."
+                                            "text": "Constructs a new vector that is the linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter."
                                         }
                                     ],
                                     "blockTags": [
@@ -3514,7 +3514,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the position that is halfway between two vectors.\r\nconst start = new Vector3(5, 10, 15);\r\nconst finish = new Vector3(9, 2, 6);\r\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\r\n\r\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the position that is halfway between two vectors.\nconst start = new Vector3(5, 10, 15);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         },
@@ -3523,7 +3523,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the position that is 1/4 between two vectors.\r\nconst start = new Vector3(5, 10, 15);\r\nconst finish = new Vector3(9, 2, 6);\r\nconst halfway = Vector3.interpolatePosition(start, finish, 0.25);\r\n\r\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the position that is 1/4 between two vectors.\nconst start = new Vector3(5, 10, 15);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.25);\n\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         }
@@ -3534,7 +3534,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 162,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L162"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L162"
                                     }
                                 ],
                                 "parameters": [
@@ -3670,7 +3670,7 @@
                         "fileName": "src/aux-common/math/Vector3.ts",
                         "line": 14,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/56c869f96/src/aux-common/math/Vector3.ts#L14"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L14"
                     }
                 ]
             },
@@ -3708,7 +3708,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3539": "CasualOSError",
+        "id-3545": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -3718,477 +3718,487 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3558": "AIChatMessage",
+        "id-3564": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-3328": "AIChatOptions",
+        "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
-        "id-2478": "AIGenerateImageSuccess",
+        "id-2481": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-3342": "AIGenerateImageOptions",
+        "id-3348": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-3338": "AIGenerateSkyboxOptions",
+        "id-3344": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
-        "id-2471": "AIGenerateSkyboxRequest",
+        "id-2474": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
-        "id-2475": "AIGenerateSkyboxResult",
+        "id-2478": "AIGenerateSkyboxResult",
         "AIGeneratedImage": "types/ai",
-        "id-2481": "AIGeneratedImage",
-        "ARSupportedAction": "types/os",
-        "id-3073": "ARSupportedAction",
+        "id-2484": "AIGeneratedImage",
+        "ARSupportedAction": "types/os/xr",
+        "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3743": "AddCountFailure",
+        "id-3750": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3738": "AddCountSuccess",
-        "AddDropSnapAction": "types/os",
-        "id-2702": "AddDropSnapAction",
-        "AddDropSnapPointsAction": "types/os",
-        "id-2706": "AddDropSnapPointsAction",
-        "AnalyticsRecordEventAction": "types/os",
-        "id-3278": "AnalyticsRecordEventAction",
+        "id-3745": "AddCountSuccess",
+        "AddDropSnapAction": "types/os/portals",
+        "id-2705": "AddDropSnapAction",
+        "AddDropSnapPointsAction": "types/os/portals",
+        "id-2709": "AddDropSnapPointsAction",
+        "AnalyticsRecordEventAction": "types/os/portals",
+        "id-3279": "AnalyticsRecordEventAction",
         "AnimateTagOptions": "types/animation",
-        "id-2075": "AnimateTagOptions",
+        "id-2078": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2451": "AttachDebuggerOptions",
-        "AuthData": "types/os",
-        "id-3217": "AuthData",
-        "CasualOSDevice": "types/os",
-        "id-3526": "CasualOSDevice",
-        "CasualOSVersion": "types/os",
-        "id-3518": "CasualOSVersion",
+        "id-2454": "AttachDebuggerOptions",
+        "AuthData": "types/os/records",
+        "id-3218": "AuthData",
+        "CasualOSDevice": "types/os/system",
+        "id-3532": "CasualOSDevice",
+        "CasualOSVersion": "types/os/system",
+        "id-3524": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
-        "BeginRecordingAction": "types/os",
-        "id-3160": "BeginRecordingAction",
+        "BeginRecordingAction": "types/os/audio",
+        "id-3161": "BeginRecordingAction",
         "BotTagMasks": "types/core",
-        "id-3495": "BotTagMasks",
+        "id-3501": "BotTagMasks",
         "BotTags": "types/core",
-        "id-3410": "BotTags",
+        "id-3416": "BotTags",
         "BotState": "types/core",
-        "id-3508": "BotState",
-        "BufferFormAddressGLTFAction": "types/os",
-        "id-3285": "BufferFormAddressGLTFAction",
-        "BufferSoundAction": "types/os",
-        "id-2884": "BufferSoundAction",
-        "CalculateRayFromCameraAction": "types/os",
-        "id-3258": "CalculateRayFromCameraAction",
-        "CancelSoundAction": "types/os",
-        "id-2890": "CancelSoundAction",
+        "id-3514": "BotState",
+        "BufferFormAddressGLTFAction": "types/os/portals",
+        "id-3286": "BufferFormAddressGLTFAction",
+        "BufferSoundAction": "types/os/audio",
+        "id-2887": "BufferSoundAction",
+        "CalculateRayFromCameraAction": "types/os/portals",
+        "id-3259": "CalculateRayFromCameraAction",
+        "CancelSoundAction": "types/os/audio",
+        "id-2893": "CancelSoundAction",
         "CompiledBotListeners": "types/core",
-        "id-3489": "CompiledBotListeners",
-        "ConfigureWakeLockAction": "types/os",
-        "id-3265": "ConfigureWakeLockAction",
-        "ConvertGeolocationToWhat3WordsAction": "types/os",
-        "id-2648": "ConvertGeolocationToWhat3WordsAction",
-        "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2637": "ConvertGeolocationToWhat3WordsOptions",
+        "id-3495": "CompiledBotListeners",
+        "ConfigureWakeLockAction": "types/os/portals",
+        "id-3266": "ConfigureWakeLockAction",
+        "ConvertGeolocationToWhat3WordsAction": "types/os/geolocation",
+        "id-2651": "ConvertGeolocationToWhat3WordsAction",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
+        "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3680": "CreatePublicRecordKeyFailure",
+        "id-3686": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3676": "CreatePublicRecordKeySuccess",
-        "CustomAppContainerAvailableAction": "types/os",
-        "id-3117": "CustomAppContainerAvailableAction",
+        "id-3682": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2404": "DebuggerCallFrame",
+        "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2439": "DebuggerFunctionLocation",
+        "id-2442": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2433": "DebuggerPause",
+        "id-2436": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2412": "DebuggerTagMaskUpdate",
+        "id-2415": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2418": "DebuggerTagUpdate",
+        "id-2421": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2445": "DebuggerVariable",
-        "DefineGlobalBotAction": "types/os",
-        "id-2641": "DefineGlobalBotAction",
-        "DownloadAction": "types/os",
-        "id-2896": "DownloadAction",
+        "id-2448": "DebuggerVariable",
+        "DefineGlobalBotAction": "types/os/portals",
+        "id-2644": "DefineGlobalBotAction",
+        "DownloadAction": "types/os/files",
+        "id-2899": "DownloadAction",
         "Easing": "types/animation",
-        "id-2619": "Easing",
-        "EnableARAction": "types/os",
-        "id-3069": "EnableARAction",
-        "EnableCollaborationAction": "types/os",
-        "id-3028": "EnableCollaborationAction",
-        "EnableCustomDraggingAction": "types/os",
-        "id-2732": "EnableCustomDraggingAction",
-        "EnablePOVAction": "types/os",
-        "id-3087": "EnablePOVAction",
-        "EnableVRAction": "types/os",
-        "id-3083": "EnableVRAction",
-        "EnableXROptions": "types/os",
-        "id-2939": "EnableXROptions",
-        "EndRecordingAction": "types/os",
-        "id-3168": "EndRecordingAction",
+        "id-2622": "Easing",
+        "EnableARAction": "types/os/xr",
+        "id-3072": "EnableARAction",
+        "EnableCollaborationAction": "types/os/spaces",
+        "id-3031": "EnableCollaborationAction",
+        "EnableCustomDraggingAction": "types/os/portals",
+        "id-2735": "EnableCustomDraggingAction",
+        "EnablePOVAction": "types/os/portals",
+        "id-3090": "EnablePOVAction",
+        "EnableVRAction": "types/os/xr",
+        "id-3086": "EnableVRAction",
+        "EnableXROptions": "types/os/xr",
+        "id-2942": "EnableXROptions",
+        "EndRecordingAction": "types/os/audio",
+        "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3714": "EraseDataFailure",
+        "id-3721": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3710": "EraseDataSuccess",
+        "id-3717": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3733": "EraseFileFailure",
+        "id-3740": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3729": "EraseFileSuccess",
+        "id-3736": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
-        "ExitFullscreenAction": "types/os",
-        "id-3102": "ExitFullscreenAction",
-        "FocusOnOptions": "types/os",
-        "id-2686": "FocusOnOptions",
-        "FocusOnRotation": "types/os",
-        "id-2698": "FocusOnRotation",
-        "FormAnimationData": "types/os",
-        "id-2984": "FormAnimationData",
+        "ExitFullscreenAction": "types/os/portals",
+        "id-3105": "ExitFullscreenAction",
+        "FocusOnOptions": "types/os/camera",
+        "id-2689": "FocusOnOptions",
+        "FocusOnRotation": "types/os/camera",
+        "id-2701": "FocusOnRotation",
+        "FormAnimationData": "types/os/animations",
+        "id-2987": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3536": "GenericError",
-        "GetAverageFrameRateAction": "types/os",
-        "id-3238": "GetAverageFrameRateAction",
+        "id-3542": "GenericError",
+        "GetAverageFrameRateAction": "types/os/portals",
+        "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3754": "GetCountFailure",
+        "id-3761": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3748": "GetCountSuccess",
+        "id-3755": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3705": "GetDataFailure",
+        "id-3712": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3696": "GetDataSuccess",
-        "GetGeolocationAction": "types/os",
-        "id-3201": "GetGeolocationAction",
-        "GetRoomOptionsFailure": "types/os",
-        "id-2166": "GetRoomOptionsFailure",
-        "GetRoomOptionsSuccess": "types/os",
-        "id-2162": "GetRoomOptionsSuccess",
-        "GetRoomRemoteOptionsFailure": "types/os",
-        "id-2209": "GetRoomRemoteOptionsFailure",
-        "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-2204": "GetRoomRemoteOptionsSuccess",
-        "GetRoomTrackOptionsFailure": "types/os",
-        "id-2185": "GetRoomTrackOptionsFailure",
-        "GetRoomTrackOptionsSuccess": "types/os",
-        "id-2180": "GetRoomTrackOptionsSuccess",
-        "GetVoicesAction": "types/os",
-        "id-3196": "GetVoicesAction",
-        "GetWakeLockConfigurationAction": "types/os",
-        "id-3271": "GetWakeLockConfigurationAction",
-        "GoToTagAction": "types/os",
-        "id-3206": "GoToTagAction",
+        "id-3703": "GetDataSuccess",
+        "GetGeolocationAction": "types/os/geolocation",
+        "id-3202": "GetGeolocationAction",
+        "GetRoomOptionsFailure": "types/os/portals",
+        "id-2169": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os/portals",
+        "id-2165": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os/portals",
+        "id-2212": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os/portals",
+        "id-2207": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os/portals",
+        "id-2188": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os/portals",
+        "id-2183": "GetRoomTrackOptionsSuccess",
+        "GetVoicesAction": "types/os/audio",
+        "id-3197": "GetVoicesAction",
+        "GetWakeLockConfigurationAction": "types/os/portals",
+        "id-3272": "GetWakeLockConfigurationAction",
+        "GoToTagAction": "types/os/portals",
+        "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3782": "GrantMarkerPermissionFailure",
+        "id-3789": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3780": "GrantMarkerPermissionSuccess",
+        "id-3787": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3768": "GrantRoleFailure",
+        "id-3775": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3766": "GrantRoleSuccess",
-        "HtmlAppEventAction": "types/os",
-        "id-2548": "HtmlAppEventAction",
-        "HtmlAppMethodCallAction": "types/os",
-        "id-2553": "HtmlAppMethodCallAction",
-        "ImageClassifierOptions": "types/os",
-        "id-2737": "ImageClassifierOptions",
-        "InstUpdate": "types/os",
-        "id-3532": "InstUpdate",
-        "JoinRoomFailure": "types/os",
-        "id-2147": "JoinRoomFailure",
-        "JoinRoomSuccess": "types/os",
-        "id-2144": "JoinRoomSuccess",
-        "LeaveRoomFailure": "types/os",
-        "id-2156": "LeaveRoomFailure",
-        "LeaveRoomSuccess": "types/os",
-        "id-2153": "LeaveRoomSuccess",
+        "id-3773": "GrantRoleSuccess",
+        "HideHtmlAction": "types/os/portals",
+        "id-2541": "HideHtmlAction",
+        "HideTooltipAction": "types/os/portals",
+        "id-2530": "HideTooltipAction",
+        "HtmlAppEventAction": "types/os/portals",
+        "id-2551": "HtmlAppEventAction",
+        "HtmlAppMethodCallAction": "types/os/portals",
+        "id-2556": "HtmlAppMethodCallAction",
+        "ImageClassifierOptions": "types/os/image-classification",
+        "id-2740": "ImageClassifierOptions",
+        "InstUpdate": "types/os/spaces",
+        "id-3538": "InstUpdate",
+        "JoinRoomFailure": "types/os/portals",
+        "id-2150": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os/portals",
+        "id-2147": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os/portals",
+        "id-2159": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os/portals",
+        "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3724": "ListDataFailure",
+        "id-3731": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3719": "ListDataSuccess",
-        "ListFormAnimationsAction": "types/os",
-        "id-2988": "ListFormAnimationsAction",
+        "id-3726": "ListDataSuccess",
+        "ListFormAnimationsAction": "types/os/animations",
+        "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3797": "ListStudiosFailure",
+        "id-3804": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3794": "ListStudiosSuccess",
+        "id-3801": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3801": "ListedStudio",
-        "LoadBotsAction": "types/os",
-        "id-3033": "LoadBotsAction",
-        "LoadSpaceAction": "types/os",
-        "id-2929": "LoadSpaceAction",
-        "LocalFormAnimationAction": "types/os",
-        "id-3040": "LocalFormAnimationAction",
-        "LocalPositionTweenAction": "types/os",
-        "id-3054": "LocalPositionTweenAction",
-        "LocalTweenAction": "types/os",
-        "id-3044": "LocalTweenAction",
+        "id-3808": "ListedStudio",
+        "LoadInstAction": "types/os/spaces",
+        "id-2812": "LoadInstAction",
+        "LoadSpaceAction": "types/os/spaces",
+        "id-2932": "LoadSpaceAction",
+        "LocalFormAnimationAction": "types/os/animations",
+        "id-3043": "LocalFormAnimationAction",
+        "LocalPositionTweenAction": "types/os/animations",
+        "id-3057": "LocalPositionTweenAction",
+        "LocalTweenAction": "types/os/animations",
+        "id-3047": "LocalTweenAction",
         "LookRotation": "types/math/rotations",
         "id-211": "LookRotation",
-        "MediaPermissionAction": "types/os",
-        "id-3231": "MediaPermissionAction",
-        "MediaPermissionOptions": "types/os",
-        "id-2936": "MediaPermissionOptions",
-        "MeetCommandAction": "types/os",
-        "id-3173": "MeetCommandAction",
-        "MeetFunctionAction": "types/os",
-        "id-3180": "MeetFunctionAction",
+        "MediaPermissionAction": "types/os/media",
+        "id-3232": "MediaPermissionAction",
+        "MediaPermissionOptions": "types/os/media",
+        "id-2939": "MediaPermissionOptions",
+        "MeetCommandAction": "types/os/meets",
+        "id-3174": "MeetCommandAction",
+        "MeetFunctionAction": "types/os/meets",
+        "id-3181": "MeetFunctionAction",
         "Debugger": "types/debuggers/debugger",
-        "id-2216": "Debugger",
+        "id-2219": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2423": "NormalDebuggerOptions",
-        "OpenCircleWipeAction": "types/os",
-        "id-3150": "OpenCircleWipeAction",
-        "OpenCircleWipeOptions": "types/os",
-        "id-3157": "OpenCircleWipeOptions",
+        "id-2426": "NormalDebuggerOptions",
+        "OpenCircleWipeAction": "types/os/portals",
+        "id-3151": "OpenCircleWipeAction",
+        "OpenCircleWipeOptions": "types/os/portals",
+        "id-3158": "OpenCircleWipeOptions",
+        "OpenConsoleAction": "types/os/system",
+        "id-2787": "OpenConsoleAction",
         "PhotoCameraOptions": "types/camera",
-        "id-3012": "PhotoCameraOptions",
-        "OpenURLAction": "types/os",
-        "id-2873": "OpenURLAction",
+        "id-3015": "PhotoCameraOptions",
+        "OpenURLAction": "types/os/portals",
+        "id-2876": "OpenURLAction",
         "ParsedBotLink": "types/core",
-        "id-3514": "ParsedBotLink",
+        "id-3520": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-3511": "PartialBotState",
+        "id-3517": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2272": "PausableDebugger",
+        "id-2275": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2428": "PausableDebuggerOptions",
+        "id-2431": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2391": "PauseTrigger",
+        "id-2394": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2399": "PauseTriggerOptions",
+        "id-2402": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-3024": "Photo",
-        "PlaySoundAction": "types/os",
-        "id-2877": "PlaySoundAction",
+        "id-3027": "Photo",
+        "PlaySoundAction": "types/os/audio",
+        "id-2880": "PlaySoundAction",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2386": "PossiblePauseTriggerLocation",
+        "id-2389": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2460": "PseudoRandomNumberGenerator",
+        "id-2463": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
         "id-215": "QuaternionRotation",
-        "RaycastFromCameraAction": "types/os",
-        "id-3243": "RaycastFromCameraAction",
-        "RaycastInPortalAction": "types/os",
-        "id-3250": "RaycastInPortalAction",
-        "RaycastRay": "types/os",
-        "id-2140": "RaycastRay",
-        "RaycastResult": "types/os",
-        "id-2137": "RaycastResult",
+        "RaycastFromCameraAction": "types/os/portals",
+        "id-3244": "RaycastFromCameraAction",
+        "RaycastInPortalAction": "types/os/portals",
+        "id-3251": "RaycastInPortalAction",
+        "RaycastRay": "types/os/portals",
+        "id-2143": "RaycastRay",
+        "RaycastResult": "types/os/portals",
+        "id-2140": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-3291": "RecordActionOptions",
+        "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3690": "RecordDataFailure",
+        "id-3696": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3686": "RecordDataSuccess",
+        "id-3692": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-2107": "RecordFileFailure",
+        "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-2103": "RecordFileSuccess",
+        "id-2106": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2999": "RecordedFile",
+        "id-3002": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2997": "Recording",
+        "id-3000": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-3004": "RecordingOptions",
-        "RegisterBuiltinPortalAction": "types/os",
-        "id-3112": "RegisterBuiltinPortalAction",
-        "RegisterCustomAppAction": "types/os",
-        "id-3120": "RegisterCustomAppAction",
-        "RegisterHtmlAppAction": "types/os",
-        "id-3133": "RegisterHtmlAppAction",
+        "id-3007": "RecordingOptions",
+        "RegisterBuiltinPortalAction": "types/os/portals",
+        "id-3115": "RegisterBuiltinPortalAction",
+        "RegisterCustomAppAction": "types/os/portals",
+        "id-3121": "RegisterCustomAppAction",
+        "RegisterHtmlAppAction": "types/os/portals",
+        "id-3134": "RegisterHtmlAppAction",
         "RegisterPrefixOptions": "types/core",
-        "id-2994": "RegisterPrefixOptions",
-        "RejectAction": "types/os",
-        "id-2902": "RejectAction",
-        "RemoteAction": "types/os",
-        "id-3807": "RemoteAction",
-        "RequestAuthDataAction": "types/os",
-        "id-3211": "RequestAuthDataAction",
-        "RequestFullscreenAction": "types/os",
-        "id-3100": "RequestFullscreenAction",
+        "id-2997": "RegisterPrefixOptions",
+        "RejectAction": "types/os/event",
+        "id-2905": "RejectAction",
+        "RemoteAction": "types/os/event",
+        "id-3814": "RemoteAction",
+        "ReportInstAction": "types/os/moderation",
+        "id-3292": "ReportInstAction",
+        "RequestAuthDataAction": "types/os/records",
+        "id-3212": "RequestAuthDataAction",
+        "RequestFullscreenAction": "types/os/portals",
+        "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "RevokeMarkerPermissionFailure",
+        "id-3796": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "RevokeMarkerPermissionSuccess",
+        "id-3794": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3775": "RevokeRoleFailure",
+        "id-3782": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3773": "RevokeRoleSuccess",
-        "RoomJoinOptions": "types/os",
-        "id-3294": "RoomJoinOptions",
-        "RoomOptions": "types/os",
-        "id-3303": "RoomOptions",
-        "RoomRemoteOptions": "types/os",
-        "id-3319": "RoomRemoteOptions",
-        "RoomTrackOptions": "types/os",
-        "id-3307": "RoomTrackOptions",
-        "RunScriptAction": "types/os",
-        "id-2916": "RunScriptAction",
+        "id-3780": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os/portals",
+        "id-3300": "RoomJoinOptions",
+        "RoomOptions": "types/os/portals",
+        "id-3309": "RoomOptions",
+        "RoomRemoteOptions": "types/os/portals",
+        "id-3325": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os/portals",
+        "id-3313": "RoomTrackOptions",
+        "RunScriptAction": "types/os/system",
+        "id-2919": "RunScriptAction",
         "RuntimeBot": "types/core",
-        "id-3355": "RuntimeBot",
+        "id-3361": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-3501": "RuntimeBotLinks",
+        "id-3507": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-3498": "RuntimeBotVars",
+        "id-3504": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
         "id-222": "SequenceRotation",
-        "SerializableMutationRecord": "types/os",
-        "id-2562": "SerializableMutationRecord",
-        "SessionSelector": "types/os",
-        "id-2486": "SessionSelector",
-        "SetAppOutputAction": "types/os",
-        "id-3145": "SetAppOutputAction",
-        "SetClipboardAction": "types/os",
-        "id-2905": "SetClipboardAction",
-        "SetRoomOptionsSuccess": "types/os",
-        "id-2171": "SetRoomOptionsSuccess",
-        "SetRoomTrackOptions": "types/os",
-        "id-3325": "SetRoomTrackOptions",
-        "SetRoomTrackOptionsFailure": "types/os",
-        "id-2197": "SetRoomTrackOptionsFailure",
-        "SetRoomTrackOptionsSuccess": "types/os",
-        "id-2192": "SetRoomTrackOptionsSuccess",
-        "ShareAction": "types/os",
-        "id-3104": "ShareAction",
-        "ShareOptions": "types/os",
-        "id-2682": "ShareOptions",
-        "ShowChatBarAction": "types/os",
-        "id-2908": "ShowChatBarAction",
-        "ShowChatOptions": "types/os",
-        "id-2676": "ShowChatOptions",
-        "ShowConfirmAction": "types/os",
-        "id-2758": "ShowConfirmAction",
-        "ShowConfirmOptions": "types/os",
-        "id-2753": "ShowConfirmOptions",
-        "ShowInputOptions": "types/os",
-        "id-2742": "ShowInputOptions",
-        "ShowJoinCodeAction": "types/os",
-        "id-3096": "ShowJoinCodeAction",
-        "ShowUploadAuxFileAction": "types/os",
-        "id-2922": "ShowUploadAuxFileAction",
-        "ShowUploadFilesAction": "types/os",
-        "id-2924": "ShowUploadFilesAction",
-        "SnapAxis": "types/os",
-        "id-2656": "SnapAxis",
-        "SnapGrid": "types/os",
-        "id-2711": "SnapGrid",
-        "SnapGridTarget": "types/os",
-        "id-2112": "SnapGridTarget",
-        "SnapPoint": "types/os",
-        "id-2668": "SnapPoint",
-        "SpeakTextAction": "types/os",
-        "id-3187": "SpeakTextAction",
+        "SerializableMutationRecord": "types/os/portals",
+        "id-2565": "SerializableMutationRecord",
+        "SessionSelector": "types/os/event",
+        "id-2489": "SessionSelector",
+        "SetAppOutputAction": "types/os/portals",
+        "id-3146": "SetAppOutputAction",
+        "SetClipboardAction": "types/os/clipboard",
+        "id-2908": "SetClipboardAction",
+        "SetRoomOptionsSuccess": "types/os/portals",
+        "id-2174": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os/portals",
+        "id-3331": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os/portals",
+        "id-2200": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os/portals",
+        "id-2195": "SetRoomTrackOptionsSuccess",
+        "ShareAction": "types/os/input",
+        "id-3107": "ShareAction",
+        "ShareOptions": "types/os/input",
+        "id-2685": "ShareOptions",
+        "ShowChatBarAction": "types/os/input",
+        "id-2911": "ShowChatBarAction",
+        "ShowChatOptions": "types/os/input",
+        "id-2679": "ShowChatOptions",
+        "ShowConfirmAction": "types/os/input",
+        "id-2761": "ShowConfirmAction",
+        "ShowConfirmOptions": "types/os/input",
+        "id-2756": "ShowConfirmOptions",
+        "ShowHtmlAction": "types/os/portals",
+        "id-2536": "ShowHtmlAction",
+        "ShowInputOptions": "types/os/input",
+        "id-2745": "ShowInputOptions",
+        "ShowJoinCodeAction": "types/os/barcodes",
+        "id-3099": "ShowJoinCodeAction",
+        "ShowToastAction": "types/os/portals",
+        "id-2516": "ShowToastAction",
+        "ShowTooltipAction": "types/os/portals",
+        "id-2521": "ShowTooltipAction",
+        "ShowUploadAuxFileAction": "types/os/input",
+        "id-2925": "ShowUploadAuxFileAction",
+        "ShowUploadFilesAction": "types/os/input",
+        "id-2927": "ShowUploadFilesAction",
+        "SnapAxis": "types/os/portals",
+        "id-2659": "SnapAxis",
+        "SnapGrid": "types/os/portals",
+        "id-2714": "SnapGrid",
+        "SnapGridTarget": "types/os/portals",
+        "id-2115": "SnapGridTarget",
+        "SnapPoint": "types/os/portals",
+        "id-2671": "SnapPoint",
+        "SpeakTextAction": "types/os/audio",
+        "id-3188": "SpeakTextAction",
         "SpeakTextOptions": "types/experimental",
-        "id-2456": "SpeakTextOptions",
-        "StartFormAnimationAction": "types/os",
-        "id-2965": "StartFormAnimationAction",
-        "StartFormAnimationOptions": "types/os",
-        "id-2941": "StartFormAnimationOptions",
-        "StopFormAnimationAction": "types/os",
-        "id-2954": "StopFormAnimationAction",
-        "StopFormAnimationOptions": "types/os",
-        "id-2962": "StopFormAnimationOptions",
-        "SuccessfulGeolocation": "types/os",
-        "id-2623": "SuccessfulGeolocation",
+        "id-2459": "SpeakTextOptions",
+        "StartFormAnimationAction": "types/os/animations",
+        "id-2968": "StartFormAnimationAction",
+        "StartFormAnimationOptions": "types/os/animations",
+        "id-2944": "StartFormAnimationOptions",
+        "StopFormAnimationAction": "types/os/animations",
+        "id-2957": "StopFormAnimationAction",
+        "StopFormAnimationOptions": "types/os/animations",
+        "id-2965": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os/geolocation",
+        "id-2626": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-3008": "SyntheticVoice",
+        "id-3011": "SyntheticVoice",
         "TweenOptions": "types/experimental",
-        "id-2453": "TweenOptions",
-        "UnregisterCustomAppAction": "types/os",
-        "id-3127": "UnregisterCustomAppAction",
-        "UnregisterHtmlAppAction": "types/os",
-        "id-3140": "UnregisterHtmlAppAction",
-        "UnsuccessfulGeolocation": "types/os",
-        "id-2633": "UnsuccessfulGeolocation",
+        "id-2456": "TweenOptions",
+        "UnloadInstAction": "types/os/spaces",
+        "id-2816": "UnloadInstAction",
+        "UnregisterCustomAppAction": "types/os/portals",
+        "id-3128": "UnregisterCustomAppAction",
+        "UnregisterHtmlAppAction": "types/os/portals",
+        "id-3141": "UnregisterHtmlAppAction",
+        "UnsuccessfulGeolocation": "types/os/geolocation",
+        "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3761": "UpdateEventRecordFailure",
+        "id-3768": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3759": "UpdateEventRecordSuccess",
-        "UpdateHtmlAppAction": "types/os",
-        "id-2542": "UpdateHtmlAppAction",
-        "UploadedFile": "types/os",
-        "id-2133": "UploadedFile",
-        "VRSupportedAction": "types/os",
-        "id-3078": "VRSupportedAction",
-        "WakeLockConfiguration": "types/os",
-        "id-3276": "WakeLockConfiguration",
+        "id-3766": "UpdateEventRecordSuccess",
+        "UpdateHtmlAppAction": "types/os/portals",
+        "id-2545": "UpdateHtmlAppAction",
+        "UploadedFile": "types/os/files",
+        "id-2136": "UploadedFile",
+        "VRSupportedAction": "types/os/xr",
+        "id-3081": "VRSupportedAction",
+        "WakeLockConfiguration": "types/os/portals",
+        "id-3277": "WakeLockConfiguration",
         "WebhookOptions": "types/web",
-        "id-2056": "WebhookOptions",
+        "id-2059": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-2068": "WebhookResult",
+        "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3737": "AddCountResult",
+        "id-3744": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3564": "AvailablePermissions",
-        "BarcodeFormat": "types/os",
-        "id-2736": "BarcodeFormat",
+        "id-3570": "AvailablePermissions",
+        "BarcodeFormat": "types/os/barcodes",
+        "id-2739": "BarcodeFormat",
         "BotFilter": "types/core",
-        "id-2090": "BotFilter",
+        "id-2093": "BotFilter",
         "BotSpace": "types/core",
-        "id-3485": "BotSpace",
-        "CameraType": "types/os",
-        "id-2735": "CameraType",
+        "id-3491": "BotSpace",
+        "CameraType": "types/os/camera",
+        "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3675": "CreatePublicRecordKeyResult",
-        "CustomAppOutputType": "types/os",
-        "id-3115": "CustomAppOutputType",
-        "CustomPortalOutputMode": "types/os",
-        "id-3116": "CustomPortalOutputMode",
+        "id-3681": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
-        "id-2618": "EaseMode",
+        "id-2621": "EaseMode",
         "EaseType": "types/animation",
-        "id-2617": "EaseType",
+        "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3709": "EraseDataResult",
+        "id-3716": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3728": "EraseFileResult",
-        "Geolocation": "types/os",
-        "id-2622": "Geolocation",
+        "id-3735": "EraseFileResult",
+        "Geolocation": "types/os/geolocation",
+        "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3747": "GetCountResult",
+        "id-3754": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3695": "GetDataResult",
-        "GetRoomOptionsResult": "types/os",
-        "id-2161": "GetRoomOptionsResult",
-        "GetRoomRemoteOptionsResult": "types/os",
-        "id-2203": "GetRoomRemoteOptionsResult",
-        "GetRoomTrackOptionsResult": "types/os",
-        "id-2179": "GetRoomTrackOptionsResult",
+        "id-3702": "GetDataResult",
+        "GetRoomOptionsResult": "types/os/portals",
+        "id-2164": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os/portals",
+        "id-2206": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os/portals",
+        "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3779": "GrantMarkerPermissionResult",
+        "id-3786": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3765": "GrantRoleResult",
-        "JoinRoomResult": "types/os",
-        "id-2143": "JoinRoomResult",
-        "LeaveRoomResult": "types/os",
-        "id-2152": "LeaveRoomResult",
+        "id-3772": "GrantRoleResult",
+        "JoinRoomResult": "types/os/portals",
+        "id-2146": "JoinRoomResult",
+        "LeaveRoomResult": "types/os/portals",
+        "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3718": "ListDataResult",
+        "id-3725": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3793": "ListStudiosResult",
+        "id-3800": "ListStudiosResult",
         "Mod": "types/core",
-        "id-2085": "Mod",
+        "id-2088": "Mod",
         "PortalType": "types/core",
-        "id-3517": "PortalType",
+        "id-3523": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2390": "PossiblePauseTriggerStates",
+        "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3685": "RecordDataResult",
+        "id-3691": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-2102": "RecordFileResult",
+        "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3786": "RevokeMarkerPermissionResult",
+        "id-3793": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3772": "RevokeRoleResult",
-        "SetRoomOptionsResult": "types/os",
-        "id-2170": "SetRoomOptionsResult",
-        "SetRoomTrackOptionsResult": "types/os",
-        "id-2191": "SetRoomTrackOptionsResult",
-        "ShowInputSuptype": "types/os",
-        "id-2752": "ShowInputSuptype",
-        "ShowInputType": "types/os",
-        "id-2751": "ShowInputType",
-        "SnapTarget": "types/os",
-        "id-2675": "SnapTarget",
+        "id-3779": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os/portals",
+        "id-2173": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os/portals",
+        "id-2194": "SetRoomTrackOptionsResult",
+        "ShowInputSuptype": "types/os/input",
+        "id-2755": "ShowInputSuptype",
+        "ShowInputType": "types/os/input",
+        "id-2754": "ShowInputType",
+        "SnapTarget": "types/os/portals",
+        "id-2678": "SnapTarget",
         "TagFilter": "types/core",
-        "id-2086": "TagFilter",
+        "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3758": "UpdateEventRecordResult",
+        "id-3765": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
@@ -4207,18 +4217,18 @@
         "id-249": "getbot-filters",
         "getbots-filters": "actions/data",
         "id-233": "getbots-filters",
-        "priorityShout": "actions/event",
+        "priorityShout": "actions/os/event",
         "id-450": "priorityShout",
-        "shout": "actions/event",
+        "shout": "actions/os/event",
         "id-463": "shout",
         "updateBotLinks": "actions/data",
         "id-423": "updateBotLinks",
-        "whisper": "actions/event",
+        "whisper": "actions/os/event",
         "id-489": "whisper",
-        "action.perform": "actions/event",
-        "id-1591": "action.perform",
-        "action.reject": "actions/event",
-        "id-1595": "action.reject",
+        "action.perform": "actions/os/event",
+        "id-1594": "action.perform",
+        "action.reject": "actions/os/event",
+        "id-1598": "action.reject",
         "ai.chat-string": "actions/ai",
         "id-650": "ai.chat-string",
         "ai.chat-message": "actions/ai",
@@ -4254,55 +4264,55 @@
         "byTag": "actions/bot-filters",
         "id-503": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1804": "bytes.fromBase64String",
+        "id-1807": "bytes.fromBase64String",
         "bytes.fromBase64Url": "actions/bytes",
-        "id-1821": "bytes.fromBase64Url",
+        "id-1824": "bytes.fromBase64Url",
         "bytes.fromHexString": "actions/bytes",
-        "id-1812": "bytes.fromHexString",
+        "id-1815": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1800": "bytes.toBase64String",
+        "id-1803": "bytes.toBase64String",
         "bytes.toBase64Url": "actions/bytes",
-        "id-1816": "bytes.toBase64Url",
+        "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
-        "id-1808": "bytes.toHexString",
+        "id-1811": "bytes.toHexString",
         "clearAnimations": "actions/utility",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1827": "crypto.hash-raw",
+        "id-1830": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1833": "crypto.hash-string",
+        "id-1836": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1864": "crypto.hmac-raw",
+        "id-1867": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1857": "crypto.hmac-string",
+        "id-1860": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1922": "crypto.asymmetric.decrypt",
+        "id-1925": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1917": "crypto.asymmetric.encrypt",
+        "id-1920": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1928": "crypto.asymmetric.isEncrypted",
+        "id-1931": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1913": "crypto.asymmetric.isKeypair",
+        "id-1916": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1909": "crypto.asymmetric.keypair",
+        "id-1912": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1893": "crypto.encrypt",
+        "id-1896": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1883": "crypto.hmacSha256",
+        "id-1886": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1888": "crypto.hmacSha512",
+        "id-1891": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1903": "crypto.isEncrypted",
+        "id-1906": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1932": "crypto.keypair",
+        "id-1935": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1849": "crypto.sha256",
+        "id-1852": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1853": "crypto.sha512",
+        "id-1856": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1936": "crypto.sign",
+        "id-1939": "crypto.sign",
         "deleteTagMaskText": "actions/data",
         "id-356": "deleteTagMaskText",
         "deleteTagText": "actions/data",
@@ -4311,26 +4321,26 @@
         "id-301": "diffSnapshots",
         "either": "actions/bot-filters",
         "id-545": "either",
-        "os.beginAudioRecording": "actions/audio",
-        "id-1638": "os.beginAudioRecording",
+        "os.beginAudioRecording": "actions/os/audio",
+        "id-1641": "os.beginAudioRecording",
         "experiment.beginRecording": "actions/experimental",
-        "id-1645": "experiment.beginRecording",
-        "os.endAudioRecording": "actions/audio",
-        "id-1642": "os.endAudioRecording",
+        "id-1648": "experiment.beginRecording",
+        "os.endAudioRecording": "actions/os/audio",
+        "id-1645": "os.endAudioRecording",
         "experiment.endRecording": "actions/experimental",
-        "id-1649": "experiment.endRecording",
+        "id-1652": "experiment.endRecording",
         "experiment.getAnchorPointPosition": "actions/experimental",
-        "id-1628": "experiment.getAnchorPointPosition",
+        "id-1631": "experiment.getAnchorPointPosition",
         "experiment.getVoices": "actions/experimental",
-        "id-1657": "experiment.getVoices",
+        "id-1660": "experiment.getVoices",
         "experiment.localFormAnimation": "actions/experimental",
-        "id-1601": "experiment.localFormAnimation",
+        "id-1604": "experiment.localFormAnimation",
         "experiment.localPositionTween": "actions/experimental",
-        "id-1606": "experiment.localPositionTween",
+        "id-1609": "experiment.localPositionTween",
         "experiment.localRotationTween": "actions/experimental",
-        "id-1617": "experiment.localRotationTween",
+        "id-1620": "experiment.localRotationTween",
         "experiment.speakText": "actions/experimental",
-        "id-1652": "experiment.speakText",
+        "id-1655": "experiment.speakText",
         "getBotLinks": "actions/data",
         "id-419": "getBotLinks",
         "getBotPosition": "actions/data",
@@ -4362,368 +4372,372 @@
         "insertTagText": "actions/data",
         "id-334": "insertTagText",
         "math.abs": "actions/math",
-        "id-1674": "math.abs",
+        "id-1677": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1744": "math.addVectors",
+        "id-1747": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1775": "math.areClose",
+        "id-1778": "math.areClose",
         "math.avg": "actions/math",
-        "id-1666": "math.avg",
+        "id-1669": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1700": "math.degreesToRadians",
+        "id-1703": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1740": "math.getAnchorPointOffset",
+        "id-1743": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1708": "math.getForwardDirection",
+        "id-1711": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1682": "math.getSeededRandomNumberGenerator",
+        "id-1685": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1717": "math.intersectPlane",
+        "id-1720": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1754": "math.negateVector",
+        "id-1757": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1759": "math.normalizeVector",
+        "id-1762": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1704": "math.radiansToDegrees",
+        "id-1707": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1695": "math.random",
+        "id-1698": "math.random",
         "math.randomInt": "actions/math",
-        "id-1690": "math.randomInt",
+        "id-1693": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1769": "math.scaleVector",
+        "id-1772": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1686": "math.setRandomSeed",
+        "id-1689": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1670": "math.sqrt",
+        "id-1673": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1678": "math.stdDev",
+        "id-1681": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1749": "math.subtractVectors",
+        "id-1752": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1662": "math.sum",
+        "id-1665": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1764": "math.vectorLength",
+        "id-1767": "math.vectorLength",
         "neighboring": "actions/bot-filters",
         "id-531": "neighboring",
         "not": "actions/bot-filters",
         "id-552": "not",
         "os.attachDebugger": "actions/debuggers",
-        "id-1547": "os.attachDebugger",
+        "id-1550": "os.attachDebugger",
         "os.createDebugger-normal": "actions/debuggers",
-        "id-1536": "os.createDebugger-normal",
+        "id-1539": "os.createDebugger-normal",
         "os.createDebugger-pausable": "actions/debuggers",
-        "id-1540": "os.createDebugger-pausable",
-        "os.focusOn-bot": "actions/portals",
+        "id-1543": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/os/portals",
         "id-737": "os.focusOn-bot",
-        "os.focusOn-position": "actions/portals",
+        "os.focusOn-position": "actions/os/portals",
         "id-742": "os.focusOn-position",
         "os.getExecutingDebugger": "actions/debuggers",
-        "id-1544": "os.getExecutingDebugger",
-        "showChat-options": "actions/os",
+        "id-1547": "os.getExecutingDebugger",
+        "showChat-options": "actions/os/input",
         "id-764": "showChat-options",
-        "showChat-placeholder": "actions/os",
+        "showChat-placeholder": "actions/os/input",
         "id-760": "showChat-placeholder",
-        "os.showInput": "actions/portals",
+        "os.showInput": "actions/os/portals",
         "id-983": "os.showInput",
-        "os.addBotDropGrid": "actions/portals",
+        "os.addBotDropGrid": "actions/os/portals",
         "id-1053": "os.addBotDropGrid",
-        "os.addBotDropSnap": "actions/portals",
+        "os.addBotDropSnap": "actions/os/portals",
         "id-1044": "os.addBotDropSnap",
-        "os.addDropGrid": "actions/portals",
+        "os.addDropGrid": "actions/os/portals",
         "id-1049": "os.addDropGrid",
-        "os.addDropSnap": "actions/portals",
+        "os.addDropSnap": "actions/os/portals",
         "id-1040": "os.addDropSnap",
-        "os.applyUpdatesToInst": "actions/os",
-        "id-1499": "os.applyUpdatesToInst",
-        "os.arSupported": "actions/xr",
+        "os.applyUpdatesToInst": "actions/os/spaces",
+        "id-1502": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/os/xr",
         "id-808": "os.arSupported",
-        "os.bufferFormAddressGLTF": "actions/animations",
-        "id-1457": "os.bufferFormAddressGLTF",
-        "os.bufferSound": "actions/audio",
+        "os.bufferFormAddressGLTF": "actions/os/animations",
+        "id-1460": "os.bufferFormAddressGLTF",
+        "os.bufferSound": "actions/os/audio",
         "id-1016": "os.bufferSound",
-        "os.calculateRayFromCamera": "actions/portals",
-        "id-1452": "os.calculateRayFromCamera",
-        "os.cancelSound": "actions/audio",
+        "os.calculateRayFromCamera": "actions/os/portals",
+        "id-1455": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/os/audio",
         "id-1020": "os.cancelSound",
-        "os.capturePhoto": "actions/camera",
+        "os.capturePhoto": "actions/os/camera",
         "id-903": "os.capturePhoto",
-        "os.closeBarcodeScanner": "actions/barcodes",
+        "os.closeBarcodeScanner": "actions/os/barcodes",
         "id-881": "os.closeBarcodeScanner",
-        "os.closeCircleWipe": "actions/portals",
+        "os.closeCircleWipe": "actions/os/portals",
         "id-1032": "os.closeCircleWipe",
-        "os.closeImageClassifier": "actions/image-classification",
+        "os.closeImageClassifier": "actions/os/image-classification",
         "id-896": "os.closeImageClassifier",
-        "os.closePhotoCamera": "actions/camera",
+        "os.closePhotoCamera": "actions/os/camera",
         "id-907": "os.closePhotoCamera",
-        "os.closeQRCodeScanner": "actions/barcodes",
+        "os.closeQRCodeScanner": "actions/os/barcodes",
         "id-867": "os.closeQRCodeScanner",
-        "os.compileApp": "actions/app",
+        "os.compileApp": "actions/os/app",
         "id-1167": "os.compileApp",
-        "os.convertGeolocationToWhat3Words": "actions/os",
-        "id-1437": "os.convertGeolocationToWhat3Words",
-        "os.countEvents": "actions/records",
-        "id-1427": "os.countEvents",
-        "os.createInitializationUpdate": "actions/os",
-        "id-1495": "os.createInitializationUpdate",
-        "os.device": "actions/os",
+        "os.convertGeolocationToWhat3Words": "actions/os/geolocation",
+        "id-1440": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/os/records",
+        "id-1430": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os/spaces",
+        "id-1498": "os.createInitializationUpdate",
+        "os.device": "actions/os/system",
         "id-782": "os.device",
-        "os.disableAR": "actions/xr",
+        "os.disableAR": "actions/os/xr",
         "id-798": "os.disableAR",
-        "os.disablePointOfView": "actions/portals",
+        "os.disablePointOfView": "actions/os/portals",
         "id-823": "os.disablePointOfView",
-        "os.disableVR": "actions/xr",
+        "os.disableVR": "actions/os/xr",
         "id-805": "os.disableVR",
-        "os.disableWakeLock": "actions/os",
+        "os.disableWakeLock": "actions/os/portals",
         "id-829": "os.disableWakeLock",
-        "os.download": "actions/files",
+        "os.download": "actions/os/files",
         "id-835": "os.download",
-        "os.downloadBots": "actions/files",
+        "os.downloadBots": "actions/os/files",
         "id-841": "os.downloadBots",
-        "os.downloadBotsAsInitialzationUpdate": "actions/files",
+        "os.downloadBotsAsInitialzationUpdate": "actions/os/files",
         "id-846": "os.downloadBotsAsInitialzationUpdate",
-        "os.downloadInst": "actions/files",
+        "os.downloadInst": "actions/os/files",
         "id-854": "os.downloadInst",
-        "os.enableAR": "actions/xr",
+        "os.enableAR": "actions/os/xr",
         "id-794": "os.enableAR",
-        "os.enableCollaboration": "actions/os",
+        "os.enableCollaboration": "actions/os/spaces",
         "id-788": "os.enableCollaboration",
-        "os.enableCustomDragging": "actions/portals",
+        "os.enableCustomDragging": "actions/os/portals",
         "id-1058": "os.enableCustomDragging",
-        "os.enablePointOfView": "actions/portals",
+        "os.enablePointOfView": "actions/os/portals",
         "id-814": "os.enablePointOfView",
-        "os.enableVR": "actions/xr",
+        "os.enableVR": "actions/os/xr",
         "id-801": "os.enableVR",
-        "os.eraseData": "actions/records",
-        "id-1370": "os.eraseData",
-        "os.eraseManualApprovalData": "actions/records",
-        "id-1376": "os.eraseManualApprovalData",
-        "os.exitFullscreenMode": "actions/portals",
+        "os.eraseData": "actions/os/records",
+        "id-1373": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/os/records",
+        "id-1379": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/os/portals",
         "id-708": "os.exitFullscreenMode",
-        "os.getAverageFrameRate": "actions/os",
+        "os.getAverageFrameRate": "actions/os/portals",
         "id-1115": "os.getAverageFrameRate",
-        "os.getCameraPosition": "actions/portals",
+        "os.getCameraPosition": "actions/os/portals",
         "id-1071": "os.getCameraPosition",
-        "os.getCameraRotation": "actions/portals",
+        "os.getCameraRotation": "actions/os/portals",
         "id-1075": "os.getCameraRotation",
-        "os.getCurrentDimension": "actions/portals",
+        "os.getCurrentDimension": "actions/os/portals",
         "id-954": "os.getCurrentDimension",
-        "os.getCurrentInst": "actions/portals",
+        "os.getCurrentInst": "actions/os/portals",
         "id-960": "os.getCurrentInst",
-        "os.getCurrentInstUpdate": "actions/os",
-        "id-1503": "os.getCurrentInstUpdate",
-        "os.getData": "actions/records",
-        "id-1352": "os.getData",
-        "os.getDimensionalDepth": "actions/portals",
+        "os.getCurrentInstUpdate": "actions/os/spaces",
+        "id-1506": "os.getCurrentInstUpdate",
+        "os.getData": "actions/os/records",
+        "id-1355": "os.getData",
+        "os.getDimensionalDepth": "actions/os/portals",
         "id-973": "os.getDimensionalDepth",
-        "os.getFocusPoint": "actions/portals",
+        "os.getFocusPoint": "actions/os/portals",
         "id-1083": "os.getFocusPoint",
-        "os.getGeolocation": "actions/os",
+        "os.getGeolocation": "actions/os/geolocation",
         "id-1065": "os.getGeolocation",
-        "os.getInputList": "actions/portals",
+        "os.getInputList": "actions/os/portals",
         "id-1108": "os.getInputList",
-        "os.getInputState": "actions/portals",
+        "os.getInputState": "actions/os/portals",
         "id-1103": "os.getInputState",
-        "os.getInstStateFromUpdates": "actions/os",
-        "id-1491": "os.getInstStateFromUpdates",
-        "os.getManualApprovalData": "actions/records",
-        "id-1358": "os.getManualApprovalData",
-        "os.getMediaPermission": "actions/os",
+        "os.getInstStateFromUpdates": "actions/os/spaces",
+        "id-1494": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/os/records",
+        "id-1361": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os/media",
         "id-1111": "os.getMediaPermission",
-        "os.getMenuDimension": "actions/portals",
+        "os.getMenuDimension": "actions/os/portals",
         "id-963": "os.getMenuDimension",
-        "os.getMiniPortalDimension": "actions/portals",
+        "os.getMiniPortalDimension": "actions/os/portals",
         "id-966": "os.getMiniPortalDimension",
-        "os.getPointerDirection": "actions/portals",
+        "os.getPointerDirection": "actions/os/portals",
         "id-1099": "os.getPointerDirection",
-        "os.getPointerPosition": "actions/portals",
+        "os.getPointerPosition": "actions/os/portals",
         "id-1087": "os.getPointerPosition",
-        "os.getPointerRotation": "actions/portals",
+        "os.getPointerRotation": "actions/os/portals",
         "id-1091": "os.getPointerRotation",
-        "os.getPortalDimension": "actions/portals",
+        "os.getPortalDimension": "actions/os/portals",
         "id-969": "os.getPortalDimension",
-        "os.getPublicRecordKey": "actions/records",
-        "id-1277": "os.getPublicRecordKey",
-        "os.getRoomOptions": "actions/rooms",
+        "os.getPublicRecordKey": "actions/os/records",
+        "id-1280": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/os/rooms",
         "id-1133": "os.getRoomOptions",
-        "os.getRoomRemoteOptions": "actions/rooms",
+        "os.getRoomRemoteOptions": "actions/os/rooms",
         "id-1148": "os.getRoomRemoteOptions",
-        "os.getRoomTrackOptions": "actions/rooms",
+        "os.getRoomTrackOptions": "actions/os/rooms",
         "id-1137": "os.getRoomTrackOptions",
-        "os.getSubjectlessPublicRecordKey": "actions/records",
-        "id-1281": "os.getSubjectlessPublicRecordKey",
-        "os.getWakeLockConfiguration": "actions/os",
+        "os.getSubjectlessPublicRecordKey": "actions/os/records",
+        "id-1284": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os/portals",
         "id-832": "os.getWakeLockConfiguration",
-        "os.goToDimension": "actions/portals",
+        "os.goToDimension": "actions/os/portals",
         "id-997": "os.goToDimension",
-        "os.goToURL": "actions/portals",
+        "os.goToURL": "actions/os/portals",
         "id-1001": "os.goToURL",
-        "os.grantInstAdminPermission": "actions/records",
-        "id-1299": "os.grantInstAdminPermission",
-        "os.grantInstRole": "actions/records",
-        "id-1319": "os.grantInstRole",
-        "os.grantRecordMarkerPermission": "actions/records",
-        "id-1285": "os.grantRecordMarkerPermission",
-        "os.grantUserRole": "actions/records",
-        "id-1304": "os.grantUserRole",
-        "os.hasBotInMiniPortal": "actions/portals",
+        "os.grantInstAdminPermission": "actions/os/records",
+        "id-1302": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/os/records",
+        "id-1322": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/os/records",
+        "id-1288": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/os/records",
+        "id-1307": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/os/portals",
         "id-1024": "os.hasBotInMiniPortal",
-        "os.hideBarcode": "actions/barcodes",
+        "os.hideBarcode": "actions/os/barcodes",
         "id-889": "os.hideBarcode",
-        "os.hideChat": "actions/os",
+        "os.hideChat": "actions/os/input",
         "id-772": "os.hideChat",
-        "os.hideHtml": "actions/os",
+        "os.hideHtml": "actions/os/portals",
         "id-715": "os.hideHtml",
-        "os.hideQRCode": "actions/barcodes",
+        "os.hideQRCode": "actions/os/barcodes",
         "id-874": "os.hideQRCode",
-        "os.hideTips": "actions/portals",
+        "os.hideTips": "actions/os/portals",
         "id-696": "os.hideTips",
-        "os.importAUX": "actions/files",
+        "os.importAUX": "actions/os/files",
         "id-938": "os.importAUX",
-        "os.inSheet": "actions/portals",
+        "os.inSheet": "actions/os/portals",
         "id-1068": "os.inSheet",
-        "os.isCollaborative": "actions/os",
+        "os.isCollaborative": "actions/os/spaces",
         "id-785": "os.isCollaborative",
-        "os.isInDimension": "actions/portals",
+        "os.isInDimension": "actions/os/portals",
         "id-950": "os.isInDimension",
-        "os.isRecordKey": "actions/records",
-        "id-1334": "os.isRecordKey",
-        "os.joinRoom": "actions/rooms",
+        "os.isRecordKey": "actions/os/records",
+        "id-1337": "os.isRecordKey",
+        "os.joinRoom": "actions/os/rooms",
         "id-1118": "os.joinRoom",
-        "os.leaveRoom": "actions/rooms",
+        "os.leaveRoom": "actions/os/rooms",
         "id-1123": "os.leaveRoom",
-        "os.listBuiltinTags": "actions/app",
+        "os.listBuiltinTags": "actions/os/app",
         "id-1268": "os.listBuiltinTags",
-        "os.listData": "actions/records",
-        "id-1364": "os.listData",
-        "os.listFormAnimations": "actions/animations",
-        "id-1472": "os.listFormAnimations",
-        "os.listInstUpdates": "actions/os",
-        "id-1488": "os.listInstUpdates",
-        "os.listUserStudios": "actions/records",
-        "id-1433": "os.listUserStudios",
-        "os.loadInst": "actions/os",
+        "os.listData": "actions/os/records",
+        "id-1367": "os.listData",
+        "os.listFormAnimations": "actions/os/animations",
+        "id-1475": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os/spaces",
+        "id-1491": "os.listInstUpdates",
+        "os.listUserStudios": "actions/os/records",
+        "id-1436": "os.listUserStudios",
+        "os.loadInst": "actions/os/spaces",
         "id-930": "os.loadInst",
-        "os.log": "actions/os",
+        "os.log": "actions/os/system",
         "id-1061": "os.log",
-        "os.meetCommand": "actions/os",
-        "id-1524": "os.meetCommand",
-        "os.meetFunction": "actions/os",
-        "id-1529": "os.meetFunction",
-        "os.openBarcodeScanner": "actions/barcodes",
+        "os.meetCommand": "actions/os/meets",
+        "id-1527": "os.meetCommand",
+        "os.meetFunction": "actions/os/meets",
+        "id-1532": "os.meetFunction",
+        "os.mergeInstUpdates": "actions/os/spaces",
+        "id-1509": "os.mergeInstUpdates",
+        "os.openBarcodeScanner": "actions/os/barcodes",
         "id-877": "os.openBarcodeScanner",
-        "os.openCircleWipe": "actions/portals",
+        "os.openCircleWipe": "actions/os/portals",
         "id-1036": "os.openCircleWipe",
-        "os.openDevConsole": "actions/os",
+        "os.openDevConsole": "actions/os/system",
         "id-1009": "os.openDevConsole",
-        "os.openImageClassifier": "actions/image-classification",
+        "os.openImageClassifier": "actions/os/image-classification",
         "id-892": "os.openImageClassifier",
-        "os.openPhotoCamera": "actions/camera",
+        "os.openPhotoCamera": "actions/os/camera",
         "id-899": "os.openPhotoCamera",
-        "os.openQRCodeScanner": "actions/barcodes",
+        "os.openQRCodeScanner": "actions/os/barcodes",
         "id-863": "os.openQRCodeScanner",
-        "os.openURL": "actions/portals",
+        "os.openURL": "actions/os/portals",
         "id-1005": "os.openURL",
-        "os.parseBotsFromData": "actions/files",
+        "os.parseBotsFromData": "actions/os/files",
         "id-942": "os.parseBotsFromData",
-        "os.playSound": "actions/audio",
+        "os.playSound": "actions/os/audio",
         "id-1012": "os.playSound",
-        "os.raycast": "actions/portals",
-        "id-1446": "os.raycast",
-        "os.raycastFromCamera": "actions/portals",
-        "id-1441": "os.raycastFromCamera",
-        "os.recordData": "actions/records",
-        "id-1338": "os.recordData",
-        "os.recordEvent": "actions/records",
-        "id-1421": "os.recordEvent",
-        "os.recordFile": "actions/records",
-        "id-1382": "os.recordFile",
-        "os.recordManualApprovalData": "actions/records",
-        "id-1345": "os.recordManualApprovalData",
-        "os.registerApp": "actions/app",
+        "os.raycast": "actions/os/portals",
+        "id-1449": "os.raycast",
+        "os.raycastFromCamera": "actions/os/portals",
+        "id-1444": "os.raycastFromCamera",
+        "os.recordData": "actions/os/records",
+        "id-1341": "os.recordData",
+        "os.recordEvent": "actions/os/records",
+        "id-1424": "os.recordEvent",
+        "os.recordFile": "actions/os/records",
+        "id-1385": "os.recordFile",
+        "os.recordManualApprovalData": "actions/os/records",
+        "id-1348": "os.recordManualApprovalData",
+        "os.registerApp": "actions/os/app",
         "id-1158": "os.registerApp",
-        "os.registerTagPrefix": "actions/app",
+        "os.registerTagPrefix": "actions/os/app",
         "id-1153": "os.registerTagPrefix",
-        "os.remoteCount": "actions/os",
-        "id-1510": "os.remoteCount",
-        "os.remotes": "actions/os",
-        "id-1485": "os.remotes",
-        "os.replaceDragBot": "actions/portals",
+        "os.remoteCount": "actions/os/remotes",
+        "id-1513": "os.remoteCount",
+        "os.remotes": "actions/os/remotes",
+        "id-1488": "os.remotes",
+        "os.replaceDragBot": "actions/os/portals",
         "id-946": "os.replaceDragBot",
-        "os.requestAuthBot": "actions/records",
-        "id-1271": "os.requestAuthBot",
-        "os.requestAuthBotInBackground": "actions/records",
-        "id-1274": "os.requestAuthBotInBackground",
-        "os.requestFullscreenMode": "actions/portals",
+        "os.reportInst": "actions/os/moderation",
+        "id-1271": "os.reportInst",
+        "os.requestAuthBot": "actions/os/records",
+        "id-1274": "os.requestAuthBot",
+        "os.requestAuthBotInBackground": "actions/os/records",
+        "id-1277": "os.requestAuthBotInBackground",
+        "os.requestFullscreenMode": "actions/os/portals",
         "id-705": "os.requestFullscreenMode",
-        "os.requestWakeLock": "actions/os",
+        "os.requestWakeLock": "actions/os/portals",
         "id-826": "os.requestWakeLock",
-        "os.revokeInstRole": "actions/records",
-        "id-1327": "os.revokeInstRole",
-        "os.revokeRecordMarkerPermission": "actions/records",
-        "id-1292": "os.revokeRecordMarkerPermission",
-        "os.revokeUserRole": "actions/records",
-        "id-1312": "os.revokeUserRole",
-        "os.run": "actions/os",
+        "os.revokeInstRole": "actions/os/records",
+        "id-1330": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/os/records",
+        "id-1295": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/os/records",
+        "id-1315": "os.revokeUserRole",
+        "os.run": "actions/os/system",
         "id-775": "os.run",
-        "os.setClipboard": "actions/os",
+        "os.setClipboard": "actions/os/clipboard",
         "id-718": "os.setClipboard",
-        "os.setRoomOptions": "actions/rooms",
+        "os.setRoomOptions": "actions/os/rooms",
         "id-1128": "os.setRoomOptions",
-        "os.setRoomTrackOptions": "actions/rooms",
+        "os.setRoomTrackOptions": "actions/os/rooms",
         "id-1142": "os.setRoomTrackOptions",
-        "os.share": "actions/os",
+        "os.share": "actions/os/input",
         "id-1028": "os.share",
-        "os.showBarcode": "actions/barcodes",
+        "os.showBarcode": "actions/os/barcodes",
         "id-884": "os.showBarcode",
-        "os.showConfirm": "actions/portals",
+        "os.showConfirm": "actions/os/portals",
         "id-993": "os.showConfirm",
-        "os.showHtml": "actions/os",
+        "os.showHtml": "actions/os/portals",
         "id-711": "os.showHtml",
-        "os.showInputForTag": "actions/portals",
+        "os.showInputForTag": "actions/os/portals",
         "id-977": "os.showInputForTag",
-        "os.showJoinCode": "actions/barcodes",
+        "os.showJoinCode": "actions/os/barcodes",
         "id-700": "os.showJoinCode",
-        "os.showQRCode": "actions/barcodes",
+        "os.showQRCode": "actions/os/barcodes",
         "id-870": "os.showQRCode",
-        "os.showUploadAuxFile": "actions/files",
+        "os.showUploadAuxFile": "actions/os/files",
         "id-857": "os.showUploadAuxFile",
-        "os.showUploadFiles": "actions/files",
+        "os.showUploadFiles": "actions/os/files",
         "id-860": "os.showUploadFiles",
-        "os.sleep": "actions/os",
+        "os.sleep": "actions/os/system",
         "id-680": "os.sleep",
-        "os.startFormAnimation": "actions/animations",
-        "id-1461": "os.startFormAnimation",
-        "os.stopFormAnimation": "actions/animations",
-        "id-1467": "os.stopFormAnimation",
-        "os.tip": "actions/portals",
+        "os.startFormAnimation": "actions/os/animations",
+        "id-1464": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/os/animations",
+        "id-1470": "os.stopFormAnimation",
+        "os.tip": "actions/os/portals",
         "id-689": "os.tip",
-        "os.toast": "actions/os",
+        "os.toast": "actions/os/portals",
         "id-684": "os.toast",
-        "os.totalRemoteCount": "actions/os",
-        "id-1514": "os.totalRemoteCount",
-        "os.unloadInst": "actions/os",
+        "os.totalRemoteCount": "actions/os/remotes",
+        "id-1517": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os/spaces",
         "id-934": "os.unloadInst",
-        "os.unregisterApp": "actions/app",
+        "os.unregisterApp": "actions/os/app",
         "id-1163": "os.unregisterApp",
-        "os.version": "actions/os",
+        "os.version": "actions/os/system",
         "id-779": "os.version",
-        "os.vrSupported": "actions/xr",
+        "os.vrSupported": "actions/os/xr",
         "id-811": "os.vrSupported",
-        "os.agreedUponTime": "actions/time",
+        "os.agreedUponTime": "actions/os/time",
         "id-911": "os.agreedUponTime",
-        "os.deadReckoningTime": "actions/time",
+        "os.deadReckoningTime": "actions/os/time",
         "id-919": "os.deadReckoningTime",
-        "os.instLatency": "actions/time",
+        "os.instLatency": "actions/os/time",
         "id-913": "os.instLatency",
-        "os.instTimeOffset": "actions/time",
+        "os.instTimeOffset": "actions/os/time",
         "id-915": "os.instTimeOffset",
-        "os.instTimeOffsetSpread": "actions/time",
+        "os.instTimeOffsetSpread": "actions/os/time",
         "id-917": "os.instTimeOffsetSpread",
-        "os.localTime": "actions/time",
+        "os.localTime": "actions/os/time",
         "id-909": "os.localTime",
-        "remote": "actions/event",
+        "remote": "actions/os/event",
         "id-559": "remote",
-        "sendRemoteData": "actions/event",
+        "sendRemoteData": "actions/os/event",
         "id-571": "sendRemoteData",
         "removeTags": "actions/data",
         "id-364": "removeTags",
@@ -4735,17 +4749,17 @@
         "id-322": "setTagMask",
         "subtractMods": "actions/mods",
         "id-380": "subtractMods",
-        "superShout": "actions/event",
+        "superShout": "actions/os/event",
         "id-445": "superShout",
         "uuid": "actions/data",
         "id-582": "uuid",
         "web.get": "actions/web",
-        "id-1955": "web.get",
+        "id-1958": "web.get",
         "web.hook": "actions/web",
-        "id-1966": "web.hook",
+        "id-1969": "web.hook",
         "web.post": "actions/web",
-        "id-1960": "web.post",
-        "configBot": "actions/os",
+        "id-1963": "web.post",
+        "configBot": "actions/os/system",
         "id-645": "configBot"
     }
 }

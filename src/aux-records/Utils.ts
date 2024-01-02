@@ -598,3 +598,14 @@ export function handleAxiosErrors(err: any) {
         throw err;
     }
 }
+
+/**
+ * Calculates the number of bytes contained in the given string encoded to utf-8.
+ * @param str The string.
+ */
+export function byteLengthOfString(str: string): number {
+    if (typeof Buffer !== 'undefined') {
+        return Buffer.byteLength(str, 'utf8');
+    }
+    return new Blob([str], { type: 'text/plain' }).size;
+}

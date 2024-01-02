@@ -95,7 +95,7 @@ export function listEnvironmentFiles(directory: string): string[] {
         .map((f) => path.join(directory, f.name));
 }
 
-export function getPolicies() {
+export function getPolicies(includeExtensionlessFiles: boolean) {
     const virtualModules: Record<string, string> = {};
     const files: any = {};
 
@@ -104,7 +104,16 @@ export function getPolicies() {
         let content: string;
         if (override) {
             console.log(`[Policies] Using override for ${name}`);
-            content = override;
+            const jsonResult = tryParseJson(override);
+
+            if (!jsonResult.success) {
+                console.warn(
+                    `[Policies] ${name} override was not valid JSON. Using string, but this might be bad if your system does not allow line breaks in environment variables.`
+                );
+                content = override;
+            } else {
+                content = String(jsonResult.value);
+            }
         } else {
             const defaultTerms = readFileSync(
                 path.resolve(defaultPolicies, name),
@@ -117,7 +126,9 @@ export function getPolicies() {
 
         const fileName = name.slice(0, name.lastIndexOf('.'));
 
-        files[fileName] = content;
+        if (includeExtensionlessFiles) {
+            files[fileName] = content;
+        }
         files[`${fileName}.txt`] = content;
         files[`${fileName}.md`] = content;
     }

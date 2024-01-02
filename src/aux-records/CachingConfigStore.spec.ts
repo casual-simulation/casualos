@@ -15,6 +15,7 @@ import {
     createTestPrivoConfiguration,
     createTestSubConfiguration,
 } from './TestUtils';
+import { ModerationConfiguration } from './ModerationConfiguration';
 
 describe('CachingPolicyStore', () => {
     let inner: MemoryStore;
@@ -32,12 +33,16 @@ describe('CachingPolicyStore', () => {
         inner = new MemoryStore({
             subscriptions: createTestSubConfiguration(),
             privo: createTestPrivoConfiguration(),
+            moderation: {
+                allowUnauthenticatedReports: true,
+            },
         });
         cache = new MemoryCache();
         store = new CachingConfigStore(inner, cache, 1);
 
         jest.spyOn(inner, 'getSubscriptionConfiguration');
         jest.spyOn(inner, 'getPrivoConfiguration');
+        jest.spyOn(inner, 'getModerationConfig');
     });
 
     afterEach(() => {
@@ -106,11 +111,59 @@ describe('CachingPolicyStore', () => {
         it('should retrieve the value from the cache', async () => {
             await cache.store(`privo`, createTestPrivoConfiguration(), 1);
 
-            inner.subscriptionConfiguration = null;
+            inner.moderationConfiguration = null;
             const result = await store.getPrivoConfiguration();
 
             expect(result).toEqual(createTestPrivoConfiguration());
             expect(inner.getPrivoConfiguration).toBeCalledTimes(0);
+        });
+    });
+
+    describe('getModerationConfig()', () => {
+        it('should store the configuration in the cache', async () => {
+            const result = await store.getModerationConfig();
+
+            expect(result).toEqual(inner.moderationConfiguration);
+
+            const cached = await cache.retrieve<ModerationConfiguration>(
+                `moderation`
+            );
+
+            expect(cached).toEqual({
+                allowUnauthenticatedReports: true,
+            });
+            expect(cache.items).toEqual(
+                new Map([
+                    [
+                        `moderation`,
+                        {
+                            data: {
+                                allowUnauthenticatedReports: true,
+                            },
+                            expireTimeMs: 1000,
+                        },
+                    ],
+                ])
+            );
+            expect(inner.getModerationConfig).toBeCalledTimes(1);
+        });
+
+        it('should retrieve the value from the cache', async () => {
+            await cache.store(
+                `moderation`,
+                {
+                    allowUnauthenticatedReports: true,
+                },
+                1
+            );
+
+            inner.moderationConfiguration = null;
+            const result = await store.getModerationConfig();
+
+            expect(result).toEqual({
+                allowUnauthenticatedReports: true,
+            });
+            expect(inner.getModerationConfig).toBeCalledTimes(0);
         });
     });
 });

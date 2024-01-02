@@ -38,7 +38,7 @@ const casualOsPackages = fs
     )
     .map((folder) => `@casual-simulation/${folder}`);
 
-const policies = getPolicies();
+const policies = getPolicies(true);
 
 export default defineConfig(({ command, mode }) => ({
     cacheDir: path.resolve(

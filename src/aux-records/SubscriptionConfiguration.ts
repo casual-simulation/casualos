@@ -50,6 +50,16 @@ export const subscriptionFeaturesSchema = z.object({
             .int()
             .positive()
             .optional(),
+        maxItemSizeInBytes: z
+            .number()
+            .describe(
+                'The maximum number of bytes that can be stored in a single data item. If set to null, then there is no limit. If omitted, then the limit is 500,000 bytes (500KB)'
+            )
+            .int()
+            .positive()
+            .nullable()
+            .optional()
+            .default(500000),
     }),
     files: z.object({
         allowed: z
@@ -653,6 +663,13 @@ export interface DataFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxWritesPerPeriod?: number;
+
+    /**
+     * The maximum number of bytes that can be stored in a single data item.
+     * If not specified, then the limit is 500,000 bytes (500KB).
+     * If set to null, then there is no limit.
+     */
+    maxItemSizeInBytes?: number;
 }
 
 export interface FileFeaturesConfiguration {

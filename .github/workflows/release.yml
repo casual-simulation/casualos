@@ -166,9 +166,10 @@ jobs:
                   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   aws-region: us-east-1
             - name: Run CodeBuild
-              uses: aws-actions/aws-codebuild-run-build@v1.0.3
+              uses: aws-actions/aws-codebuild-run-build@v1.0.13
               with:
                   project-name: publish-casualos-docker-arm32
+                  disable-github-env-vars: true
     arm64:
         name: ARM64 Docker Build
         needs: build
@@ -181,6 +182,7 @@ jobs:
                   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   aws-region: us-east-1
             - name: Run CodeBuild
-              uses: aws-actions/aws-codebuild-run-build@v1.0.3
+              uses: aws-actions/aws-codebuild-run-build@v1.0.13
               with:
                   project-name: publish-casualos-docker-arm64
+                  disable-github-env-vars: true

@@ -88,6 +88,8 @@ export class AuthHandler implements AuxAuth {
     private _oauthChannel: BroadcastChannel = new BroadcastChannel(
         OAUTH_LOGIN_CHANNEL_NAME
     );
+    private _initialized: boolean = false;
+    private _initPromise: Promise<void> = null;
 
     constructor() {
         this._oauthChannel.addEventListener('message', (event) => {
@@ -96,6 +98,25 @@ export class AuthHandler implements AuxAuth {
                 this._oauthRedirectComplete.next();
             }
         });
+    }
+
+    private _init() {
+        if (this._initPromise) {
+            return this._initPromise;
+        }
+        return (this._initPromise = this._initAsync());
+    }
+
+    private async _initAsync() {
+        if (this._initialized) {
+            return;
+        }
+        this._initialized = true;
+
+        console.log('[AuthHandler] Checking initial login status...');
+        if (await this._checkLoginStatus()) {
+            await this._loadUserInfo();
+        }
     }
 
     async getPolicyUrls(): Promise<PolicyUrls> {
@@ -110,6 +131,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async isLoggedIn(): Promise<boolean> {
+        await this._init();
         if (this._loggedIn) {
             const expiry = this._getTokenExpirationTime(this._token);
             if (Date.now() < expiry) {
@@ -815,6 +837,7 @@ export class AuthHandler implements AuxAuth {
             this._loginUIStatus.next({
                 page: 'show_update_password_link',
                 updatePasswordUrl: result.updatePasswordUrl,
+                providedParentEmail: !!info.parentEmail,
             });
 
             return authManager.userId;
@@ -912,10 +935,4 @@ export class AuthHandler implements AuxAuth {
     private get _supportsSms() {
         return ENABLE_SMS_AUTHENTICATION === true;
     }
-}
-
-interface ProvidedPrivoInfo {
-    email: string;
-    name: string | undefined | null;
-    dateOfBirth: Date | undefined | null;
 }

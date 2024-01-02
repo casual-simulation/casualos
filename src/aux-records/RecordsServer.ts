@@ -54,6 +54,7 @@ import {
     GenericHttpResponse,
     GenericWebsocketRequest,
 } from '@casual-simulation/aux-common';
+import { ModerationController } from './ModerationController';
 
 const NOT_LOGGED_IN_RESULT = {
     success: false as const,
@@ -113,6 +114,12 @@ const INSTS_NOT_SUPPORTED_RESULT = {
     errorMessage: 'Inst features are not supported by this server.',
 };
 
+const MODERATION_NOT_SUPPORTED_RESULT = {
+    success: false,
+    errorCode: 'not_supported' as const,
+    errorMessage: 'Moderation features are not supported by this server.',
+};
+
 /**
  * The Zod validation for record keys.
  */
@@ -161,6 +168,27 @@ const MARKERS_VALIDATION = z
     )
     .nonempty('markers must not be empty.');
 
+const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
+const NO_WHITESPACE_REGEX = /^\S*$/g;
+const NO_SPECIAL_CHARACTERS_MESSAGE =
+    'The value cannot not contain special characters.';
+const NO_SPECIAL_CHARACTERS_REGEX =
+    /^[^!@#$%\^&*()\[\]{}\-_=+`~,./?;:'"\\<>|]*$/g;
+
+const DISPLAY_NAME_VALIDATION = z
+    .string()
+    .trim()
+    .min(1)
+    .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
+    .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
+
+const NAME_VALIDATION = z
+    .string()
+    .trim()
+    .min(1)
+    .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
+    .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
+
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
@@ -175,6 +203,7 @@ export class RecordsServer {
     private _subscriptions: SubscriptionController | null;
     private _aiController: AIController | null;
     private _websocketController: WebsocketController | null;
+    private _moderationController: ModerationController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -202,7 +231,8 @@ export class RecordsServer {
         rateLimitController: RateLimitController,
         policyController: PolicyController,
         aiController: AIController | null,
-        websocketController: WebsocketController | null
+        websocketController: WebsocketController | null,
+        moderationController: ModerationController | null
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -218,6 +248,7 @@ export class RecordsServer {
         this._policyController = policyController;
         this._aiController = aiController;
         this._websocketController = websocketController;
+        this._moderationController = moderationController;
     }
 
     /**
@@ -797,6 +828,15 @@ export class RecordsServer {
                 await this._deleteInst(request),
                 this._allowedAccountOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/insts/report'
+        ) {
+            return formatResponse(
+                request,
+                await this._reportInst(request),
+                this._allowedApiOrigins
+            );
         } else if (request.method === 'GET' && request.path === '/instData') {
             return formatResponse(
                 request,
@@ -1185,8 +1225,8 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            displayName: z.string().trim(),
-            name: z.string().trim().optional(),
+            displayName: DISPLAY_NAME_VALIDATION,
+            name: NAME_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -3777,11 +3817,11 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            email: z.string().nonempty().email().optional(),
-            parentEmail: z.string().nonempty().email().optional(),
-            name: z.string().nonempty(),
+            email: z.string().min(1).email().optional(),
+            parentEmail: z.string().min(1).email().optional(),
+            name: NAME_VALIDATION,
             dateOfBirth: z.coerce.date(),
-            displayName: z.string().nonempty(),
+            displayName: DISPLAY_NAME_VALIDATION,
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -4400,6 +4440,84 @@ export class RecordsServer {
             inst,
             validation.userId
         );
+        return returnResult(result);
+    }
+
+    private async _reportInst(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._moderationController) {
+            return returnResult(MODERATION_NOT_SUPPORTED_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z.string().nonempty().nullable(),
+            inst: z.string().nonempty(),
+            automaticReport: z.boolean(),
+            reportReason: z.union([
+                z.literal('poor-performance'),
+                z.literal('spam'),
+                z.literal('harassment'),
+                z.literal('copyright-infringement'),
+                z.literal('obscene'),
+                z.literal('illegal'),
+                z.literal('other'),
+            ]),
+            reportReasonText: z.string().nonempty().trim(),
+            reportedUrl: z.string().url(),
+            reportedPermalink: z.string().url(),
+        });
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            if (validation.errorCode !== 'no_session_key') {
+                return returnResult(validation);
+            }
+        }
+
+        const {
+            recordName,
+            inst,
+            automaticReport,
+            reportReason,
+            reportReasonText,
+            reportedUrl,
+            reportedPermalink,
+        } = parseResult.data;
+
+        const result = await this._moderationController.reportInst({
+            recordName,
+            inst,
+            automaticReport,
+            reportReason,
+            reportReasonText,
+            reportedUrl,
+            reportedPermalink,
+            reportingIpAddress: request.ipAddress,
+            reportingUserId: validation.userId,
+        });
+
         return returnResult(result);
     }
 

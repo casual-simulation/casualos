@@ -234,7 +234,7 @@ export class SubscriptionController {
                 purchasableSubscriptions,
             };
         } catch (err) {
-            console.log(
+            console.error(
                 '[SubscriptionController] An error occurred while getting subscription status:',
                 err
             );

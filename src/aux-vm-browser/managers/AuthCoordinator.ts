@@ -20,6 +20,7 @@ import {
     DenialReason,
     MissingPermissionDenialReason,
     PartitionAuthRequest,
+    reportInst,
 } from '@casual-simulation/aux-common';
 import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
 
@@ -110,6 +111,13 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         const sim = this._simulationManager.simulations.get(simId);
         if (sim) {
             await sim.auth.primary.logout();
+        }
+    }
+
+    async showReportInst(simId: string) {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            await sim.helper.transaction(reportInst());
         }
     }
 

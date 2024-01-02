@@ -28,19 +28,7 @@ export default class PrivoRegistrationCard extends Vue {
     dateOfBirth: Date = null;
     parentEmail: string = null;
     updatePasswordUrl: string = '';
-
-    // showEmailError: boolean = false;
-    // showNameError: boolean = false;
-    // showDateOfBirthError: boolean = false;
-    // showEnterAddressError: boolean = false;
-    // showInvalidAddressError: boolean = false;
-    // showTermsOfServiceError: boolean = false;
-    // showBannedUserError: boolean = false;
-    // showDisplayNameError: boolean = false;
-    // showDisplayNameContainsNameError: boolean = false;
-    // showParentEmailError: boolean = false;
-    // showInvalidParentEmailError: boolean = false;
-    // showEnterParentEmailError: boolean = false;
+    enterDateOfBirth: boolean = true;
 
     errors: FormError[] = [];
 
@@ -113,7 +101,16 @@ export default class PrivoRegistrationCard extends Vue {
         return !!this.dateOfBirth;
     }
 
+    get dateOfBirthText() {
+        if (this.dateOfBirth) {
+            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            return dob.toLocaleString(DateTime.DATE_MED);
+        }
+        return '';
+    }
+
     created() {
+        this.enterDateOfBirth = true;
         this.resetFields();
         this.resetErrors();
     }
@@ -134,7 +131,9 @@ export default class PrivoRegistrationCard extends Vue {
 
         const valid = !result.success || result.allowed;
 
-        if (valid) {
+        if (result.success === false) {
+            this.errors = getFormErrors(result);
+        } else if (valid) {
             this.errors = this.errors.filter((e) => e.for !== EMAIL_FIELD);
         } else {
             this.errors = [
@@ -149,7 +148,7 @@ export default class PrivoRegistrationCard extends Vue {
     }
 
     async checkDisplayName() {
-        if (!this.displayName) {
+        if (!this.displayName || !this.name) {
             return;
         }
         const result = await authManager.isValidDisplayName(
@@ -159,14 +158,19 @@ export default class PrivoRegistrationCard extends Vue {
 
         const valid = !result.success || result.allowed;
 
-        if (valid) {
+        if (result.success === false) {
+            this.errors = getFormErrors(result);
+        } else if (valid) {
             this.errors = this.errors.filter(
-                (e) => e.for !== DISPLAY_NAME_FIELD
+                (e) => e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
             );
         } else {
             if (result.containsName) {
                 this.errors = [
-                    ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
+                    ...this.errors.filter(
+                        (e) =>
+                            e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
+                    ),
                     {
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',
@@ -176,7 +180,10 @@ export default class PrivoRegistrationCard extends Vue {
                 ];
             } else {
                 this.errors = [
-                    ...this.errors.filter((e) => e.for !== DISPLAY_NAME_FIELD),
+                    ...this.errors.filter(
+                        (e) =>
+                            e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
+                    ),
                     {
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',
@@ -200,6 +207,22 @@ export default class PrivoRegistrationCard extends Vue {
         this.parentEmail = null;
     }
 
+    async provideDateOfBirth() {
+        if (!this.dateOfBirth) {
+            this.errors = [
+                {
+                    for: DATE_OF_BIRTH_FIELD,
+                    errorCode: 'invalid_date_of_birth',
+                    errorMessage: 'Please enter a valid date of birth.',
+                },
+            ];
+            return;
+        }
+
+        this.errors = [];
+        this.enterDateOfBirth = false;
+    }
+
     async register() {
         try {
             this.processing = true;
@@ -209,6 +232,41 @@ export default class PrivoRegistrationCard extends Vue {
             this.name = this.name.trim();
             this.email = this.email?.trim();
             this.parentEmail = this.parentEmail?.trim();
+
+            if (!this.displayName) {
+                this.errors.push({
+                    for: DISPLAY_NAME_FIELD,
+                    errorCode: 'invalid_display_name',
+                    errorMessage: 'Please enter a display name.',
+                });
+            }
+            if (!this.name) {
+                this.errors.push({
+                    for: NAME_FIELD,
+                    errorCode: 'invalid_name',
+                    errorMessage: 'Please enter a name.',
+                });
+            }
+
+            if (this.requireEmail && !this.email) {
+                this.errors.push({
+                    for: EMAIL_FIELD,
+                    errorCode: 'invalid_email',
+                    errorMessage: 'Please enter an email.',
+                });
+            }
+
+            if (this.requireParentEmail && !this.parentEmail) {
+                this.errors.push({
+                    for: PARENT_EMAIL_FIELD,
+                    errorCode: 'invalid_parent_email',
+                    errorMessage: 'Please enter a parent email.',
+                });
+            }
+
+            if (this.errors.length > 0) {
+                return;
+            }
 
             const result = await authManager.signUpWithPrivo({
                 email: this.email,

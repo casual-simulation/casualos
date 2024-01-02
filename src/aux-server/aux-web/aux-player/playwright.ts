@@ -18,6 +18,7 @@ appManager.simulationFactory = async (id, origin, config) => {
         {
             recordName: null,
             inst: null,
+            isStatic: !!origin.isStatic,
         },
         config,
         new AuxVMImpl(id, {

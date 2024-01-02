@@ -1384,6 +1384,10 @@ export class WebsocketController {
                 totalCount: instsResult.totalCount,
             };
         } catch (err) {
+            console.error(
+                `[WebsocketController] A server error occurred while listing insts:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',

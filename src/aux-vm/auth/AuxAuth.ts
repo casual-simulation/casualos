@@ -151,6 +151,11 @@ export interface LoginUIUpdatePasswordLink {
      * The link used to update the user's password.
      */
     updatePasswordUrl: string;
+
+    /**
+     * Whether a parent email was provided by the user.
+     */
+    providedParentEmail: boolean;
 }
 
 export interface PrivoSignUpInfo {

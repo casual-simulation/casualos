@@ -24,14 +24,16 @@ Make sure you have all the prerequisite tools installed:
 1. Clone the repository.
     - `git clone https://github.com/casual-simulation/casualos.git`
 2. Make sure global dependencies are installed.
-    - `npm install -g lerna@6.0.3 jake node-gyp prisma`
+    - `npm install -g jake node-gyp prisma`
     - (Windows Only) [Tell NPM to use the global `node-gyp`.](https://github.com/nodejs/node-gyp/issues/2272) (Older versions of node-gyp cannot detect Visual Studio 2022)
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
-3. Start CockroachDB
+3. Enable corepack
+    - `corepack enable`
+4. Start CockroachDB
     - Use a separate terminal tab
     - `npm run cockroach`
     - If you want, you can choose to start CockroachDB when your system starts or use something like Docker to host your CockroachDB instance.
-4. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
+5. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
         1. Open the hosts file as Sudo/Admin.
@@ -41,11 +43,11 @@ Make sure you have all the prerequisite tools installed:
             ```
             127.0.0.1 casualos.localhost
             ```
-5. Start related services:
+6. Start related services:
     1. `nerdctl compose -f docker/docker-compose.dev.yml up -d`
-6. Bootstrap the project.
+7. Bootstrap the project.
     - `npm run bootstrap`
-7. Install commit hooks.
+8. Install commit hooks.
     - `npx husky install`
 
 ## Commands

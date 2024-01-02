@@ -11,9 +11,10 @@
                 </p>
                 <p>
                     By using Our products or services, You agree to these Terms of Service as well
-                    as Our <a href="/acceptable-use-policy">Acceptable Use Policy</a>
+                    as Our
+                    <router-link to="/acceptable-use-policy">Acceptable Use Policy</router-link>
                     and
-                    <a href="/privacy-policy">Privacy Policy</a>.
+                    <router-link to="/privacy-policy">Privacy Policy</router-link>.
                 </p>
 
                 <div v-html="termsHtml"></div>

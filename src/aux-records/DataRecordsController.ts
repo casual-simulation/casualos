@@ -29,11 +29,14 @@ import {
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { PUBLIC_READ_MARKER, hasValue } from '@casual-simulation/aux-common';
 import { without } from 'lodash';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import { byteLengthOfString } from './Utils';
+import { ZodIssue, z } from 'zod';
+import stringify from '@casual-simulation/fast-json-stable-stringify';
 
 export interface DataRecordsConfiguration {
     store: DataRecordsStore;
@@ -77,7 +80,7 @@ export class DataRecordsController {
     async recordData(
         recordKeyOrRecordName: string,
         address: string,
-        data: string,
+        data: object | string | boolean | number,
         subjectId: string,
         updatePolicy: UserPolicy,
         deletePolicy: UserPolicy,
@@ -251,6 +254,27 @@ export class DataRecordsController {
                 };
             }
 
+            if (hasValue(features.data.maxItemSizeInBytes)) {
+                const dataString =
+                    typeof data === 'string' ? data : stringify(data);
+                const size = byteLengthOfString(dataString);
+                const schema = z.number().max(features.data.maxItemSizeInBytes);
+                const result = schema.safeParse(size, {
+                    path: ['data', 'sizeInBytes'],
+                });
+
+                if (result.success === false) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The size of the item is larger than the subscription allows.',
+                        errorReason: 'data_too_large',
+                        issues: result.error.issues,
+                    };
+                }
+            }
+
             if (request.action === 'data.create') {
                 // Check metrics
                 if (features.data.maxItems > 0) {
@@ -291,10 +315,14 @@ export class DataRecordsController {
                 address: address,
             };
         } catch (err) {
+            console.error(
+                `[DataRecordsController] A server error occurred while recording data:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -582,10 +610,14 @@ export class DataRecordsController {
                 address,
             };
         } catch (err) {
+            console.error(
+                `[DataRecordsController] A server error occurred while erasing data:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -659,7 +691,12 @@ export interface RecordDataFailure {
     /**
      * The reason for the error.
      */
-    errorReason?: 'data_not_allowed' | 'too_many_items';
+    errorReason?: 'data_not_allowed' | 'too_many_items' | 'data_too_large';
+
+    /**
+     * The issues with the request.
+     */
+    issues?: ZodIssue[];
 }
 
 /**

@@ -36,6 +36,11 @@ export default class AuthSubscription extends Vue {
 
     maybeSupported: boolean = false;
 
+    @Watch('studioId')
+    studioIdChanged() {
+        this._loadSubscriptions();
+    }
+
     created() {
         this.maybeSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
         this.loading = false;

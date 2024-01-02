@@ -21,7 +21,7 @@ export default class HasAccountDialog extends Vue {
     @Prop()
     status: LoginUIHasAccount;
 
-    showHasAccount: boolean;
+    showHasAccount: boolean = false;
     hasAccountValue: boolean = null;
 
     get privacyPolicyUrl() {

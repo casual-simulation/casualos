@@ -16,7 +16,7 @@ export interface StoredAuxVersion2 {
 
 /**
  * Defines an interface that represents an update that has been applied to an inst.
- * @dochash types/os
+ * @dochash types/os/spaces
  * @docname InstUpdate
  */
 export interface InstUpdate {

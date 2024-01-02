@@ -10,6 +10,7 @@ import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import {
     AuthHelperInterface,
     SimulationManager,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
 import {
     AuthData,

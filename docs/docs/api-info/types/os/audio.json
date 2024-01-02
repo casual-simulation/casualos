@@ -1,0 +1,3074 @@
+{
+    "hash": "types/os/audio",
+    "pageTitle": "Audio Actions",
+    "pageDescription": "Defines the types that are used by audio actions.",
+    "pageSidebarLabel": "Audio",
+    "contents": [
+        {
+            "id": 3161,
+            "order": 9999,
+            "name": "BeginRecordingAction",
+            "reflection": {
+                "id": 3161,
+                "name": "BeginRecordingAction",
+                "variant": "declaration",
+                "kind": 256,
+                "flags": {},
+                "comment": {
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "An event that is used to start audio recording."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/os/audio"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "BeginRecordingAction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3166,
+                        "name": "audio",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether to record audio.\r\n\r\nIf the computer does not have an audio device attached, then setting this to true\r\nwill cause an error.\r\n\r\nIf an array is specified, only the specified audio sources will be recorded.\r\n\r\nDefaults to true."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2534,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2534"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "boolean"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "union",
+                                        "types": [
+                                            {
+                                                "type": "literal",
+                                                "value": "screen"
+                                            },
+                                            {
+                                                "type": "literal",
+                                                "value": "microphone"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": 3008,
+                            "name": "RecordingOptions.audio",
+                            "id": 3008,
+                            "qualifiedName": "RecordingOptions.audio"
+                        }
+                    },
+                    {
+                        "id": 3164,
+                        "name": "playerId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the player that created this task.\r\nSet by remote action handlers when a task is recieved from a remote player."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 195,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L195"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 3168,
+                        "name": "screen",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether to record the screen.\r\n\r\nDefaults to false."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2551,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2551"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": 3010,
+                            "name": "RecordingOptions.screen",
+                            "id": 3010,
+                            "qualifiedName": "RecordingOptions.screen"
+                        }
+                    },
+                    {
+                        "id": 3163,
+                        "name": "taskId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the async task."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 189,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L189"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 3162,
+                        "name": "type",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2561,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2561"
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "begin_recording"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 3165,
+                        "name": "uncopiable",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether the action can be structure cloned.\r\nIf true, then the action should not be passed across message ports."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/Action.ts#L18"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    },
+                    {
+                        "id": 3167,
+                        "name": "video",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether to record video.\r\n\r\nIf the computer does not have a video device attached (like a web cam),\r\nthen setting this to true will cause an error.\r\n\r\nDefaults to true."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2544,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2544"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": 3009,
+                            "name": "RecordingOptions.video",
+                            "id": 3009,
+                            "qualifiedName": "RecordingOptions.video"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "children": [
+                            3166,
+                            3164,
+                            3168,
+                            3163,
+                            3162,
+                            3165,
+                            3167
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 2560,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2560"
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "target": {
+                            "sourceFileName": "../src/aux-common/bots/BotEvents.ts",
+                            "qualifiedName": "AsyncAction"
+                        },
+                        "name": "AsyncAction",
+                        "package": "@casual-simulation/aux-common"
+                    },
+                    {
+                        "type": "reference",
+                        "target": 3007,
+                        "name": "RecordingOptions",
+                        "package": "@casual-simulation/aux-common",
+                        "id": 3007,
+                        "qualifiedName": "RecordingOptions"
+                    }
+                ]
+            },
+            "comment": {
+                "text": "An event that is used to start audio recording.",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "text": "types/os/audio"
+                    },
+                    {
+                        "tagName": "docname",
+                        "text": "BeginRecordingAction"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2887,
+            "order": 9999,
+            "name": "BufferSoundAction",
+            "reflection": {
+                "id": 2887,
+                "name": "BufferSoundAction",
+                "variant": "declaration",
+                "kind": 256,
+                "flags": {},
+                "comment": {
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "Defines an event that is used to pre-load a sound from the given URL."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/os/audio"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "BufferSoundAction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2891,
+                        "name": "playerId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the player that created this task.\r\nSet by remote action handlers when a task is recieved from a remote player."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 195,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L195"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 2890,
+                        "name": "taskId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the async task."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 189,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L189"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 2888,
+                        "name": "type",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1294,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1294"
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "buffer_sound"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 2892,
+                        "name": "uncopiable",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether the action can be structure cloned.\r\nIf true, then the action should not be passed across message ports."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/Action.ts#L18"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    },
+                    {
+                        "id": 2889,
+                        "name": "url",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The URL to buffer."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1299,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1299"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "children": [
+                            2891,
+                            2890,
+                            2888,
+                            2892,
+                            2889
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1293,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1293"
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "target": {
+                            "sourceFileName": "../src/aux-common/bots/BotEvents.ts",
+                            "qualifiedName": "AsyncAction"
+                        },
+                        "name": "AsyncAction",
+                        "package": "@casual-simulation/aux-common"
+                    }
+                ]
+            },
+            "comment": {
+                "text": "Defines an event that is used to pre-load a sound from the given URL.",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "text": "types/os/audio"
+                    },
+                    {
+                        "tagName": "docname",
+                        "text": "BufferSoundAction"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2893,
+            "order": 9999,
+            "name": "CancelSoundAction",
+            "reflection": {
+                "id": 2893,
+                "name": "CancelSoundAction",
+                "variant": "declaration",
+                "kind": 256,
+                "flags": {},
+                "comment": {
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "Defines an event that is used to cancel a sound that is playing."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/os/audio"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "CancelSoundAction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2897,
+                        "name": "playerId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the player that created this task.\r\nSet by remote action handlers when a task is recieved from a remote player."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 195,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L195"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 2895,
+                        "name": "soundID",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the sound."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1314,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1314"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 2896,
+                        "name": "taskId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the async task."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 189,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L189"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 2894,
+                        "name": "type",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1309,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1309"
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "cancel_sound"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 2898,
+                        "name": "uncopiable",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether the action can be structure cloned.\r\nIf true, then the action should not be passed across message ports."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/Action.ts#L18"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "children": [
+                            2897,
+                            2895,
+                            2896,
+                            2894,
+                            2898
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1308,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1308"
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "target": {
+                            "sourceFileName": "../src/aux-common/bots/BotEvents.ts",
+                            "qualifiedName": "AsyncAction"
+                        },
+                        "name": "AsyncAction",
+                        "package": "@casual-simulation/aux-common"
+                    }
+                ]
+            },
+            "comment": {
+                "text": "Defines an event that is used to cancel a sound that is playing.",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "text": "types/os/audio"
+                    },
+                    {
+                        "tagName": "docname",
+                        "text": "CancelSoundAction"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 3169,
+            "order": 9999,
+            "name": "EndRecordingAction",
+            "reflection": {
+                "id": 3169,
+                "name": "EndRecordingAction",
+                "variant": "declaration",
+                "kind": 256,
+                "flags": {},
+                "comment": {
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "An event that is used to finish audio recording."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/os/audio"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "EndRecordingAction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3172,
+                        "name": "playerId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the player that created this task.\r\nSet by remote action handlers when a task is recieved from a remote player."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 195,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L195"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 3171,
+                        "name": "taskId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the async task."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 189,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L189"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 3170,
+                        "name": "type",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2571,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2571"
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "end_recording"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 3173,
+                        "name": "uncopiable",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether the action can be structure cloned.\r\nIf true, then the action should not be passed across message ports."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/Action.ts#L18"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "children": [
+                            3172,
+                            3171,
+                            3170,
+                            3173
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 2570,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2570"
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "target": {
+                            "sourceFileName": "../src/aux-common/bots/BotEvents.ts",
+                            "qualifiedName": "AsyncAction"
+                        },
+                        "name": "AsyncAction",
+                        "package": "@casual-simulation/aux-common"
+                    }
+                ]
+            },
+            "comment": {
+                "text": "An event that is used to finish audio recording.",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "text": "types/os/audio"
+                    },
+                    {
+                        "tagName": "docname",
+                        "text": "EndRecordingAction"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 3197,
+            "order": 9999,
+            "name": "GetVoicesAction",
+            "reflection": {
+                "id": 3197,
+                "name": "GetVoicesAction",
+                "variant": "declaration",
+                "kind": 256,
+                "flags": {},
+                "comment": {
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "An event that is used to retrieve the synthetic voices that are supported by the current system."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/os/audio"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "GetVoicesAction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3200,
+                        "name": "playerId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the player that created this task.\r\nSet by remote action handlers when a task is recieved from a remote player."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 195,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L195"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 3199,
+                        "name": "taskId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the async task."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 189,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L189"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 3198,
+                        "name": "type",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2656,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2656"
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "get_voices"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 3201,
+                        "name": "uncopiable",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether the action can be structure cloned.\r\nIf true, then the action should not be passed across message ports."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/Action.ts#L18"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "children": [
+                            3200,
+                            3199,
+                            3198,
+                            3201
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 2655,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2655"
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "target": {
+                            "sourceFileName": "../src/aux-common/bots/BotEvents.ts",
+                            "qualifiedName": "AsyncAction"
+                        },
+                        "name": "AsyncAction",
+                        "package": "@casual-simulation/aux-common"
+                    }
+                ]
+            },
+            "comment": {
+                "text": "An event that is used to retrieve the synthetic voices that are supported by the current system.",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "text": "types/os/audio"
+                    },
+                    {
+                        "tagName": "docname",
+                        "text": "GetVoicesAction"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2880,
+            "order": 9999,
+            "name": "PlaySoundAction",
+            "reflection": {
+                "id": 2880,
+                "name": "PlaySoundAction",
+                "variant": "declaration",
+                "kind": 256,
+                "flags": {},
+                "comment": {
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "Defines an event that is used to play a sound from the given url."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/os/audio"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@doctitle",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Audio Actions"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docsidebar",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Audio"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docdescription",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Defines the types that are used by audio actions."
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "PlaySoundAction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2885,
+                        "name": "playerId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the player that created this task.\r\nSet by remote action handlers when a task is recieved from a remote player."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 195,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L195"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 2883,
+                        "name": "soundID",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the sound."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1284,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1284"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 2884,
+                        "name": "taskId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the async task."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 189,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L189"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 2881,
+                        "name": "type",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1273,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1273"
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "play_sound"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 2886,
+                        "name": "uncopiable",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether the action can be structure cloned.\r\nIf true, then the action should not be passed across message ports."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/Action.ts#L18"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    },
+                    {
+                        "id": 2882,
+                        "name": "url",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The URL to open."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1278,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1278"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "children": [
+                            2885,
+                            2883,
+                            2884,
+                            2881,
+                            2886,
+                            2882
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1272,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L1272"
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "target": {
+                            "sourceFileName": "../src/aux-common/bots/BotEvents.ts",
+                            "qualifiedName": "AsyncAction"
+                        },
+                        "name": "AsyncAction",
+                        "package": "@casual-simulation/aux-common"
+                    }
+                ]
+            },
+            "comment": {
+                "text": "Defines an event that is used to play a sound from the given url.",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "text": "types/os/audio"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "text": "Audio Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "text": "Audio"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "text": "Defines the types that are used by audio actions."
+                    },
+                    {
+                        "tagName": "docname",
+                        "text": "PlaySoundAction"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 3188,
+            "order": 9999,
+            "name": "SpeakTextAction",
+            "reflection": {
+                "id": 3188,
+                "name": "SpeakTextAction",
+                "variant": "declaration",
+                "kind": 256,
+                "flags": {},
+                "comment": {
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "An event that is used to speak some text using the builtin text to speech engine."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/os/audio"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "SpeakTextAction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3194,
+                        "name": "pitch",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The pitch that the text should be spoken at."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2621,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2621"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "SpeakTextOptions.pitch"
+                        }
+                    },
+                    {
+                        "id": 3192,
+                        "name": "playerId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the player that created this task.\r\nSet by remote action handlers when a task is recieved from a remote player."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 195,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L195"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.playerId"
+                        }
+                    },
+                    {
+                        "id": 3195,
+                        "name": "rate",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The rate that the text should be spoken at."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2626,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2626"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "SpeakTextOptions.rate"
+                        }
+                    },
+                    {
+                        "id": 3191,
+                        "name": "taskId",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The ID of the async task."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 189,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L189"
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.taskId"
+                        }
+                    },
+                    {
+                        "id": 3190,
+                        "name": "text",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The text that should be spoken."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2646,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2646"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 3189,
+                        "name": "type",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2641,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2641"
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "speak_text"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.type"
+                        }
+                    },
+                    {
+                        "id": 3193,
+                        "name": "uncopiable",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "Whether the action can be structure cloned.\r\nIf true, then the action should not be passed across message ports."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/common/Action.ts",
+                                "line": 18,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/Action.ts#L18"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "AsyncAction.uncopiable"
+                        }
+                    },
+                    {
+                        "id": 3196,
+                        "name": "voice",
+                        "variant": "declaration",
+                        "kind": 1024,
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The name of the voice that the text should be spoken with."
+                                }
+                            ],
+                            "blockTags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 2631,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2631"
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "target": -1,
+                            "name": "SpeakTextOptions.voice"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "children": [
+                            3194,
+                            3192,
+                            3195,
+                            3191,
+                            3190,
+                            3189,
+                            3193,
+                            3196
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 2640,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/bots/BotEvents.ts#L2640"
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "target": {
+                            "sourceFileName": "../src/aux-common/bots/BotEvents.ts",
+                            "qualifiedName": "AsyncAction"
+                        },
+                        "name": "AsyncAction",
+                        "package": "@casual-simulation/aux-common"
+                    },
+                    {
+                        "type": "reference",
+                        "target": {
+                            "sourceFileName": "../src/aux-common/bots/BotEvents.ts",
+                            "qualifiedName": "SpeakTextOptions"
+                        },
+                        "name": "SpeakTextOptions",
+                        "package": "@casual-simulation/aux-common"
+                    }
+                ]
+            },
+            "comment": {
+                "text": "An event that is used to speak some text using the builtin text to speech engine.",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "text": "types/os/audio"
+                    },
+                    {
+                        "tagName": "docname",
+                        "text": "SpeakTextAction"
+                    }
+                ]
+            },
+            "group": null
+        }
+    ],
+    "references": {
+        "CasualOSError": "types/error",
+        "id-3545": "CasualOSError",
+        "Quaternion": "types/math/rotations",
+        "id-127": "Quaternion",
+        "Rotation": "types/math/rotations",
+        "id-154": "Rotation",
+        "Vector2": "types/math/vectors",
+        "id-1": "Vector2",
+        "Vector3": "types/math/vectors",
+        "id-58": "Vector3",
+        "AIChatMessage": "types/ai",
+        "id-3564": "AIChatMessage",
+        "AIChatOptions": "types/ai",
+        "id-3334": "AIChatOptions",
+        "AIGenerateImageSuccess": "types/ai",
+        "id-2481": "AIGenerateImageSuccess",
+        "AIGenerateImageOptions": "types/ai",
+        "id-3348": "AIGenerateImageOptions",
+        "AIGenerateSkyboxOptions": "types/ai",
+        "id-3344": "AIGenerateSkyboxOptions",
+        "AIGenerateSkyboxRequest": "types/ai",
+        "id-2474": "AIGenerateSkyboxRequest",
+        "AIGenerateSkyboxResult": "types/ai",
+        "id-2478": "AIGenerateSkyboxResult",
+        "AIGeneratedImage": "types/ai",
+        "id-2484": "AIGeneratedImage",
+        "ARSupportedAction": "types/os/xr",
+        "id-3076": "ARSupportedAction",
+        "AddCountFailure": "types/records/events",
+        "id-3750": "AddCountFailure",
+        "AddCountSuccess": "types/records/events",
+        "id-3745": "AddCountSuccess",
+        "AddDropSnapAction": "types/os/portals",
+        "id-2705": "AddDropSnapAction",
+        "AddDropSnapPointsAction": "types/os/portals",
+        "id-2709": "AddDropSnapPointsAction",
+        "AnalyticsRecordEventAction": "types/os/portals",
+        "id-3279": "AnalyticsRecordEventAction",
+        "AnimateTagOptions": "types/animation",
+        "id-2078": "AnimateTagOptions",
+        "AttachDebuggerOptions": "types/debuggers/common",
+        "id-2454": "AttachDebuggerOptions",
+        "AuthData": "types/os/records",
+        "id-3218": "AuthData",
+        "CasualOSDevice": "types/os/system",
+        "id-3532": "CasualOSDevice",
+        "CasualOSVersion": "types/os/system",
+        "id-3524": "CasualOSVersion",
+        "AxisAndAngle": "types/math/rotations",
+        "id-200": "AxisAndAngle",
+        "BeginRecordingAction": "types/os/audio",
+        "id-3161": "BeginRecordingAction",
+        "BotTagMasks": "types/core",
+        "id-3501": "BotTagMasks",
+        "BotTags": "types/core",
+        "id-3416": "BotTags",
+        "BotState": "types/core",
+        "id-3514": "BotState",
+        "BufferFormAddressGLTFAction": "types/os/portals",
+        "id-3286": "BufferFormAddressGLTFAction",
+        "BufferSoundAction": "types/os/audio",
+        "id-2887": "BufferSoundAction",
+        "CalculateRayFromCameraAction": "types/os/portals",
+        "id-3259": "CalculateRayFromCameraAction",
+        "CancelSoundAction": "types/os/audio",
+        "id-2893": "CancelSoundAction",
+        "CompiledBotListeners": "types/core",
+        "id-3495": "CompiledBotListeners",
+        "ConfigureWakeLockAction": "types/os/portals",
+        "id-3266": "ConfigureWakeLockAction",
+        "ConvertGeolocationToWhat3WordsAction": "types/os/geolocation",
+        "id-2651": "ConvertGeolocationToWhat3WordsAction",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
+        "id-2640": "ConvertGeolocationToWhat3WordsOptions",
+        "CreatePublicRecordKeyFailure": "types/records/key",
+        "id-3686": "CreatePublicRecordKeyFailure",
+        "CreatePublicRecordKeySuccess": "types/records/key",
+        "id-3682": "CreatePublicRecordKeySuccess",
+        "DebuggerCallFrame": "types/debuggers/common",
+        "id-2407": "DebuggerCallFrame",
+        "DebuggerFunctionLocation": "types/debuggers/common",
+        "id-2442": "DebuggerFunctionLocation",
+        "DebuggerPause": "types/debuggers/common",
+        "id-2436": "DebuggerPause",
+        "DebuggerTagMaskUpdate": "types/debuggers/common",
+        "id-2415": "DebuggerTagMaskUpdate",
+        "DebuggerTagUpdate": "types/debuggers/common",
+        "id-2421": "DebuggerTagUpdate",
+        "DebuggerVariable": "types/debuggers/common",
+        "id-2448": "DebuggerVariable",
+        "DefineGlobalBotAction": "types/os/portals",
+        "id-2644": "DefineGlobalBotAction",
+        "DownloadAction": "types/os/files",
+        "id-2899": "DownloadAction",
+        "Easing": "types/animation",
+        "id-2622": "Easing",
+        "EnableARAction": "types/os/xr",
+        "id-3072": "EnableARAction",
+        "EnableCollaborationAction": "types/os/spaces",
+        "id-3031": "EnableCollaborationAction",
+        "EnableCustomDraggingAction": "types/os/portals",
+        "id-2735": "EnableCustomDraggingAction",
+        "EnablePOVAction": "types/os/portals",
+        "id-3090": "EnablePOVAction",
+        "EnableVRAction": "types/os/xr",
+        "id-3086": "EnableVRAction",
+        "EnableXROptions": "types/os/xr",
+        "id-2942": "EnableXROptions",
+        "EndRecordingAction": "types/os/audio",
+        "id-3169": "EndRecordingAction",
+        "EraseDataFailure": "types/records/data",
+        "id-3721": "EraseDataFailure",
+        "EraseDataSuccess": "types/records/data",
+        "id-3717": "EraseDataSuccess",
+        "EraseFileFailure": "types/records/files",
+        "id-3740": "EraseFileFailure",
+        "EraseFileSuccess": "types/records/files",
+        "id-3736": "EraseFileSuccess",
+        "EulerAnglesRotation": "types/math/rotations",
+        "id-203": "EulerAnglesRotation",
+        "ExitFullscreenAction": "types/os/portals",
+        "id-3105": "ExitFullscreenAction",
+        "FocusOnOptions": "types/os/camera",
+        "id-2689": "FocusOnOptions",
+        "FocusOnRotation": "types/os/camera",
+        "id-2701": "FocusOnRotation",
+        "FormAnimationData": "types/os/animations",
+        "id-2987": "FormAnimationData",
+        "FromToRotation": "types/math/rotations",
+        "id-197": "FromToRotation",
+        "GenericError": "types/error",
+        "id-3542": "GenericError",
+        "GetAverageFrameRateAction": "types/os/portals",
+        "id-3239": "GetAverageFrameRateAction",
+        "GetCountFailure": "types/records/events",
+        "id-3761": "GetCountFailure",
+        "GetCountSuccess": "types/records/events",
+        "id-3755": "GetCountSuccess",
+        "GetDataFailure": "types/records/data",
+        "id-3712": "GetDataFailure",
+        "GetDataSuccess": "types/records/data",
+        "id-3703": "GetDataSuccess",
+        "GetGeolocationAction": "types/os/geolocation",
+        "id-3202": "GetGeolocationAction",
+        "GetRoomOptionsFailure": "types/os/portals",
+        "id-2169": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os/portals",
+        "id-2165": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os/portals",
+        "id-2212": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os/portals",
+        "id-2207": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os/portals",
+        "id-2188": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os/portals",
+        "id-2183": "GetRoomTrackOptionsSuccess",
+        "GetVoicesAction": "types/os/audio",
+        "id-3197": "GetVoicesAction",
+        "GetWakeLockConfigurationAction": "types/os/portals",
+        "id-3272": "GetWakeLockConfigurationAction",
+        "GoToTagAction": "types/os/portals",
+        "id-3207": "GoToTagAction",
+        "GrantMarkerPermissionFailure": "types/records/policies",
+        "id-3789": "GrantMarkerPermissionFailure",
+        "GrantMarkerPermissionSuccess": "types/records/policies",
+        "id-3787": "GrantMarkerPermissionSuccess",
+        "GrantRoleFailure": "types/records/roles",
+        "id-3775": "GrantRoleFailure",
+        "GrantRoleSuccess": "types/records/roles",
+        "id-3773": "GrantRoleSuccess",
+        "HideHtmlAction": "types/os/portals",
+        "id-2541": "HideHtmlAction",
+        "HideTooltipAction": "types/os/portals",
+        "id-2530": "HideTooltipAction",
+        "HtmlAppEventAction": "types/os/portals",
+        "id-2551": "HtmlAppEventAction",
+        "HtmlAppMethodCallAction": "types/os/portals",
+        "id-2556": "HtmlAppMethodCallAction",
+        "ImageClassifierOptions": "types/os/image-classification",
+        "id-2740": "ImageClassifierOptions",
+        "InstUpdate": "types/os/spaces",
+        "id-3538": "InstUpdate",
+        "JoinRoomFailure": "types/os/portals",
+        "id-2150": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os/portals",
+        "id-2147": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os/portals",
+        "id-2159": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os/portals",
+        "id-2156": "LeaveRoomSuccess",
+        "ListDataFailure": "types/records/data",
+        "id-3731": "ListDataFailure",
+        "ListDataSuccess": "types/records/data",
+        "id-3726": "ListDataSuccess",
+        "ListFormAnimationsAction": "types/os/animations",
+        "id-2991": "ListFormAnimationsAction",
+        "ListStudiosFailure": "types/records/studios",
+        "id-3804": "ListStudiosFailure",
+        "ListStudiosSuccess": "types/records/studios",
+        "id-3801": "ListStudiosSuccess",
+        "ListedStudio": "types/records/studios",
+        "id-3808": "ListedStudio",
+        "LoadInstAction": "types/os/spaces",
+        "id-2812": "LoadInstAction",
+        "LoadSpaceAction": "types/os/spaces",
+        "id-2932": "LoadSpaceAction",
+        "LocalFormAnimationAction": "types/os/animations",
+        "id-3043": "LocalFormAnimationAction",
+        "LocalPositionTweenAction": "types/os/animations",
+        "id-3057": "LocalPositionTweenAction",
+        "LocalTweenAction": "types/os/animations",
+        "id-3047": "LocalTweenAction",
+        "LookRotation": "types/math/rotations",
+        "id-211": "LookRotation",
+        "MediaPermissionAction": "types/os/media",
+        "id-3232": "MediaPermissionAction",
+        "MediaPermissionOptions": "types/os/media",
+        "id-2939": "MediaPermissionOptions",
+        "MeetCommandAction": "types/os/meets",
+        "id-3174": "MeetCommandAction",
+        "MeetFunctionAction": "types/os/meets",
+        "id-3181": "MeetFunctionAction",
+        "Debugger": "types/debuggers/debugger",
+        "id-2219": "Debugger",
+        "NormalDebuggerOptions": "types/debuggers/common",
+        "id-2426": "NormalDebuggerOptions",
+        "OpenCircleWipeAction": "types/os/portals",
+        "id-3151": "OpenCircleWipeAction",
+        "OpenCircleWipeOptions": "types/os/portals",
+        "id-3158": "OpenCircleWipeOptions",
+        "OpenConsoleAction": "types/os/system",
+        "id-2787": "OpenConsoleAction",
+        "PhotoCameraOptions": "types/camera",
+        "id-3015": "PhotoCameraOptions",
+        "OpenURLAction": "types/os/portals",
+        "id-2876": "OpenURLAction",
+        "ParsedBotLink": "types/core",
+        "id-3520": "ParsedBotLink",
+        "PartialBotState": "types/core",
+        "id-3517": "PartialBotState",
+        "PausableDebugger": "types/debuggers/pausable-debugger",
+        "id-2275": "PausableDebugger",
+        "PausableDebuggerOptions": "types/debuggers/common",
+        "id-2431": "PausableDebuggerOptions",
+        "PauseTrigger": "types/debuggers/common",
+        "id-2394": "PauseTrigger",
+        "PauseTriggerOptions": "types/debuggers/common",
+        "id-2402": "PauseTriggerOptions",
+        "Photo": "types/camera",
+        "id-3027": "Photo",
+        "PlaySoundAction": "types/os/audio",
+        "id-2880": "PlaySoundAction",
+        "PossiblePauseTriggerLocation": "types/debuggers/common",
+        "id-2389": "PossiblePauseTriggerLocation",
+        "PseudoRandomNumberGenerator": "types/core",
+        "id-2463": "PseudoRandomNumberGenerator",
+        "QuaternionRotation": "types/math/rotations",
+        "id-215": "QuaternionRotation",
+        "RaycastFromCameraAction": "types/os/portals",
+        "id-3244": "RaycastFromCameraAction",
+        "RaycastInPortalAction": "types/os/portals",
+        "id-3251": "RaycastInPortalAction",
+        "RaycastRay": "types/os/portals",
+        "id-2143": "RaycastRay",
+        "RaycastResult": "types/os/portals",
+        "id-2140": "RaycastResult",
+        "RecordActionOptions": "types/records/extra",
+        "id-3297": "RecordActionOptions",
+        "RecordDataFailure": "types/records/data",
+        "id-3696": "RecordDataFailure",
+        "RecordDataSuccess": "types/records/data",
+        "id-3692": "RecordDataSuccess",
+        "RecordFileFailure": "types/records/files",
+        "id-2110": "RecordFileFailure",
+        "RecordFileSuccess": "types/records/files",
+        "id-2106": "RecordFileSuccess",
+        "RecordedFile": "types/experimental",
+        "id-3002": "RecordedFile",
+        "Recording": "types/experimental",
+        "id-3000": "Recording",
+        "RecordingOptions": "types/experimental",
+        "id-3007": "RecordingOptions",
+        "RegisterBuiltinPortalAction": "types/os/portals",
+        "id-3115": "RegisterBuiltinPortalAction",
+        "RegisterCustomAppAction": "types/os/portals",
+        "id-3121": "RegisterCustomAppAction",
+        "RegisterHtmlAppAction": "types/os/portals",
+        "id-3134": "RegisterHtmlAppAction",
+        "RegisterPrefixOptions": "types/core",
+        "id-2997": "RegisterPrefixOptions",
+        "RejectAction": "types/os/event",
+        "id-2905": "RejectAction",
+        "RemoteAction": "types/os/event",
+        "id-3814": "RemoteAction",
+        "ReportInstAction": "types/os/moderation",
+        "id-3292": "ReportInstAction",
+        "RequestAuthDataAction": "types/os/records",
+        "id-3212": "RequestAuthDataAction",
+        "RequestFullscreenAction": "types/os/portals",
+        "id-3103": "RequestFullscreenAction",
+        "RevokeMarkerPermissionFailure": "types/records/policies",
+        "id-3796": "RevokeMarkerPermissionFailure",
+        "RevokeMarkerPermissionSuccess": "types/records/policies",
+        "id-3794": "RevokeMarkerPermissionSuccess",
+        "RevokeRoleFailure": "types/records/roles",
+        "id-3782": "RevokeRoleFailure",
+        "RevokeRoleSuccess": "types/records/roles",
+        "id-3780": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os/portals",
+        "id-3300": "RoomJoinOptions",
+        "RoomOptions": "types/os/portals",
+        "id-3309": "RoomOptions",
+        "RoomRemoteOptions": "types/os/portals",
+        "id-3325": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os/portals",
+        "id-3313": "RoomTrackOptions",
+        "RunScriptAction": "types/os/system",
+        "id-2919": "RunScriptAction",
+        "RuntimeBot": "types/core",
+        "id-3361": "RuntimeBot",
+        "RuntimeBotLinks": "types/core",
+        "id-3507": "RuntimeBotLinks",
+        "RuntimeBotVars": "types/core",
+        "id-3504": "RuntimeBotVars",
+        "SequenceRotation": "types/math/rotations",
+        "id-222": "SequenceRotation",
+        "SerializableMutationRecord": "types/os/portals",
+        "id-2565": "SerializableMutationRecord",
+        "SessionSelector": "types/os/event",
+        "id-2489": "SessionSelector",
+        "SetAppOutputAction": "types/os/portals",
+        "id-3146": "SetAppOutputAction",
+        "SetClipboardAction": "types/os/clipboard",
+        "id-2908": "SetClipboardAction",
+        "SetRoomOptionsSuccess": "types/os/portals",
+        "id-2174": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os/portals",
+        "id-3331": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os/portals",
+        "id-2200": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os/portals",
+        "id-2195": "SetRoomTrackOptionsSuccess",
+        "ShareAction": "types/os/input",
+        "id-3107": "ShareAction",
+        "ShareOptions": "types/os/input",
+        "id-2685": "ShareOptions",
+        "ShowChatBarAction": "types/os/input",
+        "id-2911": "ShowChatBarAction",
+        "ShowChatOptions": "types/os/input",
+        "id-2679": "ShowChatOptions",
+        "ShowConfirmAction": "types/os/input",
+        "id-2761": "ShowConfirmAction",
+        "ShowConfirmOptions": "types/os/input",
+        "id-2756": "ShowConfirmOptions",
+        "ShowHtmlAction": "types/os/portals",
+        "id-2536": "ShowHtmlAction",
+        "ShowInputOptions": "types/os/input",
+        "id-2745": "ShowInputOptions",
+        "ShowJoinCodeAction": "types/os/barcodes",
+        "id-3099": "ShowJoinCodeAction",
+        "ShowToastAction": "types/os/portals",
+        "id-2516": "ShowToastAction",
+        "ShowTooltipAction": "types/os/portals",
+        "id-2521": "ShowTooltipAction",
+        "ShowUploadAuxFileAction": "types/os/input",
+        "id-2925": "ShowUploadAuxFileAction",
+        "ShowUploadFilesAction": "types/os/input",
+        "id-2927": "ShowUploadFilesAction",
+        "SnapAxis": "types/os/portals",
+        "id-2659": "SnapAxis",
+        "SnapGrid": "types/os/portals",
+        "id-2714": "SnapGrid",
+        "SnapGridTarget": "types/os/portals",
+        "id-2115": "SnapGridTarget",
+        "SnapPoint": "types/os/portals",
+        "id-2671": "SnapPoint",
+        "SpeakTextAction": "types/os/audio",
+        "id-3188": "SpeakTextAction",
+        "SpeakTextOptions": "types/experimental",
+        "id-2459": "SpeakTextOptions",
+        "StartFormAnimationAction": "types/os/animations",
+        "id-2968": "StartFormAnimationAction",
+        "StartFormAnimationOptions": "types/os/animations",
+        "id-2944": "StartFormAnimationOptions",
+        "StopFormAnimationAction": "types/os/animations",
+        "id-2957": "StopFormAnimationAction",
+        "StopFormAnimationOptions": "types/os/animations",
+        "id-2965": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os/geolocation",
+        "id-2626": "SuccessfulGeolocation",
+        "SyntheticVoice": "types/experimental",
+        "id-3011": "SyntheticVoice",
+        "TweenOptions": "types/experimental",
+        "id-2456": "TweenOptions",
+        "UnloadInstAction": "types/os/spaces",
+        "id-2816": "UnloadInstAction",
+        "UnregisterCustomAppAction": "types/os/portals",
+        "id-3128": "UnregisterCustomAppAction",
+        "UnregisterHtmlAppAction": "types/os/portals",
+        "id-3141": "UnregisterHtmlAppAction",
+        "UnsuccessfulGeolocation": "types/os/geolocation",
+        "id-2636": "UnsuccessfulGeolocation",
+        "UpdateEventRecordFailure": "types/records/events",
+        "id-3768": "UpdateEventRecordFailure",
+        "UpdateEventRecordSuccess": "types/records/events",
+        "id-3766": "UpdateEventRecordSuccess",
+        "UpdateHtmlAppAction": "types/os/portals",
+        "id-2545": "UpdateHtmlAppAction",
+        "UploadedFile": "types/os/files",
+        "id-2136": "UploadedFile",
+        "VRSupportedAction": "types/os/xr",
+        "id-3081": "VRSupportedAction",
+        "WakeLockConfiguration": "types/os/portals",
+        "id-3277": "WakeLockConfiguration",
+        "WebhookOptions": "types/web",
+        "id-2059": "WebhookOptions",
+        "WebhookResult": "types/web",
+        "id-2071": "WebhookResult",
+        "AddCountResult": "types/records/events",
+        "id-3744": "AddCountResult",
+        "AvailablePermissions": "types/permissions",
+        "id-3570": "AvailablePermissions",
+        "BarcodeFormat": "types/os/barcodes",
+        "id-2739": "BarcodeFormat",
+        "BotFilter": "types/core",
+        "id-2093": "BotFilter",
+        "BotSpace": "types/core",
+        "id-3491": "BotSpace",
+        "CameraType": "types/os/camera",
+        "id-2738": "CameraType",
+        "CreatePublicRecordKeyResult": "types/records/key",
+        "id-3681": "CreatePublicRecordKeyResult",
+        "EaseMode": "types/animation",
+        "id-2621": "EaseMode",
+        "EaseType": "types/animation",
+        "id-2620": "EaseType",
+        "EraseDataResult": "types/records/data",
+        "id-3716": "EraseDataResult",
+        "EraseFileResult": "types/records/files",
+        "id-3735": "EraseFileResult",
+        "Geolocation": "types/os/geolocation",
+        "id-2625": "Geolocation",
+        "GetCountResult": "types/records/events",
+        "id-3754": "GetCountResult",
+        "GetDataResult": "types/records/data",
+        "id-3702": "GetDataResult",
+        "GetRoomOptionsResult": "types/os/portals",
+        "id-2164": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os/portals",
+        "id-2206": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os/portals",
+        "id-2182": "GetRoomTrackOptionsResult",
+        "GrantMarkerPermissionResult": "types/records/policies",
+        "id-3786": "GrantMarkerPermissionResult",
+        "GrantRoleResult": "types/records/roles",
+        "id-3772": "GrantRoleResult",
+        "JoinRoomResult": "types/os/portals",
+        "id-2146": "JoinRoomResult",
+        "LeaveRoomResult": "types/os/portals",
+        "id-2155": "LeaveRoomResult",
+        "ListDataResult": "types/records/data",
+        "id-3725": "ListDataResult",
+        "ListStudiosResult": "types/records/studios",
+        "id-3800": "ListStudiosResult",
+        "Mod": "types/core",
+        "id-2088": "Mod",
+        "PortalType": "types/core",
+        "id-3523": "PortalType",
+        "PossiblePauseTriggerStates": "types/debuggers/common",
+        "id-2393": "PossiblePauseTriggerStates",
+        "RecordDataResult": "types/records/data",
+        "id-3691": "RecordDataResult",
+        "RecordFileResult": "types/records/files",
+        "id-2105": "RecordFileResult",
+        "RevokeMarkerPermissionResult": "types/records/policies",
+        "id-3793": "RevokeMarkerPermissionResult",
+        "RevokeRoleResult": "types/records/roles",
+        "id-3779": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os/portals",
+        "id-2173": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os/portals",
+        "id-2194": "SetRoomTrackOptionsResult",
+        "ShowInputSuptype": "types/os/input",
+        "id-2755": "ShowInputSuptype",
+        "ShowInputType": "types/os/input",
+        "id-2754": "ShowInputType",
+        "SnapTarget": "types/os/portals",
+        "id-2678": "SnapTarget",
+        "TagFilter": "types/core",
+        "id-2089": "TagFilter",
+        "UpdateEventRecordResult": "types/records/events",
+        "id-3765": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/utility",
+        "id-591": "animateTag-byOptions",
+        "getbot-tag": "actions/data",
+        "id-256": "getbot-tag",
+        "getbots-tag": "actions/data",
+        "id-240": "getbots-tag",
+        "animateTag-byTag": "actions/utility",
+        "id-585": "animateTag-byTag",
+        "changeState": "actions/data",
+        "id-401": "changeState",
+        "create": "actions/data",
+        "id-385": "create",
+        "destroy": "actions/data",
+        "id-389": "destroy",
+        "getbot-filters": "actions/data",
+        "id-249": "getbot-filters",
+        "getbots-filters": "actions/data",
+        "id-233": "getbots-filters",
+        "priorityShout": "actions/os/event",
+        "id-450": "priorityShout",
+        "shout": "actions/os/event",
+        "id-463": "shout",
+        "updateBotLinks": "actions/data",
+        "id-423": "updateBotLinks",
+        "whisper": "actions/os/event",
+        "id-489": "whisper",
+        "action.perform": "actions/os/event",
+        "id-1594": "action.perform",
+        "action.reject": "actions/os/event",
+        "id-1598": "action.reject",
+        "ai.chat-string": "actions/ai",
+        "id-650": "ai.chat-string",
+        "ai.chat-message": "actions/ai",
+        "id-653": "ai.chat-message",
+        "ai.chat-messages": "actions/ai",
+        "id-656": "ai.chat-messages",
+        "ai.generateImage-string": "actions/ai",
+        "id-669": "ai.generateImage-string",
+        "ai.generateImage-request": "actions/ai",
+        "id-673": "ai.generateImage-request",
+        "ai.generateSkybox-string": "actions/ai",
+        "id-661": "ai.generateSkybox-string",
+        "ai.generateSkybox-request": "actions/ai",
+        "id-665": "ai.generateSkybox-request",
+        "applyDiffToSnapshot": "actions/data",
+        "id-306": "applyDiffToSnapshot",
+        "applyMod": "actions/mods",
+        "id-375": "applyMod",
+        "assert": "actions/debuggers",
+        "id-634": "assert",
+        "assertEqual": "actions/debuggers",
+        "id-639": "assertEqual",
+        "atPosition": "actions/bot-filters",
+        "id-520": "atPosition",
+        "byCreator": "actions/bot-filters",
+        "id-541": "byCreator",
+        "byID": "actions/bot-filters",
+        "id-508": "byID",
+        "byMod": "actions/bot-filters",
+        "id-512": "byMod",
+        "bySpace": "actions/bot-filters",
+        "id-537": "bySpace",
+        "byTag": "actions/bot-filters",
+        "id-503": "byTag",
+        "bytes.fromBase64String": "actions/bytes",
+        "id-1807": "bytes.fromBase64String",
+        "bytes.fromBase64Url": "actions/bytes",
+        "id-1824": "bytes.fromBase64Url",
+        "bytes.fromHexString": "actions/bytes",
+        "id-1815": "bytes.fromHexString",
+        "bytes.toBase64String": "actions/bytes",
+        "id-1803": "bytes.toBase64String",
+        "bytes.toBase64Url": "actions/bytes",
+        "id-1819": "bytes.toBase64Url",
+        "bytes.toHexString": "actions/bytes",
+        "id-1811": "bytes.toHexString",
+        "clearAnimations": "actions/utility",
+        "id-605": "clearAnimations",
+        "clearTagMasks": "actions/data",
+        "id-329": "clearTagMasks",
+        "crypto.hash-raw": "actions/crypto",
+        "id-1830": "crypto.hash-raw",
+        "crypto.hash-string": "actions/crypto",
+        "id-1836": "crypto.hash-string",
+        "crypto.hmac-raw": "actions/crypto",
+        "id-1867": "crypto.hmac-raw",
+        "crypto.hmac-string": "actions/crypto",
+        "id-1860": "crypto.hmac-string",
+        "crypto.asymmetric.decrypt": "actions/crypto",
+        "id-1925": "crypto.asymmetric.decrypt",
+        "crypto.asymmetric.encrypt": "actions/crypto",
+        "id-1920": "crypto.asymmetric.encrypt",
+        "crypto.asymmetric.isEncrypted": "actions/crypto",
+        "id-1931": "crypto.asymmetric.isEncrypted",
+        "crypto.asymmetric.isKeypair": "actions/crypto",
+        "id-1916": "crypto.asymmetric.isKeypair",
+        "crypto.asymmetric.keypair": "actions/crypto",
+        "id-1912": "crypto.asymmetric.keypair",
+        "crypto.encrypt": "actions/crypto",
+        "id-1896": "crypto.encrypt",
+        "crypto.hmacSha256": "actions/crypto",
+        "id-1886": "crypto.hmacSha256",
+        "crypto.hmacSha512": "actions/crypto",
+        "id-1891": "crypto.hmacSha512",
+        "crypto.isEncrypted": "actions/crypto",
+        "id-1906": "crypto.isEncrypted",
+        "crypto.keypair": "actions/crypto",
+        "id-1935": "crypto.keypair",
+        "crypto.sha256": "actions/crypto",
+        "id-1852": "crypto.sha256",
+        "crypto.sha512": "actions/crypto",
+        "id-1856": "crypto.sha512",
+        "crypto.sign": "actions/crypto",
+        "id-1939": "crypto.sign",
+        "deleteTagMaskText": "actions/data",
+        "id-356": "deleteTagMaskText",
+        "deleteTagText": "actions/data",
+        "id-349": "deleteTagText",
+        "diffSnapshots": "actions/data",
+        "id-301": "diffSnapshots",
+        "either": "actions/bot-filters",
+        "id-545": "either",
+        "os.beginAudioRecording": "actions/os/audio",
+        "id-1641": "os.beginAudioRecording",
+        "experiment.beginRecording": "actions/experimental",
+        "id-1648": "experiment.beginRecording",
+        "os.endAudioRecording": "actions/os/audio",
+        "id-1645": "os.endAudioRecording",
+        "experiment.endRecording": "actions/experimental",
+        "id-1652": "experiment.endRecording",
+        "experiment.getAnchorPointPosition": "actions/experimental",
+        "id-1631": "experiment.getAnchorPointPosition",
+        "experiment.getVoices": "actions/experimental",
+        "id-1660": "experiment.getVoices",
+        "experiment.localFormAnimation": "actions/experimental",
+        "id-1604": "experiment.localFormAnimation",
+        "experiment.localPositionTween": "actions/experimental",
+        "id-1609": "experiment.localPositionTween",
+        "experiment.localRotationTween": "actions/experimental",
+        "id-1620": "experiment.localRotationTween",
+        "experiment.speakText": "actions/experimental",
+        "id-1655": "experiment.speakText",
+        "getBotLinks": "actions/data",
+        "id-419": "getBotLinks",
+        "getBotPosition": "actions/data",
+        "id-275": "getBotPosition",
+        "getBotRotation": "actions/data",
+        "id-280": "getBotRotation",
+        "getBotTagValues": "actions/data",
+        "id-265": "getBotTagValues",
+        "getFormattedJSON": "actions/data",
+        "id-293": "getFormattedJSON",
+        "getID": "actions/data",
+        "id-285": "getID",
+        "getJSON": "actions/data",
+        "id-289": "getJSON",
+        "getLink": "actions/data",
+        "id-415": "getLink",
+        "getMod": "actions/mods",
+        "id-270": "getMod",
+        "getSnapshot": "actions/data",
+        "id-297": "getSnapshot",
+        "getTag": "actions/data",
+        "id-311": "getTag",
+        "inDimension": "actions/bot-filters",
+        "id-516": "inDimension",
+        "inStack": "actions/bot-filters",
+        "id-526": "inStack",
+        "insertTagMaskText": "actions/data",
+        "id-341": "insertTagMaskText",
+        "insertTagText": "actions/data",
+        "id-334": "insertTagText",
+        "math.abs": "actions/math",
+        "id-1677": "math.abs",
+        "math.addVectors": "actions/math",
+        "id-1747": "math.addVectors",
+        "math.areClose": "actions/math",
+        "id-1778": "math.areClose",
+        "math.avg": "actions/math",
+        "id-1669": "math.avg",
+        "math.degreesToRadians": "actions/math",
+        "id-1703": "math.degreesToRadians",
+        "math.getAnchorPointOffset": "actions/math",
+        "id-1743": "math.getAnchorPointOffset",
+        "math.getForwardDirection": "actions/math",
+        "id-1711": "math.getForwardDirection",
+        "math.getSeededRandomNumberGenerator": "actions/math",
+        "id-1685": "math.getSeededRandomNumberGenerator",
+        "math.intersectPlane": "actions/math",
+        "id-1720": "math.intersectPlane",
+        "math.negateVector": "actions/math",
+        "id-1757": "math.negateVector",
+        "math.normalizeVector": "actions/math",
+        "id-1762": "math.normalizeVector",
+        "math.radiansToDegrees": "actions/math",
+        "id-1707": "math.radiansToDegrees",
+        "math.random": "actions/math",
+        "id-1698": "math.random",
+        "math.randomInt": "actions/math",
+        "id-1693": "math.randomInt",
+        "math.scaleVector": "actions/math",
+        "id-1772": "math.scaleVector",
+        "math.setRandomSeed": "actions/math",
+        "id-1689": "math.setRandomSeed",
+        "math.sqrt": "actions/math",
+        "id-1673": "math.sqrt",
+        "math.stdDev": "actions/math",
+        "id-1681": "math.stdDev",
+        "math.subtractVectors": "actions/math",
+        "id-1752": "math.subtractVectors",
+        "math.sum": "actions/math",
+        "id-1665": "math.sum",
+        "math.vectorLength": "actions/math",
+        "id-1767": "math.vectorLength",
+        "neighboring": "actions/bot-filters",
+        "id-531": "neighboring",
+        "not": "actions/bot-filters",
+        "id-552": "not",
+        "os.attachDebugger": "actions/debuggers",
+        "id-1550": "os.attachDebugger",
+        "os.createDebugger-normal": "actions/debuggers",
+        "id-1539": "os.createDebugger-normal",
+        "os.createDebugger-pausable": "actions/debuggers",
+        "id-1543": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/os/portals",
+        "id-737": "os.focusOn-bot",
+        "os.focusOn-position": "actions/os/portals",
+        "id-742": "os.focusOn-position",
+        "os.getExecutingDebugger": "actions/debuggers",
+        "id-1547": "os.getExecutingDebugger",
+        "showChat-options": "actions/os/input",
+        "id-764": "showChat-options",
+        "showChat-placeholder": "actions/os/input",
+        "id-760": "showChat-placeholder",
+        "os.showInput": "actions/os/portals",
+        "id-983": "os.showInput",
+        "os.addBotDropGrid": "actions/os/portals",
+        "id-1053": "os.addBotDropGrid",
+        "os.addBotDropSnap": "actions/os/portals",
+        "id-1044": "os.addBotDropSnap",
+        "os.addDropGrid": "actions/os/portals",
+        "id-1049": "os.addDropGrid",
+        "os.addDropSnap": "actions/os/portals",
+        "id-1040": "os.addDropSnap",
+        "os.applyUpdatesToInst": "actions/os/spaces",
+        "id-1502": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/os/xr",
+        "id-808": "os.arSupported",
+        "os.bufferFormAddressGLTF": "actions/os/animations",
+        "id-1460": "os.bufferFormAddressGLTF",
+        "os.bufferSound": "actions/os/audio",
+        "id-1016": "os.bufferSound",
+        "os.calculateRayFromCamera": "actions/os/portals",
+        "id-1455": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/os/audio",
+        "id-1020": "os.cancelSound",
+        "os.capturePhoto": "actions/os/camera",
+        "id-903": "os.capturePhoto",
+        "os.closeBarcodeScanner": "actions/os/barcodes",
+        "id-881": "os.closeBarcodeScanner",
+        "os.closeCircleWipe": "actions/os/portals",
+        "id-1032": "os.closeCircleWipe",
+        "os.closeImageClassifier": "actions/os/image-classification",
+        "id-896": "os.closeImageClassifier",
+        "os.closePhotoCamera": "actions/os/camera",
+        "id-907": "os.closePhotoCamera",
+        "os.closeQRCodeScanner": "actions/os/barcodes",
+        "id-867": "os.closeQRCodeScanner",
+        "os.compileApp": "actions/os/app",
+        "id-1167": "os.compileApp",
+        "os.convertGeolocationToWhat3Words": "actions/os/geolocation",
+        "id-1440": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/os/records",
+        "id-1430": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os/spaces",
+        "id-1498": "os.createInitializationUpdate",
+        "os.device": "actions/os/system",
+        "id-782": "os.device",
+        "os.disableAR": "actions/os/xr",
+        "id-798": "os.disableAR",
+        "os.disablePointOfView": "actions/os/portals",
+        "id-823": "os.disablePointOfView",
+        "os.disableVR": "actions/os/xr",
+        "id-805": "os.disableVR",
+        "os.disableWakeLock": "actions/os/portals",
+        "id-829": "os.disableWakeLock",
+        "os.download": "actions/os/files",
+        "id-835": "os.download",
+        "os.downloadBots": "actions/os/files",
+        "id-841": "os.downloadBots",
+        "os.downloadBotsAsInitialzationUpdate": "actions/os/files",
+        "id-846": "os.downloadBotsAsInitialzationUpdate",
+        "os.downloadInst": "actions/os/files",
+        "id-854": "os.downloadInst",
+        "os.enableAR": "actions/os/xr",
+        "id-794": "os.enableAR",
+        "os.enableCollaboration": "actions/os/spaces",
+        "id-788": "os.enableCollaboration",
+        "os.enableCustomDragging": "actions/os/portals",
+        "id-1058": "os.enableCustomDragging",
+        "os.enablePointOfView": "actions/os/portals",
+        "id-814": "os.enablePointOfView",
+        "os.enableVR": "actions/os/xr",
+        "id-801": "os.enableVR",
+        "os.eraseData": "actions/os/records",
+        "id-1373": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/os/records",
+        "id-1379": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/os/portals",
+        "id-708": "os.exitFullscreenMode",
+        "os.getAverageFrameRate": "actions/os/portals",
+        "id-1115": "os.getAverageFrameRate",
+        "os.getCameraPosition": "actions/os/portals",
+        "id-1071": "os.getCameraPosition",
+        "os.getCameraRotation": "actions/os/portals",
+        "id-1075": "os.getCameraRotation",
+        "os.getCurrentDimension": "actions/os/portals",
+        "id-954": "os.getCurrentDimension",
+        "os.getCurrentInst": "actions/os/portals",
+        "id-960": "os.getCurrentInst",
+        "os.getCurrentInstUpdate": "actions/os/spaces",
+        "id-1506": "os.getCurrentInstUpdate",
+        "os.getData": "actions/os/records",
+        "id-1355": "os.getData",
+        "os.getDimensionalDepth": "actions/os/portals",
+        "id-973": "os.getDimensionalDepth",
+        "os.getFocusPoint": "actions/os/portals",
+        "id-1083": "os.getFocusPoint",
+        "os.getGeolocation": "actions/os/geolocation",
+        "id-1065": "os.getGeolocation",
+        "os.getInputList": "actions/os/portals",
+        "id-1108": "os.getInputList",
+        "os.getInputState": "actions/os/portals",
+        "id-1103": "os.getInputState",
+        "os.getInstStateFromUpdates": "actions/os/spaces",
+        "id-1494": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/os/records",
+        "id-1361": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os/media",
+        "id-1111": "os.getMediaPermission",
+        "os.getMenuDimension": "actions/os/portals",
+        "id-963": "os.getMenuDimension",
+        "os.getMiniPortalDimension": "actions/os/portals",
+        "id-966": "os.getMiniPortalDimension",
+        "os.getPointerDirection": "actions/os/portals",
+        "id-1099": "os.getPointerDirection",
+        "os.getPointerPosition": "actions/os/portals",
+        "id-1087": "os.getPointerPosition",
+        "os.getPointerRotation": "actions/os/portals",
+        "id-1091": "os.getPointerRotation",
+        "os.getPortalDimension": "actions/os/portals",
+        "id-969": "os.getPortalDimension",
+        "os.getPublicRecordKey": "actions/os/records",
+        "id-1280": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/os/rooms",
+        "id-1133": "os.getRoomOptions",
+        "os.getRoomRemoteOptions": "actions/os/rooms",
+        "id-1148": "os.getRoomRemoteOptions",
+        "os.getRoomTrackOptions": "actions/os/rooms",
+        "id-1137": "os.getRoomTrackOptions",
+        "os.getSubjectlessPublicRecordKey": "actions/os/records",
+        "id-1284": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os/portals",
+        "id-832": "os.getWakeLockConfiguration",
+        "os.goToDimension": "actions/os/portals",
+        "id-997": "os.goToDimension",
+        "os.goToURL": "actions/os/portals",
+        "id-1001": "os.goToURL",
+        "os.grantInstAdminPermission": "actions/os/records",
+        "id-1302": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/os/records",
+        "id-1322": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/os/records",
+        "id-1288": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/os/records",
+        "id-1307": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/os/portals",
+        "id-1024": "os.hasBotInMiniPortal",
+        "os.hideBarcode": "actions/os/barcodes",
+        "id-889": "os.hideBarcode",
+        "os.hideChat": "actions/os/input",
+        "id-772": "os.hideChat",
+        "os.hideHtml": "actions/os/portals",
+        "id-715": "os.hideHtml",
+        "os.hideQRCode": "actions/os/barcodes",
+        "id-874": "os.hideQRCode",
+        "os.hideTips": "actions/os/portals",
+        "id-696": "os.hideTips",
+        "os.importAUX": "actions/os/files",
+        "id-938": "os.importAUX",
+        "os.inSheet": "actions/os/portals",
+        "id-1068": "os.inSheet",
+        "os.isCollaborative": "actions/os/spaces",
+        "id-785": "os.isCollaborative",
+        "os.isInDimension": "actions/os/portals",
+        "id-950": "os.isInDimension",
+        "os.isRecordKey": "actions/os/records",
+        "id-1337": "os.isRecordKey",
+        "os.joinRoom": "actions/os/rooms",
+        "id-1118": "os.joinRoom",
+        "os.leaveRoom": "actions/os/rooms",
+        "id-1123": "os.leaveRoom",
+        "os.listBuiltinTags": "actions/os/app",
+        "id-1268": "os.listBuiltinTags",
+        "os.listData": "actions/os/records",
+        "id-1367": "os.listData",
+        "os.listFormAnimations": "actions/os/animations",
+        "id-1475": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os/spaces",
+        "id-1491": "os.listInstUpdates",
+        "os.listUserStudios": "actions/os/records",
+        "id-1436": "os.listUserStudios",
+        "os.loadInst": "actions/os/spaces",
+        "id-930": "os.loadInst",
+        "os.log": "actions/os/system",
+        "id-1061": "os.log",
+        "os.meetCommand": "actions/os/meets",
+        "id-1527": "os.meetCommand",
+        "os.meetFunction": "actions/os/meets",
+        "id-1532": "os.meetFunction",
+        "os.mergeInstUpdates": "actions/os/spaces",
+        "id-1509": "os.mergeInstUpdates",
+        "os.openBarcodeScanner": "actions/os/barcodes",
+        "id-877": "os.openBarcodeScanner",
+        "os.openCircleWipe": "actions/os/portals",
+        "id-1036": "os.openCircleWipe",
+        "os.openDevConsole": "actions/os/system",
+        "id-1009": "os.openDevConsole",
+        "os.openImageClassifier": "actions/os/image-classification",
+        "id-892": "os.openImageClassifier",
+        "os.openPhotoCamera": "actions/os/camera",
+        "id-899": "os.openPhotoCamera",
+        "os.openQRCodeScanner": "actions/os/barcodes",
+        "id-863": "os.openQRCodeScanner",
+        "os.openURL": "actions/os/portals",
+        "id-1005": "os.openURL",
+        "os.parseBotsFromData": "actions/os/files",
+        "id-942": "os.parseBotsFromData",
+        "os.playSound": "actions/os/audio",
+        "id-1012": "os.playSound",
+        "os.raycast": "actions/os/portals",
+        "id-1449": "os.raycast",
+        "os.raycastFromCamera": "actions/os/portals",
+        "id-1444": "os.raycastFromCamera",
+        "os.recordData": "actions/os/records",
+        "id-1341": "os.recordData",
+        "os.recordEvent": "actions/os/records",
+        "id-1424": "os.recordEvent",
+        "os.recordFile": "actions/os/records",
+        "id-1385": "os.recordFile",
+        "os.recordManualApprovalData": "actions/os/records",
+        "id-1348": "os.recordManualApprovalData",
+        "os.registerApp": "actions/os/app",
+        "id-1158": "os.registerApp",
+        "os.registerTagPrefix": "actions/os/app",
+        "id-1153": "os.registerTagPrefix",
+        "os.remoteCount": "actions/os/remotes",
+        "id-1513": "os.remoteCount",
+        "os.remotes": "actions/os/remotes",
+        "id-1488": "os.remotes",
+        "os.replaceDragBot": "actions/os/portals",
+        "id-946": "os.replaceDragBot",
+        "os.reportInst": "actions/os/moderation",
+        "id-1271": "os.reportInst",
+        "os.requestAuthBot": "actions/os/records",
+        "id-1274": "os.requestAuthBot",
+        "os.requestAuthBotInBackground": "actions/os/records",
+        "id-1277": "os.requestAuthBotInBackground",
+        "os.requestFullscreenMode": "actions/os/portals",
+        "id-705": "os.requestFullscreenMode",
+        "os.requestWakeLock": "actions/os/portals",
+        "id-826": "os.requestWakeLock",
+        "os.revokeInstRole": "actions/os/records",
+        "id-1330": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/os/records",
+        "id-1295": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/os/records",
+        "id-1315": "os.revokeUserRole",
+        "os.run": "actions/os/system",
+        "id-775": "os.run",
+        "os.setClipboard": "actions/os/clipboard",
+        "id-718": "os.setClipboard",
+        "os.setRoomOptions": "actions/os/rooms",
+        "id-1128": "os.setRoomOptions",
+        "os.setRoomTrackOptions": "actions/os/rooms",
+        "id-1142": "os.setRoomTrackOptions",
+        "os.share": "actions/os/input",
+        "id-1028": "os.share",
+        "os.showBarcode": "actions/os/barcodes",
+        "id-884": "os.showBarcode",
+        "os.showConfirm": "actions/os/portals",
+        "id-993": "os.showConfirm",
+        "os.showHtml": "actions/os/portals",
+        "id-711": "os.showHtml",
+        "os.showInputForTag": "actions/os/portals",
+        "id-977": "os.showInputForTag",
+        "os.showJoinCode": "actions/os/barcodes",
+        "id-700": "os.showJoinCode",
+        "os.showQRCode": "actions/os/barcodes",
+        "id-870": "os.showQRCode",
+        "os.showUploadAuxFile": "actions/os/files",
+        "id-857": "os.showUploadAuxFile",
+        "os.showUploadFiles": "actions/os/files",
+        "id-860": "os.showUploadFiles",
+        "os.sleep": "actions/os/system",
+        "id-680": "os.sleep",
+        "os.startFormAnimation": "actions/os/animations",
+        "id-1464": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/os/animations",
+        "id-1470": "os.stopFormAnimation",
+        "os.tip": "actions/os/portals",
+        "id-689": "os.tip",
+        "os.toast": "actions/os/portals",
+        "id-684": "os.toast",
+        "os.totalRemoteCount": "actions/os/remotes",
+        "id-1517": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os/spaces",
+        "id-934": "os.unloadInst",
+        "os.unregisterApp": "actions/os/app",
+        "id-1163": "os.unregisterApp",
+        "os.version": "actions/os/system",
+        "id-779": "os.version",
+        "os.vrSupported": "actions/os/xr",
+        "id-811": "os.vrSupported",
+        "os.agreedUponTime": "actions/os/time",
+        "id-911": "os.agreedUponTime",
+        "os.deadReckoningTime": "actions/os/time",
+        "id-919": "os.deadReckoningTime",
+        "os.instLatency": "actions/os/time",
+        "id-913": "os.instLatency",
+        "os.instTimeOffset": "actions/os/time",
+        "id-915": "os.instTimeOffset",
+        "os.instTimeOffsetSpread": "actions/os/time",
+        "id-917": "os.instTimeOffsetSpread",
+        "os.localTime": "actions/os/time",
+        "id-909": "os.localTime",
+        "remote": "actions/os/event",
+        "id-559": "remote",
+        "sendRemoteData": "actions/os/event",
+        "id-571": "sendRemoteData",
+        "removeTags": "actions/data",
+        "id-364": "removeTags",
+        "renameTag": "actions/data",
+        "id-369": "renameTag",
+        "setTag": "actions/data",
+        "id-316": "setTag",
+        "setTagMask": "actions/data",
+        "id-322": "setTagMask",
+        "subtractMods": "actions/mods",
+        "id-380": "subtractMods",
+        "superShout": "actions/os/event",
+        "id-445": "superShout",
+        "uuid": "actions/data",
+        "id-582": "uuid",
+        "web.get": "actions/web",
+        "id-1958": "web.get",
+        "web.hook": "actions/web",
+        "id-1969": "web.hook",
+        "web.post": "actions/web",
+        "id-1963": "web.post",
+        "configBot": "actions/os/system",
+        "id-645": "configBot"
+    }
+}
