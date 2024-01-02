@@ -166,28 +166,6 @@ export interface PolicyStore {
      * @param subjectType The type of the subject. This can be either a user, inst, or role.
      * @param subjectId The ID of the subject.
      * @param resourceKind The kind of the resource.
-     * @param resourceId The ID of the resource.
-     * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
-     * @param options The options for the permission.
-     * @param expireTimeMs The time that the permission expires. If null, then the permission never expires.
-     */
-    assignPermissionToSubjectAndResource(
-        recordName: string,
-        subjectType: SubjectType,
-        subjectId: string,
-        resourceKind: ResourceKinds,
-        resourceId: string,
-        action: ActionKinds,
-        options: PermissionOptions,
-        expireTimeMs: number | null
-    ): Promise<AssignPermissionToSubjectAndResourceResult>;
-
-    /**
-     * Assigns the given permission to the given subject for the given resource.
-     * @param recordName The name of the record that the resource exists in.
-     * @param subjectType The type of the subject. This can be either a user, inst, or role.
-     * @param subjectId The ID of the subject.
-     * @param resourceKind The kind of the resource.
      * @param marker The ID of the marker.
      * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
      * @param options The options for the permission.
@@ -261,6 +239,18 @@ export interface PolicyStore {
         recordName: string,
         marker: string
     ): Promise<MarkerPermissionAssignment[]>;
+
+    /**
+     * Lists the resource permission assignments for the given subject in the given record.
+     * @param recordName The name of the record.
+     * @param subjectType The type of the subject.
+     * @param subjectId The ID of the subject.
+     */
+    listPermissionsForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordResult>;
 
     /**
      * Assigns the given role to the given subject.
@@ -480,7 +470,7 @@ export interface GetResourcePermissionFailure {
 
 export interface PermissionAssignment {
     /**
-     * The ID of the marker permission assignment.
+     * The ID of the permission assignment.
      */
     id: string;
 
@@ -541,17 +531,7 @@ export interface ResourcePermissionAssignment extends PermissionAssignment {
 /**
  * Defines an interface that represents a marker permission assignment.
  */
-export interface MarkerPermissionAssignment {
-    /**
-     * The ID of the marker permission assignment.
-     */
-    id: string;
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
+export interface MarkerPermissionAssignment extends PermissionAssignment {
     /**
      * The marker that the permission applies to.
      */
@@ -676,4 +656,101 @@ export interface ListPermissionsInRecordFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;
+}
+
+/**
+ * Gets the publicRead permission for the given resource kind and action.
+ * @param resourceKind The kind of the resource.
+ * @param action The kind of the action.
+ */
+export function getPublicReadPermission(
+    resourceKind: ResourceKinds,
+    action: ActionKinds
+) {
+    if (resourceKind === 'data') {
+        // data.read and data.list
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'file' || resourceKind === 'inst') {
+        // file.read, inst.read
+        if (action === 'read') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'event') {
+        // event.count
+        if (action === 'count') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    }
+
+    // All other actions are not allowed.
+    return null;
+}
+
+/**
+ * Gets the publicWrite permission for the given resource kind and action.
+ * @param resourceKind The kind of the resource.
+ * @param action The kind of the action.
+ */
+export function getPublicWritePermission(
+    resourceKind: ResourceKinds,
+    action: ActionKinds
+) {
+    if (resourceKind === 'data') {
+        if (
+            action === 'read' ||
+            action === 'create' ||
+            action === 'update' ||
+            action === 'delete' ||
+            action === 'list'
+        ) {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'file') {
+        if (action === 'read' || action === 'delete' || action === 'create') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'event') {
+        if (
+            action === 'increment' ||
+            action === 'count' ||
+            action === 'create'
+        ) {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'inst') {
+        if (
+            action === 'read' ||
+            action === 'updateData' ||
+            action === 'sendAction' ||
+            action === 'delete' ||
+            action === 'create'
+        ) {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    }
+
+    return null;
 }
