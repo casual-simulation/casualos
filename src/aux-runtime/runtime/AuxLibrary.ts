@@ -10287,12 +10287,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * animateTag(bot, "homeX", null);
      *
-     * @dochash actions/utility
-     * @doctitle Utility Actions
-     * @docsidebar Utility
-     * @docdescription Utility actions make it easy to perform various tasks.
+     * @dochash actions/os/animations
      * @docgroup 01-utility-actions
-     *
      * @docname animateTag
      * @docid animateTag-byTag
      */
@@ -10348,10 +10344,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     tagMaskSpace: 'tempShared'
      * });
      *
-     * @dochash actions/utility
-     * @doctitle Utility Actions
-     * @docsidebar Utility
-     * @docdescription Utility actions make it easy to perform various tasks.
+     * @dochash actions/os/animations
      * @docgroup 01-utility-actions
      *
      * @docname animateTag
@@ -10609,7 +10602,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot the bot, bot ID, or list of bots that should cancel their animations.
      * @param tag the tag or list of tags that the animations should be canceled for.
      *
-     * @dochash actions/utility
+     * @dochash actions/os/animations
      * @docgroup 01-utility-actions
      * @docname clearAnimations
      */
