@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed some visual issues with studio subscriptions.
+-   Fixed an issue where it was possible for a studio to have default user features when subscribed.
 
 ## V3.2.8
 
