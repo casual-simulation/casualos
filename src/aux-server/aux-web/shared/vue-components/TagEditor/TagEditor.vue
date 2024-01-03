@@ -6,7 +6,6 @@
                 :value="editorValue"
                 @input="onInput($event.target.value)"
                 @focus.stop="onFocus"
-                @blur.stop="onBlur"
                 autocapitalize="none"
                 autocorrect="off"
             />
@@ -18,9 +17,8 @@
                     ref="inputBox"
                     v-bind:value="editorValue"
                     :placeholder="placeholder"
-                    v-on:input="onInput"
+                    @input="onInput"
                     @focus.stop="onFocus"
-                    @blur.stop="onBlur"
                     autocapitalize="none"
                     autocorrect="off"
                 />
@@ -32,16 +30,19 @@
                 {{ errorMessage }}
             </md-menu-item>
 
-            <template v-if="isOpen" class="tag-editor-autofill-holder">
-                <md-menu-item
-                    ref="knownTags"
-                    v-for="(result, i) in results"
-                    :key="i"
-                    @click="onAutoFill(result)"
-                >
-                    {{ result }}
-                </md-menu-item>
-            </template>
+            <md-menu-item @click="console.log('test')">test</md-menu-item>
+            <md-menu-item
+                ref="knownTags"
+                v-for="(result, i) in results"
+                :key="i"
+                @click="onAutoFill(result)"
+                type="button"
+            >
+                {{ result }}
+            </md-menu-item>
+            <!-- <template v-if="isOpen" class="tag-editor-autofill-holder">
+                
+            </template> -->
         </md-menu-content>
     </md-menu>
 </template>
