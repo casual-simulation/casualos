@@ -443,8 +443,8 @@ export class PrismaMetricsStore implements MetricsStore {
             });
 
             return {
-                ownerId: studio.id,
-                studioId: null,
+                ownerId: null,
+                studioId: studio.id,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
                 subscriptionType: 'studio',
