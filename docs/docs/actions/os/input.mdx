@@ -1,0 +1,20 @@
+---
+id: input
+title: Input Actions
+sidebar_label: Input
+description: Input actions are functions that make it easier accept input from the user.
+---
+
+import Doc from '../../api-info/actions/os/input.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

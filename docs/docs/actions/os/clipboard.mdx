@@ -1,0 +1,20 @@
+---
+id: clipboard
+title: Clipboard Actions
+sidebar_label: Clipboard
+description: Clipboard actions are functions that make it easier to work with the player&#39;s clipboard.
+---
+
+import Doc from '../../api-info/actions/os/clipboard.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

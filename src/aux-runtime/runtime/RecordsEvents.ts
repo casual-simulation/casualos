@@ -746,7 +746,7 @@ export interface SetRoomOptionsAction extends AsyncAction {
 /**
  * Defines a set of options that the local user can have for a room.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RoomOptions
  */
 export interface RoomOptions {
@@ -769,7 +769,7 @@ export interface RoomOptions {
 /**
  * Defines a set of options that the local usr can specify when joining a room.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RoomJoinOptions
  */
 export interface RoomJoinOptions extends RoomOptions {
@@ -855,7 +855,7 @@ export interface SetRoomTrackOptionsAction extends AsyncAction {
 /**
  * Defines an interface that represents the set of options that can be set on a room video/audio track.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SetRoomTrackOptions
  */
 export interface SetRoomTrackOptions {
@@ -874,7 +874,7 @@ export interface SetRoomTrackOptions {
 /**
  * Defines an interface that represents the options that a audio/video track has.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RoomTrackOptions
  */
 export interface RoomTrackOptions {
@@ -929,7 +929,7 @@ export type TrackSource =
 /**
  * Defines the possible qualities that a track can stream at.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname TrackVideoQuality
  */
 export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
@@ -954,7 +954,7 @@ export interface GetRoomRemoteOptionsAction extends AsyncAction {
 /**
  * Defines an interface that contains options for a remote room user.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RoomRemoteOptions
  */
 export interface RoomRemoteOptions {

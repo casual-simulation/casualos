@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.2.9
+
+#### Date: 1/3/2024
+
+### :bug: Bug Fixes
+
+-   Fixed some visual issues with studio subscriptions.
+-   Fixed an issue where it was possible for a studio to have default user features when subscribed.
+
 ## V3.2.8
 
 #### Date: 12/29/2023

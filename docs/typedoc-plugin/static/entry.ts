@@ -205,8 +205,6 @@ export {
     ShareAction,
     RegisterBuiltinPortalAction,
 
-    CustomAppOutputType,
-    CustomPortalOutputMode,
     CustomAppContainerAvailableAction,
 
     RegisterCustomAppAction,
@@ -244,6 +242,8 @@ export {
     AnalyticsRecordEventAction,
 
     BufferFormAddressGLTFAction,
+
+    ReportInstAction,
 } from '../../../src/aux-common/bots/BotEvents';
 export {
     RecordActionOptions,

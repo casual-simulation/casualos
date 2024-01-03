@@ -167,16 +167,16 @@
 
                     <md-card-actions>
                         <md-button
-                            v-if="subscription.prices.length > 0"
-                            @click="subscribe(subscription.id, subscription.prices[0])"
-                            class="md-primary"
-                            >Subscribe</md-button
-                        >
-                        <md-button
-                            v-else-if="subscription.defaultSubscription"
+                            v-if="subscription.defaultSubscription"
                             class="md-primary"
                             disabled
                             >Active</md-button
+                        >
+                        <md-button
+                            v-else-if="subscription.prices.length > 0"
+                            @click="subscribe(subscription.id, subscription.prices[0])"
+                            class="md-primary"
+                            >Subscribe</md-button
                         >
                     </md-card-actions>
                 </md-card>

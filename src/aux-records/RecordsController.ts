@@ -782,7 +782,7 @@ export class RecordsController {
                 config,
                 metrics.subscriptionStatus,
                 metrics.subscriptionId,
-                metrics.ownerId ? 'user' : 'studio'
+                metrics.subscriptionType
             ),
         };
     }

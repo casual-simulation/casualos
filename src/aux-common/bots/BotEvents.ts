@@ -344,6 +344,7 @@ export interface ShellAction extends Action {
 
 /**
  * An event that is used to show a toast message to the user.
+ * @dochash types/os/portals
  * @docname ShowToastAction
  */
 export interface ShowToastAction extends Action {
@@ -361,6 +362,7 @@ export interface ShowToastAction extends Action {
 
 /**
  * An event that is used to show a tooltip message to the user.
+ * @dochash types/os/portals
  * @docname ShowTooltipAction
  */
 export interface ShowTooltipAction extends AsyncAction {
@@ -391,6 +393,7 @@ export interface ShowTooltipAction extends AsyncAction {
 
 /**
  * An event that is used to hide tooltip messages.
+ * @dochash types/os/portals
  * @docname HideTooltipAction
  */
 export interface HideTooltipAction extends AsyncAction {
@@ -405,6 +408,7 @@ export interface HideTooltipAction extends AsyncAction {
 
 /**
  * An event that is used to show some HTML to the user.
+ * @dochash types/os/portals
  * @docname ShowHtmlAction
  */
 export interface ShowHtmlAction extends Action {
@@ -423,6 +427,7 @@ export interface ShowHtmlAction extends Action {
 
 /**
  * An event that is used to hide the HTML from the user.
+ * @dochash types/os/portals
  * @docname HideHtmlAction
  */
 export interface HideHtmlAction extends Action {
@@ -433,7 +438,10 @@ export interface HideHtmlAction extends Action {
 /**
  * Options for {@link os.focusOn-bot}, and {@link os.focusOn-position} actions.
  *
- * @dochash types/os
+ * @dochash types/os/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
  * @docname FocusOnOptions
  */
 export interface FocusOnOptions {
@@ -514,7 +522,7 @@ export interface FocusOnOptions {
 /**
  * Defines an interface that represents a rotation in polar coordinates for use with {@link os.focusOn-bot}.
  *
- * @dochash types/os
+ * @dochash types/os/camera
  * @docname FocusOnRotation
  */
 export interface FocusOnRotation {
@@ -570,7 +578,7 @@ export interface CancelAnimationAction extends AsyncAction {
 /**
  * The possible camera types.
  *
- * @dochash types/os
+ * @dochash types/os/camera
  * @docname CameraType
  */
 export type CameraType = 'front' | 'rear';
@@ -745,6 +753,7 @@ export interface OpenPhotoCameraOptions {
 
 /**
  * An event that is used to toggle whether the console is open.
+ * @dochash types/os/system
  * @docname OpenConsoleAction
  */
 export interface OpenConsoleAction extends Action {
@@ -777,7 +786,10 @@ export interface ShowQRCodeAction extends Action {
 /**
  * The list of possible barcode formats.
  *
- * @dochash types/os
+ * @dochash types/os/barcodes
+ * @doctitle Barcode Types
+ * @docsidebar Barcodes
+ * @docdescription Types that are used in barcode actions.
  * @docname BarcodeFormat
  */
 export type BarcodeFormat =
@@ -832,7 +844,10 @@ export interface OpenImageClassifierAction
 /**
  * Defines an interface that represents a set of options for {@link os.openImageClassifier}.
  *
- * @dochash types/os
+ * @dochash types/os/image-classification
+ * @doctitle Image Classifier Types
+ * @docsidebar Image Classifier
+ * @docdescription Types that are used in image classifier actions.
  * @docname ImageClassifierOptions
  */
 export interface ImageClassifierOptions {
@@ -861,7 +876,8 @@ export interface ImageClassifierOptions {
 
 /**
  * An event that is used to load a simulation.
- * @docname LoadServerAction
+ * @dochash types/os/spaces
+ * @docname LoadInstAction
  */
 export interface LoadServerAction extends Action {
     type: 'load_server';
@@ -874,7 +890,8 @@ export interface LoadServerAction extends Action {
 
 /**
  * An event that is used to unload a simulation.
- * @docname UnloadServerAction
+ * @dochash types/os/spaces
+ * @docname UnloadInstAction
  */
 export interface UnloadServerAction extends Action {
     type: 'unload_server';
@@ -1158,7 +1175,7 @@ export interface ShowInputAction extends AsyncAction {
 
 /**
  * Defines an event that is used to show a confirmation dialog.
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShowConfirmAction
  */
 export interface ShowConfirmAction extends AsyncAction {
@@ -1173,7 +1190,7 @@ export interface ShowConfirmAction extends AsyncAction {
 /**
  * Defines an interface that represents the options that can be used for a confirmation dialog.
  *
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShowConfirmOptions
  */
 export interface ShowConfirmOptions {
@@ -1229,7 +1246,10 @@ export interface GoToURLAction extends Action {
  * Defines an event that is used to open the given URL.
  * This should be equivalent to clicking a link with rel="noreferrer" and target="_blank".
  *
- * @dochash types/os
+ * @dochash types/os/portals
+ * @doctitle Portal Types
+ * @docsidebar Portals
+ * @docdescription Types that are used in portal actions.
  * @docname OpenURLAction
  */
 export interface OpenURLAction extends Action {
@@ -1243,7 +1263,10 @@ export interface OpenURLAction extends Action {
 
 /**
  * Defines an event that is used to play a sound from the given url.
- * @dochash types/os
+ * @dochash types/os/audio
+ * @doctitle Audio Actions
+ * @docsidebar Audio
+ * @docdescription Defines the types that are used by audio actions.
  * @docname PlaySoundAction
  */
 export interface PlaySoundAction extends AsyncAction {
@@ -1264,7 +1287,7 @@ export interface PlaySoundAction extends AsyncAction {
 /**
  * Defines an event that is used to pre-load a sound from the given URL.
  *
- * @dochash types/os
+ * @dochash types/os/audio
  * @docname BufferSoundAction
  */
 export interface BufferSoundAction extends AsyncAction {
@@ -1279,7 +1302,7 @@ export interface BufferSoundAction extends AsyncAction {
 /**
  * Defines an event that is used to cancel a sound that is playing.
  *
- * @dochash types/os
+ * @dochash types/os/audio
  * @docname CancelSoundAction
  */
 export interface CancelSoundAction extends AsyncAction {
@@ -1294,7 +1317,10 @@ export interface CancelSoundAction extends AsyncAction {
 /**
  * Defines an event that is used to download a file onto the device.
  *
- * @dochash types/os
+ * @dochash types/os/files
+ * @doctitle File Actions
+ * @docsidebar Files
+ * @docdescription Types that are used in file actions.
  * @docname DownloadAction
  */
 export interface DownloadAction extends Action {
@@ -1319,7 +1345,10 @@ export interface DownloadAction extends Action {
 /**
  * Defines an interface for options that a show input event can use.
  *
- * @dochash types/os
+ * @dochash types/os/input
+ * @doctitle Input Types
+ * @docsidebar Input
+ * @docdescription Types that are used in actions that accept user input.
  * @docname ShowInputOptions
  */
 export interface ShowInputOptions {
@@ -1371,14 +1400,14 @@ export interface ShowInputItem {
 
 /**
  * Defines the possible input types.
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShowInputType
  */
 export type ShowInputType = 'text' | 'color' | 'secret' | 'date' | 'list';
 
 /**
  * Defines the possible input types.
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShowInputSuptype
  */
 export type ShowInputSubtype =
@@ -1427,7 +1456,10 @@ export interface ShoutAction {
 /**
  * Defines an event that prevents the execution of an action.
  *
- * @dochash types/os
+ * @dochash types/os/event
+ * @doctitle Event Types
+ * @docsidebar Events
+ * @docdescription Types that are used in event actions.
  * @docname RejectAction
  */
 export interface RejectAction {
@@ -1442,7 +1474,10 @@ export interface RejectAction {
 /**
  * Defines an event that sets some text on the user's clipboard.
  *
- * @dochash types/os
+ * @dochash types/os/clipboard
+ * @doctitle Clipboard Types
+ * @docsidebar Clipboard
+ * @docdescription Types that are used in clipboard actions.
  * @docname SetClipboardAction
  */
 export interface SetClipboardAction {
@@ -1457,7 +1492,7 @@ export interface SetClipboardAction {
 /**
  * Defines an event that shows the chat bar.
  *
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShowChatBarAction
  */
 export interface ShowChatBarAction {
@@ -1497,7 +1532,7 @@ export interface ShowChatBarAction {
 /**
  * Defines the possible options for showing the chat bar.
  *
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShowChatOptions
  */
 export interface ShowChatOptions {
@@ -1530,7 +1565,7 @@ export interface ShowChatOptions {
 /**
  * Defines an event that executes a script.
  *
- * @dochash types/os
+ * @dochash types/os/system
  * @docname RunScriptAction
  */
 export interface RunScriptAction extends AsyncAction {
@@ -1545,7 +1580,7 @@ export interface RunScriptAction extends AsyncAction {
 /**
  * Defines an event that shows the "upload AUX file" dialog.
  *
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShowUploadAuxFileAction
  */
 export interface ShowUploadAuxFileAction {
@@ -1555,7 +1590,7 @@ export interface ShowUploadAuxFileAction {
 /**
  * Defines an event that shows the "uplaod file" dialog.
  *
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShowUploadFilesAction
  */
 export interface ShowUploadFilesAction extends AsyncAction {
@@ -1565,7 +1600,10 @@ export interface ShowUploadFilesAction extends AsyncAction {
 /**
  * Defines an event that loads a space into the instance.
  *
- * @dochash types/os
+ * @dochash types/os/spaces
+ * @doctitle Space Types
+ * @docsidebar Spaces
+ * @docdescription Types that are used in actions that relate to spaces.
  * @docname LoadSpaceAction
  */
 export interface LoadSpaceAction extends Partial<AsyncAction> {
@@ -1585,7 +1623,7 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
 /**
  * An event that is used to enable collaboration features.
  *
- * @dochash types/os
+ * @dochash types/os/spaces
  * @docname EnableCollaborationAction
  */
 export interface EnableCollaborationAction extends AsyncAction {
@@ -1594,9 +1632,6 @@ export interface EnableCollaborationAction extends AsyncAction {
 
 /**
  * Defines an event that loads bots from the given space that match the given tags and values.
- *
- * @dochash types/os
- * @docname LoadBotsAction
  */
 export interface LoadBotsAction extends AsyncAction {
     type: 'load_bots';
@@ -1647,7 +1682,10 @@ export interface ClearSpaceAction extends AsyncAction {
  * Defines an event that runs an animation locally over
  * whatever existing animations are playing.
  *
- * @dochash types/os
+ * @dochash types/os/animations
+ * @doctitle Animation Types
+ * @docsidebar Animations
+ * @docdescription Types that are used in actions that relate to animations.
  * @docname LocalFormAnimationAction
  */
 export interface LocalFormAnimationAction {
@@ -1721,7 +1759,7 @@ export const MAX_TWEEN_DURATION = 60 * 60 * 24;
 /**
  * Defines an event that runs a tween locally.
  *
- * @dochash types/os
+ * @dochash types/os/animations
  * @docname LocalTweenAction
  */
 export interface LocalTweenAction extends AsyncAction {
@@ -1756,7 +1794,7 @@ export interface LocalTweenAction extends AsyncAction {
 /**
  * Defines an event that runs a position tween locally.
  *
- * @dochash types/os
+ * @dochash types/os/animations
  * @docname LocalPositionTweenAction
  */
 export interface LocalPositionTweenAction extends LocalTweenAction {
@@ -1777,7 +1815,10 @@ export interface LocalRotationTweenAction extends LocalTweenAction {
 /**
  * Defines an interface that represents the options that an EnableARAction or EnableVRAction can have.
  *
- * @dochash types/os
+ * @dochash types/os/xr
+ * @doctitle XR Actions
+ * @docsidebar XR
+ * @docdescription Types that are used in actions that relate to XR features (Augmented Reality or Virtual Reality).
  * @docname EnableXROptions
  */
 export interface EnableXROptions {
@@ -1794,7 +1835,7 @@ export interface EnableXROptions {
 /**
  * Defines an event that enables AR on the device.
  *
- * @dochash types/os
+ * @dochash types/os/xr
  * @docname EnableARAction
  */
 export interface EnableARAction {
@@ -1814,7 +1855,7 @@ export interface EnableARAction {
 /**
  * Defines an event that checks for AR support on the device.
  *
- * @dochash types/os
+ * @dochash types/os/xr
  * @docname ARSupportedAction
  */
 export interface ARSupportedAction extends AsyncAction {
@@ -1824,7 +1865,7 @@ export interface ARSupportedAction extends AsyncAction {
 /**
  * Defines an event that checks for VR support on the device.
  *
- * @dochash types/os
+ * @dochash types/os/xr
  * @docname VRSupportedAction
  */
 export interface VRSupportedAction extends AsyncAction {
@@ -1834,7 +1875,7 @@ export interface VRSupportedAction extends AsyncAction {
 /**
  * Defines an event that enables VR on the device.
  *
- * @dochash types/os
+ * @dochash types/os/xr
  * @docname EnableVRAction
  */
 export interface EnableVRAction {
@@ -1854,7 +1895,7 @@ export interface EnableVRAction {
 /**
  * Defines an event that enables POV on the device.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname EnablePOVAction
  */
 export interface EnablePOVAction {
@@ -1879,7 +1920,7 @@ export interface EnablePOVAction {
 /**
  * Defines an event that shows a QR code that is a link to a instance & dimension.
  *
- * @dochash types/os
+ * @dochash types/os/barcodes
  * @docname ShowJoinCodeAction
  */
 export interface ShowJoinCodeAction {
@@ -1900,7 +1941,7 @@ export interface ShowJoinCodeAction {
  * Defines an event that requests that AUX enter fullscreen mode.
  * This can be denied by the user.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RequestFullscreenAction
  */
 export interface RequestFullscreenAction {
@@ -1910,7 +1951,7 @@ export interface RequestFullscreenAction {
 /**
  * Defines an event that exits fullscreen mode.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname ExitFullscreenAction
  */
 export interface ExitFullscreenAction {
@@ -1920,7 +1961,7 @@ export interface ExitFullscreenAction {
 /**
  * Defines the options that a share action can have.
  *
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShareOptions
  */
 export interface ShareOptions {
@@ -1944,7 +1985,7 @@ export interface ShareOptions {
  * Defines an event that shares the given information using the
  * device's native social sharing capabilities.
  *
- * @dochash types/os
+ * @dochash types/os/input
  * @docname ShareAction
  */
 export interface ShareAction extends AsyncAction, ShareOptions {
@@ -1954,7 +1995,7 @@ export interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * Defines an event that ensures a portal bot has been created for a portal.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RegisterBuiltinPortalAction
  */
 export interface RegisterBuiltinPortalAction {
@@ -1967,26 +2008,7 @@ export interface RegisterBuiltinPortalAction {
 }
 
 /**
- * The list of types of output that custom portals support.
- *
- * @dochash types/os
- * @docname CustomAppOutputType
- */
-export type CustomAppOutputType = 'html';
-
-/**
- * the list of modes that custom portals support.
- *
- * @dochash types/os
- * @docname CustomPortalOutputMode
- */
-export type CustomPortalOutputMode = 'push' | 'pull';
-
-/**
  * Defines an event that registers a custom app container.
- *
- * @dochash types/os
- * @docname CustomAppContainerAvailableAction
  */
 export interface CustomAppContainerAvailableAction extends Action {
     type: 'custom_app_container_available';
@@ -1995,7 +2017,7 @@ export interface CustomAppContainerAvailableAction extends Action {
 /**
  * Defines an event that registers a custom portal.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RegisterCustomAppAction
  */
 export interface RegisterCustomAppAction extends AsyncAction {
@@ -2015,7 +2037,7 @@ export interface RegisterCustomAppAction extends AsyncAction {
 /**
  * Defines an event that unregisters a custom app.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname UnregisterCustomAppAction
  */
 export interface UnregisterCustomAppAction extends AsyncAction {
@@ -2030,7 +2052,7 @@ export interface UnregisterCustomAppAction extends AsyncAction {
 /**
  * Defines an event that requests that a HTML app be created.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RegisterHtmlAppAction
  */
 export interface RegisterHtmlAppAction extends AsyncAction {
@@ -2051,7 +2073,7 @@ export interface RegisterHtmlAppAction extends AsyncAction {
 /**
  * Defines an event that requests that a HTML app be deleted.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname UnregisterHtmlAppAction
  */
 export interface UnregisterHtmlAppAction extends Action {
@@ -2072,7 +2094,7 @@ export interface UnregisterHtmlAppAction extends Action {
 /**
  * Defines an event that notifies that the output of a app should be updated with the given data.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SetAppOutputAction
  */
 export interface SetAppOutputAction extends Action {
@@ -2094,7 +2116,7 @@ export interface SetAppOutputAction extends Action {
 /**
  * Defines an event that notifies that a custom app has recieved a HTML update.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname UpdateHtmlAppAction
  */
 export interface UpdateHtmlAppAction extends Action {
@@ -2116,7 +2138,7 @@ export interface UpdateHtmlAppAction extends Action {
 /**
  * Defines an event that represents an event that was dispatched from HTML in a portal.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname HtmlAppEventAction
  */
 export interface HtmlAppEventAction extends Action {
@@ -2136,7 +2158,7 @@ export interface HtmlAppEventAction extends Action {
 /**
  * Defines an event that represents a method call that was dispatched from HTML in a portal.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname HtmlAppMethodCallAction
  */
 export interface HtmlAppMethodCallAction extends AsyncAction {
@@ -2166,7 +2188,7 @@ export interface HtmlAppMethodCallAction extends AsyncAction {
 /**
  * Defines a mutation record that can be serialized and sent over a web worker pipe.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SerializableMutationRecord
  */
 export interface SerializableMutationRecord {
@@ -2235,7 +2257,7 @@ export interface RegisterPrefixOptions {
 /**
  * An event that is used to show or hide the circle wipe.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname OpenCircleWipeAction
  */
 export interface OpenCircleWipeAction extends AsyncAction {
@@ -2255,7 +2277,7 @@ export interface OpenCircleWipeAction extends AsyncAction {
 /**
  * The options for the circle wipe.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname OpenCircleWipeOptions
  */
 export interface OpenCircleWipeOptions {
@@ -2273,7 +2295,7 @@ export interface OpenCircleWipeOptions {
 /**
  * Defines a base interface for actions that can add drop snap points.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname AddDropSnapAction
  */
 export interface AddDropSnapAction extends Action {
@@ -2287,7 +2309,7 @@ export interface AddDropSnapAction extends Action {
 /**
  * An event that is used to add some snap points for a drag operation.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname AddDropSnapPointsAction
  */
 export interface AddDropSnapTargetsAction extends AddDropSnapAction {
@@ -2303,7 +2325,7 @@ export interface AddDropSnapTargetsAction extends AddDropSnapAction {
  * Defines an interface that represents a snap point.
  * That is, a point in 3D space with an associated snap distance.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docgroup 10-snap
  * @docorder 1
  * @docname SnapPoint
@@ -2326,7 +2348,7 @@ export interface SnapPoint {
  * Defines an interface that represents a snap axis.
  * That is, a ray in 3D space with an associated snap distance.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docgroup 10-snap
  * @docorder 2
  * @docname SnapAxis
@@ -2359,7 +2381,7 @@ export interface SnapAxis {
  * - `"face"` means that the dragged bot should snap to other bot faces.
  * - `"bots"` means that the dragged bot will snap to other bots.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docgroup 10-snap
  * @docorder 0
  * @docname SnapTarget
@@ -2388,7 +2410,7 @@ export interface AddDropGridTargetsAction extends AddDropSnapAction {
  * Defines an interface that represents a snap grid.
  * That is, a 2D plane that is segmented into discrete sections.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname SnapGrid
  */
 export interface SnapGrid {
@@ -2449,7 +2471,7 @@ export interface SnapGrid {
  * An event that is used to disable the default dragging logic (moving the bot) and enable
  * "onDragging" shouts and whispers.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname EnableCustomDraggingAction
  */
 export interface EnableCustomDraggingAction extends Action {
@@ -2532,7 +2554,7 @@ export interface RecordingOptions {
 /**
  * An event that is used to start audio recording.
  *
- * @dochash types/os
+ * @dochash types/os/audio
  * @docname BeginRecordingAction
  */
 export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
@@ -2542,7 +2564,7 @@ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
 /**
  * An event that is used to finish audio recording.
  *
- * @dochash types/os
+ * @dochash types/os/audio
  * @docname EndRecordingAction
  */
 export interface EndRecordingAction extends AsyncAction {
@@ -2552,7 +2574,10 @@ export interface EndRecordingAction extends AsyncAction {
 /**
  * An event that is used to send a command to the Jitsi Meet API.
  *
- * @dochash types/os
+ * @dochash types/os/meets
+ * @doctitle Meet Types
+ * @docsidebar Meets
+ * @docdescription Types that are used in actions that relate to the meetPortal.
  * @docname MeetCommandAction
  */
 export interface MeetCommandAction extends AsyncAction {
@@ -2572,7 +2597,7 @@ export interface MeetCommandAction extends AsyncAction {
 /**
  * An event that is used to call Jitsi Meet functions.
  *
- * @dochash types/os
+ * @dochash types/os/meets
  * @docname MeetFunctionAction
  */
 export interface MeetFunctionAction extends AsyncAction {
@@ -2609,7 +2634,7 @@ export interface SpeakTextOptions {
 /**
  * An event that is used to speak some text using the builtin text to speech engine.
  *
- * @dochash types/os
+ * @dochash types/os/audio
  * @docname SpeakTextAction
  */
 export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
@@ -2624,7 +2649,7 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
 /**
  * An event that is used to retrieve the synthetic voices that are supported by the current system.
  *
- * @dochash types/os
+ * @dochash types/os/audio
  * @docname GetVoicesAction
  */
 export interface GetVoicesAction extends AsyncAction {
@@ -2657,7 +2682,7 @@ export interface SyntheticVoice {
 /**
  * An event that is used to retrieve the current geolocation of the device.
  *
- * @dochash types/os
+ * @dochash types/os/geolocation
  * @docname GetGeolocationAction
  */
 export interface GetGeolocationAction extends AsyncAction {
@@ -2667,10 +2692,10 @@ export interface GetGeolocationAction extends AsyncAction {
 /**
  * Defines the possible geolocation results.
  *
- * @dochash types/os
- * @doctitle OS Types
- * @docsidebar OS
- * @docdescription Defines the types that are used by OS actions.
+ * @dochash types/os/geolocation
+ * @doctitle Geolocation Types
+ * @docsidebar Geolocation
+ * @docdescription Defines the types that are used by Location actions.
  * @docgroup 01-geo
  * @docorder 0
  * @docname Geolocation
@@ -2680,7 +2705,7 @@ export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
 /**
  * Defines an interface that represents a successful geolocation result.
  *
- * @dochash types/os
+ * @dochash types/os/geolocation
  * @docgroup 01-geo
  * @docorder 1
  * @docname SuccessfulGeolocation
@@ -2737,7 +2762,7 @@ export interface SuccessfulGeolocation {
 /**
  * Defines an interface that represents an unsuccessful geolocation result.
  *
- * @dochash types/os
+ * @dochash types/os/geolocation
  * @docgroup 01-geo
  * @docorder 2
  * @docname UnsuccessfulGeolocation
@@ -2804,7 +2829,7 @@ export interface RecordedFile {
 /**
  * Defines an event that tells the IDE portal to open the given bot and tag.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GoToTagAction
  */
 export interface GoToTagAction {
@@ -2829,7 +2854,10 @@ export interface GoToTagAction {
 /**
  * Defines an event that requests to report the current inst.
  *
- * @dochash types/os
+ * @dochash types/os/moderation
+ * @doctitle Moderation Types
+ * @docsidebar Moderation
+ * @docdescription Types that are used in actions that relate to moderation.
  * @docname ReportInstAction
  */
 export interface ReportInstAction extends AsyncAction {
@@ -2839,7 +2867,10 @@ export interface ReportInstAction extends AsyncAction {
 /**
  * Defines an event that requests a Auth data from the OS.
  *
- * @dochash types/os
+ * @dochash types/os/records
+ * @doctitle Records Types
+ * @docsidebar Records
+ * @docdescription Defines the types that are used by Record actions.
  * @docname RequestAuthDataAction
  */
 export interface RequestAuthDataAction extends AsyncAction {
@@ -2855,7 +2886,7 @@ export interface RequestAuthDataAction extends AsyncAction {
 /**
  * Defines an interface that represents a authenticated user.
  *
- * @dochash types/os
+ * @dochash types/os/records
  * @docname AuthData
  */
 export interface AuthData {
@@ -2929,7 +2960,7 @@ export interface AuthData {
 /**
  * Defines an event that defines a global variable that points to the given bot.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname DefineGlobalBotAction
  */
 export interface DefineGlobalBotAction extends AsyncAction {
@@ -2951,7 +2982,7 @@ export const APPROVED_SYMBOL = Symbol('approved');
 /**
  * Defines an interface that represents options for converting a geolocation to a what3words address.
  *
- * @dochash types/os
+ * @dochash types/os/geolocation
  * @docgroup 01-geo
  * @docorder 3
  * @docname ConvertGeolocationToWhat3WordsOptions
@@ -2976,7 +3007,7 @@ export interface ConvertGeolocationToWhat3WordsOptions {
 /**
  * Defines an interface that represents an action that converts a geolocation (latitude and longitude) to a what3words address (see https://what3words.com/).
  *
- * @dochash types/os
+ * @dochash types/os/geolocation
  * @docname ConvertGeolocationToWhat3WordsAction
  */
 export interface ConvertGeolocationToWhat3WordsAction
@@ -2988,7 +3019,10 @@ export interface ConvertGeolocationToWhat3WordsAction
 /**
  * Defines an interface that represents options for requesting media permissions.
  *
- * @dochash types/os
+ * @dochash types/os/media
+ * @doctitle Media Types
+ * @docsidebar Media
+ * @docdescription Defines the types that are used by Media actions.
  * @docname MediaPermissionOptions
  */
 export interface MediaPermssionOptions {
@@ -3006,7 +3040,7 @@ export interface MediaPermssionOptions {
 /**
  * Defines an event that gets permission for audio and/or video.
  *
- * @dochash types/os
+ * @dochash types/os/media
  * @docname MediaPermissionAction
  */
 export interface MediaPermissionAction
@@ -3018,7 +3052,7 @@ export interface MediaPermissionAction
 /**
  * Defines an event that retrieves the current average frame rate.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetAverageFrameRateAction
  */
 export interface GetAverageFrameRateAction extends AsyncAction {
@@ -3028,7 +3062,7 @@ export interface GetAverageFrameRateAction extends AsyncAction {
 /**
  * Defines an event that performs a raycast from the camera in the given portal.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RaycastFromCameraAction
  */
 export interface RaycastFromCameraAction extends AsyncAction {
@@ -3048,7 +3082,7 @@ export interface RaycastFromCameraAction extends AsyncAction {
 /**
  * Defines an event that performs a raycast for the given ray in the given portal.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname RaycastInPortalAction
  */
 export interface RaycastInPortalAction extends AsyncAction {
@@ -3073,7 +3107,7 @@ export interface RaycastInPortalAction extends AsyncAction {
 /**
  * Defines an event that calculates a ray for the given portal from the given viewport coordinates.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname CalculateRayFromCameraAction
  */
 export interface CalculateRayFromCameraAction extends AsyncAction {
@@ -3093,7 +3127,7 @@ export interface CalculateRayFromCameraAction extends AsyncAction {
 /**
  * Defines an event that requests the pre-caching of a GLTF mesh.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname BufferFormAddressGLTFAction
  */
 export interface BufferFormAddressGLTFAction extends AsyncAction {
@@ -3108,7 +3142,7 @@ export interface BufferFormAddressGLTFAction extends AsyncAction {
 /**
  * Defines an interface that contains a bunch of options for starting an animation.
  *
- * @dochash types/os
+ * @dochash types/os/animations
  * @docname StartFormAnimationOptions
  */
 export interface StartFormAnimationOptions {
@@ -3177,7 +3211,7 @@ export interface StartFormAnimationOptions {
 /**
  * Defines an event that starts a given animation on a bot/bots.
  *
- * @dochash types/os
+ * @dochash types/os/animations
  * @docname StartFormAnimationAction
  */
 export interface StartFormAnimationAction
@@ -3199,7 +3233,7 @@ export interface StartFormAnimationAction
 /**
  * Defines an interface that contains a bunch of options for stopping an animation.
  *
- * @dochash types/os
+ * @dochash types/os/animations
  * @docname StopFormAnimationOptions
  */
 export interface StopFormAnimationOptions {
@@ -3218,7 +3252,7 @@ export interface StopFormAnimationOptions {
 /**
  * Defines an event that stops an animation on a bot/bots.
  *
- * @dochash types/os
+ * @dochash types/os/animations
  * @docname StopFormAnimationAction
  */
 export interface StopFormAnimationAction
@@ -3235,7 +3269,7 @@ export interface StopFormAnimationAction
 /**
  * Defines an event that retrieves a list of animations for a given form or bot.
  *
- * @dochash types/os
+ * @dochash types/os/animations
  * @docname ListFormAnimationsAction
  */
 export interface ListFormAnimationsAction extends AsyncAction {
@@ -3250,7 +3284,7 @@ export interface ListFormAnimationsAction extends AsyncAction {
 /**
  * Defines an interface that contains animation information.
  *
- * @dochash types/os
+ * @dochash types/os/animations
  * @docname FormAnimationData
  */
 export interface FormAnimationData {
@@ -3286,7 +3320,7 @@ export interface Point3D {
 /**
  * An event that is used to enable/disable wake lock.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname ConfigureWakeLockAction
  */
 export interface ConfigureWakeLockAction extends AsyncAction {
@@ -3301,7 +3335,7 @@ export interface ConfigureWakeLockAction extends AsyncAction {
 /**
  * An event that is used to retrieve the current wake lock configuration.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname GetWakeLockConfigurationAction
  */
 export interface GetWakeLockConfigurationAction extends AsyncAction {
@@ -3311,7 +3345,7 @@ export interface GetWakeLockConfigurationAction extends AsyncAction {
 /**
  * Defines an interface that represents a wake lock configuration.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname WakeLockConfiguration
  */
 export interface WakeLockConfiguration {
@@ -3324,7 +3358,7 @@ export interface WakeLockConfiguration {
 /**
  * An action that is used to record an event for analytics.
  *
- * @dochash types/os
+ * @dochash types/os/portals
  * @docname AnalyticsRecordEventAction
  */
 export interface AnalyticsRecordEventAction extends AsyncAction {
