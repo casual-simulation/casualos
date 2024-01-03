@@ -831,6 +831,14 @@ function TypeLink({ type, references, isInUnionOrArray }) {
             <TypeLink type={t} references={references} isInUnionOrArray={true} />
         </>);
         return types;
+    } else if(type.type === 'tuple') {
+        const types = type.elements.map((t, index) => <>
+            {index > 0 ? ', ' : ''}
+            <TypeLink type={t} references={references} isInUnionOrArray={true} />
+        </>);
+        return <span>[{types}]</span>
+    } else if (type.type === 'typeOperator') {
+        return <span>{type.operator} <TypeLink type={type.target} references={references} isInUnionOrArray={true} /></span>
     } else {
         return '' + JSON.stringify(type);
     }
