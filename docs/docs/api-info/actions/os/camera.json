@@ -26,7 +26,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " shout once opened.\r\n\r\nWhile open, each time the user takes a photo the system will send a "
+                            "text": " shout once opened.\n\nWhile open, each time the user takes a photo the system will send a "
                         },
                         {
                             "kind": "text",
@@ -43,7 +43,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPrompt the user to take a single photo.\r\nconst photo = await os.capturePhoto();\n```"
+                                    "text": "```ts\nPrompt the user to take a single photo.\nconst photo = await os.capturePhoto();\n```"
                                 }
                             ]
                         },
@@ -52,7 +52,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTake a single photo, defaulting to the front-facing camera.\r\nawait os.capturePhoto({\r\n    cameraType: \"front\"\r\n});\n```"
+                                    "text": "```ts\nTake a single photo, defaulting to the front-facing camera.\nawait os.capturePhoto({\n    cameraType: \"front\"\n});\n```"
                                 }
                             ]
                         },
@@ -61,7 +61,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTake a single photo, skipping the confirmation user step.\r\nawait os.capturePhoto({\r\n   skipConfirm: true\r\n});\n```"
+                                    "text": "```ts\nTake a single photo, skipping the confirmation user step.\nawait os.capturePhoto({\n   skipConfirm: true\n});\n```"
                                 }
                             ]
                         },
@@ -70,7 +70,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTake a single photo after a 3 second delay.\r\nawait os.capturePhoto({\r\n   takePhotoAfterSeconds: 3\r\n});\n```"
+                                    "text": "```ts\nTake a single photo after a 3 second delay.\nawait os.capturePhoto({\n   takePhotoAfterSeconds: 3\n});\n```"
                                 }
                             ]
                         },
@@ -126,7 +126,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6430,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L6430"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6430"
                     }
                 ],
                 "parameters": [
@@ -178,23 +178,23 @@
                 }
             },
             "comment": {
-                "text": "Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the @onPhotoCameraOpened shout once opened.\r\n\r\nWhile open, each time the user takes a photo the system will send a @onPhotoCaptured shout. Optionally accepts which camera to use for scanning. (front/back)",
+                "text": "Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the @onPhotoCameraOpened shout once opened.\n\nWhile open, each time the user takes a photo the system will send a @onPhotoCaptured shout. Optionally accepts which camera to use for scanning. (front/back)",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nPrompt the user to take a single photo.\r\nconst photo = await os.capturePhoto();\n```"
+                        "text": "```ts\nPrompt the user to take a single photo.\nconst photo = await os.capturePhoto();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nTake a single photo, defaulting to the front-facing camera.\r\nawait os.capturePhoto({\r\n    cameraType: \"front\"\r\n});\n```"
+                        "text": "```ts\nTake a single photo, defaulting to the front-facing camera.\nawait os.capturePhoto({\n    cameraType: \"front\"\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nTake a single photo, skipping the confirmation user step.\r\nawait os.capturePhoto({\r\n   skipConfirm: true\r\n});\n```"
+                        "text": "```ts\nTake a single photo, skipping the confirmation user step.\nawait os.capturePhoto({\n   skipConfirm: true\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nTake a single photo after a 3 second delay.\r\nawait os.capturePhoto({\r\n   takePhotoAfterSeconds: 3\r\n});\n```"
+                        "text": "```ts\nTake a single photo after a 3 second delay.\nawait os.capturePhoto({\n   takePhotoAfterSeconds: 3\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -251,7 +251,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nClose the photo camera\r\nawait os.closePhotoCamera();\n```"
+                                    "text": "```ts\nClose the photo camera\nawait os.closePhotoCamera();\n```"
                                 }
                             ]
                         },
@@ -280,7 +280,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6445,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L6445"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6445"
                     }
                 ],
                 "type": {
@@ -304,7 +304,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nClose the photo camera\r\nawait os.closePhotoCamera();\n```"
+                        "text": "```ts\nClose the photo camera\nawait os.closePhotoCamera();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -340,7 +340,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " shout once opened.\r\n\r\nWhile open, each time the user takes a photo the system will send a "
+                            "text": " shout once opened.\n\nWhile open, each time the user takes a photo the system will send a "
                         },
                         {
                             "kind": "text",
@@ -357,7 +357,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the photo camera.\r\nawait os.openPhotoCamera();\n```"
+                                    "text": "```ts\nOpen the photo camera.\nawait os.openPhotoCamera();\n```"
                                 }
                             ]
                         },
@@ -366,7 +366,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the photo camera, defaulting to the front-facing camera.\r\nawait os.openPhotoCamera({\r\n    cameraType: \"front\"\r\n});\n```"
+                                    "text": "```ts\nOpen the photo camera, defaulting to the front-facing camera.\nawait os.openPhotoCamera({\n    cameraType: \"front\"\n});\n```"
                                 }
                             ]
                         },
@@ -422,7 +422,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6393,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L6393"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6393"
                     }
                 ],
                 "parameters": [
@@ -470,15 +470,15 @@
                 }
             },
             "comment": {
-                "text": "Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the @onPhotoCameraOpened shout once opened.\r\n\r\nWhile open, each time the user takes a photo the system will send a @onPhotoCaptured shout. Optionally accepts which camera to use for scanning. (front/back)",
+                "text": "Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the @onPhotoCameraOpened shout once opened.\n\nWhile open, each time the user takes a photo the system will send a @onPhotoCaptured shout. Optionally accepts which camera to use for scanning. (front/back)",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the photo camera.\r\nawait os.openPhotoCamera();\n```"
+                        "text": "```ts\nOpen the photo camera.\nawait os.openPhotoCamera();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the photo camera, defaulting to the front-facing camera.\r\nawait os.openPhotoCamera({\r\n    cameraType: \"front\"\r\n});\n```"
+                        "text": "```ts\nOpen the photo camera, defaulting to the front-facing camera.\nawait os.openPhotoCamera({\n    cameraType: \"front\"\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -507,7 +507,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -517,7 +517,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -535,9 +535,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -551,9 +551,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -581,9 +581,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -617,13 +617,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -637,17 +637,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -669,13 +669,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -687,7 +687,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -697,17 +697,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -775,9 +775,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -799,7 +799,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -807,13 +807,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -909,9 +909,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -925,11 +925,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -937,21 +939,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -959,17 +961,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -977,13 +979,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -997,14 +999,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -1074,7 +1076,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",

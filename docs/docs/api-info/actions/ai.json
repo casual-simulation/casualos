@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Sends a chat message to the AI.\r\nReturns a promise that contains the response from the AI.\r\nThrows a "
+                            "text": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a "
                         },
                         {
                             "kind": "text",
@@ -26,7 +26,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " if an error occurs while sending the message.\r\n\r\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message."
+                            "text": " if an error occurs while sending the message.\n\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message."
                         }
                     ],
                     "blockTags": [
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a message to the AI and log the response.\r\nconst response = await ai.chat({\r\n    role: \"user\",\r\n    content: \"Hello!\"\r\n});\r\nconsole.log(`${response.role}: ${response.content}`);\n```"
+                                    "text": "```ts\nSend a message to the AI and log the response.\nconst response = await ai.chat({\n    role: \"user\",\n    content: \"Hello!\"\n});\nconsole.log(`${response.role}: ${response.content}`);\n```"
                                 }
                             ]
                         },
@@ -73,7 +73,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4755,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L4755"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4755"
                     }
                 ],
                 "parameters": [
@@ -94,10 +94,10 @@
                         },
                         "type": {
                             "type": "reference",
-                            "target": 3564,
+                            "target": 3565,
                             "name": "AIChatMessage",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3564,
+                            "id": 3565,
                             "qualifiedName": "AIChatMessage"
                         }
                     },
@@ -137,10 +137,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3564,
+                            "target": 3565,
                             "name": "AIChatMessage",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3564,
+                            "id": 3565,
                             "qualifiedName": "AIChatMessage"
                         }
                     ],
@@ -149,11 +149,11 @@
                 }
             },
             "comment": {
-                "text": "Sends a chat message to the AI.\r\nReturns a promise that contains the response from the AI.\r\nThrows a CasualOSError if an error occurs while sending the message.\r\n\r\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.",
+                "text": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a CasualOSError if an error occurs while sending the message.\n\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a message to the AI and log the response.\r\nconst response = await ai.chat({\r\n    role: \"user\",\r\n    content: \"Hello!\"\r\n});\r\nconsole.log(`${response.role}: ${response.content}`);\n```"
+                        "text": "```ts\nSend a message to the AI and log the response.\nconst response = await ai.chat({\n    role: \"user\",\n    content: \"Hello!\"\n});\nconsole.log(`${response.role}: ${response.content}`);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -185,7 +185,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Sends a chat message to the AI.\r\nReturns a promise that contains the response from the AI.\r\nThrows a "
+                            "text": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a "
                         },
                         {
                             "kind": "text",
@@ -193,7 +193,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " if an error occurs while sending the message.\r\n\r\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message."
+                            "text": " if an error occurs while sending the message.\n\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message."
                         }
                     ],
                     "blockTags": [
@@ -202,7 +202,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a message to the AI and log the response.\r\nconst response = await ai.chat([\r\n     {\r\n         role: \"system\",\r\n         content: \"You are a helpful assistant.\"\r\n     },\r\n    {\r\n         role: \"user\",\r\n         content: \"Hello!\"\r\n    }\r\n]);\r\nconsole.log(`${response.role}: ${response.content}`);\n```"
+                                    "text": "```ts\nSend a message to the AI and log the response.\nconst response = await ai.chat([\n     {\n         role: \"system\",\n         content: \"You are a helpful assistant.\"\n     },\n    {\n         role: \"user\",\n         content: \"Hello!\"\n    }\n]);\nconsole.log(`${response.role}: ${response.content}`);\n```"
                                 }
                             ]
                         },
@@ -211,7 +211,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nBuild a basic chat bot.\r\nconst messages = [\r\n     {\r\n         role: \"system\",\r\n         content: \"You are a helpful assistant.\"\r\n     },\r\n];\r\n\r\nwhile(true) {\r\n     const userInput = await os.showInput();\r\n     if (!userInput) {\r\n         break;\r\n     }\r\n     messages.push({\r\n         role: \"user\",\r\n         content: userInput\r\n     });\r\n\r\n     const response = await ai.chat(messages);\r\n     messages.push(response);\r\n     os.toast(response.content);\r\n}\r\n\r\nos.toast(\"Goodbye!\");\n```"
+                                    "text": "```ts\nBuild a basic chat bot.\nconst messages = [\n     {\n         role: \"system\",\n         content: \"You are a helpful assistant.\"\n     },\n];\n\nwhile(true) {\n     const userInput = await os.showInput();\n     if (!userInput) {\n         break;\n     }\n     messages.push({\n         role: \"user\",\n         content: userInput\n     });\n\n     const response = await ai.chat(messages);\n     messages.push(response);\n     os.toast(response.content);\n}\n\nos.toast(\"Goodbye!\");\n```"
                                 }
                             ]
                         },
@@ -249,7 +249,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4812,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L4812"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4812"
                     }
                 ],
                 "parameters": [
@@ -263,10 +263,10 @@
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "target": 3564,
+                                "target": 3565,
                                 "name": "AIChatMessage",
                                 "package": "@casual-simulation/aux-records",
-                                "id": 3564,
+                                "id": 3565,
                                 "qualifiedName": "AIChatMessage"
                             }
                         }
@@ -307,10 +307,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3564,
+                            "target": 3565,
                             "name": "AIChatMessage",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3564,
+                            "id": 3565,
                             "qualifiedName": "AIChatMessage"
                         }
                     ],
@@ -319,15 +319,15 @@
                 }
             },
             "comment": {
-                "text": "Sends a chat message to the AI.\r\nReturns a promise that contains the response from the AI.\r\nThrows a CasualOSError if an error occurs while sending the message.\r\n\r\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.",
+                "text": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a CasualOSError if an error occurs while sending the message.\n\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a message to the AI and log the response.\r\nconst response = await ai.chat([\r\n     {\r\n         role: \"system\",\r\n         content: \"You are a helpful assistant.\"\r\n     },\r\n    {\r\n         role: \"user\",\r\n         content: \"Hello!\"\r\n    }\r\n]);\r\nconsole.log(`${response.role}: ${response.content}`);\n```"
+                        "text": "```ts\nSend a message to the AI and log the response.\nconst response = await ai.chat([\n     {\n         role: \"system\",\n         content: \"You are a helpful assistant.\"\n     },\n    {\n         role: \"user\",\n         content: \"Hello!\"\n    }\n]);\nconsole.log(`${response.role}: ${response.content}`);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nBuild a basic chat bot.\r\nconst messages = [\r\n     {\r\n         role: \"system\",\r\n         content: \"You are a helpful assistant.\"\r\n     },\r\n];\r\n\r\nwhile(true) {\r\n     const userInput = await os.showInput();\r\n     if (!userInput) {\r\n         break;\r\n     }\r\n     messages.push({\r\n         role: \"user\",\r\n         content: userInput\r\n     });\r\n\r\n     const response = await ai.chat(messages);\r\n     messages.push(response);\r\n     os.toast(response.content);\r\n}\r\n\r\nos.toast(\"Goodbye!\");\n```"
+                        "text": "```ts\nBuild a basic chat bot.\nconst messages = [\n     {\n         role: \"system\",\n         content: \"You are a helpful assistant.\"\n     },\n];\n\nwhile(true) {\n     const userInput = await os.showInput();\n     if (!userInput) {\n         break;\n     }\n     messages.push({\n         role: \"user\",\n         content: userInput\n     });\n\n     const response = await ai.chat(messages);\n     messages.push(response);\n     os.toast(response.content);\n}\n\nos.toast(\"Goodbye!\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -359,7 +359,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Sends a chat message to the AI.\r\nReturns a promise that contains the response from the AI.\r\nThrows a "
+                            "text": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a "
                         },
                         {
                             "kind": "text",
@@ -367,7 +367,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " if an error occurs while sending the message.\r\n\r\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message."
+                            "text": " if an error occurs while sending the message.\n\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message."
                         }
                     ],
                     "blockTags": [
@@ -376,7 +376,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a message to the AI and log the response.\r\nconst response = await ai.chat(\"Hello!\");\r\nconsole.log(response);\n```"
+                                    "text": "```ts\nSend a message to the AI and log the response.\nconst response = await ai.chat(\"Hello!\");\nconsole.log(response);\n```"
                                 }
                             ]
                         },
@@ -441,7 +441,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4732,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L4732"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4732"
                     }
                 ],
                 "parameters": [
@@ -509,11 +509,11 @@
                 }
             },
             "comment": {
-                "text": "Sends a chat message to the AI.\r\nReturns a promise that contains the response from the AI.\r\nThrows a CasualOSError if an error occurs while sending the message.\r\n\r\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.",
+                "text": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a CasualOSError if an error occurs while sending the message.\n\nThis function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a message to the AI and log the response.\r\nconst response = await ai.chat(\"Hello!\");\r\nconsole.log(response);\n```"
+                        "text": "```ts\nSend a message to the AI and log the response.\nconst response = await ai.chat(\"Hello!\");\nconsole.log(response);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -557,7 +557,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Generates an image from the given prompt.\r\n\r\nReturns a promise that resolves with the Base64 data of the generated image that can be used as the "
+                            "text": "Generates an image from the given prompt.\n\nReturns a promise that resolves with the Base64 data of the generated image that can be used as the "
                         },
                         {
                             "kind": "text",
@@ -574,7 +574,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate an image from a prompt.\r\nconst imageResult = await ai.generateImage({\r\n    prompt: \"An oil painting of a grassy field.\",\r\n});\r\nmasks.formAddress = imageResult.images[0].url;\n```"
+                                    "text": "```ts\nGenerate an image from a prompt.\nconst imageResult = await ai.generateImage({\n    prompt: \"An oil painting of a grassy field.\",\n});\nmasks.formAddress = imageResult.images[0].url;\n```"
                                 }
                             ]
                         },
@@ -583,7 +583,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a image from a prompt and a negative prompt\r\nconst imageResult = await ai.generateImage({\r\n    prompt: \"An oil painting of a grassy field.\",\r\n    negativePrompt: \"realistic\"\r\n});\r\nmasks.formAddress = imageResult.images[0].url;\n```"
+                                    "text": "```ts\nGenerate a image from a prompt and a negative prompt\nconst imageResult = await ai.generateImage({\n    prompt: \"An oil painting of a grassy field.\",\n    negativePrompt: \"realistic\"\n});\nmasks.formAddress = imageResult.images[0].url;\n```"
                                 }
                             ]
                         },
@@ -592,7 +592,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a image and upload it as a file record\r\nconst imageResult = await ai.generateImage({\r\n    prompt: \"An oil painting of a grassy field.\",\r\n    negativePrompt: \"realistic\"\r\n});\r\nconst image = imageResult.images[0];\r\nconst blob = bytes.fromBase64Url(image.url);\r\nconst file = await os.recordFile(recordKey, blob);\r\nconsole.log('file url', file.url);\n```"
+                                    "text": "```ts\nGenerate a image and upload it as a file record\nconst imageResult = await ai.generateImage({\n    prompt: \"An oil painting of a grassy field.\",\n    negativePrompt: \"realistic\"\n});\nconst image = imageResult.images[0];\nconst blob = bytes.fromBase64Url(image.url);\nconst file = await os.recordFile(recordKey, blob);\nconsole.log('file url', file.url);\n```"
                                 }
                             ]
                         },
@@ -630,7 +630,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5019,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L5019"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5019"
                     }
                 ],
                 "parameters": [
@@ -706,19 +706,19 @@
                 }
             },
             "comment": {
-                "text": "Generates an image from the given prompt.\r\n\r\nReturns a promise that resolves with the Base64 data of the generated image that can be used as the formAddress of a bot.",
+                "text": "Generates an image from the given prompt.\n\nReturns a promise that resolves with the Base64 data of the generated image that can be used as the formAddress of a bot.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate an image from a prompt.\r\nconst imageResult = await ai.generateImage({\r\n    prompt: \"An oil painting of a grassy field.\",\r\n});\r\nmasks.formAddress = imageResult.images[0].url;\n```"
+                        "text": "```ts\nGenerate an image from a prompt.\nconst imageResult = await ai.generateImage({\n    prompt: \"An oil painting of a grassy field.\",\n});\nmasks.formAddress = imageResult.images[0].url;\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a image from a prompt and a negative prompt\r\nconst imageResult = await ai.generateImage({\r\n    prompt: \"An oil painting of a grassy field.\",\r\n    negativePrompt: \"realistic\"\r\n});\r\nmasks.formAddress = imageResult.images[0].url;\n```"
+                        "text": "```ts\nGenerate a image from a prompt and a negative prompt\nconst imageResult = await ai.generateImage({\n    prompt: \"An oil painting of a grassy field.\",\n    negativePrompt: \"realistic\"\n});\nmasks.formAddress = imageResult.images[0].url;\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a image and upload it as a file record\r\nconst imageResult = await ai.generateImage({\r\n    prompt: \"An oil painting of a grassy field.\",\r\n    negativePrompt: \"realistic\"\r\n});\r\nconst image = imageResult.images[0];\r\nconst blob = bytes.fromBase64Url(image.url);\r\nconst file = await os.recordFile(recordKey, blob);\r\nconsole.log('file url', file.url);\n```"
+                        "text": "```ts\nGenerate a image and upload it as a file record\nconst imageResult = await ai.generateImage({\n    prompt: \"An oil painting of a grassy field.\",\n    negativePrompt: \"realistic\"\n});\nconst image = imageResult.images[0];\nconst blob = bytes.fromBase64Url(image.url);\nconst file = await os.recordFile(recordKey, blob);\nconsole.log('file url', file.url);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -750,7 +750,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Generates an image from the given prompt.\r\n\r\nReturns a promise that resolves with the Base64 data of the generated image that can be used as the "
+                            "text": "Generates an image from the given prompt.\n\nReturns a promise that resolves with the Base64 data of the generated image that can be used as the "
                         },
                         {
                             "kind": "text",
@@ -767,7 +767,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate an image from a prompt.\r\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\");\r\nmasks.formAddress = image;\n```"
+                                    "text": "```ts\nGenerate an image from a prompt.\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\");\nmasks.formAddress = image;\n```"
                                 }
                             ]
                         },
@@ -776,7 +776,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a image from a prompt and a negative prompt\r\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\", \"realistic\");\r\nmasks.formAddress = image;\n```"
+                                    "text": "```ts\nGenerate a image from a prompt and a negative prompt\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\", \"realistic\");\nmasks.formAddress = image;\n```"
                                 }
                             ]
                         },
@@ -785,7 +785,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a image and upload it as a file record\r\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\");\r\nconst blob = bytes.fromBase64Url(image);\r\nconst file = await os.recordFile(recordKey, blob);\r\nconsole.log('file url', file.url);\n```"
+                                    "text": "```ts\nGenerate a image and upload it as a file record\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\");\nconst blob = bytes.fromBase64Url(image);\nconst file = await os.recordFile(recordKey, blob);\nconsole.log('file url', file.url);\n```"
                                 }
                             ]
                         },
@@ -823,7 +823,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4978,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L4978"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4978"
                     }
                 ],
                 "parameters": [
@@ -926,19 +926,19 @@
                 }
             },
             "comment": {
-                "text": "Generates an image from the given prompt.\r\n\r\nReturns a promise that resolves with the Base64 data of the generated image that can be used as the formAddress of a bot.",
+                "text": "Generates an image from the given prompt.\n\nReturns a promise that resolves with the Base64 data of the generated image that can be used as the formAddress of a bot.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate an image from a prompt.\r\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\");\r\nmasks.formAddress = image;\n```"
+                        "text": "```ts\nGenerate an image from a prompt.\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\");\nmasks.formAddress = image;\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a image from a prompt and a negative prompt\r\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\", \"realistic\");\r\nmasks.formAddress = image;\n```"
+                        "text": "```ts\nGenerate a image from a prompt and a negative prompt\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\", \"realistic\");\nmasks.formAddress = image;\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a image and upload it as a file record\r\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\");\r\nconst blob = bytes.fromBase64Url(image);\r\nconst file = await os.recordFile(recordKey, blob);\r\nconsole.log('file url', file.url);\n```"
+                        "text": "```ts\nGenerate a image and upload it as a file record\nconst image = await ai.generateImage(\"An oil painting of a grassy field.\");\nconst blob = bytes.fromBase64Url(image);\nconst file = await os.recordFile(recordKey, blob);\nconsole.log('file url', file.url);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -970,7 +970,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.\r\n\r\nReturns a promise that resolves with an object that contains a URL to the generated image that can be used as the "
+                            "text": "Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.\n\nReturns a promise that resolves with an object that contains a URL to the generated image that can be used as the "
                         },
                         {
                             "kind": "text",
@@ -1003,7 +1003,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a skybox from a prompt.\r\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\");\r\nmasks.formAddress = skybox;\n```"
+                                    "text": "```ts\nGenerate a skybox from a prompt.\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\");\nmasks.formAddress = skybox;\n```"
                                 }
                             ]
                         },
@@ -1012,7 +1012,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a skybox from a prompt and a negative prompt\r\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\", \"A skybox with a red sky and brown grass.\");\r\nmasks.formAddress = skybox;\n```"
+                                    "text": "```ts\nGenerate a skybox from a prompt and a negative prompt\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\", \"A skybox with a red sky and brown grass.\");\nmasks.formAddress = skybox;\n```"
                                 }
                             ]
                         },
@@ -1050,7 +1050,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4894,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L4894"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4894"
                     }
                 ],
                 "parameters": [
@@ -1100,15 +1100,15 @@
                 }
             },
             "comment": {
-                "text": "Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.\r\n\r\nReturns a promise that resolves with an object that contains a URL to the generated image that can be used as the formAddress of a bot that has form set to `skybox`.",
+                "text": "Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.\n\nReturns a promise that resolves with an object that contains a URL to the generated image that can be used as the formAddress of a bot that has form set to `skybox`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a skybox from a prompt.\r\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\");\r\nmasks.formAddress = skybox;\n```"
+                        "text": "```ts\nGenerate a skybox from a prompt.\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\");\nmasks.formAddress = skybox;\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a skybox from a prompt and a negative prompt\r\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\", \"A skybox with a red sky and brown grass.\");\r\nmasks.formAddress = skybox;\n```"
+                        "text": "```ts\nGenerate a skybox from a prompt and a negative prompt\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\", \"A skybox with a red sky and brown grass.\");\nmasks.formAddress = skybox;\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1140,7 +1140,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.\r\n\r\nReturns a promise that resolves with a URL to the generated image that can be used as the "
+                            "text": "Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.\n\nReturns a promise that resolves with a URL to the generated image that can be used as the "
                         },
                         {
                             "kind": "text",
@@ -1173,7 +1173,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a skybox from a prompt.\r\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\");\r\nmasks.formAddress = skybox;\n```"
+                                    "text": "```ts\nGenerate a skybox from a prompt.\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\");\nmasks.formAddress = skybox;\n```"
                                 }
                             ]
                         },
@@ -1182,7 +1182,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a skybox from a prompt and a negative prompt\r\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\", \"A skybox with a red sky and brown grass.\");\r\nmasks.formAddress = skybox;\n```"
+                                    "text": "```ts\nGenerate a skybox from a prompt and a negative prompt\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\", \"A skybox with a red sky and brown grass.\");\nmasks.formAddress = skybox;\n```"
                                 }
                             ]
                         },
@@ -1220,7 +1220,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4869,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L4869"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4869"
                     }
                 ],
                 "parameters": [
@@ -1310,15 +1310,15 @@
                 }
             },
             "comment": {
-                "text": "Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.\r\n\r\nReturns a promise that resolves with a URL to the generated image that can be used as the formAddress of a bot that has form set to `skybox`.",
+                "text": "Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.\n\nReturns a promise that resolves with a URL to the generated image that can be used as the formAddress of a bot that has form set to `skybox`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a skybox from a prompt.\r\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\");\r\nmasks.formAddress = skybox;\n```"
+                        "text": "```ts\nGenerate a skybox from a prompt.\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\");\nmasks.formAddress = skybox;\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a skybox from a prompt and a negative prompt\r\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\", \"A skybox with a red sky and brown grass.\");\r\nmasks.formAddress = skybox;\n```"
+                        "text": "```ts\nGenerate a skybox from a prompt and a negative prompt\nconst skybox = await ai.generateSkybox(\"A skybox with a blue sky and green grass.\", \"A skybox with a red sky and brown grass.\");\nmasks.formAddress = skybox;\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1339,7 +1339,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -1349,7 +1349,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -1367,9 +1367,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -1383,9 +1383,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -1413,9 +1413,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -1449,13 +1449,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -1469,17 +1469,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -1501,13 +1501,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -1519,7 +1519,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -1529,17 +1529,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -1607,9 +1607,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -1631,7 +1631,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -1639,13 +1639,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -1741,9 +1741,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -1757,11 +1757,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -1769,21 +1771,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -1791,17 +1793,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -1809,13 +1811,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -1829,14 +1831,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -1906,7 +1908,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",
