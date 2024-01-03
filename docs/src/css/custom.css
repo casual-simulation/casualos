@@ -16,7 +16,15 @@
     --ifm-color-primary: #e0bf65;
     --ifm-link-color: #d3a31f;
     --ifm-contents-link-color:#d3a31f;
+
+    --type-link-color: rgb(78, 201, 176);
+    --type-link-color-hover: rgba(78, 201, 176, 0.8);
   }
+
+html:not([data-theme="dark"]) {
+    --type-link-color: rgb(68, 175, 154);
+    --type-link-color-hover: rgba(68, 175, 154, 0.8);
+}
   
 html:not([data-theme="dark"]) .badge.badge--normal {
     --ifm-badge-border-color: var(--ifm-color-black);
@@ -64,30 +72,25 @@ html[data-theme="dark"] .rc-tooltip {
       margin-left: -22.22px;
   }
 
-  div.api h3 {
+  .api h3 {
     --ifm-h3-font-size: 1.5rem;
     margin-bottom: calc( var(--ifm-heading-vertical-rhythm-bottom) * var(--ifm-leading) );
     margin-top: calc(var(--ifm-h3-vertical-rhythm-top) * var(--ifm-leading));
   }
 
-  div.api h2 > a.hash-link {
-    float: left;
-    padding-left: 0;
-    padding-right: 0.5rem;
-}
-
-div.api h2 {
+.api h2 {
     margin-left: -26.95px;
     font-size: 2rem;
+    margin-top: 24px;
 }
 
-div.api h3 > a.hash-link {
+.api h2 > a.hash-link, .api h3 > a.hash-link {
     float: left;
     padding-left: 0;
     padding-right: 0.5rem;
 }
 
-div.api h3 {
+.api h3 {
     margin-left: -22.22px;
 }
   
@@ -152,4 +155,98 @@ div.api h3 {
 
   .rc-tooltip-hidden {
       display: none !important;
+  }
+
+  .api {
+    line-height: 20px;
+  }
+
+  .api-list {
+    padding-left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .api-member-item {
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .api-member-separator {
+    flex: 0 0 1px;
+    display: block;
+    background-color: #333;
+  }
+
+  .class-members-list {
+    padding-left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .class-member-separator {
+    flex: 0 0 1px;
+    display: block;
+    background-color: #333;
+  }
+
+  .class-member-item {
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .class-member-property p {
+    margin-bottom: 0;
+  }
+
+  .class-member-item code {
+    font-size: 100%;
+  }
+
+  .class-member-name {
+    font-family: var(--ifm-font-family-monospace);
+    font-size: 1.1em;
+  }
+
+  .class-member-type {
+    font-size: 70%;
+    margin-left: 8px;
+    font-weight: normal;
+  }
+
+  .function-member-name {
+    font-family: var(--ifm-font-family-monospace);
+    font-size: 1.1em;
+  }
+
+  .function-member-type {
+    font-size: 90%;
+    margin-left: 8px;
+    font-weight: normal;
+  }
+
+  .type-link {
+    color: var(--type-link-color);
+  }
+
+  .type-link:hover {
+    color: var(--type-link-color-hover);
+  }
+
+  .type-link:visited {
+    color: var(--type-link-color-hover);
+  }
+
+  .api a {
+    color: var(--type-link-color);
+  }
+
+  .api a:hover {
+    color: var(--type-link-color-hover);
+  }
+
+  .api a:visited {
+    color: var(--type-link-color-hover);
   }

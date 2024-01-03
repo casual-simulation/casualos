@@ -274,6 +274,7 @@ export {
     PartialBotsState,
     ParsedBotLink,
     PortalType,
+    BotAnchorPoint,
 } from '../../../src/aux-common/bots/Bot';
 export { 
     AuxVersion
