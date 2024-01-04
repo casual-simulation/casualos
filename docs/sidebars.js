@@ -62,7 +62,6 @@ export default {
                                 'actions/os/xr',
                             ]
                         },
-                        'actions/utility',
                         'actions/web',
                     ]
                 },

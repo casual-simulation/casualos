@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Data",
     "contents": [
         {
-            "id": 3696,
+            "id": 3697,
             "order": 9999,
             "name": "RecordDataFailure",
             "reflection": {
-                "id": 3696,
+                "id": 3697,
                 "name": "RecordDataFailure",
                 "variant": "declaration",
                 "kind": 256,
@@ -62,7 +62,7 @@
                 },
                 "children": [
                     {
-                        "id": 3698,
+                        "id": 3699,
                         "name": "errorCode",
                         "variant": "declaration",
                         "kind": 1024,
@@ -81,7 +81,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 674,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L674"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L674"
                             }
                         ],
                         "type": {
@@ -135,7 +135,7 @@
                         }
                     },
                     {
-                        "id": 3699,
+                        "id": 3700,
                         "name": "errorMessage",
                         "variant": "declaration",
                         "kind": 1024,
@@ -154,7 +154,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 689,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L689"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L689"
                             }
                         ],
                         "type": {
@@ -163,7 +163,7 @@
                         }
                     },
                     {
-                        "id": 3700,
+                        "id": 3701,
                         "name": "errorReason",
                         "variant": "declaration",
                         "kind": 1024,
@@ -184,7 +184,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 694,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L694"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L694"
                             }
                         ],
                         "type": {
@@ -206,7 +206,7 @@
                         }
                     },
                     {
-                        "id": 3701,
+                        "id": 3702,
                         "name": "issues",
                         "variant": "declaration",
                         "kind": 1024,
@@ -227,7 +227,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 699,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L699"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L699"
                             }
                         ],
                         "type": {
@@ -244,7 +244,7 @@
                         }
                     },
                     {
-                        "id": 3697,
+                        "id": 3698,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -254,7 +254,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 669,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L669"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L669"
                             }
                         ],
                         "type": {
@@ -267,11 +267,11 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3698,
                             3699,
                             3700,
                             3701,
-                            3697
+                            3702,
+                            3698
                         ]
                     }
                 ],
@@ -280,7 +280,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 668,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L668"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L668"
                     }
                 ]
             },
@@ -308,11 +308,11 @@
             "group": "01-create"
         },
         {
-            "id": 3691,
+            "id": 3692,
             "order": 9999,
             "name": "RecordDataResult",
             "reflection": {
-                "id": 3691,
+                "id": 3692,
                 "name": "RecordDataResult",
                 "variant": "declaration",
                 "kind": 2097152,
@@ -395,7 +395,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 637,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L637"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L637"
                     }
                 ],
                 "type": {
@@ -403,18 +403,18 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3692,
+                            "target": 3693,
                             "name": "RecordDataSuccess",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3692,
+                            "id": 3693,
                             "qualifiedName": "RecordDataSuccess"
                         },
                         {
                             "type": "reference",
-                            "target": 3696,
+                            "target": 3697,
                             "name": "RecordDataFailure",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3696,
+                            "id": 3697,
                             "qualifiedName": "RecordDataFailure"
                         }
                     ]
@@ -456,11 +456,11 @@
             "group": "01-create"
         },
         {
-            "id": 3692,
+            "id": 3693,
             "order": 9999,
             "name": "RecordDataSuccess",
             "reflection": {
-                "id": 3692,
+                "id": 3693,
                 "name": "RecordDataSuccess",
                 "variant": "declaration",
                 "kind": 256,
@@ -513,7 +513,7 @@
                 },
                 "children": [
                     {
-                        "id": 3695,
+                        "id": 3696,
                         "name": "address",
                         "variant": "declaration",
                         "kind": 1024,
@@ -532,7 +532,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 657,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L657"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L657"
                             }
                         ],
                         "type": {
@@ -541,7 +541,7 @@
                         }
                     },
                     {
-                        "id": 3694,
+                        "id": 3695,
                         "name": "recordName",
                         "variant": "declaration",
                         "kind": 1024,
@@ -560,7 +560,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 652,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L652"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L652"
                             }
                         ],
                         "type": {
@@ -569,7 +569,7 @@
                         }
                     },
                     {
-                        "id": 3693,
+                        "id": 3694,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -579,7 +579,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 648,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L648"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L648"
                             }
                         ],
                         "type": {
@@ -592,9 +592,9 @@
                     {
                         "title": "Properties",
                         "children": [
+                            3696,
                             3695,
-                            3694,
-                            3693
+                            3694
                         ]
                     }
                 ],
@@ -603,7 +603,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 647,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L647"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L647"
                     }
                 ]
             },
@@ -631,11 +631,11 @@
             "group": "01-create"
         },
         {
-            "id": 3712,
+            "id": 3713,
             "order": 9999,
             "name": "GetDataFailure",
             "reflection": {
-                "id": 3712,
+                "id": 3713,
                 "name": "GetDataFailure",
                 "variant": "declaration",
                 "kind": 256,
@@ -688,7 +688,7 @@
                 },
                 "children": [
                     {
-                        "id": 3714,
+                        "id": 3715,
                         "name": "errorCode",
                         "variant": "declaration",
                         "kind": 1024,
@@ -707,7 +707,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 772,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L772"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L772"
                             }
                         ],
                         "type": {
@@ -757,7 +757,7 @@
                         }
                     },
                     {
-                        "id": 3715,
+                        "id": 3716,
                         "name": "errorMessage",
                         "variant": "declaration",
                         "kind": 1024,
@@ -776,7 +776,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 781,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L781"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L781"
                             }
                         ],
                         "type": {
@@ -785,7 +785,7 @@
                         }
                     },
                     {
-                        "id": 3713,
+                        "id": 3714,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -795,7 +795,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 768,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L768"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L768"
                             }
                         ],
                         "type": {
@@ -808,9 +808,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3714,
                             3715,
-                            3713
+                            3716,
+                            3714
                         ]
                     }
                 ],
@@ -819,7 +819,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 767,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L767"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L767"
                     }
                 ]
             },
@@ -847,11 +847,11 @@
             "group": "02-get"
         },
         {
-            "id": 3702,
+            "id": 3703,
             "order": 9999,
             "name": "GetDataResult",
             "reflection": {
-                "id": 3702,
+                "id": 3703,
                 "name": "GetDataResult",
                 "variant": "declaration",
                 "kind": 2097152,
@@ -907,7 +907,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 710,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L710"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L710"
                     }
                 ],
                 "type": {
@@ -915,18 +915,18 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3703,
+                            "target": 3704,
                             "name": "GetDataSuccess",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3703,
+                            "id": 3704,
                             "qualifiedName": "GetDataSuccess"
                         },
                         {
                             "type": "reference",
-                            "target": 3712,
+                            "target": 3713,
                             "name": "GetDataFailure",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3712,
+                            "id": 3713,
                             "qualifiedName": "GetDataFailure"
                         }
                     ]
@@ -956,11 +956,11 @@
             "group": "02-get"
         },
         {
-            "id": 3703,
+            "id": 3704,
             "order": 9999,
             "name": "GetDataSuccess",
             "reflection": {
-                "id": 3703,
+                "id": 3704,
                 "name": "GetDataSuccess",
                 "variant": "declaration",
                 "kind": 256,
@@ -1013,7 +1013,7 @@
                 },
                 "children": [
                     {
-                        "id": 3705,
+                        "id": 3706,
                         "name": "data",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1032,7 +1032,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 726,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L726"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L726"
                             }
                         ],
                         "type": {
@@ -1041,7 +1041,7 @@
                         }
                     },
                     {
-                        "id": 3710,
+                        "id": 3711,
                         "name": "deletePolicy",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1060,7 +1060,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 751,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L751"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L751"
                             }
                         ],
                         "type": {
@@ -1074,7 +1074,7 @@
                         }
                     },
                     {
-                        "id": 3711,
+                        "id": 3712,
                         "name": "markers",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1093,7 +1093,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 756,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L756"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L756"
                             }
                         ],
                         "type": {
@@ -1105,7 +1105,7 @@
                         }
                     },
                     {
-                        "id": 3707,
+                        "id": 3708,
                         "name": "publisherId",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1124,7 +1124,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 736,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L736"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L736"
                             }
                         ],
                         "type": {
@@ -1133,7 +1133,7 @@
                         }
                     },
                     {
-                        "id": 3706,
+                        "id": 3707,
                         "name": "recordName",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1152,7 +1152,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 731,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L731"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L731"
                             }
                         ],
                         "type": {
@@ -1161,7 +1161,7 @@
                         }
                     },
                     {
-                        "id": 3708,
+                        "id": 3709,
                         "name": "subjectId",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1180,7 +1180,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 741,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L741"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L741"
                             }
                         ],
                         "type": {
@@ -1189,7 +1189,7 @@
                         }
                     },
                     {
-                        "id": 3704,
+                        "id": 3705,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1199,7 +1199,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 721,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L721"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L721"
                             }
                         ],
                         "type": {
@@ -1208,7 +1208,7 @@
                         }
                     },
                     {
-                        "id": 3709,
+                        "id": 3710,
                         "name": "updatePolicy",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1227,7 +1227,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 746,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L746"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L746"
                             }
                         ],
                         "type": {
@@ -1245,14 +1245,14 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3705,
-                            3710,
-                            3711,
-                            3707,
                             3706,
+                            3711,
+                            3712,
                             3708,
-                            3704,
-                            3709
+                            3707,
+                            3709,
+                            3705,
+                            3710
                         ]
                     }
                 ],
@@ -1261,7 +1261,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 720,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L720"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L720"
                     }
                 ]
             },
@@ -1289,11 +1289,11 @@
             "group": "02-get"
         },
         {
-            "id": 3721,
+            "id": 3722,
             "order": 9999,
             "name": "EraseDataFailure",
             "reflection": {
-                "id": 3721,
+                "id": 3722,
                 "name": "EraseDataFailure",
                 "variant": "declaration",
                 "kind": 256,
@@ -1346,7 +1346,7 @@
                 },
                 "children": [
                     {
-                        "id": 3723,
+                        "id": 3724,
                         "name": "errorCode",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1365,7 +1365,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 830,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L830"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L830"
                             }
                         ],
                         "type": {
@@ -1411,7 +1411,7 @@
                         }
                     },
                     {
-                        "id": 3724,
+                        "id": 3725,
                         "name": "errorMessage",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1430,7 +1430,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 841,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L841"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L841"
                             }
                         ],
                         "type": {
@@ -1439,7 +1439,7 @@
                         }
                     },
                     {
-                        "id": 3722,
+                        "id": 3723,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1449,7 +1449,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 825,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L825"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L825"
                             }
                         ],
                         "type": {
@@ -1462,9 +1462,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3723,
                             3724,
-                            3722
+                            3725,
+                            3723
                         ]
                     }
                 ],
@@ -1473,7 +1473,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 824,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L824"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L824"
                     }
                 ]
             },
@@ -1501,11 +1501,11 @@
             "group": "03-erase"
         },
         {
-            "id": 3716,
+            "id": 3717,
             "order": 9999,
             "name": "EraseDataResult",
             "reflection": {
-                "id": 3716,
+                "id": 3717,
                 "name": "EraseDataResult",
                 "variant": "declaration",
                 "kind": 2097152,
@@ -1561,7 +1561,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 792,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L792"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L792"
                     }
                 ],
                 "type": {
@@ -1569,18 +1569,18 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3717,
+                            "target": 3718,
                             "name": "EraseDataSuccess",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3717,
+                            "id": 3718,
                             "qualifiedName": "EraseDataSuccess"
                         },
                         {
                             "type": "reference",
-                            "target": 3721,
+                            "target": 3722,
                             "name": "EraseDataFailure",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3721,
+                            "id": 3722,
                             "qualifiedName": "EraseDataFailure"
                         }
                     ]
@@ -1610,11 +1610,11 @@
             "group": "03-erase"
         },
         {
-            "id": 3717,
+            "id": 3718,
             "order": 9999,
             "name": "EraseDataSuccess",
             "reflection": {
-                "id": 3717,
+                "id": 3718,
                 "name": "EraseDataSuccess",
                 "variant": "declaration",
                 "kind": 256,
@@ -1667,7 +1667,7 @@
                 },
                 "children": [
                     {
-                        "id": 3720,
+                        "id": 3721,
                         "name": "address",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1686,7 +1686,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 813,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L813"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L813"
                             }
                         ],
                         "type": {
@@ -1695,7 +1695,7 @@
                         }
                     },
                     {
-                        "id": 3719,
+                        "id": 3720,
                         "name": "recordName",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1714,7 +1714,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 808,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L808"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L808"
                             }
                         ],
                         "type": {
@@ -1723,7 +1723,7 @@
                         }
                     },
                     {
-                        "id": 3718,
+                        "id": 3719,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1733,7 +1733,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 803,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L803"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L803"
                             }
                         ],
                         "type": {
@@ -1746,9 +1746,9 @@
                     {
                         "title": "Properties",
                         "children": [
+                            3721,
                             3720,
-                            3719,
-                            3718
+                            3719
                         ]
                     }
                 ],
@@ -1757,7 +1757,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 802,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L802"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L802"
                     }
                 ]
             },
@@ -1785,11 +1785,11 @@
             "group": "03-erase"
         },
         {
-            "id": 3731,
+            "id": 3732,
             "order": 9999,
             "name": "ListDataFailure",
             "reflection": {
-                "id": 3731,
+                "id": 3732,
                 "name": "ListDataFailure",
                 "variant": "declaration",
                 "kind": 256,
@@ -1842,7 +1842,7 @@
                 },
                 "children": [
                     {
-                        "id": 3733,
+                        "id": 3734,
                         "name": "errorCode",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1852,7 +1852,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 897,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L897"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L897"
                             }
                         ],
                         "type": {
@@ -1898,7 +1898,7 @@
                         }
                     },
                     {
-                        "id": 3734,
+                        "id": 3735,
                         "name": "errorMessage",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1908,7 +1908,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 902,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L902"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L902"
                             }
                         ],
                         "type": {
@@ -1917,7 +1917,7 @@
                         }
                     },
                     {
-                        "id": 3732,
+                        "id": 3733,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1927,7 +1927,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 896,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L896"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L896"
                             }
                         ],
                         "type": {
@@ -1940,9 +1940,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3733,
                             3734,
-                            3732
+                            3735,
+                            3733
                         ]
                     }
                 ],
@@ -1951,7 +1951,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 895,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L895"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L895"
                     }
                 ]
             },
@@ -1979,11 +1979,11 @@
             "group": "04-list"
         },
         {
-            "id": 3725,
+            "id": 3726,
             "order": 9999,
             "name": "ListDataResult",
             "reflection": {
-                "id": 3725,
+                "id": 3726,
                 "name": "ListDataResult",
                 "variant": "declaration",
                 "kind": 2097152,
@@ -2039,7 +2039,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 852,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L852"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L852"
                     }
                 ],
                 "type": {
@@ -2047,18 +2047,18 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3726,
+                            "target": 3727,
                             "name": "ListDataSuccess",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3726,
+                            "id": 3727,
                             "qualifiedName": "ListDataSuccess"
                         },
                         {
                             "type": "reference",
-                            "target": 3731,
+                            "target": 3732,
                             "name": "ListDataFailure",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3731,
+                            "id": 3732,
                             "qualifiedName": "ListDataFailure"
                         }
                     ]
@@ -2088,11 +2088,11 @@
             "group": "04-list"
         },
         {
-            "id": 3726,
+            "id": 3727,
             "order": 9999,
             "name": "ListDataSuccess",
             "reflection": {
-                "id": 3726,
+                "id": 3727,
                 "name": "ListDataSuccess",
                 "variant": "declaration",
                 "kind": 256,
@@ -2145,7 +2145,7 @@
                 },
                 "children": [
                     {
-                        "id": 3729,
+                        "id": 3730,
                         "name": "items",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2164,7 +2164,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 873,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L873"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L873"
                             }
                         ],
                         "type": {
@@ -2181,7 +2181,7 @@
                         }
                     },
                     {
-                        "id": 3728,
+                        "id": 3729,
                         "name": "recordName",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2200,7 +2200,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 868,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L868"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L868"
                             }
                         ],
                         "type": {
@@ -2209,7 +2209,7 @@
                         }
                     },
                     {
-                        "id": 3727,
+                        "id": 3728,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2219,7 +2219,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 863,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L863"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L863"
                             }
                         ],
                         "type": {
@@ -2228,7 +2228,7 @@
                         }
                     },
                     {
-                        "id": 3730,
+                        "id": 3731,
                         "name": "totalCount",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2247,7 +2247,7 @@
                                 "fileName": "src/aux-records/DataRecordsController.ts",
                                 "line": 878,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L878"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L878"
                             }
                         ],
                         "type": {
@@ -2260,10 +2260,10 @@
                     {
                         "title": "Properties",
                         "children": [
+                            3730,
                             3729,
                             3728,
-                            3727,
-                            3730
+                            3731
                         ]
                     }
                 ],
@@ -2272,7 +2272,7 @@
                         "fileName": "src/aux-records/DataRecordsController.ts",
                         "line": 862,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/DataRecordsController.ts#L862"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/DataRecordsController.ts#L862"
                     }
                 ]
             },
@@ -2302,7 +2302,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -2312,7 +2312,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -2330,9 +2330,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -2346,9 +2346,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -2376,9 +2376,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -2412,13 +2412,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -2432,17 +2432,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -2464,13 +2464,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -2482,7 +2482,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -2492,17 +2492,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -2570,9 +2570,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -2594,7 +2594,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -2602,13 +2602,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -2704,9 +2704,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -2720,11 +2720,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -2732,21 +2734,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -2754,17 +2756,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -2772,13 +2774,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -2792,14 +2794,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -2869,7 +2871,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",

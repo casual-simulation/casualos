@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the number of times that the given [event](glossary:event-record) has been recorded in the given record.\r\n\r\nReturns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful."
+                            "text": "Gets the number of times that the given [event](glossary:event-record) has been recorded in the given record.\n\nReturns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the number of times the click event has happened\r\nconst result = await os.countEvents(myRecord, 'click');\r\n\r\nif (result.success) {\r\n    os.toast(result.count);\r\n} else {\r\n    os.toast('Failed to get count ' + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nGet the number of times the click event has happened\nconst result = await os.countEvents(myRecord, 'click');\n\nif (result.success) {\n    os.toast(result.count);\n} else {\n    os.toast('Failed to get count ' + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -65,7 +65,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9151,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L9151"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9151"
                     }
                 ],
                 "parameters": [
@@ -140,10 +140,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3754,
+                            "target": 3755,
                             "name": "GetCountResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3754,
+                            "id": 3755,
                             "qualifiedName": "GetCountResult"
                         }
                     ],
@@ -152,11 +152,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the number of times that the given [event](glossary:event-record) has been recorded in the given record.\r\n\r\nReturns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.",
+                "text": "Gets the number of times that the given [event](glossary:event-record) has been recorded in the given record.\n\nReturns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the number of times the click event has happened\r\nconst result = await os.countEvents(myRecord, 'click');\r\n\r\nif (result.success) {\r\n    os.toast(result.count);\r\n} else {\r\n    os.toast('Failed to get count ' + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nGet the number of times the click event has happened\nconst result = await os.countEvents(myRecord, 'click');\n\nif (result.success) {\n    os.toast(result.count);\n} else {\n    os.toast('Failed to get count ' + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -188,7 +188,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Erases the [data](glossary:data-record) stored at the given address in the given [record](glossary:record).\r\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred."
+                            "text": "Erases the [data](glossary:data-record) stored at the given address in the given [record](glossary:record).\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred."
                         }
                     ],
                     "blockTags": [
@@ -197,7 +197,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nErase some data from a record\r\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\r\nif (!recordKeyResult.success) {\r\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\r\n    return;\r\n}\r\nconst result = await os.eraseData(recordKeyResult.recordKey, 'myAddress');\r\n\r\nif (result.success) {\r\n    os.toast(\"Success!\");\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nErase some data from a record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.eraseData(recordKeyResult.recordKey, 'myAddress');\n\nif (result.success) {\n    os.toast(\"Success!\");\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -235,7 +235,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8587,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8587"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8587"
                     }
                 ],
                 "parameters": [
@@ -297,7 +297,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the HTTP Endpoint of the records website that the data should be recorded to.\r\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint."
+                                    "text": "the HTTP Endpoint of the records website that the data should be recorded to.\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint."
                                 }
                             ],
                             "blockTags": []
@@ -318,10 +318,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3716,
+                            "target": 3717,
                             "name": "EraseDataResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3716,
+                            "id": 3717,
                             "qualifiedName": "EraseDataResult"
                         }
                     ],
@@ -330,11 +330,11 @@
                 }
             },
             "comment": {
-                "text": "Erases the [data](glossary:data-record) stored at the given address in the given [record](glossary:record).\r\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
+                "text": "Erases the [data](glossary:data-record) stored at the given address in the given [record](glossary:record).\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nErase some data from a record\r\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\r\nif (!recordKeyResult.success) {\r\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\r\n    return;\r\n}\r\nconst result = await os.eraseData(recordKeyResult.recordKey, 'myAddress');\r\n\r\nif (result.success) {\r\n    os.toast(\"Success!\");\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nErase some data from a record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.eraseData(recordKeyResult.recordKey, 'myAddress');\n\nif (result.success) {\n    os.toast(\"Success!\");\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -366,7 +366,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Erases the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record. Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.\r\n\r\nWorks the same as "
+                            "text": "Erases the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record. Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.\n\nWorks the same as "
                         },
                         {
                             "kind": "text",
@@ -412,7 +412,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8609,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8609"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8609"
                     }
                 ],
                 "parameters": [
@@ -474,7 +474,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the HTTP Endpoint of the records website that the data should be recorded to.\r\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint."
+                                    "text": "the HTTP Endpoint of the records website that the data should be recorded to.\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint."
                                 }
                             ],
                             "blockTags": []
@@ -495,10 +495,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3716,
+                            "target": 3717,
                             "name": "EraseDataResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3716,
+                            "id": 3717,
                             "qualifiedName": "EraseDataResult"
                         }
                     ],
@@ -507,7 +507,7 @@
                 }
             },
             "comment": {
-                "text": "Erases the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record. Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.\r\n\r\nWorks the same as os.eraseData except that manual approval data records require the user to allow the operation manually.",
+                "text": "Erases the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record. Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.\n\nWorks the same as os.eraseData except that manual approval data records require the user to allow the operation manually.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -539,7 +539,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the data stored at the given address in the given record.\r\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred."
+                            "text": "Gets the data stored at the given address in the given record.\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred."
                         }
                     ],
                     "blockTags": [
@@ -548,7 +548,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet some data from a record\r\nconst result = await os.getData('myRecord', 'myAddress');\r\n\r\nif (result.success) {\r\n    os.toast(result.data);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nGet some data from a record\nconst result = await os.getData('myRecord', 'myAddress');\n\nif (result.success) {\n    os.toast(result.data);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -586,7 +586,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8432,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8432"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8432"
                     }
                 ],
                 "parameters": [
@@ -600,7 +600,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the record name or a record key. This indicates the record that the data should be retrieved from.\r\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine."
+                                    "text": "the record name or a record key. This indicates the record that the data should be retrieved from.\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine."
                                 }
                             ],
                             "blockTags": []
@@ -640,7 +640,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the HTTP Endpoint of the records website that the data should be recorded to.\r\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint."
+                                    "text": "the HTTP Endpoint of the records website that the data should be recorded to.\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint."
                                 }
                             ],
                             "blockTags": []
@@ -661,10 +661,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3702,
+                            "target": 3703,
                             "name": "GetDataResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3702,
+                            "id": 3703,
                             "qualifiedName": "GetDataResult"
                         }
                     ],
@@ -673,11 +673,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the data stored at the given address in the given record.\r\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
+                "text": "Gets the data stored at the given address in the given record.\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet some data from a record\r\nconst result = await os.getData('myRecord', 'myAddress');\r\n\r\nif (result.success) {\r\n    os.toast(result.data);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nGet some data from a record\nconst result = await os.getData('myRecord', 'myAddress');\n\nif (result.success) {\n    os.toast(result.data);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -709,7 +709,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record.\r\n\r\nWorks the same as "
+                            "text": "Gets the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record.\n\nWorks the same as "
                         },
                         {
                             "kind": "text",
@@ -755,7 +755,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8455,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8455"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8455"
                     }
                 ],
                 "parameters": [
@@ -769,7 +769,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the record name or a record key. This indicates the record that the data should be retrieved from.\r\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine."
+                                    "text": "the record name or a record key. This indicates the record that the data should be retrieved from.\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine."
                                 }
                             ],
                             "blockTags": []
@@ -809,7 +809,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the HTTP Endpoint of the records website that the data should be recorded to.\r\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint."
+                                    "text": "the HTTP Endpoint of the records website that the data should be recorded to.\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint."
                                 }
                             ],
                             "blockTags": []
@@ -830,10 +830,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3702,
+                            "target": 3703,
                             "name": "GetDataResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3702,
+                            "id": 3703,
                             "qualifiedName": "GetDataResult"
                         }
                     ],
@@ -842,7 +842,7 @@
                 }
             },
             "comment": {
-                "text": "Gets the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record.\r\n\r\nWorks the same as os.getData except that manual approval data records require the user to allow the operation manually.",
+                "text": "Gets the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record.\n\nWorks the same as os.getData except that manual approval data records require the user to allow the operation manually.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -874,7 +874,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\r\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred."
+                            "text": "Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred."
                         }
                     ],
                     "blockTags": [
@@ -883,7 +883,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRequest an access key for a public record.\r\nconst result = await os.getPublicRecordKey('myPublicRecord');\r\n\r\nif (result.success) {\r\n    os.toast(result.recordKey);\r\n} else {\r\n    os.toast('Failed ' + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nRequest an access key for a public record.\nconst result = await os.getPublicRecordKey('myPublicRecord');\n\nif (result.success) {\n    os.toast(result.recordKey);\n} else {\n    os.toast('Failed ' + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -921,7 +921,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8022,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8022"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8022"
                     }
                 ],
                 "parameters": [
@@ -955,10 +955,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3681,
+                            "target": 3682,
                             "name": "CreatePublicRecordKeyResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3681,
+                            "id": 3682,
                             "qualifiedName": "CreatePublicRecordKeyResult"
                         }
                     ],
@@ -967,11 +967,11 @@
                 }
             },
             "comment": {
-                "text": "Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\r\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.",
+                "text": "Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRequest an access key for a public record.\r\nconst result = await os.getPublicRecordKey('myPublicRecord');\r\n\r\nif (result.success) {\r\n    os.toast(result.recordKey);\r\n} else {\r\n    os.toast('Failed ' + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nRequest an access key for a public record.\nconst result = await os.getPublicRecordKey('myPublicRecord');\n\nif (result.success) {\n    os.toast(result.recordKey);\n} else {\n    os.toast('Failed ' + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1003,7 +1003,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Requests an subjectless [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\r\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.\r\n\r\nThis function works similarly to "
+                            "text": "Requests an subjectless [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.\n\nThis function works similarly to "
                         },
                         {
                             "kind": "text",
@@ -1011,7 +1011,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ", except that it does not require the user to be signed in when the resulting key is used.\r\nUsage of subjectless keys should therefore be limited, since they do not record who is using the key and therefore make moderation more difficult."
+                            "text": ", except that it does not require the user to be signed in when the resulting key is used.\nUsage of subjectless keys should therefore be limited, since they do not record who is using the key and therefore make moderation more difficult."
                         }
                     ],
                     "blockTags": [
@@ -1049,7 +1049,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8043,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8043"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8043"
                     }
                 ],
                 "parameters": [
@@ -1083,10 +1083,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3681,
+                            "target": 3682,
                             "name": "CreatePublicRecordKeyResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3681,
+                            "id": 3682,
                             "qualifiedName": "CreatePublicRecordKeyResult"
                         }
                     ],
@@ -1095,7 +1095,7 @@
                 }
             },
             "comment": {
-                "text": "Requests an subjectless [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\r\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.\r\n\r\nThis function works similarly to os.getPublicRecordKey, except that it does not require the user to be signed in when the resulting key is used.\r\nUsage of subjectless keys should therefore be limited, since they do not record who is using the key and therefore make moderation more difficult.",
+                "text": "Requests an subjectless [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.\n\nThis function works similarly to os.getPublicRecordKey, except that it does not require the user to be signed in when the resulting key is used.\nUsage of subjectless keys should therefore be limited, since they do not record who is using the key and therefore make moderation more difficult.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1127,7 +1127,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Attempts to grant the current inst admin permissions in the given record for the rest of the day.\r\n\r\nWhen called, the user will be prompted to accept/deny the request.\r\n\r\nSee [Record Security](page:learn/records/security) for more information."
+                            "text": "Attempts to grant the current inst admin permissions in the given record for the rest of the day.\n\nWhen called, the user will be prompted to accept/deny the request.\n\nSee [Record Security](page:learn/records/security) for more information."
                         }
                     ],
                     "blockTags": [
@@ -1165,7 +1165,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8127,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8127"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8127"
                     }
                 ],
                 "parameters": [
@@ -1225,10 +1225,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3772,
+                            "target": 3773,
                             "name": "GrantRoleResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3772,
+                            "id": 3773,
                             "qualifiedName": "GrantRoleResult"
                         }
                     ],
@@ -1237,7 +1237,7 @@
                 }
             },
             "comment": {
-                "text": "Attempts to grant the current inst admin permissions in the given record for the rest of the day.\r\n\r\nWhen called, the user will be prompted to accept/deny the request.\r\n\r\nSee [Record Security](page:learn/records/security) for more information.",
+                "text": "Attempts to grant the current inst admin permissions in the given record for the rest of the day.\n\nWhen called, the user will be prompted to accept/deny the request.\n\nSee [Record Security](page:learn/records/security) for more information.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1269,7 +1269,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Grants the given inst the given role in the given record for the specified time.\r\n\r\nSee [Record Security](page:learn/records/security) for more information."
+                            "text": "Grants the given inst the given role in the given record for the specified time.\n\nSee [Record Security](page:learn/records/security) for more information."
                         }
                     ],
                     "blockTags": [
@@ -1307,7 +1307,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8220,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8220"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8220"
                     }
                 ],
                 "parameters": [
@@ -1427,10 +1427,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3772,
+                            "target": 3773,
                             "name": "GrantRoleResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3772,
+                            "id": 3773,
                             "qualifiedName": "GrantRoleResult"
                         }
                     ],
@@ -1439,7 +1439,7 @@
                 }
             },
             "comment": {
-                "text": "Grants the given inst the given role in the given record for the specified time.\r\n\r\nSee [Record Security](page:learn/records/security) for more information.",
+                "text": "Grants the given inst the given role in the given record for the specified time.\n\nSee [Record Security](page:learn/records/security) for more information.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1471,7 +1471,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Grants the given marker the given permission in the given record.\r\n\r\nSee [Record Security](page:learn/records/security) for more information."
+                            "text": "Grants the given marker the given permission in the given record.\n\nSee [Record Security](page:learn/records/security) for more information."
                         }
                     ],
                     "blockTags": [
@@ -1509,7 +1509,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8065,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8065"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8065"
                     }
                 ],
                 "parameters": [
@@ -1570,10 +1570,10 @@
                         },
                         "type": {
                             "type": "reference",
-                            "target": 3570,
+                            "target": 3571,
                             "name": "AvailablePermissions",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3570,
+                            "id": 3571,
                             "qualifiedName": "AvailablePermissions"
                         }
                     },
@@ -1613,10 +1613,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3786,
+                            "target": 3787,
                             "name": "GrantMarkerPermissionResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3786,
+                            "id": 3787,
                             "qualifiedName": "GrantMarkerPermissionResult"
                         }
                     ],
@@ -1625,7 +1625,7 @@
                 }
             },
             "comment": {
-                "text": "Grants the given marker the given permission in the given record.\r\n\r\nSee [Record Security](page:learn/records/security) for more information.",
+                "text": "Grants the given marker the given permission in the given record.\n\nSee [Record Security](page:learn/records/security) for more information.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1657,7 +1657,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Grants the given user the given role in the given record for the specified time.\r\n\r\nSee [Record Security](page:learn/records/security) for more information."
+                            "text": "Grants the given user the given role in the given record for the specified time.\n\nSee [Record Security](page:learn/records/security) for more information."
                         }
                     ],
                     "blockTags": [
@@ -1695,7 +1695,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8155,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8155"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8155"
                     }
                 ],
                 "parameters": [
@@ -1824,10 +1824,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3772,
+                            "target": 3773,
                             "name": "GrantRoleResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3772,
+                            "id": 3773,
                             "qualifiedName": "GrantRoleResult"
                         }
                     ],
@@ -1836,7 +1836,7 @@
                 }
             },
             "comment": {
-                "text": "Grants the given user the given role in the given record for the specified time.\r\n\r\nSee [Record Security](page:learn/records/security) for more information.",
+                "text": "Grants the given user the given role in the given record for the specified time.\n\nSee [Record Security](page:learn/records/security) for more information.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1868,7 +1868,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Determines if the given value represents a [record key](glossary:record-key).\r\n\r\nReturns "
+                            "text": "Determines if the given value represents a [record key](glossary:record-key).\n\nReturns "
                         },
                         {
                             "kind": "code",
@@ -1893,7 +1893,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDetermine if a value is a record key.\r\nconst isRecordKey = os.isRecordKey(tags.myRecordKey);\r\nos.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');\n```"
+                                    "text": "```ts\nDetermine if a value is a record key.\nconst isRecordKey = os.isRecordKey(tags.myRecordKey);\nos.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');\n```"
                                 }
                             ]
                         },
@@ -1931,7 +1931,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8285,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8285"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8285"
                     }
                 ],
                 "parameters": [
@@ -1962,11 +1962,11 @@
                 }
             },
             "comment": {
-                "text": "Determines if the given value represents a [record key](glossary:record-key).\r\n\r\nReturns `true` if the value is a record key and `false` if the value is not a record key.",
+                "text": "Determines if the given value represents a [record key](glossary:record-key).\n\nReturns `true` if the value is a record key and `false` if the value is not a record key.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDetermine if a value is a record key.\r\nconst isRecordKey = os.isRecordKey(tags.myRecordKey);\r\nos.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');\n```"
+                        "text": "```ts\nDetermine if a value is a record key.\nconst isRecordKey = os.isRecordKey(tags.myRecordKey);\nos.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1998,7 +1998,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets a partial list of [data](glossary:data-record) that is stored in the given record.\r\nOptionally accepts the address before the first item that should be included in the list.\r\nReturns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.\r\n\r\nOn [publicos.link](https://publicos.link), the returned list is limited to 25 items."
+                            "text": "Gets a partial list of [data](glossary:data-record) that is stored in the given record.\nOptionally accepts the address before the first item that should be included in the list.\nReturns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.\n\nOn [publicos.link](https://publicos.link), the returned list is limited to 25 items."
                         }
                     ],
                     "blockTags": [
@@ -2007,7 +2007,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet a list of data items in a record\r\nconst result = await os.listData('myRecord');\r\nif (result.success) {\r\n    os.toast(result.items);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nGet a list of data items in a record\nconst result = await os.listData('myRecord');\nif (result.success) {\n    os.toast(result.items);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -2016,7 +2016,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nList all the items in a record\r\nlet lastAddress;\r\nlet items = [];\r\nwhile(true) {\r\n    const result = await os.listData('myRecord', lastAddress);\r\n    if (result.success) {\r\n        console.log(result.items);\r\n        items.push(...result.items);\r\n        if (result.items.length > 0) {\r\n            lastAddress = result.items[result.items.length - 1].address;\r\n        } else {\r\n            // result.items is empty, so we can break out of the loop\r\n            break;\r\n        }\r\n    } else {\r\n        os.toast(\"Failed \" + result.errorMessage);\r\n        break;\r\n    }\r\n}\n```"
+                                    "text": "```ts\nList all the items in a record\nlet lastAddress;\nlet items = [];\nwhile(true) {\n    const result = await os.listData('myRecord', lastAddress);\n    if (result.success) {\n        console.log(result.items);\n        items.push(...result.items);\n        if (result.items.length > 0) {\n            lastAddress = result.items[result.items.length - 1].address;\n        } else {\n            // result.items is empty, so we can break out of the loop\n            break;\n        }\n    } else {\n        os.toast(\"Failed \" + result.errorMessage);\n        break;\n    }\n}\n```"
                                 }
                             ]
                         },
@@ -2054,7 +2054,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8539,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8539"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8539"
                     }
                 ],
                 "parameters": [
@@ -2068,7 +2068,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the record name or a record key. This indicates the record that the data should be retrieved from.\r\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine."
+                                    "text": "the record name or a record key. This indicates the record that the data should be retrieved from.\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine."
                                 }
                             ],
                             "blockTags": []
@@ -2088,7 +2088,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the address after which items will be included in the list.\r\nSince items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.\r\nIf omitted, then the list will start with the first item."
+                                    "text": "the address after which items will be included in the list.\nSince items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.\nIf omitted, then the list will start with the first item."
                                 }
                             ],
                             "blockTags": []
@@ -2130,10 +2130,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3725,
+                            "target": 3726,
                             "name": "ListDataResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3725,
+                            "id": 3726,
                             "qualifiedName": "ListDataResult"
                         }
                     ],
@@ -2142,15 +2142,15 @@
                 }
             },
             "comment": {
-                "text": "Gets a partial list of [data](glossary:data-record) that is stored in the given record.\r\nOptionally accepts the address before the first item that should be included in the list.\r\nReturns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.\r\n\r\nOn [publicos.link](https://publicos.link), the returned list is limited to 25 items.",
+                "text": "Gets a partial list of [data](glossary:data-record) that is stored in the given record.\nOptionally accepts the address before the first item that should be included in the list.\nReturns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.\n\nOn [publicos.link](https://publicos.link), the returned list is limited to 25 items.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet a list of data items in a record\r\nconst result = await os.listData('myRecord');\r\nif (result.success) {\r\n    os.toast(result.items);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nGet a list of data items in a record\nconst result = await os.listData('myRecord');\nif (result.success) {\n    os.toast(result.items);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nList all the items in a record\r\nlet lastAddress;\r\nlet items = [];\r\nwhile(true) {\r\n    const result = await os.listData('myRecord', lastAddress);\r\n    if (result.success) {\r\n        console.log(result.items);\r\n        items.push(...result.items);\r\n        if (result.items.length > 0) {\r\n            lastAddress = result.items[result.items.length - 1].address;\r\n        } else {\r\n            // result.items is empty, so we can break out of the loop\r\n            break;\r\n        }\r\n    } else {\r\n        os.toast(\"Failed \" + result.errorMessage);\r\n        break;\r\n    }\r\n}\n```"
+                        "text": "```ts\nList all the items in a record\nlet lastAddress;\nlet items = [];\nwhile(true) {\n    const result = await os.listData('myRecord', lastAddress);\n    if (result.success) {\n        console.log(result.items);\n        items.push(...result.items);\n        if (result.items.length > 0) {\n            lastAddress = result.items[result.items.length - 1].address;\n        } else {\n            // result.items is empty, so we can break out of the loop\n            break;\n        }\n    } else {\n        os.toast(\"Failed \" + result.errorMessage);\n        break;\n    }\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2182,7 +2182,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the list of studios that the currently logged in user has access to.\r\n\r\nReturns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred."
+                            "text": "Gets the list of studios that the currently logged in user has access to.\n\nReturns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred."
                         }
                     ],
                     "blockTags": [
@@ -2191,7 +2191,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the list of studios that the user has access to\r\nconst result = await os.listUserStudios();\r\n\r\nif (result.success) {\r\n     os.toast(result.studios.map(s => s.name).join(', '));\r\n} else {\r\n     os.toast('Failed to get studios ' + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nGet the list of studios that the user has access to\nconst result = await os.listUserStudios();\n\nif (result.success) {\n     os.toast(result.studios.map(s => s.name).join(', '));\n} else {\n     os.toast('Failed to get studios ' + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -2229,7 +2229,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9207,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L9207"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9207"
                     }
                 ],
                 "parameters": [
@@ -2265,10 +2265,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3800,
+                            "target": 3801,
                             "name": "ListStudiosResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3800,
+                            "id": 3801,
                             "qualifiedName": "ListStudiosResult"
                         }
                     ],
@@ -2277,11 +2277,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the list of studios that the currently logged in user has access to.\r\n\r\nReturns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.",
+                "text": "Gets the list of studios that the currently logged in user has access to.\n\nReturns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the list of studios that the user has access to\r\nconst result = await os.listUserStudios();\r\n\r\nif (result.success) {\r\n     os.toast(result.studios.map(s => s.name).join(', '));\r\n} else {\r\n     os.toast('Failed to get studios ' + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nGet the list of studios that the user has access to\nconst result = await os.listUserStudios();\n\nif (result.success) {\n     os.toast(result.studios.map(s => s.name).join(', '));\n} else {\n     os.toast('Failed to get studios ' + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2313,7 +2313,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Stores the given [data](glossary:data-record) in the given [record](glossary:record) at the given address.\r\nIf data already exists at the given address, it will be overwritten.\r\n\r\nReturns a promise that resolves with an object that indicates if the request was successful."
+                            "text": "Stores the given [data](glossary:data-record) in the given [record](glossary:record) at the given address.\nIf data already exists at the given address, it will be overwritten.\n\nReturns a promise that resolves with an object that indicates if the request was successful."
                         }
                     ],
                     "blockTags": [
@@ -2322,7 +2322,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPublish some data to a record\r\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\r\nif (!recordKeyResult.success) {\r\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\r\n    return;\r\n}\r\nconst result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');\r\n\r\nif (result.success) {\r\n    os.toast(\"Success!\");\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nPublish some data to a record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');\n\nif (result.success) {\n    os.toast(\"Success!\");\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -2360,7 +2360,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8319,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8319"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8319"
                     }
                 ],
                 "parameters": [
@@ -2422,7 +2422,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the data that should be stored. This can be any value that can be serialized to JSON.\r\nMust be less than 300KB in size.\r\nIf you need to store data larger than 300KB, you can use "
+                                    "text": "the data that should be stored. This can be any value that can be serialized to JSON.\nMust be less than 300KB in size.\nIf you need to store data larger than 300KB, you can use "
                                 },
                                 {
                                     "kind": "text",
@@ -2486,10 +2486,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3691,
+                            "target": 3692,
                             "name": "RecordDataResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3691,
+                            "id": 3692,
                             "qualifiedName": "RecordDataResult"
                         }
                     ],
@@ -2498,11 +2498,11 @@
                 }
             },
             "comment": {
-                "text": "Stores the given [data](glossary:data-record) in the given [record](glossary:record) at the given address.\r\nIf data already exists at the given address, it will be overwritten.\r\n\r\nReturns a promise that resolves with an object that indicates if the request was successful.",
+                "text": "Stores the given [data](glossary:data-record) in the given [record](glossary:record) at the given address.\nIf data already exists at the given address, it will be overwritten.\n\nReturns a promise that resolves with an object that indicates if the request was successful.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nPublish some data to a record\r\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\r\nif (!recordKeyResult.success) {\r\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\r\n    return;\r\n}\r\nconst result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');\r\n\r\nif (result.success) {\r\n    os.toast(\"Success!\");\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nPublish some data to a record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');\n\nif (result.success) {\n    os.toast(\"Success!\");\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2534,7 +2534,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Records that the given [event](glossary:event-record) occurred in the given record.\r\n\r\nReturns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful."
+                            "text": "Records that the given [event](glossary:event-record) occurred in the given record.\n\nReturns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful."
                         }
                     ],
                     "blockTags": [
@@ -2543,7 +2543,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRecord that a click event happened\r\nawait os.recordEvent(myRecordKey, 'click');\n```"
+                                    "text": "```ts\nRecord that a click event happened\nawait os.recordEvent(myRecordKey, 'click');\n```"
                                 }
                             ]
                         },
@@ -2581,7 +2581,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9096,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L9096"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9096"
                     }
                 ],
                 "parameters": [
@@ -2656,10 +2656,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3744,
+                            "target": 3745,
                             "name": "AddCountResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3744,
+                            "id": 3745,
                             "qualifiedName": "AddCountResult"
                         }
                     ],
@@ -2668,11 +2668,11 @@
                 }
             },
             "comment": {
-                "text": "Records that the given [event](glossary:event-record) occurred in the given record.\r\n\r\nReturns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.",
+                "text": "Records that the given [event](glossary:event-record) occurred in the given record.\n\nReturns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRecord that a click event happened\r\nawait os.recordEvent(myRecordKey, 'click');\n```"
+                        "text": "```ts\nRecord that a click event happened\nawait os.recordEvent(myRecordKey, 'click');\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2704,7 +2704,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Stores the given [file data](glossary:file-record) in the given record using the given options for the file. The file can later be retrieved by using os.getFile(urlOrRecordFileResult).\r\n\r\nReturns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred."
+                            "text": "Stores the given [file data](glossary:file-record) in the given record using the given options for the file. The file can later be retrieved by using os.getFile(urlOrRecordFileResult).\n\nReturns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred."
                         }
                     ],
                     "blockTags": [
@@ -2713,7 +2713,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nUpload a file\r\nconst files = await os.showUploadFiles();\r\n\r\nif (files.length <= 0) {\r\n    return;\r\n}\r\n\r\nconst file = files[0];\r\nconst result = await os.recordFile(tags.recordKey, file);\r\n\r\nif (result.success) {\r\n    tags.uploadUrl = result.url;\r\n    os.toast(\"Success! Uploaded to \" + result.url);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nUpload a file\nconst files = await os.showUploadFiles();\n\nif (files.length <= 0) {\n    return;\n}\n\nconst file = files[0];\nconst result = await os.recordFile(tags.recordKey, file);\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -2722,7 +2722,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nUpload a string to a file record\r\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\r\nif (!recordKeyResult.success) {\r\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\r\n    return;\r\n}\r\nconst result = await os.recordFile(recordKeyResult.recordKey, 'my file data');\r\n\r\nif (result.success) {\r\n    tags.uploadUrl = result.url;\r\n    os.toast(\"Success! Uploaded to \" + result.url);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nUpload a string to a file record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordFile(recordKeyResult.recordKey, 'my file data');\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -2731,7 +2731,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nUpload red bots to a file record\r\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\r\nif (!recordKeyResult.success) {\r\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\r\n    return;\r\n}\r\nconst result = await os.recordFile(recordKeyResult.recordKey, getBots(\"color\", \"red\"), {\r\n    description: 'my bots'\r\n});\r\n\r\nif (result.success) {\r\n    tags.uploadUrl = result.url;\r\n    os.toast(\"Success! Uploaded to \" + result.url);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nUpload red bots to a file record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordFile(recordKeyResult.recordKey, getBots(\"color\", \"red\"), {\n    description: 'my bots'\n});\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -2740,7 +2740,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nUpload a file to a custom endpoint\r\nconst files = await os.showUploadFiles();\r\n\r\nif (files.length <= 0) {\r\n    return;\r\n}\r\n\r\nconst file = files[0];\r\nconst result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');\r\n\r\nif (result.success) {\r\n    tags.uploadUrl = result.url;\r\n    os.toast(\"Success! Uploaded to \" + result.url);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nUpload a file to a custom endpoint\nconst files = await os.showUploadFiles();\n\nif (files.length <= 0) {\n    return;\n}\n\nconst file = files[0];\nconst result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -2778,7 +2778,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8736,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8736"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8736"
                     }
                 ],
                 "parameters": [
@@ -2900,23 +2900,23 @@
                 }
             },
             "comment": {
-                "text": "Stores the given [file data](glossary:file-record) in the given record using the given options for the file. The file can later be retrieved by using os.getFile(urlOrRecordFileResult).\r\n\r\nReturns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.",
+                "text": "Stores the given [file data](glossary:file-record) in the given record using the given options for the file. The file can later be retrieved by using os.getFile(urlOrRecordFileResult).\n\nReturns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nUpload a file\r\nconst files = await os.showUploadFiles();\r\n\r\nif (files.length <= 0) {\r\n    return;\r\n}\r\n\r\nconst file = files[0];\r\nconst result = await os.recordFile(tags.recordKey, file);\r\n\r\nif (result.success) {\r\n    tags.uploadUrl = result.url;\r\n    os.toast(\"Success! Uploaded to \" + result.url);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nUpload a file\nconst files = await os.showUploadFiles();\n\nif (files.length <= 0) {\n    return;\n}\n\nconst file = files[0];\nconst result = await os.recordFile(tags.recordKey, file);\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nUpload a string to a file record\r\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\r\nif (!recordKeyResult.success) {\r\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\r\n    return;\r\n}\r\nconst result = await os.recordFile(recordKeyResult.recordKey, 'my file data');\r\n\r\nif (result.success) {\r\n    tags.uploadUrl = result.url;\r\n    os.toast(\"Success! Uploaded to \" + result.url);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nUpload a string to a file record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordFile(recordKeyResult.recordKey, 'my file data');\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nUpload red bots to a file record\r\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\r\nif (!recordKeyResult.success) {\r\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\r\n    return;\r\n}\r\nconst result = await os.recordFile(recordKeyResult.recordKey, getBots(\"color\", \"red\"), {\r\n    description: 'my bots'\r\n});\r\n\r\nif (result.success) {\r\n    tags.uploadUrl = result.url;\r\n    os.toast(\"Success! Uploaded to \" + result.url);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nUpload red bots to a file record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordFile(recordKeyResult.recordKey, getBots(\"color\", \"red\"), {\n    description: 'my bots'\n});\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nUpload a file to a custom endpoint\r\nconst files = await os.showUploadFiles();\r\n\r\nif (files.length <= 0) {\r\n    return;\r\n}\r\n\r\nconst file = files[0];\r\nconst result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');\r\n\r\nif (result.success) {\r\n    tags.uploadUrl = result.url;\r\n    os.toast(\"Success! Uploaded to \" + result.url);\r\n} else {\r\n    os.toast(\"Failed \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nUpload a file to a custom endpoint\nconst files = await os.showUploadFiles();\n\nif (files.length <= 0) {\n    return;\n}\n\nconst file = files[0];\nconst result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2948,7 +2948,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Stores the given [manual approval data](glossary:manual-approval-data-record) in the given record at the given address. If data already exists at the given address, it will be overwritten.\r\n\r\nReturns a promise that resolves with an object that indicates if the request was successful.\r\n\r\nWorks the same as "
+                            "text": "Stores the given [manual approval data](glossary:manual-approval-data-record) in the given record at the given address. If data already exists at the given address, it will be overwritten.\n\nReturns a promise that resolves with an object that indicates if the request was successful.\n\nWorks the same as "
                         },
                         {
                             "kind": "text",
@@ -2994,7 +2994,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8352,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8352"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8352"
                     }
                 ],
                 "parameters": [
@@ -3056,7 +3056,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the data that should be stored. This can be any value that can be serialized to JSON.\r\nMust be less than 300KB in size.\r\nIf you need to store data larger than 300KB, you can use "
+                                    "text": "the data that should be stored. This can be any value that can be serialized to JSON.\nMust be less than 300KB in size.\nIf you need to store data larger than 300KB, you can use "
                                 },
                                 {
                                     "kind": "text",
@@ -3120,10 +3120,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3691,
+                            "target": 3692,
                             "name": "RecordDataResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3691,
+                            "id": 3692,
                             "qualifiedName": "RecordDataResult"
                         }
                     ],
@@ -3132,7 +3132,7 @@
                 }
             },
             "comment": {
-                "text": "Stores the given [manual approval data](glossary:manual-approval-data-record) in the given record at the given address. If data already exists at the given address, it will be overwritten.\r\n\r\nReturns a promise that resolves with an object that indicates if the request was successful.\r\n\r\nWorks the same as os.recordData except that manual approval data records require the user to allow the operation manually.",
+                "text": "Stores the given [manual approval data](glossary:manual-approval-data-record) in the given record at the given address. If data already exists at the given address, it will be overwritten.\n\nReturns a promise that resolves with an object that indicates if the request was successful.\n\nWorks the same as os.recordData except that manual approval data records require the user to allow the operation manually.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -3164,7 +3164,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\r\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.\r\n\r\nReturns a promise that resolves with a bot that contains information about the signed in user session.\r\nResolves with "
+                            "text": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.\n\nReturns a promise that resolves with a bot that contains information about the signed in user session.\nResolves with "
                         },
                         {
                             "kind": "code",
@@ -3172,7 +3172,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " if the user was unable to sign in.\r\n\r\nOn success, the "
+                            "text": " if the user was unable to sign in.\n\nOn success, the "
                         },
                         {
                             "kind": "code",
@@ -3180,7 +3180,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " global variable will reference the bot that was returned by the promise.\r\n\r\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\r\n\r\nSee "
+                            "text": " global variable will reference the bot that was returned by the promise.\n\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\n\nSee "
                         },
                         {
                             "kind": "text",
@@ -3197,7 +3197,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRequest an auth bot for the user\r\nawait os.requestAuthBot();\r\nos.toast(\"Logged in!\");\n```"
+                                    "text": "```ts\nRequest an auth bot for the user\nawait os.requestAuthBot();\nos.toast(\"Logged in!\");\n```"
                                 }
                             ]
                         },
@@ -3262,7 +3262,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7923,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L7923"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7923"
                     }
                 ],
                 "type": {
@@ -3286,11 +3286,11 @@
                 }
             },
             "comment": {
-                "text": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\r\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.\r\n\r\nReturns a promise that resolves with a bot that contains information about the signed in user session.\r\nResolves with `null` if the user was unable to sign in.\r\n\r\nOn success, the `authBot` global variable will reference the bot that was returned by the promise.\r\n\r\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\r\n\r\nSee os.requestAuthBotInBackground for a version of this function that does not show a popup if the user is not signed in.",
+                "text": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.\n\nReturns a promise that resolves with a bot that contains information about the signed in user session.\nResolves with `null` if the user was unable to sign in.\n\nOn success, the `authBot` global variable will reference the bot that was returned by the promise.\n\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\n\nSee os.requestAuthBotInBackground for a version of this function that does not show a popup if the user is not signed in.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRequest an auth bot for the user\r\nawait os.requestAuthBot();\r\nos.toast(\"Logged in!\");\n```"
+                        "text": "```ts\nRequest an auth bot for the user\nawait os.requestAuthBot();\nos.toast(\"Logged in!\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3334,7 +3334,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\r\nWorks similarly to "
+                            "text": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\nWorks similarly to "
                         },
                         {
                             "kind": "text",
@@ -3342,7 +3342,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ", except that the request will not show a popup if the user is not signed in.\r\n\r\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.\r\n\r\nReturns a promise that resolves with a bot that contains information about the signed in user session.\r\nResolves with "
+                            "text": ", except that the request will not show a popup if the user is not signed in.\n\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.\n\nReturns a promise that resolves with a bot that contains information about the signed in user session.\nResolves with "
                         },
                         {
                             "kind": "code",
@@ -3350,7 +3350,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " if the user is not already signed in.\r\n\r\nOn success, the "
+                            "text": " if the user is not already signed in.\n\nOn success, the "
                         },
                         {
                             "kind": "code",
@@ -3358,7 +3358,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " global variable will reference the bot that was returned by the promise.\r\n\r\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\r\n\r\nSee "
+                            "text": " global variable will reference the bot that was returned by the promise.\n\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\n\nSee "
                         },
                         {
                             "kind": "text",
@@ -3375,7 +3375,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRequest the auth bot in the background.\r\nconst authBot = await os.requestAuthBotInBackground();\r\nif (authBot) {\r\n    os.toast(\"Logged in!\");\r\n} else {\r\n    os.toast(\"Not logged in.\");\r\n}\n```"
+                                    "text": "```ts\nRequest the auth bot in the background.\nconst authBot = await os.requestAuthBotInBackground();\nif (authBot) {\n    os.toast(\"Logged in!\");\n} else {\n    os.toast(\"Not logged in.\");\n}\n```"
                                 }
                             ]
                         },
@@ -3440,7 +3440,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7957,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L7957"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7957"
                     }
                 ],
                 "type": {
@@ -3464,11 +3464,11 @@
                 }
             },
             "comment": {
-                "text": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\r\nWorks similarly to os.requestAuthBot, except that the request will not show a popup if the user is not signed in.\r\n\r\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.\r\n\r\nReturns a promise that resolves with a bot that contains information about the signed in user session.\r\nResolves with `null` if the user is not already signed in.\r\n\r\nOn success, the `authBot` global variable will reference the bot that was returned by the promise.\r\n\r\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\r\n\r\nSee os.requestAuthBot for a version of this function that shows a popup if the user is not signed in.",
+                "text": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\nWorks similarly to os.requestAuthBot, except that the request will not show a popup if the user is not signed in.\n\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.\n\nReturns a promise that resolves with a bot that contains information about the signed in user session.\nResolves with `null` if the user is not already signed in.\n\nOn success, the `authBot` global variable will reference the bot that was returned by the promise.\n\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\n\nSee os.requestAuthBot for a version of this function that shows a popup if the user is not signed in.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRequest the auth bot in the background.\r\nconst authBot = await os.requestAuthBotInBackground();\r\nif (authBot) {\r\n    os.toast(\"Logged in!\");\r\n} else {\r\n    os.toast(\"Not logged in.\");\r\n}\n```"
+                        "text": "```ts\nRequest the auth bot in the background.\nconst authBot = await os.requestAuthBotInBackground();\nif (authBot) {\n    os.toast(\"Logged in!\");\n} else {\n    os.toast(\"Not logged in.\");\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3512,7 +3512,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Revokes the given role from the given inst in the given record.\r\n\r\nSee [Record Security](page:learn/records/security) for more information."
+                            "text": "Revokes the given role from the given inst in the given record.\n\nSee [Record Security](page:learn/records/security) for more information."
                         }
                     ],
                     "blockTags": [
@@ -3550,7 +3550,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8253,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8253"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8253"
                     }
                 ],
                 "parameters": [
@@ -3650,10 +3650,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3779,
+                            "target": 3780,
                             "name": "RevokeRoleResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3779,
+                            "id": 3780,
                             "qualifiedName": "RevokeRoleResult"
                         }
                     ],
@@ -3662,7 +3662,7 @@
                 }
             },
             "comment": {
-                "text": "Revokes the given role from the given inst in the given record.\r\n\r\nSee [Record Security](page:learn/records/security) for more information.",
+                "text": "Revokes the given role from the given inst in the given record.\n\nSee [Record Security](page:learn/records/security) for more information.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -3694,7 +3694,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Revokes the given permission from the given marker in the given record.\r\n\r\nSee [Record Security](page:learn/records/security) for more information."
+                            "text": "Revokes the given permission from the given marker in the given record.\n\nSee [Record Security](page:learn/records/security) for more information."
                         }
                     ],
                     "blockTags": [
@@ -3732,7 +3732,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8096,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8096"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8096"
                     }
                 ],
                 "parameters": [
@@ -3793,10 +3793,10 @@
                         },
                         "type": {
                             "type": "reference",
-                            "target": 3570,
+                            "target": 3571,
                             "name": "AvailablePermissions",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3570,
+                            "id": 3571,
                             "qualifiedName": "AvailablePermissions"
                         }
                     },
@@ -3836,10 +3836,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3793,
+                            "target": 3794,
                             "name": "RevokeMarkerPermissionResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3793,
+                            "id": 3794,
                             "qualifiedName": "RevokeMarkerPermissionResult"
                         }
                     ],
@@ -3848,7 +3848,7 @@
                 }
             },
             "comment": {
-                "text": "Revokes the given permission from the given marker in the given record.\r\n\r\nSee [Record Security](page:learn/records/security) for more information.",
+                "text": "Revokes the given permission from the given marker in the given record.\n\nSee [Record Security](page:learn/records/security) for more information.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -3880,7 +3880,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Revokes the given role from the given user in the given record.\r\n\r\nSee [Record Security](page:learn/records/security) for more information."
+                            "text": "Revokes the given role from the given user in the given record.\n\nSee [Record Security](page:learn/records/security) for more information."
                         }
                     ],
                     "blockTags": [
@@ -3918,7 +3918,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 8188,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L8188"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L8188"
                     }
                 ],
                 "parameters": [
@@ -4018,10 +4018,10 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "target": 3779,
+                            "target": 3780,
                             "name": "RevokeRoleResult",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3779,
+                            "id": 3780,
                             "qualifiedName": "RevokeRoleResult"
                         }
                     ],
@@ -4030,7 +4030,7 @@
                 }
             },
             "comment": {
-                "text": "Revokes the given role from the given user in the given record.\r\n\r\nSee [Record Security](page:learn/records/security) for more information.",
+                "text": "Revokes the given role from the given user in the given record.\n\nSee [Record Security](page:learn/records/security) for more information.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -4051,7 +4051,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -4061,7 +4061,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -4079,9 +4079,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -4095,9 +4095,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -4125,9 +4125,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -4161,13 +4161,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -4181,17 +4181,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -4213,13 +4213,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -4231,7 +4231,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -4241,17 +4241,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -4319,9 +4319,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -4343,7 +4343,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -4351,13 +4351,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -4453,9 +4453,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -4469,11 +4469,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -4481,21 +4483,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -4503,17 +4505,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -4521,13 +4523,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -4541,14 +4543,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -4618,7 +4620,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",

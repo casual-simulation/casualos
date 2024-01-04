@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the current options for a room\r\nconst result = await os.getRoomOptions(\"myChat\");\r\nif (result.success) {\r\n    os.toast(\"Room options: \" + JSON.stringify(result.options));\r\n} else {\r\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nGet the current options for a room\nconst result = await os.getRoomOptions(\"myChat\");\nif (result.success) {\n    os.toast(\"Room options: \" + JSON.stringify(result.options));\n} else {\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -54,9 +54,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14575,
+                        "line": 14568,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14575"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14568"
                     }
                 ],
                 "parameters": [
@@ -106,7 +106,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the current options for a room\r\nconst result = await os.getRoomOptions(\"myChat\");\r\nif (result.success) {\r\n    os.toast(\"Room options: \" + JSON.stringify(result.options));\r\n} else {\r\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nGet the current options for a room\nconst result = await os.getRoomOptions(\"myChat\");\nif (result.success) {\n    os.toast(\"Room options: \" + JSON.stringify(result.options));\n} else {\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -134,7 +134,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Attempts to get the current options for the specified remote user in the specified room. Returns a promise that resolves with an object that contains information about the remote user.\r\n\r\nThis function is useful for determining if the user is streaming audio or video and how good their network connection is."
+                            "text": "Attempts to get the current options for the specified remote user in the specified room. Returns a promise that resolves with an object that contains information about the remote user.\n\nThis function is useful for determining if the user is streaming audio or video and how good their network connection is."
                         }
                     ],
                     "blockTags": [
@@ -143,7 +143,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the options for a remote user\r\nconst result = await os.getRoomRemoteOptions(\"myChat\", \"myRemote\");\r\nif (result.success) {\r\n    os.toast(\"Remote options: \" + JSON.stringify(result.options));\r\n} else {\r\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nGet the options for a remote user\nconst result = await os.getRoomRemoteOptions(\"myChat\", \"myRemote\");\nif (result.success) {\n    os.toast(\"Remote options: \" + JSON.stringify(result.options));\n} else {\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -170,9 +170,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14676,
+                        "line": 14669,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14676"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14669"
                     }
                 ],
                 "parameters": [
@@ -246,11 +246,11 @@
                 }
             },
             "comment": {
-                "text": "Attempts to get the current options for the specified remote user in the specified room. Returns a promise that resolves with an object that contains information about the remote user.\r\n\r\nThis function is useful for determining if the user is streaming audio or video and how good their network connection is.",
+                "text": "Attempts to get the current options for the specified remote user in the specified room. Returns a promise that resolves with an object that contains information about the remote user.\n\nThis function is useful for determining if the user is streaming audio or video and how good their network connection is.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the options for a remote user\r\nconst result = await os.getRoomRemoteOptions(\"myChat\", \"myRemote\");\r\nif (result.success) {\r\n    os.toast(\"Remote options: \" + JSON.stringify(result.options));\r\n} else {\r\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nGet the options for a remote user\nconst result = await os.getRoomRemoteOptions(\"myChat\", \"myRemote\");\nif (result.success) {\n    os.toast(\"Remote options: \" + JSON.stringify(result.options));\n} else {\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -278,7 +278,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Attempts to get the current options for the specified audio/video track in the specified room.\r\nReturns a promise that resolves with an object that contains the information.\r\n\r\nThis function is useful for getting basic information about a track, like the video aspect ratio or if it is sourced from a camera or the screen."
+                            "text": "Attempts to get the current options for the specified audio/video track in the specified room.\nReturns a promise that resolves with an object that contains the information.\n\nThis function is useful for getting basic information about a track, like the video aspect ratio or if it is sourced from a camera or the screen."
                         }
                     ],
                     "blockTags": [
@@ -287,7 +287,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the options for a track\r\nconst result = await os.getRoomTrackOptions(\"myChat\", \"myTrack\");\r\nif (result.success) {\r\n    os.toast(\"Track options: \" + JSON.stringify(result.options));\r\n} else {\r\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nGet the options for a track\nconst result = await os.getRoomTrackOptions(\"myChat\", \"myTrack\");\nif (result.success) {\n    os.toast(\"Track options: \" + JSON.stringify(result.options));\n} else {\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -314,9 +314,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14601,
+                        "line": 14594,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14601"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14594"
                     }
                 ],
                 "parameters": [
@@ -390,11 +390,11 @@
                 }
             },
             "comment": {
-                "text": "Attempts to get the current options for the specified audio/video track in the specified room.\r\nReturns a promise that resolves with an object that contains the information.\r\n\r\nThis function is useful for getting basic information about a track, like the video aspect ratio or if it is sourced from a camera or the screen.",
+                "text": "Attempts to get the current options for the specified audio/video track in the specified room.\nReturns a promise that resolves with an object that contains the information.\n\nThis function is useful for getting basic information about a track, like the video aspect ratio or if it is sourced from a camera or the screen.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the options for a track\r\nconst result = await os.getRoomTrackOptions(\"myChat\", \"myTrack\");\r\nif (result.success) {\r\n    os.toast(\"Track options: \" + JSON.stringify(result.options));\r\n} else {\r\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nGet the options for a track\nconst result = await os.getRoomTrackOptions(\"myChat\", \"myTrack\");\nif (result.success) {\n    os.toast(\"Track options: \" + JSON.stringify(result.options));\n} else {\n    os.toast(\"Failed to get the options: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -422,7 +422,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Attempts to join the given meeting room using the given options.\r\nReturns a promise that resolves with an object that indicates whether the operation was successful.\r\n\r\nTriggers the "
+                            "text": "Attempts to join the given meeting room using the given options.\nReturns a promise that resolves with an object that indicates whether the operation was successful.\n\nTriggers the "
                         },
                         {
                             "kind": "text",
@@ -430,7 +430,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " listener once the room has been successfully joined.\r\n\r\nAdditionally, the following listeners will be triggered when the relevent events occur in the chat room:\r\n-    "
+                            "text": " listener once the room has been successfully joined.\n\nAdditionally, the following listeners will be triggered when the relevent events occur in the chat room:\n-    "
                         },
                         {
                             "kind": "text",
@@ -438,7 +438,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n-    "
+                            "text": "\n-    "
                         },
                         {
                             "kind": "text",
@@ -446,7 +446,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n-    "
+                            "text": "\n-    "
                         },
                         {
                             "kind": "text",
@@ -454,7 +454,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n-    "
+                            "text": "\n-    "
                         },
                         {
                             "kind": "text",
@@ -462,7 +462,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n-    "
+                            "text": "\n-    "
                         },
                         {
                             "kind": "text",
@@ -470,7 +470,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n-    "
+                            "text": "\n-    "
                         },
                         {
                             "kind": "text",
@@ -478,7 +478,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n-    "
+                            "text": "\n-    "
                         },
                         {
                             "kind": "text",
@@ -486,7 +486,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n-    "
+                            "text": "\n-    "
                         },
                         {
                             "kind": "text",
@@ -499,7 +499,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nJoin the \"myChat\" room\r\nconst result = await os.joinRoom(\"myChat\");\r\nif (result.success) {\r\n    os.toast(\"Joined the room!\");\r\n} else {\r\n    os.toast(\"Failed to join the room: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nJoin the \"myChat\" room\nconst result = await os.joinRoom(\"myChat\");\nif (result.success) {\n    os.toast(\"Joined the room!\");\n} else {\n    os.toast(\"Failed to join the room: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -508,7 +508,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nJoin a room with the video stream disabled\r\nconst result = await os.joinRoom(\"myChat\", {\r\n    video: false\r\n});\r\nif (result.success) {\r\n    os.toast(\"Joined the room!\");\r\n} else {\r\n    os.toast(\"Failed to join the room: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nJoin a room with the video stream disabled\nconst result = await os.joinRoom(\"myChat\", {\n    video: false\n});\nif (result.success) {\n    os.toast(\"Joined the room!\");\n} else {\n    os.toast(\"Failed to join the room: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -562,9 +562,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14481,
+                        "line": 14474,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14481"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14474"
                     }
                 ],
                 "parameters": [
@@ -636,15 +636,15 @@
                 }
             },
             "comment": {
-                "text": "Attempts to join the given meeting room using the given options.\r\nReturns a promise that resolves with an object that indicates whether the operation was successful.\r\n\r\nTriggers the @onRoomJoined listener once the room has been successfully joined.\r\n\r\nAdditionally, the following listeners will be triggered when the relevent events occur in the chat room:\r\n-    @onRoomTrackSubscribed\r\n-    @onRoomTrackUnsubscribed\r\n-    @onRoomStreamLost\r\n-    @onRoomStreaming\r\n-    @onRoomSpeakersChanged\r\n-    @onRoomRemoteJoined\r\n-    @onRoomRemoteLeave\r\n-    @onRoomOptionsChanged",
+                "text": "Attempts to join the given meeting room using the given options.\nReturns a promise that resolves with an object that indicates whether the operation was successful.\n\nTriggers the @onRoomJoined listener once the room has been successfully joined.\n\nAdditionally, the following listeners will be triggered when the relevent events occur in the chat room:\n-    @onRoomTrackSubscribed\n-    @onRoomTrackUnsubscribed\n-    @onRoomStreamLost\n-    @onRoomStreaming\n-    @onRoomSpeakersChanged\n-    @onRoomRemoteJoined\n-    @onRoomRemoteLeave\n-    @onRoomOptionsChanged",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nJoin the \"myChat\" room\r\nconst result = await os.joinRoom(\"myChat\");\r\nif (result.success) {\r\n    os.toast(\"Joined the room!\");\r\n} else {\r\n    os.toast(\"Failed to join the room: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nJoin the \"myChat\" room\nconst result = await os.joinRoom(\"myChat\");\nif (result.success) {\n    os.toast(\"Joined the room!\");\n} else {\n    os.toast(\"Failed to join the room: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nJoin a room with the video stream disabled\r\nconst result = await os.joinRoom(\"myChat\", {\r\n    video: false\r\n});\r\nif (result.success) {\r\n    os.toast(\"Joined the room!\");\r\n} else {\r\n    os.toast(\"Failed to join the room: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nJoin a room with the video stream disabled\nconst result = await os.joinRoom(\"myChat\", {\n    video: false\n});\nif (result.success) {\n    os.toast(\"Joined the room!\");\n} else {\n    os.toast(\"Failed to join the room: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -684,7 +684,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Attempts to exit the given room using the given options. Returns a promise that resolves with an object which indicates whether the operation was successful.\r\n\r\nTriggers the "
+                            "text": "Attempts to exit the given room using the given options. Returns a promise that resolves with an object which indicates whether the operation was successful.\n\nTriggers the "
                         },
                         {
                             "kind": "text",
@@ -701,7 +701,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nLeave the \"myChat\" room\r\nconst result = await os.leaveRoom(\"myChat\");\r\nif (result.success) {\r\n    os.toast(\"Left the room!\");\r\n} else {\r\n    os.toast(\"Failed to leave the room: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nLeave the \"myChat\" room\nconst result = await os.leaveRoom(\"myChat\");\nif (result.success) {\n    os.toast(\"Left the room!\");\n} else {\n    os.toast(\"Failed to leave the room: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -728,9 +728,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14509,
+                        "line": 14502,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14509"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14502"
                     }
                 ],
                 "parameters": [
@@ -802,11 +802,11 @@
                 }
             },
             "comment": {
-                "text": "Attempts to exit the given room using the given options. Returns a promise that resolves with an object which indicates whether the operation was successful.\r\n\r\nTriggers the @onRoomLeave listener once the room has been left.",
+                "text": "Attempts to exit the given room using the given options. Returns a promise that resolves with an object which indicates whether the operation was successful.\n\nTriggers the @onRoomLeave listener once the room has been left.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nLeave the \"myChat\" room\r\nconst result = await os.leaveRoom(\"myChat\");\r\nif (result.success) {\r\n    os.toast(\"Left the room!\");\r\n} else {\r\n    os.toast(\"Failed to leave the room: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nLeave the \"myChat\" room\nconst result = await os.leaveRoom(\"myChat\");\nif (result.success) {\n    os.toast(\"Left the room!\");\n} else {\n    os.toast(\"Failed to leave the room: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -834,7 +834,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Attempts to set the options for the given chat room.\r\nUseful for enabling/disabling video, audio, and screensharing. Returns a promise that resolves with an object indicating if the operation was successful and what the current state of the room is.\r\n\r\nTriggers the "
+                            "text": "Attempts to set the options for the given chat room.\nUseful for enabling/disabling video, audio, and screensharing. Returns a promise that resolves with an object indicating if the operation was successful and what the current state of the room is.\n\nTriggers the "
                         },
                         {
                             "kind": "text",
@@ -867,7 +867,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStart screensharing\r\nconst result = await os.setRoomOptions(\"myChat\", {\r\n    screen: true\r\n});\r\nif (result.success) {\r\n    os.toast(\"Screensharing started!\");\r\n} else {\r\n    os.toast(\"Failed to start screensharing: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nStart screensharing\nconst result = await os.setRoomOptions(\"myChat\", {\n    screen: true\n});\nif (result.success) {\n    os.toast(\"Screensharing started!\");\n} else {\n    os.toast(\"Failed to start screensharing: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -876,7 +876,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nMute the microphone\r\nconst result = await os.setRoomOptions(\"myChat\", {\r\n    audio: false\r\n});\r\nif (result.success) {\r\n    os.toast(\"Microphone muted!\");\r\n} else {\r\n    os.toast(\"Failed to mute microphone: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nMute the microphone\nconst result = await os.setRoomOptions(\"myChat\", {\n    audio: false\n});\nif (result.success) {\n    os.toast(\"Microphone muted!\");\n} else {\n    os.toast(\"Failed to mute microphone: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -903,9 +903,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14550,
+                        "line": 14543,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14550"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14543"
                     }
                 ],
                 "parameters": [
@@ -986,15 +986,15 @@
                 }
             },
             "comment": {
-                "text": "Attempts to set the options for the given chat room.\r\nUseful for enabling/disabling video, audio, and screensharing. Returns a promise that resolves with an object indicating if the operation was successful and what the current state of the room is.\r\n\r\nTriggers the @onRoomOptionsChanged and @onRoomTrackSubscribed/@onRoomTrackUnsubscribed listeners as needed for the specified changes.",
+                "text": "Attempts to set the options for the given chat room.\nUseful for enabling/disabling video, audio, and screensharing. Returns a promise that resolves with an object indicating if the operation was successful and what the current state of the room is.\n\nTriggers the @onRoomOptionsChanged and @onRoomTrackSubscribed/@onRoomTrackUnsubscribed listeners as needed for the specified changes.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nStart screensharing\r\nconst result = await os.setRoomOptions(\"myChat\", {\r\n    screen: true\r\n});\r\nif (result.success) {\r\n    os.toast(\"Screensharing started!\");\r\n} else {\r\n    os.toast(\"Failed to start screensharing: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nStart screensharing\nconst result = await os.setRoomOptions(\"myChat\", {\n    screen: true\n});\nif (result.success) {\n    os.toast(\"Screensharing started!\");\n} else {\n    os.toast(\"Failed to start screensharing: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nMute the microphone\r\nconst result = await os.setRoomOptions(\"myChat\", {\r\n    audio: false\r\n});\r\nif (result.success) {\r\n    os.toast(\"Microphone muted!\");\r\n} else {\r\n    os.toast(\"Failed to mute microphone: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nMute the microphone\nconst result = await os.setRoomOptions(\"myChat\", {\n    audio: false\n});\nif (result.success) {\n    os.toast(\"Microphone muted!\");\n} else {\n    os.toast(\"Failed to mute microphone: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1022,7 +1022,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Attempts to set the current options for the specified audio/video track in the specified room. Returns a promise that resolves with an object that indicates whether the operation was successful.\r\n\r\nThis function is useful for locally muting a track or setting the video quality you want it to stream at."
+                            "text": "Attempts to set the current options for the specified audio/video track in the specified room. Returns a promise that resolves with an object that indicates whether the operation was successful.\n\nThis function is useful for locally muting a track or setting the video quality you want it to stream at."
                         }
                     ],
                     "blockTags": [
@@ -1031,7 +1031,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStop streaming a track\r\nconst result = await os.setRoomTrackOptions(\"myChat\", \"myTrack\", {\r\n    muted: true\r\n});\r\nif (result.success) {\r\n    os.toast(\"Track muted!\");\r\n} else {\r\n    os.toast(\"Failed to mute the track: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nStop streaming a track\nconst result = await os.setRoomTrackOptions(\"myChat\", \"myTrack\", {\n    muted: true\n});\nif (result.success) {\n    os.toast(\"Track muted!\");\n} else {\n    os.toast(\"Failed to mute the track: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -1040,7 +1040,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSet the video quality on a track\r\nconst result = await os.setRoomTrackOptions(\"myChat\", \"myTrack\", {\r\n    videoQuality: 'low'\r\n});\r\nif (result.success) {\r\n    os.toast(\"Track video quality changed!\");\r\n} else {\r\n    os.toast(\"Failed to set video quality on the track: \" + result.errorMessage);\r\n}\n```"
+                                    "text": "```ts\nSet the video quality on a track\nconst result = await os.setRoomTrackOptions(\"myChat\", \"myTrack\", {\n    videoQuality: 'low'\n});\nif (result.success) {\n    os.toast(\"Track video quality changed!\");\n} else {\n    os.toast(\"Failed to set video quality on the track: \" + result.errorMessage);\n}\n```"
                                 }
                             ]
                         },
@@ -1067,9 +1067,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14642,
+                        "line": 14635,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14642"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14635"
                     }
                 ],
                 "parameters": [
@@ -1167,15 +1167,15 @@
                 }
             },
             "comment": {
-                "text": "Attempts to set the current options for the specified audio/video track in the specified room. Returns a promise that resolves with an object that indicates whether the operation was successful.\r\n\r\nThis function is useful for locally muting a track or setting the video quality you want it to stream at.",
+                "text": "Attempts to set the current options for the specified audio/video track in the specified room. Returns a promise that resolves with an object that indicates whether the operation was successful.\n\nThis function is useful for locally muting a track or setting the video quality you want it to stream at.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nStop streaming a track\r\nconst result = await os.setRoomTrackOptions(\"myChat\", \"myTrack\", {\r\n    muted: true\r\n});\r\nif (result.success) {\r\n    os.toast(\"Track muted!\");\r\n} else {\r\n    os.toast(\"Failed to mute the track: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nStop streaming a track\nconst result = await os.setRoomTrackOptions(\"myChat\", \"myTrack\", {\n    muted: true\n});\nif (result.success) {\n    os.toast(\"Track muted!\");\n} else {\n    os.toast(\"Failed to mute the track: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSet the video quality on a track\r\nconst result = await os.setRoomTrackOptions(\"myChat\", \"myTrack\", {\r\n    videoQuality: 'low'\r\n});\r\nif (result.success) {\r\n    os.toast(\"Track video quality changed!\");\r\n} else {\r\n    os.toast(\"Failed to set video quality on the track: \" + result.errorMessage);\r\n}\n```"
+                        "text": "```ts\nSet the video quality on a track\nconst result = await os.setRoomTrackOptions(\"myChat\", \"myTrack\", {\n    videoQuality: 'low'\n});\nif (result.success) {\n    os.toast(\"Track video quality changed!\");\n} else {\n    os.toast(\"Failed to set video quality on the track: \" + result.errorMessage);\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1192,7 +1192,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -1202,7 +1202,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -1220,9 +1220,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -1236,9 +1236,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -1266,9 +1266,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -1302,13 +1302,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -1322,17 +1322,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -1354,13 +1354,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -1372,7 +1372,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -1382,17 +1382,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -1460,9 +1460,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -1484,7 +1484,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -1492,13 +1492,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -1594,9 +1594,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -1610,11 +1610,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -1622,21 +1624,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -1644,17 +1646,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -1662,13 +1664,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -1682,14 +1684,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -1759,7 +1761,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",

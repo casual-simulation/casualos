@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Permissions",
     "contents": [
         {
-            "id": 3665,
+            "id": 3666,
             "order": 9999,
             "name": "AssignPolicyPermission",
             "reflection": {
-                "id": 3665,
+                "id": 3666,
                 "name": "AssignPolicyPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -35,7 +35,7 @@
                 },
                 "children": [
                     {
-                        "id": 3667,
+                        "id": 3668,
                         "name": "policies",
                         "variant": "declaration",
                         "kind": 1024,
@@ -54,7 +54,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 438,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L438"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L438"
                             }
                         ],
                         "type": {
@@ -77,7 +77,7 @@
                         }
                     },
                     {
-                        "id": 3668,
+                        "id": 3669,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -96,7 +96,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -119,7 +119,7 @@
                         }
                     },
                     {
-                        "id": 3666,
+                        "id": 3667,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -129,7 +129,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 535,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L535"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L535"
                             }
                         ],
                         "type": {
@@ -147,9 +147,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3667,
                             3668,
-                            3666
+                            3669,
+                            3667
                         ]
                     }
                 ],
@@ -158,7 +158,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 534,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L534"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L534"
                     }
                 ],
                 "extendedTypes": [
@@ -185,11 +185,11 @@
             "group": null
         },
         {
-            "id": 3570,
+            "id": 3571,
             "order": 9999,
             "name": "AvailablePermissions",
             "reflection": {
-                "id": 3570,
+                "id": 3571,
                 "name": "AvailablePermissions",
                 "variant": "declaration",
                 "kind": 2097152,
@@ -254,7 +254,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 12,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L12"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L12"
                     }
                 ],
                 "type": {
@@ -262,202 +262,202 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3571,
+                            "target": 3572,
                             "name": "CreateDataPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3571,
+                            "id": 3572,
                             "qualifiedName": "CreateDataPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3575,
+                            "target": 3576,
                             "name": "ReadDataPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3575,
+                            "id": 3576,
                             "qualifiedName": "ReadDataPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3579,
+                            "target": 3580,
                             "name": "UpdateDataPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3579,
+                            "id": 3580,
                             "qualifiedName": "UpdateDataPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3587,
+                            "target": 3588,
                             "name": "DeleteDataPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3587,
+                            "id": 3588,
                             "qualifiedName": "DeleteDataPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3583,
+                            "target": 3584,
                             "name": "ListDataPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3583,
+                            "id": 3584,
                             "qualifiedName": "ListDataPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3591,
+                            "target": 3592,
                             "name": "CreateFilePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3591,
+                            "id": 3592,
                             "qualifiedName": "CreateFilePermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3596,
+                            "target": 3597,
                             "name": "ReadFilePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3596,
+                            "id": 3597,
                             "qualifiedName": "ReadFilePermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3611,
+                            "target": 3612,
                             "name": "ListFilePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3611,
+                            "id": 3612,
                             "qualifiedName": "ListFilePermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3601,
+                            "target": 3602,
                             "name": "UpdateFilePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3601,
+                            "id": 3602,
                             "qualifiedName": "UpdateFilePermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3606,
+                            "target": 3607,
                             "name": "DeleteFilePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3606,
+                            "id": 3607,
                             "qualifiedName": "DeleteFilePermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3616,
+                            "target": 3617,
                             "name": "IncrementEventPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3616,
+                            "id": 3617,
                             "qualifiedName": "IncrementEventPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3620,
+                            "target": 3621,
                             "name": "CountEventPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3620,
+                            "id": 3621,
                             "qualifiedName": "CountEventPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3624,
+                            "target": 3625,
                             "name": "UpdateEventPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3624,
+                            "id": 3625,
                             "qualifiedName": "UpdateEventPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3628,
+                            "target": 3629,
                             "name": "ListEventPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3628,
+                            "id": 3629,
                             "qualifiedName": "ListEventPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3673,
+                            "target": 3674,
                             "name": "ReadPolicyPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3673,
+                            "id": 3674,
                             "qualifiedName": "ReadPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3657,
+                            "target": 3658,
                             "name": "GrantPermissionToPolicyPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3657,
+                            "id": 3658,
                             "qualifiedName": "GrantPermissionToPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3661,
+                            "target": 3662,
                             "name": "RevokePermissionFromPolicyPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3661,
+                            "id": 3662,
                             "qualifiedName": "RevokePermissionFromPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3677,
+                            "target": 3678,
                             "name": "ListPoliciesPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3677,
+                            "id": 3678,
                             "qualifiedName": "ListPoliciesPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3665,
+                            "target": 3666,
                             "name": "AssignPolicyPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3665,
+                            "id": 3666,
                             "qualifiedName": "AssignPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3669,
+                            "target": 3670,
                             "name": "UnassignPolicyPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3669,
+                            "id": 3670,
                             "qualifiedName": "UnassignPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3632,
+                            "target": 3633,
                             "name": "GrantRolePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3632,
+                            "id": 3633,
                             "qualifiedName": "GrantRolePermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3639,
+                            "target": 3640,
                             "name": "RevokeRolePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3639,
+                            "id": 3640,
                             "qualifiedName": "RevokeRolePermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3645,
+                            "target": 3646,
                             "name": "ReadRolePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3645,
+                            "id": 3646,
                             "qualifiedName": "ReadRolePermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3653,
+                            "target": 3654,
                             "name": "ListRolesPermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3653,
+                            "id": 3654,
                             "qualifiedName": "ListRolesPermission"
                         },
                         {
                             "type": "reference",
-                            "target": 3649,
+                            "target": 3650,
                             "name": "UpdateRolePermission",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3649,
+                            "id": 3650,
                             "qualifiedName": "UpdateRolePermission"
                         },
                         {
@@ -509,11 +509,11 @@
             "group": null
         },
         {
-            "id": 3620,
+            "id": 3621,
             "order": 9999,
             "name": "CountEventPermission",
             "reflection": {
-                "id": 3620,
+                "id": 3621,
                 "name": "CountEventPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -539,7 +539,7 @@
                 },
                 "children": [
                     {
-                        "id": 3622,
+                        "id": 3623,
                         "name": "events",
                         "variant": "declaration",
                         "kind": 1024,
@@ -558,7 +558,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 346,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L346"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L346"
                             }
                         ],
                         "type": {
@@ -581,7 +581,7 @@
                         }
                     },
                     {
-                        "id": 3623,
+                        "id": 3624,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -600,7 +600,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -623,7 +623,7 @@
                         }
                     },
                     {
-                        "id": 3621,
+                        "id": 3622,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -633,7 +633,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 379,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L379"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L379"
                             }
                         ],
                         "type": {
@@ -651,9 +651,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3622,
                             3623,
-                            3621
+                            3624,
+                            3622
                         ]
                     }
                 ],
@@ -662,7 +662,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 378,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L378"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L378"
                     }
                 ],
                 "extendedTypes": [
@@ -689,11 +689,11 @@
             "group": null
         },
         {
-            "id": 3571,
+            "id": 3572,
             "order": 9999,
             "name": "CreateDataPermission",
             "reflection": {
-                "id": 3571,
+                "id": 3572,
                 "name": "CreateDataPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -719,7 +719,7 @@
                 },
                 "children": [
                     {
-                        "id": 3573,
+                        "id": 3574,
                         "name": "addresses",
                         "variant": "declaration",
                         "kind": 1024,
@@ -738,7 +738,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 120,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L120"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L120"
                             }
                         ],
                         "type": {
@@ -761,7 +761,7 @@
                         }
                     },
                     {
-                        "id": 3574,
+                        "id": 3575,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -780,7 +780,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -803,7 +803,7 @@
                         }
                     },
                     {
-                        "id": 3572,
+                        "id": 3573,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -813,7 +813,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 136,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L136"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L136"
                             }
                         ],
                         "type": {
@@ -831,9 +831,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3573,
                             3574,
-                            3572
+                            3575,
+                            3573
                         ]
                     }
                 ],
@@ -842,7 +842,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 135,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L135"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L135"
                     }
                 ],
                 "extendedTypes": [
@@ -869,11 +869,11 @@
             "group": null
         },
         {
-            "id": 3591,
+            "id": 3592,
             "order": 9999,
             "name": "CreateFilePermission",
             "reflection": {
-                "id": 3591,
+                "id": 3592,
                 "name": "CreateFilePermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -899,7 +899,7 @@
                 },
                 "children": [
                     {
-                        "id": 3594,
+                        "id": 3595,
                         "name": "allowedMimeTypes",
                         "variant": "declaration",
                         "kind": 1024,
@@ -920,7 +920,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 235,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L235"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L235"
                             }
                         ],
                         "type": {
@@ -946,7 +946,7 @@
                         }
                     },
                     {
-                        "id": 3593,
+                        "id": 3594,
                         "name": "maxFileSizeInBytes",
                         "variant": "declaration",
                         "kind": 1024,
@@ -967,7 +967,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 228,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L228"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L228"
                             }
                         ],
                         "type": {
@@ -981,7 +981,7 @@
                         }
                     },
                     {
-                        "id": 3595,
+                        "id": 3596,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1000,7 +1000,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -1023,7 +1023,7 @@
                         }
                     },
                     {
-                        "id": 3592,
+                        "id": 3593,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1033,7 +1033,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 253,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L253"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L253"
                             }
                         ],
                         "type": {
@@ -1051,10 +1051,10 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3594,
-                            3593,
                             3595,
-                            3592
+                            3594,
+                            3596,
+                            3593
                         ]
                     }
                 ],
@@ -1063,7 +1063,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 252,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L252"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L252"
                     }
                 ],
                 "extendedTypes": [
@@ -1090,11 +1090,11 @@
             "group": null
         },
         {
-            "id": 3587,
+            "id": 3588,
             "order": 9999,
             "name": "DeleteDataPermission",
             "reflection": {
-                "id": 3587,
+                "id": 3588,
                 "name": "DeleteDataPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -1120,7 +1120,7 @@
                 },
                 "children": [
                     {
-                        "id": 3589,
+                        "id": 3590,
                         "name": "addresses",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1139,7 +1139,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 120,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L120"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L120"
                             }
                         ],
                         "type": {
@@ -1162,7 +1162,7 @@
                         }
                     },
                     {
-                        "id": 3590,
+                        "id": 3591,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1181,7 +1181,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -1204,7 +1204,7 @@
                         }
                     },
                     {
-                        "id": 3588,
+                        "id": 3589,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1214,7 +1214,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 190,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L190"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L190"
                             }
                         ],
                         "type": {
@@ -1232,9 +1232,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3589,
                             3590,
-                            3588
+                            3591,
+                            3589
                         ]
                     }
                 ],
@@ -1243,7 +1243,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 189,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L189"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L189"
                     }
                 ],
                 "extendedTypes": [
@@ -1270,11 +1270,11 @@
             "group": null
         },
         {
-            "id": 3606,
+            "id": 3607,
             "order": 9999,
             "name": "DeleteFilePermission",
             "reflection": {
-                "id": 3606,
+                "id": 3607,
                 "name": "DeleteFilePermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -1300,7 +1300,7 @@
                 },
                 "children": [
                     {
-                        "id": 3609,
+                        "id": 3610,
                         "name": "allowedMimeTypes",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1321,7 +1321,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 235,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L235"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L235"
                             }
                         ],
                         "type": {
@@ -1347,7 +1347,7 @@
                         }
                     },
                     {
-                        "id": 3608,
+                        "id": 3609,
                         "name": "maxFileSizeInBytes",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1368,7 +1368,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 228,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L228"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L228"
                             }
                         ],
                         "type": {
@@ -1382,7 +1382,7 @@
                         }
                     },
                     {
-                        "id": 3610,
+                        "id": 3611,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1401,7 +1401,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -1424,7 +1424,7 @@
                         }
                     },
                     {
-                        "id": 3607,
+                        "id": 3608,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1434,7 +1434,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 324,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L324"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L324"
                             }
                         ],
                         "type": {
@@ -1452,10 +1452,10 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3609,
-                            3608,
                             3610,
-                            3607
+                            3609,
+                            3611,
+                            3608
                         ]
                     }
                 ],
@@ -1464,7 +1464,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 323,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L323"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L323"
                     }
                 ],
                 "extendedTypes": [
@@ -1491,11 +1491,11 @@
             "group": null
         },
         {
-            "id": 3657,
+            "id": 3658,
             "order": 9999,
             "name": "GrantPermissionToPolicyPermission",
             "reflection": {
-                "id": 3657,
+                "id": 3658,
                 "name": "GrantPermissionToPolicyPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -1521,7 +1521,7 @@
                 },
                 "children": [
                     {
-                        "id": 3659,
+                        "id": 3660,
                         "name": "policies",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1540,7 +1540,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 438,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L438"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L438"
                             }
                         ],
                         "type": {
@@ -1563,7 +1563,7 @@
                         }
                     },
                     {
-                        "id": 3660,
+                        "id": 3661,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1582,7 +1582,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -1605,7 +1605,7 @@
                         }
                     },
                     {
-                        "id": 3658,
+                        "id": 3659,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1615,7 +1615,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 492,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L492"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L492"
                             }
                         ],
                         "type": {
@@ -1633,9 +1633,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3659,
                             3660,
-                            3658
+                            3661,
+                            3659
                         ]
                     }
                 ],
@@ -1644,7 +1644,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 491,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L491"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L491"
                     }
                 ],
                 "extendedTypes": [
@@ -1671,11 +1671,11 @@
             "group": null
         },
         {
-            "id": 3632,
+            "id": 3633,
             "order": 9999,
             "name": "GrantRolePermission",
             "reflection": {
-                "id": 3632,
+                "id": 3633,
                 "name": "GrantRolePermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -1701,7 +1701,7 @@
                 },
                 "children": [
                     {
-                        "id": 3635,
+                        "id": 3636,
                         "name": "instances",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1720,7 +1720,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 606,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L606"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L606"
                             }
                         ],
                         "type": {
@@ -1738,7 +1738,7 @@
                         }
                     },
                     {
-                        "id": 3636,
+                        "id": 3637,
                         "name": "maxDurationMs",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1759,7 +1759,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 612,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L612"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L612"
                             }
                         ],
                         "type": {
@@ -1768,7 +1768,7 @@
                         }
                     },
                     {
-                        "id": 3638,
+                        "id": 3639,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1787,7 +1787,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -1810,7 +1810,7 @@
                         }
                     },
                     {
-                        "id": 3637,
+                        "id": 3638,
                         "name": "roles",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1829,7 +1829,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 575,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L575"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L575"
                             }
                         ],
                         "type": {
@@ -1852,7 +1852,7 @@
                         }
                     },
                     {
-                        "id": 3633,
+                        "id": 3634,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1862,7 +1862,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 590,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L590"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L590"
                             }
                         ],
                         "type": {
@@ -1876,7 +1876,7 @@
                         }
                     },
                     {
-                        "id": 3634,
+                        "id": 3635,
                         "name": "userIds",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1895,7 +1895,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 598,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L598"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L598"
                             }
                         ],
                         "type": {
@@ -1920,12 +1920,12 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3635,
                             3636,
-                            3638,
                             3637,
-                            3633,
-                            3634
+                            3639,
+                            3638,
+                            3634,
+                            3635
                         ]
                     }
                 ],
@@ -1934,7 +1934,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 589,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L589"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L589"
                     }
                 ],
                 "extendedTypes": [
@@ -1961,11 +1961,11 @@
             "group": null
         },
         {
-            "id": 3616,
+            "id": 3617,
             "order": 9999,
             "name": "IncrementEventPermission",
             "reflection": {
-                "id": 3616,
+                "id": 3617,
                 "name": "IncrementEventPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -1991,7 +1991,7 @@
                 },
                 "children": [
                     {
-                        "id": 3618,
+                        "id": 3619,
                         "name": "events",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2010,7 +2010,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 346,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L346"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L346"
                             }
                         ],
                         "type": {
@@ -2033,7 +2033,7 @@
                         }
                     },
                     {
-                        "id": 3619,
+                        "id": 3620,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2052,7 +2052,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -2075,7 +2075,7 @@
                         }
                     },
                     {
-                        "id": 3617,
+                        "id": 3618,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2085,7 +2085,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 361,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L361"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L361"
                             }
                         ],
                         "type": {
@@ -2103,9 +2103,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3618,
                             3619,
-                            3617
+                            3620,
+                            3618
                         ]
                     }
                 ],
@@ -2114,7 +2114,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 360,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L360"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L360"
                     }
                 ],
                 "extendedTypes": [
@@ -2141,11 +2141,11 @@
             "group": null
         },
         {
-            "id": 3583,
+            "id": 3584,
             "order": 9999,
             "name": "ListDataPermission",
             "reflection": {
-                "id": 3583,
+                "id": 3584,
                 "name": "ListDataPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -2171,7 +2171,7 @@
                 },
                 "children": [
                     {
-                        "id": 3585,
+                        "id": 3586,
                         "name": "addresses",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2190,7 +2190,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 120,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L120"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L120"
                             }
                         ],
                         "type": {
@@ -2213,7 +2213,7 @@
                         }
                     },
                     {
-                        "id": 3586,
+                        "id": 3587,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2232,7 +2232,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -2255,7 +2255,7 @@
                         }
                     },
                     {
-                        "id": 3584,
+                        "id": 3585,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2265,7 +2265,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 208,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L208"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L208"
                             }
                         ],
                         "type": {
@@ -2283,9 +2283,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3585,
                             3586,
-                            3584
+                            3587,
+                            3585
                         ]
                     }
                 ],
@@ -2294,7 +2294,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 207,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L207"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L207"
                     }
                 ],
                 "extendedTypes": [
@@ -2321,11 +2321,11 @@
             "group": null
         },
         {
-            "id": 3628,
+            "id": 3629,
             "order": 9999,
             "name": "ListEventPermission",
             "reflection": {
-                "id": 3628,
+                "id": 3629,
                 "name": "ListEventPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -2351,7 +2351,7 @@
                 },
                 "children": [
                     {
-                        "id": 3630,
+                        "id": 3631,
                         "name": "events",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2370,7 +2370,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 346,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L346"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L346"
                             }
                         ],
                         "type": {
@@ -2393,7 +2393,7 @@
                         }
                     },
                     {
-                        "id": 3631,
+                        "id": 3632,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2412,7 +2412,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -2435,7 +2435,7 @@
                         }
                     },
                     {
-                        "id": 3629,
+                        "id": 3630,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2445,7 +2445,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 416,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L416"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L416"
                             }
                         ],
                         "type": {
@@ -2463,9 +2463,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3630,
                             3631,
-                            3629
+                            3632,
+                            3630
                         ]
                     }
                 ],
@@ -2474,7 +2474,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 415,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L415"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L415"
                     }
                 ],
                 "extendedTypes": [
@@ -2501,11 +2501,11 @@
             "group": null
         },
         {
-            "id": 3677,
+            "id": 3678,
             "order": 9999,
             "name": "ListPoliciesPermission",
             "reflection": {
-                "id": 3677,
+                "id": 3678,
                 "name": "ListPoliciesPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -2531,7 +2531,7 @@
                 },
                 "children": [
                     {
-                        "id": 3679,
+                        "id": 3680,
                         "name": "policies",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2550,7 +2550,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 438,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L438"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L438"
                             }
                         ],
                         "type": {
@@ -2573,7 +2573,7 @@
                         }
                     },
                     {
-                        "id": 3680,
+                        "id": 3681,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2592,7 +2592,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -2615,7 +2615,7 @@
                         }
                     },
                     {
-                        "id": 3678,
+                        "id": 3679,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2625,7 +2625,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 474,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L474"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L474"
                             }
                         ],
                         "type": {
@@ -2643,9 +2643,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3679,
                             3680,
-                            3678
+                            3681,
+                            3679
                         ]
                     }
                 ],
@@ -2654,7 +2654,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 473,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L473"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L473"
                     }
                 ],
                 "extendedTypes": [
@@ -2681,11 +2681,11 @@
             "group": null
         },
         {
-            "id": 3653,
+            "id": 3654,
             "order": 9999,
             "name": "ListRolesPermission",
             "reflection": {
-                "id": 3653,
+                "id": 3654,
                 "name": "ListRolesPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -2711,7 +2711,7 @@
                 },
                 "children": [
                     {
-                        "id": 3656,
+                        "id": 3657,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2730,7 +2730,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -2753,7 +2753,7 @@
                         }
                     },
                     {
-                        "id": 3655,
+                        "id": 3656,
                         "name": "roles",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2772,7 +2772,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 575,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L575"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L575"
                             }
                         ],
                         "type": {
@@ -2795,7 +2795,7 @@
                         }
                     },
                     {
-                        "id": 3654,
+                        "id": 3655,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2805,7 +2805,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 705,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L705"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L705"
                             }
                         ],
                         "type": {
@@ -2823,9 +2823,9 @@
                     {
                         "title": "Properties",
                         "children": [
+                            3657,
                             3656,
-                            3655,
-                            3654
+                            3655
                         ]
                     }
                 ],
@@ -2834,7 +2834,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 704,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L704"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L704"
                     }
                 ],
                 "extendedTypes": [
@@ -2861,11 +2861,11 @@
             "group": null
         },
         {
-            "id": 3575,
+            "id": 3576,
             "order": 9999,
             "name": "ReadDataPermission",
             "reflection": {
-                "id": 3575,
+                "id": 3576,
                 "name": "ReadDataPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -2891,7 +2891,7 @@
                 },
                 "children": [
                     {
-                        "id": 3577,
+                        "id": 3578,
                         "name": "addresses",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2910,7 +2910,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 120,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L120"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L120"
                             }
                         ],
                         "type": {
@@ -2933,7 +2933,7 @@
                         }
                     },
                     {
-                        "id": 3578,
+                        "id": 3579,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2952,7 +2952,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -2975,7 +2975,7 @@
                         }
                     },
                     {
-                        "id": 3576,
+                        "id": 3577,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -2985,7 +2985,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 154,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L154"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L154"
                             }
                         ],
                         "type": {
@@ -3003,9 +3003,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3577,
                             3578,
-                            3576
+                            3579,
+                            3577
                         ]
                     }
                 ],
@@ -3014,7 +3014,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 153,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L153"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L153"
                     }
                 ],
                 "extendedTypes": [
@@ -3041,11 +3041,11 @@
             "group": null
         },
         {
-            "id": 3596,
+            "id": 3597,
             "order": 9999,
             "name": "ReadFilePermission",
             "reflection": {
-                "id": 3596,
+                "id": 3597,
                 "name": "ReadFilePermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -3071,7 +3071,7 @@
                 },
                 "children": [
                     {
-                        "id": 3599,
+                        "id": 3600,
                         "name": "allowedMimeTypes",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3092,7 +3092,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 235,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L235"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L235"
                             }
                         ],
                         "type": {
@@ -3118,7 +3118,7 @@
                         }
                     },
                     {
-                        "id": 3598,
+                        "id": 3599,
                         "name": "maxFileSizeInBytes",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3139,7 +3139,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 228,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L228"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L228"
                             }
                         ],
                         "type": {
@@ -3153,7 +3153,7 @@
                         }
                     },
                     {
-                        "id": 3600,
+                        "id": 3601,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3172,7 +3172,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -3195,7 +3195,7 @@
                         }
                     },
                     {
-                        "id": 3597,
+                        "id": 3598,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3205,7 +3205,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 271,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L271"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L271"
                             }
                         ],
                         "type": {
@@ -3223,10 +3223,10 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3599,
-                            3598,
                             3600,
-                            3597
+                            3599,
+                            3601,
+                            3598
                         ]
                     }
                 ],
@@ -3235,7 +3235,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 270,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L270"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L270"
                     }
                 ],
                 "extendedTypes": [
@@ -3262,11 +3262,11 @@
             "group": null
         },
         {
-            "id": 3673,
+            "id": 3674,
             "order": 9999,
             "name": "ReadPolicyPermission",
             "reflection": {
-                "id": 3673,
+                "id": 3674,
                 "name": "ReadPolicyPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -3292,7 +3292,7 @@
                 },
                 "children": [
                     {
-                        "id": 3675,
+                        "id": 3676,
                         "name": "policies",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3311,7 +3311,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 438,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L438"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L438"
                             }
                         ],
                         "type": {
@@ -3334,7 +3334,7 @@
                         }
                     },
                     {
-                        "id": 3676,
+                        "id": 3677,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3353,7 +3353,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -3376,7 +3376,7 @@
                         }
                     },
                     {
-                        "id": 3674,
+                        "id": 3675,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3386,7 +3386,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 456,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L456"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L456"
                             }
                         ],
                         "type": {
@@ -3404,9 +3404,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3675,
                             3676,
-                            3674
+                            3677,
+                            3675
                         ]
                     }
                 ],
@@ -3415,7 +3415,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 455,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L455"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L455"
                     }
                 ],
                 "extendedTypes": [
@@ -3442,11 +3442,11 @@
             "group": null
         },
         {
-            "id": 3645,
+            "id": 3646,
             "order": 9999,
             "name": "ReadRolePermission",
             "reflection": {
-                "id": 3645,
+                "id": 3646,
                 "name": "ReadRolePermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -3472,7 +3472,7 @@
                 },
                 "children": [
                     {
-                        "id": 3648,
+                        "id": 3649,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3491,7 +3491,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -3514,7 +3514,7 @@
                         }
                     },
                     {
-                        "id": 3647,
+                        "id": 3648,
                         "name": "roles",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3533,7 +3533,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 575,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L575"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L575"
                             }
                         ],
                         "type": {
@@ -3556,7 +3556,7 @@
                         }
                     },
                     {
-                        "id": 3646,
+                        "id": 3647,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3566,7 +3566,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 669,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L669"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L669"
                             }
                         ],
                         "type": {
@@ -3584,9 +3584,9 @@
                     {
                         "title": "Properties",
                         "children": [
+                            3649,
                             3648,
-                            3647,
-                            3646
+                            3647
                         ]
                     }
                 ],
@@ -3595,7 +3595,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 668,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L668"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L668"
                     }
                 ],
                 "extendedTypes": [
@@ -3622,11 +3622,11 @@
             "group": null
         },
         {
-            "id": 3661,
+            "id": 3662,
             "order": 9999,
             "name": "RevokePermissionFromPolicyPermission",
             "reflection": {
-                "id": 3661,
+                "id": 3662,
                 "name": "RevokePermissionFromPolicyPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -3652,7 +3652,7 @@
                 },
                 "children": [
                     {
-                        "id": 3663,
+                        "id": 3664,
                         "name": "policies",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3671,7 +3671,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 438,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L438"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L438"
                             }
                         ],
                         "type": {
@@ -3694,7 +3694,7 @@
                         }
                     },
                     {
-                        "id": 3664,
+                        "id": 3665,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3713,7 +3713,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -3736,7 +3736,7 @@
                         }
                     },
                     {
-                        "id": 3662,
+                        "id": 3663,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3746,7 +3746,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 513,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L513"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L513"
                             }
                         ],
                         "type": {
@@ -3764,9 +3764,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3663,
                             3664,
-                            3662
+                            3665,
+                            3663
                         ]
                     }
                 ],
@@ -3775,7 +3775,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 512,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L512"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L512"
                     }
                 ],
                 "extendedTypes": [
@@ -3802,11 +3802,11 @@
             "group": null
         },
         {
-            "id": 3639,
+            "id": 3640,
             "order": 9999,
             "name": "RevokeRolePermission",
             "reflection": {
-                "id": 3639,
+                "id": 3640,
                 "name": "RevokeRolePermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -3832,7 +3832,7 @@
                 },
                 "children": [
                     {
-                        "id": 3642,
+                        "id": 3643,
                         "name": "instances",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3851,7 +3851,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 649,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L649"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L649"
                             }
                         ],
                         "type": {
@@ -3869,7 +3869,7 @@
                         }
                     },
                     {
-                        "id": 3644,
+                        "id": 3645,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3888,7 +3888,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -3911,7 +3911,7 @@
                         }
                     },
                     {
-                        "id": 3643,
+                        "id": 3644,
                         "name": "roles",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3930,7 +3930,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 575,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L575"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L575"
                             }
                         ],
                         "type": {
@@ -3953,7 +3953,7 @@
                         }
                     },
                     {
-                        "id": 3640,
+                        "id": 3641,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3963,7 +3963,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 633,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L633"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L633"
                             }
                         ],
                         "type": {
@@ -3977,7 +3977,7 @@
                         }
                     },
                     {
-                        "id": 3641,
+                        "id": 3642,
                         "name": "userIds",
                         "variant": "declaration",
                         "kind": 1024,
@@ -3996,7 +3996,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 641,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L641"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L641"
                             }
                         ],
                         "type": {
@@ -4021,11 +4021,11 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3642,
-                            3644,
                             3643,
-                            3640,
-                            3641
+                            3645,
+                            3644,
+                            3641,
+                            3642
                         ]
                     }
                 ],
@@ -4034,7 +4034,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 632,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L632"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L632"
                     }
                 ],
                 "extendedTypes": [
@@ -4061,11 +4061,11 @@
             "group": null
         },
         {
-            "id": 3669,
+            "id": 3670,
             "order": 9999,
             "name": "UnassignPolicyPermission",
             "reflection": {
-                "id": 3669,
+                "id": 3670,
                 "name": "UnassignPolicyPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -4091,7 +4091,7 @@
                 },
                 "children": [
                     {
-                        "id": 3671,
+                        "id": 3672,
                         "name": "policies",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4110,7 +4110,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 438,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L438"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L438"
                             }
                         ],
                         "type": {
@@ -4133,7 +4133,7 @@
                         }
                     },
                     {
-                        "id": 3672,
+                        "id": 3673,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4152,7 +4152,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -4175,7 +4175,7 @@
                         }
                     },
                     {
-                        "id": 3670,
+                        "id": 3671,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4185,7 +4185,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 553,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L553"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L553"
                             }
                         ],
                         "type": {
@@ -4203,9 +4203,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3671,
                             3672,
-                            3670
+                            3673,
+                            3671
                         ]
                     }
                 ],
@@ -4214,7 +4214,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 552,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L552"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L552"
                     }
                 ],
                 "extendedTypes": [
@@ -4241,11 +4241,11 @@
             "group": null
         },
         {
-            "id": 3579,
+            "id": 3580,
             "order": 9999,
             "name": "UpdateDataPermission",
             "reflection": {
-                "id": 3579,
+                "id": 3580,
                 "name": "UpdateDataPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -4271,7 +4271,7 @@
                 },
                 "children": [
                     {
-                        "id": 3581,
+                        "id": 3582,
                         "name": "addresses",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4290,7 +4290,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 120,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L120"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L120"
                             }
                         ],
                         "type": {
@@ -4313,7 +4313,7 @@
                         }
                     },
                     {
-                        "id": 3582,
+                        "id": 3583,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4332,7 +4332,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -4355,7 +4355,7 @@
                         }
                     },
                     {
-                        "id": 3580,
+                        "id": 3581,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4365,7 +4365,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 172,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L172"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L172"
                             }
                         ],
                         "type": {
@@ -4383,9 +4383,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3581,
                             3582,
-                            3580
+                            3583,
+                            3581
                         ]
                     }
                 ],
@@ -4394,7 +4394,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 171,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L171"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L171"
                     }
                 ],
                 "extendedTypes": [
@@ -4421,11 +4421,11 @@
             "group": null
         },
         {
-            "id": 3624,
+            "id": 3625,
             "order": 9999,
             "name": "UpdateEventPermission",
             "reflection": {
-                "id": 3624,
+                "id": 3625,
                 "name": "UpdateEventPermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -4451,7 +4451,7 @@
                 },
                 "children": [
                     {
-                        "id": 3626,
+                        "id": 3627,
                         "name": "events",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4470,7 +4470,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 346,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L346"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L346"
                             }
                         ],
                         "type": {
@@ -4493,7 +4493,7 @@
                         }
                     },
                     {
-                        "id": 3627,
+                        "id": 3628,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4512,7 +4512,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -4535,7 +4535,7 @@
                         }
                     },
                     {
-                        "id": 3625,
+                        "id": 3626,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4545,7 +4545,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 398,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L398"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L398"
                             }
                         ],
                         "type": {
@@ -4563,9 +4563,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3626,
                             3627,
-                            3625
+                            3628,
+                            3626
                         ]
                     }
                 ],
@@ -4574,7 +4574,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 397,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L397"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L397"
                     }
                 ],
                 "extendedTypes": [
@@ -4601,11 +4601,11 @@
             "group": null
         },
         {
-            "id": 3601,
+            "id": 3602,
             "order": 9999,
             "name": "UpdateFilePermission",
             "reflection": {
-                "id": 3601,
+                "id": 3602,
                 "name": "UpdateFilePermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -4631,7 +4631,7 @@
                 },
                 "children": [
                     {
-                        "id": 3604,
+                        "id": 3605,
                         "name": "allowedMimeTypes",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4652,7 +4652,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 235,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L235"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L235"
                             }
                         ],
                         "type": {
@@ -4678,7 +4678,7 @@
                         }
                     },
                     {
-                        "id": 3603,
+                        "id": 3604,
                         "name": "maxFileSizeInBytes",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4699,7 +4699,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 228,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L228"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L228"
                             }
                         ],
                         "type": {
@@ -4713,7 +4713,7 @@
                         }
                     },
                     {
-                        "id": 3605,
+                        "id": 3606,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4732,7 +4732,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -4755,7 +4755,7 @@
                         }
                     },
                     {
-                        "id": 3602,
+                        "id": 3603,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4765,7 +4765,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 306,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L306"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L306"
                             }
                         ],
                         "type": {
@@ -4783,10 +4783,10 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3604,
-                            3603,
                             3605,
-                            3602
+                            3604,
+                            3606,
+                            3603
                         ]
                     }
                 ],
@@ -4795,7 +4795,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 305,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L305"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L305"
                     }
                 ],
                 "extendedTypes": [
@@ -4822,11 +4822,11 @@
             "group": null
         },
         {
-            "id": 3649,
+            "id": 3650,
             "order": 9999,
             "name": "UpdateRolePermission",
             "reflection": {
-                "id": 3649,
+                "id": 3650,
                 "name": "UpdateRolePermission",
                 "variant": "declaration",
                 "kind": 256,
@@ -4852,7 +4852,7 @@
                 },
                 "children": [
                     {
-                        "id": 3652,
+                        "id": 3653,
                         "name": "role",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4871,7 +4871,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 100,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L100"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L100"
                             }
                         ],
                         "type": {
@@ -4894,7 +4894,7 @@
                         }
                     },
                     {
-                        "id": 3651,
+                        "id": 3652,
                         "name": "roles",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4913,7 +4913,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 575,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L575"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L575"
                             }
                         ],
                         "type": {
@@ -4936,7 +4936,7 @@
                         }
                     },
                     {
-                        "id": 3650,
+                        "id": 3651,
                         "name": "type",
                         "variant": "declaration",
                         "kind": 1024,
@@ -4946,7 +4946,7 @@
                                 "fileName": "src/aux-common/common/PolicyPermissions.ts",
                                 "line": 687,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L687"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L687"
                             }
                         ],
                         "type": {
@@ -4964,9 +4964,9 @@
                     {
                         "title": "Properties",
                         "children": [
+                            3653,
                             3652,
-                            3651,
-                            3650
+                            3651
                         ]
                     }
                 ],
@@ -4975,7 +4975,7 @@
                         "fileName": "src/aux-common/common/PolicyPermissions.ts",
                         "line": 686,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/common/PolicyPermissions.ts#L686"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/common/PolicyPermissions.ts#L686"
                     }
                 ],
                 "extendedTypes": [
@@ -5004,7 +5004,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -5014,7 +5014,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -5032,9 +5032,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -5048,9 +5048,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -5078,9 +5078,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -5114,13 +5114,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -5134,17 +5134,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -5166,13 +5166,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -5184,7 +5184,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -5194,17 +5194,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -5272,9 +5272,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -5296,7 +5296,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -5304,13 +5304,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -5406,9 +5406,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -5422,11 +5422,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -5434,21 +5436,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -5456,17 +5458,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -5474,13 +5476,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -5494,14 +5496,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -5571,7 +5573,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",

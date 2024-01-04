@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Events",
     "contents": [
         {
-            "id": 3744,
+            "id": 3745,
             "order": 0,
             "name": "AddCountResult",
             "reflection": {
-                "id": 3744,
+                "id": 3745,
                 "name": "AddCountResult",
                 "variant": "declaration",
                 "kind": 2097152,
@@ -92,7 +92,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 436,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L436"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L436"
                     }
                 ],
                 "type": {
@@ -100,18 +100,18 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3745,
+                            "target": 3746,
                             "name": "AddCountSuccess",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3745,
+                            "id": 3746,
                             "qualifiedName": "AddCountSuccess"
                         },
                         {
                             "type": "reference",
-                            "target": 3750,
+                            "target": 3751,
                             "name": "AddCountFailure",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3750,
+                            "id": 3751,
                             "qualifiedName": "AddCountFailure"
                         }
                     ]
@@ -153,11 +153,11 @@
             "group": "01-add"
         },
         {
-            "id": 3750,
+            "id": 3751,
             "order": 2,
             "name": "AddCountFailure",
             "reflection": {
-                "id": 3750,
+                "id": 3751,
                 "name": "AddCountFailure",
                 "variant": "declaration",
                 "kind": 256,
@@ -210,7 +210,7 @@
                 },
                 "children": [
                     {
-                        "id": 3752,
+                        "id": 3753,
                         "name": "errorCode",
                         "variant": "declaration",
                         "kind": 1024,
@@ -229,7 +229,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 478,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L478"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L478"
                             }
                         ],
                         "type": {
@@ -275,7 +275,7 @@
                         }
                     },
                     {
-                        "id": 3753,
+                        "id": 3754,
                         "name": "errorMessage",
                         "variant": "declaration",
                         "kind": 1024,
@@ -294,7 +294,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 489,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L489"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L489"
                             }
                         ],
                         "type": {
@@ -303,7 +303,7 @@
                         }
                     },
                     {
-                        "id": 3751,
+                        "id": 3752,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -313,7 +313,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 473,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L473"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L473"
                             }
                         ],
                         "type": {
@@ -326,9 +326,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3752,
                             3753,
-                            3751
+                            3754,
+                            3752
                         ]
                     }
                 ],
@@ -337,7 +337,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 472,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L472"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L472"
                     }
                 ]
             },
@@ -365,11 +365,11 @@
             "group": "01-add"
         },
         {
-            "id": 3745,
+            "id": 3746,
             "order": 1,
             "name": "AddCountSuccess",
             "reflection": {
-                "id": 3745,
+                "id": 3746,
                 "name": "AddCountSuccess",
                 "variant": "declaration",
                 "kind": 256,
@@ -422,7 +422,7 @@
                 },
                 "children": [
                     {
-                        "id": 3749,
+                        "id": 3750,
                         "name": "countAdded",
                         "variant": "declaration",
                         "kind": 1024,
@@ -441,7 +441,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 461,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L461"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L461"
                             }
                         ],
                         "type": {
@@ -450,7 +450,7 @@
                         }
                     },
                     {
-                        "id": 3748,
+                        "id": 3749,
                         "name": "eventName",
                         "variant": "declaration",
                         "kind": 1024,
@@ -469,7 +469,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 456,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L456"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L456"
                             }
                         ],
                         "type": {
@@ -478,7 +478,7 @@
                         }
                     },
                     {
-                        "id": 3747,
+                        "id": 3748,
                         "name": "recordName",
                         "variant": "declaration",
                         "kind": 1024,
@@ -497,7 +497,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 451,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L451"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L451"
                             }
                         ],
                         "type": {
@@ -506,7 +506,7 @@
                         }
                     },
                     {
-                        "id": 3746,
+                        "id": 3747,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -516,7 +516,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 447,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L447"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L447"
                             }
                         ],
                         "type": {
@@ -529,10 +529,10 @@
                     {
                         "title": "Properties",
                         "children": [
+                            3750,
                             3749,
                             3748,
-                            3747,
-                            3746
+                            3747
                         ]
                     }
                 ],
@@ -541,7 +541,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 446,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L446"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L446"
                     }
                 ]
             },
@@ -569,11 +569,11 @@
             "group": "02-add"
         },
         {
-            "id": 3754,
+            "id": 3755,
             "order": 0,
             "name": "GetCountResult",
             "reflection": {
-                "id": 3754,
+                "id": 3755,
                 "name": "GetCountResult",
                 "variant": "declaration",
                 "kind": 2097152,
@@ -629,7 +629,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 500,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L500"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L500"
                     }
                 ],
                 "type": {
@@ -637,18 +637,18 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3755,
+                            "target": 3756,
                             "name": "GetCountSuccess",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3755,
+                            "id": 3756,
                             "qualifiedName": "GetCountSuccess"
                         },
                         {
                             "type": "reference",
-                            "target": 3761,
+                            "target": 3762,
                             "name": "GetCountFailure",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3761,
+                            "id": 3762,
                             "qualifiedName": "GetCountFailure"
                         }
                     ]
@@ -678,11 +678,11 @@
             "group": "02-count"
         },
         {
-            "id": 3755,
+            "id": 3756,
             "order": 1,
             "name": "GetCountSuccess",
             "reflection": {
-                "id": 3755,
+                "id": 3756,
                 "name": "GetCountSuccess",
                 "variant": "declaration",
                 "kind": 256,
@@ -735,7 +735,7 @@
                 },
                 "children": [
                     {
-                        "id": 3757,
+                        "id": 3758,
                         "name": "count",
                         "variant": "declaration",
                         "kind": 1024,
@@ -754,7 +754,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 516,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L516"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L516"
                             }
                         ],
                         "type": {
@@ -763,7 +763,7 @@
                         }
                     },
                     {
-                        "id": 3759,
+                        "id": 3760,
                         "name": "eventName",
                         "variant": "declaration",
                         "kind": 1024,
@@ -782,7 +782,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 526,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L526"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L526"
                             }
                         ],
                         "type": {
@@ -791,7 +791,7 @@
                         }
                     },
                     {
-                        "id": 3760,
+                        "id": 3761,
                         "name": "markers",
                         "variant": "declaration",
                         "kind": 1024,
@@ -810,7 +810,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 531,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L531"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L531"
                             }
                         ],
                         "type": {
@@ -822,7 +822,7 @@
                         }
                     },
                     {
-                        "id": 3758,
+                        "id": 3759,
                         "name": "recordName",
                         "variant": "declaration",
                         "kind": 1024,
@@ -841,7 +841,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 521,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L521"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L521"
                             }
                         ],
                         "type": {
@@ -850,7 +850,7 @@
                         }
                     },
                     {
-                        "id": 3756,
+                        "id": 3757,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -860,7 +860,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 511,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L511"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L511"
                             }
                         ],
                         "type": {
@@ -873,11 +873,11 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3757,
-                            3759,
-                            3760,
                             3758,
-                            3756
+                            3760,
+                            3761,
+                            3759,
+                            3757
                         ]
                     }
                 ],
@@ -886,7 +886,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 510,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L510"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L510"
                     }
                 ]
             },
@@ -914,11 +914,11 @@
             "group": "02-count"
         },
         {
-            "id": 3761,
+            "id": 3762,
             "order": 2,
             "name": "GetCountFailure",
             "reflection": {
-                "id": 3761,
+                "id": 3762,
                 "name": "GetCountFailure",
                 "variant": "declaration",
                 "kind": 256,
@@ -971,7 +971,7 @@
                 },
                 "children": [
                     {
-                        "id": 3763,
+                        "id": 3764,
                         "name": "errorCode",
                         "variant": "declaration",
                         "kind": 1024,
@@ -990,7 +990,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 548,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L548"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L548"
                             }
                         ],
                         "type": {
@@ -1036,7 +1036,7 @@
                         }
                     },
                     {
-                        "id": 3764,
+                        "id": 3765,
                         "name": "errorMessage",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1055,7 +1055,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 557,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L557"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L557"
                             }
                         ],
                         "type": {
@@ -1064,7 +1064,7 @@
                         }
                     },
                     {
-                        "id": 3762,
+                        "id": 3763,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1074,7 +1074,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 543,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L543"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L543"
                             }
                         ],
                         "type": {
@@ -1087,9 +1087,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3763,
                             3764,
-                            3762
+                            3765,
+                            3763
                         ]
                     }
                 ],
@@ -1098,7 +1098,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 542,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L542"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L542"
                     }
                 ]
             },
@@ -1126,11 +1126,11 @@
             "group": "02-count"
         },
         {
-            "id": 3765,
+            "id": 3766,
             "order": 1,
             "name": "UpdateEventRecordResult",
             "reflection": {
-                "id": 3765,
+                "id": 3766,
                 "name": "UpdateEventRecordResult",
                 "variant": "declaration",
                 "kind": 2097152,
@@ -1186,7 +1186,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 611,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L611"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L611"
                     }
                 ],
                 "type": {
@@ -1194,18 +1194,18 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3766,
+                            "target": 3767,
                             "name": "UpdateEventRecordSuccess",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3766,
+                            "id": 3767,
                             "qualifiedName": "UpdateEventRecordSuccess"
                         },
                         {
                             "type": "reference",
-                            "target": 3768,
+                            "target": 3769,
                             "name": "UpdateEventRecordFailure",
                             "package": "@casual-simulation/aux-records",
-                            "id": 3768,
+                            "id": 3769,
                             "qualifiedName": "UpdateEventRecordFailure"
                         }
                     ]
@@ -1235,11 +1235,11 @@
             "group": "03-update"
         },
         {
-            "id": 3766,
+            "id": 3767,
             "order": 2,
             "name": "UpdateEventRecordSuccess",
             "reflection": {
-                "id": 3766,
+                "id": 3767,
                 "name": "UpdateEventRecordSuccess",
                 "variant": "declaration",
                 "kind": 256,
@@ -1292,7 +1292,7 @@
                 },
                 "children": [
                     {
-                        "id": 3767,
+                        "id": 3768,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1302,7 +1302,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 624,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L624"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L624"
                             }
                         ],
                         "type": {
@@ -1315,7 +1315,7 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3767
+                            3768
                         ]
                     }
                 ],
@@ -1324,7 +1324,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 623,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L623"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L623"
                     }
                 ]
             },
@@ -1352,11 +1352,11 @@
             "group": "03-update"
         },
         {
-            "id": 3768,
+            "id": 3769,
             "order": 3,
             "name": "UpdateEventRecordFailure",
             "reflection": {
-                "id": 3768,
+                "id": 3769,
                 "name": "UpdateEventRecordFailure",
                 "variant": "declaration",
                 "kind": 256,
@@ -1409,7 +1409,7 @@
                 },
                 "children": [
                     {
-                        "id": 3770,
+                        "id": 3771,
                         "name": "errorCode",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1419,7 +1419,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 637,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L637"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L637"
                             }
                         ],
                         "type": {
@@ -1461,7 +1461,7 @@
                         }
                     },
                     {
-                        "id": 3771,
+                        "id": 3772,
                         "name": "errorMessage",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1471,7 +1471,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 641,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L641"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L641"
                             }
                         ],
                         "type": {
@@ -1480,7 +1480,7 @@
                         }
                     },
                     {
-                        "id": 3769,
+                        "id": 3770,
                         "name": "success",
                         "variant": "declaration",
                         "kind": 1024,
@@ -1490,7 +1490,7 @@
                                 "fileName": "src/aux-records/EventRecordsController.ts",
                                 "line": 636,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L636"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L636"
                             }
                         ],
                         "type": {
@@ -1503,9 +1503,9 @@
                     {
                         "title": "Properties",
                         "children": [
-                            3770,
                             3771,
-                            3769
+                            3772,
+                            3770
                         ]
                     }
                 ],
@@ -1514,7 +1514,7 @@
                         "fileName": "src/aux-records/EventRecordsController.ts",
                         "line": 635,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-records/EventRecordsController.ts#L635"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/EventRecordsController.ts#L635"
                     }
                 ]
             },
@@ -1544,7 +1544,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -1554,7 +1554,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -1572,9 +1572,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -1588,9 +1588,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -1618,9 +1618,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -1654,13 +1654,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -1674,17 +1674,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -1706,13 +1706,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -1724,7 +1724,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -1734,17 +1734,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -1812,9 +1812,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -1836,7 +1836,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -1844,13 +1844,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -1946,9 +1946,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -1962,11 +1962,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -1974,21 +1976,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -1996,17 +1998,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -2014,13 +2016,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -2034,14 +2036,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -2111,7 +2113,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",

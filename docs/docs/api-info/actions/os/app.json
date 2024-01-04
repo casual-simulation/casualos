@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.\r\n\r\nUsed in tandem with "
+                            "text": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.\n\nUsed in tandem with "
                         },
                         {
                             "kind": "text",
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisplay a header\r\nos.compileApp('myApp', <h1>Hello World!</h1>);\n```"
+                                    "text": "```ts\nDisplay a header\nos.compileApp('myApp', <h1>Hello World!</h1>);\n```"
                                 }
                             ]
                         },
@@ -44,7 +44,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisplay a button\r\nos.compileApp('myApp',\r\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\r\n        Click Me!\r\n    </button>\r\n);\n```"
+                                    "text": "```ts\nDisplay a button\nos.compileApp('myApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\n        Click Me!\n    </button>\n);\n```"
                                 }
                             ]
                         },
@@ -53,7 +53,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisplay an input box\r\nos.compileApp('myApp',\r\n    <input onInput={ (e) => { tags.label = e.target.value } } />\r\n);\n```"
+                                    "text": "```ts\nDisplay an input box\nos.compileApp('myApp',\n    <input onInput={ (e) => { tags.label = e.target.value } } />\n);\n```"
                                 }
                             ]
                         },
@@ -62,7 +62,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisplay a slider input\r\nos.compileApp('myApp',\r\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\r\n);\n```"
+                                    "text": "```ts\nDisplay a slider input\nos.compileApp('myApp',\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\n);\n```"
                                 }
                             ]
                         },
@@ -91,7 +91,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7858,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L7858"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7858"
                     }
                 ],
                 "parameters": [
@@ -137,23 +137,23 @@
                 }
             },
             "comment": {
-                "text": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.\r\n\r\nUsed in tandem with os.registerApp to create custom apps.",
+                "text": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.\n\nUsed in tandem with os.registerApp to create custom apps.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisplay a header\r\nos.compileApp('myApp', <h1>Hello World!</h1>);\n```"
+                        "text": "```ts\nDisplay a header\nos.compileApp('myApp', <h1>Hello World!</h1>);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisplay a button\r\nos.compileApp('myApp',\r\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\r\n        Click Me!\r\n    </button>\r\n);\n```"
+                        "text": "```ts\nDisplay a button\nos.compileApp('myApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\n        Click Me!\n    </button>\n);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisplay an input box\r\nos.compileApp('myApp',\r\n    <input onInput={ (e) => { tags.label = e.target.value } } />\r\n);\n```"
+                        "text": "```ts\nDisplay an input box\nos.compileApp('myApp',\n    <input onInput={ (e) => { tags.label = e.target.value } } />\n);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisplay a slider input\r\nos.compileApp('myApp',\r\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\r\n);\n```"
+                        "text": "```ts\nDisplay a slider input\nos.compileApp('myApp',\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\n);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -181,7 +181,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the list of tag names that are built-in to CasualOS.\r\n\r\nIncludes tags like "
+                            "text": "Gets the list of tag names that are built-in to CasualOS.\n\nIncludes tags like "
                         },
                         {
                             "kind": "text",
@@ -214,7 +214,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the list of built-in tags\r\nconst builtinTags = os.listBuiltinTags();\r\nos.toast(builtinTags);\n```"
+                                    "text": "```ts\nGet the list of built-in tags\nconst builtinTags = os.listBuiltinTags();\nos.toast(builtinTags);\n```"
                                 }
                             ]
                         },
@@ -243,7 +243,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7875,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L7875"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7875"
                     }
                 ],
                 "type": {
@@ -255,11 +255,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the list of tag names that are built-in to CasualOS.\r\n\r\nIncludes tags like color and gridPortal, but not user-defined ones like [dimension].",
+                "text": "Gets the list of tag names that are built-in to CasualOS.\n\nIncludes tags like color and gridPortal, but not user-defined ones like [dimension].",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the list of built-in tags\r\nconst builtinTags = os.listBuiltinTags();\r\nos.toast(builtinTags);\n```"
+                        "text": "```ts\nGet the list of built-in tags\nconst builtinTags = os.listBuiltinTags();\nos.toast(builtinTags);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -287,7 +287,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.\r\n\r\nOnce setup, CasualOS will send a "
+                            "text": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.\n\nOnce setup, CasualOS will send a "
                         },
                         {
                             "kind": "text",
@@ -295,7 +295,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " whisper to the given bot.\r\nAt this point, you can call "
+                            "text": " whisper to the given bot.\nAt this point, you can call "
                         },
                         {
                             "kind": "text",
@@ -303,7 +303,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " to set what the app displays.\r\n\r\nCasualOS will also define a global variable "
+                            "text": " to set what the app displays.\n\nCasualOS will also define a global variable "
                         },
                         {
                             "kind": "code",
@@ -311,7 +311,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " that points to the given bot.\r\n\r\nApps work by running the HTML you give it by calling "
+                            "text": " that points to the given bot.\n\nApps work by running the HTML you give it by calling "
                         },
                         {
                             "kind": "text",
@@ -319,15 +319,15 @@
                         },
                         {
                             "kind": "text",
-                            "text": " with the HTML you want the app to show.\r\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\r\n\r\nAt the most basic, JSX is like writing HTML inside JavaScript:\r\n\r\n"
+                            "text": " with the HTML you want the app to show.\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\n\nAt the most basic, JSX is like writing HTML inside JavaScript:\n\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\r\nlet htmlData = <div>\r\n    <h1>Hello World</h1>\r\n</div>;\r\n```"
+                            "text": "```typescript\nlet htmlData = <div>\n    <h1>Hello World</h1>\n</div>;\n```"
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n\r\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\r\n\r\nCasualOS also includes a helper called "
+                            "text": "\n\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\n\nCasualOS also includes a helper called "
                         },
                         {
                             "kind": "code",
@@ -335,15 +335,15 @@
                         },
                         {
                             "kind": "text",
-                            "text": " that can be used to make HTML objects out of a string.\r\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\r\n\r\n"
+                            "text": " that can be used to make HTML objects out of a string.\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\n\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\r\nlet htmlData = html`\r\n    <div>\r\n        <h1>Hello World</h1>\r\n    </div>\r\n`;\r\n```"
+                            "text": "```typescript\nlet htmlData = html`\n    <div>\n        <h1>Hello World</h1>\n    </div>\n`;\n```"
                         },
                         {
                             "kind": "text",
-                            "text": "\r\n\r\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages."
+                            "text": "\n\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages."
                         }
                     ],
                     "blockTags": [
@@ -352,7 +352,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSetup a basic app\r\nawait os.registerApp('basicApp', thisBot);\r\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n```"
+                                    "text": "```ts\nSetup a basic app\nawait os.registerApp('basicApp', thisBot);\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n```"
                                 }
                             ]
                         },
@@ -361,7 +361,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSetup an app with a button\r\nawait os.registerApp('buttonApp', thisBot);\r\n\r\nos.compileApp('buttonApp',\r\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\r\n        Click Me!\r\n    </button>\r\n);\n```"
+                                    "text": "```ts\nSetup an app with a button\nawait os.registerApp('buttonApp', thisBot);\n\nos.compileApp('buttonApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\n        Click Me!\n    </button>\n);\n```"
                                 }
                             ]
                         },
@@ -370,7 +370,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSetup an app with an input box\r\nawait os.registerApp('inputApp', thisBot);\r\n\r\nos.compileApp('inputApp',\r\n    <input onInput={ (e) => { tags.label = e.target.value } }>\r\n);\n```"
+                                    "text": "```ts\nSetup an app with an input box\nawait os.registerApp('inputApp', thisBot);\n\nos.compileApp('inputApp',\n    <input onInput={ (e) => { tags.label = e.target.value } }>\n);\n```"
                                 }
                             ]
                         },
@@ -426,7 +426,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7804,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L7804"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7804"
                     }
                 ],
                 "parameters": [
@@ -517,19 +517,19 @@
                 }
             },
             "comment": {
-                "text": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.\r\n\r\nOnce setup, CasualOS will send a @onAppSetup whisper to the given bot.\r\nAt this point, you can call os.compileApp to set what the app displays.\r\n\r\nCasualOS will also define a global variable `{app}Bot` that points to the given bot.\r\n\r\nApps work by running the HTML you give it by calling os.compileApp with the HTML you want the app to show.\r\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\r\n\r\nAt the most basic, JSX is like writing HTML inside JavaScript:\r\n\r\n```typescript\r\nlet htmlData = <div>\r\n    <h1>Hello World</h1>\r\n</div>;\r\n```\r\n\r\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\r\n\r\nCasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.\r\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\r\n\r\n```typescript\r\nlet htmlData = html`\r\n    <div>\r\n        <h1>Hello World</h1>\r\n    </div>\r\n`;\r\n```\r\n\r\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.",
+                "text": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.\n\nOnce setup, CasualOS will send a @onAppSetup whisper to the given bot.\nAt this point, you can call os.compileApp to set what the app displays.\n\nCasualOS will also define a global variable `{app}Bot` that points to the given bot.\n\nApps work by running the HTML you give it by calling os.compileApp with the HTML you want the app to show.\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\n\nAt the most basic, JSX is like writing HTML inside JavaScript:\n\n```typescript\nlet htmlData = <div>\n    <h1>Hello World</h1>\n</div>;\n```\n\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\n\nCasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\n\n```typescript\nlet htmlData = html`\n    <div>\n        <h1>Hello World</h1>\n    </div>\n`;\n```\n\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSetup a basic app\r\nawait os.registerApp('basicApp', thisBot);\r\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n```"
+                        "text": "```ts\nSetup a basic app\nawait os.registerApp('basicApp', thisBot);\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSetup an app with a button\r\nawait os.registerApp('buttonApp', thisBot);\r\n\r\nos.compileApp('buttonApp',\r\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\r\n        Click Me!\r\n    </button>\r\n);\n```"
+                        "text": "```ts\nSetup an app with a button\nawait os.registerApp('buttonApp', thisBot);\n\nos.compileApp('buttonApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\n        Click Me!\n    </button>\n);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSetup an app with an input box\r\nawait os.registerApp('inputApp', thisBot);\r\n\r\nos.compileApp('inputApp',\r\n    <input onInput={ (e) => { tags.label = e.target.value } }>\r\n);\n```"
+                        "text": "```ts\nSetup an app with an input box\nawait os.registerApp('inputApp', thisBot);\n\nos.compileApp('inputApp',\n    <input onInput={ (e) => { tags.label = e.target.value } }>\n);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -569,7 +569,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Specifies that the given prefix should be used to indicate that the tag contains script content.\r\nUse this function to specify custom prefixes that function similarly to "
+                            "text": "Specifies that the given prefix should be used to indicate that the tag contains script content.\nUse this function to specify custom prefixes that function similarly to "
                         },
                         {
                             "kind": "code",
@@ -594,7 +594,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAdd 📖 as an script prefix.\r\nawait os.registerTagPrefix(\"📖\");\n```"
+                                    "text": "```ts\nAdd 📖 as an script prefix.\nawait os.registerTagPrefix(\"📖\");\n```"
                                 }
                             ]
                         },
@@ -603,7 +603,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRegister some arbitrary text as a prefix.\r\nawait os.registerTagPrefix(\"myPrefix\");\n```"
+                                    "text": "```ts\nRegister some arbitrary text as a prefix.\nawait os.registerTagPrefix(\"myPrefix\");\n```"
                                 }
                             ]
                         },
@@ -612,7 +612,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRegister a prefix as JSX code.\r\nawait os.registerTagPrefix(\"🔺\", {\r\n    language: \"jsx\"\r\n});\n```"
+                                    "text": "```ts\nRegister a prefix as JSX code.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n});\n```"
                                 }
                             ]
                         },
@@ -621,7 +621,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRegister a prefix with a name.\r\nawait os.registerTagPrefix(\"🔺\", {\r\n    language: \"jsx\"\r\n    name: 'Triangle'\r\n});\n```"
+                                    "text": "```ts\nRegister a prefix with a name.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n    name: 'Triangle'\n});\n```"
                                 }
                             ]
                         },
@@ -650,7 +650,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7721,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L7721"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7721"
                     }
                 ],
                 "parameters": [
@@ -718,23 +718,23 @@
                 }
             },
             "comment": {
-                "text": "Specifies that the given prefix should be used to indicate that the tag contains script content.\r\nUse this function to specify custom prefixes that function similarly to `@` or `🧬`.",
+                "text": "Specifies that the given prefix should be used to indicate that the tag contains script content.\nUse this function to specify custom prefixes that function similarly to `@` or `🧬`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nAdd 📖 as an script prefix.\r\nawait os.registerTagPrefix(\"📖\");\n```"
+                        "text": "```ts\nAdd 📖 as an script prefix.\nawait os.registerTagPrefix(\"📖\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRegister some arbitrary text as a prefix.\r\nawait os.registerTagPrefix(\"myPrefix\");\n```"
+                        "text": "```ts\nRegister some arbitrary text as a prefix.\nawait os.registerTagPrefix(\"myPrefix\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRegister a prefix as JSX code.\r\nawait os.registerTagPrefix(\"🔺\", {\r\n    language: \"jsx\"\r\n});\n```"
+                        "text": "```ts\nRegister a prefix as JSX code.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRegister a prefix with a name.\r\nawait os.registerTagPrefix(\"🔺\", {\r\n    language: \"jsx\"\r\n    name: 'Triangle'\r\n});\n```"
+                        "text": "```ts\nRegister a prefix with a name.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n    name: 'Triangle'\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -771,7 +771,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nUnregister an app\r\nawait os.unregisterApp('myApp');\n```"
+                                    "text": "```ts\nUnregister an app\nawait os.unregisterApp('myApp');\n```"
                                 }
                             ]
                         },
@@ -800,7 +800,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7821,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L7821"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7821"
                     }
                 ],
                 "parameters": [
@@ -846,7 +846,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nUnregister an app\r\nawait os.unregisterApp('myApp');\n```"
+                        "text": "```ts\nUnregister an app\nawait os.unregisterApp('myApp');\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -863,7 +863,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -873,7 +873,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -891,9 +891,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -907,9 +907,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -937,9 +937,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -973,13 +973,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -993,17 +993,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -1025,13 +1025,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -1043,7 +1043,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -1053,17 +1053,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -1131,9 +1131,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -1155,7 +1155,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -1163,13 +1163,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -1265,9 +1265,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -1281,11 +1281,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -1293,21 +1295,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -1315,17 +1317,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -1333,13 +1335,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -1353,14 +1355,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -1430,7 +1432,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",

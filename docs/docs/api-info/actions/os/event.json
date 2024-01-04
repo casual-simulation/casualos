@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Performs the given action.\r\nThis function can be used to perform actions that you have stored as data without having to find out which function to call. You can find a list of action types [here](https://github.com/casual-simulation/casualos/blob/develop/src/aux-common/bots/BotEvents.ts#L40)."
+                            "text": "Performs the given action.\nThis function can be used to perform actions that you have stored as data without having to find out which function to call. You can find a list of action types [here](https://github.com/casual-simulation/casualos/blob/develop/src/aux-common/bots/BotEvents.ts#L40)."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPerform a toast action\r\naction.perform({\r\n    type: 'show_toast',\r\n    message: 'Hello, world!',\r\n    duration: 2000\r\n});\n```"
+                                    "text": "```ts\nPerform a toast action\naction.perform({\n    type: 'show_toast',\n    message: 'Hello, world!',\n    duration: 2000\n});\n```"
                                 }
                             ]
                         },
@@ -36,7 +36,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPerform an add bot action\r\naction.perform({\r\n    type: 'add_bot',\r\n    id: 'bot_id',\r\n    bot: {\r\n        id: 'bot_id',\r\n        tags: {\r\n            home: true,\r\n            label: 'Hello, World!'\r\n        }\r\n    }\r\n});\n```"
+                                    "text": "```ts\nPerform an add bot action\naction.perform({\n    type: 'add_bot',\n    id: 'bot_id',\n    bot: {\n        id: 'bot_id',\n        tags: {\n            home: true,\n            label: 'Hello, World!'\n        }\n    }\n});\n```"
                                 }
                             ]
                         },
@@ -72,9 +72,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 10746,
+                        "line": 10739,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L10746"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10739"
                     }
                 ],
                 "parameters": [
@@ -105,15 +105,15 @@
                 }
             },
             "comment": {
-                "text": "Performs the given action.\r\nThis function can be used to perform actions that you have stored as data without having to find out which function to call. You can find a list of action types [here](https://github.com/casual-simulation/casualos/blob/develop/src/aux-common/bots/BotEvents.ts#L40).",
+                "text": "Performs the given action.\nThis function can be used to perform actions that you have stored as data without having to find out which function to call. You can find a list of action types [here](https://github.com/casual-simulation/casualos/blob/develop/src/aux-common/bots/BotEvents.ts#L40).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nPerform a toast action\r\naction.perform({\r\n    type: 'show_toast',\r\n    message: 'Hello, world!',\r\n    duration: 2000\r\n});\n```"
+                        "text": "```ts\nPerform a toast action\naction.perform({\n    type: 'show_toast',\n    message: 'Hello, world!',\n    duration: 2000\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nPerform an add bot action\r\naction.perform({\r\n    type: 'add_bot',\r\n    id: 'bot_id',\r\n    bot: {\r\n        id: 'bot_id',\r\n        tags: {\r\n            home: true,\r\n            label: 'Hello, World!'\r\n        }\r\n    }\r\n});\n```"
+                        "text": "```ts\nPerform an add bot action\naction.perform({\n    type: 'add_bot',\n    id: 'bot_id',\n    bot: {\n        id: 'bot_id',\n        tags: {\n            home: true,\n            label: 'Hello, World!'\n        }\n    }\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -145,7 +145,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Prevents a previous action from being performed.\r\n\r\nThis is especially useful when used in a "
+                            "text": "Prevents a previous action from being performed.\n\nThis is especially useful when used in a "
                         },
                         {
                             "kind": "text",
@@ -162,7 +162,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPrevent a toast message from being performed.\r\nconst toastAction = os.toast(\"my message\");\r\naction.reject(toastAction);\n```"
+                                    "text": "```ts\nPrevent a toast message from being performed.\nconst toastAction = os.toast(\"my message\");\naction.reject(toastAction);\n```"
                                 }
                             ]
                         },
@@ -198,9 +198,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 10813,
+                        "line": 10806,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L10813"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10806"
                     }
                 ],
                 "parameters": [
@@ -235,11 +235,11 @@
                 }
             },
             "comment": {
-                "text": "Prevents a previous action from being performed.\r\n\r\nThis is especially useful when used in a @onAnyAction listener since it lets you reject actions before they are performed.",
+                "text": "Prevents a previous action from being performed.\n\nThis is especially useful when used in a @onAnyAction listener since it lets you reject actions before they are performed.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nPrevent a toast message from being performed.\r\nconst toastAction = os.toast(\"my message\");\r\naction.reject(toastAction);\n```"
+                        "text": "```ts\nPrevent a toast message from being performed.\nconst toastAction = os.toast(\"my message\");\naction.reject(toastAction);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -279,7 +279,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " and have a listen tag for the specified events until one of the bots returns a value.\r\nOptionally includes a custom that argument.\r\nAlso triggers "
+                            "text": " and have a listen tag for the specified events until one of the bots returns a value.\nOptionally includes a custom that argument.\nAlso triggers "
                         },
                         {
                             "kind": "text",
@@ -295,7 +295,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " for the bots that the shout was sent to.\r\n\r\nThis function is useful when you want to shout but only want one bot to process the shout."
+                            "text": " for the bots that the shout was sent to.\n\nThis function is useful when you want to shout but only want one bot to process the shout."
                         }
                     ],
                     "blockTags": [
@@ -304,16 +304,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShout to the first bot that handles\n```"
-                                }
-                            ]
-                        },
-                        {
-                            "tag": "@onClick",
-                            "content": [
-                                {
-                                    "kind": "text",
-                                    "text": "priorityShout(['onClick']);"
+                                    "text": "```ts\nShout to the first bot that handles @onClick\npriorityShout(['onClick']);\n```"
                                 }
                             ]
                         },
@@ -322,25 +313,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShout to the first bot that handles\n```"
-                                }
-                            ]
-                        },
-                        {
-                            "tag": "@myTest",
-                            "content": [
-                                {
-                                    "kind": "text",
-                                    "text": "or"
-                                }
-                            ]
-                        },
-                        {
-                            "tag": "@mySecondTest",
-                            "content": [
-                                {
-                                    "kind": "text",
-                                    "text": "priorityShout(['myTest', 'mySecondTest']);"
+                                    "text": "```ts\nShout to the first bot that handles @myTest or @mySecondTest\npriorityShout(['myTest', 'mySecondTest']);\n```"
                                 }
                             ]
                         },
@@ -349,7 +322,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPriority shout with a color\r\npriorityShout(['myTest', 'mySecondTest'], \"blue\");\n```"
+                                    "text": "```ts\nPriority shout with a color\npriorityShout(['myTest', 'mySecondTest'], \"blue\");\n```"
                                 }
                             ]
                         },
@@ -385,9 +358,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14002,
+                        "line": 13995,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14002"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13995"
                     }
                 ],
                 "parameters": [
@@ -459,31 +432,19 @@
                 }
             },
             "comment": {
-                "text": "Shouts to all bots that are listening and have a listen tag for the specified events until one of the bots returns a value.\r\nOptionally includes a custom that argument.\r\nAlso triggers @onListen and @onAnyListen for the bots that the shout was sent to.\r\n\r\nThis function is useful when you want to shout but only want one bot to process the shout.",
+                "text": "Shouts to all bots that are listening and have a listen tag for the specified events until one of the bots returns a value.\nOptionally includes a custom that argument.\nAlso triggers @onListen and @onAnyListen for the bots that the shout was sent to.\n\nThis function is useful when you want to shout but only want one bot to process the shout.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShout to the first bot that handles\n```"
-                    },
-                    {
-                        "tagName": "onClick",
-                        "text": "priorityShout(['onClick']);"
+                        "text": "```ts\nShout to the first bot that handles @onClick\npriorityShout(['onClick']);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShout to the first bot that handles\n```"
-                    },
-                    {
-                        "tagName": "myTest",
-                        "text": "or"
-                    },
-                    {
-                        "tagName": "mySecondTest",
-                        "text": "priorityShout(['myTest', 'mySecondTest']);"
+                        "text": "```ts\nShout to the first bot that handles @myTest or @mySecondTest\npriorityShout(['myTest', 'mySecondTest']);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nPriority shout with a color\r\npriorityShout(['myTest', 'mySecondTest'], \"blue\");\n```"
+                        "text": "```ts\nPriority shout with a color\npriorityShout(['myTest', 'mySecondTest'], \"blue\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -515,7 +476,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Sends the given action to another remote.\r\n\r\nIn CasualOS, all actions are messages which are placed in a queue and processed one at at time.\r\n\r\nFor example, the "
+                            "text": "Sends the given action to another remote.\n\nIn CasualOS, all actions are messages which are placed in a queue and processed one at at time.\n\nFor example, the "
                         },
                         {
                             "kind": "text",
@@ -523,7 +484,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " action queues a message which, when processed, will show a toast message.\r\nHowever, before any action is performed, it is run through the "
+                            "text": " action queues a message which, when processed, will show a toast message.\nHowever, before any action is performed, it is run through the "
                         },
                         {
                             "kind": "text",
@@ -539,7 +500,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\r\nThis lets you write rules for what actions each player is allowed to take.\r\n\r\nThere are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the "
+                            "text": ".\nThis lets you write rules for what actions each player is allowed to take.\n\nThere are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the "
                         },
                         {
                             "kind": "text",
@@ -547,7 +508,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " function), it won't run by default.\r\nInstead it is wrapped as a device action and sent to "
+                            "text": " function), it won't run by default.\nInstead it is wrapped as a device action and sent to "
                         },
                         {
                             "kind": "text",
@@ -555,7 +516,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.\r\nIf you want to perform the action, you can use "
+                            "text": " for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.\nIf you want to perform the action, you can use "
                         },
                         {
                             "kind": "text",
@@ -572,7 +533,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a toast message to another remote.\r\n// Get the configBot ID of the other remote.\r\nconst otherRemoteId = 'otherRemoteId';\r\n\r\n// Create a toast action\r\nconst toastAction = os.toast('My message!');\r\n\r\n// Send the action to the other remote\r\n// The toastAction will not be performed locally because\r\n// it is being sent to another remote.\r\nremote(toastAction, otherRemoteId);\n```"
+                                    "text": "```ts\nSend a toast message to another remote.\n// Get the configBot ID of the other remote.\nconst otherRemoteId = 'otherRemoteId';\n\n// Create a toast action\nconst toastAction = os.toast('My message!');\n\n// Send the action to the other remote\n// The toastAction will not be performed locally because\n// it is being sent to another remote.\nremote(toastAction, otherRemoteId);\n```"
                                 }
                             ]
                         },
@@ -610,7 +571,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9884,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L9884"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9884"
                     }
                 ],
                 "parameters": [
@@ -651,7 +612,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the object specifing which remote to send the action to.\r\nIf not specified, then the action is sent to the server.\r\nIf specified, then the action is sent to all remotes that match the given values.\r\nIf given a string, then the action is sent to the remote with the matching ID."
+                                    "text": "the object specifing which remote to send the action to.\nIf not specified, then the action is sent to the server.\nIf specified, then the action is sent to all remotes that match the given values.\nIf given a string, then the action is sent to the remote with the matching ID."
                                 }
                             ],
                             "blockTags": []
@@ -706,7 +667,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering\r\n                     with respect to other events. Defaults to true."
+                                    "text": "Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering\n                     with respect to other events. Defaults to true."
                                 }
                             ],
                             "blockTags": []
@@ -722,20 +683,20 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3814,
+                            "target": 3815,
                             "name": "RemoteAction",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3814,
+                            "id": 3815,
                             "qualifiedName": "RemoteAction"
                         },
                         {
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "target": 3814,
+                                "target": 3815,
                                 "name": "RemoteAction",
                                 "package": "@casual-simulation/aux-common",
-                                "id": 3814,
+                                "id": 3815,
                                 "qualifiedName": "RemoteAction"
                             }
                         }
@@ -743,11 +704,11 @@
                 }
             },
             "comment": {
-                "text": "Sends the given action to another remote.\r\n\r\nIn CasualOS, all actions are messages which are placed in a queue and processed one at at time.\r\n\r\nFor example, the os.toast action queues a message which, when processed, will show a toast message.\r\nHowever, before any action is performed, it is run through the @onAnyAction listener which can decide whether to reject an action using action.reject.\r\nThis lets you write rules for what actions each player is allowed to take.\r\n\r\nThere are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the remote function), it won't run by default.\r\nInstead it is wrapped as a device action and sent to @onAnyAction for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.\r\nIf you want to perform the action, you can use action.perform on the inner device action to queue it for execution.",
+                "text": "Sends the given action to another remote.\n\nIn CasualOS, all actions are messages which are placed in a queue and processed one at at time.\n\nFor example, the os.toast action queues a message which, when processed, will show a toast message.\nHowever, before any action is performed, it is run through the @onAnyAction listener which can decide whether to reject an action using action.reject.\nThis lets you write rules for what actions each player is allowed to take.\n\nThere are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the remote function), it won't run by default.\nInstead it is wrapped as a device action and sent to @onAnyAction for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.\nIf you want to perform the action, you can use action.perform on the inner device action to queue it for execution.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a toast message to another remote.\r\n// Get the configBot ID of the other remote.\r\nconst otherRemoteId = 'otherRemoteId';\r\n\r\n// Create a toast action\r\nconst toastAction = os.toast('My message!');\r\n\r\n// Send the action to the other remote\r\n// The toastAction will not be performed locally because\r\n// it is being sent to another remote.\r\nremote(toastAction, otherRemoteId);\n```"
+                        "text": "```ts\nSend a toast message to another remote.\n// Get the configBot ID of the other remote.\nconst otherRemoteId = 'otherRemoteId';\n\n// Create a toast action\nconst toastAction = os.toast('My message!');\n\n// Send the action to the other remote\n// The toastAction will not be performed locally because\n// it is being sent to another remote.\nremote(toastAction, otherRemoteId);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -787,7 +748,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " shout to the remote with the given ID or remotes if given a list of IDs. This is useful for sending arbitrary messages to specific remotes.\r\n\r\nIn effect, this allows remotes to communicate with each other by sending arbitrary events."
+                            "text": " shout to the remote with the given ID or remotes if given a list of IDs. This is useful for sending arbitrary messages to specific remotes.\n\nIn effect, this allows remotes to communicate with each other by sending arbitrary events."
                         }
                     ],
                     "blockTags": [
@@ -796,7 +757,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a \"custom\" message to another remote.\r\nconst otherRemoteId = \"otherRemoteId\";\r\n\r\n// The other remote will receive a\n```"
+                                    "text": "```ts\nSend a \"custom\" message to another remote.\nconst otherRemoteId = \"otherRemoteId\";\n\n// The other remote will receive a\n```"
                                 }
                             ]
                         },
@@ -805,7 +766,7 @@
                             "content": [
                                 {
                                     "kind": "text",
-                                    "text": "with\r\n// that.name === \"custom\" and that.that === \"Hello\"\r\nsendRemoteData(otherRemoteId, \"custom\", \"Hello\");"
+                                    "text": "with\n// that.name === \"custom\" and that.that === \"Hello\"\nsendRemoteData(otherRemoteId, \"custom\", \"Hello\");"
                                 }
                             ]
                         },
@@ -814,7 +775,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a message to all other remotes.\r\nconst remotes = await os.remotes();\r\nconst remoteId = getID(configBot);\r\nconst otherRemotes = remotes.filter(id => id !== remoteId);\r\n\r\n// All other remotes will receive a\n```"
+                                    "text": "```ts\nSend a message to all other remotes.\nconst remotes = await os.remotes();\nconst remoteId = getID(configBot);\nconst otherRemotes = remotes.filter(id => id !== remoteId);\n\n// All other remotes will receive a\n```"
                                 }
                             ]
                         },
@@ -823,7 +784,7 @@
                             "content": [
                                 {
                                     "kind": "text",
-                                    "text": "with\r\n// that.name === \"custom\" and that.that === \"Hello\"\r\nsendRemoteData(otherRemotes, \"custom\", \"Hello\");"
+                                    "text": "with\n// that.name === \"custom\" and that.that === \"Hello\"\nsendRemoteData(otherRemotes, \"custom\", \"Hello\");"
                                 }
                             ]
                         },
@@ -861,7 +822,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9940,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L9940"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9940"
                     }
                 ],
                 "parameters": [
@@ -945,20 +906,20 @@
                     "types": [
                         {
                             "type": "reference",
-                            "target": 3814,
+                            "target": 3815,
                             "name": "RemoteAction",
                             "package": "@casual-simulation/aux-common",
-                            "id": 3814,
+                            "id": 3815,
                             "qualifiedName": "RemoteAction"
                         },
                         {
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "target": 3814,
+                                "target": 3815,
                                 "name": "RemoteAction",
                                 "package": "@casual-simulation/aux-common",
-                                "id": 3814,
+                                "id": 3815,
                                 "qualifiedName": "RemoteAction"
                             }
                         }
@@ -966,23 +927,23 @@
                 }
             },
             "comment": {
-                "text": "Sends a @onRemoteData shout to the remote with the given ID or remotes if given a list of IDs. This is useful for sending arbitrary messages to specific remotes.\r\n\r\nIn effect, this allows remotes to communicate with each other by sending arbitrary events.",
+                "text": "Sends a @onRemoteData shout to the remote with the given ID or remotes if given a list of IDs. This is useful for sending arbitrary messages to specific remotes.\n\nIn effect, this allows remotes to communicate with each other by sending arbitrary events.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a \"custom\" message to another remote.\r\nconst otherRemoteId = \"otherRemoteId\";\r\n\r\n// The other remote will receive a\n```"
+                        "text": "```ts\nSend a \"custom\" message to another remote.\nconst otherRemoteId = \"otherRemoteId\";\n\n// The other remote will receive a\n```"
                     },
                     {
                         "tagName": "onRemoteData",
-                        "text": "with\r\n// that.name === \"custom\" and that.that === \"Hello\"\r\nsendRemoteData(otherRemoteId, \"custom\", \"Hello\");"
+                        "text": "with\n// that.name === \"custom\" and that.that === \"Hello\"\nsendRemoteData(otherRemoteId, \"custom\", \"Hello\");"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a message to all other remotes.\r\nconst remotes = await os.remotes();\r\nconst remoteId = getID(configBot);\r\nconst otherRemotes = remotes.filter(id => id !== remoteId);\r\n\r\n// All other remotes will receive a\n```"
+                        "text": "```ts\nSend a message to all other remotes.\nconst remotes = await os.remotes();\nconst remoteId = getID(configBot);\nconst otherRemotes = remotes.filter(id => id !== remoteId);\n\n// All other remotes will receive a\n```"
                     },
                     {
                         "tagName": "onRemoteData",
-                        "text": "with\r\n// that.name === \"custom\" and that.that === \"Hello\"\r\nsendRemoteData(otherRemotes, \"custom\", \"Hello\");"
+                        "text": "with\n// that.name === \"custom\" and that.that === \"Hello\"\nsendRemoteData(otherRemotes, \"custom\", \"Hello\");"
                     },
                     {
                         "tagName": "dochash",
@@ -1022,7 +983,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " and have\r\na listen tag for the specified name. Optionally includes a custom that argument.\r\nAlso triggers "
+                            "text": " and have\na listen tag for the specified name. Optionally includes a custom that argument.\nAlso triggers "
                         },
                         {
                             "kind": "text",
@@ -1056,16 +1017,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a\n```"
-                                }
-                            ]
-                        },
-                        {
-                            "tag": "@reset",
-                            "content": [
-                                {
-                                    "kind": "text",
-                                    "text": "event to all bots\r\nshout(\"reset\");"
+                                    "text": "```ts\nSend a @reset event to all bots\nshout(\"reset\");\n```"
                                 }
                             ]
                         },
@@ -1074,16 +1026,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a\n```"
-                                }
-                            ]
-                        },
-                        {
-                            "tag": "@hello",
-                            "content": [
-                                {
-                                    "kind": "text",
-                                    "text": "event with your name\r\nshout(\"hello\", \"Bob\");"
+                                    "text": "```ts\nSend a @hello event with your name\nshout(\"hello\", \"Bob\");\n```"
                                 }
                             ]
                         },
@@ -1146,9 +1089,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14048,
+                        "line": 14041,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14048"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14041"
                     }
                 ],
                 "parameters": [
@@ -1217,7 +1160,7 @@
                 }
             },
             "comment": {
-                "text": "Sends a shout to all bots that are listening and have\r\na listen tag for the specified name. Optionally includes a custom that argument.\r\nAlso triggers @onListen and @onAnyListen.",
+                "text": "Sends a shout to all bots that are listening and have\na listen tag for the specified name. Optionally includes a custom that argument.\nAlso triggers @onListen and @onAnyListen.",
                 "tags": [
                     {
                         "tagName": "returns",
@@ -1225,19 +1168,11 @@
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a\n```"
-                    },
-                    {
-                        "tagName": "reset",
-                        "text": "event to all bots\r\nshout(\"reset\");"
+                        "text": "```ts\nSend a @reset event to all bots\nshout(\"reset\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a\n```"
-                    },
-                    {
-                        "tagName": "hello",
-                        "text": "event with your name\r\nshout(\"hello\", \"Bob\");"
+                        "text": "```ts\nSend a @hello event with your name\nshout(\"hello\", \"Bob\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1290,7 +1225,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a hello super shout to all the loaded instances.\r\nsuperShout(\"hello\");\n```"
+                                    "text": "```ts\nSend a hello super shout to all the loaded instances.\nsuperShout(\"hello\");\n```"
                                 }
                             ]
                         },
@@ -1326,9 +1261,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 13974,
+                        "line": 13967,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L13974"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13967"
                     }
                 ],
                 "parameters": [
@@ -1405,7 +1340,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a hello super shout to all the loaded instances.\r\nsuperShout(\"hello\");\n```"
+                        "text": "```ts\nSend a hello super shout to all the loaded instances.\nsuperShout(\"hello\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1445,7 +1380,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " and have\r\na listen tag for the specified name. Optionally includes a custom that argument.\r\nAlso triggers "
+                            "text": " and have\na listen tag for the specified name. Optionally includes a custom that argument.\nAlso triggers "
                         },
                         {
                             "kind": "text",
@@ -1479,16 +1414,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a\n```"
-                                }
-                            ]
-                        },
-                        {
-                            "tag": "@reset",
-                            "content": [
-                                {
-                                    "kind": "text",
-                                    "text": "event to all bots named \"Bob\"\r\nlet bots = getBots(\"#name\", \"Bob\");\r\nwhisper(bots, \"reset\");"
+                                    "text": "```ts\nSend a @reset event to all bots named \"Bob\"\nlet bots = getBots(\"#name\", \"Bob\");\nwhisper(bots, \"reset\");\n```"
                                 }
                             ]
                         },
@@ -1497,16 +1423,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a\n```"
-                                }
-                            ]
-                        },
-                        {
-                            "tag": "@setColor",
-                            "content": [
-                                {
-                                    "kind": "text",
-                                    "text": "event to ourself\r\nwhisper(this, \"setColor\", \"red\");"
+                                    "text": "```ts\nSend a @setColor event to ourself\nwhisper(this, \"setColor\", \"red\");\n```"
                                 }
                             ]
                         },
@@ -1542,9 +1459,9 @@
                 "sources": [
                     {
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
-                        "line": 14078,
+                        "line": 14071,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-runtime/runtime/AuxLibrary.ts#L14078"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14071"
                     }
                 ],
                 "parameters": [
@@ -1690,7 +1607,7 @@
                 }
             },
             "comment": {
-                "text": "Sends a whisper to all bots that are listening and have\r\na listen tag for the specified name. Optionally includes a custom that argument.\r\nAlso triggers @onListen and @onAnyListen.",
+                "text": "Sends a whisper to all bots that are listening and have\na listen tag for the specified name. Optionally includes a custom that argument.\nAlso triggers @onListen and @onAnyListen.",
                 "tags": [
                     {
                         "tagName": "returns",
@@ -1698,19 +1615,11 @@
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a\n```"
-                    },
-                    {
-                        "tagName": "reset",
-                        "text": "event to all bots named \"Bob\"\r\nlet bots = getBots(\"#name\", \"Bob\");\r\nwhisper(bots, \"reset\");"
+                        "text": "```ts\nSend a @reset event to all bots named \"Bob\"\nlet bots = getBots(\"#name\", \"Bob\");\nwhisper(bots, \"reset\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a\n```"
-                    },
-                    {
-                        "tagName": "setColor",
-                        "text": "event to ourself\r\nwhisper(this, \"setColor\", \"red\");"
+                        "text": "```ts\nSend a @setColor event to ourself\nwhisper(this, \"setColor\", \"red\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1731,7 +1640,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -1741,7 +1650,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -1759,9 +1668,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -1775,9 +1684,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -1805,9 +1714,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -1841,13 +1750,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -1861,17 +1770,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -1893,13 +1802,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -1911,7 +1820,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -1921,17 +1830,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -1999,9 +1908,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -2023,7 +1932,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -2031,13 +1940,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -2133,9 +2042,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -2149,11 +2058,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -2161,21 +2072,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -2183,17 +2094,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -2201,13 +2112,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -2221,14 +2132,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -2298,7 +2209,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",
