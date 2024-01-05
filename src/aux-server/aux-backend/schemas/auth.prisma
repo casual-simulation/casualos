@@ -50,7 +50,10 @@ model User {
     records Record[]
     recordKeys RecordKey[]
     roleAssignments RoleAssignment[]
-    permissionAssignments PermissionAssignment[]
+    // TODO: Support global permissions
+    // globalPermissionAssignments GlobalPermissionAssignment[]
+    resourcePermissionAssignments ResourcePermissionAssignment[]
+    markerPermissionAssignments MarkerPermissionAssignment[]
 
     publishedDataRecords DataRecord[] @relation("PublishedDataRecords")
     subjectDataRecords DataRecord[] @relation("SubjectDataRecords")
@@ -243,6 +246,9 @@ model Record {
     instBranches InstBranch[]
     branchUpdates BranchUpdate[]
 
+    resourceAssignments ResourcePermissionAssignment[]
+    markerAssignments MarkerPermissionAssignment[]
+
     userInstReports UserInstReport[]
 
     createdAt DateTime @default(now())
@@ -311,19 +317,60 @@ model RoleAssignment {
     @@index([recordName, roleId])
 }
 
+// TODO: Support global permissions
+// model GlobalPermissionAssignment {
+//     // The ID of the assignment
+//     id String @db.Uuid @id
+
+//     // The kind of the resource.
+//     // If null, then permission for all resource kinds is granted.
+//     resourceKind String?
+
+//     // The action that the assignment grants.
+//     // If null, then the assignment grants every action to the resource.
+//     action String?
+
+//     // The options that the assignment grants.
+//     options Json?
+
+//     // The ID of the subject that the assignment grants permission to.
+//     // This can be the ID of the user or the ID of the inst that permission is granted to.
+//     subjectId String
+
+//     // The type of the subject that the assignment grants permission to.
+//     // This can be "user", "inst" or "role"
+//     // If "role", then all users/insts that have the role in the record are granted permission.
+//     // If "inst" or "user", then the given user/inst is granted permission across all records.
+//     subjectType String
+
+//     // The ID of the user that the assignment grants permission to.
+//     // Null if the subjectType is "role" or "inst"
+//     userId String?
+//     user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GlobalPermissionAssignment_userId_fkey1")
+
+//     // The time that the assignment expires.
+//     // Null means that the assignment never expires.
+//     expireTime DateTime?
+
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+
+//     @@index([subjectType, subjectId])
+//     @@index([resourceKind, action, subjectType, subjectId])
+// }
+
 model ResourcePermissionAssignment {
     // The ID of the assignment
     id String @db.Uuid @id
 
     // The name of the record.
     recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "ResourcePermissionAssignment_recordName_fkey1")
 
     // The kind of the resource.
-    // If null, then the assignment grants permission for a marker instead.
     resourceKind String
 
     // The ID of the resource.
-    // If null, then the assignment is grants permission for a marker instead.
     resourceId String
 
     // The action that the assignment grants.
@@ -344,7 +391,7 @@ model ResourcePermissionAssignment {
     // The ID of the user that the assignment grants permission to.
     // Null if the subjectType is "role" or "inst"
     userId String?
-    user User? @relation(fields: [userId], references: [id])
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "ResourcePermissionAssignment_userId_fkey1")
 
     // The time that the assignment expires.
     // Null means that the assignment never expires.
@@ -371,6 +418,7 @@ model MarkerPermissionAssignment {
 
     // The name of the record.
     recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "MarkerPermissionAssignment_recordName_fkey1")
 
     // The marker of the resources that the assignment grants.
     // If null, then the assignment grants permission for a resource instead.
@@ -398,7 +446,7 @@ model MarkerPermissionAssignment {
     // The ID of the user that the assignment grants permission to.
     // Null if the subjectType is "role" or "inst"
     userId String?
-    user User? @relation(fields: [userId], references: [id])
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "MarkerPermissionAssignment_userId_fkey1")
 
     // The time that the assignment expires.
     // Null means that the assignment never expires.
