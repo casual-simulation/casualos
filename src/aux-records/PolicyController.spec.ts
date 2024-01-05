@@ -2,18 +2,22 @@ import { AuthController } from './AuthController';
 import { AuthMessenger } from './AuthMessenger';
 import { AuthStore, PrivacyFeatures } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
+import { Record, RecordKey } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
 import {
     AuthorizeRequest,
     AuthorizeResult,
+    ConstructAuthorizationContextResult,
     PolicyController,
     ResourceInfo,
+    explainationForPermissionAssignment,
     filterAndMergeMarkerPermissions,
     getResourceInfo,
     willMarkersBeRemaining,
 } from './PolicyController';
 import {
     ACCOUNT_MARKER,
+    ActionKinds,
     ADMIN_ROLE_NAME,
     DATA_RESOURCE_KIND,
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
@@ -24,6 +28,8 @@ import {
     POLICY_RESOURCE_KIND,
     PolicyDocument,
     PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+    ResourceKinds,
     ROLE_RESOURCE_KIND,
 } from '@casual-simulation/aux-common';
 import {
@@ -35,11 +41,19 @@ import {
     RecordsController,
 } from './RecordsController';
 import {
+    TestServices,
     createTestControllers,
     createTestRecordKey,
     createTestUser,
 } from './TestUtils';
-import { ListMarkerPoliciesResult } from './PolicyStore';
+import {
+    AssignPermissionToSubjectAndMarkerSuccess,
+    AssignPermissionToSubjectAndResourceSuccess,
+    ListMarkerPoliciesResult,
+    MarkerPermissionAssignment,
+    ResourcePermissionAssignment,
+    SubjectType,
+} from './PolicyStore';
 
 console.log = jest.fn();
 
@@ -47,50 +61,68 @@ describe('PolicyController', () => {
     let store: MemoryStore;
     let controller: PolicyController;
 
-    let ownerId: string;
-    let ownerSessionKey: string;
-    let ownerKey: string;
-    let userId: string;
-    let sessionKey: string;
+    const ownerId: string = 'ownerId';
+    const userId: string = 'userId';
     let recordKey: string;
+    let savedRecordKey: RecordKey;
     let recordName: string;
+    let record: Record = null;
+    let services: TestServices;
 
-    let memberId: string;
+    const memberId: string = 'memberId';
     let studioId: string;
-    let studioRecord: string;
+    const studioRecord: string = 'studioRecord';
 
     let wrongRecordKey: string;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const services = createTestControllers();
+        const testRecordKey = await createTestRecordKey(services, userId);
+        recordKey = testRecordKey.recordKey;
+        recordName = testRecordKey.recordName;
+        record = await services.store.getRecordByName(recordName);
+
+        savedRecordKey = services.store.recordKeys.find(
+            (k) => k.recordName === recordName
+        );
+    });
+
+    beforeEach(async () => {
+        services = createTestControllers();
 
         store = services.store;
         controller = services.policies;
 
-        const owner = await createTestUser(services, 'owner@example.com');
-        const user = await createTestUser(services);
+        await services.store.addRecord({
+            ...record,
+        });
+
+        await services.store.addRecordKey({
+            ...savedRecordKey,
+        });
 
         await services.authStore.saveNewUser({
-            id: 'memberId',
+            id: ownerId,
+            allSessionRevokeTimeMs: null,
+            currentLoginRequestId: null,
+            email: 'owner@example.com',
+            phoneNumber: null,
+        });
+        await services.authStore.saveNewUser({
+            id: userId,
+            allSessionRevokeTimeMs: null,
+            currentLoginRequestId: null,
+            email: 'user@example.com',
+            phoneNumber: null,
+        });
+        await services.authStore.saveNewUser({
+            id: memberId,
             allSessionRevokeTimeMs: null,
             currentLoginRequestId: null,
             email: 'member@example.com',
             phoneNumber: null,
         });
 
-        userId = user.userId;
-        sessionKey = user.sessionKey;
-
-        ownerId = owner.userId;
-        ownerSessionKey = user.sessionKey;
-
-        memberId = 'memberId';
-
-        const testRecordKey = await createTestRecordKey(services, userId);
-        recordKey = testRecordKey.recordKey;
-        recordName = testRecordKey.recordName;
-
-        const record = await services.store.getRecordByName(recordName);
         await services.store.updateRecord({
             name: recordName,
             ownerId: ownerId,
@@ -108,13 +140,12 @@ describe('PolicyController', () => {
         )) as CreateStudioSuccess;
 
         const studioRecordResult = (await services.records.createRecord({
-            recordName: 'studioRecord',
+            recordName: studioRecord,
             userId: ownerId,
             studioId: studioResult.studioId,
         })) as CreateRecordSuccess;
 
         studioId = studioResult.studioId;
-        studioRecord = 'studioRecord';
 
         await services.records.addStudioMember({
             studioId: studioId,
@@ -33794,6 +33825,1472 @@ describe('PolicyController', () => {
         });
     });
 
+    describe.only('authorizeSubject()', () => {
+        const adminOrGrantedActionCases: [ActionKinds, string | null][] = [
+            ['create', 'resourceId'],
+            ['update', 'resourceId'],
+            ['delete', 'resourceId'],
+            ['read', 'resourceId'],
+            ['list', null],
+            ['updateData', 'resourceId'],
+            ['increment', 'resourceId'],
+            ['count', 'resourceId'],
+            ['sendAction', 'resourceId'],
+            ['assign', 'resourceId'],
+            ['unassign', 'resourceId'],
+            ['grantPermission', 'resourceId'],
+            ['revokePermission', 'resourceId'],
+            ['grant', 'resourceId'],
+            ['revoke', 'resourceId'],
+        ];
+
+        const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
+            ['data'],
+            ['file'],
+            ['event'],
+            ['inst'],
+            ['policy'],
+            ['role'],
+        ];
+
+        // Admins can perform all actions on all resources
+        describe.each(adminOrGrantedResourceKindCases)('%s', (resourceKind) => {
+            describe.each(adminOrGrantedActionCases)(
+                '%s',
+                (action, resourceId) => {
+                    const marker = 'secret';
+
+                    it('should allow the action if the user is the owner of the record', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: ownerId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+
+                                // The role that record owners recieve
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // resourceKind and action are null because this permission
+                                // applies to all resources and actions.
+                                resourceKind: null,
+                                action: null,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'User is the owner of the record.',
+                        });
+                    });
+
+                    it('should allow the action if the user is an admin of the studio', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: studioRecord,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: ownerId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: studioRecord,
+                            permission: {
+                                id: null,
+                                recordName: studioRecord,
+                                userId: null,
+
+                                // The role that admins recieve automatically
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // Null because admins have all access in a studio
+                                resourceKind: null,
+                                action: null,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation:
+                                "User is an admin in the record's studio.",
+                        });
+                    });
+
+                    it('should allow the action if the user was granted the admin role in the record', async () => {
+                        await store.assignSubjectRole(
+                            recordName,
+                            userId,
+                            'user',
+                            {
+                                expireTimeMs: null,
+                                role: ADMIN_ROLE_NAME,
+                            }
+                        );
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: userId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // resourceKind and action are null because this permission
+                                // applies to all resources and actions.
+                                resourceKind: null,
+                                action: null,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'User is assigned the "admin" role.',
+                        });
+                    });
+
+                    it('should allow the action if the inst was granted the admin role in the record', async () => {
+                        await store.assignSubjectRole(
+                            recordName,
+                            'myInst',
+                            'inst',
+                            {
+                                expireTimeMs: null,
+                                role: ADMIN_ROLE_NAME,
+                            }
+                        );
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: 'myInst',
+                                subjectType: 'inst',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // resourceKind and action are null because this permission
+                                // applies to all resources and actions.
+                                resourceKind: null,
+                                action: null,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'Inst is assigned the "admin" role.',
+                        });
+                    });
+
+                    it('should allow the action if the role is the admin role', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: ADMIN_ROLE_NAME,
+                                subjectType: 'role',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // resourceKind and action are null because this permission
+                                // applies to all resources and actions.
+                                resourceKind: null,
+                                action: null,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'Role is "admin".',
+                        });
+                    });
+
+                    if (resourceId) {
+                        it('should allow the action if the user was granted access to the resource', async () => {
+                            const permission =
+                                (await store.assignPermissionToSubjectAndResource(
+                                    recordName,
+                                    'user',
+                                    userId,
+                                    resourceKind,
+                                    resourceId,
+                                    action,
+                                    {},
+                                    null
+                                )) as AssignPermissionToSubjectAndResourceSuccess;
+
+                            const context =
+                                await controller.constructAuthorizationContext({
+                                    recordKeyOrRecordName: recordName,
+                                    userId: userId,
+                                });
+
+                            const result = await controller.authorizeSubject(
+                                context,
+                                {
+                                    subjectId: userId,
+                                    subjectType: 'user',
+                                    resourceKind: resourceKind,
+                                    action: action,
+                                    resourceId: resourceId,
+                                    markers: [marker],
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                permission: permission.permissionAssignment,
+                                explanation: `User was granted access to resource "resourceId" by "${permission.permissionAssignment.id}"`,
+                            });
+                        });
+
+                        it('should allow the action if the user was granted access to the resource via a role', async () => {
+                            await store.assignSubjectRole(
+                                recordName,
+                                userId,
+                                'user',
+                                {
+                                    role: 'myRole',
+                                    expireTimeMs: null,
+                                }
+                            );
+
+                            const permission =
+                                (await store.assignPermissionToSubjectAndResource(
+                                    recordName,
+                                    'role',
+                                    'myRole',
+                                    resourceKind,
+                                    resourceId,
+                                    action,
+                                    {},
+                                    null
+                                )) as AssignPermissionToSubjectAndResourceSuccess;
+
+                            const context =
+                                await controller.constructAuthorizationContext({
+                                    recordKeyOrRecordName: recordName,
+                                    userId: userId,
+                                });
+
+                            const result = await controller.authorizeSubject(
+                                context,
+                                {
+                                    subjectId: userId,
+                                    subjectType: 'user',
+                                    resourceKind: resourceKind,
+                                    action: action,
+                                    resourceId: resourceId,
+                                    markers: [marker],
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                permission: permission.permissionAssignment,
+                                explanation: `User was granted access to resource "resourceId" by "${permission.permissionAssignment.id}" using role "myRole"`,
+                            });
+                        });
+                    } else {
+                        // permissions that do not provide a resource ID are not allowed to provide multiple markers
+                        it('should reject the action if given more than one marker', async () => {
+                            const context =
+                                await controller.constructAuthorizationContext({
+                                    recordKeyOrRecordName: recordName,
+                                    userId: userId,
+                                });
+
+                            const result = await controller.authorizeSubject(
+                                context,
+                                {
+                                    subjectId: userId,
+                                    subjectType: 'user',
+                                    resourceKind: resourceKind,
+                                    action: action,
+                                    resourceId: resourceId,
+                                    markers: [marker, 'marker2'],
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: `The "${action}" action cannot be used with multiple markers.`,
+                                reason: {
+                                    type: 'too_many_markers',
+                                },
+                            });
+                        });
+                    }
+
+                    it('should allow the action if the user was granted access to the marker', async () => {
+                        const permission =
+                            (await store.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'user',
+                                userId,
+                                resourceKind,
+                                marker,
+                                action,
+                                {},
+                                null
+                            )) as AssignPermissionToSubjectAndMarkerSuccess;
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: userId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: permission.permissionAssignment,
+                            explanation: `User was granted access to marker "${marker}" by "${permission.permissionAssignment.id}"`,
+                        });
+                    });
+
+                    it('should allow the action if the user was granted access to the marker via a role', async () => {
+                        await store.assignSubjectRole(
+                            recordName,
+                            userId,
+                            'user',
+                            {
+                                role: 'myRole',
+                                expireTimeMs: null,
+                            }
+                        );
+
+                        const permission =
+                            (await store.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'myRole',
+                                resourceKind,
+                                marker,
+                                action,
+                                {},
+                                null
+                            )) as AssignPermissionToSubjectAndMarkerSuccess;
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: userId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: permission.permissionAssignment,
+                            explanation: `User was granted access to marker "${marker}" by "${permission.permissionAssignment.id}" using role "myRole"`,
+                        });
+                    });
+
+                    it('should deny the action if given a null user ID', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: null,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage:
+                                'You must be logged in to perform this action.',
+                        });
+                    });
+
+                    it('should deny the action if the user is not the owner of the record', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: userId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                            reason: {
+                                type: 'missing_permission',
+                                recordName: recordName,
+                                subjectType: 'user',
+                                subjectId: userId,
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                            },
+                        });
+                    });
+                }
+            );
+        });
+
+        const recordKeyResourceKindCases: [
+            ResourceKinds,
+            [ActionKinds, string | null][]
+        ][] = [
+            [
+                'data',
+                [
+                    ['create', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'file',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                ],
+            ],
+            [
+                'event',
+                [
+                    ['create', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['count', 'resourceId'],
+                ],
+            ],
+            [
+                'inst',
+                [
+                    ['create', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                ],
+            ],
+        ];
+
+        const recordKeySubjectTypeCases: [SubjectType][] = [['user'], ['inst']];
+
+        describe.each(recordKeyResourceKindCases)(
+            '%s',
+            (resourceKind, actions) => {
+                describe.each(actions)('%s', (action, resourceId) => {
+                    describe.each(recordKeySubjectTypeCases)(
+                        'subject %s',
+                        (subjectType) => {
+                            const marker = 'marker';
+
+                            it('should allow the action if using a recordKey', async () => {
+                                const context =
+                                    await controller.constructAuthorizationContext(
+                                        {
+                                            recordKeyOrRecordName: recordKey,
+                                            userId: userId,
+                                        }
+                                    );
+
+                                const result =
+                                    await controller.authorizeSubject(context, {
+                                        subjectId: 'subjectId',
+                                        subjectType: subjectType,
+                                        resourceKind: resourceKind,
+                                        action: action,
+                                        resourceId: resourceId,
+                                        markers: [marker],
+                                    });
+
+                                expect(result).toEqual({
+                                    success: true,
+                                    recordName: recordName,
+                                    permission: {
+                                        id: null,
+                                        recordName,
+                                        userId: null,
+
+                                        // The role that record keys recieve
+                                        subjectType: 'role',
+                                        subjectId: ADMIN_ROLE_NAME,
+
+                                        // This permission may only apply to this specific resource kind
+                                        // or action
+                                        resourceKind: resourceKind,
+                                        action: action,
+
+                                        marker: marker,
+                                        options: {},
+                                        expireTimeMs: null,
+                                    },
+                                    explanation: 'A recordKey was used.',
+                                });
+                            });
+
+                            if (subjectType === 'user') {
+                                it('should deny the action if the user is not logged in but is using a subjectfull record key', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName:
+                                                    recordKey,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: null,
+                                                subjectType: subjectType,
+                                                resourceKind: resourceKind,
+                                                action: action,
+                                                resourceId: resourceId,
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_logged_in',
+                                        errorMessage:
+                                            'You must be logged in in order to use this record key.',
+                                    });
+                                });
+
+                                it('should allow the action if the user is not logged in but is using a subjectless record key', async () => {
+                                    const testRecordKey =
+                                        await createTestRecordKey(
+                                            services,
+                                            ownerId,
+                                            recordName,
+                                            'subjectless'
+                                        );
+
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName:
+                                                    testRecordKey.recordKey,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: null,
+                                                subjectType: subjectType,
+                                                resourceKind: resourceKind,
+                                                action: action,
+                                                resourceId: resourceId,
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: true,
+                                        recordName: recordName,
+                                        permission: {
+                                            id: null,
+                                            recordName,
+                                            userId: null,
+
+                                            // The role that record keys recieve
+                                            subjectType: 'role',
+                                            subjectId: ADMIN_ROLE_NAME,
+
+                                            // This permission may only apply to this specific resource kind
+                                            // or action
+                                            resourceKind: resourceKind,
+                                            action: action,
+
+                                            marker: marker,
+                                            options: {},
+                                            expireTimeMs: null,
+                                        },
+                                        explanation: 'A recordKey was used.',
+                                    });
+                                });
+                            }
+                        }
+                    );
+                });
+            }
+        );
+
+        const recordKeyResourceKindDenialCases: [
+            ResourceKinds,
+            [ActionKinds, string | null][]
+        ][] = [
+            [
+                'policy',
+                [
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+            [
+                'file',
+                [
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+            [
+                'event',
+                [
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                ],
+            ],
+            [
+                'inst',
+                [
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+            [
+                'policy',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+            [
+                'role',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+        ];
+
+        const recordKeySubjectTypeDenialCases: [SubjectType][] = [
+            ['user'],
+            ['inst'],
+        ];
+
+        describe.each(recordKeyResourceKindDenialCases)(
+            '%s',
+            (resourceKind, actions) => {
+                describe.each(actions)('%s', (action, resourceId) => {
+                    describe.each(recordKeySubjectTypeDenialCases)(
+                        '%s',
+                        (subjectType) => {
+                            const marker = 'marker';
+
+                            it('should deny the action if using a recordKey', async () => {
+                                const context =
+                                    await controller.constructAuthorizationContext(
+                                        {
+                                            recordKeyOrRecordName: recordKey,
+                                            userId: userId,
+                                        }
+                                    );
+
+                                const result =
+                                    await controller.authorizeSubject(context, {
+                                        subjectId: 'subjectId',
+                                        subjectType: subjectType,
+                                        resourceKind: resourceKind,
+                                        action: action,
+                                        resourceId: resourceId,
+                                        markers: [marker],
+                                    });
+
+                                expect(result).toEqual({
+                                    success: false,
+                                    errorCode: 'not_authorized',
+                                    errorMessage:
+                                        'You are not authorized to perform this action.',
+                                    reason: {
+                                        type: 'missing_permission',
+                                        recordName: recordName,
+                                        subjectType: subjectType,
+                                        subjectId: 'subjectId',
+                                        action: action,
+                                        resourceKind: resourceKind,
+                                        resourceId: resourceId,
+                                    },
+                                });
+                            });
+                        }
+                    );
+                });
+            }
+        );
+
+        const studioMemberResourceKindCases: [
+            ResourceKinds,
+            [ActionKinds, string | null][]
+        ][] = [
+            [
+                'data',
+                [
+                    ['create', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'file',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'event',
+                [
+                    ['increment', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'inst',
+                [
+                    ['create', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+        ];
+
+        describe.each(studioMemberResourceKindCases)(
+            '%s',
+            (resourceKind, actions) => {
+                describe.each(actions)('%s', (action, resourceId) => {
+                    const marker = 'marker';
+
+                    it('should allow the action if the user is a member of the studio', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: studioRecord,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: memberId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: studioRecord,
+                            permission: {
+                                id: null,
+                                recordName: studioRecord,
+
+                                userId: memberId,
+                                subjectType: 'user',
+                                subjectId: memberId,
+
+                                // resourceKind and action are specified
+                                // because members don't necessarily have all permissions in the studio
+                                resourceKind: resourceKind,
+                                action: action,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation:
+                                "User is a member in the record's studio.",
+                        });
+                    });
+
+                    it('should deny the action if the user is not a member of the studio', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: studioRecord,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: userId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                            reason: {
+                                type: 'missing_permission',
+                                recordName: studioRecord,
+                                subjectType: 'user',
+                                subjectId: userId,
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                            },
+                        });
+                    });
+                });
+            }
+        );
+
+        const studioMemberResourceKindDenialCases: [
+            ResourceKinds,
+            [ActionKinds, string | null][]
+        ][] = [
+            [
+                'policy',
+                [
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+            [
+                'file',
+                [
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+            [
+                'event',
+                [
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                ],
+            ],
+            [
+                'inst',
+                [
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+            [
+                'policy',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+            [
+                'role',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ],
+        ];
+
+        describe.each(studioMemberResourceKindDenialCases)(
+            '%s',
+            (resourceKind, actions) => {
+                describe.each(actions)('%s', (action, resourceId) => {
+                    describe.each(recordKeySubjectTypeCases)(
+                        'subject %s',
+                        (subjectType) => {
+                            const marker = 'marker';
+
+                            it('should deny the action even if the user is a member of the studio', async () => {
+                                const context =
+                                    await controller.constructAuthorizationContext(
+                                        {
+                                            recordKeyOrRecordName: studioRecord,
+                                            userId: userId,
+                                        }
+                                    );
+
+                                const result =
+                                    await controller.authorizeSubject(context, {
+                                        subjectId: memberId,
+                                        subjectType: 'user',
+                                        resourceKind: resourceKind,
+                                        action: action,
+                                        resourceId: resourceId,
+                                        markers: [marker],
+                                    });
+
+                                expect(result).toEqual({
+                                    success: false,
+                                    errorCode: 'not_authorized',
+                                    errorMessage:
+                                        'You are not authorized to perform this action.',
+                                    reason: {
+                                        type: 'missing_permission',
+                                        recordName: studioRecord,
+                                        subjectType: 'user',
+                                        subjectId: memberId,
+                                        resourceKind: resourceKind,
+                                        action: action,
+                                        resourceId: resourceId,
+                                    },
+                                });
+                            });
+                        }
+                    );
+                });
+            }
+        );
+
+        const publicReadResourceKindCases: [
+            ResourceKinds,
+            [ActionKinds, string | null][]
+        ][] = [
+            [
+                'data',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            ['file', [['read', 'resourceId']]],
+            ['event', [['count', 'resourceId']]],
+            ['inst', [['read', 'resourceId']]],
+        ];
+
+        const publicReadSubjectTypeCases: [
+            string,
+            SubjectType,
+            string | null
+        ][] = [
+            ['user', 'user', 'randomUserId'],
+            ['not logged in', 'user', null],
+            ['inst', 'inst', 'instId'],
+        ];
+
+        describe.each(publicReadResourceKindCases)(
+            '%s',
+            (resourceKind, actions) => {
+                describe.each(actions)('%s', (action, resourceId) => {
+                    describe.each(publicReadSubjectTypeCases)(
+                        '%s',
+                        (desc, subjectType, subjectId) => {
+                            const marker = PUBLIC_READ_MARKER;
+
+                            it('should allow the action', async () => {
+                                const context =
+                                    await controller.constructAuthorizationContext(
+                                        {
+                                            recordKeyOrRecordName: studioRecord,
+                                            userId: userId,
+                                        }
+                                    );
+
+                                const result =
+                                    await controller.authorizeSubject(context, {
+                                        subjectId: subjectId,
+                                        subjectType: subjectType,
+                                        resourceKind: resourceKind,
+                                        action: action,
+                                        resourceId: resourceId,
+                                        markers: [marker],
+                                    });
+
+                                expect(result).toEqual({
+                                    success: true,
+                                    recordName: studioRecord,
+                                    permission: {
+                                        id: null,
+                                        recordName: studioRecord,
+
+                                        userId: null,
+                                        subjectType: subjectType,
+                                        subjectId: subjectId,
+
+                                        // resourceKind and action are specified
+                                        // because members don't necessarily have all permissions in the studio
+                                        resourceKind: resourceKind,
+                                        action: action,
+
+                                        marker: marker,
+                                        options: {},
+                                        expireTimeMs: null,
+                                    },
+                                    explanation:
+                                        'Resource has the publicRead marker.',
+                                });
+                            });
+                        }
+                    );
+                });
+            }
+        );
+
+        const publicWriteResourceKindCases: [
+            ResourceKinds,
+            [ActionKinds, string | null][]
+        ][] = [
+            [
+                'data',
+                [
+                    ['create', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'file',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                ],
+            ],
+            [
+                'event',
+                [
+                    ['create', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['count', 'resourceId'],
+                ],
+            ],
+            [
+                'inst',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                ],
+            ],
+        ];
+
+        const publicWriteSubjectTypeCases: [
+            string,
+            SubjectType,
+            string | null
+        ][] = [
+            ['user', 'user', 'randomUserId'],
+            ['not logged in', 'user', null],
+            ['inst', 'inst', 'instId'],
+        ];
+
+        describe.each(publicWriteResourceKindCases)(
+            '%s',
+            (resourceKind, actions) => {
+                describe.each(actions)('%s', (action, resourceId) => {
+                    describe.each(publicReadSubjectTypeCases)(
+                        '%s',
+                        (desc, subjectType, subjectId) => {
+                            const marker = PUBLIC_WRITE_MARKER;
+
+                            it('should allow the action', async () => {
+                                const context =
+                                    await controller.constructAuthorizationContext(
+                                        {
+                                            recordKeyOrRecordName: studioRecord,
+                                            userId: userId,
+                                        }
+                                    );
+
+                                const result =
+                                    await controller.authorizeSubject(context, {
+                                        subjectId: subjectId,
+                                        subjectType: subjectType,
+                                        resourceKind: resourceKind,
+                                        action: action,
+                                        resourceId: resourceId,
+                                        markers: [marker],
+                                    });
+
+                                expect(result).toEqual({
+                                    success: true,
+                                    recordName: studioRecord,
+                                    permission: {
+                                        id: null,
+                                        recordName: studioRecord,
+
+                                        userId: null,
+                                        subjectType: subjectType,
+                                        subjectId: subjectId,
+
+                                        // resourceKind and action are specified
+                                        // because members don't necessarily have all permissions in the studio
+                                        resourceKind: resourceKind,
+                                        action: action,
+
+                                        marker: marker,
+                                        options: {},
+                                        expireTimeMs: null,
+                                    },
+                                    explanation:
+                                        'Resource has the publicWrite marker.',
+                                });
+                            });
+                        }
+                    );
+                });
+            }
+        );
+    });
+
+    describe.only('authorizeSubjects()', () => {
+        it('should authorize both subjects', async () => {
+            const marker = 'marker';
+            const resourceKind: ResourceKinds = 'data';
+            const resourceId = 'resourceId';
+            const action: ActionKinds = 'create';
+
+            await store.assignSubjectRole(recordName, 'myInst', 'inst', {
+                expireTimeMs: null,
+                role: ADMIN_ROLE_NAME,
+            });
+
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+            });
+
+            const result = await controller.authorizeSubjects(context, {
+                subjects: [
+                    {
+                        subjectType: 'user',
+                        subjectId: ownerId,
+                    },
+                    {
+                        subjectType: 'inst',
+                        subjectId: 'myInst',
+                    },
+                ],
+                resourceKind: resourceKind,
+                action: action,
+                resourceId: resourceId,
+                markers: [marker],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: recordName,
+                results: [
+                    {
+                        success: true,
+                        recordName: recordName,
+                        subjectType: 'user',
+                        subjectId: ownerId,
+                        permission: {
+                            id: null,
+                            recordName,
+                            userId: null,
+
+                            // The role that record owners recieve
+                            subjectType: 'role',
+                            subjectId: ADMIN_ROLE_NAME,
+
+                            // resourceKind and action are null because this permission
+                            // applies to all resources and actions.
+                            resourceKind: null,
+                            action: null,
+
+                            marker: marker,
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        explanation: 'User is the owner of the record.',
+                    },
+                    {
+                        success: true,
+                        recordName: recordName,
+                        subjectType: 'inst',
+                        subjectId: 'myInst',
+                        permission: {
+                            id: null,
+                            recordName,
+                            userId: null,
+                            subjectType: 'role',
+                            subjectId: ADMIN_ROLE_NAME,
+                            resourceKind: null,
+                            action: null,
+                            marker: marker,
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        explanation: 'Inst is assigned the "admin" role.',
+                    },
+                ],
+            });
+        });
+    });
+
     // describe('')
 
     // Two ways to authorize access:
@@ -34277,6 +35774,69 @@ describe('getResourceInfo()', () => {
             expect(result).toEqual(info);
         }
     );
+});
+
+describe('explainationForPermissionAssignment()', () => {
+    it('should return the explanation for a resource permission assignment', () => {
+        const permissionAssignment: ResourcePermissionAssignment = {
+            subjectType: 'user',
+            subjectId: 'userId',
+            resourceKind: 'data',
+            action: 'read',
+            id: 'permissionId',
+            expireTimeMs: null,
+            options: {},
+            recordName: 'recordName',
+            resourceId: 'resourceId',
+            userId: 'userId',
+        };
+
+        expect(
+            explainationForPermissionAssignment('user', permissionAssignment)
+        ).toBe(
+            'User was granted access to resource "resourceId" by "permissionId"'
+        );
+    });
+
+    it('should return the explanation for a marker permission assignment', () => {
+        const permissionAssignment: MarkerPermissionAssignment = {
+            subjectType: 'user',
+            subjectId: 'userId',
+            resourceKind: 'data',
+            action: 'read',
+            id: 'permissionId',
+            expireTimeMs: null,
+            options: {},
+            recordName: 'recordName',
+            userId: 'userId',
+            marker: 'marker',
+        };
+
+        expect(
+            explainationForPermissionAssignment('user', permissionAssignment)
+        ).toBe('User was granted access to marker "marker" by "permissionId"');
+    });
+
+    it('should return the explanation for a marker permission assignment that uses a role', () => {
+        const permissionAssignment: MarkerPermissionAssignment = {
+            subjectType: 'role',
+            subjectId: 'roleId',
+            resourceKind: 'data',
+            action: 'read',
+            id: 'permissionId',
+            expireTimeMs: null,
+            options: {},
+            recordName: 'recordName',
+            userId: 'userId',
+            marker: 'marker',
+        };
+
+        expect(
+            explainationForPermissionAssignment('user', permissionAssignment)
+        ).toBe(
+            'User was granted access to marker "marker" by "permissionId" using role "roleId"'
+        );
+    });
 });
 
 describe('willMarkersBeRemaining()', () => {

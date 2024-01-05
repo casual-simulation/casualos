@@ -1203,7 +1203,7 @@ export class AuthManager {
     }
 
     get websocketEndpoint(): string {
-        return this._websocketEndpoint ?? location.origin;
+        return this._websocketEndpoint;
     }
 
     get websocketProtocol(): RemoteCausalRepoProtocol {

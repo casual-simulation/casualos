@@ -93,6 +93,7 @@ import {
     getSubjectUserId,
 } from './PolicyStore';
 import {
+    ADMIN_ROLE_NAME,
     ActionKinds,
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
@@ -201,6 +202,8 @@ export class MemoryStore
 
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
+    // TODO: Support global permissions
+    // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
 
     maxAllowedInstSize: number = Infinity;
 
@@ -645,29 +648,6 @@ export class MemoryStore
         action: ActionKinds,
         currentTimeMs: number
     ): Promise<GetMarkerPermissionResult> {
-        const defaultPermission = getPublicMarkersPermission(
-            markers,
-            resourceKind,
-            action
-        );
-        const userId = getSubjectUserId(subjectType, subjectId);
-
-        if (defaultPermission) {
-            return {
-                success: true,
-                permissionAssignment: {
-                    id: null,
-                    recordName: recordName,
-                    userId,
-                    subjectType,
-                    subjectId,
-                    expireTimeMs: null,
-                    options: {},
-                    ...defaultPermission,
-                },
-            };
-        }
-
         const existingRoles =
             subjectType === 'user'
                 ? await this.listRolesForUser(recordName, subjectId)
@@ -695,6 +675,35 @@ export class MemoryStore
         };
     }
 
+    // TODO: Support global permissions
+    // async assignGlobalPermissionToSubject(
+    //     subjectType: SubjectType,
+    //     subjectId: string,
+    //     resourceKind: ResourceKinds,
+    //     action: ActionKinds,
+    //     options: PermissionOptions,
+    //     expireTimeMs: number
+    // ): Promise<AssignGlobalPermissionToSubjectResult> {
+    //     const userId = getSubjectUserId(subjectType, subjectId);
+    //     const assignment: GlobalPermissionAssignment = {
+    //         id: uuid(),
+    //         userId,
+    //         subjectType,
+    //         subjectId,
+    //         resourceKind,
+    //         action,
+    //         options,
+    //         expireTimeMs
+    //     };
+
+    //     this._globalPermissionAssignments.push(assignment);
+
+    //     return {
+    //         success: true,
+    //         permissionAssignment: assignment,
+    //     };
+    // }
+
     async assignPermissionToSubjectAndResource(
         recordName: string,
         subjectType: SubjectType,
@@ -703,7 +712,7 @@ export class MemoryStore
         resourceId: string,
         action: ActionKinds,
         options: PermissionOptions,
-        expireTimeMs: number
+        expireTimeMs: number | null
     ): Promise<AssignPermissionToSubjectAndResourceResult> {
         const userId = getSubjectUserId(subjectType, subjectId);
         const assignment: ResourcePermissionAssignment = {

@@ -140,6 +140,25 @@ export interface PolicyStore {
         currentTimeMs: number
     ): Promise<GetMarkerPermissionResult>;
 
+    // TODO: Support global permissions
+    // /**
+    //  * Assigns the given permission to the given subject for all resources in all records.
+    //  * @param subjectType The type of the subject. If "role", then all users/insts that have the given role in the related record are granted permission.
+    //  * @param subjectId The ID of the subject.
+    //  * @param resourceKind The kind of the resource. If null, then the permission applies to all resources.
+    //  * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
+    //  * @param options The options for the permission.
+    //  * @param expireTimeMs The time that the permission expires. If null, then the permission never expires.
+    //  */
+    // assignGlobalPermissionToSubject(
+    //     subjectType: SubjectType,
+    //     subjectId: string,
+    //     resourceKind: ResourceKinds,
+    //     action: ActionKinds,
+    //     options: PermissionOptions,
+    //     expireTimeMs: number | null
+    // ): Promise<AssignGlobalPermissionToSubjectResult>;
+
     /**
      * Assigns the given permission to the given subject for the given resource.
      * @param recordName The name of the record that the resource exists in.
@@ -515,6 +534,59 @@ export interface PermissionAssignment {
     expireTimeMs: number | null;
 }
 
+// TODO: Support global permissions
+// /**
+//  * Defines an interface that represents a global permission assignment.
+//  * That is, a permission assignment that applies to all resources in all records.
+//  */
+// export interface GlobalPermissionAssignment {
+//     /**
+//      * The ID of the permission assignment.
+//      */
+//     id: string;
+
+//     /**
+//      * The kind of the resources that the subject is allowed to perform actions on.
+//      * Null if the subject is allowed to perform actions on all kinds of resources.
+//      */
+//     resourceKind: ResourceKinds | null;
+
+//     /**
+//      * The kind of the actions that the subject is allowed to perform.
+//      * Null if the subject is allowed to perform any action.
+//      */
+//     action: ActionKinds | null;
+
+//     /**
+//      * The options for the permission assignment.
+//      */
+//     options: PermissionOptions;
+
+//     /**
+//      * The ID of the subject.
+//      */
+//     subjectId: string;
+
+//     /**
+//      * The type of the subject.
+//      * If set to "role", then all users/insts that have the given role in the record are granted permission.
+//      * If set to "user" or "inst", then only the given user/inst is granted permission.
+//      */
+//     subjectType: SubjectType;
+
+//     /**
+//      * The ID of the user that the assignment grants permission to.
+//      * Null if the subject type is not "user".
+//      */
+//     userId: string | null;
+
+//     /**
+//      * The time that the permission expires.
+//      * Null if the permission never expires.
+//      */
+//     expireTimeMs: number | null;
+// }
+
 /**
  * Defines an interface that represents a resource permission assignment.
  */
@@ -573,6 +645,26 @@ export interface GetMarkerPermissionFailure {
      */
     errorMessage: string;
 }
+
+// TODO: Support global permissions
+// export type AssignGlobalPermissionToSubjectResult =
+//     | AssignGlobalPermissionToSubjectSuccess
+//     | AssignGlobalPermissionToSubjectFailure;
+
+// export interface AssignGlobalPermissionToSubjectSuccess {
+//     success: true;
+
+//     /**
+//      * The assignment that was created or updated.
+//      */
+//     permissionAssignment: GlobalPermissionAssignment;
+// }
+
+// export interface AssignGlobalPermissionToSubjectFailure {
+//     success: false;
+//     errorCode: ServerError;
+//     errorMessage: string;
+// }
 
 export type AssignPermissionToSubjectAndResourceResult =
     | AssignPermissionToSubjectAndResourceSuccess

@@ -136,7 +136,7 @@ export async function createTestUser(
 }
 
 export async function createTestRecordKey(
-    { records }: TestServices,
+    { records }: Pick<TestServices, 'records'>,
     userId: string,
     recordName: string = 'testRecord',
     policy: PublicRecordKeyPolicy = 'subjectfull'

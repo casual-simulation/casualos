@@ -30,6 +30,7 @@ import {
     DenialReason,
     ResourceKinds,
     ActionKinds,
+    PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
 import {
     ListedStudioAssignment,
@@ -39,16 +40,21 @@ import {
 import {
     AssignedRole,
     getExpireTime,
+    getPublicMarkersPermission,
     GetUserPolicyFailure,
     ListedUserPolicy,
     ListMarkerPoliciesResult,
+    MarkerPermissionAssignment,
     PolicyStore,
+    ResourcePermissionAssignment,
     RoleAssignment,
+    SubjectType,
     UpdateUserPolicyFailure,
     UpdateUserRolesFailure,
     UserPolicyRecord,
 } from './PolicyStore';
 import { intersectionBy, isEqual, sortBy, union } from 'lodash';
+import { getMarkersOrDefault } from './Utils';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -80,6 +86,79 @@ export const NOT_AUTHORIZED_TO_MANY_INSTANCES_RESULT: AuthorizeResult = {
         type: 'too_many_insts',
     },
 };
+
+const ALLOWED_RECORD_KEY_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
+    ['data', ['read', 'create', 'delete', 'update', 'list']],
+    ['file', ['read', 'create', 'delete']],
+    ['event', ['create', 'count', 'increment']],
+    [
+        'inst',
+        ['read', 'create', 'delete', 'update', 'updateData', 'sendAction'],
+    ],
+];
+
+const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
+    ['data', ['read', 'create', 'delete', 'update', 'list']],
+    ['file', ['read', 'create', 'delete', 'list']],
+    ['event', ['create', 'count', 'increment', 'list']],
+    [
+        'inst',
+        [
+            'read',
+            'create',
+            'delete',
+            'update',
+            'updateData',
+            'sendAction',
+            'list',
+        ],
+    ],
+];
+
+function constructAllowedResourcesLookup(
+    allowedResources: [ResourceKinds, ActionKinds[]][]
+): Set<string> {
+    const lookup = new Set<string>();
+    for (let [resourceKind, actions] of allowedResources) {
+        for (let action of actions) {
+            lookup.add(`${resourceKind}.${action}`);
+        }
+    }
+    return lookup;
+}
+
+const ALLOWED_RECORD_KEY_RESOURCES_LOOKUP = constructAllowedResourcesLookup(
+    ALLOWED_RECORD_KEY_RESOURCES
+);
+const ALLOWED_STUDIO_MEMBER_RESOURCES_LOOKUP = constructAllowedResourcesLookup(
+    ALLOWED_STUDIO_MEMBER_RESOURCES
+);
+
+/**
+ * Determines if the given resource kind and action are allowed to be accessed by a record key.
+ * @param resourceKind The kind of the resource kind.
+ * @param action The action.
+ */
+function isAllowedRecordKeyResource(
+    resourceKind: string,
+    action: string
+): boolean {
+    return ALLOWED_RECORD_KEY_RESOURCES_LOOKUP.has(`${resourceKind}.${action}`);
+}
+
+/**
+ * Determines if the given resource kind and action are allowed to be accessed by a studio member.
+ * @param resourceKind The kind of the resource kind.
+ * @param action The action.
+ */
+function isAllowedStudioMemberResource(
+    resourceKind: string,
+    action: string
+): boolean {
+    return ALLOWED_STUDIO_MEMBER_RESOURCES_LOOKUP.has(
+        `${resourceKind}.${action}`
+    );
+}
 
 /**
  * Defines a class that is able to calculate the policies and permissions that are allowed for specific actions.
@@ -173,6 +252,7 @@ export class PolicyController {
      * Returns a promise that resolves with information about the security properties of the request.
      * @param context The authorization context for the request.
      * @param request The request.
+     * @deprecated Use authorizeSubject() instead.
      */
     async authorizeRequest(
         request: AuthorizeRequest
@@ -205,6 +285,7 @@ export class PolicyController {
      * Returns a promise that resolves with information about the security properties of the request.
      * @param context The authorization context for the request.
      * @param request The request.
+     * @deprecated Use authorizeSubjectUsingContext() instead.
      */
     async authorizeRequestUsingContext(
         context: AuthorizationContext,
@@ -216,6 +297,519 @@ export class PolicyController {
             console.error('[PolicyController] A server error occurred.', err);
             return {
                 allowed: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to authorize the given user and instances for the action and resource(s).
+     * @param context The authorization context for the request.
+     * @param request The request.
+     */
+    async authorizeUserAndInstances(
+        context: ConstructAuthorizationContextResult,
+        request: AuthorizeUserAndInstancesRequest
+    ): Promise<AuthorizeUserAndInstancesResult> {
+        try {
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization = await this.authorizeSubjects(context, {
+                action: request.action,
+                markers: request.markers,
+                resourceKind: request.resourceKind,
+                resourceId: request.resourceId,
+                subjects: [
+                    {
+                        subjectType: 'user',
+                        subjectId: request.userId,
+                    },
+                    ...request.instances.map(
+                        (i) =>
+                            ({
+                                subjectType: 'inst',
+                                subjectId: i,
+                            } as AuthorizeSubject)
+                    ),
+                ],
+            });
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const userResult = authorization.results.find(
+                (r) =>
+                    r.subjectType === 'user' && r.subjectId === request.userId
+            );
+
+            return {
+                ...authorization,
+                user: userResult,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing subjects.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to authorize the given subjects for the action and resource(s).
+     * @param context The authorization context for the request.
+     * @param request The request.
+     */
+    async authorizeSubjects(
+        context: ConstructAuthorizationContextResult,
+        request: AuthorizeSubjectsRequest
+    ): Promise<AuthorizeSubjectsResult> {
+        try {
+            if (context.success === false) {
+                return context;
+            }
+
+            if (request.subjects.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide at least one subject to authorize.',
+                };
+            }
+
+            const results: AuthorizedSubject[] = [];
+            for (let subject of request.subjects) {
+                const subjectResult = await this.authorizeSubjectUsingContext(
+                    context.context,
+                    {
+                        ...subject,
+                        action: request.action,
+                        resourceKind: request.resourceKind,
+                        resourceId: request.resourceId,
+                        markers: request.markers,
+                    }
+                );
+
+                if (subjectResult.success === false) {
+                    return subjectResult;
+                }
+
+                results.push({
+                    ...subjectResult,
+                    subjectType: subject.subjectType,
+                    subjectId: subject.subjectId,
+                });
+            }
+
+            return {
+                success: true,
+                recordName: context.context.recordName,
+                results: results,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing subjects.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to authorize the given subject for the action and resource(s).
+     * Returns a promise that resolves with information about the security properties of the request.
+     * @param context The context for the request.
+     * @param request The request to authorize.
+     */
+    async authorizeSubject(
+        context: ConstructAuthorizationContextResult,
+        request: AuthorizeSubjectRequest
+    ): Promise<AuthorizeSubjectResult> {
+        try {
+            if (context.success === false) {
+                return context;
+            }
+
+            return await this.authorizeSubjectUsingContext(
+                context.context,
+                request
+            );
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing a subject.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to authorize the given subject for the action and resource(s).
+     * Returns a promise that resolves with information about the security properties of the request.
+     * @param context The context for the request.
+     * @param request The request to authorize.
+     */
+    async authorizeSubjectUsingContext(
+        context: AuthorizationContext,
+        request: AuthorizeSubjectRequest
+    ): Promise<AuthorizeSubjectResult> {
+        try {
+            const markers = getMarkersOrDefault(request.markers);
+            if (request.action === 'list' && markers.length > 1) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `The "${request.action}" action cannot be used with multiple markers.`,
+                    reason: {
+                        type: 'too_many_markers',
+                    },
+                };
+            }
+
+            const recordName = context.recordName;
+            const publicPermission = getPublicMarkersPermission(
+                markers,
+                request.resourceKind,
+                request.action
+            );
+
+            if (publicPermission) {
+                return {
+                    success: true,
+                    recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+                        subjectType: request.subjectType,
+                        subjectId: request.subjectId,
+                        resourceKind: publicPermission.resourceKind,
+                        action: publicPermission.action,
+                        marker: publicPermission.marker,
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation:
+                        publicPermission.marker === PUBLIC_READ_MARKER
+                            ? 'Resource has the publicRead marker.'
+                            : 'Resource has the publicWrite marker.',
+                };
+            }
+
+            if (
+                request.subjectType === 'role' &&
+                request.subjectId === ADMIN_ROLE_NAME
+            ) {
+                return {
+                    success: true,
+                    recordName: recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+
+                        // Record owners are treated as if they are admins in the record
+                        subjectType: 'role',
+                        subjectId: ADMIN_ROLE_NAME,
+
+                        // Admins get all access to all resources in a record
+                        resourceKind: null,
+                        action: null,
+
+                        marker: markers[0],
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation: `Role is "${ADMIN_ROLE_NAME}".`,
+                };
+            }
+
+            if (
+                context.recordKeyProvided &&
+                context.recordKeyResult &&
+                context.recordKeyResult.success &&
+                isAllowedRecordKeyResource(request.resourceKind, request.action)
+            ) {
+                if (
+                    context.subjectPolicy === 'subjectfull' &&
+                    request.subjectType === 'user' &&
+                    !request.subjectId
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'You must be logged in in order to use this record key.',
+                    };
+                }
+
+                return {
+                    success: true,
+                    recordName: context.recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+
+                        // Record owners are treated as if they are admins in the record
+                        subjectType: 'role',
+                        subjectId: ADMIN_ROLE_NAME,
+
+                        // Admins get all access to all resources in a record
+                        resourceKind: request.resourceKind,
+                        action: request.action,
+
+                        marker: markers[0],
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation: 'A recordKey was used.',
+                };
+            }
+
+            if (request.subjectType === 'user' && request.subjectId) {
+                if (request.subjectId === context.recordOwnerId) {
+                    return {
+                        success: true,
+                        recordName: recordName,
+                        permission: {
+                            id: null,
+                            recordName: recordName,
+                            userId: null,
+
+                            // Record owners are treated as if they are admins in the record
+                            subjectType: 'role',
+                            subjectId: ADMIN_ROLE_NAME,
+
+                            // Admins get all access to all resources in a record
+                            resourceKind: null,
+                            action: null,
+
+                            marker: markers[0],
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        explanation: 'User is the owner of the record.',
+                    };
+                } else if (context.recordStudioMembers) {
+                    const member = context.recordStudioMembers.find(
+                        (m) => m.userId === request.subjectId
+                    );
+
+                    if (member) {
+                        if (member.role === 'admin') {
+                            return {
+                                success: true,
+                                recordName: recordName,
+                                permission: {
+                                    id: null,
+                                    recordName: recordName,
+                                    userId: null,
+
+                                    // Admins in a studio are treated as if they are admins in the record.
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+
+                                    // Admins get all access to all resources in a record
+                                    resourceKind: null,
+                                    action: null,
+
+                                    marker: markers[0],
+                                    options: {},
+
+                                    // No expiration
+                                    expireTimeMs: null,
+                                },
+                                explanation:
+                                    "User is an admin in the record's studio.",
+                            };
+                        } else if (
+                            member.role === 'member' &&
+                            isAllowedStudioMemberResource(
+                                request.resourceKind,
+                                request.action
+                            )
+                        ) {
+                            return {
+                                success: true,
+                                recordName: recordName,
+                                permission: {
+                                    id: null,
+                                    recordName: recordName,
+
+                                    // Members in a studio are treated as if they are granted direct access to most resources
+                                    // in the record.
+                                    userId: request.subjectId,
+                                    subjectType: 'user',
+                                    subjectId: request.subjectId,
+
+                                    // Not all actions or resources are granted though
+                                    resourceKind: request.resourceKind,
+                                    action: request.action,
+
+                                    marker: markers[0],
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation:
+                                    "User is a member in the record's studio.",
+                            };
+                        }
+                    }
+                }
+            }
+
+            if (request.subjectId) {
+                if (
+                    request.subjectType === 'inst' ||
+                    request.subjectType === 'user'
+                ) {
+                    // check for admin role
+                    const roles =
+                        request.subjectType === 'user'
+                            ? await this._policies.listRolesForUser(
+                                  recordName,
+                                  request.subjectId
+                              )
+                            : await this._policies.listRolesForInst(
+                                  recordName,
+                                  request.subjectId
+                              );
+
+                    const role = roles.find((r) => r.role === ADMIN_ROLE_NAME);
+                    if (role) {
+                        const kindString =
+                            request.subjectType === 'user' ? 'User' : 'Inst';
+                        return {
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+                                userId: null,
+
+                                // Admins in a studio are treated as if they are admins in the record.
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // Admins get all access to all resources in a record
+                                resourceKind: null,
+                                action: null,
+
+                                marker: markers[0],
+                                options: {},
+
+                                // No expiration
+                                expireTimeMs: role.expireTimeMs,
+                            },
+                            explanation: `${kindString} is assigned the "${ADMIN_ROLE_NAME}" role.`,
+                        };
+                    }
+                }
+
+                let permission:
+                    | ResourcePermissionAssignment
+                    | MarkerPermissionAssignment = null;
+                if (request.resourceId) {
+                    const result =
+                        await this._policies.getPermissionForSubjectAndResource(
+                            request.subjectType,
+                            request.subjectId,
+                            recordName,
+                            request.resourceKind,
+                            request.resourceId,
+                            request.action,
+                            Date.now()
+                        );
+
+                    if (result.success === false) {
+                        return result;
+                    }
+
+                    permission = result.permissionAssignment;
+                }
+
+                if (!permission) {
+                    const result =
+                        await this._policies.getPermissionForSubjectAndMarkers(
+                            request.subjectType,
+                            request.subjectId,
+                            recordName,
+                            request.resourceKind,
+                            markers,
+                            request.action,
+                            Date.now()
+                        );
+
+                    if (result.success === false) {
+                        return result;
+                    }
+
+                    permission = result.permissionAssignment;
+                }
+
+                if (permission) {
+                    // const subjectString = request.subjectType === 'user' ? 'User' :
+                    //     request.subjectType === 'inst' ? 'Inst' : 'Role';
+                    return {
+                        success: true,
+                        recordName,
+                        permission: permission,
+                        explanation: explainationForPermissionAssignment(
+                            request.subjectType,
+                            permission
+                        ),
+                    };
+                }
+            }
+
+            if (!request.subjectId && !context.recordKeyProvided) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You must be logged in to perform this action.',
+                };
+            }
+
+            return {
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    subjectType: request.subjectType,
+                    subjectId: request.subjectId,
+                    resourceKind: request.resourceKind,
+                    resourceId: request.resourceId,
+                    action: request.action,
+                },
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing a subject.',
+                err
+            );
+            return {
+                success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
             };
@@ -5429,6 +6023,36 @@ export function filterAndMergeMarkerPermissions(
     return markers;
 }
 
+/**
+ * Gets a simple human readable explaination for the given permission assignment.
+ */
+export function explainationForPermissionAssignment(
+    subjectType: SubjectType,
+    permissionAssignment:
+        | MarkerPermissionAssignment
+        | ResourcePermissionAssignment
+): string {
+    const subjectString =
+        subjectType === 'user'
+            ? 'User'
+            : subjectType === 'inst'
+            ? 'Inst'
+            : 'Role';
+
+    let permissionString: string;
+    if ('marker' in permissionAssignment) {
+        permissionString = `${subjectString} was granted access to marker "${permissionAssignment.marker}" by "${permissionAssignment.id}"`;
+    } else {
+        permissionString = `${subjectString} was granted access to resource "${permissionAssignment.resourceId}" by "${permissionAssignment.id}"`;
+    }
+
+    if (permissionAssignment.subjectType === 'role') {
+        permissionString += ` using role "${permissionAssignment.subjectId}"`;
+    }
+
+    return permissionString;
+}
+
 export interface MarkerPermission {
     marker: string;
     permissions: PossiblePermission[];
@@ -6474,4 +7098,246 @@ export interface ResourceInfo {
      * The kind of the action.
      */
     actionKind: ActionKinds;
+}
+
+export interface AuthorizeSubject {
+    /**
+     * The type of the subject that should be authorized.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the subject that should be authorized.
+     */
+    subjectId: string | null;
+}
+
+export interface AuthorizeUserAndInstancesRequest {
+    /**
+     * The ID of the user that should be authorized.
+     */
+    userId: string;
+
+    /**
+     * The instances that should be authorized.
+     */
+    instances: string[];
+
+    /**
+     * The kind of resource that the action is being performed on.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The kind of the action.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource.
+     * Should be omitted if the action is "list".
+     */
+    resourceId?: string;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    markers: string[];
+}
+
+export type AuthorizeUserAndInstancesResult =
+    | AuthorizeUserAndInstancesSuccess
+    | AuthorizeSubjectFailure;
+
+export interface AuthorizeUserAndInstancesSuccess {
+    success: true;
+    recordName: string;
+
+    /**
+     * The permission that authorizes the user to perform the request.
+     */
+    user: AuthorizedSubject;
+
+    /**
+     * The results for each subject.
+     */
+    results: AuthorizedSubject[];
+}
+
+export interface AuthorizeSubjectsRequest {
+    /**
+     * The list of subjects that should be authorized.
+     */
+    subjects: AuthorizeSubject[];
+
+    /**
+     * The kind of resource that the action is being performed on.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The kind of the action.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource.
+     * Should be omitted if the action is "list".
+     */
+    resourceId?: string;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    markers: string[];
+}
+
+export interface AuthorizeSubjectRequest {
+    /**
+     * The type of the subject that should be authorized.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the subject that should be authorized.
+     */
+    subjectId: string | null;
+
+    /**
+     * The kind of resource that the action is being performed on.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The kind of the action.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource.
+     * Should be omitted if the action is "list".
+     */
+    resourceId?: string;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    markers: string[];
+}
+
+export type AuthorizeSubjectsResult =
+    | AuthorizeSubjectsSuccess
+    | AuthorizeSubjectFailure;
+
+export interface AuthorizeSubjectsSuccess {
+    success: true;
+    recordName: string;
+
+    /**
+     * The results for each subject.
+     */
+    results: AuthorizedSubject[];
+}
+
+export type AuthorizeSubjectResult =
+    | AuthorizeSubjectSuccess
+    | AuthorizeSubjectFailure;
+
+export interface AuthorizeSubjectSuccess {
+    success: true;
+
+    /**
+     * The name of the record that the action should be for.
+     */
+    recordName: string;
+
+    /**
+     * The permission that authorizes the request.
+     */
+    permission: MarkerPermissionAssignment | ResourcePermissionAssignment;
+
+    /**
+     * The explaination for the authorization.
+     */
+    explanation: string;
+}
+
+export interface AuthorizedSubject extends AuthorizeSubjectSuccess {
+    /**
+     * The type of the subject that was authorized.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the subject that was authorized.
+     */
+    subjectId: string;
+}
+
+export interface AuthorizeSubjectFailure {
+    success: false;
+
+    /**
+     * The error code that occurred.
+     */
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | 'action_not_supported'
+        | 'not_logged_in'
+        | 'not_authorized'
+        | SubscriptionLimitReached
+        | 'unacceptable_request';
+
+    /**
+     * The error message that occurred.
+     */
+    errorMessage: string;
+
+    /**
+     * The denial reason.
+     */
+    reason?: AuthorizeSubjectDenialReason;
+}
+
+export type AuthorizeSubjectDenialReason =
+    | AuthorizeActionMissingPermission
+    | AuthorizeActionTooManyMarkers;
+
+export interface AuthorizeActionMissingPermission {
+    type: 'missing_permission';
+
+    /**
+     * The name of the record that the permission is missing in.
+     */
+    recordName: string;
+
+    /**
+     * Whether the user or inst is missing the permission.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the user/inst that is missing the permission.
+     */
+    subjectId: string;
+
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The action that was attempted.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource that was being accessed.
+     */
+    resourceId?: string;
+}
+
+export interface AuthorizeActionTooManyMarkers {
+    type: 'too_many_markers';
 }
