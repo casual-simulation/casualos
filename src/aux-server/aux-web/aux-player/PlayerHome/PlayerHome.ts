@@ -291,7 +291,15 @@ export default class PlayerHome extends Vue {
                         const bios = getFirst(biosOption) as BiosOption;
                         const options = await this._getBiosOptions();
 
-                        if (options.some((o) => o === bios)) {
+                        if (
+                            options.some(
+                                (o) =>
+                                    o === bios ||
+                                    (isStaticInst(o) && isStaticInst(bios)) ||
+                                    (isPrivateInst(o) && isPrivateInst(bios)) ||
+                                    (isPublicInst(o) && isPublicInst(bios))
+                            )
+                        ) {
                             this.biosSelection = bios;
                             if (
                                 bios !== 'enter join code' &&
