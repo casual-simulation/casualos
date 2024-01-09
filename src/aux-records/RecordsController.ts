@@ -730,7 +730,7 @@ export class RecordsController {
             };
         } catch (err) {
             console.error(
-                '[RecordsController] [validateRecordName] An error occurred while creating a public record key:',
+                '[RecordsController] [validateRecordName] An error occurred while creating a validating a record name:',
                 err
             );
             return {

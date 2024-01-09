@@ -14,3 +14,7 @@
 .md-dialog.input-dialog {
     z-index: 20;
 }
+
+.important-warning {
+    max-width: 700px;
+}
