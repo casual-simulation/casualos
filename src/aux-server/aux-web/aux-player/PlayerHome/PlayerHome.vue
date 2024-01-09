@@ -18,9 +18,18 @@
                 <md-field>
                     <label for="biosOption">bios=</label>
                     <md-select v-model="biosSelection" name="biosOption" id="biosOption">
-                        <md-option v-for="option in biosOptions" :key="option" :value="option">{{
-                            option
-                        }}</md-option>
+                        <bios-option
+                            v-for="option in biosOptions"
+                            :key="option"
+                            ref="biosOptions"
+                            :value="option"
+                            :class="{ 'double-line': hasOptionDescription(option) }"
+                        >
+                            <span>{{ option }}</span>
+                            <span v-if="hasOptionDescription(option)">{{
+                                getOptionDescription(option)
+                            }}</span>
+                        </bios-option>
                     </md-select>
                 </md-field>
 
