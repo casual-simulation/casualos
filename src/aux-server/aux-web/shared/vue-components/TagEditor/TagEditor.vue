@@ -29,8 +29,6 @@
             <md-menu-item v-if="errorMessage" class="tag-editor-error">
                 {{ errorMessage }}
             </md-menu-item>
-
-            <md-menu-item @click="console.log('test')">test</md-menu-item>
             <md-menu-item
                 ref="knownTags"
                 v-for="(result, i) in results"
@@ -40,9 +38,6 @@
             >
                 {{ result }}
             </md-menu-item>
-            <!-- <template v-if="isOpen" class="tag-editor-autofill-holder">
-                
-            </template> -->
         </md-menu-content>
     </md-menu>
 </template>
