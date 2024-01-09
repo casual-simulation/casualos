@@ -9,3 +9,7 @@
 );
 
 @import 'vue-material/dist/theme/all';
+
+:root {
+    --md-theme-default-text-alternate-on-background: #999;
+}

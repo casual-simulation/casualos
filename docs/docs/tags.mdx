@@ -2966,14 +2966,23 @@ The BIOS option that was used to initialize CasualOS.
   <PossibleValueCode value='null'>
     No BIOS option was used. This will cause a selection box to appear asking the user what their preference is. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='static inst'>
-    A new static inst will be generated.
+  <PossibleValueCode value='local inst'>
+    A new local inst will be created. Bots are stored in the browser on the device.
   </PossibleValueCode>
-  <PossibleValueCode value='private inst'>
-    A new private inst will be generated in "My Studio".
+  <PossibleValueCode value='local'>
+    Shorthand for "local inst".
   </PossibleValueCode>
-  <PossibleValueCode value='public inst'>
-    A new public inst will be generated.
+  <PossibleValueCode value='studio inst'>
+    A new private inst will be generated in "My Studio". Bots are stored in the cloud and shared with studio members.
+  </PossibleValueCode>
+  <PossibleValueCode value='studio'>
+    Shorthand for "studio inst".
+  </PossibleValueCode>
+  <PossibleValueCode value='free inst'>
+    A new public inst will be generated. Bots are stored in the cloud and shared publicly, expires in 24h.
+  </PossibleValueCode>
+  <PossibleValueCode value='free'>
+    Shorthand for "free inst".
   </PossibleValueCode>
   <PossibleValueCode value='enter join code'>
     The BIOS selection box will be shown with the "enter join code" option selected.
