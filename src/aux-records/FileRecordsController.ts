@@ -531,7 +531,7 @@ export class FileRecordsController {
                 totalCount: result2.totalCount,
             };
         } catch (err) {
-            console.log(
+            console.error(
                 '[FileRecordsController] An error occurred while listing files:',
                 err
             );

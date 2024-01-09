@@ -164,10 +164,14 @@ export class EventRecordsController {
                 };
             }
         } catch (err) {
+            console.error(
+                `[EventRecordsController] A server error occurred while adding count:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -231,10 +235,14 @@ export class EventRecordsController {
                 markers: markers,
             };
         } catch (err) {
+            console.error(
+                `[EventRecordsController] A server error occurred while getting count:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -333,10 +341,14 @@ export class EventRecordsController {
                 success: true,
             };
         } catch (err) {
+            console.error(
+                `[EventRecordsController] A server error occurred while updating event:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }

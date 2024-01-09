@@ -730,7 +730,7 @@ export class RecordsController {
             };
         } catch (err) {
             console.error(
-                '[RecordsController] [validateRecordName] An error occurred while creating a public record key:',
+                '[RecordsController] [validateRecordName] An error occurred while creating a validating a record name:',
                 err
             );
             return {
@@ -782,7 +782,7 @@ export class RecordsController {
                 config,
                 metrics.subscriptionStatus,
                 metrics.subscriptionId,
-                metrics.ownerId ? 'user' : 'studio'
+                metrics.subscriptionType
             ),
         };
     }
@@ -806,7 +806,7 @@ export class RecordsController {
                 records: records,
             };
         } catch (err) {
-            console.log(
+            console.error(
                 '[RecordsController] [listRecords] Error listing records: ',
                 err
             );
@@ -844,7 +844,7 @@ export class RecordsController {
                 records: records,
             };
         } catch (err) {
-            console.log(
+            console.error(
                 '[RecordsController] [listStudioRecords] Error listing records: ',
                 err
             );

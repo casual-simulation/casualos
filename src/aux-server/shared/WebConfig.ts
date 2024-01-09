@@ -7,9 +7,9 @@ import {
  * The possible BIOS options.
  *
  * - "enter join code" indicates that the user should be prompted to enter a join code.
- * - "staticInst" indicates that the instance should be loaded statically.
- * - "publicInst" indicates that the instance should be loaded from the public partition.
- * - "privateInst" indicates that the instance should be loaded from the private partition.
+ * - "static inst", "local inst", and "local" indicates that the instance should be loaded statically.
+ * - "public inst", "free inst", and "free" indicates that the instance should be loaded from the public partition.
+ * - "private inst", "studio inst", and "studio" indicates that the instance should be loaded from the private partition.
  * - "sign in" indicates that the user should be prompted to sign in.
  * - "sign up" indicates that the user should be prompted to sign up.
  * - "sign out" indicates that the user should be logged out.
@@ -17,8 +17,14 @@ import {
 export type BiosOption =
     | 'enter join code'
     | 'static inst'
+    | 'local inst'
+    | 'local'
     | 'public inst'
     | 'private inst'
+    | 'free inst'
+    | 'free'
+    | 'studio inst'
+    | 'studio'
     | 'sign in'
     | 'sign up'
     | 'sign out';

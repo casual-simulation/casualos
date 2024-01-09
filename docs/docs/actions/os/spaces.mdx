@@ -1,0 +1,20 @@
+---
+id: spaces
+title: Space Actions
+sidebar_label: Spaces
+description: Space actions are functions that make it easier to work with the spaces in CasualOS.
+---
+
+import Doc from '../../api-info/actions/os/spaces.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

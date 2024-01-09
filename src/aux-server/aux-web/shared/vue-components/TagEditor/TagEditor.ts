@@ -15,6 +15,7 @@ import { EventBus } from '@casual-simulation/aux-components';
 export default class TagEditor extends Vue {
     @Prop() value: string;
     @Prop() tagExists: boolean;
+
     @Prop({ default: false })
     useMaterialInput: boolean;
 
@@ -39,6 +40,18 @@ export default class TagEditor extends Vue {
     }
 
     get showMenu() {
+        return (
+            this.focused &&
+            this.changed &&
+            (this.results.length > 0 || this.errorMessage)
+        );
+    }
+
+    onEnter() {
+        console.log('enter');
+    }
+
+    private _updateMenuItems() {
         if (this.value.length > 0) {
             // call the sort applicable tags function here
             this.results = this._sortAutoCompleteItems();
@@ -51,12 +64,6 @@ export default class TagEditor extends Vue {
                 });
             }
         }
-
-        return !!(
-            this.focused &&
-            this.changed &&
-            (this.errorMessage || this.results.length > 0)
-        );
     }
 
     get errorMessage() {
@@ -82,6 +89,7 @@ export default class TagEditor extends Vue {
     onInput(event: any) {
         this.$nextTick(() => {
             this.$emit('input', this._convertToFinalValue(event.target.value));
+            this._updateMenuItems();
             this.changed = true;
             const error = this.errorMessage;
             this.$emit('valid', !error);
@@ -124,6 +132,7 @@ export default class TagEditor extends Vue {
     }
 
     onAutoFill(fillValue: string) {
+        console.log('autofill', fillValue);
         this._lastAutoFillTime = Date.now();
         this.changed = true;
         this.$emit('autoFill', fillValue);
@@ -144,14 +153,6 @@ export default class TagEditor extends Vue {
         const field = (<any>this.$refs.mdField)?.MdField;
         if (field) {
             field.focused = true;
-        }
-    }
-
-    onBlur() {
-        this.focused = false;
-        const field = (<any>this.$refs.mdField)?.MdField;
-        if (field) {
-            field.focused = false;
         }
     }
 

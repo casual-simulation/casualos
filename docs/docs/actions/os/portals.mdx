@@ -1,0 +1,20 @@
+---
+id: portals
+title: Portal Actions
+sidebar_label: Portals
+description: Actions for working with portals.
+---
+
+import Doc from '../../api-info/actions/os/portals.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

@@ -173,39 +173,37 @@ export const subscriptionFeaturesSchema = z.object({
                 .optional(),
         }),
     }),
-    insts: z
-        .object({
-            allowed: z
-                .boolean()
-                .describe(
-                    'Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.'
-                ),
-            maxInsts: z
-                .number()
-                .describe(
-                    'The maximum number of private insts that are allowed for the subscription. If omitted, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-            maxBytesPerInst: z
-                .number()
-                .describe(
-                    'The maximum number of bytes that can be stored in an inst. If omitted, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-            maxActiveConnectionsPerInst: z
-                .number()
-                .describe(
-                    'The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-        })
-        .optional(),
+    insts: z.object({
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.'
+            ),
+        maxInsts: z
+            .number()
+            .describe(
+                'The maximum number of private insts that are allowed for the subscription. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxBytesPerInst: z
+            .number()
+            .describe(
+                'The maximum number of bytes that can be stored in an inst. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxActiveConnectionsPerInst: z
+            .number()
+            .describe(
+                'The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+    }),
 });
 
 export const subscriptionConfigSchema = z.object({

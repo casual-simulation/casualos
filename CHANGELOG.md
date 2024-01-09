@@ -1,12 +1,45 @@
 # CasualOS Changelog
 
+## V3.2.10
+
+#### Date: 1/9/2024
+
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
+### :rocket: Features
+
+-   Added new BIOS options.
+    -   `local inst` - Works exactly like `static inst`.
+    -   `local` - Shorthand `local inst`.
+    -   `free inst` - Works exactly like `public inst`.
+    -   `free` - Shorthand for `free inst`.
+    -   `studio inst` - Works exactly like `private inst`.
+    -   `studio` - Shorthand for `studio inst`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using the keyboard to select a tag in the sheetPortal would cause the page to refresh.
+-   Fixed an issue where loading a studio inst for the first time after creating an account could fail.
+
+## V3.2.9
+
+#### Date: 1/3/2024
+
+### :bug: Bug Fixes
+
+-   Fixed some visual issues with studio subscriptions.
+-   Fixed an issue where it was possible for a studio to have default user features when subscribed.
+
 ## V3.2.8
 
-#### Date: 12/22/2023
+#### Date: 12/29/2023
 
 ### :bug: Bug Fixes
 
 -   Fix issues with Docker ARM32 and ARM64 builds.
+-   Fixed an issue where objects could not be stored as data if a max data size was set.
 
 ## V3.2.7
 

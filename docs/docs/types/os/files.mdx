@@ -1,0 +1,20 @@
+---
+id: files
+title: File Actions
+sidebar_label: Files
+description: Types that are used in file actions.
+---
+
+import Doc from '../../api-info/types/os/files.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

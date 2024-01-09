@@ -1,0 +1,20 @@
+---
+id: portals
+title: Portal Types
+sidebar_label: Portals
+description: Types that are used in portal actions.
+---
+
+import Doc from '../../api-info/types/os/portals.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />
