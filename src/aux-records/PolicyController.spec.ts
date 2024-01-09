@@ -54,6 +54,7 @@ import {
     ResourcePermissionAssignment,
     SubjectType,
 } from './PolicyStore';
+import { formatInstId } from './websockets';
 
 console.log = jest.fn();
 
@@ -34004,7 +34005,7 @@ describe('PolicyController', () => {
                     it('should allow the action if the inst was granted the admin role in the record', async () => {
                         await store.assignSubjectRole(
                             recordName,
-                            'myInst',
+                            '/myInst',
                             'inst',
                             {
                                 expireTimeMs: null,
@@ -34021,7 +34022,7 @@ describe('PolicyController', () => {
                         const result = await controller.authorizeSubject(
                             context,
                             {
-                                subjectId: 'myInst',
+                                subjectId: '/myInst',
                                 subjectType: 'inst',
                                 resourceKind: resourceKind,
                                 action: action,
@@ -34414,7 +34415,10 @@ describe('PolicyController', () => {
             ],
         ];
 
-        const recordKeySubjectTypeCases: [SubjectType][] = [['user'], ['inst']];
+        const recordKeySubjectTypeCases: [SubjectType, string][] = [
+            ['user', 'subjectId'],
+            ['inst', '/subjectId'],
+        ];
 
         describe.each(recordKeyResourceKindCases)(
             '%s',
@@ -34422,7 +34426,7 @@ describe('PolicyController', () => {
                 describe.each(actions)('%s', (action, resourceId) => {
                     describe.each(recordKeySubjectTypeCases)(
                         'subject %s',
-                        (subjectType) => {
+                        (subjectType, subjectId) => {
                             const marker = 'marker';
 
                             it('should allow the action if using a recordKey', async () => {
@@ -34436,7 +34440,7 @@ describe('PolicyController', () => {
 
                                 const result =
                                     await controller.authorizeSubject(context, {
-                                        subjectId: 'subjectId',
+                                        subjectId: subjectId,
                                         subjectType: subjectType,
                                         resourceKind: resourceKind,
                                         action: action,
@@ -34568,21 +34572,6 @@ describe('PolicyController', () => {
             [ActionKinds, string | null][]
         ][] = [
             [
-                'policy',
-                [
-                    ['assign', 'resourceId'],
-                    ['unassign', 'resourceId'],
-                    ['grant', 'resourceId'],
-                    ['revoke', 'resourceId'],
-                    ['grantPermission', 'resourceId'],
-                    ['revokePermission', 'resourceId'],
-                    ['updateData', 'resourceId'],
-                    ['sendAction', 'resourceId'],
-                    ['count', 'resourceId'],
-                    ['increment', 'resourceId'],
-                ],
-            ],
-            [
                 'file',
                 [
                     ['list', null],
@@ -34668,9 +34657,9 @@ describe('PolicyController', () => {
             ],
         ];
 
-        const recordKeySubjectTypeDenialCases: [SubjectType][] = [
-            ['user'],
-            ['inst'],
+        const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
+            ['user', 'subjectId'],
+            ['inst', '/subjectId'],
         ];
 
         describe.each(recordKeyResourceKindDenialCases)(
@@ -34678,8 +34667,8 @@ describe('PolicyController', () => {
             (resourceKind, actions) => {
                 describe.each(actions)('%s', (action, resourceId) => {
                     describe.each(recordKeySubjectTypeDenialCases)(
-                        '%s',
-                        (subjectType) => {
+                        'subject %s',
+                        (subjectType, subjectId) => {
                             const marker = 'marker';
 
                             it('should deny the action if using a recordKey', async () => {
@@ -34693,7 +34682,7 @@ describe('PolicyController', () => {
 
                                 const result =
                                     await controller.authorizeSubject(context, {
-                                        subjectId: 'subjectId',
+                                        subjectId: subjectId,
                                         subjectType: subjectType,
                                         resourceKind: resourceKind,
                                         action: action,
@@ -34710,7 +34699,7 @@ describe('PolicyController', () => {
                                         type: 'missing_permission',
                                         recordName: recordName,
                                         subjectType: subjectType,
-                                        subjectId: 'subjectId',
+                                        subjectId: subjectId,
                                         action: action,
                                         resourceKind: resourceKind,
                                         resourceId: resourceId,
@@ -34857,25 +34846,229 @@ describe('PolicyController', () => {
             }
         );
 
+        describe.each(studioMemberResourceKindCases)(
+            '%s',
+            (resourceKind, actions) => {
+                describe.each(actions)('%s', (action, resourceId) => {
+                    const marker = 'marker';
+                    const inst = 'inst';
+                    let instId: string;
+
+                    beforeEach(() => {
+                        instId = formatInstId(recordName, inst);
+                    });
+
+                    it('should allow the action if the inst is owned by the record', async () => {
+                        await store.saveInst({
+                            recordName,
+                            inst: inst,
+                            markers: ['anything'],
+                            branches: [],
+                        });
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: instId,
+                                subjectType: 'inst',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: instId,
+
+                                // resourceKind and action are specified
+                                // because members don't necessarily have all permissions in the studio
+                                resourceKind: resourceKind,
+                                action: action,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'Inst is owned by the record.',
+                        });
+                    });
+
+                    it('should deny the action if the inst is not owned by the record', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: studioRecord,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: instId,
+                                subjectType: 'inst',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                            reason: {
+                                type: 'missing_permission',
+                                recordName: studioRecord,
+                                subjectType: 'inst',
+                                subjectId: instId,
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                            },
+                        });
+                    });
+
+                    it('should allow the action if the inst is owned by the studio', async () => {
+                        const otherStudioRecord = 'otherStudioRecord';
+                        const studioRecordResult =
+                            (await services.records.createRecord({
+                                recordName: otherStudioRecord,
+                                userId: ownerId,
+                                studioId: studioId,
+                            })) as CreateRecordSuccess;
+
+                        await store.saveInst({
+                            recordName: otherStudioRecord,
+                            inst: inst,
+                            markers: ['anything'],
+                            branches: [],
+                        });
+                        instId = formatInstId(otherStudioRecord, inst);
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: studioRecord,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: instId,
+                                subjectType: 'inst',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: studioRecord,
+                            permission: {
+                                id: null,
+                                recordName: studioRecord,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: instId,
+
+                                // resourceKind and action are specified
+                                // because members don't necessarily have all permissions in the studio
+                                resourceKind: resourceKind,
+                                action: action,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: `Inst is owned by the record's (${studioRecord}) studio (${studioId}).`,
+                        });
+                    });
+
+                    it('should allow the action if the inst is owned by the user', async () => {
+                        const otherRecord = 'otherRecord';
+                        const studioRecordResult =
+                            (await services.records.createRecord({
+                                recordName: otherRecord,
+                                userId: ownerId,
+                                ownerId: ownerId,
+                            })) as CreateRecordSuccess;
+
+                        await store.saveInst({
+                            recordName: otherRecord,
+                            inst: inst,
+                            markers: ['anything'],
+                            branches: [],
+                        });
+                        instId = formatInstId(otherRecord, inst);
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: instId,
+                                subjectType: 'inst',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: instId,
+
+                                // resourceKind and action are specified
+                                // because members don't necessarily have all permissions in the studio
+                                resourceKind: resourceKind,
+                                action: action,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: `Inst is owned by the record's (${recordName}) owner (${ownerId}).`,
+                        });
+                    });
+                });
+            }
+        );
+
         const studioMemberResourceKindDenialCases: [
             ResourceKinds,
             [ActionKinds, string | null][]
         ][] = [
-            [
-                'policy',
-                [
-                    ['assign', 'resourceId'],
-                    ['unassign', 'resourceId'],
-                    ['grant', 'resourceId'],
-                    ['revoke', 'resourceId'],
-                    ['grantPermission', 'resourceId'],
-                    ['revokePermission', 'resourceId'],
-                    ['updateData', 'resourceId'],
-                    ['sendAction', 'resourceId'],
-                    ['count', 'resourceId'],
-                    ['increment', 'resourceId'],
-                ],
-            ],
             [
                 'file',
                 [
@@ -35210,8 +35403,9 @@ describe('PolicyController', () => {
             const resourceKind: ResourceKinds = 'data';
             const resourceId = 'resourceId';
             const action: ActionKinds = 'create';
+            const instId = '/myInst';
 
-            await store.assignSubjectRole(recordName, 'myInst', 'inst', {
+            await store.assignSubjectRole(recordName, instId, 'inst', {
                 expireTimeMs: null,
                 role: ADMIN_ROLE_NAME,
             });
@@ -35229,7 +35423,7 @@ describe('PolicyController', () => {
                     },
                     {
                         subjectType: 'inst',
-                        subjectId: 'myInst',
+                        subjectId: instId,
                     },
                 ],
                 resourceKind: resourceKind,
@@ -35271,7 +35465,7 @@ describe('PolicyController', () => {
                         success: true,
                         recordName: recordName,
                         subjectType: 'inst',
-                        subjectId: 'myInst',
+                        subjectId: instId,
                         permission: {
                             id: null,
                             recordName,

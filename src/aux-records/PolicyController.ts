@@ -55,6 +55,7 @@ import {
 } from './PolicyStore';
 import { intersectionBy, isEqual, sortBy, union } from 'lodash';
 import { getMarkersOrDefault } from './Utils';
+import { parseInstId } from './websockets';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -239,6 +240,7 @@ export class PolicyController {
             recordOwnerId: ownerId,
             recordStudioId: studioId,
             recordStudioMembers: studioMembers,
+            userId: request.userId,
         };
 
         return {
@@ -672,6 +674,104 @@ export class PolicyController {
                                     "User is a member in the record's studio.",
                             };
                         }
+                    }
+                }
+            } else if (request.subjectType === 'inst' && request.subjectId) {
+                const instId = parseInstId(request.subjectId);
+                if (!instId) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'Invalid inst ID. It must contain a forward slash',
+                    };
+                }
+
+                if (instId.recordName) {
+                    if (instId.recordName === recordName) {
+                        return {
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: request.subjectId,
+
+                                // resourceKind and action are specified
+                                // because insts don't necessarily have all permissions in the record
+                                resourceKind: request.resourceKind,
+                                action: request.action,
+
+                                marker: markers[0],
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: `Inst is owned by the record.`,
+                        };
+                    }
+
+                    const instRecord = await this._records.validateRecordName(
+                        instId.recordName,
+                        context.userId
+                    );
+
+                    if (instRecord.success === false) {
+                        return instRecord;
+                    } else if (
+                        instRecord.ownerId &&
+                        instRecord.ownerId === context.recordOwnerId
+                    ) {
+                        return {
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: request.subjectId,
+
+                                // resourceKind and action are specified
+                                // because insts don't necessarily have all permissions in the record
+                                resourceKind: request.resourceKind,
+                                action: request.action,
+
+                                marker: markers[0],
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: `Inst is owned by the record's (${recordName}) owner (${context.recordOwnerId}).`,
+                        };
+                    } else if (
+                        instRecord.studioId &&
+                        instRecord.studioId === context.recordStudioId
+                    ) {
+                        return {
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: request.subjectId,
+
+                                // resourceKind and action are specified
+                                // because insts don't necessarily have all permissions in the record
+                                resourceKind: request.resourceKind,
+                                action: request.action,
+
+                                marker: markers[0],
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: `Inst is owned by the record's (${recordName}) studio (${context.recordStudioId}).`,
+                        };
                     }
                 }
             }
@@ -6085,6 +6185,11 @@ export interface AuthorizationContext {
     recordStudioId: string;
     recordStudioMembers?: ListedStudioAssignment[];
     subjectPolicy: PublicRecordKeyPolicy;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
 }
 
 export interface RolesContext<T extends AuthorizeRequestBase>

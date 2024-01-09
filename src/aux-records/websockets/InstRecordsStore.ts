@@ -328,3 +328,32 @@ export interface ListInstsStoreFailure {
     errorCode: ServerError | 'record_not_found';
     errorMessage: string;
 }
+
+/**
+ * Gets the ID for an inst with the given origin.
+ * @param recordName The name of the record for the simulation.
+ * @param inst The name of the inst for the simulation.
+ */
+export function formatInstId(recordName: string | null, inst: string): string {
+    return `${recordName ?? ''}/${inst}`;
+}
+
+/**
+ * Parses the given inst ID into the record name and inst name.
+ * @param id The ID of the inst.
+ */
+export function parseInstId(id: string): {
+    recordName: string | null;
+    inst: string;
+} {
+    const indexOfFirstSlash = id.indexOf('/');
+    if (indexOfFirstSlash < 0) {
+        return null;
+    }
+    const recordName = id.substring(0, indexOfFirstSlash);
+    const inst = id.substring(indexOfFirstSlash + 1);
+    return {
+        recordName: recordName ? recordName : null,
+        inst,
+    };
+}
