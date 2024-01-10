@@ -64,8 +64,7 @@ import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid } from 'uuid';
 import {
     AuthorizationContext,
-    AuthorizeDenied,
-    ListedInstItem,
+    ConstructAuthorizationContextFailure,
     PolicyController,
     returnAuthorizationResult,
 } from '../PolicyController';
@@ -2263,7 +2262,9 @@ export interface GetOrCreateInstSuccess {
 
 export interface GetOrCreateInstFailure {
     success: false;
-    errorCode: AuthorizeDenied['errorCode'] | SaveInstFailure['errorCode'];
+    errorCode: //AuthorizeDenied['errorCode']
+    | ConstructAuthorizationContextFailure['errorCode']
+        | SaveInstFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;
 }
@@ -2280,7 +2281,8 @@ export interface GetBranchDataFailure {
     errorCode:
         | ServerError
         | 'inst_not_found'
-        | AuthorizeDenied['errorCode']
+        | ConstructAuthorizationContextFailure['errorCode']
+        // | AuthorizeDenied['errorCode']
         | GetOrCreateInstFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;
@@ -2290,7 +2292,7 @@ export type ListInstsResult = ListInstsSuccess | ListInstsFailure;
 
 export interface ListInstsSuccess {
     success: true;
-    insts: ListedInstItem[];
+    insts: any[]; //ListedInstItem[];
     totalCount: number;
 }
 
@@ -2300,7 +2302,8 @@ export interface ListInstsFailure {
         | ServerError
         | 'record_not_found'
         | NotSupportedError
-        | AuthorizeDenied['errorCode']
+        | ConstructAuthorizationContextFailure['errorCode']
+        // | AuthorizeDenied['errorCode']
         | GetOrCreateInstFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;
@@ -2318,7 +2321,8 @@ export interface EraseInstFailure {
         | ServerError
         | 'inst_not_found'
         | NotSupportedError
-        | AuthorizeDenied['errorCode']
+        | ConstructAuthorizationContextFailure['errorCode']
+        // | AuthorizeDenied['errorCode']
         | GetOrCreateInstFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;

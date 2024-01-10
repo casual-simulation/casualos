@@ -71,22 +71,14 @@ import {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
-    GetUserPolicyResult,
-    ListMarkerPoliciesResult,
     ListPermissionsInRecordForSubjectResult,
     ListPermissionsInRecordResult,
-    ListUserPoliciesStoreResult,
     ListedRoleAssignments,
-    ListedUserPolicy,
     MarkerPermissionAssignment,
     PolicyStore,
     ResourcePermissionAssignment,
     RoleAssignment,
-    SubjectType,
-    UpdateRolesUpdate,
-    UpdateUserPolicyResult,
     UpdateUserRolesResult,
-    UserPolicyRecord,
     getExpireTime,
     getPublicMarkerPermission,
     getPublicMarkersPermission,
@@ -95,14 +87,11 @@ import {
 import {
     ADMIN_ROLE_NAME,
     ActionKinds,
-    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
     PermissionOptions,
-    PolicyDocument,
     ResourceKinds,
+    SubjectType,
 } from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
@@ -207,14 +196,15 @@ export class MemoryStore
 
     maxAllowedInstSize: number = Infinity;
 
-    policies: {
-        [recordName: string]: {
-            [marker: string]: {
-                document: PolicyDocument;
-                markers: string[];
-            };
-        };
-    };
+    policies: any;
+    //  {
+    //     [recordName: string]: {
+    //         [marker: string]: {
+    //             document: PolicyDocument;
+    //             markers: string[];
+    //         };
+    //     };
+    // };
 
     roles: {
         [recordName: string]: {
@@ -1837,98 +1827,98 @@ export class MemoryStore
         return record;
     }
 
-    async listUserPolicies(
-        recordName: string,
-        startingMarker: string
-    ): Promise<ListUserPoliciesStoreResult> {
-        const recordPolicies = this.policies[recordName] ?? {};
+    // async listUserPolicies(
+    //     recordName: string,
+    //     startingMarker: string
+    // ): Promise<ListUserPoliciesStoreResult> {
+    //     const recordPolicies = this.policies[recordName] ?? {};
 
-        const keys = sortBy(Object.keys(recordPolicies));
+    //     const keys = sortBy(Object.keys(recordPolicies));
 
-        let results: ListedUserPolicy[] = [];
-        let start = !startingMarker;
-        for (let key of keys) {
-            if (start) {
-                results.push({
-                    marker: key,
-                    document: recordPolicies[key].document,
-                    markers: recordPolicies[key].markers,
-                });
-            } else if (key === startingMarker || key > startingMarker) {
-                start = true;
-            }
-        }
+    //     let results: ListedUserPolicy[] = [];
+    //     let start = !startingMarker;
+    //     for (let key of keys) {
+    //         if (start) {
+    //             results.push({
+    //                 marker: key,
+    //                 document: recordPolicies[key].document,
+    //                 markers: recordPolicies[key].markers,
+    //             });
+    //         } else if (key === startingMarker || key > startingMarker) {
+    //             start = true;
+    //         }
+    //     }
 
-        return {
-            success: true,
-            policies: results,
-            totalCount: results.length,
-        };
-    }
+    //     return {
+    //         success: true,
+    //         policies: results,
+    //         totalCount: results.length,
+    //     };
+    // }
 
-    async getUserPolicy(
-        recordName: string,
-        marker: string
-    ): Promise<GetUserPolicyResult> {
-        const policy = this.policies[recordName]?.[marker];
+    // async getUserPolicy(
+    //     recordName: string,
+    //     marker: string
+    // ): Promise<GetUserPolicyResult> {
+    //     const policy = this.policies[recordName]?.[marker];
 
-        if (!policy) {
-            return {
-                success: false,
-                errorCode: 'policy_not_found',
-                errorMessage: 'The policy was not found.',
-            };
-        }
+    //     if (!policy) {
+    //         return {
+    //             success: false,
+    //             errorCode: 'policy_not_found',
+    //             errorMessage: 'The policy was not found.',
+    //         };
+    //     }
 
-        return {
-            success: true,
-            document: policy.document,
-            markers: policy.markers,
-        };
-    }
+    //     return {
+    //         success: true,
+    //         document: policy.document,
+    //         markers: policy.markers,
+    //     };
+    // }
 
-    async updateUserPolicy(
-        recordName: string,
-        marker: string,
-        policy: UserPolicyRecord
-    ): Promise<UpdateUserPolicyResult> {
-        if (!this.policies[recordName]) {
-            this.policies[recordName] = {};
-        }
+    // async updateUserPolicy(
+    //     recordName: string,
+    //     marker: string,
+    //     policy: UserPolicyRecord
+    // ): Promise<UpdateUserPolicyResult> {
+    //     if (!this.policies[recordName]) {
+    //         this.policies[recordName] = {};
+    //     }
 
-        this.policies[recordName][marker] = {
-            document: policy.document,
-            markers: policy.markers,
-        };
+    //     this.policies[recordName][marker] = {
+    //         document: policy.document,
+    //         markers: policy.markers,
+    //     };
 
-        return {
-            success: true,
-        };
-    }
+    //     return {
+    //         success: true,
+    //     };
+    // }
 
-    async listPoliciesForMarkerAndUser(
-        recordName: string,
-        userId: string,
-        marker: string
-    ): Promise<ListMarkerPoliciesResult> {
-        const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
-        if (marker === PUBLIC_READ_MARKER) {
-            policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
-        } else if (marker === PUBLIC_WRITE_MARKER) {
-            policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
-        }
-        const policy = this.policies[recordName]?.[marker];
-        if (policy) {
-            policies.push(policy.document);
-        }
+    // async listPoliciesForMarkerAndUser(
+    //     recordName: string,
+    //     userId: string,
+    //     marker: string
+    // ): Promise<ListMarkerPoliciesResult> {
+    //     const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
+    //     if (marker === PUBLIC_READ_MARKER) {
+    //         policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
+    //     } else if (marker === PUBLIC_WRITE_MARKER) {
+    //         policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
+    //     }
+    //     const policy = this.policies[recordName]?.[marker];
+    //     if (policy) {
+    //         policies.push(policy.document);
+    //     }
 
-        return {
-            policies,
-            recordOwnerPrivacyFeatures:
-                await this._getRecordOwnerPrivacyFeatures(recordName),
-            userPrivacyFeatures: await this._getUserPrivacyFeatures(userId),
-        };
-    }
+    //     return {
+    //         policies,
+    //         recordOwnerPrivacyFeatures:
+    //             await this._getRecordOwnerPrivacyFeatures(recordName),
+    //         userPrivacyFeatures: await this._getUserPrivacyFeatures(userId),
+    //     };
+    // }
 
     private async _getRecordOwnerPrivacyFeatures(
         recordName: string
@@ -2125,50 +2115,50 @@ export class MemoryStore
         };
     }
 
-    async updateUserRoles(
-        recordName: string,
-        userId: string,
-        update: UpdateRolesUpdate
-    ): Promise<UpdateUserRolesResult> {
-        if (!this.roleAssignments[recordName]) {
-            this.roleAssignments[recordName] = {};
-        }
+    // async updateUserRoles(
+    //     recordName: string,
+    //     userId: string,
+    //     update: UpdateRolesUpdate
+    // ): Promise<UpdateUserRolesResult> {
+    //     if (!this.roleAssignments[recordName]) {
+    //         this.roleAssignments[recordName] = {};
+    //     }
 
-        const assignments = update.roles
-            .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
-            .map((r) => ({
-                ...r,
-                expireTimeMs:
-                    r.expireTimeMs === Infinity ? null : r.expireTimeMs,
-            }));
-        this.roleAssignments[recordName][userId] = assignments;
+    //     const assignments = update.roles
+    //         .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
+    //         .map((r) => ({
+    //             ...r,
+    //             expireTimeMs:
+    //                 r.expireTimeMs === Infinity ? null : r.expireTimeMs,
+    //         }));
+    //     this.roleAssignments[recordName][userId] = assignments;
 
-        return {
-            success: true,
-        };
-    }
+    //     return {
+    //         success: true,
+    //     };
+    // }
 
-    async updateInstRoles(
-        recordName: string,
-        inst: string,
-        update: UpdateRolesUpdate
-    ): Promise<UpdateUserRolesResult> {
-        if (!this.roleAssignments[recordName]) {
-            this.roleAssignments[recordName] = {};
-        }
-        const assignments = update.roles
-            .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
-            .map((r) => ({
-                ...r,
-                expireTimeMs:
-                    r.expireTimeMs === Infinity ? null : r.expireTimeMs,
-            }));
-        this.roleAssignments[recordName][inst] = assignments;
+    // async updateInstRoles(
+    //     recordName: string,
+    //     inst: string,
+    //     update: UpdateRolesUpdate
+    // ): Promise<UpdateUserRolesResult> {
+    //     if (!this.roleAssignments[recordName]) {
+    //         this.roleAssignments[recordName] = {};
+    //     }
+    //     const assignments = update.roles
+    //         .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
+    //         .map((r) => ({
+    //             ...r,
+    //             expireTimeMs:
+    //                 r.expireTimeMs === Infinity ? null : r.expireTimeMs,
+    //         }));
+    //     this.roleAssignments[recordName][inst] = assignments;
 
-        return {
-            success: true,
-        };
-    }
+    //     return {
+    //         success: true,
+    //     };
+    // }
 
     private _getRolesForEntity(recordName: string, id: string): AssignedRole[] {
         const roles = this.roles[recordName]?.[id] ?? new Set<string>();

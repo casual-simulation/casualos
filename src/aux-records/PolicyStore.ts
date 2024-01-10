@@ -4,8 +4,9 @@ import {
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
     PermissionOptions,
-    PolicyDocument,
     ResourceKinds,
+    SubjectType,
+    USER_SUBJECT_TYPE,
 } from '@casual-simulation/aux-common';
 import { PrivacyFeatures } from './AuthStore';
 
@@ -13,27 +14,27 @@ import { PrivacyFeatures } from './AuthStore';
  * Defines an interface for objects that are able to store and retrieve policy documents.
  */
 export interface PolicyStore {
-    /**
-     * Gets the list of policy documents that apply to the given marker and user.
-     * @param recordName The name of the record that the policies belong to.
-     * @param userId The ID of the user that is attempting to utilize the markers. Null if the user is not logged in.
-     * @param marker The marker.
-     */
-    listPoliciesForMarkerAndUser(
-        recordName: string,
-        userId: string,
-        marker: string
-    ): Promise<ListMarkerPoliciesResult>;
+    // /**
+    //  * Gets the list of policy documents that apply to the given marker and user.
+    //  * @param recordName The name of the record that the policies belong to.
+    //  * @param userId The ID of the user that is attempting to utilize the markers. Null if the user is not logged in.
+    //  * @param marker The marker.
+    //  */
+    // listPoliciesForMarkerAndUser(
+    //     recordName: string,
+    //     userId: string,
+    //     marker: string
+    // ): Promise<ListMarkerPoliciesResult>;
 
-    /**
-     * Lists the user-created policices for the given record.
-     * @param recordName The name of the record.
-     * @param startingMarker The marker that policies should be listed after. If null, then the list starts with the first policy.
-     */
-    listUserPolicies(
-        recordName: string,
-        startingMarker: string | null
-    ): Promise<ListUserPoliciesStoreResult>;
+    // /**
+    //  * Lists the user-created policices for the given record.
+    //  * @param recordName The name of the record.
+    //  * @param startingMarker The marker that policies should be listed after. If null, then the list starts with the first policy.
+    //  */
+    // listUserPolicies(
+    //     recordName: string,
+    //     startingMarker: string | null
+    // ): Promise<ListUserPoliciesStoreResult>;
 
     /**
      * Lists the roles that are assigned to the user.
@@ -72,27 +73,27 @@ export interface PolicyStore {
         startingRole: string | null
     ): Promise<ListedRoleAssignments>;
 
-    /**
-     * Gets the user-created policy for the given marker.
-     * @param recordName The name of the record.
-     * @param marker The name of the marker.
-     */
-    getUserPolicy(
-        recordName: string,
-        marker: string
-    ): Promise<GetUserPolicyResult>;
+    // /**
+    //  * Gets the user-created policy for the given marker.
+    //  * @param recordName The name of the record.
+    //  * @param marker The name of the marker.
+    //  */
+    // getUserPolicy(
+    //     recordName: string,
+    //     marker: string
+    // ): Promise<GetUserPolicyResult>;
 
-    /**
-     * Updates the policy for the given marker.
-     * @param recordName The name of the record.
-     * @param marker The name of the marker.
-     * @param document The new policy document.
-     */
-    updateUserPolicy(
-        recordName: string,
-        marker: string,
-        policy: UserPolicyRecord
-    ): Promise<UpdateUserPolicyResult>;
+    // /**
+    //  * Updates the policy for the given marker.
+    //  * @param recordName The name of the record.
+    //  * @param marker The name of the marker.
+    //  * @param document The new policy document.
+    //  */
+    // updateUserPolicy(
+    //     recordName: string,
+    //     marker: string,
+    //     policy: UserPolicyRecord
+    // ): Promise<UpdateUserPolicyResult>;
 
     /**
      * Gets the privacy features that are enabled for the given user.
@@ -306,62 +307,62 @@ export interface PolicyStore {
     ): Promise<UpdateUserRolesResult>;
 }
 
-/**
- * Defines an interface that represents a user-created policy.
- */
-export interface UserPolicyRecord {
-    /**
-     * The policy document.
-     */
-    document: PolicyDocument;
+// /**
+//  * Defines an interface that represents a user-created policy.
+//  */
+// export interface UserPolicyRecord {
+//     /**
+//      * The policy document.
+//      */
+//     document: PolicyDocument;
 
-    /**
-     * The list of markers that are applied to the policy.
-     */
-    markers: string[];
-}
+//     /**
+//      * The list of markers that are applied to the policy.
+//      */
+//     markers: string[];
+// }
 
-export interface ListedUserPolicy extends UserPolicyRecord {
-    /**
-     * The marker that this policy is for.
-     */
-    marker: string;
-}
+// export interface ListedUserPolicy extends UserPolicyRecord {
+//     /**
+//      * The marker that this policy is for.
+//      */
+//     marker: string;
+// }
 
-export type GetUserPolicyResult = GetUserPolicySuccess | GetUserPolicyFailure;
+// export type GetUserPolicyResult = GetUserPolicySuccess | GetUserPolicyFailure;
 
-export interface GetUserPolicySuccess {
-    success: true;
-    document: PolicyDocument;
-    markers: string[];
-}
+// export interface GetUserPolicySuccess {
+//     success: true;
+//     document: PolicyDocument;
+//     markers: string[];
+// }
 
-export interface GetUserPolicyFailure {
-    success: false;
-    errorCode: ServerError | 'policy_not_found';
-    errorMessage: string;
-}
+// export interface GetUserPolicyFailure {
+//     success: false;
+//     errorCode: ServerError | 'policy_not_found';
+//     errorMessage: string;
+// }
 
-export type UpdateUserPolicyResult =
-    | UpdateUserPolicySuccess
-    | UpdateUserPolicyFailure;
+// export type UpdateUserPolicyResult =
+//     | UpdateUserPolicySuccess
+//     | UpdateUserPolicyFailure;
 
-export interface UpdateUserPolicySuccess {
-    success: true;
-}
+// export interface UpdateUserPolicySuccess {
+//     success: true;
+// }
 
-export interface UpdateUserPolicyFailure {
-    success: false;
-    errorCode: ServerError | 'policy_too_large';
-    errorMessage: string;
-}
+// export interface UpdateUserPolicyFailure {
+//     success: false;
+//     errorCode: ServerError | 'policy_too_large';
+//     errorMessage: string;
+// }
 
-export interface UpdateRolesUpdate {
-    /**
-     * The roles that should be assigned.
-     */
-    roles: AssignedRole[];
-}
+// export interface UpdateRolesUpdate {
+//     /**
+//      * The roles that should be assigned.
+//      */
+//     roles: AssignedRole[];
+// }
 
 export interface AssignedRole {
     /**
@@ -390,21 +391,21 @@ export interface UpdateUserRolesFailure {
     errorMessage: string;
 }
 
-export type ListUserPoliciesStoreResult =
-    | ListUserPoliciesStoreSuccess
-    | ListUserPoliciesStoreFailure;
+// export type ListUserPoliciesStoreResult =
+//     | ListUserPoliciesStoreSuccess
+//     | ListUserPoliciesStoreFailure;
 
-export interface ListUserPoliciesStoreSuccess {
-    success: true;
-    policies: ListedUserPolicy[];
-    totalCount: number;
-}
+// export interface ListUserPoliciesStoreSuccess {
+//     success: true;
+//     policies: ListedUserPolicy[];
+//     totalCount: number;
+// }
 
-export interface ListUserPoliciesStoreFailure {
-    success: false;
-    errorCode: ServerError;
-    errorMessage: string;
-}
+// export interface ListUserPoliciesStoreFailure {
+//     success: false;
+//     errorCode: ServerError;
+//     errorMessage: string;
+// }
 
 export interface ListedRoleAssignments {
     assignments: RoleAssignment[];
@@ -425,22 +426,22 @@ export interface InstRoleAssignment {
     role: AssignedRole;
 }
 
-export interface ListMarkerPoliciesResult {
-    /**
-     * The policies that were returned.
-     */
-    policies: PolicyDocument[];
+// export interface ListMarkerPoliciesResult {
+//     /**
+//      * The policies that were returned.
+//      */
+//     policies: PolicyDocument[];
 
-    /**
-     * The privacy features that are enabled for the record owner.
-     */
-    recordOwnerPrivacyFeatures: PrivacyFeatures;
+//     /**
+//      * The privacy features that are enabled for the record owner.
+//      */
+//     recordOwnerPrivacyFeatures: PrivacyFeatures;
 
-    /**
-     * The privacy features that are enabled for the user.
-     */
-    userPrivacyFeatures: PrivacyFeatures;
-}
+//     /**
+//      * The privacy features that are enabled for the user.
+//      */
+//     userPrivacyFeatures: PrivacyFeatures;
+// }
 
 /**
  * Gets the expiration time that can be used for comparision.
@@ -451,15 +452,6 @@ export interface ListMarkerPoliciesResult {
 export function getExpireTime(expireTimeMs: number | null): number {
     return expireTimeMs ?? Infinity;
 }
-
-export const USER_SUBJECT_TYPE = 'user';
-export const INST_SUBJECT_TYPE = 'inst';
-export const ROLE_SUBJECT_TYPE = 'role';
-
-export type SubjectType =
-    | typeof USER_SUBJECT_TYPE
-    | typeof INST_SUBJECT_TYPE
-    | typeof ROLE_SUBJECT_TYPE;
 
 export type GetResourcePermissionResult =
     | GetResourcePermissionSuccess
@@ -681,7 +673,7 @@ export interface AssignPermissionToSubjectAndResourceSuccess {
 
 export interface AssignPermissionToSubjectAndResourceFailure {
     success: false;
-    errorCode: ServerError;
+    errorCode: ServerError | 'permission_already_exists';
     errorMessage: string;
 }
 
@@ -700,7 +692,7 @@ export interface AssignPermissionToSubjectAndMarkerSuccess {
 
 export interface AssignPermissionToSubjectAndMarkerFailure {
     success: false;
-    errorCode: ServerError;
+    errorCode: ServerError | 'permission_already_exists';
     errorMessage: string;
 }
 

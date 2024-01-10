@@ -46,7 +46,7 @@ export interface MissingPermissionDenialReason {
     /**
      * The permission that is missing.
      */
-    permission: AvailablePermissions['type'];
+    permission: string;
 }
 
 export interface MissingRoleDenialReason {
