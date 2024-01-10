@@ -147,277 +147,299 @@ describe('PolicyController', () => {
         });
     });
 
-    // describe('grantMarkerPermission()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //         };
-    //     });
+    describe.only('grantMarkerPermission()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
 
-    //     it('should grant a permission to a marker', async () => {
-    //         const result = await controller.grantMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //         });
+        it('should grant a permission to a marker', async () => {
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    resourceKind: 'data',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    resourceId: null,
+                    expireTimeMs: null,
+                },
+            });
 
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
+            expect(result).toEqual({
+                success: true,
+            });
 
-    //         const permissions = await store.listPermissionsForMarker(recordName, 'test');
+            const permissions = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
 
-    //         expect(permissions).toEqual([
-    //             {
-    //                 id: expect.any(String),
-    //                 marker: 'test',
-    //                 action: 'read',
-    //                 resourceKind: 'data',
-    //                 resourceId: null,
-    //                 subjectId: 'developer',
-    //                 subjectType: 'role',
-    //                 userId: null,
-    //                 expireTimeMs: null,
-    //                 options: {}
-    //             }
-    //         ]);
-    //     });
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    marker: 'test',
+                    action: 'read',
+                    resourceKind: 'data',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
+        });
 
-    //     it('should do nothing if the marker already has the permission', async () => {
-    //         store.policies[recordName] = {
-    //             ['test']: {
-    //                 document: {
-    //                     permissions: [
-    //                         {
-    //                             type: 'data.read',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                     ],
-    //                 },
-    //                 markers: [ACCOUNT_MARKER],
-    //             },
-    //         };
+        it('should do nothing if the marker already has the permission', async () => {
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'read',
+                {},
+                null
+            );
 
-    //         await store.assignPermissionToSubjectAndMarker(recordName, 'role', 'developer', 'data', 'test', 'read', {}, null);
+            expect(
+                await store.listPermissionsForMarker(recordName, 'test')
+            ).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    marker: 'test',
+                    action: 'read',
+                    resourceKind: 'data',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
 
-    //         expect(await store.listPermissionsForMarker(recordName, 'test')).toEqual([
-    //             {
-    //                 id: expect.any(String),
-    //                 marker: 'test',
-    //                 action: 'read',
-    //                 resourceKind: 'data',
-    //                 resourceId: null,
-    //                 subjectId: 'developer',
-    //                 subjectType: 'role',
-    //                 userId: null,
-    //                 expireTimeMs: null,
-    //                 options: {}
-    //             }
-    //         ]);
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    resourceKind: 'data',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+            });
 
-    //         const result = await controller.grantMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //         });
+            expect(result).toEqual({
+                success: true,
+            });
 
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
+            const permissions = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
 
-    //         const permissions = await store.listPermissionsForMarker(recordName, 'test');
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    marker: 'test',
+                    action: 'read',
+                    resourceKind: 'data',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
+        });
 
-    //         expect(permissions).toEqual([
-    //             {
-    //                 id: expect.any(String),
-    //                 marker: 'test',
-    //                 action: 'read',
-    //                 resourceKind: 'data',
-    //                 resourceId: null,
-    //                 subjectId: 'developer',
-    //                 subjectType: 'role',
-    //                 userId: null,
-    //                 expireTimeMs: null,
-    //                 options: {}
-    //             }
-    //         ]);
-    //     });
+        it('should update the permission if it has different options from the existing one', async () => {
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'file',
+                'test',
+                'read',
+                { maxFileSizeInBytes: 100 },
+                null
+            );
 
-    //     it('should add the given permission if it has different options from the existing one', async () => {
-    //         store.policies[recordName] = {
-    //             ['test']: {
-    //                 document: {
-    //                     permissions: [
-    //                         {
-    //                             type: 'data.read',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                     ],
-    //                 },
-    //                 markers: [ACCOUNT_MARKER],
-    //             },
-    //         };
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    resourceKind: 'file',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {
+                        maxFileSizeInBytes: 200,
+                    },
+                    expireTimeMs: null,
+                },
+            });
 
-    //         const result = await controller.grantMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: 'abc',
-    //             },
-    //         });
+            expect(result).toEqual({
+                success: true,
+            });
 
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
+            const permissions = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
 
-    //         const policy = await store.getUserPolicy(recordName, 'test');
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    marker: 'test',
+                    action: 'read',
+                    resourceKind: 'file',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {
+                        maxFileSizeInBytes: 200,
+                    },
+                },
+            ]);
+        });
 
-    //         expect(policy).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: 'abc',
-    //                     },
-    //                 ],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
+        it('should do nothing if the user is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
 
-    //     it('should do nothing if the user is not authorized', async () => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([]),
-    //         };
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    resourceKind: 'data',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+            });
 
-    //         const result = await controller.grantMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //         });
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: 'test',
+                    action: 'grantPermission',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
 
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 id: userId,
-    //                 kind: 'user',
-    //                 marker: 'account',
-    //                 permission: 'policy.grantPermission',
-    //                 role: null,
-    //                 type: 'missing_permission',
-    //             },
-    //         });
+            const permissions = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
+            expect(permissions).toEqual([]);
+        });
 
-    //         const policy = await store.getUserPolicy(recordName, 'test');
+        it('should do nothing if the inst is not authorized', async () => {
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    resourceKind: 'data',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+                instances: ['/inst'],
+            });
 
-    //         expect(policy).toEqual({
-    //             success: false,
-    //             errorCode: 'policy_not_found',
-    //             errorMessage: expect.any(String),
-    //         });
-    //     });
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: 'test',
+                    action: 'grantPermission',
+                    subjectId: '/inst',
+                    subjectType: 'inst',
+                },
+            });
 
-    //     it('should do nothing if the inst is not authorized', async () => {
-    //         const result = await controller.grantMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //             instances: ['inst'],
-    //         });
+            const permissions = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
+            expect(permissions).toEqual([]);
+        });
 
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 id: 'inst',
-    //                 kind: 'inst',
-    //                 marker: 'account',
-    //                 permission: 'policy.grantPermission',
-    //                 role: null,
-    //                 type: 'missing_permission',
-    //             },
-    //         });
+        it('should work if both the user and the instance have the admin role', async () => {
+            store.roles[recordName]['/inst'] = new Set([ADMIN_ROLE_NAME]);
 
-    //         const policy = await store.getUserPolicy(recordName, 'test');
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    resourceKind: 'data',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+                instances: ['/inst'],
+            });
 
-    //         expect(policy).toEqual({
-    //             success: false,
-    //             errorCode: 'policy_not_found',
-    //             errorMessage: expect.any(String),
-    //         });
-    //     });
+            expect(result).toEqual({
+                success: true,
+            });
 
-    //     it('should work if both the user and the instance have the admin role', async () => {
-    //         store.roles[recordName]['inst'] = new Set([ADMIN_ROLE_NAME]);
+            const permissions = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
 
-    //         const result = await controller.grantMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //             instances: ['inst'],
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 ],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-    // });
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    marker: 'test',
+                    action: 'read',
+                    resourceKind: 'data',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
+        });
+    });
 
     // describe('revokeMarkerPermission()', () => {
     //     beforeEach(() => {

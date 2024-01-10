@@ -188,11 +188,30 @@ export interface Permission {
      * The ID of the subject.
      */
     subjectId: string;
+
+    /**
+     * The ID of the resource that is allowed.
+     * If null, then all resources are allowed.
+     */
+    resourceId?: string | null;
+
+    /**
+     * The options for the permission.
+     */
+    options: {};
+
+    /**
+     * The unix time in miliseconds that the permission will expire at.
+     * If null, then the permission does not expire.
+     */
+    expireTimeMs: number | null;
 }
 
 export const PERMISSION_VALIDATION = z.object({
     subjectType: SUBJECT_TYPE_VALIDATION,
     subjectId: z.string().min(1),
+    resourceId: z.string().min(1).nullable().optional(),
+    expireTimeMs: z.number().nullable(),
 });
 
 type ZodPermission = z.infer<typeof PERMISSION_VALIDATION>;
@@ -208,12 +227,6 @@ export interface DataPermission extends Permission {
     resourceKind: typeof DATA_RESOURCE_KIND;
 
     /**
-     * The ID of the resource that is allowed.
-     * If null, then all resources are allowed.
-     */
-    resourceId: string | null;
-
-    /**
      * The action th at is allowed.
      * If null, then all actions are allowed.
      */
@@ -222,7 +235,6 @@ export interface DataPermission extends Permission {
 
 export const DATA_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
     resourceKind: z.literal(DATA_RESOURCE_KIND),
-    resourceId: z.string().min(1).nullable(),
     action: DATA_ACTION_KINDS_VALIDATION.nullable(),
 });
 
@@ -268,12 +280,6 @@ export interface FilePermission extends Permission {
     resourceKind: typeof FILE_RESOURCE_KIND;
 
     /**
-     * The ID of the resource that is allowed.
-     * If null, then all resources are allowed.
-     */
-    resourceId: string | null;
-
-    /**
      * The action th at is allowed.
      * If null, then all actions are allowed.
      */
@@ -287,7 +293,6 @@ export interface FilePermission extends Permission {
 
 export const FILE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
     resourceKind: z.literal(FILE_RESOURCE_KIND),
-    resourceId: z.string().min(1).nullable(),
     action: FILE_ACTION_KINDS_VALIDATION.nullable(),
     options: FILE_PERMISSION_OPTIONS_VALIDATION,
 });
@@ -302,12 +307,6 @@ export interface EventPermission extends Permission {
      * The kind of the permission.
      */
     resourceKind: typeof EVENT_RESOURCE_KIND;
-
-    /**
-     * The ID of the resource that is allowed.
-     * If null, then all resources are allowed.
-     */
-    resourceId: string | null;
 
     /**
      * The action th at is allowed.
@@ -334,12 +333,6 @@ export interface MarkerPermission extends Permission {
     resourceKind: typeof MARKER_RESOURCE_KIND;
 
     /**
-     * The ID of the resource that is allowed.
-     * If null, then all resources are allowed.
-     */
-    resourceId: string | null;
-
-    /**
      * The action th at is allowed.
      * If null, then all actions are allowed.
      */
@@ -348,7 +341,6 @@ export interface MarkerPermission extends Permission {
 
 export const MARKER_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
     resourceKind: z.literal(MARKER_RESOURCE_KIND),
-    resourceId: z.string().min(1).nullable(),
     action: MARKER_ACTION_KINDS_VALIDATION.nullable(),
 });
 type ZodMarkerPermission = z.infer<typeof MARKER_PERMISSION_VALIDATION>;
@@ -405,7 +397,6 @@ export interface RolePermission extends Permission {
 
 export const ROLE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
     resourceKind: z.literal(ROLE_RESOURCE_KIND),
-    resourceId: z.string().min(1).nullable(),
     action: ROLE_ACTION_KINDS_VALIDATION.nullable(),
     options: ROLE_PERMISSION_OPTIONS_VALIDATION,
 });
@@ -432,7 +423,6 @@ export interface InstPermission extends Permission {
 }
 export const INST_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
     resourceKind: z.literal(INST_RESOURCE_KIND),
-    resourceId: z.string().min(1).nullable(),
     action: INST_ACTION_KINDS_VALIDATION.nullable(),
 });
 type ZodInstPermission = z.infer<typeof INST_PERMISSION_VALIDATION>;

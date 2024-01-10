@@ -17,6 +17,7 @@ import {
     ActionKinds,
     PUBLIC_READ_MARKER,
     SubjectType,
+    ACCOUNT_MARKER,
 } from '@casual-simulation/aux-common';
 import {
     ListedStudioAssignment,
@@ -25,6 +26,7 @@ import {
 } from './RecordsStore';
 import {
     AssignedRole,
+    AssignPermissionToSubjectAndMarkerFailure,
     getExpireTime,
     getPublicMarkersPermission,
     MarkerPermissionAssignment,
@@ -964,118 +966,75 @@ export class PolicyController {
         }
     }
 
-    // /**
-    //  * Attempts to grant a permission to a marker.
-    //  * @param request The request for the operation.
-    //  */
-    // async grantMarkerPermission(
-    //     request: GrantMarkerPermissionRequest
-    // ): Promise<GrantMarkerPermissionResult> {
-    //     try {
-    //         const baseRequest = {
-    //             recordKeyOrRecordName: request.recordKeyOrRecordName,
-    //             userId: request.userId,
-    //         };
-    //         const context = await this.constructAuthorizationContext(
-    //             baseRequest
-    //         );
-    //         if (context.success === false) {
-    //             return {
-    //                 success: false,
-    //                 errorCode: context.errorCode,
-    //                 errorMessage: context.errorMessage,
-    //             };
-    //         }
+    /**
+     * Attempts to grant a permission to a marker.
+     * @param request The request for the operation.
+     */
+    async grantMarkerPermission(
+        request: GrantMarkerPermissionRequest
+    ): Promise<GrantMarkerPermissionResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordKeyOrRecordName,
+                userId: request.userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
 
-    //         const authorization = await this.authorizeUserAndInstances(context, {
-    //             action: 'grantPermission',
-    //             resourceKind: 'marker',
-    //             resourceId: request.marker,
-    //             markers: [ACCOUNT_MARKER],
-    //             userId: request.userId,
-    //             instances: request.instances,
-    //         });
+            const authorization = await this.authorizeUserAndInstances(
+                context,
+                {
+                    action: 'grantPermission',
+                    resourceKind: 'marker',
+                    resourceId: request.marker,
+                    markers: [ACCOUNT_MARKER],
+                    userId: request.userId,
+                    instances: request.instances,
+                }
+            );
 
-    //         if (authorization.success === false) {
-    //             return authorization;
-    //         }
+            if (authorization.success === false) {
+                return authorization;
+            }
 
-    //         const recordName = context.context.recordName;
+            const recordName = context.context.recordName;
 
-    //         await this._policies.assignPermissionToSubjectAndMarker(
-    //             recordName,
-    //             request.
-    //         )
+            const assignmentResult =
+                await this._policies.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    request.permission.subjectType,
+                    request.permission.subjectId,
+                    request.permission.resourceKind,
+                    request.marker,
+                    request.permission.action,
+                    request.permission.options,
+                    request.permission.expireTimeMs
+                );
 
-    //         const policyResult = await this._policies.getUserPolicy(
-    //             context.context.recordName,
-    //             request.marker
-    //         );
+            if (assignmentResult.success === false) {
+                return assignmentResult;
+            }
 
-    //         if (
-    //             policyResult.success === false &&
-    //             policyResult.errorCode !== 'policy_not_found'
-    //         ) {
-    //             console.log(
-    //                 `[PolicyController] Failure while retrieving policy for ${context.context.recordName} and ${request.marker}.`,
-    //                 policyResult
-    //             );
-    //             return {
-    //                 success: false,
-    //                 errorCode: policyResult.errorCode,
-    //                 errorMessage: policyResult.errorMessage,
-    //             };
-    //         }
-
-    //         const policy: UserPolicyRecord = policyResult.success
-    //             ? policyResult
-    //             : {
-    //                   document: {
-    //                       permissions: [],
-    //                   },
-    //                   markers: [ACCOUNT_MARKER],
-    //               };
-
-    //         const alreadyExists = policy.document.permissions.some((p) =>
-    //             isEqual(p, request.permission)
-    //         );
-
-    //         if (!alreadyExists) {
-    //             console.log(
-    //                 `[PolicyController] Adding permission to policy for ${context.context.recordName} and ${request.marker}.`,
-    //                 request.permission
-    //             );
-    //             policy.document.permissions.push(request.permission);
-    //             const updateResult = await this._policies.updateUserPolicy(
-    //                 context.context.recordName,
-    //                 request.marker,
-    //                 {
-    //                     document: policy.document,
-    //                     markers: policy.markers,
-    //                 }
-    //             );
-
-    //             if (updateResult.success === false) {
-    //                 console.log(
-    //                     `[PolicyController] Policy update failed:`,
-    //                     updateResult
-    //                 );
-    //                 return updateResult;
-    //             }
-    //         }
-
-    //         return {
-    //             success: true,
-    //         };
-    //     } catch (err) {
-    //         console.error('[PolicyController] A server error occurred.', err);
-    //         return {
-    //             success: false,
-    //             errorCode: 'server_error',
-    //             errorMessage: 'A server error occurred.',
-    //         };
-    //     }
-    // }
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 
     // /**
     //  * Attempts to revoke a permission from a marker.
@@ -2899,7 +2858,11 @@ export interface GrantMarkerPermissionFailure {
     /**
      * The error code that indicates why the request failed.
      */
-    errorCode: ServerError;
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | AssignPermissionToSubjectAndMarkerFailure['errorCode'];
     // | AuthorizeDenied['errorCode']
     // | UpdateUserPolicyFailure['errorCode'];
 
@@ -2955,10 +2918,10 @@ export interface RevokeMarkerPermissionFailure {
     /**
      * The error code that indicates why the request failed.
      */
-    errorCode: ServerError;
-    // | AuthorizeDenied['errorCode']
-    // | GetUserPolicyFailure['errorCode']
-    // | UpdateUserPolicyFailure['errorCode'];
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
 
     /**
      * The error message that indicates why the request failed.
@@ -2978,9 +2941,10 @@ export interface ReadUserPolicySuccess {
 
 export interface ReadUserPolicyFailure {
     success: false;
-    errorCode: ServerError;
-    // | AuthorizeDenied['errorCode']
-    // | GetUserPolicyFailure['errorCode'];
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -2996,8 +2960,10 @@ export interface ListUserPoliciesSuccess {
 
 export interface ListUserPoliciesFailure {
     success: false;
-    errorCode: ServerError;
-    // | AuthorizeDenied['errorCode'];
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -3016,8 +2982,10 @@ export interface ListAssignedUserRolesSuccess {
 
 export interface ListAssignedUserRolesFailure {
     success: false;
-    errorCode: ServerError;
-    // | AuthorizeDenied['errorCode'];
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -3036,8 +3004,10 @@ export interface ListAssignedInstRolesSuccess {
 
 export interface ListAssignedInstRolesFailure {
     success: false;
-    errorCode: ServerError;
-    //  | AuthorizeDenied['errorCode'];
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -3061,8 +3031,11 @@ export interface ListRoleAssignmentsSuccess {
 
 export interface ListRoleAssignmentsFailure {
     success: false;
-    errorCode: ServerError | NotSupportedError;
-    // | AuthorizeDenied['errorCode'];
+    errorCode:
+        | ServerError
+        | NotSupportedError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -3113,7 +3086,8 @@ export interface GrantRoleFailure {
      */
     errorCode:
         | ServerError
-        // | AuthorizeDenied['errorCode']
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | UpdateUserRolesFailure['errorCode'];
 
     /**
@@ -3166,7 +3140,8 @@ export interface RevokeRoleFailure {
      */
     errorCode:
         | ServerError
-        // | AuthorizeDenied['errorCode']
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | UpdateUserRolesFailure['errorCode'];
 
     /**

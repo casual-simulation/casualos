@@ -744,8 +744,32 @@ export class MemoryStore
         marker: string,
         action: ActionKinds,
         options: PermissionOptions,
-        expireTimeMs: number
+        expireTimeMs: number | null
     ): Promise<AssignPermissionToSubjectAndMarkerResult> {
+        const assignmentIndex = this._markerPermissionAssignments.findIndex(
+            (a) =>
+                a.recordName === recordName &&
+                a.subjectType === subjectType &&
+                a.subjectId === subjectId &&
+                a.marker === marker &&
+                a.resourceKind === resourceKind &&
+                a.action === action
+        );
+
+        if (assignmentIndex >= 0) {
+            const assignment =
+                this._markerPermissionAssignments[assignmentIndex];
+            this._markerPermissionAssignments[assignmentIndex] = {
+                ...assignment,
+                options,
+                expireTimeMs,
+            };
+            return {
+                success: true,
+                permissionAssignment: assignment,
+            };
+        }
+
         const userId = getSubjectUserId(subjectType, subjectId);
         const assignment: MarkerPermissionAssignment = {
             id: uuid(),
