@@ -1,62 +1,89 @@
-import { AvailablePermissions } from './PolicyPermissions';
+import {
+    ActionKinds,
+    AvailablePermissions,
+    ResourceKinds,
+    SubjectType,
+} from './PolicyPermissions';
+import { PrivacyFeatures } from './PrivacyFeatures';
 
 export type DenialReason =
-    | NoMarkersDenialReason
-    | MissingPermissionDenialReason
-    | TooManyInstsDenialReason
-    | MissingRoleDenialReason
-    | NoMarkersRemainingDenialReason;
+    | AuthorizeActionMissingPermission
+    | AuthorizeActionTooManyMarkers
+    | AuthorizeActionDisabledPrivacyFeature;
 
-/**
- * Defines an interface that represents a denial reason that is returned when the resource has no markers.
- */
-export interface NoMarkersDenialReason {
-    type: 'no_markers';
-}
-
-export interface MissingPermissionDenialReason {
+export interface AuthorizeActionMissingPermission {
     type: 'missing_permission';
+
+    /**
+     * The name of the record that the permission is missing in.
+     */
+    recordName: string;
 
     /**
      * Whether the user or inst is missing the permission.
      */
-    kind: 'user' | 'inst';
+    subjectType: SubjectType;
 
     /**
      * The ID of the user/inst that is missing the permission.
      */
-    id: string;
+    subjectId: string;
 
     /**
-     * The marker that was being evaluated.
+     * The kind of the resource.
      */
-    marker: string;
+    resourceKind: ResourceKinds;
 
     /**
-     * The role that was selected for authorization.
-     *
-     * If not specified, then no role could be determined.
-     * This often happens when the user/inst hasn't been assigned a role, but it can also happen when no permissions match any of the roles that the user/inst has assigned.
-     *
-     * If true, then that indicates that the "everyone" role was used.
-     * If a string, then that is the name of the role that was used.
+     * The action that was attempted.
      */
-    role?: string | true;
+    action: ActionKinds;
 
     /**
-     * The permission that is missing.
+     * The ID of the resource that was being accessed.
      */
-    permission: string;
+    resourceId?: string;
 }
 
-export interface MissingRoleDenialReason {
-    type: 'missing_role';
+export interface AuthorizeActionDisabledPrivacyFeature {
+    type: 'disabled_privacy_feature';
+
+    /**
+     * The name of the record that the permission is missing in.
+     */
+    recordName: string;
+
+    /**
+     * Whether the user or inst is missing the permission.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the user/inst that is missing the permission.
+     */
+    subjectId: string;
+
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The action that was attempted.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource that was being accessed.
+     */
+    resourceId?: string;
+
+    /**
+     * The privacy feature that is missing.
+     */
+    privacyFeature: keyof PrivacyFeatures;
 }
 
-export interface NoMarkersRemainingDenialReason {
-    type: 'no_markers_remaining';
-}
-
-export interface TooManyInstsDenialReason {
-    type: 'too_many_insts';
+export interface AuthorizeActionTooManyMarkers {
+    type: 'too_many_markers';
 }

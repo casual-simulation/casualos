@@ -1,7 +1,3 @@
-import { AuthController } from './AuthController';
-import { AuthMessenger } from './AuthMessenger';
-import { AuthStore, PrivacyFeatures } from './AuthStore';
-import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { Record, RecordKey } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
 import {
@@ -147,7 +143,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe.only('grantMarkerPermission()', () => {
+    describe('grantMarkerPermission()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -441,1449 +437,939 @@ describe('PolicyController', () => {
         });
     });
 
-    // describe('revokeMarkerPermission()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //         };
-
-    //         store.policies[recordName] = {
-    //             ['test']: {
-    //                 document: {
-    //                     permissions: [
-    //                         {
-    //                             type: 'data.read',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                     ],
-    //                 },
-    //                 markers: [ACCOUNT_MARKER],
-    //             },
-    //         };
-    //     });
-
-    //     it('should remove a permission from a policy', async () => {
-    //         const result = await controller.revokeMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-
-    //     it('should remove all matching permissions from a policy', async () => {
-    //         store.policies[recordName] = {
-    //             ['test']: {
-    //                 document: {
-    //                     permissions: [
-    //                         {
-    //                             type: 'data.read',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                         {
-    //                             type: 'data.read',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                         {
-    //                             type: 'data.read',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                     ],
-    //                 },
-    //                 markers: [ACCOUNT_MARKER],
-    //             },
-    //         };
-
-    //         const result = await controller.revokeMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-
-    //     it('should do nothing if the permission was not found', async () => {
-    //         const result = await controller.revokeMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: 'abc',
-    //             },
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 ],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-
-    //     it('should do nothing if the policy doesnt exist', async () => {
-    //         delete store.policies[recordName]['test'];
-
-    //         const result = await controller.revokeMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: false,
-    //             errorCode: 'policy_not_found',
-    //             errorMessage: expect.any(String),
-    //         });
-    //     });
-
-    //     it('should do nothing if the user is not authorized', async () => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([]),
-    //         };
-
-    //         const result = await controller.revokeMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 id: userId,
-    //                 kind: 'user',
-    //                 marker: 'account',
-    //                 permission: 'policy.revokePermission',
-    //                 role: null,
-    //                 type: 'missing_permission',
-    //             },
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 ],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-
-    //     it('should do nothing if the inst is not authorized', async () => {
-    //         const result = await controller.revokeMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //             instances: ['inst'],
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 id: 'inst',
-    //                 kind: 'inst',
-    //                 marker: 'account',
-    //                 permission: 'policy.revokePermission',
-    //                 role: null,
-    //                 type: 'missing_permission',
-    //             },
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 ],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-
-    //     it('should work if both the user and the inst have admin permissions', async () => {
-    //         store.roles[recordName]['inst'] = new Set([ADMIN_ROLE_NAME]);
-
-    //         const result = await controller.revokeMarkerPermission({
-    //             recordKeyOrRecordName: recordName,
-    //             userId: userId,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //             instances: ['inst'],
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-    // });
-
-    // describe('readUserPolicy()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //         };
-
-    //         store.policies[recordName] = {
-    //             ['test']: {
-    //                 document: {
-    //                     permissions: [
-    //                         {
-    //                             type: 'data.read',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                     ],
-    //                 },
-    //                 markers: [ACCOUNT_MARKER],
-    //             },
-    //         };
-    //     });
-
-    //     it('should return the policy', async () => {
-    //         const result = await controller.readUserPolicy(
-    //             recordName,
-    //             userId,
-    //             'test'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 ],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-
-    //     it('should deny the request if the user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-
-    //         const result = await controller.readUserPolicy(
-    //             recordName,
-    //             userId,
-    //             'test'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'policy.read',
-    //                 id: userId,
-    //                 kind: 'user',
-    //                 marker: 'account',
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-
-    //     it('should deny the request if the inst is not authorized', async () => {
-    //         const result = await controller.readUserPolicy(
-    //             recordName,
-    //             userId,
-    //             'test',
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'policy.read',
-    //                 kind: 'inst',
-    //                 id: 'inst',
-    //                 marker: 'account',
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-
-    //     it('should return an unsuccessful result if the policy doesnt exist', async () => {
-    //         const result = await controller.readUserPolicy(
-    //             recordName,
-    //             userId,
-    //             'does not exist'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'policy_not_found',
-    //             errorMessage: 'The policy was not found.',
-    //         });
-    //     });
-
-    //     it('should return the policy if both the user and the inst have admin permissions', async () => {
-    //         store.roles[recordName]['inst'] = new Set([ADMIN_ROLE_NAME]);
-
-    //         const result = await controller.readUserPolicy(
-    //             recordName,
-    //             userId,
-    //             'test',
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 ],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-    // });
-
-    // describe('listUserPolicies()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //         };
-
-    //         store.policies[recordName] = {
-    //             ['abc']: {
-    //                 document: {
-    //                     permissions: [
-    //                         {
-    //                             type: 'data.list',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                     ],
-    //                 },
-    //                 markers: [ACCOUNT_MARKER],
-    //             },
-    //             ['test']: {
-    //                 document: {
-    //                     permissions: [
-    //                         {
-    //                             type: 'data.read',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                     ],
-    //                 },
-    //                 markers: [ACCOUNT_MARKER],
-    //             },
-    //             ['test2']: {
-    //                 document: {
-    //                     permissions: [
-    //                         {
-    //                             type: 'data.create',
-    //                             role: 'developer',
-    //                             addresses: true,
-    //                         },
-    //                     ],
-    //                 },
-    //                 markers: [ACCOUNT_MARKER],
-    //             },
-    //         };
-    //     });
-
-    //     it('should return the policies', async () => {
-    //         const result = await controller.listUserPolicies(
-    //             recordName,
-    //             userId,
-    //             null
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             policies: [
-    //                 {
-    //                     marker: 'abc',
-    //                     document: {
-    //                         permissions: [
-    //                             {
-    //                                 type: 'data.list',
-    //                                 role: 'developer',
-    //                                 addresses: true,
-    //                             },
-    //                         ],
-    //                     },
-    //                     markers: [ACCOUNT_MARKER],
-    //                 },
-    //                 {
-    //                     marker: 'test',
-    //                     document: {
-    //                         permissions: [
-    //                             {
-    //                                 type: 'data.read',
-    //                                 role: 'developer',
-    //                                 addresses: true,
-    //                             },
-    //                         ],
-    //                     },
-    //                     markers: [ACCOUNT_MARKER],
-    //                 },
-    //                 {
-    //                     marker: 'test2',
-    //                     document: {
-    //                         permissions: [
-    //                             {
-    //                                 type: 'data.create',
-    //                                 role: 'developer',
-    //                                 addresses: true,
-    //                             },
-    //                         ],
-    //                     },
-    //                     markers: [ACCOUNT_MARKER],
-    //                 },
-    //             ],
-    //             totalCount: 3,
-    //         });
-    //     });
-
-    //     it('should return the policies that are after the given marker', async () => {
-    //         const result = await controller.listUserPolicies(
-    //             recordName,
-    //             userId,
-    //             'test'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             policies: [
-    //                 {
-    //                     marker: 'test2',
-    //                     document: {
-    //                         permissions: [
-    //                             {
-    //                                 type: 'data.create',
-    //                                 role: 'developer',
-    //                                 addresses: true,
-    //                             },
-    //                         ],
-    //                     },
-    //                     markers: [ACCOUNT_MARKER],
-    //                 },
-    //             ],
-    //             totalCount: 1,
-    //         });
-    //     });
-
-    //     it('should return the policies if both the user and the inst have the admin role', async () => {
-    //         store.roles[recordName]['inst'] = new Set([ADMIN_ROLE_NAME]);
-
-    //         const result = await controller.listUserPolicies(
-    //             recordName,
-    //             userId,
-    //             null,
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             policies: [
-    //                 {
-    //                     marker: 'abc',
-    //                     document: {
-    //                         permissions: [
-    //                             {
-    //                                 type: 'data.list',
-    //                                 role: 'developer',
-    //                                 addresses: true,
-    //                             },
-    //                         ],
-    //                     },
-    //                     markers: [ACCOUNT_MARKER],
-    //                 },
-    //                 {
-    //                     marker: 'test',
-    //                     document: {
-    //                         permissions: [
-    //                             {
-    //                                 type: 'data.read',
-    //                                 role: 'developer',
-    //                                 addresses: true,
-    //                             },
-    //                         ],
-    //                     },
-    //                     markers: [ACCOUNT_MARKER],
-    //                 },
-    //                 {
-    //                     marker: 'test2',
-    //                     document: {
-    //                         permissions: [
-    //                             {
-    //                                 type: 'data.create',
-    //                                 role: 'developer',
-    //                                 addresses: true,
-    //                             },
-    //                         ],
-    //                     },
-    //                     markers: [ACCOUNT_MARKER],
-    //                 },
-    //             ],
-    //             totalCount: 3,
-    //         });
-    //     });
-
-    //     it('should deny the request if the user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-    //         const result = await controller.listUserPolicies(
-    //             recordName,
-    //             userId,
-    //             null
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'policy.list',
-    //                 kind: 'user',
-    //                 id: userId,
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-
-    //     it('should deny the request if the inst is not authorized', async () => {
-    //         const result = await controller.listUserPolicies(
-    //             recordName,
-    //             userId,
-    //             null,
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'policy.list',
-    //                 kind: 'inst',
-    //                 id: 'inst',
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-    // });
-
-    // describe('listUserRoles()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //             ['testId']: new Set(['role1', 'role2', 'abc']),
-    //         };
-    //     });
-
-    //     it('should list the roles for the given user', async () => {
-    //         const result = await controller.listUserRoles(
-    //             recordName,
-    //             userId,
-    //             'testId'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             roles: [
-    //                 {
-    //                     role: 'abc',
-    //                     expireTimeMs: null,
-    //                 },
-    //                 {
-    //                     role: 'role1',
-    //                     expireTimeMs: null,
-    //                 },
-    //                 {
-    //                     role: 'role2',
-    //                     expireTimeMs: null,
-    //                 },
-    //             ],
-    //         });
-    //     });
-
-    //     it('should list the roles if the current user is the same as the target user', async () => {
-    //         const result = await controller.listUserRoles(
-    //             recordName,
-    //             'testId',
-    //             'testId'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             roles: [
-    //                 {
-    //                     role: 'abc',
-    //                     expireTimeMs: null,
-    //                 },
-    //                 {
-    //                     role: 'role1',
-    //                     expireTimeMs: null,
-    //                 },
-    //                 {
-    //                     role: 'role2',
-    //                     expireTimeMs: null,
-    //                 },
-    //             ],
-    //         });
-    //     });
-
-    //     it('should not allow listing the roles for the own user account if an instance is involved', async () => {
-    //         const result = await controller.listUserRoles(
-    //             recordName,
-    //             'testId',
-    //             'testId',
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'user',
-    //                 id: 'testId',
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-
-    //     it('should deny the request if the user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-
-    //         const result = await controller.listUserRoles(
-    //             recordName,
-    //             userId,
-    //             'testId'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'user',
-    //                 id: userId,
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-
-    //     it('should deny the request if the inst is not authorized', async () => {
-    //         const result = await controller.listUserRoles(
-    //             recordName,
-    //             userId,
-    //             'testId',
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'inst',
-    //                 id: 'inst',
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-    // });
-
-    // describe('listInstRoles()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //             ['testId']: new Set(['role1', 'role2', 'abc']),
-    //         };
-    //     });
-
-    //     it('should list the roles for the given inst', async () => {
-    //         const result = await controller.listInstRoles(
-    //             recordName,
-    //             userId,
-    //             'testId'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             roles: [
-    //                 {
-    //                     role: 'abc',
-    //                     expireTimeMs: null,
-    //                 },
-    //                 {
-    //                     role: 'role1',
-    //                     expireTimeMs: null,
-    //                 },
-    //                 {
-    //                     role: 'role2',
-    //                     expireTimeMs: null,
-    //                 },
-    //             ],
-    //         });
-    //     });
-
-    //     it('should deny the request if the user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-
-    //         const result = await controller.listInstRoles(
-    //             recordName,
-    //             userId,
-    //             'testId'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'user',
-    //                 id: userId,
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-
-    //     it('should deny the request if the inst is not authorized', async () => {
-    //         const result = await controller.listInstRoles(
-    //             recordName,
-    //             userId,
-    //             'testId',
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'inst',
-    //                 id: 'inst',
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-    // });
-
-    // describe('listAssignedRoles()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //             ['testId']: new Set(['role1', 'role2', 'abc']),
-    //             ['testId2']: new Set(['role1', 'role2', 'abc']),
-    //             ['testId4']: new Set(['role2']),
-    //             ['testId3']: new Set(['role1']),
-    //         };
-    //     });
-
-    //     it('should list the users that are assigned the given role', async () => {
-    //         const result = await controller.listAssignedRoles(
-    //             recordName,
-    //             userId,
-    //             'role1'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             assignments: [
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId2',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId3',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //             ],
-    //         });
-    //     });
-
-    //     it('should deny the request if the user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-
-    //         const result = await controller.listAssignedRoles(
-    //             recordName,
-    //             userId,
-    //             'role1'
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'user',
-    //                 id: userId,
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-
-    //     it('should deny the request if the inst is not authorized', async () => {
-    //         const result = await controller.listAssignedRoles(
-    //             recordName,
-    //             userId,
-    //             'role1',
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'inst',
-    //                 id: 'inst',
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-    // });
-
-    // describe('listRoleAssignments()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //             ['testId']: new Set(['role1', 'role2', 'abc']),
-    //             ['testId2']: new Set(['role1', 'role2', 'abc']),
-    //             ['testId4']: new Set(['role2']),
-    //             ['testId3']: new Set(['role1']),
-    //         };
-    //     });
-
-    //     it('should return a not_supported result if the store does not implement listAssignments()', async () => {
-    //         (store as any).listAssignments = null;
-
-    //         const result = await controller.listRoleAssignments(
-    //             recordName,
-    //             userId,
-    //             null
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_supported',
-    //             errorMessage: 'This operation is not supported.',
-    //         });
-    //     });
-
-    //     it('should list all role assignments', async () => {
-    //         const result = await controller.listRoleAssignments(
-    //             recordName,
-    //             userId,
-    //             null
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             totalCount: 9,
-    //             assignments: [
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId',
-    //                     role: {
-    //                         role: 'abc',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId2',
-    //                     role: {
-    //                         role: 'abc',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: userId,
-    //                     role: {
-    //                         role: ADMIN_ROLE_NAME,
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId2',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId3',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId',
-    //                     role: {
-    //                         role: 'role2',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId2',
-    //                     role: {
-    //                         role: 'role2',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId4',
-    //                     role: {
-    //                         role: 'role2',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //             ],
-    //         });
-    //     });
-
-    //     it('should list roles after the given role', async () => {
-    //         const result = await controller.listRoleAssignments(
-    //             recordName,
-    //             userId,
-    //             ADMIN_ROLE_NAME
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //             totalCount: 9,
-    //             assignments: [
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId2',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId3',
-    //                     role: {
-    //                         role: 'role1',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId',
-    //                     role: {
-    //                         role: 'role2',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId2',
-    //                     role: {
-    //                         role: 'role2',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //                 {
-    //                     type: 'user',
-    //                     userId: 'testId4',
-    //                     role: {
-    //                         role: 'role2',
-    //                         expireTimeMs: null,
-    //                     },
-    //                 },
-    //             ],
-    //         });
-    //     });
-
-    //     it('should deny the request if the user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-
-    //         const result = await controller.listRoleAssignments(
-    //             recordName,
-    //             userId,
-    //             null
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'user',
-    //                 id: userId,
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-
-    //     it('should deny the request if the inst is not authorized', async () => {
-    //         const result = await controller.listRoleAssignments(
-    //             recordName,
-    //             userId,
-    //             null,
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.list',
-    //                 kind: 'inst',
-    //                 id: 'inst',
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-    //     });
-    // });
-
-    // describe('grantRole()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //         };
-    //     });
-
-    //     it('should grant the role to the given user', async () => {
-    //         const result = await controller.grantRole(recordName, userId, {
-    //             userId: 'testId',
-    //             role: 'role1',
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const roles = await store.listRolesForUser(recordName, 'testId');
-
-    //         expect(roles).toEqual([
-    //             {
-    //                 role: 'role1',
-    //                 expireTimeMs: null,
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should be able to set an expiration time', async () => {
-    //         const expireTime = Date.now() + 100000;
-    //         const result = await controller.grantRole(recordName, userId, {
-    //             userId: 'testId',
-    //             role: 'role1',
-    //             expireTimeMs: expireTime,
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const roles = await store.listRolesForUser(recordName, 'testId');
-
-    //         expect(roles).toEqual([
-    //             {
-    //                 role: 'role1',
-    //                 expireTimeMs: expireTime,
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should grant the role to the given instance', async () => {
-    //         const result = await controller.grantRole(recordName, userId, {
-    //             instance: 'inst',
-    //             role: 'role1',
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const roles = await store.listRolesForInst(recordName, 'inst');
-
-    //         expect(roles).toEqual([
-    //             {
-    //                 role: 'role1',
-    //                 expireTimeMs: null,
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should deny the request if the current user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-
-    //         const result = await controller.grantRole(recordName, userId, {
-    //             userId: 'testId',
-    //             role: 'role1',
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.grant',
-    //                 kind: 'user',
-    //                 id: userId,
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-
-    //         const roles = await store.listRolesForUser(recordName, 'testId');
-
-    //         expect(roles).toEqual([]);
-    //     });
-
-    //     it('should deny the request if one of the given instances is not authorized', async () => {
-    //         const result = await controller.grantRole(
-    //             recordName,
-    //             userId,
-    //             {
-    //                 userId: 'testId',
-    //                 role: 'role1',
-    //             },
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.grant',
-    //                 kind: 'inst',
-    //                 id: 'inst',
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-
-    //         const roles = await store.listRolesForUser(recordName, 'testId');
-
-    //         expect(roles).toEqual([]);
-    //     });
-    // });
-
-    // describe('revokeRole()', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //         };
-
-    //         store.roleAssignments[recordName] = {
-    //             ['testId']: [
-    //                 {
-    //                     role: 'role1',
-    //                     expireTimeMs: null,
-    //                 },
-    //                 {
-    //                     role: 'role2',
-    //                     expireTimeMs: null,
-    //                 },
-    //             ],
-    //         };
-    //     });
-
-    //     it('should revoke the role from the given user', async () => {
-    //         const result = await controller.revokeRole(recordName, userId, {
-    //             userId: 'testId',
-    //             role: 'role1',
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const roles = await store.listRolesForUser(recordName, 'testId');
-
-    //         expect(roles).toEqual([
-    //             {
-    //                 role: 'role2',
-    //                 expireTimeMs: null,
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should revoke the role from the given inst', async () => {
-    //         const result = await controller.revokeRole(recordName, userId, {
-    //             instance: 'testId',
-    //             role: 'role1',
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         const roles = await store.listRolesForInst(recordName, 'testId');
-
-    //         expect(roles).toEqual([
-    //             {
-    //                 role: 'role2',
-    //                 expireTimeMs: null,
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should deny the request if the current user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-
-    //         const result = await controller.revokeRole(recordName, userId, {
-    //             userId: 'testId',
-    //             role: 'role1',
-    //         });
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.revoke',
-    //                 kind: 'user',
-    //                 id: userId,
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-
-    //         const roles = await store.listRolesForUser(recordName, 'testId');
-
-    //         expect(roles).toEqual([
-    //             {
-    //                 role: 'role1',
-    //                 expireTimeMs: null,
-    //             },
-    //             {
-    //                 role: 'role2',
-    //                 expireTimeMs: null,
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should deny the request if one of the instances are not authorized', async () => {
-    //         const result = await controller.revokeRole(
-    //             recordName,
-    //             userId,
-    //             {
-    //                 userId: 'testId',
-    //                 role: 'role1',
-    //             },
-    //             ['inst']
-    //         );
-
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'not_authorized',
-    //             errorMessage: 'You are not authorized to perform this action.',
-    //             reason: {
-    //                 type: 'missing_permission',
-    //                 permission: 'role.revoke',
-    //                 kind: 'inst',
-    //                 id: 'inst',
-    //                 marker: ACCOUNT_MARKER,
-    //                 role: null,
-    //             },
-    //         });
-
-    //         const roles = await store.listRolesForUser(recordName, 'testId');
-
-    //         expect(roles).toEqual([
-    //             {
-    //                 role: 'role1',
-    //                 expireTimeMs: null,
-    //             },
-    //             {
-    //                 role: 'role2',
-    //                 expireTimeMs: null,
-    //             },
-    //         ]);
-    //     });
-    // });
+    describe('revokeMarkerPermission()', () => {
+        let permissionId: string;
+
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = (await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'read',
+                {},
+                null
+            )) as AssignPermissionToSubjectAndMarkerSuccess;
+
+            permissionId = result.permissionAssignment.id;
+        });
+
+        it('should remove a permission from a policy', async () => {
+            const result = await controller.revokeMarkerPermission({
+                userId: userId,
+                permissionId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permission = await store.getMarkerPermissionAssignmentById(
+                permissionId
+            );
+            expect(permission).toBe(null);
+        });
+
+        it('should do nothing if the permission was not found', async () => {
+            await store.deleteMarkerPermissionAssignmentById(permissionId);
+
+            const result = await controller.revokeMarkerPermission({
+                userId: userId,
+                permissionId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+        });
+
+        it('should do nothing if the user is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await controller.revokeMarkerPermission({
+                userId: userId,
+                permissionId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: 'test',
+                    action: 'revokePermission',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
+
+            const permission = await store.getMarkerPermissionAssignmentById(
+                permissionId
+            );
+
+            expect(permission).not.toBe(null);
+        });
+
+        it('should do nothing if the inst is not authorized', async () => {
+            const result = await controller.revokeMarkerPermission({
+                userId: userId,
+                permissionId,
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: 'test',
+                    action: 'revokePermission',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+
+            const permission = await store.getMarkerPermissionAssignmentById(
+                permissionId
+            );
+
+            expect(permission).not.toBe(null);
+        });
+
+        it('should work if both the user and the inst have admin permissions', async () => {
+            store.roles[recordName]['/inst'] = new Set([ADMIN_ROLE_NAME]);
+
+            const result = await controller.revokeMarkerPermission({
+                userId: userId,
+                permissionId,
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permission = await store.getMarkerPermissionAssignmentById(
+                permissionId
+            );
+            expect(permission).toBe(null);
+        });
+    });
+
+    describe('listUserRoles()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['testId']: new Set(['role1', 'role2', 'abc']),
+            };
+        });
+
+        it('should list the roles for the given user', async () => {
+            const result = await controller.listUserRoles(
+                recordName,
+                userId,
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                roles: [
+                    {
+                        role: 'abc',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role1',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: null,
+                    },
+                ],
+            });
+        });
+
+        it('should list the roles if the current user is the same as the target user', async () => {
+            const result = await controller.listUserRoles(
+                recordName,
+                'testId',
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                roles: [
+                    {
+                        role: 'abc',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role1',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: null,
+                    },
+                ],
+            });
+        });
+
+        it('should not allow listing the roles for the own user account if an instance is involved', async () => {
+            const result = await controller.listUserRoles(
+                recordName,
+                'testId',
+                'testId',
+                ['/inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'user',
+                    subjectId: 'testId',
+                },
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listUserRoles(
+                recordName,
+                userId,
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listUserRoles(
+                recordName,
+                userId,
+                'testId',
+                ['/inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+        });
+    });
+
+    describe('listInstRoles()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['testId']: new Set(['role1', 'role2', 'abc']),
+            };
+        });
+
+        it('should list the roles for the given inst', async () => {
+            const result = await controller.listInstRoles(
+                recordName,
+                userId,
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                roles: [
+                    {
+                        role: 'abc',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role1',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: null,
+                    },
+                ],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listInstRoles(
+                recordName,
+                userId,
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listInstRoles(
+                recordName,
+                userId,
+                'testId',
+                ['/inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+        });
+    });
+
+    describe('listAssignedRoles()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['testId']: new Set(['role1', 'role2', 'abc']),
+                ['testId2']: new Set(['role1', 'role2', 'abc']),
+                ['testId4']: new Set(['role2']),
+                ['testId3']: new Set(['role1']),
+            };
+        });
+
+        it('should list the users that are assigned the given role', async () => {
+            const result = await controller.listAssignedRoles(
+                recordName,
+                userId,
+                'role1'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                assignments: [
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId3',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listAssignedRoles(
+                recordName,
+                userId,
+                'role1'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listAssignedRoles(
+                recordName,
+                userId,
+                'role1',
+                ['/inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+        });
+    });
+
+    describe('listRoleAssignments()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['testId']: new Set(['role1', 'role2', 'abc']),
+                ['testId2']: new Set(['role1', 'role2', 'abc']),
+                ['testId4']: new Set(['role2']),
+                ['testId3']: new Set(['role1']),
+            };
+        });
+
+        it('should return a not_supported result if the store does not implement listAssignments()', async () => {
+            (store as any).listAssignments = null;
+
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should list all role assignments', async () => {
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: true,
+                totalCount: 9,
+                assignments: [
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'abc',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'abc',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: userId,
+                        role: {
+                            role: ADMIN_ROLE_NAME,
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId3',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId4',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should list roles after the given role', async () => {
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                ADMIN_ROLE_NAME
+            );
+
+            expect(result).toEqual({
+                success: true,
+                totalCount: 9,
+                assignments: [
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId3',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId4',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null,
+                ['/inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'role',
+                    action: 'list',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+        });
+    });
+
+    describe('grantRole()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should grant the role to the given user', async () => {
+            const result = await controller.grantRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should be able to set an expiration time', async () => {
+            const expireTime = Date.now() + 100000;
+            const result = await controller.grantRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+                expireTimeMs: expireTime,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: expireTime,
+                },
+            ]);
+        });
+
+        it('should grant the role to the given instance', async () => {
+            const result = await controller.grantRole(recordName, userId, {
+                instance: '/inst',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForInst(recordName, '/inst');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should deny the request if the current user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.grantRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'role',
+                    resourceId: 'role1',
+                    action: 'grant',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([]);
+        });
+
+        it('should deny the request if one of the given instances is not authorized', async () => {
+            const result = await controller.grantRole(
+                recordName,
+                userId,
+                {
+                    userId: 'testId',
+                    role: 'role1',
+                },
+                ['/inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'role',
+                    resourceId: 'role1',
+                    action: 'grant',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([]);
+        });
+    });
+
+    describe('revokeRole()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            store.roleAssignments[recordName] = {
+                ['testId']: [
+                    {
+                        role: 'role1',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: null,
+                    },
+                ],
+            };
+        });
+
+        it('should revoke the role from the given user', async () => {
+            const result = await controller.revokeRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role2',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should revoke the role from the given inst', async () => {
+            const result = await controller.revokeRole(recordName, userId, {
+                instance: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForInst(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role2',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should deny the request if the current user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.revokeRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'role',
+                    resourceId: 'role1',
+                    action: 'revoke',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+                {
+                    role: 'role2',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should deny the request if one of the instances are not authorized', async () => {
+            const result = await controller.revokeRole(
+                recordName,
+                userId,
+                {
+                    userId: 'testId',
+                    role: 'role1',
+                },
+                ['/inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'role',
+                    resourceId: 'role1',
+                    action: 'revoke',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+                {
+                    role: 'role2',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+    });
 
     describe('authorizeSubject()', () => {
         const adminOrGrantedActionCases: [ActionKinds, string | null][] = [
@@ -3930,7 +3416,11 @@ describe('PolicyController', () => {
                 userId: userId,
             });
 
-            const result = await controller.authorizeSubjects(context, {
+            if (context.success === false) {
+                throw new Error('Failed to construct authorization context.');
+            }
+
+            const result = await controller.authorizeSubjects(context.context, {
                 subjects: [
                     {
                         subjectType: 'user',
@@ -4042,355 +3532,6 @@ describe('PolicyController', () => {
     // assignPermissionToSubjectAndMarker(subjectType, subjectId, recordName, resourceKind, marker, action, options)
 });
 
-// describe('getResourceInfo()', () => {
-//     const cases: [string, AvailablePermissions, ResourceInfo | null][] = [
-//         [
-//             'data.read',
-//             {
-//                 type: 'data.read',
-//                 address: 'abc',
-//             },
-//             {
-//                 resourceKind: DATA_RESOURCE_KIND,
-//                 resourceId: 'abc',
-//                 actionKind: 'read',
-//             },
-//         ],
-//         [
-//             'data.create',
-//             {
-//                 type: 'data.create',
-//                 address: 'abc',
-//             },
-//             {
-//                 resourceKind: DATA_RESOURCE_KIND,
-//                 resourceId: 'abc',
-//                 actionKind: 'create',
-//             },
-//         ],
-//         [
-//             'data.update',
-//             {
-//                 type: 'data.update',
-//                 address: 'abc',
-//                 existingMarkers: ['marker'],
-//             },
-//             {
-//                 resourceKind: DATA_RESOURCE_KIND,
-//                 resourceId: 'abc',
-//                 actionKind: 'update',
-//             },
-//         ],
-//         [
-//             'data.list',
-//             {
-//                 type: 'data.list',
-//                 dataItems: [],
-//             },
-//             null,
-//         ],
-//         [
-//             'data.delete',
-//             {
-//                 type: 'data.delete',
-//                 address: 'abc',
-//             },
-//             {
-//                 resourceKind: DATA_RESOURCE_KIND,
-//                 resourceId: 'abc',
-//                 actionKind: 'delete',
-//             },
-//         ],
-//         [
-//             'file.read',
-//             {
-//                 type: 'file.read',
-//                 fileName: 'test.txt',
-//                 fileMimeType: 'text/plain',
-//                 fileSizeInBytes: 100,
-//             },
-//             {
-//                 resourceKind: FILE_RESOURCE_KIND,
-//                 resourceId: 'test.txt',
-//                 actionKind: 'read',
-//             },
-//         ],
-//         [
-//             'file.create',
-//             {
-//                 type: 'file.create',
-//                 fileName: 'test.txt',
-//                 fileMimeType: 'text/plain',
-//                 fileSizeInBytes: 100,
-//             },
-//             {
-//                 resourceKind: FILE_RESOURCE_KIND,
-//                 resourceId: 'test.txt',
-//                 actionKind: 'create',
-//             },
-//         ],
-//         [
-//             'file.delete',
-//             {
-//                 type: 'file.delete',
-//                 fileName: 'test.txt',
-//                 fileMimeType: 'text/plain',
-//                 fileSizeInBytes: 100,
-//             },
-//             {
-//                 resourceKind: FILE_RESOURCE_KIND,
-//                 resourceId: 'test.txt',
-//                 actionKind: 'delete',
-//             },
-//         ],
-//         [
-//             'file.update',
-//             {
-//                 type: 'file.update',
-//                 fileName: 'test.txt',
-//                 fileMimeType: 'text/plain',
-//                 fileSizeInBytes: 100,
-//                 existingMarkers: ['marker'],
-//             },
-//             {
-//                 resourceKind: FILE_RESOURCE_KIND,
-//                 resourceId: 'test.txt',
-//                 actionKind: 'update',
-//             },
-//         ],
-//         [
-//             'file.list',
-//             {
-//                 type: 'file.list',
-//                 fileItems: [],
-//             },
-//             null,
-//         ],
-//         [
-//             'event.increment',
-//             {
-//                 type: 'event.increment',
-//                 eventName: 'test',
-//             },
-//             {
-//                 resourceKind: EVENT_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'increment',
-//             },
-//         ],
-//         [
-//             'event.count',
-//             {
-//                 type: 'event.count',
-//                 eventName: 'test',
-//             },
-//             {
-//                 resourceKind: EVENT_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'count',
-//             },
-//         ],
-//         [
-//             'event.update',
-//             {
-//                 type: 'event.update',
-//                 eventName: 'test',
-//                 existingMarkers: ['marker'],
-//             },
-//             {
-//                 resourceKind: EVENT_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'update',
-//             },
-//         ],
-//         [
-//             'event.list',
-//             {
-//                 type: 'event.list',
-//                 eventItems: [],
-//             },
-//             null,
-//         ],
-//         [
-//             'inst.read',
-//             {
-//                 type: 'inst.read',
-//                 inst: 'test',
-//             },
-//             {
-//                 resourceKind: INST_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'read',
-//             },
-//         ],
-//         [
-//             'inst.create',
-//             {
-//                 type: 'inst.create',
-//                 inst: 'test',
-//             },
-//             {
-//                 resourceKind: INST_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'create',
-//             },
-//         ],
-//         [
-//             'inst.update',
-//             {
-//                 type: 'inst.update',
-//                 inst: 'test',
-//                 existingMarkers: ['marker'],
-//             },
-//             {
-//                 resourceKind: INST_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'update',
-//             },
-//         ],
-//         [
-//             'inst.updateData',
-//             {
-//                 type: 'inst.updateData',
-//                 inst: 'test',
-//             },
-//             {
-//                 resourceKind: INST_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'updateData',
-//             },
-//         ],
-//         [
-//             'inst.delete',
-//             {
-//                 type: 'inst.delete',
-//                 inst: 'test',
-//             },
-//             {
-//                 resourceKind: INST_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'delete',
-//             },
-//         ],
-//         [
-//             'inst.sendAction',
-//             {
-//                 type: 'inst.sendAction',
-//                 insts: 'test',
-//                 userId: 'userId',
-//             },
-//             {
-//                 resourceKind: INST_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'sendAction',
-//             },
-//         ],
-//         [
-//             'inst.list',
-//             {
-//                 type: 'inst.list',
-//                 insts: [],
-//             },
-//             null,
-//         ],
-//         [
-//             'policy.read',
-//             {
-//                 type: 'policy.read',
-//                 policy: 'test',
-//             },
-//             {
-//                 resourceKind: MARKER_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'read',
-//             },
-//         ],
-//         [
-//             'policy.grantPermission',
-//             {
-//                 type: 'policy.grantPermission',
-//                 policy: 'test',
-//             },
-//             {
-//                 resourceKind: MARKER_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'grantPermission',
-//             },
-//         ],
-//         [
-//             'policy.revokePermission',
-//             {
-//                 type: 'policy.revokePermission',
-//                 policy: 'test',
-//             },
-//             {
-//                 resourceKind: MARKER_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'revokePermission',
-//             },
-//         ],
-//         [
-//             'policy.list',
-//             {
-//                 type: 'policy.list',
-//             },
-//             null,
-//         ],
-//         [
-//             'role.grant',
-//             {
-//                 type: 'role.grant',
-//                 role: 'test',
-//             },
-//             {
-//                 resourceKind: ROLE_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'grant',
-//             },
-//         ],
-//         [
-//             'role.revoke',
-//             {
-//                 type: 'role.revoke',
-//                 role: 'test',
-//             },
-//             {
-//                 resourceKind: ROLE_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'revoke',
-//             },
-//         ],
-//         [
-//             'role.read',
-//             {
-//                 type: 'role.read',
-//                 role: 'test',
-//             },
-//             {
-//                 resourceKind: ROLE_RESOURCE_KIND,
-//                 resourceId: 'test',
-//                 actionKind: 'read',
-//             },
-//         ],
-//         [
-//             'role.list',
-//             {
-//                 type: 'role.list',
-//                 roles: 'test',
-//             },
-//             null,
-//         ],
-//     ];
-
-//     it.each(cases)(
-//         'should return the resource info for %s',
-//         (desc, request, info) => {
-//             const result = getResourceInfo(request);
-//             expect(result).toEqual(info);
-//         }
-//     );
-// });
-
 describe('explainationForPermissionAssignment()', () => {
     it('should return the explanation for a resource permission assignment', () => {
         const permissionAssignment: ResourcePermissionAssignment = {
@@ -4483,429 +3624,3 @@ describe('willMarkersBeRemaining()', () => {
         expect(willMarkersBeRemaining(existing, removed, added)).toBe(true);
     });
 });
-
-// describe('filterAndMergeMarkerPermissions()', () => {
-//     it('should merge the permissions from the markers together', () => {
-//         const markers: { marker: string; result: ListMarkerPoliciesResult }[] =
-//             [
-//                 {
-//                     marker: 'first',
-//                     result: {
-//                         policies: [
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.create',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.delete',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                         ],
-//                         recordOwnerPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: true,
-//                             publishData: true,
-//                         },
-//                         userPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: true,
-//                             publishData: true,
-//                         },
-//                     },
-//                 },
-//                 {
-//                     marker: 'second',
-//                     result: {
-//                         policies: [
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.read',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                         ],
-//                         recordOwnerPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: true,
-//                             publishData: true,
-//                         },
-//                         userPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: true,
-//                             publishData: true,
-//                         },
-//                     },
-//                 },
-//             ];
-
-//         const result = filterAndMergeMarkerPermissions(markers);
-
-//         const expected = result.map((r) => ({
-//             marker: r.marker,
-//             permissions: r.permissions.map((p) => p.permission),
-//         }));
-
-//         expect(expected).toEqual([
-//             {
-//                 marker: 'first',
-//                 permissions: [
-//                     {
-//                         type: 'data.create',
-//                         addresses: true,
-//                         role: 'admin',
-//                     },
-//                     {
-//                         type: 'data.delete',
-//                         addresses: true,
-//                         role: 'admin',
-//                     },
-//                 ],
-//             },
-//             {
-//                 marker: 'second',
-//                 permissions: [
-//                     {
-//                         type: 'data.read',
-//                         addresses: true,
-//                         role: 'admin',
-//                     },
-//                 ],
-//             },
-//         ]);
-//     });
-
-//     const cases = [['record owner'] as const, ['user'] as const];
-
-//     describe.each(cases)('%s', (kind) => {
-//         const recordOwnerValue = kind === 'record owner';
-//         const userValue = kind !== 'record owner';
-
-//         it('should filter out all permissions if not allowed to publish data', () => {
-//             const markers: {
-//                 marker: string;
-//                 result: ListMarkerPoliciesResult;
-//             }[] = [
-//                 {
-//                     marker: 'first',
-//                     result: {
-//                         policies: [
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.create',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.delete',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                     {
-//                                         type: 'data.read',
-//                                         addresses: true,
-//                                         role: true,
-//                                     },
-//                                 ],
-//                             },
-//                         ],
-//                         recordOwnerPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: true,
-//                             publishData: recordOwnerValue,
-//                         },
-//                         userPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: true,
-//                             publishData: userValue,
-//                         },
-//                     },
-//                 },
-//                 {
-//                     marker: 'second',
-//                     result: {
-//                         policies: [
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.read',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                         ],
-//                         recordOwnerPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: true,
-//                             publishData: recordOwnerValue,
-//                         },
-//                         userPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: true,
-//                             publishData: userValue,
-//                         },
-//                     },
-//                 },
-//             ];
-
-//             const result = filterAndMergeMarkerPermissions(markers);
-
-//             const expected = result.map((r) => ({
-//                 marker: r.marker,
-//                 permissions: r.permissions.map((p) => p.permission),
-//             }));
-
-//             expect(expected).toEqual([
-//                 {
-//                     marker: 'first',
-//                     permissions: [],
-//                 },
-//                 {
-//                     marker: 'second',
-//                     permissions: [],
-//                 },
-//             ]);
-//         });
-
-//         it('should filter out markers that contain public rules if allowPublicData is false', () => {
-//             const markers: {
-//                 marker: string;
-//                 result: ListMarkerPoliciesResult;
-//             }[] = [
-//                 {
-//                     marker: 'first',
-//                     result: {
-//                         policies: [
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.create',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.delete',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                     {
-//                                         type: 'data.read',
-//                                         addresses: true,
-//                                         role: true,
-//                                     },
-//                                 ],
-//                             },
-//                         ],
-//                         recordOwnerPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: recordOwnerValue,
-//                             allowPublicInsts: true,
-//                             publishData: true,
-//                         },
-//                         userPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: userValue,
-//                             allowPublicInsts: true,
-//                             publishData: true,
-//                         },
-//                     },
-//                 },
-//                 {
-//                     marker: 'second',
-//                     result: {
-//                         policies: [
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'data.read',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                         ],
-//                         recordOwnerPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: recordOwnerValue,
-//                             allowPublicInsts: true,
-//                             publishData: true,
-//                         },
-//                         userPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: userValue,
-//                             allowPublicInsts: true,
-//                             publishData: true,
-//                         },
-//                     },
-//                 },
-//             ];
-
-//             const result = filterAndMergeMarkerPermissions(markers);
-
-//             const expected = result.map((r) => ({
-//                 marker: r.marker,
-//                 permissions: r.permissions.map((p) => p.permission),
-//             }));
-
-//             expect(expected).toEqual([
-//                 {
-//                     marker: 'first',
-//                     permissions: [],
-//                 },
-//                 {
-//                     marker: 'second',
-//                     permissions: [
-//                         {
-//                             type: 'data.read',
-//                             addresses: true,
-//                             role: 'admin',
-//                         },
-//                     ],
-//                 },
-//             ]);
-//         });
-
-//         it('should filter out all inst permissions for markers that contain public rules if not allowed to access public insts', () => {
-//             const markers: {
-//                 marker: string;
-//                 result: ListMarkerPoliciesResult;
-//             }[] = [
-//                 {
-//                     marker: 'first',
-//                     result: {
-//                         policies: [
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'inst.create',
-//                                         insts: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'inst.delete',
-//                                         insts: true,
-//                                         role: 'admin',
-//                                     },
-//                                     {
-//                                         type: 'data.delete',
-//                                         addresses: true,
-//                                         role: 'admin',
-//                                     },
-//                                     {
-//                                         type: 'inst.read',
-//                                         insts: true,
-//                                         role: true,
-//                                     },
-//                                 ],
-//                             },
-//                         ],
-//                         recordOwnerPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: recordOwnerValue,
-//                             publishData: true,
-//                         },
-//                         userPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: userValue,
-//                             publishData: true,
-//                         },
-//                     },
-//                 },
-//                 {
-//                     marker: 'second',
-//                     result: {
-//                         policies: [
-//                             {
-//                                 permissions: [
-//                                     {
-//                                         type: 'inst.read',
-//                                         insts: true,
-//                                         role: 'admin',
-//                                     },
-//                                 ],
-//                             },
-//                         ],
-//                         recordOwnerPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: recordOwnerValue,
-//                             publishData: true,
-//                         },
-//                         userPrivacyFeatures: {
-//                             allowAI: true,
-//                             allowPublicData: true,
-//                             allowPublicInsts: userValue,
-//                             publishData: true,
-//                         },
-//                     },
-//                 },
-//             ];
-
-//             const result = filterAndMergeMarkerPermissions(markers);
-
-//             const expected = result.map((r) => ({
-//                 marker: r.marker,
-//                 permissions: r.permissions.map((p) => p.permission),
-//             }));
-
-//             expect(expected).toEqual([
-//                 {
-//                     marker: 'first',
-//                     permissions: [
-//                         {
-//                             type: 'data.delete',
-//                             addresses: true,
-//                             role: 'admin',
-//                         },
-//                     ],
-//                 },
-//                 {
-//                     marker: 'second',
-//                     permissions: [
-//                         {
-//                             type: 'inst.read',
-//                             insts: true,
-//                             role: 'admin',
-//                         },
-//                     ],
-//                 },
-//             ]);
-//         });
-//     });
-// });

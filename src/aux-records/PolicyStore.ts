@@ -7,8 +7,8 @@ import {
     ResourceKinds,
     SubjectType,
     USER_SUBJECT_TYPE,
+    PrivacyFeatures,
 } from '@casual-simulation/aux-common';
-import { PrivacyFeatures } from './AuthStore';
 
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.
@@ -212,18 +212,18 @@ export interface PolicyStore {
 
     /**
      * Deletes the given resource permission assignment from the store.
-     * @param assigment The assignment that should be deleted.
+     * @param id The ID of the resource permission assignment.
      */
-    deleteResourcePermissionAssignment(
-        assigment: ResourcePermissionAssignment
+    deleteResourcePermissionAssignmentById(
+        id: string
     ): Promise<DeletePermissionAssignmentResult>;
 
     /**
      * Deletes the given marker permission assignment from the store.
-     * @param assigment The assignment that should be deleted.
+     * @param id The ID of the permission assignment.
      */
-    deleteMarkerPermissionAssignment(
-        assigment: MarkerPermissionAssignment
+    deleteMarkerPermissionAssignmentById(
+        id: string
     ): Promise<DeletePermissionAssignmentResult>;
 
     /**
@@ -269,6 +269,12 @@ export interface PolicyStore {
     ): Promise<MarkerPermissionAssignment[]>;
 
     /**
+     * Lists the markers that have permissions assigned to them.
+     * @param recordName The name of the record.
+     */
+    listMarkers(recordName: string): Promise<string[]>;
+
+    /**
      * Lists the resource permission assignments for the given subject in the given record.
      * @param recordName The name of the record.
      * @param subjectType The type of the subject.
@@ -279,6 +285,24 @@ export interface PolicyStore {
         subjectType: SubjectType,
         subjectId: string
     ): Promise<ListPermissionsInRecordResult>;
+
+    /**
+     * Gets the marker permission assignment with the given ID.
+     * Returns null if no assignment was found.
+     * @param id The ID of the assignment.
+     */
+    getMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<MarkerPermissionAssignment>;
+
+    /**
+     * Gets the resource permission assignment with the given ID.
+     * Returns null if no assignment was found.
+     * @param id The ID of the assignment.
+     */
+    getResourcePermissionAssignmentById(
+        id: string
+    ): Promise<ResourcePermissionAssignment>;
 
     /**
      * Assigns the given role to the given subject.

@@ -11,7 +11,6 @@ import {
     AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
-    PrivacyFeatures,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
@@ -92,6 +91,7 @@ import {
     PermissionOptions,
     ResourceKinds,
     SubjectType,
+    PrivacyFeatures,
 } from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
@@ -134,6 +134,7 @@ import {
     RecordsNotification,
 } from './NotificationMessenger';
 import { ModerationConfiguration } from './ModerationConfiguration';
+import { uniq } from 'lodash';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -792,6 +793,22 @@ export class MemoryStore
         };
     }
 
+    async getMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<MarkerPermissionAssignment> {
+        return (
+            this._markerPermissionAssignments.find((a) => a.id === id) ?? null
+        );
+    }
+
+    async getResourcePermissionAssignmentById(
+        id: string
+    ): Promise<ResourcePermissionAssignment> {
+        return (
+            this._resourcePermissionAssignments.find((a) => a.id === id) ?? null
+        );
+    }
+
     async deleteResourcePermissionAssignment(
         assigment: ResourcePermissionAssignment
     ): Promise<DeletePermissionAssignmentResult> {
@@ -799,6 +816,16 @@ export class MemoryStore
             this._resourcePermissionAssignments.filter(
                 (p) => p.id !== assigment.id
             );
+        return {
+            success: true,
+        };
+    }
+
+    async deleteResourcePermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        this._resourcePermissionAssignments =
+            this._resourcePermissionAssignments.filter((p) => p.id !== id);
         return {
             success: true,
         };
@@ -814,6 +841,26 @@ export class MemoryStore
         return {
             success: true,
         };
+    }
+
+    async deleteMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        this._markerPermissionAssignments =
+            this._markerPermissionAssignments.filter((p) => p.id !== id);
+        return {
+            success: true,
+        };
+    }
+
+    async listMarkers(recordName: string): Promise<string[]> {
+        const markers = uniq(
+            this._markerPermissionAssignments
+                .filter((p) => p.recordName === recordName)
+                .map((p) => p.marker)
+        );
+
+        return markers;
     }
 
     async listPermissionsInRecordForSubject(

@@ -5,7 +5,6 @@ import {
     AuthSession,
     AuthStore,
     AuthUser,
-    PrivacyFeatures,
 } from './AuthStore';
 import {
     NotSupportedError,
@@ -37,7 +36,10 @@ import {
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
-import { parseConnectionToken } from '@casual-simulation/aux-common';
+import {
+    parseConnectionToken,
+    PrivacyFeatures,
+} from '@casual-simulation/aux-common';
 import {
     PrivoClientInterface,
     PrivoFeatureStatus,
