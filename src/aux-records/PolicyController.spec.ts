@@ -3379,7 +3379,7 @@ describe('PolicyController', () => {
             '%s',
             (resourceKind, actions) => {
                 describe.each(actions)('%s', (action, resourceId) => {
-                    describe.each(publicReadSubjectTypeCases)(
+                    describe.each(publicWriteSubjectTypeCases)(
                         '%s',
                         (desc, subjectType, subjectId) => {
                             const marker = PUBLIC_WRITE_MARKER;
