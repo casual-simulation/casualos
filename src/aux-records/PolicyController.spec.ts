@@ -1863,7 +1863,7 @@ describe('PolicyController', () => {
     //     });
     // });
 
-    describe.only('authorizeSubject()', () => {
+    describe('authorizeSubject()', () => {
         const adminOrGrantedActionCases: [ActionKinds, string | null][] = [
             ['create', 'resourceId'],
             ['update', 'resourceId'],
@@ -3433,7 +3433,7 @@ describe('PolicyController', () => {
             }
         );
 
-        describe.only('privacy features', () => {
+        describe('privacy features', () => {
             describe('publishData', () => {
                 it('should reject the request if the user is not allowed to publish data', async () => {
                     const owner = await store.findUser(ownerId);
