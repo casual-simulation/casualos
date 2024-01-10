@@ -36,6 +36,7 @@ import {
 import { intersectionBy, isEqual, sortBy, union } from 'lodash';
 import { getMarkersOrDefault } from './Utils';
 import { parseInstId } from './websockets';
+import { PrivacyFeatures } from './AuthStore';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -215,15 +216,48 @@ export class PolicyController {
                 ? recordKeyResult.policy
                 : 'subjectfull';
 
+        let recordOwnerPrivacyFeatures: PrivacyFeatures = null;
+        let userPrivacyFeatures: PrivacyFeatures = null;
+        if (ownerId) {
+            recordOwnerPrivacyFeatures =
+                await this._policies.getUserPrivacyFeatures(ownerId);
+        }
+
+        if (!recordOwnerPrivacyFeatures) {
+            recordOwnerPrivacyFeatures = {
+                allowAI: true,
+                allowPublicData: true,
+                allowPublicInsts: true,
+                publishData: true,
+            };
+        }
+
+        if (request.userId) {
+            userPrivacyFeatures = await this._policies.getUserPrivacyFeatures(
+                request.userId
+            );
+        }
+
+        if (!userPrivacyFeatures) {
+            userPrivacyFeatures = {
+                allowAI: true,
+                allowPublicData: true,
+                allowPublicInsts: true,
+                publishData: true,
+            };
+        }
+
         const context: AuthorizationContext = {
             recordName,
             recordKeyResult,
             subjectPolicy,
             recordKeyProvided,
             recordOwnerId: ownerId,
+            recordOwnerPrivacyFeatures,
             recordStudioId: studioId,
             recordStudioMembers: studioMembers,
             userId: request.userId,
+            userPrivacyFeatures,
         };
 
         return {
@@ -414,6 +448,25 @@ export class PolicyController {
                 };
             }
 
+            if (!context.userPrivacyFeatures.publishData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'disabled_privacy_feature',
+                        recordName: context.recordName,
+                        subjectType: 'user',
+                        subjectId: context.userId,
+                        resourceKind: request.resourceKind,
+                        action: request.action,
+                        resourceId: request.resourceId,
+                        privacyFeature: 'publishData',
+                    },
+                };
+            }
+
             const recordName = context.recordName;
             const publicPermission = getPublicMarkersPermission(
                 markers,
@@ -421,7 +474,73 @@ export class PolicyController {
                 request.action
             );
 
+            if (
+                context.recordOwnerId &&
+                context.userId !== context.recordOwnerId
+            ) {
+                if (!context.recordOwnerPrivacyFeatures.allowPublicData) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: context.recordName,
+                            subjectType: 'user',
+                            subjectId: context.userId,
+                            resourceKind: request.resourceKind,
+                            action: request.action,
+                            resourceId: request.resourceId,
+                            privacyFeature: 'allowPublicData',
+                        },
+                    };
+                }
+
+                if (
+                    request.resourceKind === 'inst' &&
+                    (!context.recordOwnerPrivacyFeatures.allowPublicInsts ||
+                        !context.userPrivacyFeatures.allowPublicInsts)
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: context.recordName,
+                            subjectType: 'user',
+                            subjectId: context.userId,
+                            resourceKind: request.resourceKind,
+                            action: request.action,
+                            resourceId: request.resourceId,
+                            privacyFeature: 'allowPublicInsts',
+                        },
+                    };
+                }
+            }
+
             if (publicPermission) {
+                if (!context.userPrivacyFeatures.allowPublicData) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: context.recordName,
+                            subjectType: 'user',
+                            subjectId: context.userId,
+                            resourceKind: request.resourceKind,
+                            action: request.action,
+                            resourceId: request.resourceId,
+                            privacyFeature: 'allowPublicData',
+                        },
+                    };
+                }
+
                 return {
                     success: true,
                     recordName,
@@ -2037,6 +2156,16 @@ export interface AuthorizationContext {
     subjectPolicy: PublicRecordKeyPolicy;
 
     /**
+     * The privacy features of the user that owns the record.
+     */
+    recordOwnerPrivacyFeatures: PrivacyFeatures;
+
+    /**
+     * The privacy features of the user that is currently logged in.
+     */
+    userPrivacyFeatures: PrivacyFeatures;
+
+    /**
      * The ID of the user that is currently logged in.
      */
     userId: string;
@@ -3265,7 +3394,8 @@ export interface AuthorizeSubjectFailure {
 
 export type AuthorizeSubjectDenialReason =
     | AuthorizeActionMissingPermission
-    | AuthorizeActionTooManyMarkers;
+    | AuthorizeActionTooManyMarkers
+    | AuthorizeActionDisabledPrivacyFeature;
 
 export interface AuthorizeActionMissingPermission {
     type: 'missing_permission';
@@ -3299,6 +3429,45 @@ export interface AuthorizeActionMissingPermission {
      * The ID of the resource that was being accessed.
      */
     resourceId?: string;
+}
+
+export interface AuthorizeActionDisabledPrivacyFeature {
+    type: 'disabled_privacy_feature';
+
+    /**
+     * The name of the record that the permission is missing in.
+     */
+    recordName: string;
+
+    /**
+     * Whether the user or inst is missing the permission.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the user/inst that is missing the permission.
+     */
+    subjectId: string;
+
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The action that was attempted.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource that was being accessed.
+     */
+    resourceId?: string;
+
+    /**
+     * The privacy feature that is missing.
+     */
+    privacyFeature: keyof PrivacyFeatures;
 }
 
 export interface AuthorizeActionTooManyMarkers {

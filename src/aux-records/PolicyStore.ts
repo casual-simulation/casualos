@@ -102,6 +102,12 @@ export interface PolicyStore {
     getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures>;
 
     /**
+     * Gets the privacy features for the owner of the given record.
+     * @param recordName The name of the record.
+     */
+    getRecordOwnerPrivacyFeatures(recordName: string): Promise<PrivacyFeatures>;
+
+    /**
      * Gets the permission for the given subject, resource, and action.
      * @param subjectType The type of the subject. Must be either a user, inst, or role.
      * @param subjectId The ID of the subject.

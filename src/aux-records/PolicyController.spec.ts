@@ -3434,42 +3434,457 @@ describe('PolicyController', () => {
         );
 
         describe.only('privacy features', () => {
-            it('should reject the request if the user is accessing data from a record they dont own and privacy features disallow public data', async () => {
-                await services.records.createRecord({
-                    recordName: 'otherRecord',
-                    userId: ownerId,
-                    ownerId: ownerId,
-                });
+            describe('publishData', () => {
+                it('should reject the request if the user is not allowed to publish data', async () => {
+                    const owner = await store.findUser(ownerId);
 
-                const context = await controller.constructAuthorizationContext({
-                    recordKeyOrRecordName: 'otherRecord',
-                    userId: userId,
-                });
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: {
+                            allowAI: false,
+                            allowPublicData: false,
+                            allowPublicInsts: false,
+                            publishData: false,
+                        },
+                    });
 
-                const result = await controller.authorizeSubject(context, {
-                    subjectId: userId,
-                    subjectType: 'user',
-                    resourceKind: 'data',
-                    action: 'read',
-                    resourceId: 'resourceId',
-                    markers: [PUBLIC_READ_MARKER],
-                });
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId: ownerId,
+                        });
 
-                expect(result).toEqual({
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
-                    reason: {
-                        type: 'disabled_privacy_feature',
-                        recordName: 'otherRecord',
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: ownerId,
                         subjectType: 'user',
-                        subjectId: userId,
                         resourceKind: 'data',
                         action: 'read',
                         resourceId: 'resourceId',
-                        privacyFeature: 'allowPublicData',
-                    },
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: recordName,
+                            subjectType: 'user',
+                            subjectId: ownerId,
+                            resourceKind: 'data',
+                            action: 'read',
+                            resourceId: 'resourceId',
+                            privacyFeature: 'publishData',
+                        },
+                    });
+                });
+
+                it('should allow the request if the user is accessing an inst in a record own as long as they can publish data', async () => {
+                    const owner = await store.findUser(ownerId);
+
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: {
+                            allowAI: false,
+                            allowPublicData: false,
+                            allowPublicInsts: false,
+                            publishData: true,
+                        },
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId: ownerId,
+                        });
+
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: ownerId,
+                        subjectType: 'user',
+                        resourceKind: 'inst',
+                        action: 'read',
+                        resourceId: 'myInst',
+                        markers: ['secret'],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        explanation: 'User is the owner of the record.',
+                        permission: {
+                            id: null,
+
+                            recordName: recordName,
+                            action: null,
+                            userId: null,
+                            resourceKind: null,
+
+                            subjectId: 'admin',
+                            subjectType: 'role',
+
+                            marker: 'secret',
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        recordName: 'testRecord',
+                    });
+                });
+            });
+
+            describe('allowPublicData', () => {
+                it('should reject the request if the user is accessing data from a record they dont own and privacy features disallow public data', async () => {
+                    await services.records.createRecord({
+                        recordName: 'otherRecord',
+                        userId: ownerId,
+                        ownerId: ownerId,
+                    });
+
+                    const owner = await store.findUser(ownerId);
+
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: false,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: 'otherRecord',
+                            userId: userId,
+                        });
+
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: userId,
+                        subjectType: 'user',
+                        resourceKind: 'data',
+                        action: 'read',
+                        resourceId: 'resourceId',
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: 'otherRecord',
+                            subjectType: 'user',
+                            subjectId: userId,
+                            resourceKind: 'data',
+                            action: 'read',
+                            resourceId: 'resourceId',
+                            privacyFeature: 'allowPublicData',
+                        },
+                    });
+                });
+
+                it('should reject the request if the user is accessing public data and their privacy features disallow public data', async () => {
+                    await services.records.createRecord({
+                        recordName: 'otherRecord',
+                        userId: userId,
+                        ownerId: userId,
+                    });
+
+                    const user = await store.findUser(userId);
+
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: false,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: 'otherRecord',
+                            userId: userId,
+                        });
+
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: userId,
+                        subjectType: 'user',
+                        resourceKind: 'data',
+                        action: 'read',
+                        resourceId: 'resourceId',
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: 'otherRecord',
+                            subjectType: 'user',
+                            subjectId: userId,
+                            resourceKind: 'data',
+                            action: 'read',
+                            resourceId: 'resourceId',
+                            privacyFeature: 'allowPublicData',
+                        },
+                    });
+                });
+
+                it('should reject the request if the inst is accessing data from a record they dont own and privacy features disallow public data', async () => {
+                    await services.records.createRecord({
+                        recordName: 'otherRecord',
+                        userId: ownerId,
+                        ownerId: ownerId,
+                    });
+
+                    const owner = await store.findUser(ownerId);
+
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: false,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: 'otherRecord',
+                            userId: userId,
+                        });
+
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: '/myInst',
+                        subjectType: 'inst',
+                        resourceKind: 'data',
+                        action: 'read',
+                        resourceId: 'resourceId',
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: 'otherRecord',
+                            subjectType: 'user',
+                            subjectId: userId,
+                            resourceKind: 'data',
+                            action: 'read',
+                            resourceId: 'resourceId',
+                            privacyFeature: 'allowPublicData',
+                        },
+                    });
+                });
+
+                it('should reject the request if the user is not logged in but is accessing from a user that disallows public data', async () => {
+                    await services.records.createRecord({
+                        recordName: 'otherRecord',
+                        userId: ownerId,
+                        ownerId: ownerId,
+                    });
+
+                    const owner = await store.findUser(ownerId);
+
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: false,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: 'otherRecord',
+                            userId: null,
+                        });
+
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: null,
+                        subjectType: 'user',
+                        resourceKind: 'data',
+                        action: 'read',
+                        resourceId: 'resourceId',
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: 'otherRecord',
+                            subjectType: 'user',
+                            subjectId: null,
+                            resourceKind: 'data',
+                            action: 'read',
+                            resourceId: 'resourceId',
+                            privacyFeature: 'allowPublicData',
+                        },
+                    });
+                });
+            });
+
+            describe('allowPublicInsts', () => {
+                it('should reject the request if the user is accessing an inst in a record they do not own but the user privacy features disallow public insts', async () => {
+                    const user = await store.findUser(userId);
+
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: false,
+                            publishData: true,
+                        },
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId: userId,
+                        });
+
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: userId,
+                        subjectType: 'user',
+                        resourceKind: 'inst',
+                        action: 'read',
+                        resourceId: 'myInst',
+                        markers: ['secret'],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: recordName,
+                            subjectType: 'user',
+                            subjectId: userId,
+                            resourceKind: 'inst',
+                            action: 'read',
+                            resourceId: 'myInst',
+                            privacyFeature: 'allowPublicInsts',
+                        },
+                    });
+                });
+
+                it('should reject the request if the user is accessing an inst in a record they do not own but the owner privacy features disallow public insts', async () => {
+                    const owner = await store.findUser(ownerId);
+
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: false,
+                            publishData: true,
+                        },
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId: userId,
+                        });
+
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: userId,
+                        subjectType: 'user',
+                        resourceKind: 'inst',
+                        action: 'read',
+                        resourceId: 'myInst',
+                        markers: ['secret'],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: recordName,
+                            subjectType: 'user',
+                            subjectId: userId,
+                            resourceKind: 'inst',
+                            action: 'read',
+                            resourceId: 'myInst',
+                            privacyFeature: 'allowPublicInsts',
+                        },
+                    });
+                });
+
+                it('should reject the request if the user is accessing an inst in a record they own but their privacy features disallow public insts', async () => {
+                    await services.records.createRecord({
+                        recordName: 'otherRecord',
+                        userId: ownerId,
+                        ownerId: ownerId,
+                    });
+
+                    const user = await store.findUser(userId);
+
+                    await store.saveUser({
+                        ...user,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: false,
+                            publishData: true,
+                        },
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: 'otherRecord',
+                            userId: userId,
+                        });
+
+                    const result = await controller.authorizeSubject(context, {
+                        subjectId: userId,
+                        subjectType: 'user',
+                        resourceKind: 'inst',
+                        action: 'read',
+                        resourceId: 'myInst',
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: 'otherRecord',
+                            subjectType: 'user',
+                            subjectId: userId,
+                            resourceKind: 'inst',
+                            action: 'read',
+                            resourceId: 'myInst',
+                            privacyFeature: 'allowPublicInsts',
+                        },
+                    });
                 });
             });
         });

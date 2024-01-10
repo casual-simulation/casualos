@@ -592,6 +592,16 @@ export class MemoryStore
         return await this._getUserPrivacyFeatures(userId);
     }
 
+    async getRecordOwnerPrivacyFeatures(
+        recordName: string
+    ): Promise<PrivacyFeatures> {
+        const record = await this.getRecordByName(recordName);
+        if (!record || !record.ownerId) {
+            return null;
+        }
+        return await this._getUserPrivacyFeatures(record.ownerId);
+    }
+
     async getPermissionForSubjectAndResource(
         subjectType: SubjectType,
         subjectId: string,
