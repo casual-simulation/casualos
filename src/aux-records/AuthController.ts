@@ -847,7 +847,10 @@ export class AuthController {
                 user.privacyFeatures?.publishData !==
                     privacyFeatures.publishData ||
                 user.privacyFeatures?.allowPublicData !==
-                    privacyFeatures.allowPublicData
+                    privacyFeatures.allowPublicData ||
+                user.privacyFeatures?.allowAI !== privacyFeatures.allowAI ||
+                user.privacyFeatures?.allowPublicInsts !==
+                    privacyFeatures.allowPublicInsts
             ) {
                 console.log(
                     `[AuthController] [completeOpenIDLogin] Updating user privacy features.`
