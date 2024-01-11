@@ -33,7 +33,7 @@ import {
     RoleAssignment,
     UpdateUserRolesFailure,
 } from './PolicyStore';
-import { sortBy } from 'lodash';
+import { sortBy, without } from 'lodash';
 import { getMarkersOrDefault } from './Utils';
 import { parseInstId } from './websockets';
 
@@ -121,6 +121,65 @@ function isAllowedStudioMemberResource(
 }
 
 /**
+ * Gets the resources that need to be authorized when creating a resource with the given markers.
+ * @param markers The markers that will be placed on the resource.
+ */
+export function getMarkerResourcesForCreation(
+    markers: string[]
+): ResourceInfo[] {
+    // If the resource has the PUBLIC_READ_MARKER, then we only need the "create" permission and not the "assign" permission.
+    return markers
+        .filter((m) => m !== PUBLIC_READ_MARKER)
+        .map(
+            (m) =>
+                ({
+                    resourceKind: 'marker',
+                    resourceId: m,
+                    action: 'assign',
+                    markers: [ACCOUNT_MARKER],
+                } as ResourceInfo)
+        );
+}
+
+/**
+ * Gets the resources that need to be authorized when updating a resource with the given markers.
+ * @param existingMarkers The markers that already exist on the resource.
+ * @param newMarkers The markers that will replace the existing markers. If null, then no markers will be added or removed.
+ */
+export function getMarkerResourcesForUpdate(
+    existingMarkers: string[],
+    newMarkers: string[]
+): ResourceInfo[] {
+    const addedMarkers = newMarkers
+        ? without(newMarkers, ...existingMarkers)
+        : [];
+    const removedMarkers = newMarkers
+        ? without(existingMarkers, ...newMarkers)
+        : [];
+
+    const resources: ResourceInfo[] = [];
+    for (let marker of addedMarkers) {
+        resources.push({
+            resourceKind: 'marker',
+            resourceId: marker,
+            action: 'assign',
+            markers: [ACCOUNT_MARKER],
+        });
+    }
+
+    for (let marker of removedMarkers) {
+        resources.push({
+            resourceKind: 'marker',
+            resourceId: marker,
+            action: 'unassign',
+            markers: [ACCOUNT_MARKER],
+        });
+    }
+
+    return resources;
+}
+
+/**
  * Defines a class that is able to calculate the policies and permissions that are allowed for specific actions.
  */
 export class PolicyController {
@@ -148,6 +207,7 @@ export class PolicyController {
     ): Promise<ConstructAuthorizationContextResult> {
         let recordKeyResult: ValidatePublicRecordKeyResult | null = null;
         let recordName: string;
+        let recordKeyCreatorId: string;
         let ownerId: string;
         let studioId: string;
         let studioMembers: ListedStudioAssignment[] = undefined;
@@ -159,6 +219,7 @@ export class PolicyController {
             if (recordKeyResult.success === true) {
                 recordName = recordKeyResult.recordName;
                 ownerId = recordKeyResult.ownerId;
+                recordKeyCreatorId = recordKeyResult.keyCreatorId;
             } else {
                 return {
                     success: false,
@@ -227,6 +288,7 @@ export class PolicyController {
             recordKeyResult,
             subjectPolicy,
             recordKeyProvided,
+            recordKeyCreatorId,
             recordOwnerId: ownerId,
             recordOwnerPrivacyFeatures,
             recordStudioId: studioId,
@@ -1821,6 +1883,11 @@ export interface AuthorizationContext {
     recordStudioId: string;
     recordStudioMembers?: ListedStudioAssignment[];
     subjectPolicy: PublicRecordKeyPolicy;
+
+    /**
+     * The ID of the user who created the record key.
+     */
+    recordKeyCreatorId: string;
 
     /**
      * The privacy features of the user that owns the record.
