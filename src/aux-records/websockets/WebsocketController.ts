@@ -739,6 +739,29 @@ export class WebsocketController {
                         return;
                     }
 
+                    const authorizeResult =
+                        await this._policies.authorizeUserAndInstancesForResources(
+                            contextResult.context,
+                            {
+                                userId: connection.userId,
+                                instances: [],
+                                resources: [
+                                    {
+                                        resourceKind: 'inst',
+                                        resourceId: event.inst,
+                                        action: 'read',
+                                        markers: branch.linkedInst.markers,
+                                    },
+                                    {
+                                        resourceKind: 'inst',
+                                        resourceId: event.inst,
+                                        action: 'updateData',
+                                        markers: branch.linkedInst.markers,
+                                    },
+                                ],
+                            }
+                        );
+
                     // const authorizeReadResult =
                     //     await this._policies.authorizeRequestUsingContext(
                     //         contextResult.context,
@@ -751,38 +774,38 @@ export class WebsocketController {
                     //         }
                     //     );
 
-                    // if (authorizeReadResult.allowed === false) {
-                    //     await this.sendError(connectionId, -1, {
-                    //         ...returnAuthorizationResult(authorizeReadResult),
-                    //         recordName: event.recordName,
-                    //         inst: event.inst,
-                    //         branch: event.branch,
-                    //     });
-                    //     return;
-                    // }
-
-                    const authorizeUpdateResult =
-                        await this._policies.authorizeUserAndInstances(
-                            contextResult.context,
-                            {
-                                resourceKind: 'inst',
-                                resourceId: event.inst,
-                                action: 'updateData',
-                                markers: branch.linkedInst.markers,
-                                userId: connection.userId,
-                                instances: [],
-                            }
-                        );
-
-                    if (authorizeUpdateResult.success === false) {
+                    if (authorizeResult.success === false) {
                         await this.sendError(connectionId, -1, {
-                            ...authorizeUpdateResult,
+                            ...authorizeResult,
                             recordName: event.recordName,
                             inst: event.inst,
                             branch: event.branch,
                         });
                         return;
                     }
+
+                    // const authorizeUpdateResult =
+                    //     await this._policies.authorizeUserAndInstances(
+                    //         contextResult.context,
+                    //         {
+                    //             resourceKind: 'inst',
+                    //             resourceId: event.inst,
+                    //             action: 'updateData',
+                    //             markers: branch.linkedInst.markers,
+                    //             userId: connection.userId,
+                    //             instances: [],
+                    //         }
+                    //     );
+
+                    // if (authorizeUpdateResult.success === false) {
+                    //     await this.sendError(connectionId, -1, {
+                    //         ...authorizeUpdateResult,
+                    //         recordName: event.recordName,
+                    //         inst: event.inst,
+                    //         branch: event.branch,
+                    //     });
+                    //     return;
+                    // }
 
                     await this._connectionStore.saveAuthorizedInst(
                         connectionId,
@@ -1839,41 +1862,78 @@ export class WebsocketController {
                     context = contextResult.context;
                 }
 
-                const authorizeCreateResult =
-                    await this._policies.authorizeUserAndInstances(context, {
-                        resourceKind: 'inst',
-                        resourceId: instName,
-                        action: 'create',
-                        markers: [PRIVATE_MARKER],
-                        userId,
-                        instances: [],
-                    });
+                const authorizationResult =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        context,
+                        {
+                            userId: userId,
+                            instances: [],
+                            resources: [
+                                {
+                                    resourceKind: 'inst',
+                                    resourceId: instName,
+                                    action: 'create',
+                                    markers: [PRIVATE_MARKER],
+                                },
+                                {
+                                    resourceKind: 'marker',
+                                    resourceId: PRIVATE_MARKER,
+                                    action: 'assign',
+                                    markers: [ACCOUNT_MARKER],
+                                },
+                                {
+                                    resourceKind: 'inst',
+                                    resourceId: instName,
+                                    action: 'read',
+                                    markers: [PRIVATE_MARKER],
+                                },
+                            ],
+                        }
+                    );
 
-                if (authorizeCreateResult.success === false) {
+                if (authorizationResult.success === false) {
                     console.log(
                         '[WebsocketController] Unable to authorize inst creation.',
-                        authorizeCreateResult
+                        authorizationResult
                     );
-                    return authorizeCreateResult;
+                    return authorizationResult;
                 }
 
-                const authorizeReadResult =
-                    await this._policies.authorizeUserAndInstances(context, {
-                        resourceKind: 'inst',
-                        resourceId: instName,
-                        action: 'read',
-                        markers: [PRIVATE_MARKER],
-                        userId,
-                        instances: [],
-                    });
+                // const authorizeCreateResult =
+                //     await this._policies.authorizeUserAndInstances(context, {
+                //         resourceKind: 'inst',
+                //         resourceId: instName,
+                //         action: 'create',
+                //         markers: [PRIVATE_MARKER],
+                //         userId,
+                //         instances: [],
+                //     });
 
-                if (authorizeReadResult.success === false) {
-                    console.log(
-                        '[WebsocketController] Unable to authorize inst creation.',
-                        authorizeReadResult
-                    );
-                    return authorizeReadResult;
-                }
+                // if (authorizeCreateResult.success === false) {
+                //     console.log(
+                //         '[WebsocketController] Unable to authorize inst creation.',
+                //         authorizeCreateResult
+                //     );
+                //     return authorizeCreateResult;
+                // }
+
+                // const authorizeReadResult =
+                //     await this._policies.authorizeUserAndInstances(context, {
+                //         resourceKind: 'inst',
+                //         resourceId: instName,
+                //         action: 'read',
+                //         markers: [PRIVATE_MARKER],
+                //         userId,
+                //         instances: [],
+                //     });
+
+                // if (authorizeReadResult.success === false) {
+                //     console.log(
+                //         '[WebsocketController] Unable to authorize inst creation.',
+                //         authorizeReadResult
+                //     );
+                //     return authorizeReadResult;
+                // }
 
                 const instMetrics =
                     await this._metrics.getSubscriptionInstMetricsByRecordName(
