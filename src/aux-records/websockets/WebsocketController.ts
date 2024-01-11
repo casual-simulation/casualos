@@ -1361,7 +1361,7 @@ export class WebsocketController {
                     resourceKind: 'inst',
                     action: 'list',
                     userId,
-                    markers: [ACCOUNT_MARKER],
+                    markers: [PRIVATE_MARKER],
                     instances: [],
                 });
 
