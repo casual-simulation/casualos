@@ -19,12 +19,15 @@ import {
 } from './RecordsController';
 import { getExtension, getType } from 'mime';
 import {
-    AuthorizeDenied,
-    AuthorizeUpdateFileRequest,
+    AuthorizeSubjectFailure,
     PolicyController,
-    returnAuthorizationResult,
+    getMarkerResourcesForCreation,
+    getMarkerResourcesForUpdate,
 } from './PolicyController';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
 import { getMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
 import { MetricsStore } from './MetricsStore';
@@ -69,24 +72,89 @@ export class FileRecordsController {
         try {
             const markers = getMarkersOrDefault(request.markers);
 
-            const result = await this._policies.authorizeRequest({
-                action: 'file.create',
-                recordKeyOrRecordName: recordKeyOrRecordName,
-                userId,
-                resourceMarkers: markers,
-                fileSizeInBytes: request.fileByteLength,
-                fileMimeType: request.fileMimeType,
-                instances: request.instances,
-            });
+            const contextResult =
+                await this._policies.constructAuthorizationContext({
+                    recordKeyOrRecordName,
+                    userId,
+                });
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            if (contextResult.success === false) {
+                return contextResult;
             }
 
-            const policy = result.subject.subjectPolicy;
-            userId = result.subject.userId;
+            const extension = getExtension(request.fileMimeType);
+            const fileName = extension
+                ? `${request.fileSha256Hex}.${extension}`
+                : request.fileSha256Hex;
 
-            if (!result.subject.userId && policy !== 'subjectless') {
+            const authorization =
+                await this._policies.authorizeUserAndInstancesForResources(
+                    contextResult.context,
+                    {
+                        userId,
+                        instances: request.instances,
+                        resources: [
+                            {
+                                resourceKind: 'file',
+                                resourceId: fileName,
+                                action: 'create',
+                                markers: markers,
+                            },
+                            ...getMarkerResourcesForCreation(markers),
+                        ],
+                    }
+                );
+
+            // const result = await this._policies.authorizeRequest({
+            //     action: 'file.create',
+            //     recordKeyOrRecordName: recordKeyOrRecordName,
+            //     userId,
+            //     resourceMarkers: markers,
+            //     fileSizeInBytes: request.fileByteLength,
+            //     fileMimeType: request.fileMimeType,
+            //     instances: request.instances,
+            // });
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const createAuthorization = authorization.results[0];
+
+            for (let result of createAuthorization.results) {
+                const options = result.permission.options;
+
+                if (
+                    'maxFileSizeInBytes' in options &&
+                    options.maxFileSizeInBytes > 0
+                ) {
+                    if (request.fileByteLength > options.maxFileSizeInBytes) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage: 'The file is too large.',
+                        };
+                    }
+                } else if (
+                    'allowedMimeTypes' in options &&
+                    Array.isArray(options.allowedMimeTypes)
+                ) {
+                    if (
+                        !options.allowedMimeTypes.includes(request.fileMimeType)
+                    ) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage: 'The file type is not allowed.',
+                        };
+                    }
+                }
+            }
+
+            const policy = contextResult.context.subjectPolicy;
+            userId = contextResult.context.userId;
+
+            if (!userId && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -99,8 +167,11 @@ export class FileRecordsController {
                 userId = null;
             }
 
-            const publisherId = result.authorizerId;
-            const recordName = result.recordName;
+            const publisherId =
+                contextResult.context.recordKeyCreatorId ??
+                userId ??
+                contextResult.context.recordOwnerId;
+            const recordName = authorization.recordName;
             const subjectId = userId;
 
             const metricsResult =
@@ -157,11 +228,6 @@ export class FileRecordsController {
                     };
                 }
             }
-
-            const extension = getExtension(request.fileMimeType);
-            const fileName = extension
-                ? `${request.fileSha256Hex}.${extension}`
-                : request.fileSha256Hex;
 
             const presignResult = await this._store.presignFileUpload({
                 recordName,
@@ -288,23 +354,36 @@ export class FileRecordsController {
 
             const markers = getMarkersOrDefault(fileResult.markers);
 
-            const result = await this._policies.authorizeRequestUsingContext(
-                context.context,
-                {
-                    action: 'file.delete',
-                    ...baseRequest,
-                    fileSizeInBytes: fileResult.sizeInBytes,
-                    fileMimeType: getType(fileResult.fileName),
-                    resourceMarkers: markers,
-                }
-            );
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: subjectId,
+                        instances: instances,
+                        resourceKind: 'file',
+                        resourceId: fileName,
+                        action: 'delete',
+                        markers: markers,
+                    }
+                );
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            // const result = await this._policies.authorizeRequestUsingContext(
+            //     context.context,
+            //     {
+            //         action: 'file.delete',
+            //         ...baseRequest,
+            //         fileSizeInBytes: fileResult.sizeInBytes,
+            //         fileMimeType: getType(fileResult.fileName),
+            //         resourceMarkers: markers,
+            //     }
+            // );
+
+            if (authorization.success === false) {
+                return authorization;
             }
 
-            const policy = result.subject.subjectPolicy;
-            subjectId = result.subject.userId;
+            const policy = context.context.subjectPolicy;
+            subjectId = authorization.user.subjectId;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -315,8 +394,7 @@ export class FileRecordsController {
                 };
             }
 
-            const publisherId = result.authorizerId;
-            const recordName = result.recordName;
+            const recordName = authorization.recordName;
 
             const eraseResult = await this._store.eraseFileRecord(
                 recordName,
@@ -387,23 +465,35 @@ export class FileRecordsController {
 
             const markers = getMarkersOrDefault(fileResult.markers);
 
-            const result = await this._policies.authorizeRequestUsingContext(
+            const result = await this._policies.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'file.read',
-                    ...baseRequest,
-                    fileSizeInBytes: fileResult.sizeInBytes,
-                    fileMimeType: getType(fileResult.fileName),
-                    resourceMarkers: markers,
+                    userId: subjectId,
+                    instances: instances,
+                    resourceKind: 'file',
+                    resourceId: fileName,
+                    action: 'read',
+                    markers: markers,
                 }
             );
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            // const result = await this._policies.authorizeRequestUsingContext(
+            //     context.context,
+            //     {
+            //         action: 'file.read',
+            //         ...baseRequest,
+            //         fileSizeInBytes: fileResult.sizeInBytes,
+            //         fileMimeType: getType(fileResult.fileName),
+            //         resourceMarkers: markers,
+            //     }
+            // );
+
+            if (result.success === false) {
+                return result;
             }
 
-            const policy = result.subject.subjectPolicy;
-            subjectId = result.subject.userId;
+            const policy = context.context.subjectPolicy;
+            subjectId = result.user.subjectId;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -484,6 +574,22 @@ export class FileRecordsController {
                 return context;
             }
 
+            const authorizeResult =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: userId,
+                        instances,
+                        resourceKind: 'file',
+                        action: 'list',
+                        markers: [PRIVATE_MARKER],
+                    }
+                );
+
+            if (authorizeResult.success === false) {
+                return authorizeResult;
+            }
+
             const result2 = await this._store.listUploadedFiles(
                 context.context.recordName,
                 fileName
@@ -497,37 +603,10 @@ export class FileRecordsController {
                 };
             }
 
-            const files = result2.files;
-            const authorizeResult =
-                await this._policies.authorizeRequestUsingContext(
-                    context.context,
-                    {
-                        action: 'file.list',
-                        ...baseRequest,
-                        fileItems: files.map((i) => ({
-                            fileName: i.fileName,
-                            fileSizeInBytes: i.sizeInBytes,
-                            fileMimeType: getType(i.fileName),
-                            markers: i.markers ?? [PUBLIC_READ_MARKER],
-                            original: i,
-                        })),
-                    }
-                );
-
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
-            }
-
-            if (!authorizeResult.allowedFileItems) {
-                throw new Error('allowedFileItems is null!');
-            }
-
             return {
                 success: true,
                 recordName: context.context.recordName,
-                files: authorizeResult.allowedFileItems.map(
-                    (f) => (f as any).original
-                ),
+                files: result2.files,
                 totalCount: result2.totalCount,
             };
         } catch (err) {
@@ -574,34 +653,35 @@ export class FileRecordsController {
             }
 
             const existingMarkers = getMarkersOrDefault(fileResult.markers);
-            const addedMarkers = markers
-                ? without(markers, ...existingMarkers)
-                : [];
-            const removedMarkers = markers
-                ? without(existingMarkers, ...markers)
-                : [];
-
             const resourceMarkers = markers ?? existingMarkers;
 
-            const result = await this._policies.authorizeRequestUsingContext(
-                context.context,
-                {
-                    action: 'file.update',
-                    ...baseRequest,
-                    existingMarkers,
-                    addedMarkers,
-                    removedMarkers,
-                    fileSizeInBytes: fileResult.sizeInBytes,
-                    fileMimeType: getType(fileResult.fileName),
-                }
-            );
+            const result =
+                await this._policies.authorizeUserAndInstancesForResources(
+                    context.context,
+                    {
+                        userId: subjectId,
+                        instances: instances,
+                        resources: [
+                            {
+                                resourceKind: 'file',
+                                resourceId: fileName,
+                                action: 'update',
+                                markers: resourceMarkers,
+                            },
+                            ...getMarkerResourcesForUpdate(
+                                existingMarkers,
+                                markers
+                            ),
+                        ],
+                    }
+                );
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            if (result.success === false) {
+                return result;
             }
 
-            const policy = result.subject.subjectPolicy;
-            subjectId = result.subject.userId;
+            const policy = context.context.subjectPolicy;
+            subjectId = context.context.userId;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -794,7 +874,7 @@ export interface RecordFileFailure {
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddFileFailure['errorCode']
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | SubscriptionLimitReached
         | 'invalid_file_data'
         | 'not_supported';
@@ -858,7 +938,7 @@ export interface EraseFileFailure {
         | ServerError
         | EraseFileStoreResult['errorCode']
         | NotLoggedInError
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
 
     /**
@@ -914,7 +994,7 @@ export interface ReadFileFailure {
         | ValidatePublicRecordKeyFailure['errorCode']
         | PresignFileReadFailure['errorCode']
         | GetFileRecordFailure['errorCode']
-        | AuthorizeDenied['errorCode'];
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -947,7 +1027,7 @@ export interface ListFilesFailure {
         | ValidatePublicRecordKeyFailure['errorCode']
         | PresignFileReadFailure['errorCode']
         | GetFileRecordFailure['errorCode']
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | NotSupportedError;
     errorMessage: string;
 }
@@ -967,6 +1047,6 @@ export interface UpdateFileRecordFailure {
         | ValidatePublicRecordKeyFailure['errorCode']
         | PresignFileReadFailure['errorCode']
         | GetFileRecordFailure['errorCode']
-        | AuthorizeDenied['errorCode'];
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
