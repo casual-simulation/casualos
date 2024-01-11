@@ -99,6 +99,7 @@ describe('AIController', () => {
             },
             metrics: store,
             config: store,
+            policies: null,
         });
     });
 
@@ -323,6 +324,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             const result = await controller.chat({
@@ -368,6 +370,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             const result = await controller.chat({
@@ -748,6 +751,95 @@ describe('AIController', () => {
                 expect(chatInterface.chat).not.toBeCalled();
             });
         });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interface: chatInterface,
+                    options: {
+                        defaultModel: 'default-model',
+                        allowedChatModels: ['test-model1', 'test-model2'],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                metrics: store,
+                config: store,
+                policies: store,
+            });
+
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            stopReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 1,
+                })
+            );
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(chatInterface.chat).not.toHaveBeenCalled();
+        });
     });
 
     describe('generateSkybox()', () => {
@@ -795,6 +887,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             const result = await controller.generateSkybox({
@@ -880,6 +973,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             const result = await controller.generateSkybox({
@@ -1051,6 +1145,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             const result = await controller.getSkybox({
@@ -1138,6 +1233,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             const result = await controller.getSkybox({
@@ -1248,6 +1344,7 @@ describe('AIController', () => {
                 },
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             otherInterface.generateImage.mockReturnValueOnce(
@@ -1297,6 +1394,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             const result = await controller.generateImage({
@@ -1399,6 +1497,7 @@ describe('AIController', () => {
                 },
                 metrics: store,
                 config: store,
+                policies: null,
             });
 
             const result = await controller.generateImage({

@@ -16,6 +16,7 @@ import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import { PolicyStore } from './PolicyStore';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
@@ -23,6 +24,7 @@ export interface AIConfiguration {
     images: AIGenerateImageConfiguration | null;
     metrics: MetricsStore;
     config: ConfigurationStore;
+    policies: PolicyStore;
 }
 
 export interface AIChatConfiguration {
@@ -148,6 +150,7 @@ export class AIController {
     private _imageOptions: AIGenerateImageOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _policies: PolicyStore;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -189,6 +192,7 @@ export class AIController {
         }
         this._metrics = configuration.metrics;
         this._config = configuration.config;
+        this._policies = configuration.policies;
     }
 
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
@@ -295,6 +299,19 @@ export class AIController {
                     );
                 } else {
                     maxTokens = allowedFeatures.ai.chat.maxTokensPerRequest;
+                }
+            }
+
+            if (this._policies) {
+                const privacyFeatures =
+                    await this._policies.getUserPrivacyFeatures(request.userId);
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
                 }
             }
 
