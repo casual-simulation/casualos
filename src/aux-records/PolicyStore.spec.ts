@@ -40,7 +40,7 @@ describe('getPublicReadPermission()', () => {
             ['create', 'update', 'delete', 'list', 'sendAction', 'updateData'],
         ] as const,
         [
-            'policy',
+            'marker',
             [
                 'create',
                 'update',
