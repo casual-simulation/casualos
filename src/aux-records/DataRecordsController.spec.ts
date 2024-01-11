@@ -403,25 +403,26 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to create some data', async () => {
-            store.policies['testRecord'] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'data.create',
-                                role: 'developer',
-                                addresses: true,
-                            },
-                            {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                'testRecord',
+                'role',
+                'developer',
+                'data',
+                'secret',
+                'create',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                'testRecord',
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'assign',
+                {},
+                null
+            );
 
             store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
@@ -455,20 +456,16 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to update some data', async () => {
-            store.policies['testRecord'] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'data.update',
-                                role: 'developer',
-                                addresses: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                'testRecord',
+                'role',
+                'developer',
+                'data',
+                'secret',
+                'update',
+                {},
+                null
+            );
 
             store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
@@ -512,42 +509,36 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to add a resource marker to some data', async () => {
-            store.policies['testRecord'] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'data.update',
-                                role: 'developer',
-                                addresses: true,
-                            },
-                            {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-                [PUBLIC_READ_MARKER]: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'data.update',
-                                role: 'developer',
-                                addresses: true,
-                            },
-                            {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                'testRecord',
+                'role',
+                'developer',
+                'data',
+                'secret',
+                'update',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                'testRecord',
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'assign',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                'testRecord',
+                'role',
+                'developer',
+                'data',
+                PUBLIC_READ_MARKER,
+                'update',
+                {},
+                null
+            );
 
             store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
@@ -654,20 +645,16 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the user does not have permission to create the data', async () => {
-            store.policies['testRecord'] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                'testRecord',
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'assign',
+                {},
+                null
+            );
 
             store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
@@ -708,7 +695,7 @@ describe('DataRecordsController', () => {
                 null,
                 null,
                 ['secret'],
-                ['inst']
+                ['/inst']
             )) as RecordDataFailure;
 
             expect(result.success).toBe(false);
@@ -1063,7 +1050,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 otherUserId,
-                ['inst']
+                ['/inst']
             )) as GetDataFailure;
 
             expect(result).toEqual({
@@ -1072,11 +1059,12 @@ describe('DataRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    kind: 'inst',
-                    id: 'inst',
-                    permission: 'data.read',
-                    marker: 'secret',
-                    role: null,
+                    recordName: 'testRecord',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
                 },
             });
         });
@@ -1179,7 +1167,11 @@ describe('DataRecordsController', () => {
                 );
             }
 
-            const result = await manager.listData('testRecord', 'address/2');
+            const result = await manager.listData(
+                'testRecord',
+                'address/2',
+                userId
+            );
 
             expect(result).toEqual({
                 success: true,
@@ -1321,7 +1313,7 @@ describe('DataRecordsController', () => {
             });
         });
 
-        it('should only return data that the user is allowed to access', async () => {
+        it('should return not_authorized if the user does not have access to the private marker', async () => {
             for (let i = 0; i < 5; i++) {
                 await store.setData(
                     'testRecord',
@@ -1342,20 +1334,21 @@ describe('DataRecordsController', () => {
             );
 
             expect(result).toEqual({
-                success: true,
-                recordName: 'testRecord',
-                items: [
-                    {
-                        address: 'address/3',
-                        data: 'data3',
-                        markers: [PUBLIC_READ_MARKER],
-                    },
-                ],
-                totalCount: 5,
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'testRecord',
+                    resourceKind: 'data',
+                    action: 'list',
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                },
             });
         });
 
-        it('should only return data that the inst is allowed to access', async () => {
+        it('should return not_authorized if the inst does not have access to the private marker', async () => {
             store.roles['testRecord'] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
@@ -1377,14 +1370,21 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address/2',
                 userId,
-                ['inst']
+                ['/inst']
             );
 
             expect(result).toEqual({
-                success: true,
-                recordName: 'testRecord',
-                items: [],
-                totalCount: 5,
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'testRecord',
+                    resourceKind: 'data',
+                    action: 'list',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
             });
         });
     });
@@ -1700,20 +1700,16 @@ describe('DataRecordsController', () => {
                 [otherUserId]: new Set(['developer']),
             };
 
-            store.policies['testRecord'] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'data.delete',
-                                role: 'developer',
-                                addresses: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                'testRecord',
+                'role',
+                'developer',
+                'data',
+                'secret',
+                'delete',
+                {},
+                null
+            );
 
             await store.setData(
                 'testRecord',
@@ -1767,11 +1763,12 @@ describe('DataRecordsController', () => {
                 errorMessage: expect.any(String),
                 reason: {
                     type: 'missing_permission',
-                    kind: 'user',
-                    id: otherUserId,
-                    marker: 'secret',
-                    permission: 'data.delete',
-                    role: null,
+                    recordName: 'testRecord',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'delete',
+                    subjectType: 'user',
+                    subjectId: otherUserId,
                 },
             });
         });
@@ -1796,7 +1793,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 otherUserId,
-                ['inst']
+                ['/inst']
             )) as EraseDataSuccess;
 
             expect(result).toEqual({
@@ -1805,11 +1802,12 @@ describe('DataRecordsController', () => {
                 errorMessage: expect.any(String),
                 reason: {
                     type: 'missing_permission',
-                    kind: 'inst',
-                    id: 'inst',
-                    marker: 'secret',
-                    permission: 'data.delete',
-                    role: null,
+                    recordName: 'testRecord',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'delete',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
                 },
             });
         });
