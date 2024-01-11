@@ -286,7 +286,178 @@ export class PolicyController {
             };
         } catch (err) {
             console.error(
-                '[PolicyController] A server error occurred while authorizing subjects.',
+                '[PolicyController] A server error occurred while authorizing user and instances.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to authorize the given user and instances for the given resources.
+     * @param context The authorization context for the request.
+     * @param request The request.
+     */
+    async authorizeUserAndInstancesForResources(
+        context: AuthorizationContext,
+        request: AuthorizeUserAndInstancesForResources
+    ): Promise<AuthorizeUserAndInstancesForResourcesResult> {
+        try {
+            const subjects: AuthorizeSubject[] = [
+                {
+                    subjectType: 'user',
+                    subjectId: request.userId,
+                },
+                ...(request.instances ?? []).map(
+                    (i) =>
+                        ({
+                            subjectType: 'inst',
+                            subjectId: i,
+                        } as AuthorizeSubject)
+                ),
+            ];
+
+            const subjectPermission = new Map<string, AuthorizedSubject>();
+            const results: AuthorizedResource[] = [];
+            const recordName = context.recordName;
+
+            for (let resource of request.resources) {
+                let subjectsToAuthorize: AuthorizeSubject[] = [];
+                let authorizations: AuthorizedSubject[] = [];
+
+                for (let subject of subjects) {
+                    const subjectKey = `${subject.subjectType}.${subject.subjectId}`;
+                    const authorizedSubject = subjectPermission.get(subjectKey);
+
+                    if (authorizedSubject) {
+                        const permission = authorizedSubject.permission;
+                        const isCorrectResourceKind =
+                            permission.resourceKind === null ||
+                            permission.resourceKind === resource.resourceKind;
+                        const isCorrectAction =
+                            permission.action === null ||
+                            permission.action === resource.action;
+                        const isCorrectMarker =
+                            !('marker' in permission) ||
+                            resource.markers.includes(permission.marker);
+                        const isCorrectResource =
+                            !('resourceId' in permission) ||
+                            permission.resourceId === null ||
+                            permission.resourceId === resource.resourceId;
+
+                        if (
+                            isCorrectResourceKind &&
+                            isCorrectAction &&
+                            isCorrectMarker &&
+                            isCorrectResource
+                        ) {
+                            // Record the authorization
+                            authorizations.push(authorizedSubject);
+                        } else {
+                            subjectsToAuthorize.push(subject);
+                        }
+                    } else {
+                        subjectsToAuthorize.push(subject);
+                    }
+                }
+
+                if (subjectsToAuthorize.length > 0) {
+                    const result = await this.authorizeSubjects(context, {
+                        action: resource.action,
+                        markers: resource.markers,
+                        resourceKind: resource.resourceKind,
+                        resourceId: resource.resourceId,
+                        subjects: subjectsToAuthorize,
+                    });
+
+                    if (result.success === false) {
+                        return result;
+                    }
+                    for (let authorization of result.results) {
+                        const subjectKey = `${authorization.subjectType}.${authorization.subjectId}`;
+                        authorizations.push(authorization);
+
+                        const permission = authorization.permission;
+
+                        const existingAuthorization =
+                            subjectPermission.get(subjectKey);
+                        if (!existingAuthorization) {
+                            subjectPermission.set(subjectKey, authorization);
+                        } else {
+                            const existingPermission =
+                                existingAuthorization.permission;
+
+                            const isResourceKindMoreGeneral =
+                                permission.resourceKind === null &&
+                                existingPermission.resourceKind !== null;
+                            const isActionMoreGeneral =
+                                permission.action === null &&
+                                existingPermission.action !== null;
+                            const isMarkerMoreGeneral =
+                                'marker' in permission &&
+                                'marker' in existingPermission &&
+                                permission.marker === null &&
+                                existingPermission.marker !== null;
+                            const isResourceMoreGeneral =
+                                'resourceId' in permission &&
+                                'resourceId' in existingPermission &&
+                                permission.resourceId === null &&
+                                existingPermission.resourceId !== null;
+
+                            if (
+                                isResourceKindMoreGeneral ||
+                                isActionMoreGeneral ||
+                                isMarkerMoreGeneral ||
+                                isResourceMoreGeneral
+                            ) {
+                                subjectPermission.set(
+                                    subjectKey,
+                                    authorization
+                                );
+                            }
+                        }
+                    }
+                }
+
+                if (authorizations.length !== subjects.length) {
+                    console.error(
+                        '[PolicyController] [authorizeUserAndInstancesForResources] The number of authorizations does not match the number of subjects!'
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    };
+                }
+
+                results.push({
+                    success: true,
+                    recordName: recordName,
+                    resourceKind: resource.resourceKind,
+                    resourceId: resource.resourceId,
+                    action: resource.action,
+                    markers: resource.markers,
+                    results: authorizations,
+                    user: authorizations.find(
+                        (r) =>
+                            r.subjectType === 'user' &&
+                            r.subjectId === request.userId
+                    ),
+                });
+            }
+
+            return {
+                success: true,
+                recordName: recordName,
+                results,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing user and instances for resources.',
                 err
             );
             return {
@@ -927,7 +1098,7 @@ export class PolicyController {
                     success: false,
                     errorCode: 'not_logged_in',
                     errorMessage:
-                        'You must be logged in to perform this action.',
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
                 };
             }
 
@@ -2032,7 +2203,12 @@ export interface ResourceInfo {
     /**
      * The kind of the action.
      */
-    actionKind: ActionKinds;
+    action: ActionKinds;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    markers: string[];
 }
 
 export interface AuthorizeSubject {
@@ -2098,6 +2274,37 @@ export interface AuthorizeUserAndInstancesSuccess {
      */
     results: AuthorizedSubject[];
 }
+
+export interface AuthorizeUserAndInstancesForResources {
+    /**
+     * The ID of the user that should be authorized.
+     */
+    userId: string;
+
+    /**
+     * The instances that should be authorized.
+     */
+    instances: string[];
+
+    /**
+     * The resources that should be authorized.
+     */
+    resources: ResourceInfo[];
+}
+
+export type AuthorizeUserAndInstancesForResourcesResult =
+    | AuthorizeUserAndInstancesForResourcesSuccess
+    | AuthorizeSubjectFailure;
+
+export interface AuthorizeUserAndInstancesForResourcesSuccess {
+    success: true;
+    recordName: string;
+    results: AuthorizedResource[];
+}
+
+export interface AuthorizedResource
+    extends ResourceInfo,
+        AuthorizeUserAndInstancesSuccess {}
 
 export interface AuthorizeSubjectsRequest {
     /**

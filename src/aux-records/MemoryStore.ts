@@ -711,7 +711,7 @@ export class MemoryStore
         subjectId: string,
         resourceKind: ResourceKinds,
         resourceId: string,
-        action: ActionKinds,
+        action: ActionKinds | null,
         options: PermissionOptions,
         expireTimeMs: number | null
     ): Promise<AssignPermissionToSubjectAndResourceResult> {

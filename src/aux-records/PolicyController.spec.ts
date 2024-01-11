@@ -1874,7 +1874,7 @@ describe('PolicyController', () => {
                             success: false,
                             errorCode: 'not_logged_in',
                             errorMessage:
-                                'You must be logged in to perform this action.',
+                                'The user must be logged in. Please provide a sessionKey or a recordKey.',
                         });
                     });
 
@@ -3486,6 +3486,334 @@ describe('PolicyController', () => {
                         explanation: 'Inst is assigned the "admin" role.',
                     },
                 ],
+            });
+        });
+    });
+
+    describe('authorizeUserAndInstancesForResources()', () => {
+        const marker = 'marker';
+
+        it('should be able to authorize a user and inst for a resource', async () => {
+            await store.assignSubjectRole(recordName, '/myInst', 'inst', {
+                expireTimeMs: null,
+                role: ADMIN_ROLE_NAME,
+            });
+
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+            });
+
+            if (context.success === false) {
+                throw new Error('Failed to construct authorization context.');
+            }
+
+            const result =
+                await controller.authorizeUserAndInstancesForResources(
+                    context.context,
+                    {
+                        userId: ownerId,
+                        instances: ['/myInst'],
+                        resources: [
+                            {
+                                resourceKind: 'data',
+                                action: 'create',
+                                resourceId: 'resourceId',
+                                markers: [marker],
+                            },
+                            {
+                                resourceKind: 'marker',
+                                action: 'assign',
+                                resourceId: marker,
+                                markers: [ACCOUNT_MARKER],
+                            },
+                            {
+                                resourceKind: 'data',
+                                action: 'read',
+                                resourceId: 'resourceId',
+                                markers: [marker],
+                            },
+                        ],
+                    }
+                );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: recordName,
+                results: [
+                    {
+                        success: true,
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        resourceId: 'resourceId',
+                        action: 'create',
+                        markers: [marker],
+                        user: {
+                            success: true,
+                            recordName,
+                            subjectType: 'user',
+                            subjectId: ownerId,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+                                resourceKind: null,
+                                action: null,
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'User is the owner of the record.',
+                        },
+                        results: [
+                            {
+                                success: true,
+                                recordName,
+                                subjectType: 'user',
+                                subjectId: ownerId,
+                                permission: {
+                                    id: null,
+                                    recordName,
+                                    userId: null,
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+                                    resourceKind: null,
+                                    action: null,
+                                    marker: marker,
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: 'User is the owner of the record.',
+                            },
+                            {
+                                success: true,
+                                recordName,
+                                subjectType: 'inst',
+                                subjectId: '/myInst',
+                                permission: {
+                                    id: null,
+                                    recordName,
+                                    userId: null,
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+                                    resourceKind: null,
+                                    action: null,
+                                    marker: marker,
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: `Inst is assigned the "${ADMIN_ROLE_NAME}" role.`,
+                            },
+                        ],
+                    },
+                    {
+                        success: true,
+                        recordName: recordName,
+                        resourceKind: 'marker',
+                        resourceId: marker,
+                        action: 'assign',
+                        markers: [ACCOUNT_MARKER],
+                        user: {
+                            success: true,
+                            recordName,
+                            subjectType: 'user',
+                            subjectId: ownerId,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+                                resourceKind: null,
+                                action: null,
+                                marker: ACCOUNT_MARKER,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'User is the owner of the record.',
+                        },
+                        results: [
+                            {
+                                success: true,
+                                recordName,
+                                subjectType: 'user',
+                                subjectId: ownerId,
+                                permission: {
+                                    id: null,
+                                    recordName,
+                                    userId: null,
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+                                    resourceKind: null,
+                                    action: null,
+                                    marker: ACCOUNT_MARKER,
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: 'User is the owner of the record.',
+                            },
+                            {
+                                success: true,
+                                recordName,
+                                subjectType: 'inst',
+                                subjectId: '/myInst',
+                                permission: {
+                                    id: null,
+                                    recordName,
+                                    userId: null,
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+                                    resourceKind: null,
+                                    action: null,
+                                    marker: ACCOUNT_MARKER,
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: `Inst is assigned the "${ADMIN_ROLE_NAME}" role.`,
+                            },
+                        ],
+                    },
+                    {
+                        success: true,
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        resourceId: 'resourceId',
+                        action: 'read',
+                        markers: [marker],
+                        user: {
+                            success: true,
+                            recordName,
+                            subjectType: 'user',
+                            subjectId: ownerId,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+                                resourceKind: null,
+                                action: null,
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'User is the owner of the record.',
+                        },
+                        results: [
+                            {
+                                success: true,
+                                recordName,
+                                subjectType: 'user',
+                                subjectId: ownerId,
+                                permission: {
+                                    id: null,
+                                    recordName,
+                                    userId: null,
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+                                    resourceKind: null,
+                                    action: null,
+                                    marker: marker,
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: 'User is the owner of the record.',
+                            },
+                            {
+                                success: true,
+                                recordName,
+                                subjectType: 'inst',
+                                subjectId: '/myInst',
+                                permission: {
+                                    id: null,
+                                    recordName,
+                                    userId: null,
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+                                    resourceKind: null,
+                                    action: null,
+                                    marker: marker,
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: `Inst is assigned the "${ADMIN_ROLE_NAME}" role.`,
+                            },
+                        ],
+                    },
+                ],
+            });
+        });
+
+        it('should return not_authorized if one of the resources fails', async () => {
+            // await store.assignSubjectRole(recordName, '/myInst', 'inst', {
+            //     expireTimeMs: null,
+            //     role: ADMIN_ROLE_NAME,
+            // });
+
+            await store.assignPermissionToSubjectAndResource(
+                recordName,
+                'inst',
+                '/myInst',
+                'data',
+                'resourceId',
+                null,
+                {},
+                null
+            );
+
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+            });
+
+            if (context.success === false) {
+                throw new Error('Failed to construct authorization context.');
+            }
+
+            const result =
+                await controller.authorizeUserAndInstancesForResources(
+                    context.context,
+                    {
+                        userId: ownerId,
+                        instances: ['/myInst'],
+                        resources: [
+                            {
+                                resourceKind: 'data',
+                                action: 'create',
+                                resourceId: 'resourceId',
+                                markers: [marker],
+                            },
+                            {
+                                resourceKind: 'marker',
+                                action: 'assign',
+                                resourceId: marker,
+                                markers: [ACCOUNT_MARKER],
+                            },
+                            {
+                                resourceKind: 'data',
+                                action: 'read',
+                                resourceId: 'resourceId',
+                                markers: [marker],
+                            },
+                        ],
+                    }
+                );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    subjectType: 'inst',
+                    subjectId: '/myInst',
+                    resourceKind: 'marker',
+                    action: 'assign',
+                    resourceId: marker,
+                },
             });
         });
     });
