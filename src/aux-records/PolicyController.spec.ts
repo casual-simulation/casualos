@@ -704,11 +704,37 @@ describe('PolicyController', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
-                ['testId']: new Set(['role1', 'role2', 'abc']),
+                ['/testId']: new Set(['role1', 'role2', 'abc']),
             };
         });
 
         it('should list the roles for the given inst', async () => {
+            const result = await controller.listInstRoles(
+                recordName,
+                userId,
+                '/testId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                roles: [
+                    {
+                        role: 'abc',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role1',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: null,
+                    },
+                ],
+            });
+        });
+
+        it('should normalize inst IDs', async () => {
             const result = await controller.listInstRoles(
                 recordName,
                 userId,
@@ -740,7 +766,7 @@ describe('PolicyController', () => {
             const result = await controller.listInstRoles(
                 recordName,
                 userId,
-                'testId'
+                '/testId'
             );
 
             expect(result).toEqual({
@@ -762,7 +788,7 @@ describe('PolicyController', () => {
             const result = await controller.listInstRoles(
                 recordName,
                 userId,
-                'testId',
+                '/testId',
                 ['/inst']
             );
 
@@ -1173,6 +1199,32 @@ describe('PolicyController', () => {
             ]);
         });
 
+        it('should normalize inst IDs', async () => {
+            const result = await controller.grantRole(recordName, userId, {
+                instance: 'inst',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const actualRoles = await store.listRolesForInst(
+                recordName,
+                '/inst'
+            );
+
+            expect(actualRoles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+            ]);
+
+            const wrongRoles = await store.listRolesForInst(recordName, 'inst');
+            expect(wrongRoles).toEqual([]);
+        });
+
         it('should deny the request if the current user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
@@ -1250,6 +1302,16 @@ describe('PolicyController', () => {
                         expireTimeMs: null,
                     },
                 ],
+                ['/instId']: [
+                    {
+                        role: 'role1',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: null,
+                    },
+                ],
             };
         });
 
@@ -1275,7 +1337,7 @@ describe('PolicyController', () => {
 
         it('should revoke the role from the given inst', async () => {
             const result = await controller.revokeRole(recordName, userId, {
-                instance: 'testId',
+                instance: '/instId',
                 role: 'role1',
             });
 
@@ -1283,7 +1345,27 @@ describe('PolicyController', () => {
                 success: true,
             });
 
-            const roles = await store.listRolesForInst(recordName, 'testId');
+            const roles = await store.listRolesForInst(recordName, '/instId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role2',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should normalize inst IDs', async () => {
+            const result = await controller.revokeRole(recordName, userId, {
+                instance: 'instId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForInst(recordName, '/instId');
 
             expect(roles).toEqual([
                 {
@@ -2770,7 +2852,7 @@ describe('PolicyController', () => {
         ][] = [
             ['user', 'user', 'randomUserId'],
             ['not logged in', 'user', null],
-            ['inst', 'inst', 'instId'],
+            ['inst', 'inst', '/instId'],
         ];
 
         describe.each(publicReadResourceKindCases)(
@@ -2880,7 +2962,7 @@ describe('PolicyController', () => {
         ][] = [
             ['user', 'user', 'randomUserId'],
             ['not logged in', 'user', null],
-            ['inst', 'inst', 'instId'],
+            ['inst', 'inst', '/instId'],
         ];
 
         describe.each(publicWriteResourceKindCases)(
@@ -3394,6 +3476,45 @@ describe('PolicyController', () => {
                         },
                     });
                 });
+            });
+        });
+
+        it('should normalize inst IDs', async () => {
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: studioRecord,
+                userId: userId,
+            });
+
+            const result = await controller.authorizeSubject(context, {
+                subjectId: 'instId',
+                subjectType: 'inst',
+                resourceKind: 'data',
+                action: 'read',
+                resourceId: 'resourceId',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: studioRecord,
+                permission: {
+                    id: null,
+                    recordName: studioRecord,
+
+                    userId: null,
+                    subjectType: 'inst',
+                    subjectId: '/instId',
+
+                    // resourceKind and action are specified
+                    // because members don't necessarily have all permissions in the studio
+                    resourceKind: 'data',
+                    action: 'read',
+
+                    marker: PUBLIC_READ_MARKER,
+                    options: {},
+                    expireTimeMs: null,
+                },
+                explanation: 'Resource has the publicRead marker.',
             });
         });
     });

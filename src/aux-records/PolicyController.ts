@@ -20,6 +20,7 @@ import {
     ACCOUNT_MARKER,
     DenialReason,
     PrivacyFeatures,
+    PermissionOptions,
 } from '@casual-simulation/aux-common';
 import { ListedStudioAssignment, PublicRecordKeyPolicy } from './RecordsStore';
 import {
@@ -35,7 +36,7 @@ import {
 } from './PolicyStore';
 import { sortBy, without } from 'lodash';
 import { getMarkersOrDefault } from './Utils';
-import { parseInstId } from './websockets';
+import { normalizeInstId, parseInstId } from './websockets';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -695,6 +696,13 @@ export class PolicyController {
             }
 
             const recordName = context.recordName;
+            const subjectType = request.subjectType;
+            let subjectId = request.subjectId;
+
+            if (subjectType === 'inst') {
+                subjectId = normalizeInstId(subjectId);
+            }
+
             const publicPermission = getPublicMarkersPermission(
                 markers,
                 request.resourceKind,
@@ -775,8 +783,8 @@ export class PolicyController {
                         id: null,
                         recordName: recordName,
                         userId: null,
-                        subjectType: request.subjectType,
-                        subjectId: request.subjectId,
+                        subjectType: subjectType,
+                        subjectId: subjectId,
                         resourceKind: publicPermission.resourceKind,
                         action: publicPermission.action,
                         marker: publicPermission.marker,
@@ -790,10 +798,7 @@ export class PolicyController {
                 };
             }
 
-            if (
-                request.subjectType === 'role' &&
-                request.subjectId === ADMIN_ROLE_NAME
-            ) {
+            if (subjectType === 'role' && subjectId === ADMIN_ROLE_NAME) {
                 return {
                     success: true,
                     recordName: recordName,
@@ -826,8 +831,8 @@ export class PolicyController {
             ) {
                 if (
                     context.subjectPolicy === 'subjectfull' &&
-                    request.subjectType === 'user' &&
-                    !request.subjectId
+                    subjectType === 'user' &&
+                    !subjectId
                 ) {
                     return {
                         success: false,
@@ -861,8 +866,8 @@ export class PolicyController {
                 };
             }
 
-            if (request.subjectType === 'user' && request.subjectId) {
-                if (request.subjectId === context.recordOwnerId) {
+            if (subjectType === 'user' && subjectId) {
+                if (subjectId === context.recordOwnerId) {
                     return {
                         success: true,
                         recordName: recordName,
@@ -887,7 +892,7 @@ export class PolicyController {
                     };
                 } else if (context.recordStudioMembers) {
                     const member = context.recordStudioMembers.find(
-                        (m) => m.userId === request.subjectId
+                        (m) => m.userId === subjectId
                     );
 
                     if (member) {
@@ -933,9 +938,9 @@ export class PolicyController {
 
                                     // Members in a studio are treated as if they are granted direct access to most resources
                                     // in the record.
-                                    userId: request.subjectId,
+                                    userId: subjectId,
                                     subjectType: 'user',
-                                    subjectId: request.subjectId,
+                                    subjectId: subjectId,
 
                                     // Not all actions or resources are granted though
                                     resourceKind: request.resourceKind,
@@ -951,8 +956,8 @@ export class PolicyController {
                         }
                     }
                 }
-            } else if (request.subjectType === 'inst' && request.subjectId) {
-                const instId = parseInstId(request.subjectId);
+            } else if (subjectType === 'inst' && subjectId) {
+                const instId = parseInstId(subjectId);
                 if (!instId) {
                     return {
                         success: false,
@@ -973,7 +978,7 @@ export class PolicyController {
 
                                 userId: null,
                                 subjectType: 'inst',
-                                subjectId: request.subjectId,
+                                subjectId: subjectId,
 
                                 // resourceKind and action are specified
                                 // because insts don't necessarily have all permissions in the record
@@ -1008,7 +1013,7 @@ export class PolicyController {
 
                                 userId: null,
                                 subjectType: 'inst',
-                                subjectId: request.subjectId,
+                                subjectId: subjectId,
 
                                 // resourceKind and action are specified
                                 // because insts don't necessarily have all permissions in the record
@@ -1034,7 +1039,7 @@ export class PolicyController {
 
                                 userId: null,
                                 subjectType: 'inst',
-                                subjectId: request.subjectId,
+                                subjectId: subjectId,
 
                                 // resourceKind and action are specified
                                 // because insts don't necessarily have all permissions in the record
@@ -1051,27 +1056,24 @@ export class PolicyController {
                 }
             }
 
-            if (request.subjectId) {
-                if (
-                    request.subjectType === 'inst' ||
-                    request.subjectType === 'user'
-                ) {
+            if (subjectId) {
+                if (subjectType === 'inst' || subjectType === 'user') {
                     // check for admin role
                     const roles =
-                        request.subjectType === 'user'
+                        subjectType === 'user'
                             ? await this._policies.listRolesForUser(
                                   recordName,
-                                  request.subjectId
+                                  subjectId
                               )
                             : await this._policies.listRolesForInst(
                                   recordName,
-                                  request.subjectId
+                                  subjectId
                               );
 
                     const role = roles.find((r) => r.role === ADMIN_ROLE_NAME);
                     if (role) {
                         const kindString =
-                            request.subjectType === 'user' ? 'User' : 'Inst';
+                            subjectType === 'user' ? 'User' : 'Inst';
                         return {
                             success: true,
                             recordName: recordName,
@@ -1105,8 +1107,8 @@ export class PolicyController {
                 if (request.resourceId) {
                     const result =
                         await this._policies.getPermissionForSubjectAndResource(
-                            request.subjectType,
-                            request.subjectId,
+                            subjectType,
+                            subjectId,
                             recordName,
                             request.resourceKind,
                             request.resourceId,
@@ -1124,8 +1126,8 @@ export class PolicyController {
                 if (!permission) {
                     const result =
                         await this._policies.getPermissionForSubjectAndMarkers(
-                            request.subjectType,
-                            request.subjectId,
+                            subjectType,
+                            subjectId,
                             recordName,
                             request.resourceKind,
                             markers,
@@ -1141,21 +1143,19 @@ export class PolicyController {
                 }
 
                 if (permission) {
-                    // const subjectString = request.subjectType === 'user' ? 'User' :
-                    //     request.subjectType === 'inst' ? 'Inst' : 'Role';
                     return {
                         success: true,
                         recordName,
                         permission: permission,
                         explanation: explainationForPermissionAssignment(
-                            request.subjectType,
+                            subjectType,
                             permission
                         ),
                     };
                 }
             }
 
-            if (!request.subjectId && !context.recordKeyProvided) {
+            if (!subjectId && !context.recordKeyProvided) {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -1171,8 +1171,8 @@ export class PolicyController {
                 reason: {
                     type: 'missing_permission',
                     recordName: recordName,
-                    subjectType: request.subjectType,
-                    subjectId: request.subjectId,
+                    subjectType: subjectType,
+                    subjectId: subjectId,
                     resourceKind: request.resourceKind,
                     resourceId: request.resourceId,
                     action: request.action,
@@ -1444,7 +1444,7 @@ export class PolicyController {
 
             const result = await this._policies.listRolesForInst(
                 context.context.recordName,
-                subjectId
+                normalizeInstId(subjectId)
             );
 
             return {
@@ -1626,7 +1626,7 @@ export class PolicyController {
 
             const recordName = context.context.recordName;
             const targetUserId = request.userId;
-            const targetInstance = request.instance;
+            const targetInstance = normalizeInstId(request.instance);
             const expireTimeMs = getExpireTime(request.expireTimeMs);
 
             const authorization = await this.authorizeUserAndInstances(
@@ -1730,7 +1730,7 @@ export class PolicyController {
 
             const recordName = context.context.recordName;
             const targetUserId = request.userId;
-            const targetInstance = request.instance;
+            const targetInstance = normalizeInstId(request.instance);
             const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
