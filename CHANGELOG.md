@@ -7,6 +7,12 @@
 ### :boom: Breaking Changes
 
 -   Changed the `BIOS_OPTIONS` environment variable to default to `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
+-   Changed how `os.listData()` to require `data.list` access for the `account` marker instead of for each item individually.
+    -   This means that `os.listData()` will continue to work for users that have a record key or are admins (record owner or member of a studio), but it will no longer be possible to list `publicRead` data items through this function.
+    -   Instead, use the new `os.listDataByMarker()` function to list data based on a marker.
+    -   The reason for this change is to make the API more predictable. Previously, it was possible for `os.listData()` to return no results even if there were items after the given address. This is because a fixed number of items would be retrieved from the database and then checked to see if the user has access to it. If the user did not have access to any items, then an empty list would be returned, even if there are items that the user _does_ have access to later in the database.
+-   Changed `os.listData()` to throw a `CausualOSError` if the user is not authorized to list items.
+    -   Previously, an empty list would be returned. Now, an empty list is only returned if there are no items.
 
 ### :rocket: Features
 
