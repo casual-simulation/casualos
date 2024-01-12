@@ -8495,6 +8495,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Optionally accepts the address before the first item that should be included in the list.
      * Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
      *
+     * Throws a {@link CasualOSError} if the user does not have "data.list" access to the "account" marker.
+     *
      * On [publicos.link](https://publicos.link), the returned list is limited to 25 items.
      *
      * @param recordKeyOrName the record name or a record key. This indicates the record that the data should be retrieved from.
