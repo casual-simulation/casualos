@@ -1155,7 +1155,14 @@ export class PolicyController {
                 }
             }
 
-            if (!subjectId && !context.recordKeyProvided) {
+            if (
+                !subjectId &&
+                (!context.recordKeyProvided ||
+                    !isAllowedRecordKeyResource(
+                        request.resourceKind,
+                        request.action
+                    ))
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',

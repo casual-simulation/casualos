@@ -25,6 +25,7 @@ import {
     getMarkerResourcesForUpdate,
 } from './PolicyController';
 import {
+    ACCOUNT_MARKER,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
@@ -582,7 +583,7 @@ export class FileRecordsController {
                         instances,
                         resourceKind: 'file',
                         action: 'list',
-                        markers: [PRIVATE_MARKER],
+                        markers: [ACCOUNT_MARKER],
                     }
                 );
 
@@ -680,17 +681,7 @@ export class FileRecordsController {
                 return result;
             }
 
-            const policy = context.context.subjectPolicy;
             subjectId = context.context.userId;
-
-            if (!subjectId && policy !== 'subjectless') {
-                return {
-                    success: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage:
-                        'The user must be logged in in order to update files.',
-                };
-            }
 
             const updateResult = await this._store.updateFileRecord(
                 result.recordName,
