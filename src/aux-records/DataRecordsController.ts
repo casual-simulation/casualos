@@ -451,7 +451,7 @@ export class DataRecordsController {
                         instances,
                         resourceKind: 'data',
                         action: 'list',
-                        markers: [PRIVATE_MARKER],
+                        markers: [ACCOUNT_MARKER],
                     }
                 );
 

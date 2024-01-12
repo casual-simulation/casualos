@@ -1313,7 +1313,7 @@ describe('DataRecordsController', () => {
             });
         });
 
-        it('should return not_authorized if the user does not have access to the private marker', async () => {
+        it('should return not_authorized if the user does not have access to the account marker', async () => {
             for (let i = 0; i < 5; i++) {
                 await store.setData(
                     'testRecord',
@@ -1348,7 +1348,7 @@ describe('DataRecordsController', () => {
             });
         });
 
-        it('should return not_authorized if the inst does not have access to the private marker', async () => {
+        it('should return not_authorized if the inst does not have access to the account marker', async () => {
             store.roles['testRecord'] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
