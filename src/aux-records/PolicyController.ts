@@ -51,7 +51,7 @@ export const MAX_ALLOWED_MARKERS = 2;
 const ALLOWED_RECORD_KEY_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
     ['data', ['read', 'create', 'delete', 'update', 'list']],
     ['file', ['read', 'create', 'delete']],
-    ['event', ['create', 'count', 'increment']],
+    ['event', ['create', 'count', 'increment', 'update']],
     [
         'inst',
         ['read', 'create', 'delete', 'update', 'updateData', 'sendAction'],

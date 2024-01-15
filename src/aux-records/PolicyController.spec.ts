@@ -2027,6 +2027,7 @@ describe('PolicyController', () => {
                     ['create', 'resourceId'],
                     ['increment', 'resourceId'],
                     ['count', 'resourceId'],
+                    ['update', 'resourceId'],
                 ],
             ],
             [
