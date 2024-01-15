@@ -266,6 +266,13 @@ export class PlayerGame extends Game {
         );
     }
 
+    getPortalHDRAddress() {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'portalHDRAddress'
+        );
+    }
+
     getPannable(): boolean {
         return this._getSimulationValue(this.playerSimulations, 'pannable');
     }

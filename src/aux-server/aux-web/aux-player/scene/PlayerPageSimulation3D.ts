@@ -29,6 +29,7 @@ import {
 } from '../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
+import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 
 const wristOffsets = {
     generic_hand_right: {
@@ -197,6 +198,10 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
      */
     get defaultLighting() {
         return this.pageConfig.defaultLighting;
+    }
+
+    get portalHDRAddress() {
+        return this.pageConfig.portalHDRAddress;
     }
 
     /**

@@ -10,6 +10,8 @@ import {
     Object3D,
     AmbientLight,
     DirectionalLight,
+    PMREMGenerator,
+    EquirectangularReflectionMapping,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -66,7 +68,7 @@ import {
     TweenCameraPosition,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import { merge, union } from 'lodash';
+import { add, merge, union } from 'lodash';
 import { EventBus } from '@casual-simulation/aux-components';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
@@ -81,6 +83,7 @@ import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
 import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
 import { update as updateMeshUI } from 'three-mesh-ui';
+import { EXRLoader } from '@casual-simulation/three/examples/jsm/loaders/EXRLoader';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -100,6 +103,8 @@ export abstract class Game {
 
     protected mainScene: Scene;
     protected renderer: WebGLRenderer;
+    protected pmremGenerator: PMREMGenerator;
+    protected exrLoader: EXRLoader;
     protected time: Time;
     protected input: Input;
     protected interaction: BaseInteractionManager;
@@ -222,6 +227,22 @@ export abstract class Game {
         this.startRenderAnimationLoop();
     }
 
+    loadEXRTextureIntoScene(portalHDRAddress: string, scene: Scene) {
+        if (!hasValue(this.exrLoader)) {
+            this.exrLoader = new EXRLoader();
+        }
+
+        this.exrLoader.load(portalHDRAddress, (texture) => {
+            if (!hasValue(this.pmremGenerator)) {
+                this.pmremGenerator = new PMREMGenerator(this.renderer);
+                this.pmremGenerator.compileEquirectangularShader();
+            }
+            texture.mapping = EquirectangularReflectionMapping;
+            let renderTarget = this.pmremGenerator.fromEquirectangular(texture);
+            scene.environment = renderTarget.texture;
+        });
+    }
+
     protected startRenderAnimationLoop() {
         this.renderer.setAnimationLoop(this.frameUpdate as any);
     }
@@ -287,6 +308,8 @@ export abstract class Game {
     abstract getDefaultLighting(): boolean;
 
     abstract getBackgroundAddress(): string;
+
+    abstract getPortalHDRAddress(): string;
 
     /**
      * Get all of the current viewports.
@@ -675,6 +698,16 @@ export abstract class Game {
         }
     }
 
+    protected mainScenePortalHDRAddressUpdate() {
+        const address = this.getPortalHDRAddress();
+        if (this.mainScenePortalHDRAddressUpdate) {
+            this._setBackgroundAddress(address);
+            if (address) {
+                this.loadEXRTextureIntoScene(address, this.mainScene);
+            }
+        }
+    }
+
     private async _setBackgroundAddress(address: string) {
         if (this._currentBackgroundAddress === address) {
             return;
@@ -989,6 +1022,7 @@ export abstract class Game {
         if (renderBackground) {
             this.mainSceneBackgroundUpdate();
         }
+        this.mainScenePortalHDRAddressUpdate();
 
         const defaultLighting = this.getDefaultLighting();
 
