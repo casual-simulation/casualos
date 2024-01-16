@@ -1194,6 +1194,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
+        return this._handleMouseDownCore(event);
+    }
+
+    private _handleMouseDownCore(event: MouseEvent) {
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1232,6 +1236,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
+        return this._handleMouseUpCore(event);
+    }
+
+    private _handleMouseUpCore(event: MouseEvent) {
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1306,6 +1314,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
+        return this._handleMouseMoveCore(event);
+    }
+
+    private _handleMouseMoveCore(event: MouseEvent) {
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1830,7 +1842,7 @@ export class Input {
             return;
         }
 
-        this._handleMouseDown(event);
+        this._handleMouseDownCore(event);
     }
 
     private _handleTouchPointerDown(event: PointerEvent) {
@@ -1962,7 +1974,7 @@ export class Input {
             return;
         }
 
-        this._handleMouseMove(event);
+        this._handleMouseMoveCore(event);
     }
 
     private _handlerTouchPointerMove(event: PointerEvent) {
@@ -2033,7 +2045,7 @@ export class Input {
             return;
         }
 
-        this._handleMouseUp(event);
+        this._handleMouseUpCore(event);
     }
 
     private _handlerTouchPointerUp(event: PointerEvent) {
