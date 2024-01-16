@@ -648,25 +648,27 @@ export class RecordsServer {
                 await this._policyRevokePermission(request),
                 this._allowedApiOrigins
             );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/policy'
-        ) {
-            return formatResponse(
-                request,
-                await this._policyRead(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/policy/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._policyList(request),
-                this._allowedApiOrigins
-            );
-        } else if (
+        }
+        // else if (
+        //     request.method === 'GET' &&
+        //     request.path === '/api/v2/records/policy'
+        // ) {
+        //     return formatResponse(
+        //         request,
+        //         await this._policyRead(request),
+        //         this._allowedApiOrigins
+        //     );
+        // } else if (
+        //     request.method === 'GET' &&
+        //     request.path === '/api/v2/records/policy/list'
+        // ) {
+        //     return formatResponse(
+        //         request,
+        //         await this._policyList(request),
+        //         this._allowedApiOrigins
+        //     );
+        // }
+        else if (
             request.method === 'GET' &&
             request.path === '/api/v2/records/role/user/list'
         ) {
@@ -1472,22 +1474,6 @@ export class RecordsServer {
 
         const { recordName, marker, permission, instances } = parseResult.data;
 
-        // const validation = ZOD_PERMISSION_MAP[permission.type as (keyof typeof ZOD_PERMISSION_MAP)];
-
-        // if (!validation) {
-        //     const validPermissionTypes = Object.keys(ZOD_PERMISSION_MAP).sort();
-        //     return returnResult({
-        //         success: false,
-        //         errorCode: 'unacceptable_request',
-        //         errorMessage: `Permission type not found. type must be one of: ${validPermissionTypes.join(', ')}`,
-        //     });
-        // }
-
-        // const validationParseResult = validation.safeParse(permission);
-        // if (validationParseResult.success === false) {
-        //     return returnZodError(validationParseResult.error);
-        // }
-
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
             if (sessionKeyValidation.errorCode === 'no_session_key') {
@@ -1525,19 +1511,12 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
+            permissionId: z
                 .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
+                    invalid_type_error: 'permissionId must be a string.',
+                    required_error: 'permissionId is required.',
                 })
-                .nonempty('recordName must not be empty'),
-            marker: z
-                .string({
-                    invalid_type_error: 'marker must be a string.',
-                    required_error: 'marker is required.',
-                })
-                .nonempty('marker must not be empty'),
-            permission: AVAILABLE_PERMISSIONS_VALIDATION,
+                .nonempty('permissionId must not be empty'),
             instances: z.array(z.string()).nonempty().optional(),
         });
 
@@ -1547,7 +1526,7 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, marker, permission, instances } = parseResult.data;
+        const { permissionId, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1558,110 +1537,108 @@ export class RecordsServer {
         }
 
         const result = await this._policyController.revokeMarkerPermission({
-            recordKeyOrRecordName: recordName,
-            marker: marker,
+            permissionId,
             userId: sessionKeyValidation.userId,
-            permission: permission as any,
             instances,
         });
 
         return returnResult(result);
     }
 
-    private async _policyRead(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
+    // private async _policyRead(
+    //     request: GenericHttpRequest
+    // ): Promise<GenericHttpResponse> {
+    //     if (!validateOrigin(request, this._allowedApiOrigins)) {
+    //         return returnResult(INVALID_ORIGIN_RESULT);
+    //     }
 
-        const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
-            marker: z
-                .string({
-                    invalid_type_error: 'marker must be a string.',
-                    required_error: 'marker is required.',
-                })
-                .nonempty('marker must not be empty'),
-        });
+    //     const schema = z.object({
+    //         recordName: z
+    //             .string({
+    //                 invalid_type_error: 'recordName must be a string.',
+    //                 required_error: 'recordName is required.',
+    //             })
+    //             .nonempty('recordName must not be empty'),
+    //         marker: z
+    //             .string({
+    //                 invalid_type_error: 'marker must be a string.',
+    //                 required_error: 'marker is required.',
+    //             })
+    //             .nonempty('marker must not be empty'),
+    //     });
 
-        const parseResult = schema.safeParse(request.query);
+    //     const parseResult = schema.safeParse(request.query);
 
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
+    //     if (parseResult.success === false) {
+    //         return returnZodError(parseResult.error);
+    //     }
 
-        const { recordName, marker } = parseResult.data;
+    //     const { recordName, marker } = parseResult.data;
 
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
+    //     const sessionKeyValidation = await this._validateSessionKey(request);
+    //     if (sessionKeyValidation.success === false) {
+    //         if (sessionKeyValidation.errorCode === 'no_session_key') {
+    //             return returnResult(NOT_LOGGED_IN_RESULT);
+    //         }
+    //         return returnResult(sessionKeyValidation);
+    //     }
 
-        const result = await this._policyController.readUserPolicy(
-            recordName,
-            sessionKeyValidation.userId,
-            marker
-        );
+    //     const result = await this._policyController.readUserPolicy(
+    //         recordName,
+    //         sessionKeyValidation.userId,
+    //         marker
+    //     );
 
-        return returnResult(result);
-    }
+    //     return returnResult(result);
+    // }
 
-    private async _policyList(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
+    // private async _policyList(
+    //     request: GenericHttpRequest
+    // ): Promise<GenericHttpResponse> {
+    //     if (!validateOrigin(request, this._allowedApiOrigins)) {
+    //         return returnResult(INVALID_ORIGIN_RESULT);
+    //     }
 
-        const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
-            startingMarker: z
-                .string({
-                    invalid_type_error: 'startingMarker must be a string.',
-                    required_error: 'startingMarker is required.',
-                })
-                .nonempty('startingMarker must not be empty')
-                .optional(),
-        });
+    //     const schema = z.object({
+    //         recordName: z
+    //             .string({
+    //                 invalid_type_error: 'recordName must be a string.',
+    //                 required_error: 'recordName is required.',
+    //             })
+    //             .nonempty('recordName must not be empty'),
+    //         startingMarker: z
+    //             .string({
+    //                 invalid_type_error: 'startingMarker must be a string.',
+    //                 required_error: 'startingMarker is required.',
+    //             })
+    //             .nonempty('startingMarker must not be empty')
+    //             .optional(),
+    //     });
 
-        const parseResult = schema.safeParse(request.query);
+    //     const parseResult = schema.safeParse(request.query);
 
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
+    //     if (parseResult.success === false) {
+    //         return returnZodError(parseResult.error);
+    //     }
 
-        const { recordName, startingMarker } = parseResult.data;
+    //     const { recordName, startingMarker } = parseResult.data;
 
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
+    //     const sessionKeyValidation = await this._validateSessionKey(request);
+    //     if (sessionKeyValidation.success === false) {
+    //         if (sessionKeyValidation.errorCode === 'no_session_key') {
+    //             return returnResult(NOT_LOGGED_IN_RESULT);
+    //         }
+    //         return returnResult(sessionKeyValidation);
+    //     }
 
-        const result = await this._policyController.listUserPolicies(
-            recordName,
-            sessionKeyValidation.userId,
-            startingMarker
-        );
+    //     const result = await this._policyController.listUserPolicies(
+    //         recordName,
+    //         sessionKeyValidation.userId,
+    //         startingMarker
+    //     );
 
-        return returnResult(result);
-    }
+    //     return returnResult(result);
+    // }
 
     private async _roleUserList(
         request: GenericHttpRequest

@@ -364,7 +364,8 @@ export type KnownErrorCodes =
     | 'policy_too_large'
     | 'invalid_policy'
     | 'not_completed'
-    | 'invalid_display_name';
+    | 'invalid_display_name'
+    | 'permission_already_exists';
 
 /**
  * Gets the status code that should be used for the given response.
