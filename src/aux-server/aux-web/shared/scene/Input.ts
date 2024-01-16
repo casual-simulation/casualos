@@ -100,6 +100,7 @@ export class Input {
 
     private _htmlElements: () => HTMLElement[];
     private _zoomElements: () => HTMLElement[];
+    private _isOculusBrowser: boolean;
 
     get time() {
         return this._game.getTime();
@@ -359,6 +360,7 @@ export class Input {
         const isOculusBrowser = browser.test(/OculusBrowser\/[\d\.]+/);
         const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
 
+        this._isOculusBrowser = isOculusBrowser;
         this._usePointerEvents = isOculusBrowser && isOculusVR;
         if (this.debugLevel > 0) {
             console.log(`[input] usePointerEvents: ${this._usePointerEvents}`);
@@ -1767,7 +1769,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerCancel(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerCancel(event);
         }
 
@@ -1826,7 +1828,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerDown(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerDown(event);
         }
 
@@ -1898,7 +1900,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerEnter(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerEnter(event);
         }
 
@@ -1928,7 +1930,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerLeave(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerLeave(event);
         }
 
@@ -1958,7 +1960,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerMove(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerMove(event);
         }
 
@@ -2029,7 +2031,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerUp(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerUp(event);
         }
 
