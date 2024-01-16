@@ -1,5 +1,5 @@
-import { sortBy } from 'lodash';
-import { RegexRule } from './Utils';
+import { orderBy, sortBy } from 'lodash';
+import { RegexRule, getMarkersOrDefault } from './Utils';
 import {
     AddressType,
     AuthInvoice,
@@ -33,6 +33,7 @@ import {
     DataRecordsStore,
     EraseDataStoreResult,
     GetDataStoreResult,
+    ListDataStoreByMarkerRequest,
     ListDataStoreResult,
     ListedDataStoreItem,
     SetDataResult,
@@ -92,6 +93,7 @@ import {
     ResourceKinds,
     SubjectType,
     PrivacyFeatures,
+    ACCOUNT_MARKER,
 } from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
@@ -1572,6 +1574,50 @@ export class MemoryStore
             success: true,
             items,
             totalCount: count,
+            marker: null,
+        };
+    }
+
+    async listDataByMarker(
+        request: ListDataStoreByMarkerRequest
+    ): Promise<ListDataStoreResult> {
+        const marker = request.marker;
+        let record = this._getDataRecord(request.recordName);
+        let items = [] as ListedDataStoreItem[];
+        const address = request.startingAddress;
+        const sortAscending = (request.sort ?? 'ascending') === 'ascending';
+
+        let count = 0;
+        for (let [key, item] of record.entries()) {
+            if (item.markers.includes(marker)) {
+                count += 1;
+                if (
+                    !address ||
+                    (sortAscending && key > address) ||
+                    (!sortAscending && key < address)
+                ) {
+                    items.push({
+                        address: key,
+                        data: item.data,
+                        markers: item.markers,
+                    });
+                }
+            }
+        }
+
+        if (request.sort) {
+            if (request.sort === 'ascending') {
+                items = sortBy(items, (i) => i.address);
+            } else if (request.sort === 'descending') {
+                items = orderBy(items, (i) => i.address, 'desc');
+            }
+        }
+
+        return {
+            success: true,
+            items,
+            totalCount: count,
+            marker: marker,
         };
     }
 

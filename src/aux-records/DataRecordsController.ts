@@ -492,6 +492,77 @@ export class DataRecordsController {
     }
 
     /**
+     * Lists some data from the given record, filtered by the given marker and starting at the given address.
+     * @param request The request that should be used to list the data.
+     */
+    async listDataByMarker(
+        request: ListDataByMarkerRequest
+    ): Promise<ListDataResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordKeyOrName,
+                userId: request.userId,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: context.context.userId,
+                        instances: request.instances,
+                        resourceKind: 'data',
+                        action: 'list',
+                        markers: [request.marker],
+                    }
+                );
+
+            const result2 = await this._store.listDataByMarker({
+                recordName: context.context.recordName,
+                marker: request.marker,
+                startingAddress: request.startingAddress,
+                sort: request.sort,
+            });
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            return {
+                success: true,
+                recordName: context.context.recordName,
+                items: result2.items as ListedData[],
+                totalCount: result2.totalCount,
+                marker: result2.marker,
+            };
+        } catch (err) {
+            console.error(
+                '[DataRecordsController] An error occurred while listing data by marker:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Erases the data in the given record and address.
      * Uses the given record key to access the record and the given subject ID to determine if the user is allowed to access the record.
      * @param recordKey The key that should be used to access the record.
@@ -839,6 +910,42 @@ export interface EraseDataFailure {
 }
 
 /**
+ * Defines an interface that represents the possible options in a list data request.
+ */
+export interface ListDataByMarkerRequest {
+    /**
+     * The record key or name that should be used to list the data.
+     */
+    recordKeyOrName: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The list of instances that are currently loaded.
+     */
+    instances?: string[];
+
+    /**
+     * The marker that the data should be filtered by.
+     */
+    marker: string;
+
+    /**
+     * The address that the listing should start after.
+     */
+    startingAddress: string | null;
+
+    /**
+     * The order that the data should be sorted in.
+     * Defaults to "ascending".
+     */
+    sort?: 'ascending' | 'descending';
+}
+
+/**
  * The possible results of a list data request.
  *
  * @dochash types/records/data
@@ -873,6 +980,12 @@ export interface ListDataSuccess {
      * The total number of items in the record.
      */
     totalCount: number;
+
+    /**
+     * The marker that was listed.
+     * If null, then all markers are listed.
+     */
+    marker?: string;
 }
 
 export interface ListedData {

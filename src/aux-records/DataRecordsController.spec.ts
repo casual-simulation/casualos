@@ -1389,6 +1389,263 @@ describe('DataRecordsController', () => {
         });
     });
 
+    describe('listDataByMarker()', () => {
+        it('should retrieve multiple records from the data store', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    [PUBLIC_READ_MARKER]
+                );
+            }
+
+            const result = await manager.listDataByMarker({
+                recordKeyOrName: 'testRecord',
+                startingAddress: 'address/2',
+                userId,
+                marker: PUBLIC_READ_MARKER,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    {
+                        address: 'address/4',
+                        data: 'data4',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                ],
+                totalCount: 5,
+                marker: PUBLIC_READ_MARKER,
+            });
+        });
+
+        it('should sort records by the given sort order', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    [PUBLIC_READ_MARKER]
+                );
+            }
+
+            const result = await manager.listDataByMarker({
+                recordKeyOrName: 'testRecord',
+                startingAddress: 'address/4',
+                userId,
+                marker: PUBLIC_READ_MARKER,
+                sort: 'descending',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    {
+                        address: 'address/2',
+                        data: 'data2',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    {
+                        address: 'address/1',
+                        data: 'data1',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    {
+                        address: 'address/0',
+                        data: 'data0',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                ],
+                totalCount: 5,
+                marker: PUBLIC_READ_MARKER,
+            });
+        });
+
+        it('should only list the marker that is specified', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    [i % 2 === 0 ? 'secret' : PUBLIC_READ_MARKER]
+                );
+            }
+
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listDataByMarker({
+                recordKeyOrName: 'testRecord',
+                startingAddress: 'address/2',
+                userId,
+                marker: PUBLIC_READ_MARKER,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                ],
+                totalCount: 2,
+                marker: PUBLIC_READ_MARKER,
+            });
+        });
+
+        it('should be able to use a record key to retrieve secret markers', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    ['secret']
+                );
+            }
+
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listDataByMarker({
+                recordKeyOrName: key,
+                startingAddress: 'address/2',
+                userId,
+                marker: 'secret',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                        markers: ['secret'],
+                    },
+                    {
+                        address: 'address/4',
+                        data: 'data4',
+                        markers: ['secret'],
+                    },
+                ],
+                totalCount: 5,
+                marker: 'secret',
+            });
+        });
+
+        it('should return not_authorized if the user does not have access to the marker', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    i % 2 === 0 ? ['secret'] : [PUBLIC_READ_MARKER]
+                );
+            }
+
+            const result = await manager.listDataByMarker({
+                recordKeyOrName: 'testRecord',
+                startingAddress: 'address/2',
+                userId: otherUserId,
+                marker: 'secret',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'testRecord',
+                    resourceKind: 'data',
+                    action: 'list',
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                },
+            });
+        });
+
+        it('should return not_authorized if the inst does not have access to the marker', async () => {
+            store.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    ['secret']
+                );
+            }
+
+            const result = await manager.listDataByMarker({
+                recordKeyOrName: 'testRecord',
+                startingAddress: 'address/2',
+                userId,
+                marker: 'secret',
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'testRecord',
+                    resourceKind: 'data',
+                    action: 'list',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+        });
+    });
+
     describe('eraseData()', () => {
         it('should delete the record from the data store', async () => {
             await store.setData(
