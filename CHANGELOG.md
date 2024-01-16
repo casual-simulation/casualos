@@ -22,6 +22,7 @@
 
 -   Fixed an issue where using the keyboard to select a tag in the sheetPortal would cause the page to refresh.
 -   Fixed an issue where loading a studio inst for the first time after creating an account could fail.
+-   Fixed an issue where gridPortal input did not work in the OculusBrowser.
 
 ## V3.2.9
 
