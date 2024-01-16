@@ -99,7 +99,7 @@ describe('getPublicWritePermission()', () => {
         ['event', ['list']] as const,
         ['inst', ['update', 'list']] as const,
         [
-            'policy',
+            'marker',
             [
                 'create',
                 'update',

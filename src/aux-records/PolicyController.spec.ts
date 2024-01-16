@@ -3,6 +3,7 @@ import { MemoryStore } from './MemoryStore';
 import {
     PolicyController,
     explainationForPermissionAssignment,
+    getMarkerResourcesForCreation,
     willMarkersBeRemaining,
 } from './PolicyController';
 import {
@@ -2251,7 +2252,9 @@ describe('PolicyController', () => {
                     ['update', 'resourceId'],
                     ['read', 'resourceId'],
                     ['assign', 'resourceId'],
+                    ['assign', PUBLIC_READ_MARKER],
                     ['unassign', 'resourceId'],
+                    ['unassign', PUBLIC_READ_MARKER],
                     ['grant', 'resourceId'],
                     ['revoke', 'resourceId'],
                     ['grantPermission', 'resourceId'],

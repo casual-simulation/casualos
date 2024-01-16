@@ -120,7 +120,6 @@ describe('FileRecordsController', () => {
             })) as RecordFileSuccess;
 
             expect(result).toEqual({
-                success: true,
                 uploadUrl: 'testUrl',
                 uploadMethod: 'POST',
                 uploadHeaders: {
