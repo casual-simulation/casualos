@@ -129,6 +129,15 @@ export class Input {
     }
 
     /**
+     * Whether or not the input system supports updating the current target based on mouse/pointer move events.
+     */
+    get supportsHoverEvents(): boolean {
+        return (
+            this.currentInputType === InputType.Mouse || this._usePointerEvents
+        );
+    }
+
+    /**
      * Gets the list of controllers that are currently available.
      */
     get controllers(): ControllerData[] {
@@ -822,7 +831,7 @@ export class Input {
      * If on mobile device, will return the page position of the first finger touching the screen.
      */
     public getMousePagePos(): Vector2 {
-        if (this._inputType == InputType.Mouse) {
+        if (this._usePointerEvents || this._inputType == InputType.Mouse) {
             return this._mouseData.pagePos;
         } else if (this._inputType == InputType.Touch) {
             return this._lastPrimaryTouchData.pagePos;
@@ -1320,10 +1329,6 @@ export class Input {
     }
 
     private _handleMouseMoveCore(event: MouseEvent) {
-        if (!this._updateInputType(InputType.Mouse)) {
-            return;
-        }
-
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
@@ -1960,7 +1965,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerMove(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerMove(event);
         }
 
@@ -1972,18 +1977,10 @@ export class Input {
     }
 
     private _handleMousePointerMove(event: PointerEvent) {
-        if (!this._updateInputType(InputType.Mouse)) {
-            return;
-        }
-
         this._handleMouseMoveCore(event);
     }
 
     private _handlerTouchPointerMove(event: PointerEvent) {
-        if (!this._updateInputType(InputType.Touch)) {
-            return;
-        }
-
         event.stopImmediatePropagation();
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
