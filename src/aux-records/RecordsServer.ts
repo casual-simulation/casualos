@@ -150,23 +150,24 @@ const EVENT_NAME_VALIDATION = z
     })
     .nonempty('eventName must not be empty.');
 
+const MARKER_VALIDATION = z
+    .string({
+        invalid_type_error: 'individual markers must be strings.',
+        required_error: 'invidiaul markers must not be null or empty.',
+    })
+    .nonempty('individual markers must not be null or empty.')
+    .max(100, 'individual markers must not be longer than 100 characters.');
+
 /**
  * The Zod validation for markers.
  */
 const MARKERS_VALIDATION = z
-    .array(
-        z
-            .string({
-                invalid_type_error: 'individual markers must be strings.',
-                required_error: 'invidiaul markers must not be null or empty.',
-            })
-            .nonempty('invidiaul markers must not be null or empty.'),
-        {
-            invalid_type_error: 'markers must be an array of strings.',
-            required_error: 'markers is required.',
-        }
-    )
-    .nonempty('markers must not be empty.');
+    .array(MARKER_VALIDATION, {
+        invalid_type_error: 'markers must be an array of strings.',
+        required_error: 'markers is required.',
+    })
+    .nonempty('markers must not be empty.')
+    .max(10, 'markers lists must not contain more than 10 markers.');
 
 const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
 const NO_WHITESPACE_REGEX = /^\S*$/g;
@@ -2526,7 +2527,7 @@ export class RecordsServer {
                 })
                 .nonempty('recordName must not be empty'),
             address: z.union([z.string(), z.null()]).optional(),
-            marker: z.string().optional(),
+            marker: MARKER_VALIDATION.optional(),
             sort: z
                 .union([z.literal('ascending'), z.literal('descending')])
                 .optional(),
@@ -2668,13 +2669,7 @@ export class RecordsServer {
                     required_error: 'fileDescription is required.',
                 })
                 .optional(),
-            markers: z
-                .array(z.string(), {
-                    invalid_type_error: 'markers must be an array of strings.',
-                    required_error: 'markers is required.',
-                })
-                .nonempty('markers must be non-empty.')
-                .optional(),
+            markers: MARKERS_VALIDATION.optional(),
             instances: z.array(z.string()).nonempty().optional(),
         });
 
@@ -2778,12 +2773,7 @@ export class RecordsServer {
                     required_error: 'fileUrl is required.',
                 })
                 .nonempty('fileUrl must be non-empty.'),
-            markers: z
-                .array(z.string(), {
-                    invalid_type_error: 'markers must be an array of strings.',
-                    required_error: 'markers is required.',
-                })
-                .nonempty('markers must be non-empty.'),
+            markers: MARKERS_VALIDATION,
             instances: z.array(z.string()).nonempty().optional(),
         });
 
