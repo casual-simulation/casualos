@@ -12,7 +12,6 @@ import {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
-    ListPermissionsInRecordForSubjectResult,
     ListPermissionsInRecordResult,
     ListedRoleAssignments,
     MarkerPermissionAssignment,
@@ -150,18 +149,6 @@ export class CachingPolicyStore implements PolicyStore {
         return await this._store.deleteMarkerPermissionAssignmentById(id);
     }
 
-    async listPermissionsInRecordForSubject(
-        recordName: string,
-        subjectType: SubjectType,
-        subjectId: string
-    ): Promise<ListPermissionsInRecordForSubjectResult> {
-        return await this._store.listPermissionsInRecordForSubject(
-            recordName,
-            subjectType,
-            subjectId
-        );
-    }
-
     async listPermissionsInRecord(
         recordName: string
     ): Promise<ListPermissionsInRecordResult> {
@@ -185,10 +172,6 @@ export class CachingPolicyStore implements PolicyStore {
         marker: string
     ): Promise<MarkerPermissionAssignment[]> {
         return await this._store.listPermissionsForMarker(recordName, marker);
-    }
-
-    async listMarkers(recordName: string): Promise<string[]> {
-        return await this._store.listMarkers(recordName);
     }
 
     async listPermissionsForSubject(

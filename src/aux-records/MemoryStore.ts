@@ -71,7 +71,6 @@ import {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
-    ListPermissionsInRecordForSubjectResult,
     ListPermissionsInRecordResult,
     ListedRoleAssignments,
     MarkerPermissionAssignment,
@@ -80,8 +79,6 @@ import {
     RoleAssignment,
     UpdateUserRolesResult,
     getExpireTime,
-    getPublicMarkerPermission,
-    getPublicMarkersPermission,
     getSubjectUserId,
 } from './PolicyStore';
 import {
@@ -852,42 +849,6 @@ export class MemoryStore
             this._markerPermissionAssignments.filter((p) => p.id !== id);
         return {
             success: true,
-        };
-    }
-
-    async listMarkers(recordName: string): Promise<string[]> {
-        const markers = uniq(
-            this._markerPermissionAssignments
-                .filter((p) => p.recordName === recordName)
-                .map((p) => p.marker)
-        );
-
-        return markers;
-    }
-
-    async listPermissionsInRecordForSubject(
-        recordName: string,
-        subjectType: SubjectType,
-        subjectId: string
-    ): Promise<ListPermissionsInRecordForSubjectResult> {
-        const resourceAssignments = this._resourcePermissionAssignments.filter(
-            (p) =>
-                p.recordName === recordName &&
-                p.subjectType === subjectType &&
-                p.subjectId === subjectId
-        );
-
-        const markerAssignments = this._markerPermissionAssignments.filter(
-            (p) =>
-                p.recordName === recordName &&
-                p.subjectType === subjectType &&
-                p.subjectId === subjectId
-        );
-
-        return {
-            success: true,
-            resourceAssignments,
-            markerAssignments,
         };
     }
 

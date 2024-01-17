@@ -227,18 +227,6 @@ export interface PolicyStore {
     ): Promise<DeletePermissionAssignmentResult>;
 
     /**
-     * Lists the resource permission assignments for the given record and subject.
-     * @param recordName The name of the record.
-     * @param subjectType The type of the subject.
-     * @param subjectId The ID of the subject.
-     */
-    listPermissionsInRecordForSubject(
-        recordName: string,
-        subjectType: SubjectType,
-        subjectId: string
-    ): Promise<ListPermissionsInRecordForSubjectResult>;
-
-    /**
      * Lists the resource permission assignments for the given record.
      * @param recordName The name of the record.
      */
@@ -267,12 +255,6 @@ export interface PolicyStore {
         recordName: string,
         marker: string
     ): Promise<MarkerPermissionAssignment[]>;
-
-    /**
-     * Lists the markers that have permissions assigned to them.
-     * @param recordName The name of the record.
-     */
-    listMarkers(recordName: string): Promise<string[]>;
 
     /**
      * Lists the resource permission assignments for the given subject in the given record.
@@ -735,23 +717,6 @@ export interface DeletePermissionAssignmentSuccess {
 }
 
 export interface DeletePermissionAssignmentFailure {
-    success: false;
-    errorCode: ServerError;
-    errorMessage: string;
-}
-
-export type ListPermissionsInRecordForSubjectResult =
-    | ListPermissionsInRecordForSubjectSuccess
-    | ListPermissionsInRecordForSubjectFailure;
-
-export interface ListPermissionsInRecordForSubjectSuccess {
-    success: true;
-
-    resourceAssignments: ResourcePermissionAssignment[];
-    markerAssignments: MarkerPermissionAssignment[];
-}
-
-export interface ListPermissionsInRecordForSubjectFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;
