@@ -35,6 +35,7 @@ import {
     eraseRecordData,
     getRecordData,
     AuxRuntime,
+    listDataRecordByMarker,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -1474,6 +1475,288 @@ describe('RecordsManager', () => {
                                 abc: 'def',
                             },
                         },
+                    }),
+                ]);
+            });
+        });
+
+        describe('list_record_data_by_marker', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a GET request to /api/v2/records/data/list', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        'myAddress',
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    }),
+                ]);
+            });
+
+            it('should not include the Authorization header if the user is not logged in', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        'myAddress',
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
+                    { validateStatus: expect.any(Function), headers: {} },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    }),
+                ]);
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+                vm.id = 'myInst';
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        'myAddress',
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress&instances=myInst',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    }),
+                ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        'myAddress',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    }),
+                ]);
+            });
+
+            it('should not include the address if the event specifies a null address', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        null,
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
                     }),
                 ]);
             });

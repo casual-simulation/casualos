@@ -11,6 +11,7 @@ export type RecordsAsyncActions =
     | RecordDataAction
     | GetRecordDataAction
     | ListRecordDataAction
+    | ListRecordDataByMarkerAction
     | EraseRecordDataAction
     | RecordFileAction
     | GetFileAction
@@ -1341,10 +1342,11 @@ export function listDataRecordByMarker(
     startingAddress: string,
     options: ListDataOptions,
     taskId?: number | string
-): ListRecordDataAction {
+): ListRecordDataByMarkerAction {
     return {
-        type: 'list_record_data',
+        type: 'list_record_data_by_marker',
         recordName,
+        marker,
         startingAddress,
         requiresApproval: false,
         options,

@@ -35,6 +35,7 @@ import {
     FileRecordedResult,
     EraseRecordDataAction,
     EraseFileAction,
+    ListRecordDataByMarkerAction,
 } from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -178,6 +179,8 @@ export class RecordsManager {
             } else if (event.type === 'get_record_data') {
                 this._getRecordData(event);
             } else if (event.type === 'list_record_data') {
+                this._listRecordData(event);
+            } else if (event.type === 'list_record_data_by_marker') {
                 this._listRecordData(event);
             } else if (event.type === 'erase_record_data') {
                 this._eraseRecordData(event);
@@ -368,7 +371,9 @@ export class RecordsManager {
         }
     }
 
-    private async _listRecordData(event: ListRecordDataAction) {
+    private async _listRecordData(
+        event: ListRecordDataAction | ListRecordDataByMarkerAction
+    ) {
         if (event.requiresApproval && !event[APPROVED_SYMBOL]) {
             return;
         }
@@ -399,12 +404,23 @@ export class RecordsManager {
             }
 
             if (hasValue(event.taskId)) {
+                let query: any = {
+                    recordName: event.recordName,
+                };
+
+                if (event.type === 'list_record_data_by_marker') {
+                    query.marker = event.marker;
+                }
+
+                query.address = event.startingAddress || null;
+                query.instances = instances;
+
                 const result: AxiosResponse<ListDataResult> = await axios.get(
-                    await this._publishUrl(auth, '/api/v2/records/data/list', {
-                        recordName: event.recordName,
-                        address: event.startingAddress || null,
-                        instances,
-                    }),
+                    await this._publishUrl(
+                        auth,
+                        '/api/v2/records/data/list',
+                        query
+                    ),
                     {
                         ...this._axiosOptions,
                         headers: info.headers,
@@ -1672,6 +1688,7 @@ export class RecordsManager {
             | RecordFileAction
             | GetRecordDataAction
             | ListRecordDataAction
+            | ListRecordDataByMarkerAction
             | GetFileAction
             | EraseFileAction
             | RecordDataAction
