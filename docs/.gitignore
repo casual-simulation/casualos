@@ -7,6 +7,10 @@
 # Generated files
 .docusaurus
 .cache-loader
+docs/api-info
+docs/extra-types.mdx
+docs/types
+docs/actions
 
 # Misc
 .DS_Store
