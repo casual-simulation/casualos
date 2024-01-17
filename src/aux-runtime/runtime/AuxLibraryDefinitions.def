@@ -3476,8 +3476,19 @@ export interface RoomTrackOptions {
     aspectRatio?: number;
 }
 
+/**
+ * The possible kinds of tracks.
+ */
 export type TrackKind = 'video' | 'audio';
+
+/**
+ * The possible sources for a room track.
+ */
 export type TrackSource = 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio';
+
+/**
+ * The possible video qualities for a room track.
+ */
 export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
 
 export interface JoinRoomActionOptions extends Partial<RoomOptions> {

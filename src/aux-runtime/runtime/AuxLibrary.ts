@@ -2264,6 +2264,9 @@ export interface SetRoomOptionsSuccess {
 
 /**
  * Defines an interface that represents a failed "set room options" request.
+ *
+ * @dochash types/os/portals
+ * @docname SetRoomOptionsFailure
  */
 export interface SetRoomOptionsFailure {
     success: false;
@@ -2653,6 +2656,9 @@ export interface RaycastResult {
 
 /**
  * Defines an interface that represents the intersection of a bot and ray.
+ *
+ * @dochash types/os/portals
+ * @docname BotIntersection
  */
 export interface BotIntersection {
     /**

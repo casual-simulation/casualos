@@ -148,7 +148,7 @@ export interface AIGenerateSkyboxOptions extends RecordActionOptions {
  * Options that are specific to Blockade Labs implementations for {@link ai.generateSkybox-string}.
  *
  * @dochash types/ai
- * @docname AIGenerateSkyboxOptions
+ * @docname AIGenerateSkyboxBlockadeLabsOptions
  */
 export interface AIGenerateSkyboxBlockadeLabsOptions {
     /**
@@ -887,7 +887,10 @@ export interface SetRoomTrackOptions {
 /**
  * Defines an interface that represents the options that a audio/video track has.
  *
- * @dochash types/os/portals
+ * @dochash types/os/rooms
+ * @doctitle Rooms Types
+ * @docsidebar Rooms
+ * @docdescription Types that are used for rooms actions.
  * @docname RoomTrackOptions
  */
 export interface RoomTrackOptions {
@@ -932,7 +935,20 @@ export interface RoomTrackOptions {
     aspectRatio?: number;
 }
 
+/**
+ * The possible kinds for a room track.
+ *
+ * @dochash types/records/rooms
+ * @docname TrackKind
+ */
 export type TrackKind = 'video' | 'audio';
+
+/**
+ * The possible sources for a room track.
+ *
+ * @dochash types/records/rooms
+ * @docname TrackSource
+ */
 export type TrackSource =
     | 'camera'
     | 'microphone'
@@ -942,7 +958,7 @@ export type TrackSource =
 /**
  * Defines the possible qualities that a track can stream at.
  *
- * @dochash types/os/portals
+ * @dochash types/os/rooms
  * @docname TrackVideoQuality
  */
 export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';

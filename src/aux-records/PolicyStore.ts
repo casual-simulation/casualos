@@ -6,7 +6,6 @@ import {
     PermissionOptions,
     ResourceKinds,
     SubjectType,
-    USER_SUBJECT_TYPE,
     PrivacyFeatures,
 } from '@casual-simulation/aux-common';
 
@@ -871,7 +870,7 @@ export function getSubjectUserId(
     subjectType: SubjectType,
     subjectId: string
 ): string | null {
-    if (subjectType === USER_SUBJECT_TYPE) {
+    if (subjectType === 'user') {
         return subjectId;
     }
     return null;

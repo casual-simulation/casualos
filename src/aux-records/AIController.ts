@@ -54,10 +54,10 @@ export interface AIChatOptions {
 
 export interface AIGenerateSkyboxConfiguration {
     interface: AIGenerateSkyboxInterface;
-    options: AIGenerateSkyboxOptions;
+    options: AIGenerateSkyboxConfigurationOptions;
 }
 
-export interface AIGenerateSkyboxOptions {
+export interface AIGenerateSkyboxConfigurationOptions {
     /**
      * The list of subscription tiers that are allowed to be used for generate skybox.
      *
@@ -71,10 +71,10 @@ export interface AIGenerateImageConfiguration {
     interfaces: {
         [provider: string]: AIImageInterface;
     };
-    options: AIGenerateImageOptions;
+    options: AIGenerateImageConfigurationOptions;
 }
 
-export interface AIGenerateImageOptions {
+export interface AIGenerateImageConfigurationOptions {
     /**
      * The model that should be used when none is specified in a request.
      */
@@ -147,7 +147,7 @@ export class AIController {
     private _imageProviders: AIImageProviders;
     private _allowedImageModels: Map<string, string>;
     private _allowedImageSubscriptionTiers: true | Set<string>;
-    private _imageOptions: AIGenerateImageOptions;
+    private _imageOptions: AIGenerateImageConfigurationOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
     private _policies: PolicyStore;

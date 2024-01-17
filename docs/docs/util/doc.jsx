@@ -788,7 +788,7 @@ function TypeLink({ type, references, isInUnionOrArray }) {
             }
         } else {
             if (!type.id) {
-                console.log('Missing reference for', type, 'it is likely that the type is not exported from the entry');
+                console.log('Missing reference for', type, 'it is likely that the type is not exported from the entry. ');
             } else {
                 console.log('Missing reference for', type.id, type.name, type, 'it is likely that the type does not have a @docid or @docname comment');
             }

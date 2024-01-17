@@ -151,6 +151,9 @@ export interface ListDataStoreByMarkerRequest {
  *
  * True indicates that any user can edit the record.
  * An array of strings indicates the list of users that are allowed to edit the record.
+ *
+ * @dochash types/records/data
+ * @docname UserPolicy
  */
 export type UserPolicy = true | string[] | null;
 

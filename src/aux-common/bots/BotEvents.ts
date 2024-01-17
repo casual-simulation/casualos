@@ -31,7 +31,10 @@ export const UNMAPPABLE = Symbol('UNMAPPABLE');
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
- * Defines a union type for all the possible events that can be emitted from a bots channel.
+ * Defines a union type for all the possible common events.
+ *
+ * @dochash types/os/event
+ * @docname BotAction
  */
 export type BotAction =
     | BotActions
@@ -1392,6 +1395,12 @@ export interface ShowInputOptions {
     items?: ShowInputItem[];
 }
 
+/**
+ * Defines an interface that represents an item that can be displayed in a {@link os.showInput} list.
+ *
+ * @dochash types/os/input
+ * @docname ShowInputItem
+ */
 export interface ShowInputItem {
     label: string;
     value: any;
@@ -2181,6 +2190,12 @@ export interface SerializableMutationRecord {
     listenerDelta?: number;
 }
 
+/**
+ * Defines a reference to a HTML node. Internal to CasualOS.
+ *
+ * @dochash types/os/portals
+ * @docname NodeReference
+ */
 export interface NodeReference {
     __id: string;
 }
@@ -3270,13 +3285,31 @@ export interface FormAnimationData {
     duration: number;
 }
 
+/**
+ * The portals that contain a camera that can be raycasted from.
+ *
+ * @dochash types/os/portals
+ * @docname CameraPortal
+ */
 export type CameraPortal = 'grid' | 'miniGrid' | 'map' | 'miniMap';
 
+/**
+ * Defines an event that represents a 2D point.
+ *
+ * @dochash types/os/portals
+ * @docname Point2D
+ */
 export interface Point2D {
     x: number;
     y: number;
 }
 
+/**
+ * Defines an interface that represents a 3D point.
+ *
+ * @dochash types/os/portals
+ * @docname Point3D
+ */
 export interface Point3D {
     x: number;
     y: number;

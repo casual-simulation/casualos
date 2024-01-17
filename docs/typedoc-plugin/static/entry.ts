@@ -1,5 +1,6 @@
 // This file imports all the files that should be included in the API Documentation generation.
 export * from '../../../src/aux-common/math/index';
+export * from '../../../src/aux-common/common/PolicyPermissions';
 export * from '../../../src/aux-runtime/runtime/AuxLibrary';
 export * from '../../../src/aux-common/bots/BotEvents';
 export * from '../../../src/aux-runtime/runtime/RecordsEvents';

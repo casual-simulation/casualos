@@ -1,13 +1,19 @@
 import { z } from 'zod';
 
-export const USER_SUBJECT_TYPE = 'user';
-export const INST_SUBJECT_TYPE = 'inst';
-export const ROLE_SUBJECT_TYPE = 'role';
-
-export type SubjectType =
-    | typeof USER_SUBJECT_TYPE
-    | typeof INST_SUBJECT_TYPE
-    | typeof ROLE_SUBJECT_TYPE;
+/**
+ * The possible types of subjects that can be affected by permissions.
+ *
+ * - "user" - The permission is for a user.
+ * - "inst" - The permission is for an inst.
+ * - "role" - The permission is for a role.
+ *
+ * @dochash types/permissions
+ * @doctitle Permissions Types
+ * @docsidebar Permissions
+ * @docdescription Types that represent permissions that control access to resources.
+ * @docname SubjectType
+ */
+export type SubjectType = 'user' | 'inst' | 'role';
 
 export const DATA_RESOURCE_KIND = 'data';
 export const FILE_RESOURCE_KIND = 'file';
@@ -15,13 +21,20 @@ export const EVENT_RESOURCE_KIND = 'event';
 export const MARKER_RESOURCE_KIND = 'marker';
 export const ROLE_RESOURCE_KIND = 'role';
 export const INST_RESOURCE_KIND = 'inst';
+
+/**
+ * The possible types of resources that can be affected by permissions.
+ *
+ * @dochash types/permissions
+ * @docname ResourceKinds
+ */
 export type ResourceKinds =
-    | typeof DATA_RESOURCE_KIND
-    | typeof FILE_RESOURCE_KIND
-    | typeof EVENT_RESOURCE_KIND
-    | typeof MARKER_RESOURCE_KIND
-    | typeof ROLE_RESOURCE_KIND
-    | typeof INST_RESOURCE_KIND;
+    | 'data'
+    | 'file'
+    | 'event'
+    | 'marker'
+    | 'role'
+    | 'inst';
 
 export const READ_ACTION = 'read';
 export const CREATE_ACTION = 'create';
@@ -39,65 +52,88 @@ export const REVOKE_ACTION = 'revoke';
 export const SEND_ACTION_ACTION = 'sendAction';
 export const UPDATE_DATA_ACTION = 'updateData';
 
+/**
+ * The possible types of actions that can be performed on resources.
+ *
+ * @dochash types/permissions
+ * @docname ActionKinds
+ */
 export type ActionKinds =
-    | typeof READ_ACTION
-    | typeof CREATE_ACTION
-    | typeof UPDATE_ACTION
-    | typeof DELETE_ACTION
-    | typeof ASSIGN_ACTION
-    | typeof UNASSIGN_ACTION
-    | typeof INCREMENT_ACTION
-    | typeof COUNT_ACTION
-    | typeof LIST_ACTION
-    | typeof GRANT_PERMISSION_ACTION
-    | typeof REVOKE_PERMISSION_ACTION
-    | typeof GRANT_ACTION
-    | typeof REVOKE_ACTION
-    | typeof SEND_ACTION_ACTION
-    | typeof UPDATE_DATA_ACTION;
+    | 'read'
+    | 'create'
+    | 'update'
+    | 'delete'
+    | 'assign'
+    | 'unassign'
+    | 'increment'
+    | 'count'
+    | 'list'
+    | 'grantPermission'
+    | 'revokePermission'
+    | 'grant'
+    | 'revoke'
+    | 'sendAction'
+    | 'updateData';
 
-export type DataActionKinds =
-    | typeof READ_ACTION
-    | typeof CREATE_ACTION
-    | typeof UPDATE_ACTION
-    | typeof DELETE_ACTION
-    | typeof LIST_ACTION;
+/**
+ * The possible types of actions that can be performed on data resources.
+ *
+ * @dochash types/permissions
+ * @docname DataActionKinds
+ */
+export type DataActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list';
 
-export type FileActionKinds =
-    | typeof READ_ACTION
-    | typeof CREATE_ACTION
-    | typeof UPDATE_ACTION
-    | typeof DELETE_ACTION
-    | typeof LIST_ACTION;
+/**
+ * The possible types of actions that can be performed on file resources.
+ *
+ * @dochash types/permissions
+ * @docname FileActionKinds
+ */
+export type FileActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list';
 
-export type EventActionKinds =
-    | typeof INCREMENT_ACTION
-    | typeof COUNT_ACTION
-    | typeof UPDATE_ACTION
-    | typeof LIST_ACTION;
+/**
+ * The possible types of actions that can be performed on event resources.
+ *
+ * @dochash types/permissions
+ * @docname EventActionKinds
+ */
+export type EventActionKinds = 'increment' | 'count' | 'update' | 'list';
 
+/**
+ * The possible types of actions that can be performed on marker resources.
+ *
+ * @dochash types/permissions
+ * @docname MarkerActionKinds
+ */
 export type MarkerActionKinds =
-    | typeof ASSIGN_ACTION
-    | typeof UNASSIGN_ACTION
-    | typeof GRANT_PERMISSION_ACTION
-    | typeof REVOKE_PERMISSION_ACTION
-    | typeof READ_ACTION;
+    | 'assign'
+    | 'unassign'
+    | 'grantPermission'
+    | 'revokePermission'
+    | 'read';
 
-export type RoleActionKinds =
-    | typeof GRANT_ACTION
-    | typeof REVOKE_ACTION
-    | typeof READ_ACTION
-    | typeof UPDATE_ACTION
-    | typeof LIST_ACTION;
+/**
+ * The possible types of actions that can be performed on roles resources.
+ *
+ * @dochash types/permissions
+ * @docname RoleActionKinds
+ */
+export type RoleActionKinds = 'grant' | 'revoke' | 'read' | 'update' | 'list';
 
+/**
+ * The possible types of actions that can be performed on inst resources.
+ *
+ * @dochash types/permissions
+ * @docname InstActionKinds
+ */
 export type InstActionKinds =
-    | typeof CREATE_ACTION
-    | typeof READ_ACTION
-    | typeof UPDATE_ACTION
-    | typeof UPDATE_DATA_ACTION
-    | typeof DELETE_ACTION
-    | typeof LIST_ACTION
-    | typeof SEND_ACTION_ACTION;
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'updateData'
+    | 'delete'
+    | 'list'
+    | 'sendAction';
 
 /**
  * The possible types of permissions that can be added to policies.
@@ -117,9 +153,9 @@ export type AvailablePermissions =
     | InstPermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.union([
-    z.literal(USER_SUBJECT_TYPE),
-    z.literal(INST_SUBJECT_TYPE),
-    z.literal(ROLE_SUBJECT_TYPE),
+    z.literal('user'),
+    z.literal('inst'),
+    z.literal('role'),
 ]);
 
 export const DATA_ACTION_KINDS_VALIDATION = z.union([
@@ -236,7 +272,7 @@ export interface DataPermission extends Permission {
     /**
      * The kind of the permission.
      */
-    resourceKind: typeof DATA_RESOURCE_KIND;
+    resourceKind: 'data';
 
     /**
      * The action th at is allowed.
@@ -298,7 +334,7 @@ export interface FilePermission extends Permission {
     /**
      * The kind of the permission.
      */
-    resourceKind: typeof FILE_RESOURCE_KIND;
+    resourceKind: 'file';
 
     /**
      * The action th at is allowed.
@@ -330,7 +366,7 @@ export interface EventPermission extends Permission {
     /**
      * The kind of the permission.
      */
-    resourceKind: typeof EVENT_RESOURCE_KIND;
+    resourceKind: 'event';
 
     /**
      * The action th at is allowed.
@@ -357,7 +393,7 @@ export interface MarkerPermission extends Permission {
     /**
      * The kind of the permission.
      */
-    resourceKind: typeof MARKER_RESOURCE_KIND;
+    resourceKind: 'marker';
 
     /**
      * The action th at is allowed.
@@ -411,7 +447,7 @@ export interface RolePermission extends Permission {
     /**
      * The kind of the permission.
      */
-    resourceKind: typeof ROLE_RESOURCE_KIND;
+    resourceKind: 'role';
 
     /**
      * The ID of the resource that is allowed.
@@ -449,7 +485,7 @@ export interface InstPermission extends Permission {
     /**
      * The kind of the permission.
      */
-    resourceKind: typeof INST_RESOURCE_KIND;
+    resourceKind: 'inst';
 
     /**
      * The ID of the resource that is allowed.
