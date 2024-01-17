@@ -174,8 +174,6 @@ import {
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
-    Record,
-    RecordReference,
     convertToString,
     GET_TAG_MASKS_SYMBOL,
     PartialBotsState,
@@ -763,36 +761,6 @@ export interface BotFilterFunction {
     [DEBUG_STRING]?: string;
 }
 
-export interface RecordFilter {
-    recordFilter: true;
-    [DEBUG_STRING]?: string;
-}
-
-export interface AuthIdRecordFilter extends RecordFilter {
-    authID: string;
-}
-
-export interface SpaceFilter extends BotFilterFunction, RecordFilter {
-    space: string;
-    toJSON: () => RecordFilter;
-}
-
-export interface AddressRecordFilter extends RecordFilter {
-    address: string;
-}
-
-export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
-    id: string;
-    toJSON: () => RecordFilter;
-}
-
-export type RecordFilters =
-    | AuthIdRecordFilter
-    | SpaceFilter
-    | AddressRecordFilter
-    | IDRecordFilter
-    | RecordReference;
-
 /**
  * Defines the options for {@link experiment.speakText}.
  *
@@ -888,31 +856,6 @@ export interface TagSpecificApiOptions {
      * The bot that is set as the config of the current bot.
      */
     config: RuntimeBot;
-}
-
-/**
- * Defines an interface that represents a set of records that were retrieved.
- */
-export interface GetRecordsResult {
-    /**
-     * The set of records that were retrieved.
-     */
-    records: Record[];
-
-    /**
-     * The total number of records that the query would have returned.
-     */
-    totalCount: number;
-
-    /**
-     * Whether there are more records available to retrieve for the query.
-     */
-    hasMoreRecords: boolean;
-
-    /**
-     * Gets the set page of records.
-     */
-    getMoreRecords(): Promise<GetRecordsResult>;
 }
 
 export const GET_RUNTIME = Symbol('get_runtime');
@@ -8494,8 +8437,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets a partial list of [data](glossary:data-record) that is stored in the given record.
      * Optionally accepts the address before the first item that should be included in the list.
      * Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
-     *
-     * Throws a {@link CasualOSError} if the user does not have "data.list" access to the "account" marker.
      *
      * On [publicos.link](https://publicos.link), the returned list is limited to 25 items.
      *

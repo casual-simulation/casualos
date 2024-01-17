@@ -1,9 +1,7 @@
 import {
-    AuxLibrary,
     createDefaultLibrary,
     createInterpretableFunction,
     DebuggerInterface,
-    GetRecordsResult,
     GET_RUNTIME,
     RecordFileApiSuccess,
     tagAsInterpretableFunction,
@@ -61,8 +59,6 @@ import {
     superShout,
     botRemoved,
     botAdded,
-    clearSpace,
-    loadBots,
     localFormAnimation,
     showInput,
     share,

@@ -246,7 +246,6 @@ declare type ExtraActions =
     | ShowJoinCodeAction
     | RequestFullscreenAction
     | ExitFullscreenAction
-    | LoadBotsAction
     | ClearSpaceAction
     | LocalFormAnimationAction
     | AddDropSnapTargetsAction
@@ -1470,23 +1469,6 @@ declare interface LoadSpaceAction {
 }
 
 /**
- * Defines an event that loads bots from the given space that match the given tags and values.
- */
-declare interface LoadBotsAction {
-    type: 'load_bots';
-
-    /**
-     * The space that should be searched.
-     */
-    space: BotSpace;
-
-    /**
-     * The tags that the loaded bots should have.
-     */
-    tags: LoadBotsTagFilter[];
-}
-
-/**
  * Defines an interface for objects that specify a tag and value
  * that a bot should have to be loaded.
  */
@@ -2521,85 +2503,6 @@ export interface Bot {
 }
 
 /**
- * Defines an interface for a record.
- */
-export interface Record {
-    /**
-     * The address that the record was published at.
-     */
-    address: string;
-
-    /**
-     * The space that the record was published to.
-     */
-    space: RecordSpace;
-
-    /**
-     * The auth ID that published the record.
-     */
-    authID: string;
-
-    /**
-     * The data that was stored in the record.
-     * Null if dataURL is specified
-     */
-    data?: any;
-
-    /**
-     * The URL that the data can be retrieved from.
-     * Null if data is specified.
-     */
-    dataURL?: string;
-}
-
-/**
- * Defines an interface for an object that represents a reference to a specific record.
- */
-export interface RecordReference {
-    /**
-     * The ID of the user that published the record.
-     */
-    authID: string;
-
-    /**
-     * The space that the record lives in.
-     */
-    space: RecordSpace;
-
-    /**
-     * The address that the record was published to.
-     */
-    address: string;
-}
-
-
-/**
- * Defines an interface that represents a set of records that were retrieved.
- */
-export interface GetRecordsResult {
-
-    /**
-     * The set of records that were retrieved.
-     */
-    records: Record[];
-
-    /**
-     * The total number of records that the query would have returned.
-     */
-    totalCount: number;
-
-    /**
-     * Whether there are more records available to retrieve for the query.
-     */
-    hasMoreRecords: boolean;
-
-    /**
-     * Gets the set page of records.
-     */
-    getMoreRecords(): Promise<GetRecordsResult>;
-}
-
-/**
  * Defines the possible bot anchor points.
  */
 declare type BotAnchorPoint =
@@ -2699,36 +2602,6 @@ declare interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
 }
-
-export interface RecordFilter {
-    recordFilter: true;
-}
-
-export interface AuthIdRecordFilter extends RecordFilter {
-    authID: string;
-}
-
-export interface SpaceFilter extends BotFilterFunction, RecordFilter {
-    space: string;
-}
-
-export interface AddressRecordFilter extends RecordFilter {
-    address: string;
-}
-
-export interface AuthTokenRecordFilter extends RecordFilter {
-    authToken: string;
-}
-
-export interface PrefixRecordFilter extends RecordFilter {
-    prefix: string;
-}
-
-export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
-    id: string;
-}
-
-export type RecordFilters = AuthIdRecordFilter | SpaceFilter | AddressRecordFilter | AuthTokenRecordFilter | PrefixRecordFilter | IDRecordFilter;
 
 /**
  * Defines a result from a webhook.

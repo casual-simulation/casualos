@@ -1,12 +1,9 @@
 import type {
     AIChatMessage,
+    PublicRecordKeyPolicy,
     RecordFileFailure,
 } from '@casual-simulation/aux-records';
-import {
-    APPROVED_SYMBOL,
-    AsyncAction,
-    Record,
-} from '@casual-simulation/aux-common';
+import { APPROVED_SYMBOL, AsyncAction } from '@casual-simulation/aux-common';
 
 export type RecordsActions = RecordsAsyncActions;
 
@@ -284,7 +281,7 @@ export interface RecordsAction extends AsyncAction {
  * - `true` indicates that any user can edit the record.
  * - An array of strings indicates the list of users that are allowed to edit the record.
  *
- * @dochash types/records
+ * @dochash types/records/extra
  * @docname RecordUserPolicyType
  */
 export type RecordUserPolicyType = true | string[];
@@ -292,7 +289,7 @@ export type RecordUserPolicyType = true | string[];
 /**
  * The options for data record actions.
  *
- * @dochash types/records
+ * @dochash types/records/data
  * @docName DataRecordOptions
  */
 export interface DataRecordOptions extends RecordActionOptions {
@@ -528,27 +525,12 @@ export interface GetEventCountAction extends RecordsAction {
     eventName: string;
 }
 
-export interface GetRecordsActionResult {
-    records: Record[];
-    hasMoreRecords: boolean;
-    totalCount: number;
-    cursor?: string;
-}
-
 /**
  * Defines an action that retrieves the list of studios that the user has access to.
  */
 export interface ListUserStudiosAction extends RecordsAction {
     type: 'list_user_studios';
 }
-
-/**
- * Defines a type that represents the different kinds of policies that a record key can have.
- *
- * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
- * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
- */
-export type PublicRecordKeyPolicy = null | 'subjectfull' | 'subjectless';
 
 /**
  * Defines an interface that represents an action that requests a key to a public record.

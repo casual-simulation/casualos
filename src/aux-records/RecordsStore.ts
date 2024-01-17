@@ -430,6 +430,9 @@ export interface ListStudioAssignmentFilters {
  *
  * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
  * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
+ *
+ * @dochash types/records/key
+ * @docname PublicRecordKeyPolicy
  */
 export type PublicRecordKeyPolicy = null | 'subjectfull' | 'subjectless';
 

@@ -988,9 +988,28 @@ export interface ListDataSuccess {
     marker?: string;
 }
 
+/**
+ * Defines an interface that represents a single item in a list data result.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 2
+ * @docname ListedData
+ */
 export interface ListedData {
+    /**
+     * The data contained in the item.
+     */
     data: any;
+
+    /**
+     * The address that the data is stored at.
+     */
     address: string;
+
+    /**
+     * The markers that have been applied to the data.
+     */
     markers: string[];
 }
 
