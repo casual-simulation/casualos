@@ -2526,6 +2526,10 @@ export class RecordsServer {
                 })
                 .nonempty('recordName must not be empty'),
             address: z.union([z.string(), z.null()]).optional(),
+            marker: z.string().optional(),
+            sort: z
+                .union([z.literal('ascending'), z.literal('descending')])
+                .optional(),
             instances: z
                 .string({
                     invalid_type_error: 'instances must be a string.',
@@ -2542,7 +2546,8 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, address, instances } = parseResult.data;
+        const { recordName, address, instances, marker, sort } =
+            parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -2571,13 +2576,26 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._data.listData(
-            recordName,
-            address || null,
-            sessionKeyValidation.userId,
-            instances
-        );
-        return returnResult(result);
+        if (!marker) {
+            const result = await this._data.listData(
+                recordName,
+                address || null,
+                sessionKeyValidation.userId,
+                instances
+            );
+            return returnResult(result);
+        } else {
+            const result = await this._data.listDataByMarker({
+                recordKeyOrName: recordName,
+                marker: marker,
+                startingAddress: address,
+                sort: sort,
+                userId: sessionKeyValidation.userId,
+                instances,
+            });
+
+            return returnResult(result);
+        }
     }
 
     private async _handleRecordFileOptions(

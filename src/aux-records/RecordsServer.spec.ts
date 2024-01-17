@@ -6364,105 +6364,282 @@ describe('RecordsServer', () => {
             );
         });
 
-        it('should return a list of data', async () => {
-            const result = await server.handleHttpRequest(
-                httpGet(
-                    `/api/v2/records/data/list?recordName=${recordName}`,
-                    defaultHeaders
-                )
-            );
+        describe('?marker', () => {
+            it('should return a list of data', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                        defaultHeaders
+                    )
+                );
 
-            expectResponseBodyToEqual(result, {
-                statusCode: 200,
-                body: {
-                    success: true,
-                    recordName,
-                    items: [
-                        {
-                            address: 'address3',
-                            data: 'crazy message!',
-                            markers: [PUBLIC_READ_MARKER],
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                data: 'crazy message!',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                            {
+                                address: 'address1',
+                                data: 'hello, world!',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                            {
+                                address: 'address2',
+                                data: 'other message!',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                        ],
+                        totalCount: 3,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to list data by address', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&address=address1&marker=${PUBLIC_READ_MARKER}`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                data: 'crazy message!',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                            {
+                                address: 'address2',
+                                data: 'other message!',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                        ],
+                        totalCount: 3,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to sort by address', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}&sort=descending`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                data: 'crazy message!',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                            {
+                                address: 'address2',
+                                data: 'other message!',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                            {
+                                address: 'address1',
+                                data: 'hello, world!',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                        ],
+                        totalCount: 3,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to list custom markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['/inst']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                await dataController.recordData(
+                    recordKey,
+                    'address3',
+                    'crazy message!',
+                    userId,
+                    null,
+                    null,
+                    ['secret']
+                );
+                await dataController.recordData(
+                    recordKey,
+                    'address1',
+                    'hello, world!',
+                    userId,
+                    null,
+                    null,
+                    ['secret']
+                );
+                await dataController.recordData(
+                    recordKey,
+                    'address2',
+                    'other message!',
+                    userId,
+                    null,
+                    null,
+                    ['secret']
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&marker=${'secret'}&instances=${'inst'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                data: 'crazy message!',
+                                markers: ['secret'],
+                            },
+                            {
+                                address: 'address1',
+                                data: 'hello, world!',
+                                markers: ['secret'],
+                            },
+                            {
+                                address: 'address2',
+                                data: 'other message!',
+                                markers: ['secret'],
+                            },
+                        ],
+                        totalCount: 3,
+                        marker: 'secret',
+                    },
+                    headers: corsHeaders(apiHeaders['origin']),
+                });
+            });
+
+            it('return a not_authorized error if the user is not authorized to access the marker', async () => {
+                await dataController.recordData(
+                    recordKey,
+                    'address3',
+                    'crazy message!',
+                    userId,
+                    null,
+                    null,
+                    ['secret']
+                );
+                await dataController.recordData(
+                    recordKey,
+                    'address1',
+                    'hello, world!',
+                    userId,
+                    null,
+                    null
+                );
+                await dataController.recordData(
+                    recordKey,
+                    'address2',
+                    'other message!',
+                    userId,
+                    null,
+                    null,
+                    ['secret']
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&instances=${'inst'}&marker=${'secret'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'data',
+                            action: 'list',
+                            subjectType: 'user',
+                            subjectId: userId,
                         },
-                        {
-                            address: 'address1',
-                            data: 'hello, world!',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                        {
-                            address: 'address2',
-                            data: 'other message!',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                    ],
-                    totalCount: 3,
-                },
-                headers: corsHeaders(defaultHeaders['origin']),
+                    },
+                    headers: corsHeaders(apiHeaders['origin']),
+                });
+            });
+
+            it('should return an unacceptable_request result when not given a recordName', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?address=testAddress`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                message: 'recordName is required.',
+                                path: ['recordName'],
+                                received: 'undefined',
+                            },
+                        ],
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
             });
         });
 
-        it('should be able to list data by address', async () => {
-            const result = await server.handleHttpRequest(
-                httpGet(
-                    `/api/v2/records/data/list?recordName=${recordName}&address=address1`,
-                    defaultHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 200,
-                body: {
-                    success: true,
-                    recordName,
-                    items: [
-                        {
-                            address: 'address3',
-                            data: 'crazy message!',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                        {
-                            address: 'address2',
-                            data: 'other message!',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                    ],
-                    totalCount: 3,
-                },
-                headers: corsHeaders(defaultHeaders['origin']),
-            });
-        });
-
-        it('should list what the user can access', async () => {
-            store.roles[recordName] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
-            };
-
-            await dataController.recordData(
-                recordKey,
-                'address3',
-                'crazy message!',
-                userId,
-                null,
-                null,
-                ['secret']
-            );
-            await dataController.recordData(
-                recordKey,
-                'address1',
-                'hello, world!',
-                userId,
-                null,
-                null,
-                ['secret']
-            );
+        it('should be able to list all data', async () => {
             await dataController.recordData(
                 recordKey,
                 'address2',
                 'other message!',
-                userId,
+                ownerId,
                 null,
                 null,
                 ['secret']
             );
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
 
             const result = await server.handleHttpRequest(
                 httpGet(
@@ -6480,12 +6657,12 @@ describe('RecordsServer', () => {
                         {
                             address: 'address3',
                             data: 'crazy message!',
-                            markers: ['secret'],
+                            markers: [PUBLIC_READ_MARKER],
                         },
                         {
                             address: 'address1',
                             data: 'hello, world!',
-                            markers: ['secret'],
+                            markers: [PUBLIC_READ_MARKER],
                         },
                         {
                             address: 'address2',
@@ -6499,96 +6676,38 @@ describe('RecordsServer', () => {
             });
         });
 
-        it('should list what the inst can access', async () => {
-            store.roles[recordName] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
-            };
-
-            await dataController.recordData(
-                recordKey,
-                'address3',
-                'crazy message!',
-                userId,
-                null,
-                null,
-                ['secret']
-            );
-            await dataController.recordData(
-                recordKey,
-                'address1',
-                'hello, world!',
-                userId,
-                null,
-                null
-            );
-            await dataController.recordData(
-                recordKey,
-                'address2',
-                'other message!',
-                userId,
-                null,
-                null,
-                ['secret']
-            );
-
+        it('should return 403 not_authorized if the user does not have access to the account marker', async () => {
             const result = await server.handleHttpRequest(
                 httpGet(
-                    `/api/v2/records/data/list?recordName=${recordName}&instances=${'inst'}`,
+                    `/api/v2/records/data/list?recordName=${recordName}`,
                     apiHeaders
                 )
             );
 
             expectResponseBodyToEqual(result, {
-                statusCode: 200,
-                body: {
-                    success: true,
-                    recordName,
-                    items: [
-                        {
-                            address: 'address1',
-                            data: 'hello, world!',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                    ],
-                    totalCount: 3,
-                },
-                headers: corsHeaders(apiHeaders['origin']),
-            });
-        });
-
-        it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleHttpRequest(
-                httpGet(
-                    `/api/v2/records/data/list?address=testAddress`,
-                    defaultHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 400,
+                statusCode: 403,
                 body: {
                     success: false,
-                    errorCode: 'unacceptable_request',
+                    errorCode: 'not_authorized',
                     errorMessage:
-                        'The request was invalid. One or more fields were invalid.',
-                    issues: [
-                        {
-                            code: 'invalid_type',
-                            expected: 'string',
-                            message: 'recordName is required.',
-                            path: ['recordName'],
-                            received: 'undefined',
-                        },
-                    ],
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'data',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
                 },
-                headers: corsHeaders(defaultHeaders['origin']),
+                headers: corsHeaders(apiHeaders['origin']),
             });
         });
 
         testRateLimit(() =>
             httpGet(
                 `/api/v2/records/data/list?recordName=${recordName}`,
-                defaultHeaders
+                authenticatedHeaders
             )
         );
     });
