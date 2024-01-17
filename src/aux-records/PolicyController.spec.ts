@@ -144,6 +144,308 @@ describe('PolicyController', () => {
         });
     });
 
+    describe('listPermissions()', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'read',
+                {},
+                null
+            );
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'create',
+                {},
+                null
+            );
+
+            await store.assignPermissionToSubjectAndResource(
+                recordName,
+                'user',
+                userId,
+                'data',
+                'address',
+                'delete',
+                {},
+                null
+            );
+        });
+
+        it('should return the list of permissions in the given record', async () => {
+            const result = await controller.listPermissions(recordName, userId);
+
+            expect(result).toEqual({
+                success: true,
+                recordName,
+                resourcePermissions: [
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        resourceId: 'address',
+                        action: 'delete',
+                        subjectType: 'user',
+                        subjectId: userId,
+                        expireTimeMs: null,
+                        options: {},
+                    },
+                ],
+                markerPermissions: [
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        marker: 'test',
+                        action: 'read',
+                        subjectType: 'role',
+                        subjectId: 'developer',
+                        expireTimeMs: null,
+                        options: {},
+                    },
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        marker: 'test',
+                        action: 'create',
+                        subjectType: 'role',
+                        subjectId: 'developer',
+                        expireTimeMs: null,
+                        options: {},
+                    },
+                ],
+            });
+        });
+
+        it('should return a not_authorized result if the user does not have access to the account marker', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listPermissions(recordName, userId);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
+        });
+    });
+
+    describe('listPermissionsForMarker()', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'read',
+                {},
+                null
+            );
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'create',
+                {},
+                null
+            );
+
+            await store.assignPermissionToSubjectAndResource(
+                recordName,
+                'user',
+                userId,
+                'data',
+                'address',
+                'delete',
+                {},
+                null
+            );
+        });
+
+        it('should return the list of permissions in the given record', async () => {
+            const result = await controller.listPermissionsForMarker(
+                recordName,
+                'test',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName,
+                markerPermissions: [
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        marker: 'test',
+                        action: 'read',
+                        subjectType: 'role',
+                        subjectId: 'developer',
+                        expireTimeMs: null,
+                        options: {},
+                    },
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        marker: 'test',
+                        action: 'create',
+                        subjectType: 'role',
+                        subjectId: 'developer',
+                        expireTimeMs: null,
+                        options: {},
+                    },
+                ],
+            });
+        });
+
+        it('should return a not_authorized result if the user does not have access to the account marker', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listPermissionsForMarker(
+                recordName,
+                'test',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
+        });
+    });
+
+    describe('listPermissionsForResource()', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'read',
+                {},
+                null
+            );
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'create',
+                {},
+                null
+            );
+
+            await store.assignPermissionToSubjectAndResource(
+                recordName,
+                'user',
+                userId,
+                'data',
+                'address',
+                'delete',
+                {},
+                null
+            );
+        });
+
+        it('should return the list of permissions in the given record', async () => {
+            const result = await controller.listPermissionsForResource(
+                recordName,
+                'data',
+                'address',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName,
+                resourcePermissions: [
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        resourceId: 'address',
+                        action: 'delete',
+                        subjectType: 'user',
+                        subjectId: userId,
+                        expireTimeMs: null,
+                        options: {},
+                    },
+                ],
+            });
+        });
+
+        it('should return a not_authorized result if the user does not have access to the account marker', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listPermissionsForResource(
+                recordName,
+                'data',
+                'address',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
+        });
+    });
+
     describe('grantMarkerPermission()', () => {
         beforeEach(() => {
             store.roles[recordName] = {

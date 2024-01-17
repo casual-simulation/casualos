@@ -1199,6 +1199,253 @@ export class PolicyController {
     }
 
     /**
+     * Gets the list of permissions in the given record.
+     * @param recordKeyOrRecordName The name of the record.
+     * @param userId The ID of the currently logged in user.
+     * @param instances The instances that are loaded.
+     */
+    async listPermissions(
+        recordKeyOrRecordName: string,
+        userId: string,
+        instances?: string[] | null
+    ): Promise<ListPermissionsResult> {
+        try {
+            const context = await this.constructAuthorizationContext({
+                recordKeyOrRecordName,
+                userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    userId,
+                    instances,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const recordName = context.context.recordName;
+
+            const result = await this._policies.listPermissionsInRecord(
+                recordName
+            );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            return {
+                success: true,
+                recordName,
+                resourcePermissions: result.resourceAssignments.map(
+                    (r) =>
+                        ({
+                            id: r.id,
+                            recordName: r.recordName,
+                            subjectType: r.subjectType,
+                            subjectId: r.subjectId,
+                            resourceKind: r.resourceKind,
+                            action: r.action,
+                            resourceId: r.resourceId,
+                            options: r.options,
+                            expireTimeMs: r.expireTimeMs,
+                        } as ListedResourcePermission)
+                ),
+                markerPermissions: result.markerAssignments.map(
+                    (r) =>
+                        ({
+                            id: r.id,
+                            recordName: r.recordName,
+                            subjectType: r.subjectType,
+                            subjectId: r.subjectId,
+                            resourceKind: r.resourceKind,
+                            action: r.action,
+                            marker: r.marker,
+                            options: r.options,
+                            expireTimeMs: r.expireTimeMs,
+                        } as ListedMarkerPermission)
+                ),
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while listing permissions.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of permissions that have been assigned to the given marker.
+     * @param recordKeyOrRecordName The name of the record.
+     * @param marker The marker that the permissions should be listed for.
+     * @param userId The ID of the currently logged in user.
+     * @param instances The instances that are loaded.
+     */
+    async listPermissionsForMarker(
+        recordKeyOrRecordName: string,
+        marker: string,
+        userId: string,
+        instances?: string[] | null
+    ): Promise<ListPermissionsForMarkerResult> {
+        try {
+            const context = await this.constructAuthorizationContext({
+                recordKeyOrRecordName,
+                userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    userId,
+                    instances,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const recordName = context.context.recordName;
+
+            const result = await this._policies.listPermissionsForMarker(
+                recordName,
+                marker
+            );
+            return {
+                success: true,
+                recordName,
+                markerPermissions: result.map(
+                    (r) =>
+                        ({
+                            id: r.id,
+                            recordName: r.recordName,
+                            subjectType: r.subjectType,
+                            subjectId: r.subjectId,
+                            resourceKind: r.resourceKind,
+                            action: r.action,
+                            marker: r.marker,
+                            options: r.options,
+                            expireTimeMs: r.expireTimeMs,
+                        } as ListedMarkerPermission)
+                ),
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while listing permissions for marker.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of permissions that have been assigned to the given marker.
+     * @param recordKeyOrRecordName The name of the record.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     * @param userId The ID of the currently logged in user.
+     * @param instances The instances that are loaded.
+     */
+    async listPermissionsForResource(
+        recordKeyOrRecordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        userId: string,
+        instances?: string[] | null
+    ): Promise<ListPermissionsForResourceResult> {
+        try {
+            const context = await this.constructAuthorizationContext({
+                recordKeyOrRecordName,
+                userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    userId,
+                    instances,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const recordName = context.context.recordName;
+
+            const result = await this._policies.listPermissionsInRecord(
+                recordName
+            );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            return {
+                success: true,
+                recordName,
+                resourcePermissions: result.resourceAssignments.map(
+                    (r) =>
+                        ({
+                            id: r.id,
+                            recordName: r.recordName,
+                            subjectType: r.subjectType,
+                            subjectId: r.subjectId,
+                            resourceKind: r.resourceKind,
+                            action: r.action,
+                            resourceId: r.resourceId,
+                            options: r.options,
+                            expireTimeMs: r.expireTimeMs,
+                        } as ListedResourcePermission)
+                ),
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while listing permissions for resource.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Attempts to grant a permission to a marker.
      * @param request The request for the operation.
      */
@@ -2514,4 +2761,130 @@ export interface AuthorizeSubjectFailure {
      * The denial reason.
      */
     reason?: DenialReason;
+}
+
+export type ListPermissionsResult =
+    | ListPermissionsSuccess
+    | ListPermissionsFailure;
+
+export interface ListPermissionsSuccess {
+    success: true;
+    recordName: string;
+
+    resourcePermissions: ListedResourcePermission[];
+    markerPermissions: ListedMarkerPermission[];
+}
+
+export interface ListPermissionsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
+    errorMessage: string;
+}
+
+export type ListPermissionsForMarkerResult =
+    | ListPermissionsForMarkerSuccess
+    | ListPermissionsFailure;
+
+export interface ListPermissionsForMarkerSuccess {
+    success: true;
+    recordName: string;
+    markerPermissions: ListedMarkerPermission[];
+}
+
+export type ListPermissionsForResourceResult =
+    | ListPermissionsForResourceSuccess
+    | ListPermissionsFailure;
+
+export interface ListPermissionsForResourceSuccess {
+    success: true;
+    recordName: string;
+    resourcePermissions: ListedResourcePermission[];
+}
+
+/**
+ * Defines an interface that represents a permission that grants access.
+ */
+export interface ListedPermission {
+    /**
+     * The ID of the permission.
+     */
+    id: string;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The kind of the actions that the subject is allowed to perform.
+     * Null if the subject is allowed to perform any action.
+     */
+    action: ActionKinds | null;
+
+    /**
+     * The options for the permission assignment.
+     */
+    options: PermissionOptions;
+
+    /**
+     * The ID of the subject.
+     */
+    subjectId: string;
+
+    /**
+     * The type of the subject.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the user that the assignment grants permission to.
+     * Null if the subject type is not "user".
+     */
+    userId: string | null;
+
+    /**
+     * The time that the permission expires.
+     * Null if the permission never expires.
+     */
+    expireTimeMs: number | null;
+}
+
+/**
+ * Defines an interface that represents a permission that grants access to a single resource.
+ *
+ * @dochash types/permissions
+ * @docname ResourcePermission
+ */
+export interface ListedResourcePermission extends ListedPermission {
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The ID of the resource.
+     */
+    resourceId: string;
+}
+
+/**
+ * Defines an interface that represents a permission that grants access to resources with a marker.
+ *
+ * @dochash types/permissions
+ * @docname MarkerPermission
+ */
+export interface ListedMarkerPermission extends ListedPermission {
+    /**
+     * The marker that the permission applies to.
+     */
+    marker: string;
+
+    /**
+     * The kind of the resource.
+     * Null if the permission applies to all resources.
+     */
+    resourceKind: ResourceKinds | null;
 }
