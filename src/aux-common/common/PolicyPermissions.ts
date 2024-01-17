@@ -102,7 +102,7 @@ export type InstActionKinds =
 /**
  * The possible types of permissions that can be added to policies.
  *
- * @dochash types/permission
+ * @dochash types/permissions
  * @docname AvailablePermissions
  */
 export type AvailablePermissions =
@@ -225,6 +225,9 @@ type ZodPermissionAssertion = HasType<ZodPermission, Permission>;
 
 /**
  * Defines an interface that describes the common options for all permissions that affect data records.
+ *
+ * @dochash types/permissions
+ * @docname DataPermission
  */
 export interface DataPermission extends Permission {
     /**
@@ -247,6 +250,12 @@ export const DATA_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
 type ZodDataPermission = z.infer<typeof DATA_PERMISSION_VALIDATION>;
 type ZodDataPermissionAssertion = HasType<ZodDataPermission, DataPermission>;
 
+/**
+ * Options for file permissions.
+ *
+ * @dochash types/permissions
+ * @docname FilePermissionOptions
+ */
 export interface FilePermissionOptions {
     /**
      * The maximum allowed file size in bytes.
@@ -278,6 +287,9 @@ type ZodFilePermissionOptionsAssertion = HasType<
 
 /**
  * Defines an interface that describes the common options for all permissions that affect file records.
+ *
+ * @dochash types/permissions
+ * @docname FilePermission
  */
 export interface FilePermission extends Permission {
     /**
@@ -307,6 +319,9 @@ type ZodFilePermissionAssertion = HasType<ZodFilePermission, FilePermission>;
 
 /**
  * Defines an interface that describes the common options for all permissions that affect event records.
+ *
+ * @dochash types/permissions
+ * @docname EventPermission
  */
 export interface EventPermission extends Permission {
     /**
@@ -330,7 +345,10 @@ type ZodEventPermission = z.infer<typeof EVENT_PERMISSION_VALIDATION>;
 type ZodEventPermissionAssertion = HasType<ZodEventPermission, EventPermission>;
 
 /**
- * Defines an interface that describes the common options for all permissions that affect policies.
+ * Defines an interface that describes the common options for all permissions that affect markers.
+ *
+ * @dochash types/permissions
+ * @docname MarkerPermission
  */
 export interface MarkerPermission extends Permission {
     /**
@@ -355,6 +373,12 @@ type ZodMarkerPermissionAssertion = HasType<
     MarkerPermission
 >;
 
+/**
+ * Options for role permissions.
+ *
+ * @dochash types/permissions
+ * @docname RolePermissionOptions
+ */
 export interface RolePermissionOptions {
     /**
      * The maximum lifetime that the role can be granted for in miliseconds.
@@ -376,6 +400,9 @@ type ZodRolePermissionOptionsAssertion = HasType<
 
 /**
  * Defines an interface that describes the common options for all permissions that affect roles.
+ *
+ * @dochash types/permissions
+ * @docname RolePermission
  */
 export interface RolePermission extends Permission {
     /**
@@ -409,6 +436,12 @@ export const ROLE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
 type ZodRolePermission = z.infer<typeof ROLE_PERMISSION_VALIDATION>;
 type ZodRolePermissionAssertion = HasType<ZodRolePermission, RolePermission>;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect insts.
+ *
+ * @dochash types/permissions
+ * @docname InstPermission
+ */
 export interface InstPermission extends Permission {
     /**
      * The kind of the permission.
