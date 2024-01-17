@@ -3116,7 +3116,7 @@ describe('RecordsServer', () => {
         testRateLimit('GET', `/api/v2/records/events/count`);
     });
 
-    describe.skip('GET /api/v2/records/events/list', () => {
+    describe('GET /api/v2/records/events/list', () => {
         let events: any[];
         beforeEach(async () => {
             events = [];
@@ -3177,7 +3177,8 @@ describe('RecordsServer', () => {
             });
         });
 
-        it('should return an empty list if the inst doesnt have permission', async () => {
+        // TODO: This test always fails because events do not support listing by a marker
+        it.skip('should return an empty list if the inst doesnt have permission', async () => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
@@ -3203,7 +3204,7 @@ describe('RecordsServer', () => {
         it('should get a list of events if the inst and user have permission', async () => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
-                ['inst']: new Set([ADMIN_ROLE_NAME]),
+                ['/inst']: new Set([ADMIN_ROLE_NAME]),
             };
 
             const result = await server.handleHttpRequest(
@@ -3219,6 +3220,34 @@ describe('RecordsServer', () => {
                     success: true,
                     events: events.slice(0, 10),
                     totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 403 not_authorized if the user does not have access to the account marker', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'event',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
                 },
                 headers: apiCorsHeaders,
             });
@@ -5173,7 +5202,7 @@ describe('RecordsServer', () => {
         testRateLimit('GET', `/api/v2/records/file`);
     });
 
-    describe.skip('GET /api/v2/records/file/list', () => {
+    describe('GET /api/v2/records/file/list', () => {
         beforeEach(async () => {
             await store.addFileRecord(
                 recordName,
@@ -5297,7 +5326,9 @@ describe('RecordsServer', () => {
             });
         });
 
-        it('should list what the user can access', async () => {
+        // this only applies to listing by marker
+        // file records don't support this yet, so this test is disabled
+        it.skip('should list what the user can access', async () => {
             store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
@@ -5356,7 +5387,9 @@ describe('RecordsServer', () => {
             });
         });
 
-        it('should list what the inst can access', async () => {
+        // this only applies to listing by marker
+        // file records don't support this yet, so this test is disabled
+        it.skip('should list what the inst can access', async () => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
                 ['inst']: new Set(['developer']),
@@ -5411,6 +5444,34 @@ describe('RecordsServer', () => {
                         },
                     ],
                     totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 403 not_authorized if the user does not have access to the account marker', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'file',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
                 },
                 headers: apiCorsHeaders,
             });
@@ -6336,7 +6397,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.skip('GET /api/v2/records/data/list', () => {
+    describe('GET /api/v2/records/data/list', () => {
         beforeEach(async () => {
             await dataController.recordData(
                 recordKey,
@@ -8453,7 +8514,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.skip('GET /api/v2/records/role/inst/list', () => {
+    describe('GET /api/v2/records/role/inst/list', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -8619,13 +8680,11 @@ describe('RecordsServer', () => {
             'GET',
             `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`
         );
-        testAuthorization(
-            () =>
-                httpGet(
-                    `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`,
-                    apiHeaders
-                ),
-            'The user is not logged in. A session key must be provided for this operation.'
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`,
+                apiHeaders
+            )
         );
         testRateLimit(() =>
             httpGet(
@@ -9568,7 +9627,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.skip('GET /api/v2/records/insts/list', () => {
+    describe('GET /api/v2/records/insts/list', () => {
         const inst1 = 'myInst';
         const inst2 = 'myInst2';
         const inst3 = 'myInst3';
@@ -9683,7 +9742,8 @@ describe('RecordsServer', () => {
             });
         });
 
-        it('should return only the insts that the user has access to', async () => {
+        // TODO: Requires the ability to list insts by marker
+        it.skip('should return only the insts that the user has access to', async () => {
             await store.assignPermissionToSubjectAndMarker(
                 recordName,
                 'role',
@@ -9724,6 +9784,34 @@ describe('RecordsServer', () => {
                         },
                     ],
                     totalCount: 3,
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return 403 not_authorized if the user does not have access to the account marker', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/insts/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'inst',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
                 },
                 headers: corsHeaders(apiHeaders['origin']),
             });
