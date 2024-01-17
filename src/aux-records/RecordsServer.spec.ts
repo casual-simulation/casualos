@@ -8332,6 +8332,234 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/permissions/list', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'read',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test2',
+                'create',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'file',
+                'abc',
+                'create',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndResource(
+                recordName,
+                'user',
+                userId,
+                'file',
+                'fileName',
+                'read',
+                {},
+                null
+            );
+        });
+
+        it('should list the permissions in the record', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/permissions/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    resourcePermissions: [
+                        {
+                            id: expect.any(String),
+                            recordName: recordName,
+                            resourceKind: 'file',
+                            resourceId: 'fileName',
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: userId,
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                    ],
+                    markerPermissions: [
+                        {
+                            id: expect.any(String),
+                            marker: 'test',
+                            recordName: recordName,
+                            resourceKind: 'data',
+                            action: 'read',
+                            subjectType: 'role',
+                            subjectId: 'developer',
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        {
+                            id: expect.any(String),
+                            marker: 'test2',
+                            recordName: recordName,
+                            resourceKind: 'data',
+                            action: 'create',
+                            subjectType: 'role',
+                            subjectId: 'developer',
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        {
+                            id: expect.any(String),
+                            marker: 'abc',
+                            recordName: recordName,
+                            resourceKind: 'file',
+                            action: 'create',
+                            subjectType: 'role',
+                            subjectId: 'developer',
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return a 403 not_authorized result when the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/permissions/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'marker',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        describe('?marker', () => {
+            it('should list the permissions for the given marker', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/permissions/list?recordName=${recordName}&marker=test`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        markerPermissions: [
+                            {
+                                id: expect.any(String),
+                                marker: 'test',
+                                recordName: recordName,
+                                resourceKind: 'data',
+                                action: 'read',
+                                subjectType: 'role',
+                                subjectId: 'developer',
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
+        describe('?resourceKind&resourceId', () => {
+            it('should list the permissions for the given resource', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/permissions/list?recordName=${recordName}&resourceKind=file&resourceId=fileName`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        resourcePermissions: [
+                            {
+                                id: expect.any(String),
+                                recordName: recordName,
+                                resourceKind: 'file',
+                                resourceId: 'fileName',
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: userId,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/permissions/list?recordName=${recordName}`
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/permissions/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/permissions/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+    });
+
     describe('GET /api/v2/records/role/user/list', () => {
         beforeEach(() => {
             store.roles[recordName] = {

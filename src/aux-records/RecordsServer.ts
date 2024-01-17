@@ -28,7 +28,10 @@ import {
 import { ZodError, z } from 'zod';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
-import { AVAILABLE_PERMISSIONS_VALIDATION } from '@casual-simulation/aux-common';
+import {
+    AVAILABLE_PERMISSIONS_VALIDATION,
+    RESOURCE_KIND_VALIDATION,
+} from '@casual-simulation/aux-common';
 import { PolicyController } from './PolicyController';
 import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
@@ -647,6 +650,15 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._policyRevokePermission(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/permissions/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listPermissions(request),
                 this._allowedApiOrigins
             );
         }
@@ -1544,6 +1556,73 @@ export class RecordsServer {
         });
 
         return returnResult(result);
+    }
+
+    private async _listPermissions(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            marker: MARKER_VALIDATION.optional(),
+            resourceKind: RESOURCE_KIND_VALIDATION.optional(),
+            resourceId: z
+                .string({
+                    invalid_type_error: 'resourceId must be a string.',
+                    required_error: 'resourceId is required.',
+                })
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, marker, resourceKind, resourceId } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        if (resourceKind && resourceId) {
+            const result =
+                await this._policyController.listPermissionsForResource(
+                    recordName,
+                    resourceKind,
+                    resourceId,
+                    sessionKeyValidation.userId
+                );
+            return returnResult(result);
+        } else if (marker) {
+            const result =
+                await this._policyController.listPermissionsForMarker(
+                    recordName,
+                    marker,
+                    sessionKeyValidation.userId
+                );
+            return returnResult(result);
+        } else {
+            const result = await this._policyController.listPermissions(
+                recordName,
+                sessionKeyValidation.userId
+            );
+            return returnResult(result);
+        }
     }
 
     // private async _policyRead(

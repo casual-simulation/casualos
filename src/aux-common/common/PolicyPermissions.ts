@@ -101,6 +101,9 @@ export type InstActionKinds =
 
 /**
  * The possible types of permissions that can be added to policies.
+ *
+ * @dochash types/permission
+ * @docname AvailablePermissions
  */
 export type AvailablePermissions =
     | DataPermission
@@ -163,6 +166,15 @@ export const INST_ACTION_KINDS_VALIDATION = z.union([
     z.literal(DELETE_ACTION),
     z.literal(LIST_ACTION),
     z.literal(SEND_ACTION_ACTION),
+]);
+
+export const RESOURCE_KIND_VALIDATION = z.union([
+    z.literal(DATA_RESOURCE_KIND),
+    z.literal(FILE_RESOURCE_KIND),
+    z.literal(EVENT_RESOURCE_KIND),
+    z.literal(MARKER_RESOURCE_KIND),
+    z.literal(ROLE_RESOURCE_KIND),
+    z.literal(INST_RESOURCE_KIND),
 ]);
 
 /**
