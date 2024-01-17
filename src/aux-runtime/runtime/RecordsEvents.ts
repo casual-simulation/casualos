@@ -385,6 +385,36 @@ export interface ListRecordDataAction extends DataRecordAction {
      * The address that the list should start with.
      */
     startingAddress?: string;
+
+    /**
+     * The options for the action.
+     */
+    options: ListDataOptions;
+}
+
+export interface ListRecordDataByMarkerAction
+    extends Omit<ListRecordDataAction, 'type'> {
+    type: 'list_record_data_by_marker';
+
+    /**
+     * The marker that should be used to filter the list.
+     */
+    marker: string;
+}
+
+/**
+ * Defines an interface that represents the options for a list data action.
+ *
+ * @dochash types/records/data
+ * @docName ListDataOptions
+ */
+export interface ListDataOptions extends RecordActionOptions {
+    /**
+     * The order that items should be sorted in.
+     * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
+     * - "descending" means that the items should be sorted in alphebatically descending order by address.
+     */
+    sort?: 'ascending' | 'descending';
 }
 
 /**
@@ -1284,7 +1314,32 @@ export function getRecordData(
 export function listDataRecord(
     recordName: string,
     startingAddress: string,
-    options: RecordActionOptions,
+    options: ListDataOptions,
+    taskId?: number | string
+): ListRecordDataAction {
+    return {
+        type: 'list_record_data',
+        recordName,
+        startingAddress,
+        requiresApproval: false,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ListRecordDataAction.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingAddress The address that the list should start with.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listDataRecordByMarker(
+    recordName: string,
+    marker: string,
+    startingAddress: string,
+    options: ListDataOptions,
     taskId?: number | string
 ): ListRecordDataAction {
     return {

@@ -168,6 +168,7 @@ import {
     revokeInstRole,
     getFile,
     listUserStudios,
+    listDataRecordByMarker,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -5852,59 +5853,59 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.grantRecordMarkerPermission()', () => {
-            it('should emit a GrantRecordMarkerPermissionAction', async () => {
-                const action: any = library.api.os.grantRecordMarkerPermission(
-                    'record',
-                    'marker',
-                    {
-                        type: 'data.create',
-                        role: 'developer',
-                        addresses: true,
-                    }
-                );
-                const expected = grantRecordMarkerPermission(
-                    'record',
-                    'marker',
-                    {
-                        type: 'data.create',
-                        role: 'developer',
-                        addresses: true,
-                    },
-                    {},
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
+        // describe('os.grantRecordMarkerPermission()', () => {
+        //     it('should emit a GrantRecordMarkerPermissionAction', async () => {
+        //         const action: any = library.api.os.grantRecordMarkerPermission(
+        //             'record',
+        //             'marker',
+        //             {
+        //                 type: 'data.create',
+        //                 role: 'developer',
+        //                 addresses: true,
+        //             }
+        //         );
+        //         const expected = grantRecordMarkerPermission(
+        //             'record',
+        //             'marker',
+        //             {
+        //                 type: 'data.create',
+        //                 role: 'developer',
+        //                 addresses: true,
+        //             },
+        //             {},
+        //             context.tasks.size
+        //         );
+        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+        //         expect(context.actions).toEqual([expected]);
+        //     });
+        // });
 
-        describe('os.revokeRecordMarkerPermission()', () => {
-            it('should emit a RevokeRecordMarkerPermissionAction', async () => {
-                const action: any = library.api.os.revokeRecordMarkerPermission(
-                    'record',
-                    'marker',
-                    {
-                        type: 'data.create',
-                        role: 'developer',
-                        addresses: true,
-                    }
-                );
-                const expected = revokeRecordMarkerPermission(
-                    'record',
-                    'marker',
-                    {
-                        type: 'data.create',
-                        role: 'developer',
-                        addresses: true,
-                    },
-                    {},
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-        });
+        // describe('os.revokeRecordMarkerPermission()', () => {
+        //     it('should emit a RevokeRecordMarkerPermissionAction', async () => {
+        //         const action: any = library.api.os.revokeRecordMarkerPermission(
+        //             'record',
+        //             'marker',
+        //             {
+        //                 type: 'data.create',
+        //                 role: 'developer',
+        //                 addresses: true,
+        //             }
+        //         );
+        //         const expected = revokeRecordMarkerPermission(
+        //             'record',
+        //             'marker',
+        //             {
+        //                 type: 'data.create',
+        //                 role: 'developer',
+        //                 addresses: true,
+        //             },
+        //             {},
+        //             context.tasks.size
+        //         );
+        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+        //         expect(context.actions).toEqual([expected]);
+        //     });
+        // });
 
         describe('os.grantInstAdminPermission()', () => {
             it('should emit a GrantInstAdminPermissionAction', async () => {
@@ -6529,6 +6530,96 @@ describe('AuxLibrary', () => {
                 );
                 const expected = listDataRecord(
                     'recordName',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listDataByMarker()', () => {
+            it('should emit a ListRecordDataByMarkerAction', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    'recordName',
+                    'myMarker'
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    'recordName',
+                    'myMarker',
+                    undefined,
+                    {
+                        endpoint: 'myEndpoint',
+                        sort: 'ascending',
+                    }
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    { endpoint: 'myEndpoint', sort: 'ascending' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting address', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    'recordName',
+                    'myMarker',
+                    'address'
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v1 record keys into a record name', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    formatV1RecordKey('recordName', 'test'),
+                    'myMarker',
+                    'address'
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
+                    'myMarker',
+                    'address'
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
                     'address',
                     {},
                     context.tasks.size

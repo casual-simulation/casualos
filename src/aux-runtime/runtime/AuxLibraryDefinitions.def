@@ -2999,6 +2999,22 @@ export interface RevokeRoleFailure {
     deletePolicy?: RecordUserPolicyType;
 }
 
+/**
+ * Defines an interface that represents the options for a list data action.
+ *
+ * @dochash types/records/data
+ * @docName ListDataOptions
+ */
+export interface ListDataOptions extends RecordActionOptions {
+
+    /**
+     * The order that items should be sorted in.
+     * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
+     * - "descending" means that the items should be sorted in alphebatically descending order by address.
+     */
+    sort?: 'ascending' | 'descending';
+}
+
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
 
 export interface RecordDataSuccess {
@@ -7869,7 +7885,7 @@ declare global {
      * // Find all the bots with the ID "bob".
      * let bobs = getBots(byId("bob"));
      */
-    function byID(id: string): IDRecordFilter;
+    function byID(id: string): BotFilterFunction;
 
     /**
      * Creates a filter function that checks whether bots match the given mod.
@@ -8699,7 +8715,7 @@ interface DebuggerBase {
      * // Find all the bots with the ID "bob".
      * let bobs = getBots(byId("bob"));
      */
-    byID(id: string): IDRecordFilter;
+    byID(id: string): BotFilterFunction;
 
     /**
      * Creates a filter function that checks whether bots match the given mod.
@@ -11134,6 +11150,67 @@ interface Os {
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     listData(recordKeyOrName: string, startingAddress?: string, endpoint?: string): Promise<ListDataResult>;
+
+    /**
+     * Gets a partial list of [data](glossary:data-record) with the given marker that is stored in the given record.
+     * Optionally accepts the address before the first item that should be included in the list.
+     * Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
+     *
+     * @param recordKeyOrName the record name or a record key. This indicates the record that the data should be retrieved from.
+     * Note that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.
+     * @param marker The marker that needs to be assigned to the data items that should be included in the list.
+     * e.g. Using "publicRead" will return all data items with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options The options for the operation.
+     * 
+     * @example Get a list of publicRead data items in a record
+     * const result = await os.listData('myRecord', 'publicRead');
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example List all the items that have the publicRead marker in a record
+     * let lastAddress;
+     * let items = [];
+     * while(true) {
+     *     const result = await os.listData('myRecord', 'publicRead', lastAddress);
+     *     if (result.success) {
+     *         console.log(result.items);
+     *         items.push(...result.items);
+     *         if (result.items.length > 0) {
+     *             lastAddress = result.items[result.items.length - 1].address;
+     *         } else {
+     *             // result.items is empty, so we can break out of the loop
+     *             break;
+     *         }
+     *     } else {
+     *         os.toast("Failed " + result.errorMessage);
+     *         break;
+     *     }
+     * }
+     * 
+     * @example List publicRead items in descending order
+     * const result = await os.listData('myRecord', 'publicRead', null, { sort: 'descending' });
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listDataByMarker
+     */
+    listDataByMarker(
+        recordKeyOrName: string,
+        marker: string,
+        startingAddress?: string,
+        options?: ListDataOptions
+    ): Promise<ListDataResult>;
 
     /**
      * Erases the data stored in the given record at the given address.

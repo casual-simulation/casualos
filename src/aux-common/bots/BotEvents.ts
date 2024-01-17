@@ -114,7 +114,6 @@ export type AsyncActions =
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
     | RunScriptAction
-    | LoadBotsAction
     | ClearSpaceAction
     | SendWebhookAction
     | AnimateTagAction

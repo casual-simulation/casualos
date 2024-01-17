@@ -275,6 +275,8 @@ import {
     getRecordData,
     eraseRecordData,
     recordFile as calcRecordFile,
+    ListDataOptions,
+    listDataRecordByMarker,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3183,8 +3185,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
-                grantRecordMarkerPermission,
-                revokeRecordMarkerPermission,
+                // grantRecordMarkerPermission,
+                // revokeRecordMarkerPermission,
                 grantInstAdminPermission,
                 grantUserRole,
                 revokeUserRole,
@@ -3196,6 +3198,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getData,
                 getManualApprovalData,
                 listData,
+                listDataByMarker,
                 eraseData,
                 eraseManualApprovalData,
 
@@ -4050,7 +4053,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname byID
      */
     function byID(id: string): BotFilter {
-        let filter: IDRecordFilter = ((bot: Bot) => {
+        let filter: any = ((bot: Bot) => {
             return bot.id === id;
         }) as any;
 
@@ -4219,7 +4222,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname bySpace
      */
     function bySpace(space: string): BotFilter {
-        let func = byTag(BOT_SPACE_TAG, space) as SpaceFilter;
+        let func = byTag(BOT_SPACE_TAG, space) as any;
         func.recordFilter = true;
         func.space = space;
         func.toJSON = () => {
@@ -7991,67 +7994,67 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
-    /**
-     * Grants the given marker the given permission in the given record.
-     *
-     * See [Record Security](page:learn/records/security) for more information.
-     *
-     * @param recordName the name of the record.
-     * @param marker the marker that the permission should be added to.
-     * @param permission the permission that should be added.
-     * @param options the options for the operation.
-     *
-     * @dochash actions/os/records
-     * @docgroup 01-records
-     * @docname os.grantRecordMarkerPermission
-     */
-    function grantRecordMarkerPermission(
-        recordName: string,
-        marker: string,
-        permission: AvailablePermissions,
-        options?: RecordActionOptions
-    ): Promise<GrantMarkerPermissionResult> {
-        const task = context.createTask();
-        const event = calcGrantRecordMarkerPermission(
-            recordName,
-            marker,
-            permission,
-            options ?? {},
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
+    // /**
+    //  * Grants the given marker the given permission in the given record.
+    //  *
+    //  * See [Record Security](page:learn/records/security) for more information.
+    //  *
+    //  * @param recordName the name of the record.
+    //  * @param marker the marker that the permission should be added to.
+    //  * @param permission the permission that should be added.
+    //  * @param options the options for the operation.
+    //  *
+    //  * @dochash actions/os/records
+    //  * @docgroup 01-records
+    //  * @docname os.grantRecordMarkerPermission
+    //  */
+    // function grantRecordMarkerPermission(
+    //     recordName: string,
+    //     marker: string,
+    //     permission: AvailablePermissions,
+    //     options?: RecordActionOptions
+    // ): Promise<GrantMarkerPermissionResult> {
+    //     const task = context.createTask();
+    //     const event = calcGrantRecordMarkerPermission(
+    //         recordName,
+    //         marker,
+    //         permission,
+    //         options ?? {},
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
 
-    /**
-     * Revokes the given permission from the given marker in the given record.
-     *
-     * See [Record Security](page:learn/records/security) for more information.
-     *
-     * @param recordName the name of the record.
-     * @param marker the name of the marker that the permission should be removed from.
-     * @param permission the permission that should be removed.
-     * @param options the options for the operation.
-     *
-     * @dochash actions/os/records
-     * @docgroup 01-records
-     * @docname os.revokeRecordMarkerPermission
-     */
-    function revokeRecordMarkerPermission(
-        recordName: string,
-        marker: string,
-        permission: AvailablePermissions,
-        options?: RecordActionOptions
-    ): Promise<RevokeMarkerPermissionResult> {
-        const task = context.createTask();
-        const event = calcRevokeRecordMarkerPermission(
-            recordName,
-            marker,
-            permission,
-            options ?? {},
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
+    // /**
+    //  * Revokes the given permission from the given marker in the given record.
+    //  *
+    //  * See [Record Security](page:learn/records/security) for more information.
+    //  *
+    //  * @param recordName the name of the record.
+    //  * @param marker the name of the marker that the permission should be removed from.
+    //  * @param permission the permission that should be removed.
+    //  * @param options the options for the operation.
+    //  *
+    //  * @dochash actions/os/records
+    //  * @docgroup 01-records
+    //  * @docname os.revokeRecordMarkerPermission
+    //  */
+    // function revokeRecordMarkerPermission(
+    //     recordName: string,
+    //     marker: string,
+    //     permission: AvailablePermissions,
+    //     options?: RecordActionOptions
+    // ): Promise<RevokeMarkerPermissionResult> {
+    //     const task = context.createTask();
+    //     const event = calcRevokeRecordMarkerPermission(
+    //         recordName,
+    //         marker,
+    //         permission,
+    //         options ?? {},
+    //         task.taskId
+    //     );
+    //     return addAsyncAction(task, event);
+    // }
 
     /**
      * Attempts to grant the current inst admin permissions in the given record for the rest of the day.
@@ -8494,6 +8497,80 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = listDataRecord(
             recordName,
+            startingAddress,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a partial list of [data](glossary:data-record) with the given marker that is stored in the given record.
+     * Optionally accepts the address before the first item that should be included in the list.
+     * Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
+     *
+     * @param recordKeyOrName the record name or a record key. This indicates the record that the data should be retrieved from.
+     * Note that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.
+     * @param marker The marker that needs to be assigned to the data items that should be included in the list.
+     * e.g. Using "publicRead" will return all data items with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options The options for the operation.
+     *
+     * @example Get a list of publicRead data items in a record
+     * const result = await os.listData('myRecord', 'publicRead');
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example List all the items that have the publicRead marker in a record
+     * let lastAddress;
+     * let items = [];
+     * while(true) {
+     *     const result = await os.listData('myRecord', 'publicRead', lastAddress);
+     *     if (result.success) {
+     *         console.log(result.items);
+     *         items.push(...result.items);
+     *         if (result.items.length > 0) {
+     *             lastAddress = result.items[result.items.length - 1].address;
+     *         } else {
+     *             // result.items is empty, so we can break out of the loop
+     *             break;
+     *         }
+     *     } else {
+     *         os.toast("Failed " + result.errorMessage);
+     *         break;
+     *     }
+     * }
+     *
+     * @example List publicRead items in descending order
+     * const result = await os.listData('myRecord', 'publicRead', null, { sort: 'descending' });
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listDataByMarker
+     */
+    function listDataByMarker(
+        recordKeyOrName: string,
+        marker: string,
+        startingAddress: string = null,
+        options: ListDataOptions = {}
+    ): Promise<ListDataResult> {
+        const recordName = isRecordKey(recordKeyOrName)
+            ? parseRecordKey(recordKeyOrName)[0]
+            : recordKeyOrName;
+        const task = context.createTask();
+        const event = listDataRecordByMarker(
+            recordName,
+            marker,
             startingAddress,
             options,
             task.taskId
