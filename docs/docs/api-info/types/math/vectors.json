@@ -90,7 +90,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 36,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L36"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L36"
                             }
                         ],
                         "signatures": [
@@ -133,7 +133,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 36,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L36"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L36"
                                     }
                                 ],
                                 "parameters": [
@@ -211,7 +211,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 16,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L16"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L16"
                             }
                         ],
                         "type": {
@@ -239,7 +239,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 21,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L21"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L21"
                             }
                         ],
                         "type": {
@@ -258,7 +258,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 169,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L169"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L169"
                             }
                         ],
                         "signatures": [
@@ -292,7 +292,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 169,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L169"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L169"
                                     }
                                 ],
                                 "parameters": [
@@ -343,7 +343,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 244,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L244"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L244"
                             }
                         ],
                         "signatures": [
@@ -377,7 +377,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 244,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L244"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L244"
                                     }
                                 ],
                                 "parameters": [
@@ -424,7 +424,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 330,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L330"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L330"
                             }
                         ],
                         "signatures": [
@@ -458,7 +458,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 330,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L330"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L330"
                                     }
                                 ],
                                 "parameters": [
@@ -505,7 +505,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 257,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L257"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L257"
                             }
                         ],
                         "signatures": [
@@ -539,7 +539,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 257,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L257"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L257"
                                     }
                                 ],
                                 "type": {
@@ -560,7 +560,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 220,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L220"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L220"
                             }
                         ],
                         "signatures": [
@@ -594,7 +594,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 220,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L220"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L220"
                                     }
                                 ],
                                 "parameters": [
@@ -645,7 +645,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 205,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L205"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L205"
                             }
                         ],
                         "signatures": [
@@ -679,7 +679,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 205,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L205"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L205"
                                     }
                                 ],
                                 "parameters": [
@@ -726,7 +726,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 302,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L302"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L302"
                             }
                         ],
                         "signatures": [
@@ -760,7 +760,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 302,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L302"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L302"
                                     }
                                 ],
                                 "type": {
@@ -785,7 +785,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 288,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L288"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L288"
                             }
                         ],
                         "signatures": [
@@ -819,7 +819,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 288,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L288"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L288"
                                     }
                                 ],
                                 "type": {
@@ -844,7 +844,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 272,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L272"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L272"
                             }
                         ],
                         "signatures": [
@@ -878,7 +878,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 272,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L272"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L272"
                                     }
                                 ],
                                 "type": {
@@ -899,7 +899,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 192,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L192"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L192"
                             }
                         ],
                         "signatures": [
@@ -942,7 +942,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 192,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L192"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L192"
                                     }
                                 ],
                                 "parameters": [
@@ -993,7 +993,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 315,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L315"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L315"
                             }
                         ],
                         "signatures": [
@@ -1027,7 +1027,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 315,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L315"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L315"
                                     }
                                 ],
                                 "type": {
@@ -1050,7 +1050,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 78,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L78"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L78"
                             }
                         ],
                         "signatures": [
@@ -1084,7 +1084,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 78,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L78"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L78"
                                     }
                                 ],
                                 "parameters": [
@@ -1157,7 +1157,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 55,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L55"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L55"
                             }
                         ],
                         "signatures": [
@@ -1191,7 +1191,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 55,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L55"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L55"
                                     }
                                 ],
                                 "parameters": [
@@ -1260,7 +1260,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 97,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L97"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L97"
                             }
                         ],
                         "signatures": [
@@ -1294,7 +1294,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 97,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L97"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L97"
                                     }
                                 ],
                                 "parameters": [
@@ -1367,7 +1367,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 150,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L150"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L150"
                             }
                         ],
                         "signatures": [
@@ -1401,7 +1401,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 150,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L150"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L150"
                                     }
                                 ],
                                 "parameters": [
@@ -1498,7 +1498,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 123,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L123"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L123"
                             }
                         ],
                         "signatures": [
@@ -1541,7 +1541,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 123,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L123"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L123"
                                     }
                                 ],
                                 "parameters": [
@@ -1667,7 +1667,7 @@
                         "fileName": "src/aux-common/math/Vector2.ts",
                         "line": 12,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector2.ts#L12"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L12"
                     }
                 ]
             },
@@ -1788,7 +1788,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 65,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L65"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L65"
                             }
                         ],
                         "signatures": [
@@ -1831,7 +1831,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 65,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L65"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L65"
                                     }
                                 ],
                                 "parameters": [
@@ -1930,7 +1930,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 18,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L18"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L18"
                             }
                         ],
                         "type": {
@@ -1958,7 +1958,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 23,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L23"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L23"
                             }
                         ],
                         "type": {
@@ -1986,7 +1986,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 28,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L28"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L28"
                             }
                         ],
                         "type": {
@@ -2005,7 +2005,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 33,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L33"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L33"
                             }
                         ],
                         "getSignature": {
@@ -2028,7 +2028,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 33,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L33"
+                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L33"
                                 }
                             ],
                             "type": {
@@ -2052,7 +2052,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 40,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L40"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L40"
                             }
                         ],
                         "getSignature": {
@@ -2075,7 +2075,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 40,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L40"
+                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L40"
                                 }
                             ],
                             "type": {
@@ -2099,7 +2099,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 47,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L47"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L47"
                             }
                         ],
                         "getSignature": {
@@ -2122,7 +2122,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 47,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L47"
+                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L47"
                                 }
                             ],
                             "type": {
@@ -2146,7 +2146,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 208,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L208"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L208"
                             }
                         ],
                         "signatures": [
@@ -2180,7 +2180,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 208,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L208"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L208"
                                     }
                                 ],
                                 "parameters": [
@@ -2231,7 +2231,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 312,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L312"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L312"
                             }
                         ],
                         "signatures": [
@@ -2265,7 +2265,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 312,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L312"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L312"
                                     }
                                 ],
                                 "parameters": [
@@ -2316,7 +2316,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 295,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L295"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L295"
                             }
                         ],
                         "signatures": [
@@ -2350,7 +2350,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 295,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L295"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L295"
                                     }
                                 ],
                                 "parameters": [
@@ -2397,7 +2397,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 405,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L405"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L405"
                             }
                         ],
                         "signatures": [
@@ -2431,7 +2431,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 405,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L405"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L405"
                                     }
                                 ],
                                 "parameters": [
@@ -2478,7 +2478,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 329,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L329"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L329"
                             }
                         ],
                         "signatures": [
@@ -2512,7 +2512,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 329,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L329"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L329"
                                     }
                                 ],
                                 "type": {
@@ -2533,7 +2533,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 267,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L267"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L267"
                             }
                         ],
                         "signatures": [
@@ -2567,7 +2567,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 267,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L267"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L267"
                                     }
                                 ],
                                 "parameters": [
@@ -2618,7 +2618,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 252,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L252"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L252"
                             }
                         ],
                         "signatures": [
@@ -2652,7 +2652,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 252,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L252"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L252"
                                     }
                                 ],
                                 "parameters": [
@@ -2699,7 +2699,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 377,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L377"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L377"
                             }
                         ],
                         "signatures": [
@@ -2733,7 +2733,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 377,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L377"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L377"
                                     }
                                 ],
                                 "type": {
@@ -2758,7 +2758,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 360,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L360"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L360"
                             }
                         ],
                         "signatures": [
@@ -2792,7 +2792,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 360,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L360"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L360"
                                     }
                                 ],
                                 "type": {
@@ -2817,7 +2817,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 344,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L344"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L344"
                             }
                         ],
                         "signatures": [
@@ -2851,7 +2851,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 344,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L344"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L344"
                                     }
                                 ],
                                 "type": {
@@ -2872,7 +2872,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 235,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L235"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L235"
                             }
                         ],
                         "signatures": [
@@ -2915,7 +2915,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 235,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L235"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L235"
                                     }
                                 ],
                                 "parameters": [
@@ -2966,7 +2966,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 390,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L390"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L390"
                             }
                         ],
                         "signatures": [
@@ -3000,7 +3000,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 390,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L390"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L390"
                                     }
                                 ],
                                 "type": {
@@ -3023,7 +3023,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 111,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L111"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L111"
                             }
                         ],
                         "signatures": [
@@ -3057,7 +3057,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 111,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L111"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L111"
                                     }
                                 ],
                                 "parameters": [
@@ -3130,7 +3130,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 86,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L86"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L86"
                             }
                         ],
                         "signatures": [
@@ -3164,7 +3164,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 86,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L86"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L86"
                                     }
                                 ],
                                 "parameters": [
@@ -3253,7 +3253,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 136,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L136"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L136"
                             }
                         ],
                         "signatures": [
@@ -3287,7 +3287,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 136,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L136"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L136"
                                     }
                                 ],
                                 "parameters": [
@@ -3360,7 +3360,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 189,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L189"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L189"
                             }
                         ],
                         "signatures": [
@@ -3394,7 +3394,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 189,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L189"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L189"
                                     }
                                 ],
                                 "parameters": [
@@ -3491,7 +3491,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 162,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L162"
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L162"
                             }
                         ],
                         "signatures": [
@@ -3534,7 +3534,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 162,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L162"
+                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L162"
                                     }
                                 ],
                                 "parameters": [
@@ -3670,7 +3670,7 @@
                         "fileName": "src/aux-common/math/Vector3.ts",
                         "line": 14,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/4e77fbf85/src/aux-common/math/Vector3.ts#L14"
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L14"
                     }
                 ]
             },
@@ -3708,7 +3708,7 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-3545": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
         "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
@@ -3718,7 +3718,7 @@
         "Vector3": "types/math/vectors",
         "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-3564": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
         "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
@@ -3736,9 +3736,9 @@
         "ARSupportedAction": "types/os/xr",
         "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3750": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3745": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
         "AddDropSnapAction": "types/os/portals",
         "id-2705": "AddDropSnapAction",
         "AddDropSnapPointsAction": "types/os/portals",
@@ -3752,9 +3752,9 @@
         "AuthData": "types/os/records",
         "id-3218": "AuthData",
         "CasualOSDevice": "types/os/system",
-        "id-3532": "CasualOSDevice",
+        "id-3533": "CasualOSDevice",
         "CasualOSVersion": "types/os/system",
-        "id-3524": "CasualOSVersion",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
         "id-200": "AxisAndAngle",
         "BeginRecordingAction": "types/os/audio",
@@ -3782,9 +3782,9 @@
         "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
         "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-3686": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-3682": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -3818,13 +3818,13 @@
         "EndRecordingAction": "types/os/audio",
         "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3721": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3717": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3740": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3736": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
         "id-203": "EulerAnglesRotation",
         "ExitFullscreenAction": "types/os/portals",
@@ -3838,17 +3838,17 @@
         "FromToRotation": "types/math/rotations",
         "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-3542": "GenericError",
+        "id-3543": "GenericError",
         "GetAverageFrameRateAction": "types/os/portals",
         "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3761": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3755": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3712": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3703": "GetDataSuccess",
+        "id-3704": "GetDataSuccess",
         "GetGeolocationAction": "types/os/geolocation",
         "id-3202": "GetGeolocationAction",
         "GetRoomOptionsFailure": "types/os/portals",
@@ -3870,13 +3870,13 @@
         "GoToTagAction": "types/os/portals",
         "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3789": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3787": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3775": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3773": "GrantRoleSuccess",
+        "id-3774": "GrantRoleSuccess",
         "HideHtmlAction": "types/os/portals",
         "id-2541": "HideHtmlAction",
         "HideTooltipAction": "types/os/portals",
@@ -3888,7 +3888,7 @@
         "ImageClassifierOptions": "types/os/image-classification",
         "id-2740": "ImageClassifierOptions",
         "InstUpdate": "types/os/spaces",
-        "id-3538": "InstUpdate",
+        "id-3539": "InstUpdate",
         "JoinRoomFailure": "types/os/portals",
         "id-2150": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os/portals",
@@ -3898,17 +3898,17 @@
         "LeaveRoomSuccess": "types/os/portals",
         "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3731": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3726": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
         "ListFormAnimationsAction": "types/os/animations",
         "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3804": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3801": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3808": "ListedStudio",
+        "id-3809": "ListedStudio",
         "LoadInstAction": "types/os/spaces",
         "id-2812": "LoadInstAction",
         "LoadSpaceAction": "types/os/spaces",
@@ -3976,9 +3976,9 @@
         "RecordActionOptions": "types/records/extra",
         "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3696": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3692": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
@@ -4000,7 +4000,7 @@
         "RejectAction": "types/os/event",
         "id-2905": "RejectAction",
         "RemoteAction": "types/os/event",
-        "id-3814": "RemoteAction",
+        "id-3815": "RemoteAction",
         "ReportInstAction": "types/os/moderation",
         "id-3292": "ReportInstAction",
         "RequestAuthDataAction": "types/os/records",
@@ -4008,13 +4008,13 @@
         "RequestFullscreenAction": "types/os/portals",
         "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3796": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3794": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3782": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3780": "RevokeRoleSuccess",
+        "id-3781": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os/portals",
         "id-3300": "RoomJoinOptions",
         "RoomOptions": "types/os/portals",
@@ -4110,9 +4110,9 @@
         "UnsuccessfulGeolocation": "types/os/geolocation",
         "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3768": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3766": "UpdateEventRecordSuccess",
+        "id-3767": "UpdateEventRecordSuccess",
         "UpdateHtmlAppAction": "types/os/portals",
         "id-2545": "UpdateHtmlAppAction",
         "UploadedFile": "types/os/files",
@@ -4126,11 +4126,13 @@
         "WebhookResult": "types/web",
         "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3744": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-3570": "AvailablePermissions",
+        "id-3571": "AvailablePermissions",
         "BarcodeFormat": "types/os/barcodes",
         "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
         "id-2093": "BotFilter",
         "BotSpace": "types/core",
@@ -4138,21 +4140,21 @@
         "CameraType": "types/os/camera",
         "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-3681": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
         "id-2621": "EaseMode",
         "EaseType": "types/animation",
         "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3716": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3735": "EraseFileResult",
+        "id-3736": "EraseFileResult",
         "Geolocation": "types/os/geolocation",
         "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3754": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3702": "GetDataResult",
+        "id-3703": "GetDataResult",
         "GetRoomOptionsResult": "types/os/portals",
         "id-2164": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os/portals",
@@ -4160,17 +4162,17 @@
         "GetRoomTrackOptionsResult": "types/os/portals",
         "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3786": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3772": "GrantRoleResult",
+        "id-3773": "GrantRoleResult",
         "JoinRoomResult": "types/os/portals",
         "id-2146": "JoinRoomResult",
         "LeaveRoomResult": "types/os/portals",
         "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3725": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3800": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
         "id-2088": "Mod",
         "PortalType": "types/core",
@@ -4178,13 +4180,13 @@
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3691": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3793": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3779": "RevokeRoleResult",
+        "id-3780": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os/portals",
         "id-2173": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os/portals",
@@ -4198,14 +4200,14 @@
         "TagFilter": "types/core",
         "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3765": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
         "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
         "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
         "id-240": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
+        "animateTag-byTag": "actions/os/animations",
         "id-585": "animateTag-byTag",
         "changeState": "actions/data",
         "id-401": "changeState",
@@ -4275,7 +4277,7 @@
         "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
         "id-1811": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
+        "clearAnimations": "actions/os/animations",
         "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-329": "clearTagMasks",

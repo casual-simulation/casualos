@@ -29,3 +29,21 @@
 .no-bots-message {
     text-align: center;
 }
+
+.md-list-item.double-line .md-list-item-text > span + span {
+    font-size: 12px;
+    white-space: initial;
+    text-overflow: initial;
+}
+
+.md-list-item.md-theme-dark.double-line .md-list-item-text > span + span {
+    color: var(--md-theme-dark-text-alternate-on-background, #ddd);
+}
+
+.md-list-item.md-theme-default.double-line .md-list-item-text > span + span {
+    color: var(--md-theme-default-text-alternate-on-background, #999);
+}
+
+.md-list-item.double-line .md-list-item-content {
+    min-height: 54px;
+}

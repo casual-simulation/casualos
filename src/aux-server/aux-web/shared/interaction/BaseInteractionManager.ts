@@ -416,7 +416,7 @@ export abstract class BaseInteractionManager {
             }
         }
 
-        if (input.currentInputType === InputType.Mouse) {
+        if (input.supportsHoverEvents) {
             if (input.isMouseFocusingOnElement(this._game.gameView.gameView)) {
                 const { gameObject, block } = this.findHoveredGameObject(
                     inputMethod,

@@ -6552,7 +6552,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @param jsonOrPdf the JSON data or the contents of the PDF file that should parsed.
      *
-     * @example Parse the list of bots in an @onFileUpload
+     * @example Parse the list of bots in an \@onFileUpload
      * let bots = os.parseBotsFromData(that.file.data);
      *
      * @dochash actions/os/files
@@ -10287,12 +10287,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * animateTag(bot, "homeX", null);
      *
-     * @dochash actions/utility
-     * @doctitle Utility Actions
-     * @docsidebar Utility
-     * @docdescription Utility actions make it easy to perform various tasks.
+     * @dochash actions/os/animations
      * @docgroup 01-utility-actions
-     *
      * @docname animateTag
      * @docid animateTag-byTag
      */
@@ -10348,10 +10344,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     tagMaskSpace: 'tempShared'
      * });
      *
-     * @dochash actions/utility
-     * @doctitle Utility Actions
-     * @docsidebar Utility
-     * @docdescription Utility actions make it easy to perform various tasks.
+     * @dochash actions/os/animations
      * @docgroup 01-utility-actions
      *
      * @docname animateTag
@@ -10609,7 +10602,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot the bot, bot ID, or list of bots that should cancel their animations.
      * @param tag the tag or list of tags that the animations should be canceled for.
      *
-     * @dochash actions/utility
+     * @dochash actions/os/animations
      * @docgroup 01-utility-actions
      * @docname clearAnimations
      */
@@ -13986,10 +13979,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param eventNames the array of event names that should be shouted. e.g. Using onClick for the name will trigger the {@tag @onClick} listener until a bot returns a value.
      * @param arg the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
      *
-     * @example Shout to the first bot that handles @onClick
+     * @example Shout to the first bot that handles \@onClick
      * priorityShout(['onClick']);
      *
-     * @example Shout to the first bot that handles @myTest or @mySecondTest
+     * @example Shout to the first bot that handles \@myTest or \@mySecondTest
      * priorityShout(['myTest', 'mySecondTest']);
      *
      * @example Priority shout with a color
@@ -14032,10 +14025,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param arg the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
      * @returns Returns a list which contains the values returned from each script that was run for the shout.
      *
-     * @example Send a @reset event to all bots
+     * @example Send a \@reset event to all bots
      * shout("reset");
      *
-     * @example Send a @hello event with your name
+     * @example Send a \@hello event with your name
      * shout("hello", "Bob");
      *
      * @dochash actions/os/event
@@ -14064,11 +14057,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param arg the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
      * @returns Returns a list which contains the values returned from each script that was run for the shout.
      *
-     * @example Send a @reset event to all bots named "Bob"
+     * @example Send a \@reset event to all bots named "Bob"
      * let bots = getBots("#name", "Bob");
      * whisper(bots, "reset");
      *
-     * @example Send a @setColor event to ourself
+     * @example Send a \@setColor event to ourself
      * whisper(this, "setColor", "red");
      *
      * @dochash actions/os/event

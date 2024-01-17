@@ -1,5 +1,29 @@
 # CasualOS Changelog
 
+## V3.2.10
+
+#### Date: 1/17/2024
+
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
+### :rocket: Features
+
+-   Added new BIOS options.
+    -   `local inst` - Works exactly like `static inst`.
+    -   `local` - Shorthand `local inst`.
+    -   `free inst` - Works exactly like `public inst`.
+    -   `free` - Shorthand for `free inst`.
+    -   `studio inst` - Works exactly like `private inst`.
+    -   `studio` - Shorthand for `studio inst`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using the keyboard to select a tag in the sheetPortal would cause the page to refresh.
+-   Fixed an issue where loading a studio inst for the first time after creating an account could fail.
+-   Fixed an issue where gridPortal input did not work in the OculusBrowser.
+
 ## V3.2.9
 
 #### Date: 1/3/2024

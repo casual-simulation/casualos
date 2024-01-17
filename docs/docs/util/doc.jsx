@@ -73,7 +73,7 @@ function memberTableOfContents(reflection, member) {
 
     let name;
     if (member.kind === ReflectionKind.Constructor) {
-        name = functionDefinition(member.signatures[0]);
+        name = functionDefinition(member.signatures[0], getChildName(member));
     } else if(member.kind === ReflectionKind.Method) {
         name = functionDefinition(member.signatures[0]);
     } else if(member.kind === ReflectionKind.Accessor) {
@@ -82,7 +82,7 @@ function memberTableOfContents(reflection, member) {
         name = propertyDefinition(member);
     }
 
-    name = `<code>${name}</code>`;
+    name = `<span>${name}</span>`;
 
     return {
         value: name,
@@ -193,14 +193,17 @@ export function apiTableOfContents(doc) {
                 level: 2
             });
 
-            toc.push(...classTableOfContents(c.reflection));
+            if (c.reflection.kind === ReflectionKind.Class) {
+                toc.push(...classTableOfContents(c.reflection));
+            }
+            // toc.push(...classTableOfContents(c.reflection));
         } else if (c.reflection.kind === ReflectionKind.CallSignature) {
             const name = getChildName(c.reflection);
             const id = getChildId(c.reflection);
             toc.push({
-                value: `<code>${functionDefinition(c.reflection, name)}</code>`,
+                value: `<span>${functionDefinition(c.reflection, name)}</span>`,
                 id: id,
-                level: 3
+                level: 2
             });
         } else if(c.reflection.kind === ReflectionKind.TypeAlias) {
             const name = getChildName(c.reflection);
@@ -216,7 +219,7 @@ export function apiTableOfContents(doc) {
             toc.push({
                 value: `<code>${functionDefinition(c.reflection, name)}</code>`,
                 id: id,
-                level: 3
+                level: 2
             });
         } else {
             const name = getChildName(c.reflection);
@@ -227,7 +230,7 @@ export function apiTableOfContents(doc) {
                 level: 2
             });
 
-            toc.push(...objectTableOfContents(c.reflection));
+            // toc.push(...objectTableOfContents(c.reflection));
         }
     }
 
@@ -238,9 +241,13 @@ export function ApiContents({doc}) {
     const contents = doc.contents;
     const references = doc.references;
     return (
-        <div className="api">
-            {contents.map(c => <ApiReflection key={c.id} reflection={c.reflection} references={references} />)}
-        </div>
+        <ul className="api api-list">
+            {contents.map(c => 
+                <li key={c.id} className="api-member-item">
+                    <ApiReflection reflection={c.reflection} references={references} />
+                </li>
+            )}
+        </ul>
     );
 }
 
@@ -351,9 +358,14 @@ export function ClassMembers(props) {
         <ReflectionBoundary reflection={reflection} root={true}>
             <div className="api">
                 <ReflectionDiscription reflection={reflection} references={props.references} />
-                {reflection.indexSignature ? <IndexSignature reflection={reflection} index={reflection.indexSignature} references={props.references} /> : ''}
-                {reflection.references ? <ClassReferences prop={reflection} references={props.references}/> : ''}
-                {children.map(c => <ClassMember key={c.name} member={c} link={memberLink(reflection, c)} references={props.references}/>)}
+                <Heading as='h3' id={`${reflection.name}-properties`}>Members</Heading>
+                <div>
+                    <ul className="class-members-list">
+                        {reflection.indexSignature ? <IndexSignature reflection={reflection} index={reflection.indexSignature} references={props.references} /> : ''}
+                        {reflection.references ? <ClassReferences prop={reflection} references={props.references}/> : ''}
+                        {children.map(c => <ClassMember key={c.name} member={c} link={memberLink(reflection, c)} references={props.references}/>)}
+                    </ul>
+                </div>
             </div>
         </ReflectionBoundary>
     );
@@ -361,12 +373,12 @@ export function ClassMembers(props) {
 
 export function IndexSignature({ reflection, index, references }) {
     const param = index.parameters[0];
-    return <div>
-        <Heading as='h3' id={`${reflection.name}-_index`}>Index Signature</Heading>
+    return <li className="class-member-item">
+        <Heading as='h4' id={`${reflection.name}-_index`}>Index Signature</Heading>
         <ReflectionDiscription reflection={index} references={references} />
         <pre><code>[{param.name}: <TypeLink type={param.type} references={references} />]: <TypeLink type={index.type} references={references} /></code></pre>
         <MemberExamples member={index} />
-    </div>
+    </li>
 }
 
 export function ReflectionDiscription({ reflection, references }) {
@@ -391,9 +403,10 @@ export function ClassMember(props) {
     
     return (
         <ReflectionBoundary reflection={props.member}>
-            <div>
+            <span role="separator" className="class-member-separator"></span>
+            <li className="class-member-item">
                 {detail}
-            </div>
+            </li>
         </ReflectionBoundary>
     )
 }
@@ -408,9 +421,9 @@ export function ClassMemberHeader(props) {
 
 export function ClassPropertyAccessor(props) {
     return (
-        <div>
-            <Heading as='h3' id={props.link}>
-                <code>{props.member.name}: <TypeLink type={props.member.getSignature.type} references={props.references}/></code>
+        <div className="class-member-property">
+            <Heading as='h4' id={props.link}>
+                <span className="class-member-name">{props.member.name}</span> <span className="class-member-type"><TypeLink type={props.member.getSignature.type} references={props.references}/></span>
             </Heading>
             <p>{props.member.getSignature.comment?.text}</p>
             {/* <CodeBlock language="json">{JSON.stringify(props.member, undefined, 2)}</CodeBlock> */}
@@ -441,9 +454,9 @@ export function ClassPropertyMember(props) {
     const id = getChildId(prop);
 
     return (
-        <div>
-            <Heading as='h3' id={props.link}>
-                <code>{name}{props.member.flags.isOptional ? '?' : ''}: {typeDetail}</code>
+        <div className="class-member-property">
+            <Heading as='h4' id={props.link}>
+                <span className="class-member-name">{name}{props.member.flags.isOptional ? <span className="class-member-optional">?</span> : ''}</span> <span className="class-member-type">{typeDetail}</span>
             </Heading>
             <ReflectionDiscription reflection={props.member} references={props.references} />
             {extraDetail}
@@ -454,14 +467,14 @@ export function ClassPropertyMember(props) {
 
 export function ClassReferences({ prop, references }) {
     const id = getChildId(prop);
-    return <div>
-        <Heading as='h3' id={`${id}-extra-functions`}>Extra Functions</Heading>
+    return <li className="class-member-item">
+        <Heading as='h4' id={`${id}-extra-functions`}>Extra Functions</Heading>
         <p>The extra functions that are available on this type.</p>
         <Details>
             <p>See the following functions for more information:</p>
             <Markdown children={prop.references} references={references}/>
         </Details>
-    </div>
+    </li>
 }
 
 export function ClassPropertyReferences({ prop, references }) {
@@ -579,7 +592,7 @@ export function FunctionSignature({func, sig, link, name, references}) {
     const params = (sig.parameters || []);
     return (
         <div>
-            <Heading as='h3' id={link}>
+            <Heading as='h4' id={link}>
                 <FunctionDefinition func={func} sig={sig} name={name} references={references}/>
             </Heading>
             <FunctionDescription sig={sig} references={references} />
@@ -633,7 +646,7 @@ export function FunctionDefinition({ func, sig, name, references }) {
     }
 
     return (
-        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}{paramsDetail}: <TypeLink type={sig.type} references={references}/></code>
+        <><span className="function-member-name">{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}{paramsDetail}</span>: <span className="function-member-type"><TypeLink type={sig.type} references={references}/></span></>
     );
 }
 
@@ -651,12 +664,12 @@ export function FunctionParameter({ param, index, references }) {
     let detail;
     if (param.flags.isRest && param.type.elementType) {
         if(index === 0) {
-            detail = <p><strong>Each parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true} references={references}/></p>
+            detail = <p><em>Each parameter</em> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true} references={references}/></p>
         } else {
-            detail = <p><strong>Each other parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true} references={references}/></p>
+            detail = <p><em>Each other parameter</em> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true} references={references}/></p>
         }
     } else {
-        detail = <p>The <strong>{indexName(index)} parameter</strong> is{param.flags.isOptional ? ' optional and is' : ''} a <TypeLink type={param.type} references={references}/> and <ParameterDescription param={param} references={references}/></p>
+        detail = <p>The <em>{indexName(index)} parameter</em> is{param.flags.isOptional ? ' optional and is' : ''} a <TypeLink type={param.type} references={references}/> and <ParameterDescription param={param} references={references}/></p>
     }
 
     return detail;
@@ -735,14 +748,31 @@ function parameterDescription(param, isRest) {
     return comment;
 }
 
+const wellKnownTypes = new Map([
+    ['ArrayBuffer', 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer'],
+    ['Blob', 'https://developer.mozilla.org/en-US/docs/Web/API/Blob'],
+    ['Uint8Array', 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array'],
+    ['RegExp', 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp'],
+    ['Function', 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function'],
+    ['Error', 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error'],
+]);
+
 function TypeLink({ type, references, isInUnionOrArray }) {
     if (type.type === 'intrinsic') {
         return <span>{type.name}</span>
     } else if (type.name) {
+
+        if (type.name === type.target?.qualifiedName && wellKnownTypes.has(type.name)) {
+            const link = wellKnownTypes.get(type.name);
+            return <><a className="type-link" href={link}>{type.name}</a></>
+        }
+
         if (type.name === 'Promise' && type.target?.qualifiedName === 'Promise' && type.typeArguments && type.typeArguments.length === 1) {
-            return <><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
+            return <><a className="type-link" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
         } else if (type.name === 'Partial' && type.target?.qualifiedName === 'Partial' && type.typeArguments && type.typeArguments.length === 1) {
-            return <><a href="https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype">Partial</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
+            return <><a className="type-link" href="https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype">Partial</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
+        } else if (type.name === 'Omit' && type.target?.qualifiedName === 'Omit' && type.typeArguments && type.typeArguments.length === 2) {
+            return <><a className="type-link" href="https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys">Omit</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>, <TypeLink type={type.typeArguments[1]} references={references}/>&gt;</>
         }
 
         let href = `#${type.name}`;
@@ -759,7 +789,7 @@ function TypeLink({ type, references, isInUnionOrArray }) {
                 console.log('Missing reference for', type.id, type.name, type, 'it is likely that the type does not have a @docid or @docname comment');
             }
         }
-        return <Link href={href}>{type.name}</Link>
+        return <Link className="type-link" href={href}>{type.name}</Link>
     } else if (type.type === 'union') {
         return <span>({type.types.map((t, i) => 
             <React.Fragment key={i}>
@@ -801,6 +831,14 @@ function TypeLink({ type, references, isInUnionOrArray }) {
             <TypeLink type={t} references={references} isInUnionOrArray={true} />
         </>);
         return types;
+    } else if(type.type === 'tuple') {
+        const types = type.elements.map((t, index) => <>
+            {index > 0 ? ', ' : ''}
+            <TypeLink type={t} references={references} isInUnionOrArray={true} />
+        </>);
+        return <span>[{types}]</span>
+    } else if (type.type === 'typeOperator') {
+        return <span>{type.operator} <TypeLink type={type.target} references={references} isInUnionOrArray={true} /></span>
     } else {
         return '' + JSON.stringify(type);
     }

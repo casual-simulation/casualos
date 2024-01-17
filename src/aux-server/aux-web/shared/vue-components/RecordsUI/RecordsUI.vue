@@ -86,8 +86,12 @@
             <md-dialog-title>Grant inst Admin?</md-dialog-title>
             <md-dialog-content class="allow-record-data-dialog-content">
                 <p>
-                    Do you want to grant this inst (<strong>{{ grantInstId }}</strong
-                    >) admin permission to {{ allowRecordName }}?
+                    This will allow the inst (<strong>{{ grantInstId }}</strong
+                    >) to access your personal cloud data (<a
+                        target="_blank"
+                        :href="grantRecordsOrigin"
+                        >{{ grantRecordsOrigin }}</a
+                    >, Record Name: {{ allowRecordName }}).
                 </p>
                 <p>
                     This will allow the inst to perform the following actions when you are logged
@@ -103,6 +107,15 @@
                     <li>Grant or revoke any permissions to any resource markers.</li>
                     <li>Grant or revoke any roles to any users.</li>
                 </ul>
+                <p class="important-warning">
+                    <strong
+                        >Important warning: If you grant this inst Admin access, other public insts
+                        may have access to your cloud data if you visit them and it has been
+                        programmed to do so. Please be careful when visiting public insts and make
+                        sure you know the person sharing, whom you may be sharing with and what
+                        permissions they have set.</strong
+                    >
+                </p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="grantInstPermission()">Grant Admin</md-button>
