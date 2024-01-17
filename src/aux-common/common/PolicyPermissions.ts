@@ -103,6 +103,9 @@ export type InstActionKinds =
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
+ * @doctitle Permissions Types
+ * @docsidebar Permissions
+ * @docdescription Types that represent permissions that control access to resources.
  * @docname AvailablePermissions
  */
 export type AvailablePermissions =
