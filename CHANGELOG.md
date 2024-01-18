@@ -14,6 +14,10 @@
         -   `redis.connectionExpireSeconds` defaults to `60 * 60 * 3` (3 hours)
         -   `redis.connectionExpireMode` defaults to `null`
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where branch info was being duplicated for temporary branches.
+
 ## V3.2.10
 
 #### Date: 1/17/2024
