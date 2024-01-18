@@ -62,6 +62,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
 
     async clearDirtyBranches(generation: string): Promise<void> {
         const key = this._generationKey(generation);
+        console.log('[RedisTempInstRecordsStore] Deleting key:', key);
         await this._redis.del(key);
     }
 
@@ -146,13 +147,34 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             let [recordName, inst, branch] = updatesKey
                 .slice(`${this._globalNamespace.length}/updates/`.length)
                 .split('/');
-            multi.del([
-                updatesKey,
-                this._getBranchSizeKey(recordName, inst, branch),
-                this._getBranchInfoKey(recordName, inst, branch),
-            ]);
+            const branchSizeKey = this._getBranchSizeKey(
+                recordName,
+                inst,
+                branch
+            );
+            const branchInfoKey = this._getBranchInfoKey(
+                recordName,
+                inst,
+                branch
+            );
+            console.log(
+                '[RedisTempInstRecordsStore] Deleting key:',
+                updatesKey
+            );
+            console.log(
+                '[RedisTempInstRecordsStore] Deleting key:',
+                branchSizeKey
+            );
+            console.log(
+                '[RedisTempInstRecordsStore] Deleting key:',
+                branchInfoKey
+            );
+            multi.del([updatesKey, branchSizeKey, branchInfoKey]);
         }
-        multi.del([key, this._getInstSizeKey(recordName, inst)]);
+        const instSizeKey = this._getInstSizeKey(recordName, inst);
+        console.log('[RedisTempInstRecordsStore] Deleting key:', key);
+        console.log('[RedisTempInstRecordsStore] Deleting key:', instSizeKey);
+        multi.del([key, instSizeKey]);
         await multi.exec();
     }
 
@@ -218,6 +240,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             this.addInstSize(recordName, inst, sizeInBytes),
             this.addBranchSize(recordName, inst, branch, sizeInBytes),
             this._redis.sAdd(branchesKey, key),
+            this._expire(branchesKey, null),
         ]);
     }
 
@@ -263,6 +286,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
 
     async deleteInstSize(recordName: string, inst: string): Promise<void> {
         const key = this._getInstSizeKey(recordName, inst);
+        console.log('[RedisTempInstRecordsStore] Deleting key:', key);
         await this._redis.del(key);
     }
 
@@ -316,6 +340,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         branch: string
     ): Promise<void> {
         const key = this._getBranchSizeKey(recordName, inst, branch);
+        console.log('[RedisTempInstRecordsStore] Deleting key:', key);
         await this._redis.del(key);
     }
 
@@ -343,22 +368,30 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         inst: string,
         branch: string
     ): Promise<void> {
-        const key = this._getUpdatesKey(recordName, inst, branch);
+        const infoKey = this._getBranchInfoKey(recordName, inst, branch);
+        const updatesKey = this._getUpdatesKey(recordName, inst, branch);
         const branchSize = await this.getBranchSize(recordName, inst, branch);
+
+        console.log('[RedisTempInstRecordsStore] Deleting key:', infoKey);
+        console.log('[RedisTempInstRecordsStore] Deleting key:', updatesKey);
+
         await Promise.all([
-            this._redis.del(key),
+            this._redis.del([infoKey, updatesKey]),
             this.deleteBranchSize(recordName, inst, branch),
             this.addInstSize(recordName, inst, -branchSize),
         ]);
     }
 
-    private async _expire(key: string) {
+    private async _expire(
+        key: string,
+        mode: 'NX' | 'XX' | 'LT' | 'GT' | null = this._instDataExpirationMode
+    ) {
         if (this._instDataExpirationSeconds) {
-            if (this._instDataExpirationMode) {
+            if (mode) {
                 await this._redis.expire(
                     key,
                     this._instDataExpirationSeconds,
-                    this._instDataExpirationMode
+                    mode
                 );
             } else {
                 await this._redis.expire(key, this._instDataExpirationSeconds);
