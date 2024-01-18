@@ -598,14 +598,16 @@ export class ServerBuilder implements SubscriptionLike {
             options.redis.tempInstRecordsStoreNamespace,
             redis,
             options.redis.tempInstRecordsLifetimeSeconds,
-            options.redis.tempInstRecordsLifetimeExpireMode
+            options.redis.tempInstRecordsLifetimeExpireMode,
+            false
         );
         this._instRecordsStore = new SplitInstRecordsStore(
             new RedisTempInstRecordsStore(
                 options.redis.instRecordsStoreNamespace,
                 redis,
                 options.redis.publicInstRecordsLifetimeSeconds,
-                options.redis.publicInstRecordsLifetimeExpireMode
+                options.redis.publicInstRecordsLifetimeExpireMode,
+                true
             ),
             new PrismaInstRecordsStore(prisma)
         );
