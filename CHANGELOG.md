@@ -1,8 +1,26 @@
 # CasualOS Changelog
 
+## V3.2.11
+
+#### Date: 1/18/2024
+
+### :rocket: Features
+
+-   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
+    -   Configurable by the `redis.tempInstRecordsLifetimeSeconds`, `redis.tempInstRecordsLifetimeExpireMode`, `redis.connectionExpireSeconds`, and `redis.connectionExpireMode` options in SERVER_CONFIG.
+    -   Defaults:
+        -   `redis.tempInstRecordsLifetimeSeconds` defaults to `60 * 60 * 24` (24 hours)
+        -   `redis.tempInstRecordsLifetimeExpireMode` defaults to `null`
+        -   `redis.connectionExpireSeconds` defaults to `60 * 60 * 3` (3 hours)
+        -   `redis.connectionExpireMode` defaults to `null`
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where branch info was being duplicated for temporary branches.
+
 ## V3.2.10
 
-#### Date: 1/9/2024
+#### Date: 1/17/2024
 
 ### :boom: Breaking Changes
 
@@ -22,6 +40,7 @@
 
 -   Fixed an issue where using the keyboard to select a tag in the sheetPortal would cause the page to refresh.
 -   Fixed an issue where loading a studio inst for the first time after creating an account could fail.
+-   Fixed an issue where gridPortal input did not work in the OculusBrowser.
 
 ## V3.2.9
 

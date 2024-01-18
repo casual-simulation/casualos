@@ -233,13 +233,25 @@ export class WebsocketController {
                         );
 
                     if (count <= 0) {
-                        const branch = await this._instStore.getBranchByName(
-                            connection.recordName,
-                            connection.inst,
-                            connection.branch
-                        );
+                        const branch =
+                            (await this._instStore.getBranchByName(
+                                connection.recordName,
+                                connection.inst,
+                                connection.branch
+                            )) ??
+                            (await this._temporaryStore.getBranchByName(
+                                connection.recordName,
+                                connection.inst,
+                                connection.branch
+                            ));
 
                         if (branch.temporary) {
+                            console.log(
+                                '[WebsocketController] Deleting temporary branch',
+                                connection.recordName,
+                                connection.inst,
+                                connection.branch
+                            );
                             await this._temporaryStore.deleteBranch(
                                 connection.recordName,
                                 connection.inst,
@@ -522,11 +534,17 @@ export class WebsocketController {
                         branch
                     );
                 if (count <= 0) {
-                    const branch = await this._instStore.getBranchByName(
-                        connection.recordName,
-                        connection.inst,
-                        connection.branch
-                    );
+                    const branch =
+                        (await this._instStore.getBranchByName(
+                            connection.recordName,
+                            connection.inst,
+                            connection.branch
+                        )) ??
+                        (await this._temporaryStore.getBranchByName(
+                            connection.recordName,
+                            connection.inst,
+                            connection.branch
+                        ));
 
                     if (branch.temporary) {
                         await this._temporaryStore.deleteBranch(
@@ -534,6 +552,9 @@ export class WebsocketController {
                             connection.inst,
                             connection.branch
                         );
+
+                        // Delete the branch from the permentent store even if it is temporary
+                        // because it is possible that the branch was created before temporary branches were only stored in the temporary store.
                         await this._instStore.deleteBranch(
                             connection.recordName,
                             connection.inst,
@@ -608,11 +629,17 @@ export class WebsocketController {
         }
 
         if (event.updates) {
-            let branch = await this._instStore.getBranchByName(
-                event.recordName,
-                event.inst,
-                event.branch
-            );
+            let branch =
+                (await this._instStore.getBranchByName(
+                    event.recordName,
+                    event.inst,
+                    event.branch
+                )) ??
+                (await this._temporaryStore.getBranchByName(
+                    event.recordName,
+                    event.inst,
+                    event.branch
+                ));
             const updateSize = sumBy(event.updates, (u) => u.length);
             const config = await this._config.getSubscriptionConfiguration();
             let features: FeaturesConfiguration = null;
@@ -2057,9 +2084,13 @@ export class WebsocketController {
         temporary: boolean,
         linkedInst: InstWithSubscriptionInfo
     ) {
-        let b = await this._instStore.getBranchByName(recordName, inst, branch);
-        if (!b) {
-            if (temporary) {
+        if (temporary) {
+            let b = await this._temporaryStore.getBranchByName(
+                recordName,
+                inst,
+                branch
+            );
+            if (!b) {
                 // Save the branch to the temp store
                 await this._temporaryStore.saveBranchInfo({
                     recordName: recordName,
@@ -2068,18 +2099,37 @@ export class WebsocketController {
                     temporary: true,
                     linkedInst: linkedInst,
                 });
+                b = await this._temporaryStore.getBranchByName(
+                    recordName,
+                    inst,
+                    branch
+                );
             }
-            // Save the branch to the inst store
-            await this._instStore.saveBranch({
-                branch: branch,
-                inst: inst,
-                recordName: recordName,
-                temporary: temporary || false,
-            });
-            b = await this._instStore.getBranchByName(recordName, inst, branch);
-        }
 
-        return b;
+            return b;
+        } else {
+            let b = await this._instStore.getBranchByName(
+                recordName,
+                inst,
+                branch
+            );
+            if (!b) {
+                // Save the branch to the inst store
+                await this._instStore.saveBranch({
+                    branch: branch,
+                    inst: inst,
+                    recordName: recordName,
+                    temporary: temporary || false,
+                });
+                b = await this._instStore.getBranchByName(
+                    recordName,
+                    inst,
+                    branch
+                );
+            }
+
+            return b;
+        }
     }
 
     private async _saveBranchUpdates(
