@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V3.2.11
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
+    -   Configurable by the `redis.tempInstRecordsLifetimeSeconds`, `redis.tempInstRecordsLifetimeExpireMode`, `redis.connectionExpireSeconds`, and `redis.connectionExpireMode` options in SERVER_CONFIG.
+    -   Defaults:
+        -   `redis.tempInstRecordsLifetimeSeconds` defaults to `60 * 60 * 24` (24 hours)
+        -   `redis.tempInstRecordsLifetimeExpireMode` defaults to `null`
+        -   `redis.connectionExpireSeconds` defaults to `60 * 60 * 3` (3 hours)
+        -   `redis.connectionExpireMode` defaults to `null`
+
 ## V3.2.10
 
 #### Date: 1/17/2024
