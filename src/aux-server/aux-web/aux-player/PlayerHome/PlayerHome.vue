@@ -15,7 +15,7 @@
         >
             <md-dialog-title>BIOS</md-dialog-title>
             <md-dialog-content>
-                <md-field>
+                <md-field class="bios-selection-field">
                     <label for="biosOption">bios=</label>
                     <md-select v-model="biosSelection" name="biosOption" id="biosOption">
                         <bios-option
@@ -32,6 +32,11 @@
                         </bios-option>
                     </md-select>
                 </md-field>
+                <span
+                    class="selection-bios-description"
+                    v-if="hasOptionDescription(biosSelection)"
+                    >{{ getOptionDescription(biosSelection) }}</span
+                >
 
                 <md-field v-if="biosSelection === 'enter join code'" :class="joinCodeClass">
                     <label for="joinCode">joinCode=</label>
