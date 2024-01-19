@@ -1,7 +1,8 @@
 import {
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
-} from '@casual-simulation/aux-common';
+} from '../partitions';
+import { z } from 'zod';
 
 /**
  * The possible BIOS options.
@@ -29,6 +30,23 @@ export type BiosOption =
     | 'sign in'
     | 'sign up'
     | 'sign out';
+
+export const BIOS_OPTION_SCHEMA = z.enum([
+    'enter join code',
+    'join inst',
+    'static inst',
+    'local inst',
+    'local',
+    'public inst',
+    'private inst',
+    'free inst',
+    'free',
+    'studio inst',
+    'studio',
+    'sign in',
+    'sign up',
+    'sign out',
+]);
 
 /**
  * Defines an interface for the configuration that the web client should try to pull from the server.
@@ -148,3 +166,25 @@ export interface WebConfig {
      */
     automaticBiosOption?: BiosOption;
 }
+
+export const WEB_CONFIG_SCHEMA = z.object({
+    version: null,
+    causalRepoConnectionProtocol: z.enum(['websocket', 'apiary-aws']),
+    causalRepoConnectionUrl: z.string(),
+    collaborativeRepoLocalPersistence: z.boolean(),
+    staticRepoLocalPersistence: z.boolean(),
+    sharedPartitionsVersion: z.enum(['v2']),
+    vmOrigin: z.string().nullable(),
+    authOrigin: z.string().nullable(),
+    recordsOrigin: z.string().nullable(),
+    disableCollaboration: z.boolean().nullable(),
+    ab1BootstrapURL: z.string().nullable(),
+    arcGisApiKey: z.string().nullable(),
+    jitsiAppName: z.string().nullable(),
+    what3WordsApiKey: z.string().nullable(),
+    playerMode: z.enum(['player', 'builder']).nullable(),
+    requirePrivoLogin: z.boolean(),
+    allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable(),
+    defaultBiosOption: BIOS_OPTION_SCHEMA.nullable(),
+    automaticBiosOption: BIOS_OPTION_SCHEMA.nullable(),
+});
