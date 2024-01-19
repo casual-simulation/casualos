@@ -155,7 +155,8 @@ export default class PlayerHome extends Vue {
         if (
             isPublicInst(this.biosSelection) ||
             isPrivateInst(this.biosSelection) ||
-            isStaticInst(this.biosSelection)
+            isStaticInst(this.biosSelection) ||
+            isJoinCode(this.biosSelection)
         ) {
             return 'Load';
         } else if (
