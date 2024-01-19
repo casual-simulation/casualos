@@ -4,8 +4,14 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `join inst,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
 ### :rocket: Features
 
+-   Added the `join inst` BIOS option as an alternative to `enter join code`.
+-   Added buttons for the `sign in`, `sign up`, and `sign out` BIOS options.
 -   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
     -   Configurable by the `redis.tempInstRecordsLifetimeSeconds`, `redis.tempInstRecordsLifetimeExpireMode`, `redis.connectionExpireSeconds`, and `redis.connectionExpireMode` options in SERVER_CONFIG.
     -   Defaults:
