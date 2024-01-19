@@ -26,7 +26,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " shout will be triggered.\n\nNote that separate instances cannot interact directly. They must instead interact via super shouts"
+                            "text": " shout will be triggered.\r\n\r\nNote that separate instances cannot interact directly. They must instead interact via super shouts"
                         }
                     ],
                     "blockTags": [
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nLoad the \"fun\" inst.\nos.loadInst(\"fun\");\n```"
+                                    "text": "```ts\nLoad the \"fun\" inst.\r\nos.loadInst(\"fun\");\n```"
                                 }
                             ]
                         },
@@ -73,7 +73,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6470,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6470"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6470"
                     }
                 ],
                 "parameters": [
@@ -108,11 +108,11 @@
                 }
             },
             "comment": {
-                "text": "Loads the given inst into the current browser tab. When the inst is loaded, the @onInstJoined shout will be triggered.\n\nNote that separate instances cannot interact directly. They must instead interact via super shouts",
+                "text": "Loads the given inst into the current browser tab. When the inst is loaded, the @onInstJoined shout will be triggered.\r\n\r\nNote that separate instances cannot interact directly. They must instead interact via super shouts",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nLoad the \"fun\" inst.\nos.loadInst(\"fun\");\n```"
+                        "text": "```ts\nLoad the \"fun\" inst.\r\nos.loadInst(\"fun\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -161,7 +161,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nUnload the \"fun\" inst.\nos.unloadInst(\"fun\");\n```"
+                                    "text": "```ts\nUnload the \"fun\" inst.\r\nos.unloadInst(\"fun\");\n```"
                                 }
                             ]
                         },
@@ -199,7 +199,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6487,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6487"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6487"
                     }
                 ],
                 "parameters": [
@@ -238,7 +238,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nUnload the \"fun\" inst.\nos.unloadInst(\"fun\");\n```"
+                        "text": "```ts\nUnload the \"fun\" inst.\r\nos.unloadInst(\"fun\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -279,7 +279,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nEnable collaboration on this device.\nawait os.enableCollaboration();\n```"
+                                    "text": "```ts\nEnable collaboration on this device.\r\nawait os.enableCollaboration();\n```"
                                 }
                             ]
                         },
@@ -317,7 +317,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5695,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5695"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5695"
                     }
                 ],
                 "type": {
@@ -341,7 +341,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nEnable collaboration on this device.\nawait os.enableCollaboration();\n```"
+                        "text": "```ts\nEnable collaboration on this device.\r\nawait os.enableCollaboration();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -373,7 +373,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets whether the current session was loaded with collaborative features enabled.\n\nWhen "
+                            "text": "Gets whether the current session was loaded with collaborative features enabled.\r\n\r\nWhen "
                         },
                         {
                             "kind": "code",
@@ -405,7 +405,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ") spaces with other players.\nWhen "
+                            "text": ") spaces with other players.\r\nWhen "
                         },
                         {
                             "kind": "code",
@@ -430,7 +430,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nToast whether the current session is collaborative.\nconst isCollaborative = os.isCollaborative();\nos.toast(isCollaborative ? \"We are collaborative!\" : \"We are not collaborative!\");\n```"
+                                    "text": "```ts\nToast whether the current session is collaborative.\r\nconst isCollaborative = os.isCollaborative();\r\nos.toast(isCollaborative ? \"We are collaborative!\" : \"We are not collaborative!\");\n```"
                                 }
                             ]
                         },
@@ -495,7 +495,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5677,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5677"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5677"
                     }
                 ],
                 "type": {
@@ -504,11 +504,11 @@
                 }
             },
             "comment": {
-                "text": "Gets whether the current session was loaded with collaborative features enabled.\n\nWhen `true`, CasualOS will attempt to sync the `shared` (including `tempShared` and `remoteTempShared`) spaces with other players.\nWhen `false`, CasualOS will treat all the shared spaces like they are all `tempLocal`.",
+                "text": "Gets whether the current session was loaded with collaborative features enabled.\r\n\r\nWhen `true`, CasualOS will attempt to sync the `shared` (including `tempShared` and `remoteTempShared`) spaces with other players.\r\nWhen `false`, CasualOS will treat all the shared spaces like they are all `tempLocal`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nToast whether the current session is collaborative.\nconst isCollaborative = os.isCollaborative();\nos.toast(isCollaborative ? \"We are collaborative!\" : \"We are not collaborative!\");\n```"
+                        "text": "```ts\nToast whether the current session is collaborative.\r\nconst isCollaborative = os.isCollaborative();\r\nos.toast(isCollaborative ? \"We are collaborative!\" : \"We are not collaborative!\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -552,7 +552,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Applies the given updates to the current inst. Returns a promise that resolves once the updates have been applied.\n\nNote that you can call this function with the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.\n\nThis feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time."
+                            "text": "Applies the given updates to the current inst. Returns a promise that resolves once the updates have been applied.\r\n\r\nNote that you can call this function with the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.\r\n\r\nThis feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time."
                         }
                     ],
                     "blockTags": [
@@ -561,7 +561,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nApply an update that was saved to a tag\nawait os.applyUpdatesToInst([ tags.savedUpdate ]);\n```"
+                                    "text": "```ts\nApply an update that was saved to a tag\r\nawait os.applyUpdatesToInst([ tags.savedUpdate ]);\n```"
                                 }
                             ]
                         },
@@ -599,7 +599,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9776,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9776"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9776"
                     }
                 ],
                 "parameters": [
@@ -648,11 +648,11 @@
                 }
             },
             "comment": {
-                "text": "Applies the given updates to the current inst. Returns a promise that resolves once the updates have been applied.\n\nNote that you can call this function with the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.\n\nThis feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.",
+                "text": "Applies the given updates to the current inst. Returns a promise that resolves once the updates have been applied.\r\n\r\nNote that you can call this function with the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.\r\n\r\nThis feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nApply an update that was saved to a tag\nawait os.applyUpdatesToInst([ tags.savedUpdate ]);\n```"
+                        "text": "```ts\nApply an update that was saved to a tag\r\nawait os.applyUpdatesToInst([ tags.savedUpdate ]);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -684,7 +684,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates an inst update that, when applied, ensures the given bots are created on this inst. Returns a promise that resolves with the inst update.\n\nNote that you can apply the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.\n\nThis feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.\n\nUnlike "
+                            "text": "Creates an inst update that, when applied, ensures the given bots are created on this inst. Returns a promise that resolves with the inst update.\r\n\r\nNote that you can apply the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.\r\n\r\nThis feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.\r\n\r\nUnlike "
                         },
                         {
                             "kind": "text",
@@ -701,7 +701,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate an update with this bot and save it to a tag\nconst update = await os.createInitializationUpdate([thisBot]);\ntags.savedUpdate = update;\n```"
+                                    "text": "```ts\nCreate an update with this bot and save it to a tag\r\nconst update = await os.createInitializationUpdate([thisBot]);\r\ntags.savedUpdate = update;\n```"
                                 }
                             ]
                         },
@@ -710,7 +710,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate an update with all the bots in the home dimension\nconst update = await os.createInitializationUpdate(getBots(inDimension('home')));\ntags.savedUpdate = update;\n```"
+                                    "text": "```ts\nCreate an update with all the bots in the home dimension\r\nconst update = await os.createInitializationUpdate(getBots(inDimension('home')));\r\ntags.savedUpdate = update;\n```"
                                 }
                             ]
                         },
@@ -748,7 +748,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9744,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9744"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9744"
                     }
                 ],
                 "parameters": [
@@ -801,15 +801,15 @@
                 }
             },
             "comment": {
-                "text": "Creates an inst update that, when applied, ensures the given bots are created on this inst. Returns a promise that resolves with the inst update.\n\nNote that you can apply the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.\n\nThis feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.\n\nUnlike os.getCurrentInstUpdate, this function creates an update that is not linked to this inst. This means that applying the update to the inst it was created in will create duplicate bots.",
+                "text": "Creates an inst update that, when applied, ensures the given bots are created on this inst. Returns a promise that resolves with the inst update.\r\n\r\nNote that you can apply the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.\r\n\r\nThis feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.\r\n\r\nUnlike os.getCurrentInstUpdate, this function creates an update that is not linked to this inst. This means that applying the update to the inst it was created in will create duplicate bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate an update with this bot and save it to a tag\nconst update = await os.createInitializationUpdate([thisBot]);\ntags.savedUpdate = update;\n```"
+                        "text": "```ts\nCreate an update with this bot and save it to a tag\r\nconst update = await os.createInitializationUpdate([thisBot]);\r\ntags.savedUpdate = update;\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate an update with all the bots in the home dimension\nconst update = await os.createInitializationUpdate(getBots(inDimension('home')));\ntags.savedUpdate = update;\n```"
+                        "text": "```ts\nCreate an update with all the bots in the home dimension\r\nconst update = await os.createInitializationUpdate(getBots(inDimension('home')));\r\ntags.savedUpdate = update;\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -841,7 +841,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Retrieves an inst update that represents the current local shared state of the inst. Returns a promise that resolves with the update.\n\nNote that the inst update only contains bots and tag masks from the "
+                            "text": "Retrieves an inst update that represents the current local shared state of the inst. Returns a promise that resolves with the update.\r\n\r\nNote that the inst update only contains bots and tag masks from the "
                         },
                         {
                             "kind": "code",
@@ -849,7 +849,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " space. Useful for saving the current shared state of the inst so that it can be restored later or transferred to another inst.\n\nUnlike "
+                            "text": " space. Useful for saving the current shared state of the inst so that it can be restored later or transferred to another inst.\r\n\r\nUnlike "
                         },
                         {
                             "kind": "text",
@@ -866,7 +866,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSave the current inst state to a local bot\nconst update = await os.getCurrentInstUpdate();\ncreate({\n    space: 'local',\n    backup: true,\n    timestamp: update.timestamp,\n    update: update\n});\n```"
+                                    "text": "```ts\nSave the current inst state to a local bot\r\nconst update = await os.getCurrentInstUpdate();\r\ncreate({\r\n    space: 'local',\r\n    backup: true,\r\n    timestamp: update.timestamp,\r\n    update: update\r\n});\n```"
                                 }
                             ]
                         },
@@ -875,7 +875,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRestore from a local bot\nconst savedUpdates = getBots(bySpace('local'), byTag('backup', true));\nsavedUpdates.sort((a, b) => b.timestamp - a.timestamp);\n\nif (savedUpdates.length > 0) {\n    const update = savedUpdates[0].tags.update;\n    await os.applyUpdatesToInst([update]);\n    os.toast(\"Restored!\");\n}\n```"
+                                    "text": "```ts\nRestore from a local bot\r\nconst savedUpdates = getBots(bySpace('local'), byTag('backup', true));\r\nsavedUpdates.sort((a, b) => b.timestamp - a.timestamp);\r\n\r\nif (savedUpdates.length > 0) {\r\n    const update = savedUpdates[0].tags.update;\r\n    await os.applyUpdatesToInst([update]);\r\n    os.toast(\"Restored!\");\r\n}\n```"
                                 }
                             ]
                         },
@@ -913,7 +913,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9817,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9817"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9817"
                     }
                 ],
                 "type": {
@@ -937,15 +937,15 @@
                 }
             },
             "comment": {
-                "text": "Retrieves an inst update that represents the current local shared state of the inst. Returns a promise that resolves with the update.\n\nNote that the inst update only contains bots and tag masks from the `shared` space. Useful for saving the current shared state of the inst so that it can be restored later or transferred to another inst.\n\nUnlike os.createInitializationUpdate, this function creates an update that is linked to this inst. This means that applying the update to the inst it was created in will not create duplicate bots. It is still possible to apply the update to other insts, but it may create duplicate bots depending on the history of the other inst.",
+                "text": "Retrieves an inst update that represents the current local shared state of the inst. Returns a promise that resolves with the update.\r\n\r\nNote that the inst update only contains bots and tag masks from the `shared` space. Useful for saving the current shared state of the inst so that it can be restored later or transferred to another inst.\r\n\r\nUnlike os.createInitializationUpdate, this function creates an update that is linked to this inst. This means that applying the update to the inst it was created in will not create duplicate bots. It is still possible to apply the update to other insts, but it may create duplicate bots depending on the history of the other inst.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSave the current inst state to a local bot\nconst update = await os.getCurrentInstUpdate();\ncreate({\n    space: 'local',\n    backup: true,\n    timestamp: update.timestamp,\n    update: update\n});\n```"
+                        "text": "```ts\nSave the current inst state to a local bot\r\nconst update = await os.getCurrentInstUpdate();\r\ncreate({\r\n    space: 'local',\r\n    backup: true,\r\n    timestamp: update.timestamp,\r\n    update: update\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRestore from a local bot\nconst savedUpdates = getBots(bySpace('local'), byTag('backup', true));\nsavedUpdates.sort((a, b) => b.timestamp - a.timestamp);\n\nif (savedUpdates.length > 0) {\n    const update = savedUpdates[0].tags.update;\n    await os.applyUpdatesToInst([update]);\n    os.toast(\"Restored!\");\n}\n```"
+                        "text": "```ts\nRestore from a local bot\r\nconst savedUpdates = getBots(bySpace('local'), byTag('backup', true));\r\nsavedUpdates.sort((a, b) => b.timestamp - a.timestamp);\r\n\r\nif (savedUpdates.length > 0) {\r\n    const update = savedUpdates[0].tags.update;\r\n    await os.applyUpdatesToInst([update]);\r\n    os.toast(\"Restored!\");\r\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -977,7 +977,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the inst state from the given list of updates. Returns a promise that resolves with the bot state that the updates produce.\n\nUseful for tracking the history of an inst over time."
+                            "text": "Calculates the inst state from the given list of updates. Returns a promise that resolves with the bot state that the updates produce.\r\n\r\nUseful for tracking the history of an inst over time."
                         }
                     ],
                     "blockTags": [
@@ -986,7 +986,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the last 5 inst states in the shared space\nconst updates = await os.listInstUpdates();\n\nlet states = [];\nfor(let i = 5; i >= 0; i--) {\n    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));\n    states.push(state);\n}\n\nconsole.log('States: ', states);\n```"
+                                    "text": "```ts\nGet the last 5 inst states in the shared space\r\nconst updates = await os.listInstUpdates();\r\n\r\nlet states = [];\r\nfor(let i = 5; i >= 0; i--) {\r\n    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));\r\n    states.push(state);\r\n}\r\n\r\nconsole.log('States: ', states);\n```"
                                 }
                             ]
                         },
@@ -995,7 +995,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the last deltas from shared space updates\nconst updates = await os.listInstUpdates();\n\nlet lastState;\nlet deltas = [];\nfor(let i = 5; i >= 0; i--) {\n    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));\n\n    if (lastState) {\n        const delta = diffSnapshots(lastState, state);\n        deltas.push(delta);\n    }\n\n    lastState = state;\n}\nconsole.log('Deltas: ', deltas);\n```"
+                                    "text": "```ts\nCalculate the last deltas from shared space updates\r\nconst updates = await os.listInstUpdates();\r\n\r\nlet lastState;\r\nlet deltas = [];\r\nfor(let i = 5; i >= 0; i--) {\r\n    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));\r\n\r\n    if (lastState) {\r\n        const delta = diffSnapshots(lastState, state);\r\n        deltas.push(delta);\r\n    }\r\n\r\n    lastState = state;\r\n}\r\nconsole.log('Deltas: ', deltas);\n```"
                                 }
                             ]
                         },
@@ -1033,7 +1033,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9708,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9708"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9708"
                     }
                 ],
                 "parameters": [
@@ -1086,15 +1086,15 @@
                 }
             },
             "comment": {
-                "text": "Calculates the inst state from the given list of updates. Returns a promise that resolves with the bot state that the updates produce.\n\nUseful for tracking the history of an inst over time.",
+                "text": "Calculates the inst state from the given list of updates. Returns a promise that resolves with the bot state that the updates produce.\r\n\r\nUseful for tracking the history of an inst over time.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the last 5 inst states in the shared space\nconst updates = await os.listInstUpdates();\n\nlet states = [];\nfor(let i = 5; i >= 0; i--) {\n    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));\n    states.push(state);\n}\n\nconsole.log('States: ', states);\n```"
+                        "text": "```ts\nGet the last 5 inst states in the shared space\r\nconst updates = await os.listInstUpdates();\r\n\r\nlet states = [];\r\nfor(let i = 5; i >= 0; i--) {\r\n    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));\r\n    states.push(state);\r\n}\r\n\r\nconsole.log('States: ', states);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the last deltas from shared space updates\nconst updates = await os.listInstUpdates();\n\nlet lastState;\nlet deltas = [];\nfor(let i = 5; i >= 0; i--) {\n    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));\n\n    if (lastState) {\n        const delta = diffSnapshots(lastState, state);\n        deltas.push(delta);\n    }\n\n    lastState = state;\n}\nconsole.log('Deltas: ', deltas);\n```"
+                        "text": "```ts\nCalculate the last deltas from shared space updates\r\nconst updates = await os.listInstUpdates();\r\n\r\nlet lastState;\r\nlet deltas = [];\r\nfor(let i = 5; i >= 0; i--) {\r\n    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));\r\n\r\n    if (lastState) {\r\n        const delta = diffSnapshots(lastState, state);\r\n        deltas.push(delta);\r\n    }\r\n\r\n    lastState = state;\r\n}\r\nconsole.log('Deltas: ', deltas);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1126,7 +1126,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the list of updates that have occurred in the shared space. Returns a promise that resolves with the list of updates.\n\nUseful when combined with "
+                            "text": "Gets the list of updates that have occurred in the shared space. Returns a promise that resolves with the list of updates.\r\n\r\nUseful when combined with "
                         },
                         {
                             "kind": "text",
@@ -1143,7 +1143,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet a list of updates to shared space\nconst updates = await os.listInstUpdates();\n```"
+                                    "text": "```ts\nGet a list of updates to shared space\r\nconst updates = await os.listInstUpdates();\n```"
                                 }
                             ]
                         },
@@ -1181,7 +1181,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9658,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9658"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9658"
                     }
                 ],
                 "type": {
@@ -1208,11 +1208,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the list of updates that have occurred in the shared space. Returns a promise that resolves with the list of updates.\n\nUseful when combined with os.getInstStateFromUpdates to track the history of an inst over time.",
+                "text": "Gets the list of updates that have occurred in the shared space. Returns a promise that resolves with the list of updates.\r\n\r\nUseful when combined with os.getInstStateFromUpdates to track the history of an inst over time.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet a list of updates to shared space\nconst updates = await os.listInstUpdates();\n```"
+                        "text": "```ts\nGet a list of updates to shared space\r\nconst updates = await os.listInstUpdates();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1244,7 +1244,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Merges the given updates into a single update. Returns the merged update.\n\nThis function is useful for compressing a list of updates into a single update that can be applied to an inst."
+                            "text": "Merges the given updates into a single update. Returns the merged update.\r\n\r\nThis function is useful for compressing a list of updates into a single update that can be applied to an inst."
                         }
                     ],
                     "blockTags": [
@@ -1253,7 +1253,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nMerge a list of updates\nconst merged = os.mergeInstUpdates(updates);\n```"
+                                    "text": "```ts\nMerge a list of updates\r\nconst merged = os.mergeInstUpdates(updates);\n```"
                                 }
                             ]
                         },
@@ -1291,7 +1291,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9842,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9842"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9842"
                     }
                 ],
                 "parameters": [
@@ -1333,11 +1333,11 @@
                 }
             },
             "comment": {
-                "text": "Merges the given updates into a single update. Returns the merged update.\n\nThis function is useful for compressing a list of updates into a single update that can be applied to an inst.",
+                "text": "Merges the given updates into a single update. Returns the merged update.\r\n\r\nThis function is useful for compressing a list of updates into a single update that can be applied to an inst.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nMerge a list of updates\nconst merged = os.mergeInstUpdates(updates);\n```"
+                        "text": "```ts\nMerge a list of updates\r\nconst merged = os.mergeInstUpdates(updates);\n```"
                     },
                     {
                         "tagName": "dochash",

@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDownload a text file named \"test.txt\" that contains \"abc\".\nos.download(\"abc\", \"test.txt\");\n```"
+                                    "text": "```ts\nDownload a text file named \"test.txt\" that contains \"abc\".\r\nos.download(\"abc\", \"test.txt\");\n```"
                                 }
                             ]
                         },
@@ -92,7 +92,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5967,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5967"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5967"
                     }
                 ],
                 "parameters": [
@@ -199,7 +199,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDownload a text file named \"test.txt\" that contains \"abc\".\nos.download(\"abc\", \"test.txt\");\n```"
+                        "text": "```ts\nDownload a text file named \"test.txt\" that contains \"abc\".\r\nos.download(\"abc\", \"test.txt\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -259,7 +259,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " file with the given filename. Useful for quickly backing up a set of bots.\n\nThe downloaded bots will be stored in the Version 1 format of the [AUX File Format](glossary:aux), which is well suited for most scenarios.\nFor scenarios where you want conflict-free initialization of a shared inst, you should use "
+                            "text": " file with the given filename. Useful for quickly backing up a set of bots.\r\n\r\nThe downloaded bots will be stored in the Version 1 format of the [AUX File Format](glossary:aux), which is well suited for most scenarios.\r\nFor scenarios where you want conflict-free initialization of a shared inst, you should use "
                         },
                         {
                             "kind": "text",
@@ -276,7 +276,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDownload all the bots in the \"abc\" dimension as \"abcBots.aux\".\nos.downloadBots(getBots(inDimension(\"abc\")), \"abcBots\");\n```"
+                                    "text": "```ts\nDownload all the bots in the \"abc\" dimension as \"abcBots.aux\".\r\nos.downloadBots(getBots(inDimension(\"abc\")), \"abcBots\");\n```"
                                 }
                             ]
                         },
@@ -285,7 +285,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDownload the current bot as \"currentBot.aux\".\nos.downloadBots([bot], \"currentBot\");\n```"
+                                    "text": "```ts\nDownload the current bot as \"currentBot.aux\".\r\nos.downloadBots([bot], \"currentBot\");\n```"
                                 }
                             ]
                         },
@@ -294,7 +294,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDownload all bots as \"myServer.pdf\".\nos.downloadBots(getBots(), \"myServer.pdf\");\n```"
+                                    "text": "```ts\nDownload all bots as \"myServer.pdf\".\r\nos.downloadBots(getBots(), \"myServer.pdf\");\n```"
                                 }
                             ]
                         },
@@ -332,7 +332,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6039,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6039"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6039"
                     }
                 ],
                 "parameters": [
@@ -410,19 +410,19 @@
                 }
             },
             "comment": {
-                "text": "Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename. Useful for quickly backing up a set of bots.\n\nThe downloaded bots will be stored in the Version 1 format of the [AUX File Format](glossary:aux), which is well suited for most scenarios.\nFor scenarios where you want conflict-free initialization of a shared inst, you should use os.downloadBotsAsInitialzationUpdate.",
+                "text": "Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename. Useful for quickly backing up a set of bots.\r\n\r\nThe downloaded bots will be stored in the Version 1 format of the [AUX File Format](glossary:aux), which is well suited for most scenarios.\r\nFor scenarios where you want conflict-free initialization of a shared inst, you should use os.downloadBotsAsInitialzationUpdate.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDownload all the bots in the \"abc\" dimension as \"abcBots.aux\".\nos.downloadBots(getBots(inDimension(\"abc\")), \"abcBots\");\n```"
+                        "text": "```ts\nDownload all the bots in the \"abc\" dimension as \"abcBots.aux\".\r\nos.downloadBots(getBots(inDimension(\"abc\")), \"abcBots\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDownload the current bot as \"currentBot.aux\".\nos.downloadBots([bot], \"currentBot\");\n```"
+                        "text": "```ts\nDownload the current bot as \"currentBot.aux\".\r\nos.downloadBots([bot], \"currentBot\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDownload all bots as \"myServer.pdf\".\nos.downloadBots(getBots(), \"myServer.pdf\");\n```"
+                        "text": "```ts\nDownload all bots as \"myServer.pdf\".\r\nos.downloadBots(getBots(), \"myServer.pdf\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -470,7 +470,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " file with the given filename.\n\nThe downloaded bots will be stored in the Version 2 format of the [AUX File Format](glossary:aux), which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.\nFor an archive of the current state, you should use "
+                            "text": " file with the given filename.\r\n\r\nThe downloaded bots will be stored in the Version 2 format of the [AUX File Format](glossary:aux), which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.\r\nFor an archive of the current state, you should use "
                         },
                         {
                             "kind": "text",
@@ -487,7 +487,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDownload all the bots in the \"abc\" dimension as \"abcBots.aux\".\nos.downloadBotsAsInitialzationUpdate(getBots(inDimension(\"abc\")), \"abcBots\");\n```"
+                                    "text": "```ts\nDownload all the bots in the \"abc\" dimension as \"abcBots.aux\".\r\nos.downloadBotsAsInitialzationUpdate(getBots(inDimension(\"abc\")), \"abcBots\");\n```"
                                 }
                             ]
                         },
@@ -496,7 +496,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDownload the current bot as \"currentBot.aux\".\nos.downloadBotsAsInitialzationUpdate([bot], \"currentBot\");\n```"
+                                    "text": "```ts\nDownload the current bot as \"currentBot.aux\".\r\nos.downloadBotsAsInitialzationUpdate([bot], \"currentBot\");\n```"
                                 }
                             ]
                         },
@@ -505,7 +505,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDownload all bots as \"myServer.pdf\".\nos.downloadBotsAsInitialzationUpdate(getBots(), \"myServer.pdf\");\n```"
+                                    "text": "```ts\nDownload all bots as \"myServer.pdf\".\r\nos.downloadBotsAsInitialzationUpdate(getBots(), \"myServer.pdf\");\n```"
                                 }
                             ]
                         },
@@ -543,7 +543,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6086,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6086"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6086"
                     }
                 ],
                 "parameters": [
@@ -621,19 +621,19 @@
                 }
             },
             "comment": {
-                "text": "Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.\n\nThe downloaded bots will be stored in the Version 2 format of the [AUX File Format](glossary:aux), which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.\nFor an archive of the current state, you should use os.downloadBots which is better for scenarios which require direct access to the bot data.",
+                "text": "Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.\r\n\r\nThe downloaded bots will be stored in the Version 2 format of the [AUX File Format](glossary:aux), which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.\r\nFor an archive of the current state, you should use os.downloadBots which is better for scenarios which require direct access to the bot data.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDownload all the bots in the \"abc\" dimension as \"abcBots.aux\".\nos.downloadBotsAsInitialzationUpdate(getBots(inDimension(\"abc\")), \"abcBots\");\n```"
+                        "text": "```ts\nDownload all the bots in the \"abc\" dimension as \"abcBots.aux\".\r\nos.downloadBotsAsInitialzationUpdate(getBots(inDimension(\"abc\")), \"abcBots\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDownload the current bot as \"currentBot.aux\".\nos.downloadBotsAsInitialzationUpdate([bot], \"currentBot\");\n```"
+                        "text": "```ts\nDownload the current bot as \"currentBot.aux\".\r\nos.downloadBotsAsInitialzationUpdate([bot], \"currentBot\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDownload all bots as \"myServer.pdf\".\nos.downloadBotsAsInitialzationUpdate(getBots(), \"myServer.pdf\");\n```"
+                        "text": "```ts\nDownload all bots as \"myServer.pdf\".\r\nos.downloadBotsAsInitialzationUpdate(getBots(), \"myServer.pdf\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -673,7 +673,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " file on the player's computer. The file will have the same name as the inst.\n\nNote that this function is almost exactly the same as "
+                            "text": " file on the player's computer. The file will have the same name as the inst.\r\n\r\nNote that this function is almost exactly the same as "
                         },
                         {
                             "kind": "text",
@@ -690,7 +690,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDownload the entire inst.\nos.downloadInst();\n```"
+                                    "text": "```ts\nDownload the entire inst.\r\nos.downloadInst();\n```"
                                 }
                             ]
                         },
@@ -728,7 +728,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6128,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6128"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6128"
                     }
                 ],
                 "type": {
@@ -741,11 +741,11 @@
                 }
             },
             "comment": {
-                "text": "Downloads all of the shared bots into a `.aux` file on the player's computer. The file will have the same name as the inst.\n\nNote that this function is almost exactly the same as os.downloadBots. The only difference is that all bots in the shared space are included and the file is named for you automatically.",
+                "text": "Downloads all of the shared bots into a `.aux` file on the player's computer. The file will have the same name as the inst.\r\n\r\nNote that this function is almost exactly the same as os.downloadBots. The only difference is that all bots in the shared space are included and the file is named for you automatically.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDownload the entire inst.\nos.downloadInst();\n```"
+                        "text": "```ts\nDownload the entire inst.\r\nos.downloadInst();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -777,7 +777,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Parses a list of bot mods from the given string of data.\nThe data can be JSON or the contents of a PDF file.\nReturns an array of mods where each mod has the structure of a bot (i.e. it has "
+                            "text": "Parses a list of bot mods from the given string of data.\r\nThe data can be JSON or the contents of a PDF file.\r\nReturns an array of mods where each mod has the structure of a bot (i.e. it has "
                         },
                         {
                             "kind": "code",
@@ -793,7 +793,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " properties).\nReturns "
+                            "text": " properties).\r\nReturns "
                         },
                         {
                             "kind": "code",
@@ -810,7 +810,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nParse the list of bots in an @onFileUpload\nlet bots = os.parseBotsFromData(that.file.data);\n```"
+                                    "text": "```ts\nParse the list of bots in an @onFileUpload\r\nlet bots = os.parseBotsFromData(that.file.data);\n```"
                                 }
                             ]
                         },
@@ -848,7 +848,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6562,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6562"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6562"
                     }
                 ],
                 "parameters": [
@@ -900,11 +900,11 @@
                 }
             },
             "comment": {
-                "text": "Parses a list of bot mods from the given string of data.\nThe data can be JSON or the contents of a PDF file.\nReturns an array of mods where each mod has the structure of a bot (i.e. it has `id` and `tags` properties).\nReturns `null` if the data is not valid JSON or PDF.",
+                "text": "Parses a list of bot mods from the given string of data.\r\nThe data can be JSON or the contents of a PDF file.\r\nReturns an array of mods where each mod has the structure of a bot (i.e. it has `id` and `tags` properties).\r\nReturns `null` if the data is not valid JSON or PDF.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nParse the list of bots in an @onFileUpload\nlet bots = os.parseBotsFromData(that.file.data);\n```"
+                        "text": "```ts\nParse the list of bots in an @onFileUpload\r\nlet bots = os.parseBotsFromData(that.file.data);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -936,7 +936,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Imports an AUX file from the given string.\n\nIf the string contains JSON, then the JSON will be imported as if it was a .aux file. If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.\n\nThis is useful to quickly download a AUX file and load it into the current inst from a site such as https://gist.github.com/."
+                            "text": "Imports an AUX file from the given string.\r\n\r\nIf the string contains JSON, then the JSON will be imported as if it was a .aux file. If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.\r\n\r\nThis is useful to quickly download a AUX file and load it into the current inst from a site such as https://gist.github.com/."
                         }
                     ],
                     "blockTags": [
@@ -945,7 +945,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nImport an AUX file from a file.\nconst path = '/drives/myFile.aux';\nos.importAUX(path);\n```"
+                                    "text": "```ts\nImport an AUX file from a file.\r\nconst path = '/drives/myFile.aux';\r\nos.importAUX(path);\n```"
                                 }
                             ]
                         },
@@ -954,7 +954,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nImport an AUX file from JSON.\nos.importAUX(`{\n    \"version\": 1,\n    \"state\": {\n        \"079847e4-6a58-423d-9a86-8d4ef8be5970\": {\n            \"id\": \"079847e4-6a58-423d-9a86-8d4ef8be5970\",\n            \"tags\": {\n                \"color\": \"red\"\n            }\n        }\n    }\n}`);\n```"
+                                    "text": "```ts\nImport an AUX file from JSON.\r\nos.importAUX(`{\r\n    \"version\": 1,\r\n    \"state\": {\r\n        \"079847e4-6a58-423d-9a86-8d4ef8be5970\": {\r\n            \"id\": \"079847e4-6a58-423d-9a86-8d4ef8be5970\",\r\n            \"tags\": {\r\n                \"color\": \"red\"\r\n            }\r\n        }\r\n    }\r\n}`);\n```"
                                 }
                             ]
                         },
@@ -992,7 +992,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6524,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6524"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6524"
                     }
                 ],
                 "parameters": [
@@ -1006,7 +1006,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the URL or JSON to load.\n                 If given JSON, then it will be imported as if it was a "
+                                    "text": "the URL or JSON to load.\r\n                 If given JSON, then it will be imported as if it was a "
                                 },
                                 {
                                     "kind": "code",
@@ -1014,7 +1014,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": " file.\n                 If given a URL, then it will be downloaded and then imported."
+                                    "text": " file.\r\n                 If given a URL, then it will be downloaded and then imported."
                                 }
                             ],
                             "blockTags": []
@@ -1042,15 +1042,15 @@
                 }
             },
             "comment": {
-                "text": "Imports an AUX file from the given string.\n\nIf the string contains JSON, then the JSON will be imported as if it was a .aux file. If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.\n\nThis is useful to quickly download a AUX file and load it into the current inst from a site such as https://gist.github.com/.",
+                "text": "Imports an AUX file from the given string.\r\n\r\nIf the string contains JSON, then the JSON will be imported as if it was a .aux file. If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.\r\n\r\nThis is useful to quickly download a AUX file and load it into the current inst from a site such as https://gist.github.com/.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nImport an AUX file from a file.\nconst path = '/drives/myFile.aux';\nos.importAUX(path);\n```"
+                        "text": "```ts\nImport an AUX file from a file.\r\nconst path = '/drives/myFile.aux';\r\nos.importAUX(path);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nImport an AUX file from JSON.\nos.importAUX(`{\n    \"version\": 1,\n    \"state\": {\n        \"079847e4-6a58-423d-9a86-8d4ef8be5970\": {\n            \"id\": \"079847e4-6a58-423d-9a86-8d4ef8be5970\",\n            \"tags\": {\n                \"color\": \"red\"\n            }\n        }\n    }\n}`);\n```"
+                        "text": "```ts\nImport an AUX file from JSON.\r\nos.importAUX(`{\r\n    \"version\": 1,\r\n    \"state\": {\r\n        \"079847e4-6a58-423d-9a86-8d4ef8be5970\": {\r\n            \"id\": \"079847e4-6a58-423d-9a86-8d4ef8be5970\",\r\n            \"tags\": {\r\n                \"color\": \"red\"\r\n            }\r\n        }\r\n    }\r\n}`);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1091,7 +1091,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the \"Upload AUX File\" dialog.\nos.showUploadAuxFile();\n```"
+                                    "text": "```ts\nShow the \"Upload AUX File\" dialog.\r\nos.showUploadAuxFile();\n```"
                                 }
                             ]
                         },
@@ -1129,7 +1129,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6145,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6145"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6145"
                     }
                 ],
                 "type": {
@@ -1146,7 +1146,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the \"Upload AUX File\" dialog.\nos.showUploadAuxFile();\n```"
+                        "text": "```ts\nShow the \"Upload AUX File\" dialog.\r\nos.showUploadAuxFile();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1178,7 +1178,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Shows the \"Upload Files\" dialog which lets the user select some files to upload to the inst.\nReturns a promise that resolves with the list of files that were uploaded."
+                            "text": "Shows the \"Upload Files\" dialog which lets the user select some files to upload to the inst.\r\nReturns a promise that resolves with the list of files that were uploaded."
                         }
                     ],
                     "blockTags": [
@@ -1187,7 +1187,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the \"Upload Files\" dialog.\nconst files = await os.showUploadFiles();\nos.toast(\"You uploaded \" + files.length + \" file(s)!\");\n```"
+                                    "text": "```ts\nShow the \"Upload Files\" dialog.\r\nconst files = await os.showUploadFiles();\r\nos.toast(\"You uploaded \" + files.length + \" file(s)!\");\n```"
                                 }
                             ]
                         },
@@ -1225,7 +1225,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6161,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6161"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6161"
                     }
                 ],
                 "type": {
@@ -1252,11 +1252,11 @@
                 }
             },
             "comment": {
-                "text": "Shows the \"Upload Files\" dialog which lets the user select some files to upload to the inst.\nReturns a promise that resolves with the list of files that were uploaded.",
+                "text": "Shows the \"Upload Files\" dialog which lets the user select some files to upload to the inst.\r\nReturns a promise that resolves with the list of files that were uploaded.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the \"Upload Files\" dialog.\nconst files = await os.showUploadFiles();\nos.toast(\"You uploaded \" + files.length + \" file(s)!\");\n```"
+                        "text": "```ts\nShow the \"Upload Files\" dialog.\r\nconst files = await os.showUploadFiles();\r\nos.toast(\"You uploaded \" + files.length + \" file(s)!\");\n```"
                     },
                     {
                         "tagName": "dochash",

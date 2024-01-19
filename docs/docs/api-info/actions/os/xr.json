@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets whether this device supports AR or not.\n\nReturns a promise that resolves with a boolean indicating wether or not augmented reality is supported by the device."
+                            "text": "Gets whether this device supports AR or not.\r\n\r\nReturns a promise that resolves with a boolean indicating wether or not augmented reality is supported by the device."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCheck if AR is supported:\nconst supported = await os.arSupported();\n```"
+                                    "text": "```ts\nCheck if AR is supported:\r\nconst supported = await os.arSupported();\n```"
                                 }
                             ]
                         },
@@ -92,7 +92,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5780,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5780"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5780"
                     }
                 ],
                 "type": {
@@ -112,11 +112,11 @@
                 }
             },
             "comment": {
-                "text": "Gets whether this device supports AR or not.\n\nReturns a promise that resolves with a boolean indicating wether or not augmented reality is supported by the device.",
+                "text": "Gets whether this device supports AR or not.\r\n\r\nReturns a promise that resolves with a boolean indicating wether or not augmented reality is supported by the device.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCheck if AR is supported:\nconst supported = await os.arSupported();\n```"
+                        "text": "```ts\nCheck if AR is supported:\r\nconst supported = await os.arSupported();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -160,7 +160,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Disables augmented reality on the device.\n\nWhen disabled, "
+                            "text": "Disables augmented reality on the device.\r\n\r\nWhen disabled, "
                         },
                         {
                             "kind": "text",
@@ -177,7 +177,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisable AR.\nos.disableAR();\n```"
+                                    "text": "```ts\nDisable AR.\r\nos.disableAR();\n```"
                                 }
                             ]
                         },
@@ -215,7 +215,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5761,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5761"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5761"
                     }
                 ],
                 "type": {
@@ -228,11 +228,11 @@
                 }
             },
             "comment": {
-                "text": "Disables augmented reality on the device.\n\nWhen disabled, @onExitAR shout is sent to all bots.",
+                "text": "Disables augmented reality on the device.\r\n\r\nWhen disabled, @onExitAR shout is sent to all bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisable AR.\nos.disableAR();\n```"
+                        "text": "```ts\nDisable AR.\r\nos.disableAR();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -264,7 +264,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Enables augmented reality on the device.\nYou can check for device support by calling "
+                            "text": "Enables augmented reality on the device.\r\nYou can check for device support by calling "
                         },
                         {
                             "kind": "text",
@@ -272,7 +272,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\n\nIf enabled successfully, the "
+                            "text": ".\r\n\r\nIf enabled successfully, the "
                         },
                         {
                             "kind": "text",
@@ -289,7 +289,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nEnable AR.\nos.enableAR();\n```"
+                                    "text": "```ts\nEnable AR.\r\nos.enableAR();\n```"
                                 }
                             ]
                         },
@@ -298,7 +298,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nEnable AR running at half the resolution of normal.\nos.enableAR({\n    frameBufferScaleFactor: 0.5\n});\n```"
+                                    "text": "```ts\nEnable AR running at half the resolution of normal.\r\nos.enableAR({\r\n    frameBufferScaleFactor: 0.5\r\n});\n```"
                                 }
                             ]
                         },
@@ -336,7 +336,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5745,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5745"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5745"
                     }
                 ],
                 "parameters": [
@@ -377,15 +377,15 @@
                 }
             },
             "comment": {
-                "text": "Enables augmented reality on the device.\nYou can check for device support by calling os.arSupported.\n\nIf enabled successfully, the @onEnterAR shout is sent to all bots.",
+                "text": "Enables augmented reality on the device.\r\nYou can check for device support by calling os.arSupported.\r\n\r\nIf enabled successfully, the @onEnterAR shout is sent to all bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nEnable AR.\nos.enableAR();\n```"
+                        "text": "```ts\nEnable AR.\r\nos.enableAR();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nEnable AR running at half the resolution of normal.\nos.enableAR({\n    frameBufferScaleFactor: 0.5\n});\n```"
+                        "text": "```ts\nEnable AR running at half the resolution of normal.\r\nos.enableAR({\r\n    frameBufferScaleFactor: 0.5\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -417,7 +417,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Disables virtual reality on the device.\n\nWhen disabled, "
+                            "text": "Disables virtual reality on the device.\r\n\r\nWhen disabled, "
                         },
                         {
                             "kind": "text",
@@ -434,7 +434,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisable VR.\nos.disableVR();\n```"
+                                    "text": "```ts\nDisable VR.\r\nos.disableVR();\n```"
                                 }
                             ]
                         },
@@ -472,7 +472,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5822,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5822"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5822"
                     }
                 ],
                 "type": {
@@ -485,11 +485,11 @@
                 }
             },
             "comment": {
-                "text": "Disables virtual reality on the device.\n\nWhen disabled, @onExitVR shout is sent to all bots.",
+                "text": "Disables virtual reality on the device.\r\n\r\nWhen disabled, @onExitVR shout is sent to all bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisable VR.\nos.disableVR();\n```"
+                        "text": "```ts\nDisable VR.\r\nos.disableVR();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -521,7 +521,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Enables virtual reality on the device.\nYou can check for device support by calling "
+                            "text": "Enables virtual reality on the device.\r\nYou can check for device support by calling "
                         },
                         {
                             "kind": "text",
@@ -529,7 +529,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\n\nIf enabled successfully, the "
+                            "text": ".\r\n\r\nIf enabled successfully, the "
                         },
                         {
                             "kind": "text",
@@ -546,7 +546,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nEnable VR.\nos.enableVR();\n```"
+                                    "text": "```ts\nEnable VR.\r\nos.enableVR();\n```"
                                 }
                             ]
                         },
@@ -555,7 +555,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nEnable VR running at half the resolution of normal.\nos.enableVR({\n    frameBufferScaleFactor: 0.5\n});\n```"
+                                    "text": "```ts\nEnable VR running at half the resolution of normal.\r\nos.enableVR({\r\n    frameBufferScaleFactor: 0.5\r\n});\n```"
                                 }
                             ]
                         },
@@ -593,7 +593,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5806,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5806"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5806"
                     }
                 ],
                 "parameters": [
@@ -634,15 +634,15 @@
                 }
             },
             "comment": {
-                "text": "Enables virtual reality on the device.\nYou can check for device support by calling os.vrSupported.\n\nIf enabled successfully, the @onEnterVR shout is sent to all bots.",
+                "text": "Enables virtual reality on the device.\r\nYou can check for device support by calling os.vrSupported.\r\n\r\nIf enabled successfully, the @onEnterVR shout is sent to all bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nEnable VR.\nos.enableVR();\n```"
+                        "text": "```ts\nEnable VR.\r\nos.enableVR();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nEnable VR running at half the resolution of normal.\nos.enableVR({\n    frameBufferScaleFactor: 0.5\n});\n```"
+                        "text": "```ts\nEnable VR running at half the resolution of normal.\r\nos.enableVR({\r\n    frameBufferScaleFactor: 0.5\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -674,7 +674,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets whether this device supports VR or not.\n\nReturns a promise that resolves with a boolean indicating wether or not virtual reality is supported by the device."
+                            "text": "Gets whether this device supports VR or not.\r\n\r\nReturns a promise that resolves with a boolean indicating wether or not virtual reality is supported by the device."
                         }
                     ],
                     "blockTags": [
@@ -683,7 +683,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCheck if VR is supported:\nconst supported = await os.vrSupported();\n```"
+                                    "text": "```ts\nCheck if VR is supported:\r\nconst supported = await os.vrSupported();\n```"
                                 }
                             ]
                         },
@@ -721,7 +721,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5838,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5838"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5838"
                     }
                 ],
                 "type": {
@@ -741,11 +741,11 @@
                 }
             },
             "comment": {
-                "text": "Gets whether this device supports VR or not.\n\nReturns a promise that resolves with a boolean indicating wether or not virtual reality is supported by the device.",
+                "text": "Gets whether this device supports VR or not.\r\n\r\nReturns a promise that resolves with a boolean indicating wether or not virtual reality is supported by the device.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCheck if VR is supported:\nconst supported = await os.vrSupported();\n```"
+                        "text": "```ts\nCheck if VR is supported:\r\nconst supported = await os.vrSupported();\n```"
                     },
                     {
                         "tagName": "dochash",

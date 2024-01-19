@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the number of remotes that are viewing the current inst.\nOptionally takes a parameter which is the inst that the number of remotes should be retrieved for.\nIf omitted, then the current inst will be checked. Returns a promise that resolves with the number of active remotes."
+                            "text": "Gets the number of remotes that are viewing the current inst.\r\nOptionally takes a parameter which is the inst that the number of remotes should be retrieved for.\r\nIf omitted, then the current inst will be checked. Returns a promise that resolves with the number of active remotes."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the number of remotes in the current inst.\nconst numberOfRemotes = await os.remoteCount();\nos.toast(\"Number of Remotes: \" + numberOfRemotes);\n```"
+                                    "text": "```ts\nGet the number of remotes in the current inst.\r\nconst numberOfRemotes = await os.remoteCount();\r\nos.toast(\"Number of Remotes: \" + numberOfRemotes);\n```"
                                 }
                             ]
                         },
@@ -36,7 +36,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the number of remotes in the `test` inst.\nconst numberOfRemotes = await os.remoteCount('test');\nos.toast(\"Number of Remotes: \" + numberOfRemotes);\n```"
+                                    "text": "```ts\nGet the number of remotes in the `test` inst.\r\nconst numberOfRemotes = await os.remoteCount('test');\r\nos.toast(\"Number of Remotes: \" + numberOfRemotes);\n```"
                                 }
                             ]
                         },
@@ -101,7 +101,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9588,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9588"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9588"
                     }
                 ],
                 "parameters": [
@@ -145,15 +145,15 @@
                 }
             },
             "comment": {
-                "text": "Gets the number of remotes that are viewing the current inst.\nOptionally takes a parameter which is the inst that the number of remotes should be retrieved for.\nIf omitted, then the current inst will be checked. Returns a promise that resolves with the number of active remotes.",
+                "text": "Gets the number of remotes that are viewing the current inst.\r\nOptionally takes a parameter which is the inst that the number of remotes should be retrieved for.\r\nIf omitted, then the current inst will be checked. Returns a promise that resolves with the number of active remotes.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the number of remotes in the current inst.\nconst numberOfRemotes = await os.remoteCount();\nos.toast(\"Number of Remotes: \" + numberOfRemotes);\n```"
+                        "text": "```ts\nGet the number of remotes in the current inst.\r\nconst numberOfRemotes = await os.remoteCount();\r\nos.toast(\"Number of Remotes: \" + numberOfRemotes);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the number of remotes in the `test` inst.\nconst numberOfRemotes = await os.remoteCount('test');\nos.toast(\"Number of Remotes: \" + numberOfRemotes);\n```"
+                        "text": "```ts\nGet the number of remotes in the `test` inst.\r\nconst numberOfRemotes = await os.remoteCount('test');\r\nos.toast(\"Number of Remotes: \" + numberOfRemotes);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -197,7 +197,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the list of remote IDs that are connected to the current inst. Returns a promise that resolves with the list of remote IDs.\n\nThe resolved list will always have at least one value that represents the current remote."
+                            "text": "Gets the list of remote IDs that are connected to the current inst. Returns a promise that resolves with the list of remote IDs.\r\n\r\nThe resolved list will always have at least one value that represents the current remote."
                         }
                     ],
                     "blockTags": [
@@ -206,7 +206,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the list of remote IDs.\nconst remotes = await os.remotes();\nos.toast(\"Remotes \" + remotes.join(','));\n```"
+                                    "text": "```ts\nGet the list of remote IDs.\r\nconst remotes = await os.remotes();\r\nos.toast(\"Remotes \" + remotes.join(','));\n```"
                                 }
                             ]
                         },
@@ -244,7 +244,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9635,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9635"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9635"
                     }
                 ],
                 "type": {
@@ -267,11 +267,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the list of remote IDs that are connected to the current inst. Returns a promise that resolves with the list of remote IDs.\n\nThe resolved list will always have at least one value that represents the current remote.",
+                "text": "Gets the list of remote IDs that are connected to the current inst. Returns a promise that resolves with the list of remote IDs.\r\n\r\nThe resolved list will always have at least one value that represents the current remote.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the list of remote IDs.\nconst remotes = await os.remotes();\nos.toast(\"Remotes \" + remotes.join(','));\n```"
+                        "text": "```ts\nGet the list of remote IDs.\r\nconst remotes = await os.remotes();\r\nos.toast(\"Remotes \" + remotes.join(','));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -312,7 +312,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the number of devices on the server.\nconst numberOfDevices = await os.totalRemoteCount();\nos.toast(\"Number of Devices: \" + numberOfDevices);\n```"
+                                    "text": "```ts\nGet the number of devices on the server.\r\nconst numberOfDevices = await os.totalRemoteCount();\r\nos.toast(\"Number of Devices: \" + numberOfDevices);\n```"
                                 }
                             ]
                         },
@@ -350,7 +350,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9611,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9611"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9611"
                     }
                 ],
                 "type": {
@@ -374,7 +374,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the number of devices on the server.\nconst numberOfDevices = await os.totalRemoteCount();\nos.toast(\"Number of Devices: \" + numberOfDevices);\n```"
+                        "text": "```ts\nGet the number of devices on the server.\r\nconst numberOfDevices = await os.totalRemoteCount();\r\nos.toast(\"Number of Devices: \" + numberOfDevices);\n```"
                     },
                     {
                         "tagName": "dochash",

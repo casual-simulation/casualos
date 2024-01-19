@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Starts a new recording. Returns a promise that resolves when recording has started.\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone."
+                            "text": "Starts a new recording. Returns a promise that resolves when recording has started.\r\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRecord for 10 seconds and download the files.\nawait experiment.beginRecording({\n    audio: true,\n    video: true,\n    screen: false\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n```"
+                                    "text": "```ts\nRecord for 10 seconds and download the files.\r\nawait experiment.beginRecording({\r\n    audio: true,\r\n    video: true,\r\n    screen: false\r\n});\r\nawait os.sleep(10000);\r\nconst data = await experiment.endRecording();\r\nlet index = 0;\r\nfor(let file of data.files) {\r\n    os.download(file.data, `file-${index}`);\r\n    index += 1;\r\n}\n```"
                                 }
                             ]
                         },
@@ -36,7 +36,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRecord the screen with microphone audio.\nawait experiment.beginRecording({\n    audio: ['microphone'],\n    video: false,\n    screen: true\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n```"
+                                    "text": "```ts\nRecord the screen with microphone audio.\r\nawait experiment.beginRecording({\r\n    audio: ['microphone'],\r\n    video: false,\r\n    screen: true\r\n});\r\nawait os.sleep(10000);\r\nconst data = await experiment.endRecording();\r\nlet index = 0;\r\nfor(let file of data.files) {\r\n    os.download(file.data, `file-${index}`);\r\n    index += 1;\r\n}\n```"
                                 }
                             ]
                         },
@@ -92,7 +92,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11139,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11139"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11139"
                     }
                 ],
                 "parameters": [
@@ -108,7 +108,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the options that should be used for the recording.\nDefaults to: "
+                                    "text": "the options that should be used for the recording.\r\nDefaults to: "
                                 },
                                 {
                                     "kind": "code",
@@ -144,15 +144,15 @@
                 }
             },
             "comment": {
-                "text": "Starts a new recording. Returns a promise that resolves when recording has started.\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.",
+                "text": "Starts a new recording. Returns a promise that resolves when recording has started.\r\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRecord for 10 seconds and download the files.\nawait experiment.beginRecording({\n    audio: true,\n    video: true,\n    screen: false\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n```"
+                        "text": "```ts\nRecord for 10 seconds and download the files.\r\nawait experiment.beginRecording({\r\n    audio: true,\r\n    video: true,\r\n    screen: false\r\n});\r\nawait os.sleep(10000);\r\nconst data = await experiment.endRecording();\r\nlet index = 0;\r\nfor(let file of data.files) {\r\n    os.download(file.data, `file-${index}`);\r\n    index += 1;\r\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRecord the screen with microphone audio.\nawait experiment.beginRecording({\n    audio: ['microphone'],\n    video: false,\n    screen: true\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n```"
+                        "text": "```ts\nRecord the screen with microphone audio.\r\nawait experiment.beginRecording({\r\n    audio: ['microphone'],\r\n    video: false,\r\n    screen: true\r\n});\r\nawait os.sleep(10000);\r\nconst data = await experiment.endRecording();\r\nlet index = 0;\r\nfor(let file of data.files) {\r\n    os.download(file.data, `file-${index}`);\r\n    index += 1;\r\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -201,7 +201,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRecord for 10 seconds and download the files.\nawait experiment.beginRecording({\n    audio: true,\n    video: true,\n    screen: false\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n```"
+                                    "text": "```ts\nRecord for 10 seconds and download the files.\r\nawait experiment.beginRecording({\r\n    audio: true,\r\n    video: true,\r\n    screen: false\r\n});\r\nawait os.sleep(10000);\r\nconst data = await experiment.endRecording();\r\nlet index = 0;\r\nfor(let file of data.files) {\r\n    os.download(file.data, `file-${index}`);\r\n    index += 1;\r\n}\n```"
                                 }
                             ]
                         },
@@ -230,7 +230,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11168,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11168"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11168"
                     }
                 ],
                 "type": {
@@ -258,7 +258,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRecord for 10 seconds and download the files.\nawait experiment.beginRecording({\n    audio: true,\n    video: true,\n    screen: false\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n```"
+                        "text": "```ts\nRecord for 10 seconds and download the files.\r\nawait experiment.beginRecording({\r\n    audio: true,\r\n    video: true,\r\n    screen: false\r\n});\r\nawait os.sleep(10000);\r\nconst data = await experiment.endRecording();\r\nlet index = 0;\r\nfor(let file of data.files) {\r\n    os.download(file.data, `file-${index}`);\r\n    index += 1;\r\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -295,7 +295,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the top anchor point of the current bot in the \"home\" dimension.\nconst point = experiment.getAnchorPointPosition(bot, \"home\", \"top\");\nos.toast(point);\n```"
+                                    "text": "```ts\nGet the top anchor point of the current bot in the \"home\" dimension.\r\nconst point = experiment.getAnchorPointPosition(bot, \"home\", \"top\");\r\nos.toast(point);\n```"
                                 }
                             ]
                         },
@@ -304,7 +304,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the back right anchor point of the current bot in the \"home\" dimension.\nconst point = experiment.getAnchorPointPosition(bot, \"home\", [ 0.5, -0.5, 0 ]);\nos.toast(point);\n```"
+                                    "text": "```ts\nGet the back right anchor point of the current bot in the \"home\" dimension.\r\nconst point = experiment.getAnchorPointPosition(bot, \"home\", [ 0.5, -0.5, 0 ]);\r\nos.toast(point);\n```"
                                 }
                             ]
                         },
@@ -313,7 +313,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPlace bots at each of the anchor points.\nlet points = [\n    'top',\n    'bottom',\n    'front',\n    'back',\n    'left',\n    'right',\n    'center',\n];\n\nfor(let point of points) {\n    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);\n    create({\n        space: 'tempShared',\n        color: 'green',\n        [os.getCurrentDimension()]: true,\n        [os.getCurrentDimension() + \"X\"]: pos.x,\n        [os.getCurrentDimension() + \"Y\"]: pos.y,\n        [os.getCurrentDimension() + \"Z\"]: pos.z,\n        anchorPoint: 'center',\n        targetAnchorPoint: point,\n        scale: 0.1,\n    });\n}\n```"
+                                    "text": "```ts\nPlace bots at each of the anchor points.\r\nlet points = [\r\n    'top',\r\n    'bottom',\r\n    'front',\r\n    'back',\r\n    'left',\r\n    'right',\r\n    'center',\r\n];\r\n\r\nfor(let point of points) {\r\n    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);\r\n    create({\r\n        space: 'tempShared',\r\n        color: 'green',\r\n        [os.getCurrentDimension()]: true,\r\n        [os.getCurrentDimension() + \"X\"]: pos.x,\r\n        [os.getCurrentDimension() + \"Y\"]: pos.y,\r\n        [os.getCurrentDimension() + \"Z\"]: pos.z,\r\n        anchorPoint: 'center',\r\n        targetAnchorPoint: point,\r\n        scale: 0.1,\r\n    });\r\n}\n```"
                                 }
                             ]
                         },
@@ -342,7 +342,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11022,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11022"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11022"
                     }
                 ],
                 "parameters": [
@@ -443,7 +443,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 11026,
                                         "character": 9,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11026"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11026"
                                     }
                                 ],
                                 "type": {
@@ -462,7 +462,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 11026,
                                         "character": 20,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11026"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11026"
                                     }
                                 ],
                                 "type": {
@@ -481,7 +481,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 11026,
                                         "character": 31,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11026"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11026"
                                     }
                                 ],
                                 "type": {
@@ -505,7 +505,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 11026,
                                 "character": 7,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11026"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11026"
                             }
                         ]
                     }
@@ -516,15 +516,15 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the top anchor point of the current bot in the \"home\" dimension.\nconst point = experiment.getAnchorPointPosition(bot, \"home\", \"top\");\nos.toast(point);\n```"
+                        "text": "```ts\nGet the top anchor point of the current bot in the \"home\" dimension.\r\nconst point = experiment.getAnchorPointPosition(bot, \"home\", \"top\");\r\nos.toast(point);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the back right anchor point of the current bot in the \"home\" dimension.\nconst point = experiment.getAnchorPointPosition(bot, \"home\", [ 0.5, -0.5, 0 ]);\nos.toast(point);\n```"
+                        "text": "```ts\nGet the back right anchor point of the current bot in the \"home\" dimension.\r\nconst point = experiment.getAnchorPointPosition(bot, \"home\", [ 0.5, -0.5, 0 ]);\r\nos.toast(point);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nPlace bots at each of the anchor points.\nlet points = [\n    'top',\n    'bottom',\n    'front',\n    'back',\n    'left',\n    'right',\n    'center',\n];\n\nfor(let point of points) {\n    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);\n    create({\n        space: 'tempShared',\n        color: 'green',\n        [os.getCurrentDimension()]: true,\n        [os.getCurrentDimension() + \"X\"]: pos.x,\n        [os.getCurrentDimension() + \"Y\"]: pos.y,\n        [os.getCurrentDimension() + \"Z\"]: pos.z,\n        anchorPoint: 'center',\n        targetAnchorPoint: point,\n        scale: 0.1,\n    });\n}\n```"
+                        "text": "```ts\nPlace bots at each of the anchor points.\r\nlet points = [\r\n    'top',\r\n    'bottom',\r\n    'front',\r\n    'back',\r\n    'left',\r\n    'right',\r\n    'center',\r\n];\r\n\r\nfor(let point of points) {\r\n    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);\r\n    create({\r\n        space: 'tempShared',\r\n        color: 'green',\r\n        [os.getCurrentDimension()]: true,\r\n        [os.getCurrentDimension() + \"X\"]: pos.x,\r\n        [os.getCurrentDimension() + \"Y\"]: pos.y,\r\n        [os.getCurrentDimension() + \"Z\"]: pos.z,\r\n        anchorPoint: 'center',\r\n        targetAnchorPoint: point,\r\n        scale: 0.1,\r\n    });\r\n}\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -552,7 +552,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the list of synthetic voices that are supported by the system.\nReturns a promise that resolves with the voices."
+                            "text": "Gets the list of synthetic voices that are supported by the system.\r\nReturns a promise that resolves with the voices."
                         }
                     ],
                     "blockTags": [
@@ -561,7 +561,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nToast the list of voices that are supported.\nconst voices = await experiment.getVoices();\nos.toast(voices);\n```"
+                                    "text": "```ts\nToast the list of voices that are supported.\r\nconst voices = await experiment.getVoices();\r\nos.toast(voices);\n```"
                                 }
                             ]
                         },
@@ -570,7 +570,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the first US English voice.\nconst voices = await experiment.getVoices();\nconst usEnglish = voices.find(v => v.language === \"en-US\");\nos.toast(usEnglish);\n```"
+                                    "text": "```ts\nGet the first US English voice.\r\nconst voices = await experiment.getVoices();\r\nconst usEnglish = voices.find(v => v.language === \"en-US\");\r\nos.toast(usEnglish);\n```"
                                 }
                             ]
                         },
@@ -599,7 +599,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11523,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11523"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11523"
                     }
                 ],
                 "type": {
@@ -626,15 +626,15 @@
                 }
             },
             "comment": {
-                "text": "Gets the list of synthetic voices that are supported by the system.\nReturns a promise that resolves with the voices.",
+                "text": "Gets the list of synthetic voices that are supported by the system.\r\nReturns a promise that resolves with the voices.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nToast the list of voices that are supported.\nconst voices = await experiment.getVoices();\nos.toast(voices);\n```"
+                        "text": "```ts\nToast the list of voices that are supported.\r\nconst voices = await experiment.getVoices();\r\nos.toast(voices);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the first US English voice.\nconst voices = await experiment.getVoices();\nconst usEnglish = voices.find(v => v.language === \"en-US\");\nos.toast(usEnglish);\n```"
+                        "text": "```ts\nGet the first US English voice.\r\nconst voices = await experiment.getVoices();\r\nconst usEnglish = voices.find(v => v.language === \"en-US\");\r\nos.toast(usEnglish);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -662,7 +662,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Locally plays the given animation on the given bot.\n\nIf an animation is already playing, it will be interrupted.\nWhen the given animation is finished playing, the interrupted animation will be restored."
+                            "text": "Locally plays the given animation on the given bot.\r\n\r\nIf an animation is already playing, it will be interrupted.\r\nWhen the given animation is finished playing, the interrupted animation will be restored."
                         }
                     ],
                     "blockTags": [
@@ -671,7 +671,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPlay the \"jump\" animation on this bot.\nexperiment.localFormAnimation(this, \"jump\");\n```"
+                                    "text": "```ts\nPlay the \"jump\" animation on this bot.\r\nexperiment.localFormAnimation(this, \"jump\");\n```"
                                 }
                             ]
                         },
@@ -700,7 +700,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10829,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10829"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10829"
                     }
                 ],
                 "parameters": [
@@ -777,11 +777,11 @@
                 }
             },
             "comment": {
-                "text": "Locally plays the given animation on the given bot.\n\nIf an animation is already playing, it will be interrupted.\nWhen the given animation is finished playing, the interrupted animation will be restored.",
+                "text": "Locally plays the given animation on the given bot.\r\n\r\nIf an animation is already playing, it will be interrupted.\r\nWhen the given animation is finished playing, the interrupted animation will be restored.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nPlay the \"jump\" animation on this bot.\nexperiment.localFormAnimation(this, \"jump\");\n```"
+                        "text": "```ts\nPlay the \"jump\" animation on this bot.\r\nexperiment.localFormAnimation(this, \"jump\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -809,7 +809,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Locally plays a tween that moves the given bot in the given dimension to the given position.\nOptionally allows customizing the easing of the tween.\n\nReturns a promise that resolves when the tween is finished.\n\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\nOnce the tween is done playing, any change to the bot will reset the position/rotation."
+                            "text": "Locally plays a tween that moves the given bot in the given dimension to the given position.\r\nOptionally allows customizing the easing of the tween.\r\n\r\nReturns a promise that resolves when the tween is finished.\r\n\r\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\r\nOnce the tween is done playing, any change to the bot will reset the position/rotation."
                         }
                     ],
                     "blockTags": [
@@ -818,7 +818,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTween the bot to X = 10 in the `home` dimension.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    });\n```"
+                                    "text": "```ts\nTween the bot to X = 10 in the `home` dimension.\r\nexperiment.localPositionTween(\r\n    this,\r\n    'home',\r\n    {\r\n        x: 10,\r\n    });\n```"
                                 }
                             ]
                         },
@@ -827,7 +827,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTween the bot over 5 seconds.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    },\n    {\n        duration: 5\n    });\n```"
+                                    "text": "```ts\nTween the bot over 5 seconds.\r\nexperiment.localPositionTween(\r\n    this,\r\n    'home',\r\n    {\r\n        x: 10,\r\n    },\r\n    {\r\n        duration: 5\r\n    });\n```"
                                 }
                             ]
                         },
@@ -836,7 +836,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTween the bot with quadratic easing.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    },\n    {\n        easing: {\n            type: 'quadratic',\n            mode: 'inout'\n        }\n    });\n```"
+                                    "text": "```ts\nTween the bot with quadratic easing.\r\nexperiment.localPositionTween(\r\n    this,\r\n    'home',\r\n    {\r\n        x: 10,\r\n    },\r\n    {\r\n        easing: {\r\n            type: 'quadratic',\r\n            mode: 'inout'\r\n        }\r\n    });\n```"
                                 }
                             ]
                         },
@@ -865,7 +865,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10890,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10890"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10890"
                     }
                 ],
                 "parameters": [
@@ -912,7 +912,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the dimension that the bot should be tweened in.\nNote that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal."
+                                    "text": "the dimension that the bot should be tweened in.\r\nNote that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal."
                                 }
                             ],
                             "blockTags": []
@@ -981,7 +981,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 10893,
                                                 "character": 20,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10893"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10893"
                                             }
                                         ],
                                         "type": {
@@ -1000,7 +1000,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 10893,
                                                 "character": 31,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10893"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10893"
                                             }
                                         ],
                                         "type": {
@@ -1021,7 +1021,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 10893,
                                                 "character": 42,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10893"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10893"
                                             }
                                         ],
                                         "type": {
@@ -1045,7 +1045,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 10893,
                                         "character": 18,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10893"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10893"
                                     }
                                 ]
                             }
@@ -1095,19 +1095,19 @@
                 }
             },
             "comment": {
-                "text": "Locally plays a tween that moves the given bot in the given dimension to the given position.\nOptionally allows customizing the easing of the tween.\n\nReturns a promise that resolves when the tween is finished.\n\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\nOnce the tween is done playing, any change to the bot will reset the position/rotation.",
+                "text": "Locally plays a tween that moves the given bot in the given dimension to the given position.\r\nOptionally allows customizing the easing of the tween.\r\n\r\nReturns a promise that resolves when the tween is finished.\r\n\r\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\r\nOnce the tween is done playing, any change to the bot will reset the position/rotation.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nTween the bot to X = 10 in the `home` dimension.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    });\n```"
+                        "text": "```ts\nTween the bot to X = 10 in the `home` dimension.\r\nexperiment.localPositionTween(\r\n    this,\r\n    'home',\r\n    {\r\n        x: 10,\r\n    });\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nTween the bot over 5 seconds.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    },\n    {\n        duration: 5\n    });\n```"
+                        "text": "```ts\nTween the bot over 5 seconds.\r\nexperiment.localPositionTween(\r\n    this,\r\n    'home',\r\n    {\r\n        x: 10,\r\n    },\r\n    {\r\n        duration: 5\r\n    });\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nTween the bot with quadratic easing.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    },\n    {\n        easing: {\n            type: 'quadratic',\n            mode: 'inout'\n        }\n    });\n```"
+                        "text": "```ts\nTween the bot with quadratic easing.\r\nexperiment.localPositionTween(\r\n    this,\r\n    'home',\r\n    {\r\n        x: 10,\r\n    },\r\n    {\r\n        easing: {\r\n            type: 'quadratic',\r\n            mode: 'inout'\r\n        }\r\n    });\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1135,7 +1135,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Locally plays a tween that rotates the given bot in the given dimension to the given rotation.\nOptionally allows customizing the easing of the tween.\n\nReturns a promise that resolves when the tween is finished.\n\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\nOnce the tween is done playing, any change to the bot will reset the position/rotation."
+                            "text": "Locally plays a tween that rotates the given bot in the given dimension to the given rotation.\r\nOptionally allows customizing the easing of the tween.\r\n\r\nReturns a promise that resolves when the tween is finished.\r\n\r\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\r\nOnce the tween is done playing, any change to the bot will reset the position/rotation."
                         }
                     ],
                     "blockTags": [
@@ -1144,7 +1144,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTween the bot 90 degrees around the Z axis in the `home` dimension.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    });\n```"
+                                    "text": "```ts\nTween the bot 90 degrees around the Z axis in the `home` dimension.\r\nexperiment.localRotationTween(\r\n    this,\r\n    'home',\r\n    {\r\n        z: Math.PI / 2,\r\n    });\n```"
                                 }
                             ]
                         },
@@ -1153,7 +1153,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTween the bot for 5 seconds.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    },\n    {\n        duration: 5\n    });\n```"
+                                    "text": "```ts\nTween the bot for 5 seconds.\r\nexperiment.localRotationTween(\r\n    this,\r\n    'home',\r\n    {\r\n        z: Math.PI / 2,\r\n    },\r\n    {\r\n        duration: 5\r\n    });\n```"
                                 }
                             ]
                         },
@@ -1162,7 +1162,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nTween the bot with quadratic easing.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    },\n    {\n        easing: {\n            type: 'quadratic',\n            mode: 'inout'\n        }\n    });\n```"
+                                    "text": "```ts\nTween the bot with quadratic easing.\r\nexperiment.localRotationTween(\r\n    this,\r\n    'home',\r\n    {\r\n        z: Math.PI / 2,\r\n    },\r\n    {\r\n        easing: {\r\n            type: 'quadratic',\r\n            mode: 'inout'\r\n        }\r\n    });\n```"
                                 }
                             ]
                         },
@@ -1191,7 +1191,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10960,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10960"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10960"
                     }
                 ],
                 "parameters": [
@@ -1238,7 +1238,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the dimension that the bot should be tweened in.\nNote that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal."
+                                    "text": "the dimension that the bot should be tweened in.\r\nNote that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal."
                                 }
                             ],
                             "blockTags": []
@@ -1307,7 +1307,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 10963,
                                                 "character": 20,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10963"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10963"
                                             }
                                         ],
                                         "type": {
@@ -1326,7 +1326,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 10963,
                                                 "character": 31,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10963"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10963"
                                             }
                                         ],
                                         "type": {
@@ -1347,7 +1347,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 10963,
                                                 "character": 42,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10963"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10963"
                                             }
                                         ],
                                         "type": {
@@ -1371,7 +1371,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 10963,
                                         "character": 18,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10963"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10963"
                                     }
                                 ]
                             }
@@ -1421,19 +1421,19 @@
                 }
             },
             "comment": {
-                "text": "Locally plays a tween that rotates the given bot in the given dimension to the given rotation.\nOptionally allows customizing the easing of the tween.\n\nReturns a promise that resolves when the tween is finished.\n\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\nOnce the tween is done playing, any change to the bot will reset the position/rotation.",
+                "text": "Locally plays a tween that rotates the given bot in the given dimension to the given rotation.\r\nOptionally allows customizing the easing of the tween.\r\n\r\nReturns a promise that resolves when the tween is finished.\r\n\r\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\r\nOnce the tween is done playing, any change to the bot will reset the position/rotation.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nTween the bot 90 degrees around the Z axis in the `home` dimension.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    });\n```"
+                        "text": "```ts\nTween the bot 90 degrees around the Z axis in the `home` dimension.\r\nexperiment.localRotationTween(\r\n    this,\r\n    'home',\r\n    {\r\n        z: Math.PI / 2,\r\n    });\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nTween the bot for 5 seconds.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    },\n    {\n        duration: 5\n    });\n```"
+                        "text": "```ts\nTween the bot for 5 seconds.\r\nexperiment.localRotationTween(\r\n    this,\r\n    'home',\r\n    {\r\n        z: Math.PI / 2,\r\n    },\r\n    {\r\n        duration: 5\r\n    });\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nTween the bot with quadratic easing.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    },\n    {\n        easing: {\n            type: 'quadratic',\n            mode: 'inout'\n        }\n    });\n```"
+                        "text": "```ts\nTween the bot with quadratic easing.\r\nexperiment.localRotationTween(\r\n    this,\r\n    'home',\r\n    {\r\n        z: Math.PI / 2,\r\n    },\r\n    {\r\n        easing: {\r\n            type: 'quadratic',\r\n            mode: 'inout'\r\n        }\r\n    });\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1461,7 +1461,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Speaks the given text using a synthetic voice and options.\nNote that this is a local effect. The gererated sounds are only played in the current session.\n\nReturns a promise that resolves when the text has been spoken."
+                            "text": "Speaks the given text using a synthetic voice and options.\r\nNote that this is a local effect. The gererated sounds are only played in the current session.\r\n\r\nReturns a promise that resolves when the text has been spoken."
                         }
                     ],
                     "blockTags": [
@@ -1490,7 +1490,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11486,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11486"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11486"
                     }
                 ],
                 "parameters": [
@@ -1558,7 +1558,7 @@
                 }
             },
             "comment": {
-                "text": "Speaks the given text using a synthetic voice and options.\nNote that this is a local effect. The gererated sounds are only played in the current session.\n\nReturns a promise that resolves when the text has been spoken.",
+                "text": "Speaks the given text using a synthetic voice and options.\r\nNote that this is a local effect. The gererated sounds are only played in the current session.\r\n\r\nReturns a promise that resolves when the text has been spoken.",
                 "tags": [
                     {
                         "tagName": "dochash",

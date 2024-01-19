@@ -56,7 +56,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4581,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4581"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4581"
                     }
                 ],
                 "parameters": [
@@ -184,7 +184,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nChange the #state of the bot to \"Running\"\n// Triggers\n```"
+                                    "text": "```ts\nChange the #state of the bot to \"Running\"\r\n// Triggers\n```"
                                 }
                             ]
                         },
@@ -202,7 +202,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nChange the #playbackState of the bot to \"Playing\"\n// Triggers\n```"
+                                    "text": "```ts\nChange the #playbackState of the bot to \"Playing\"\r\n// Triggers\n```"
                                 }
                             ]
                         },
@@ -249,7 +249,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13775,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13775"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13775"
                     }
                 ],
                 "parameters": [
@@ -338,7 +338,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nChange the #state of the bot to \"Running\"\n// Triggers\n```"
+                        "text": "```ts\nChange the #state of the bot to \"Running\"\r\n// Triggers\n```"
                     },
                     {
                         "tagName": "stateRunningOnEnter",
@@ -346,7 +346,7 @@
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nChange the #playbackState of the bot to \"Playing\"\n// Triggers\n```"
+                        "text": "```ts\nChange the #playbackState of the bot to \"Playing\"\r\n// Triggers\n```"
                     },
                     {
                         "tagName": "playbackStatePlayingOnEnter",
@@ -390,7 +390,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "](tags:@onCreate) on all the created bots.\nBy default, bots are created with a unique "
+                            "text": "](tags:@onCreate) on all the created bots.\r\nBy default, bots are created with a unique "
                         },
                         {
                             "kind": "text",
@@ -430,7 +430,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\nBots must be created with at least one tag. If "
+                            "text": ".\r\nBots must be created with at least one tag. If "
                         },
                         {
                             "kind": "code",
@@ -438,7 +438,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " tries to make a bot with zero tags then an error will be thrown.\n\nIf "
+                            "text": " tries to make a bot with zero tags then an error will be thrown.\r\n\r\nIf "
                         },
                         {
                             "kind": "text",
@@ -488,7 +488,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a red bot\nlet redBot = create({\n    color: \"red\"\n});\n```"
+                                    "text": "```ts\nCreate a red bot\r\nlet redBot = create({\r\n    color: \"red\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -497,7 +497,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a parent and a child bot\nlet myParentBot = create({\n  creator: null,\n   label: \"Parent\"\n});\nlet myChildBot = create({\n   creator: getID(myParentBot),\n   label: \"Child\"\n});\n```"
+                                    "text": "```ts\nCreate a parent and a child bot\r\nlet myParentBot = create({\r\n  creator: null,\r\n   label: \"Parent\"\r\n});\r\nlet myChildBot = create({\r\n   creator: getID(myParentBot),\r\n   label: \"Child\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -506,7 +506,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a red bot in the tempLocal  space\nlet myBot = create({ space: \"tempLocal\", color: \"red\" });\n```"
+                                    "text": "```ts\nCreate a red bot in the tempLocal  space\r\nlet myBot = create({ space: \"tempLocal\", color: \"red\" });\n```"
                                 }
                             ]
                         },
@@ -515,7 +515,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a bot from multiple mods\n// myBot is placed in the \"myDimension\" dimension and is colored green\nlet myBot = create({ myDimension: true }, {\n    color: \"green\"\n});\n```"
+                                    "text": "```ts\nCreate a bot from multiple mods\r\n// myBot is placed in the \"myDimension\" dimension and is colored green\r\nlet myBot = create({ myDimension: true }, {\r\n    color: \"green\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -524,7 +524,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a red bot and a blue bot\nlet [myRedBot, myBlueBot] = create({ creator: null}, [\n    {\n       color: \"red\"\n    },\n    {\n      color: \"blue\"\n    }\n});\n```"
+                                    "text": "```ts\nCreate a red bot and a blue bot\r\nlet [myRedBot, myBlueBot] = create({ creator: null}, [\r\n    {\r\n       color: \"red\"\r\n    },\r\n    {\r\n      color: \"blue\"\r\n    }\r\n});\n```"
                                 }
                             ]
                         },
@@ -562,7 +562,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13538,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13538"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13538"
                     }
                 ],
                 "parameters": [
@@ -578,7 +578,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the mods that should be applied to the new bot(s).\nIf no parameters are specified, then the new bot will have its "
+                                    "text": "the mods that should be applied to the new bot(s).\r\nIf no parameters are specified, then the new bot will have its "
                                 },
                                 {
                                     "kind": "text",
@@ -610,7 +610,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ".\nIf an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_."
+                                    "text": ".\r\nIf an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_."
                                 }
                             ],
                             "blockTags": []
@@ -654,7 +654,7 @@
                 }
             },
             "comment": {
-                "text": "Creates a new bot or combination of bots with the given mods. Also triggers [`@onCreate`](tags:@onCreate) on all the created bots.\nBy default, bots are created with a unique id, creator set to the current `bot.id`, and space set to `shared`.\nBots must be created with at least one tag. If `create()` tries to make a bot with zero tags then an error will be thrown.\n\nIf creator references a non-existent bot or a bot with a different space than the created bot, then creator will be set to `null`.",
+                "text": "Creates a new bot or combination of bots with the given mods. Also triggers [`@onCreate`](tags:@onCreate) on all the created bots.\r\nBy default, bots are created with a unique id, creator set to the current `bot.id`, and space set to `shared`.\r\nBots must be created with at least one tag. If `create()` tries to make a bot with zero tags then an error will be thrown.\r\n\r\nIf creator references a non-existent bot or a bot with a different space than the created bot, then creator will be set to `null`.",
                 "tags": [
                     {
                         "tagName": "returns",
@@ -662,23 +662,23 @@
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a red bot\nlet redBot = create({\n    color: \"red\"\n});\n```"
+                        "text": "```ts\nCreate a red bot\r\nlet redBot = create({\r\n    color: \"red\"\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a parent and a child bot\nlet myParentBot = create({\n  creator: null,\n   label: \"Parent\"\n});\nlet myChildBot = create({\n   creator: getID(myParentBot),\n   label: \"Child\"\n});\n```"
+                        "text": "```ts\nCreate a parent and a child bot\r\nlet myParentBot = create({\r\n  creator: null,\r\n   label: \"Parent\"\r\n});\r\nlet myChildBot = create({\r\n   creator: getID(myParentBot),\r\n   label: \"Child\"\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a red bot in the tempLocal  space\nlet myBot = create({ space: \"tempLocal\", color: \"red\" });\n```"
+                        "text": "```ts\nCreate a red bot in the tempLocal  space\r\nlet myBot = create({ space: \"tempLocal\", color: \"red\" });\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a bot from multiple mods\n// myBot is placed in the \"myDimension\" dimension and is colored green\nlet myBot = create({ myDimension: true }, {\n    color: \"green\"\n});\n```"
+                        "text": "```ts\nCreate a bot from multiple mods\r\n// myBot is placed in the \"myDimension\" dimension and is colored green\r\nlet myBot = create({ myDimension: true }, {\r\n    color: \"green\"\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a red bot and a blue bot\nlet [myRedBot, myBlueBot] = create({ creator: null}, [\n    {\n       color: \"red\"\n    },\n    {\n      color: \"blue\"\n    }\n});\n```"
+                        "text": "```ts\nCreate a red bot and a blue bot\r\nlet [myRedBot, myBlueBot] = create({ creator: null}, [\r\n    {\r\n       color: \"red\"\r\n    },\r\n    {\r\n      color: \"blue\"\r\n    }\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -719,7 +719,7 @@
                             "content": [
                                 {
                                     "kind": "text",
-                                    "text": "for each of the destroyed bots.\n\nNote that only destroyable bots will be destroyed. Bots that have "
+                                    "text": "for each of the destroyed bots.\r\n\r\nNote that only destroyable bots will be destroyed. Bots that have "
                                 },
                                 {
                                     "kind": "text",
@@ -735,7 +735,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": " will not be destroyed.\n\nAlso note that all bots that have "
+                                    "text": " will not be destroyed.\r\n\r\nAlso note that all bots that have "
                                 },
                                 {
                                     "kind": "text",
@@ -760,7 +760,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDestroy a the bot with the name \"bob\"\ndestroy(getBot(\"#name\", \"bob\"));\n```"
+                                    "text": "```ts\nDestroy a the bot with the name \"bob\"\r\ndestroy(getBot(\"#name\", \"bob\"));\n```"
                                 }
                             ]
                         },
@@ -769,7 +769,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDestroy all bots that are colored red\ndestroy(getBots(\"#color\", \"red\"));\n```"
+                                    "text": "```ts\nDestroy all bots that are colored red\r\ndestroy(getBots(\"#color\", \"red\"));\n```"
                                 }
                             ]
                         },
@@ -778,7 +778,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDestroy a bot by its ID\n// Destroy the bot with the #id: \"config\"\ndestroy(\"config\");\n```"
+                                    "text": "```ts\nDestroy a bot by its ID\r\n// Destroy the bot with the #id: \"config\"\r\ndestroy(\"config\");\n```"
                                 }
                             ]
                         },
@@ -816,7 +816,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13679,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13679"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13679"
                     }
                 ],
                 "parameters": [
@@ -882,19 +882,19 @@
                 "tags": [
                     {
                         "tagName": "onDestroy",
-                        "text": "for each of the destroyed bots.\n\nNote that only destroyable bots will be destroyed. Bots that have destroyable set to `false` will not be destroyed.\n\nAlso note that all bots that have creator set to the id of a destroyed bot will also be destroyed (unless they are not destroyable). This happens recursively until there are no more bots to destroy."
+                        "text": "for each of the destroyed bots.\r\n\r\nNote that only destroyable bots will be destroyed. Bots that have destroyable set to `false` will not be destroyed.\r\n\r\nAlso note that all bots that have creator set to the id of a destroyed bot will also be destroyed (unless they are not destroyable). This happens recursively until there are no more bots to destroy."
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDestroy a the bot with the name \"bob\"\ndestroy(getBot(\"#name\", \"bob\"));\n```"
+                        "text": "```ts\nDestroy a the bot with the name \"bob\"\r\ndestroy(getBot(\"#name\", \"bob\"));\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDestroy all bots that are colored red\ndestroy(getBots(\"#color\", \"red\"));\n```"
+                        "text": "```ts\nDestroy all bots that are colored red\r\ndestroy(getBots(\"#color\", \"red\"));\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDestroy a bot by its ID\n// Destroy the bot with the #id: \"config\"\ndestroy(\"config\");\n```"
+                        "text": "```ts\nDestroy a bot by its ID\r\n// Destroy the bot with the #id: \"config\"\r\ndestroy(\"config\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -926,7 +926,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the difference between the two given snapshots.\nThe returned value is such that if you were to apply the changes (using "
+                            "text": "Calculates the difference between the two given snapshots.\r\nThe returned value is such that if you were to apply the changes (using "
                         },
                         {
                             "kind": "text",
@@ -943,7 +943,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the diff between two snapshots\nconst first = getSnapshot([thisBot]);\nthisBot.tags.color = 'red';\nconst second = getSnapshot([thisBot]);\nconst diff = diffSnapshots(first, second);\n\nconsole.log(diff);\n```"
+                                    "text": "```ts\nCalculate the diff between two snapshots\r\nconst first = getSnapshot([thisBot]);\r\nthisBot.tags.color = 'red';\r\nconst second = getSnapshot([thisBot]);\r\nconst diff = diffSnapshots(first, second);\r\n\r\nconsole.log(diff);\n```"
                                 }
                             ]
                         },
@@ -981,7 +981,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4494,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4494"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4494"
                     }
                 ],
                 "parameters": [
@@ -1044,11 +1044,11 @@
                 }
             },
             "comment": {
-                "text": "Calculates the difference between the two given snapshots.\nThe returned value is such that if you were to apply the changes (using applyDiffToSnapshot) it represents to the first snapshot you would end up with the second snapshot.",
+                "text": "Calculates the difference between the two given snapshots.\r\nThe returned value is such that if you were to apply the changes (using applyDiffToSnapshot) it represents to the first snapshot you would end up with the second snapshot.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the diff between two snapshots\nconst first = getSnapshot([thisBot]);\nthisBot.tags.color = 'red';\nconst second = getSnapshot([thisBot]);\nconst diff = diffSnapshots(first, second);\n\nconsole.log(diff);\n```"
+                        "text": "```ts\nCalculate the diff between two snapshots\r\nconst first = getSnapshot([thisBot]);\r\nthisBot.tags.color = 'red';\r\nconst second = getSnapshot([thisBot]);\r\nconst diff = diffSnapshots(first, second);\r\n\r\nconsole.log(diff);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1080,7 +1080,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the list of bot links that are stored in tags on the specified bot.\n\nThis function can be useful if you want to discover what tags are linking to bots and get those bot IDs."
+                            "text": "Gets the list of bot links that are stored in tags on the specified bot.\r\n\r\nThis function can be useful if you want to discover what tags are linking to bots and get those bot IDs."
                         }
                     ],
                     "blockTags": [
@@ -1089,7 +1089,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the list of bot links on this bot\nlet botLinks = getBotLinks(thisBot);\n```"
+                                    "text": "```ts\nGet the list of bot links on this bot\r\nlet botLinks = getBotLinks(thisBot);\n```"
                                 }
                             ]
                         },
@@ -1127,7 +1127,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13856,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13856"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13856"
                     }
                 ],
                 "parameters": [
@@ -1169,11 +1169,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the list of bot links that are stored in tags on the specified bot.\n\nThis function can be useful if you want to discover what tags are linking to bots and get those bot IDs.",
+                "text": "Gets the list of bot links that are stored in tags on the specified bot.\r\n\r\nThis function can be useful if you want to discover what tags are linking to bots and get those bot IDs.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the list of bot links on this bot\nlet botLinks = getBotLinks(thisBot);\n```"
+                        "text": "```ts\nGet the list of bot links on this bot\r\nlet botLinks = getBotLinks(thisBot);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1214,7 +1214,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the position of this bot in the #home dimension\nlet position = getBotPosition(thisBot, \"home\");\n```"
+                                    "text": "```ts\nGet the position of this bot in the #home dimension\r\nlet position = getBotPosition(thisBot, \"home\");\n```"
                                 }
                             ]
                         },
@@ -1252,7 +1252,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3976,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3976"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3976"
                     }
                 ],
                 "parameters": [
@@ -1324,7 +1324,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the position of this bot in the #home dimension\nlet position = getBotPosition(thisBot, \"home\");\n```"
+                        "text": "```ts\nGet the position of this bot in the #home dimension\r\nlet position = getBotPosition(thisBot, \"home\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1365,7 +1365,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the rotation of this bot in the #home dimension\nlet rotation = getBotRotation(thisBot, \"home\");\n```"
+                                    "text": "```ts\nGet the rotation of this bot in the #home dimension\r\nlet rotation = getBotRotation(thisBot, \"home\");\n```"
                                 }
                             ]
                         },
@@ -1403,7 +1403,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4005,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4005"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4005"
                     }
                 ],
                 "parameters": [
@@ -1475,7 +1475,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the rotation of this bot in the #home dimension\nlet rotation = getBotRotation(thisBot, \"home\");\n```"
+                        "text": "```ts\nGet the rotation of this bot in the #home dimension\r\nlet rotation = getBotRotation(thisBot, \"home\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1516,7 +1516,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind the number of bots named bob and print it\nconst numberOfBobs = getBotTagValues(\"#name\", \"bob\").length;\nos.toast(numberOfBobs);\n```"
+                                    "text": "```ts\nFind the number of bots named bob and print it\r\nconst numberOfBobs = getBotTagValues(\"#name\", \"bob\").length;\r\nos.toast(numberOfBobs);\n```"
                                 }
                             ]
                         },
@@ -1525,7 +1525,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all the bot ages above 10\nconst agesOver10 = getBotTagValues(\"#age\", age => age > 10);\n```"
+                                    "text": "```ts\nFind all the bot ages above 10\r\nconst agesOver10 = getBotTagValues(\"#age\", age => age > 10);\n```"
                                 }
                             ]
                         },
@@ -1563,7 +1563,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3891,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3891"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3891"
                     }
                 ],
                 "parameters": [
@@ -1627,11 +1627,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind the number of bots named bob and print it\nconst numberOfBobs = getBotTagValues(\"#name\", \"bob\").length;\nos.toast(numberOfBobs);\n```"
+                        "text": "```ts\nFind the number of bots named bob and print it\r\nconst numberOfBobs = getBotTagValues(\"#name\", \"bob\").length;\r\nos.toast(numberOfBobs);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all the bot ages above 10\nconst agesOver10 = getBotTagValues(\"#age\", age => age > 10);\n```"
+                        "text": "```ts\nFind all the bot ages above 10\r\nconst agesOver10 = getBotTagValues(\"#age\", age => age > 10);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1672,7 +1672,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSort a nicely formatted copy of a bot in a tag\nlet bob = getBot(\"#name\", \"bob\");\ntags.savedBot = getFormattedJSON(bob);\n```"
+                                    "text": "```ts\nSort a nicely formatted copy of a bot in a tag\r\nlet bob = getBot(\"#name\", \"bob\");\r\ntags.savedBot = getFormattedJSON(bob);\n```"
                                 }
                             ]
                         },
@@ -1710,7 +1710,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4431,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4431"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4431"
                     }
                 ],
                 "parameters": [
@@ -1753,7 +1753,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSort a nicely formatted copy of a bot in a tag\nlet bob = getBot(\"#name\", \"bob\");\ntags.savedBot = getFormattedJSON(bob);\n```"
+                        "text": "```ts\nSort a nicely formatted copy of a bot in a tag\r\nlet bob = getBot(\"#name\", \"bob\");\r\ntags.savedBot = getFormattedJSON(bob);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1802,7 +1802,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the ID of the current bot\nlet id = getID(thisBot);\n```"
+                                    "text": "```ts\nGet the ID of the current bot\r\nlet id = getID(thisBot);\n```"
                                 }
                             ]
                         },
@@ -1811,7 +1811,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the ID of a bot with #name set to \"bob\"\nlet id = getID(getBot(\"#name\", \"bob\"));\n```"
+                                    "text": "```ts\nGet the ID of a bot with #name set to \"bob\"\r\nlet id = getID(getBot(\"#name\", \"bob\"));\n```"
                                 }
                             ]
                         },
@@ -1849,7 +1849,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4389,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4389"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4389"
                     }
                 ],
                 "parameters": [
@@ -1897,11 +1897,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the ID of the current bot\nlet id = getID(thisBot);\n```"
+                        "text": "```ts\nGet the ID of the current bot\r\nlet id = getID(thisBot);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the ID of a bot with #name set to \"bob\"\nlet id = getID(getBot(\"#name\", \"bob\"));\n```"
+                        "text": "```ts\nGet the ID of a bot with #name set to \"bob\"\r\nlet id = getID(getBot(\"#name\", \"bob\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1942,7 +1942,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStore a copy of a bot in a tag\nlet bob = getBot(\"#name\", \"bob\");\ntags.savedBot = getJSON(bob);\n```"
+                                    "text": "```ts\nStore a copy of a bot in a tag\r\nlet bob = getBot(\"#name\", \"bob\");\r\ntags.savedBot = getJSON(bob);\n```"
                                 }
                             ]
                         },
@@ -1980,7 +1980,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4411,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4411"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4411"
                     }
                 ],
                 "parameters": [
@@ -2023,7 +2023,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nStore a copy of a bot in a tag\nlet bob = getBot(\"#name\", \"bob\");\ntags.savedBot = getJSON(bob);\n```"
+                        "text": "```ts\nStore a copy of a bot in a tag\r\nlet bob = getBot(\"#name\", \"bob\");\r\ntags.savedBot = getJSON(bob);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2064,7 +2064,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a link to this bot\nlet link = getLink(thisBot);\n```"
+                                    "text": "```ts\nCreate a link to this bot\r\nlet link = getLink(thisBot);\n```"
                                 }
                             ]
                         },
@@ -2073,7 +2073,7 @@
                             "content": [
                                 {
                                     "kind": "text",
-                                    "text": "Toast a link to this bot\ntoast(getLink(thisBot));"
+                                    "text": "Toast a link to this bot\r\ntoast(getLink(thisBot));"
                                 }
                             ]
                         },
@@ -2111,7 +2111,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13822,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13822"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13822"
                     }
                 ],
                 "parameters": [
@@ -2184,11 +2184,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a link to this bot\nlet link = getLink(thisBot);\n```"
+                        "text": "```ts\nCreate a link to this bot\r\nlet link = getLink(thisBot);\n```"
                     },
                     {
                         "tagName": "examples",
-                        "text": "Toast a link to this bot\ntoast(getLink(thisBot));"
+                        "text": "Toast a link to this bot\r\ntoast(getLink(thisBot));"
                     },
                     {
                         "tagName": "dochash",
@@ -2266,7 +2266,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4447,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4447"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4447"
                     }
                 ],
                 "parameters": [
@@ -2353,7 +2353,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Get the first bot that matches all of the given filter(s).\nIf multiple bots match the given filter(s), then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\nIf no bots match the given filter(s), then "
+                            "text": "Get the first bot that matches all of the given filter(s).\r\nIf multiple bots match the given filter(s), then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\r\nIf no bots match the given filter(s), then "
                         },
                         {
                             "kind": "code",
@@ -2370,7 +2370,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind a bot with the #test tag\nlet foundBot = getBot(byTag(\"#test\"));\n```"
+                                    "text": "```ts\nFind a bot with the #test tag\r\nlet foundBot = getBot(byTag(\"#test\"));\n```"
                                 }
                             ]
                         },
@@ -2379,7 +2379,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind a bot with #name set to \"bob\" and in the #people dimension\nlet foundBot = getBot(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n```"
+                                    "text": "```ts\nFind a bot with #name set to \"bob\" and in the #people dimension\r\nlet foundBot = getBot(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n```"
                                 }
                             ]
                         },
@@ -2426,7 +2426,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3840,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3840"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3840"
                     }
                 ],
                 "parameters": [
@@ -2462,7 +2462,7 @@
                                             "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                             "line": 755,
                                             "character": 25,
-                                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                         }
                                     ],
                                     "signatures": [
@@ -2477,7 +2477,7 @@
                                                     "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                     "line": 755,
                                                     "character": 25,
-                                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                                    "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                                 }
                                             ],
                                             "parameters": [
@@ -2518,15 +2518,15 @@
                 }
             },
             "comment": {
-                "text": "Get the first bot that matches all of the given filter(s).\nIf multiple bots match the given filter(s), then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\nIf no bots match the given filter(s), then `undefined` is returned.",
+                "text": "Get the first bot that matches all of the given filter(s).\r\nIf multiple bots match the given filter(s), then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\r\nIf no bots match the given filter(s), then `undefined` is returned.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind a bot with the #test tag\nlet foundBot = getBot(byTag(\"#test\"));\n```"
+                        "text": "```ts\nFind a bot with the #test tag\r\nlet foundBot = getBot(byTag(\"#test\"));\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind a bot with #name set to \"bob\" and in the #people dimension\nlet foundBot = getBot(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n```"
+                        "text": "```ts\nFind a bot with #name set to \"bob\" and in the #people dimension\r\nlet foundBot = getBot(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2562,7 +2562,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the first bot that matches the given tag and value.\nIf multiple bots match the given tag and value, then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\nIf no bots match the given tag and value, then "
+                            "text": "Gets the first bot that matches the given tag and value.\r\nIf multiple bots match the given tag and value, then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\r\nIf no bots match the given tag and value, then "
                         },
                         {
                             "kind": "code",
@@ -2579,7 +2579,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind the first bot with #name set to \"bob\"\nlet foundBot = getBot(\"#name\", \"bob\");\n```"
+                                    "text": "```ts\nFind the first bot with #name set to \"bob\"\r\nlet foundBot = getBot(\"#name\", \"bob\");\n```"
                                 }
                             ]
                         },
@@ -2588,7 +2588,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind the first bot with a #height larger than 2\nlet foundBot = getBot(\"#height\", height => height > 2);\n```"
+                                    "text": "```ts\nFind the first bot with a #height larger than 2\r\nlet foundBot = getBot(\"#height\", height => height > 2);\n```"
                                 }
                             ]
                         },
@@ -2597,7 +2597,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind the first bot with the #test tag\nlet foundBot = getBot(\"#test\");\n```"
+                                    "text": "```ts\nFind the first bot with the #test tag\r\nlet foundBot = getBot(\"#test\");\n```"
                                 }
                             ]
                         },
@@ -2644,7 +2644,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3865,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3865"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3865"
                     }
                 ],
                 "parameters": [
@@ -2701,19 +2701,19 @@
                 }
             },
             "comment": {
-                "text": "Gets the first bot that matches the given tag and value.\nIf multiple bots match the given tag and value, then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\nIf no bots match the given tag and value, then `undefined` is returned.",
+                "text": "Gets the first bot that matches the given tag and value.\r\nIf multiple bots match the given tag and value, then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\r\nIf no bots match the given tag and value, then `undefined` is returned.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind the first bot with #name set to \"bob\"\nlet foundBot = getBot(\"#name\", \"bob\");\n```"
+                        "text": "```ts\nFind the first bot with #name set to \"bob\"\r\nlet foundBot = getBot(\"#name\", \"bob\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind the first bot with a #height larger than 2\nlet foundBot = getBot(\"#height\", height => height > 2);\n```"
+                        "text": "```ts\nFind the first bot with a #height larger than 2\r\nlet foundBot = getBot(\"#height\", height => height > 2);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind the first bot with the #test tag\nlet foundBot = getBot(\"#test\");\n```"
+                        "text": "```ts\nFind the first bot with the #test tag\r\nlet foundBot = getBot(\"#test\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2766,7 +2766,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGets all the bots in the inst.\nlet bots = getBots();\n```"
+                                    "text": "```ts\nGets all the bots in the inst.\r\nlet bots = getBots();\n```"
                                 }
                             ]
                         },
@@ -2775,7 +2775,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots with the \"test\" tag\nlet bots = getBots(byTag(\"#test\"));\n```"
+                                    "text": "```ts\nFind all bots with the \"test\" tag\r\nlet bots = getBots(byTag(\"#test\"));\n```"
                                 }
                             ]
                         },
@@ -2784,7 +2784,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots with #name set to \"bob\" and in the #people dimension\nlet bots = getBots(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n```"
+                                    "text": "```ts\nFind all bots with #name set to \"bob\" and in the #people dimension\r\nlet bots = getBots(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n```"
                                 }
                             ]
                         },
@@ -2831,7 +2831,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3775,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3775"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3775"
                     }
                 ],
                 "parameters": [
@@ -2867,7 +2867,7 @@
                                             "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                             "line": 755,
                                             "character": 25,
-                                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                         }
                                     ],
                                     "signatures": [
@@ -2882,7 +2882,7 @@
                                                     "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                     "line": 755,
                                                     "character": 25,
-                                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                                    "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                                 }
                                             ],
                                             "parameters": [
@@ -2930,15 +2930,15 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGets all the bots in the inst.\nlet bots = getBots();\n```"
+                        "text": "```ts\nGets all the bots in the inst.\r\nlet bots = getBots();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots with the \"test\" tag\nlet bots = getBots(byTag(\"#test\"));\n```"
+                        "text": "```ts\nFind all bots with the \"test\" tag\r\nlet bots = getBots(byTag(\"#test\"));\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots with #name set to \"bob\" and in the #people dimension\nlet bots = getBots(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n```"
+                        "text": "```ts\nFind all bots with #name set to \"bob\" and in the #people dimension\r\nlet bots = getBots(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2991,7 +2991,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all the bots with #name set to \"bob\"\nlet bots = getBots(\"#name\", \"bob\");\n```"
+                                    "text": "```ts\nFind all the bots with #name set to \"bob\"\r\nlet bots = getBots(\"#name\", \"bob\");\n```"
                                 }
                             ]
                         },
@@ -3000,7 +3000,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots with a #height larger than 2\nlet bots = getBots(\"#height\", height => height > 2);\n```"
+                                    "text": "```ts\nFind all bots with a #height larger than 2\r\nlet bots = getBots(\"#height\", height => height > 2);\n```"
                                 }
                             ]
                         },
@@ -3009,7 +3009,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots with the #test tag\nlet bots = getBots(\"#test\");\n```"
+                                    "text": "```ts\nFind all bots with the #test tag\r\nlet bots = getBots(\"#test\");\n```"
                                 }
                             ]
                         },
@@ -3092,7 +3092,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3752,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3752"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3752"
                     }
                 ],
                 "parameters": [
@@ -3156,15 +3156,15 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all the bots with #name set to \"bob\"\nlet bots = getBots(\"#name\", \"bob\");\n```"
+                        "text": "```ts\nFind all the bots with #name set to \"bob\"\r\nlet bots = getBots(\"#name\", \"bob\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots with a #height larger than 2\nlet bots = getBots(\"#height\", height => height > 2);\n```"
+                        "text": "```ts\nFind all bots with a #height larger than 2\r\nlet bots = getBots(\"#height\", height => height > 2);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots with the #test tag\nlet bots = getBots(\"#test\");\n```"
+                        "text": "```ts\nFind all bots with the #test tag\r\nlet bots = getBots(\"#test\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3225,7 +3225,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRemove tags named starting with \"abc\" from this bot.\nremoveTags(thisBot, \"abc\");\n```"
+                                    "text": "```ts\nRemove tags named starting with \"abc\" from this bot.\r\nremoveTags(thisBot, \"abc\");\n```"
                                 }
                             ]
                         },
@@ -3234,7 +3234,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRemove tags named \"hello\" using a case-insensitive regex from this bot.\nremoveTags(thisBot, /^hello$/gi);\n```"
+                                    "text": "```ts\nRemove tags named \"hello\" using a case-insensitive regex from this bot.\r\nremoveTags(thisBot, /^hello$/gi);\n```"
                                 }
                             ]
                         },
@@ -3272,7 +3272,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13338,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13338"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13338"
                     }
                 ],
                 "parameters": [
@@ -3361,11 +3361,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRemove tags named starting with \"abc\" from this bot.\nremoveTags(thisBot, \"abc\");\n```"
+                        "text": "```ts\nRemove tags named starting with \"abc\" from this bot.\r\nremoveTags(thisBot, \"abc\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRemove tags named \"hello\" using a case-insensitive regex from this bot.\nremoveTags(thisBot, /^hello$/gi);\n```"
+                        "text": "```ts\nRemove tags named \"hello\" using a case-insensitive regex from this bot.\r\nremoveTags(thisBot, /^hello$/gi);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3406,7 +3406,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRename the \"auxColor\" tag to \"color\"\nrenameTag(thisBot, \"auxColor\", \"color\");\n```"
+                                    "text": "```ts\nRename the \"auxColor\" tag to \"color\"\r\nrenameTag(thisBot, \"auxColor\", \"color\");\n```"
                                 }
                             ]
                         },
@@ -3444,7 +3444,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13387,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13387"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13387"
                     }
                 ],
                 "parameters": [
@@ -3539,7 +3539,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRename the \"auxColor\" tag to \"color\"\nrenameTag(thisBot, \"auxColor\", \"color\");\n```"
+                        "text": "```ts\nRename the \"auxColor\" tag to \"color\"\r\nrenameTag(thisBot, \"auxColor\", \"color\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3571,7 +3571,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.\n\nThis function is useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs."
+                            "text": "Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.\r\n\r\nThis function is useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs."
                         }
                     ],
                     "blockTags": [
@@ -3580,7 +3580,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nChange all references to \"botA\" to \"botB\" on this bot\nupdateBotLinks(thisBot, {\n   \"botA\": \"botB\"\n});\n```"
+                                    "text": "```ts\nChange all references to \"botA\" to \"botB\" on this bot\r\nupdateBotLinks(thisBot, {\r\n   \"botA\": \"botB\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -3618,7 +3618,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13890,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13890"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13890"
                     }
                 ],
                 "parameters": [
@@ -3673,11 +3673,11 @@
                 }
             },
             "comment": {
-                "text": "Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.\n\nThis function is useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.",
+                "text": "Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.\r\n\r\nThis function is useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nChange all references to \"botA\" to \"botB\" on this bot\nupdateBotLinks(thisBot, {\n   \"botA\": \"botB\"\n});\n```"
+                        "text": "```ts\nChange all references to \"botA\" to \"botB\" on this bot\r\nupdateBotLinks(thisBot, {\r\n   \"botA\": \"botB\"\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3709,7 +3709,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates a [Universally Unique IDentifier (UUID)](https://en.wikipedia.org/wiki/Universally_unique_identifier).\nUseful for generating a random identifier that is guaranteed to be unique"
+                            "text": "Creates a [Universally Unique IDentifier (UUID)](https://en.wikipedia.org/wiki/Universally_unique_identifier).\r\nUseful for generating a random identifier that is guaranteed to be unique"
                         }
                     ],
                     "blockTags": [
@@ -3718,7 +3718,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a new UUID and toast it\nconst id = uuid();\nos.toast(id);\n```"
+                                    "text": "```ts\nGenerate a new UUID and toast it\r\nconst id = uuid();\r\nos.toast(id);\n```"
                                 }
                             ]
                         },
@@ -3756,7 +3756,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10173,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10173"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10173"
                     }
                 ],
                 "type": {
@@ -3765,11 +3765,11 @@
                 }
             },
             "comment": {
-                "text": "Creates a [Universally Unique IDentifier (UUID)](https://en.wikipedia.org/wiki/Universally_unique_identifier).\nUseful for generating a random identifier that is guaranteed to be unique",
+                "text": "Creates a [Universally Unique IDentifier (UUID)](https://en.wikipedia.org/wiki/Universally_unique_identifier).\r\nUseful for generating a random identifier that is guaranteed to be unique",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a new UUID and toast it\nconst id = uuid();\nos.toast(id);\n```"
+                        "text": "```ts\nGenerate a new UUID and toast it\r\nconst id = uuid();\r\nos.toast(id);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3839,7 +3839,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13158,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13158"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13158"
                     }
                 ],
                 "parameters": [
@@ -3944,7 +3944,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Deletes the specified number of characters from the given tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nIf a space is specified, then only the tag mask in that space will be changed.\n\nReturns the resulting raw tag value."
+                            "text": "Deletes the specified number of characters from the given tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\r\nIf a space is specified, then only the tag mask in that space will be changed.\r\n\r\nReturns the resulting raw tag value."
                         }
                     ],
                     "blockTags": [
@@ -3953,7 +3953,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDelete the last two characters from a tag mask.\ndeleteTagMaskText(bot, \"myTag\", tags.myTag.length - 2, 2);\n```"
+                                    "text": "```ts\nDelete the last two characters from a tag mask.\r\ndeleteTagMaskText(bot, \"myTag\", tags.myTag.length - 2, 2);\n```"
                                 }
                             ]
                         },
@@ -3962,7 +3962,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDelete the first 3 characters from a tag mask in the local space.\ndeleteTagMaskText(bot, \"myTag\", 0, 3, \"local\");\n```"
+                                    "text": "```ts\nDelete the first 3 characters from a tag mask in the local space.\r\ndeleteTagMaskText(bot, \"myTag\", 0, 3, \"local\");\n```"
                                 }
                             ]
                         },
@@ -4000,7 +4000,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13299,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13299"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13299"
                     }
                 ],
                 "parameters": [
@@ -4125,15 +4125,15 @@
                 }
             },
             "comment": {
-                "text": "Deletes the specified number of characters from the given tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nIf a space is specified, then only the tag mask in that space will be changed.\n\nReturns the resulting raw tag value.",
+                "text": "Deletes the specified number of characters from the given tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\r\nIf a space is specified, then only the tag mask in that space will be changed.\r\n\r\nReturns the resulting raw tag value.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDelete the last two characters from a tag mask.\ndeleteTagMaskText(bot, \"myTag\", tags.myTag.length - 2, 2);\n```"
+                        "text": "```ts\nDelete the last two characters from a tag mask.\r\ndeleteTagMaskText(bot, \"myTag\", tags.myTag.length - 2, 2);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDelete the first 3 characters from a tag mask in the local space.\ndeleteTagMaskText(bot, \"myTag\", 0, 3, \"local\");\n```"
+                        "text": "```ts\nDelete the first 3 characters from a tag mask in the local space.\r\ndeleteTagMaskText(bot, \"myTag\", 0, 3, \"local\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -4165,7 +4165,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Deletes the specified number of characters from the given tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nReturns the resulting raw tag value."
+                            "text": "Deletes the specified number of characters from the given tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\r\nReturns the resulting raw tag value."
                         }
                     ],
                     "blockTags": [
@@ -4174,7 +4174,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDelete the last two characters from a tag.\ndeleteTagText(bot, \"myTag\", tags.myTag.length - 2, 2);\n```"
+                                    "text": "```ts\nDelete the last two characters from a tag.\r\ndeleteTagText(bot, \"myTag\", tags.myTag.length - 2, 2);\n```"
                                 }
                             ]
                         },
@@ -4183,7 +4183,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDelete the first 3 characters from a tag.\ndeleteTagText(bot, \"myTag\", 0, 3);\n```"
+                                    "text": "```ts\nDelete the first 3 characters from a tag.\r\ndeleteTagText(bot, \"myTag\", 0, 3);\n```"
                                 }
                             ]
                         },
@@ -4221,7 +4221,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13259,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13259"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13259"
                     }
                 ],
                 "parameters": [
@@ -4316,15 +4316,15 @@
                 }
             },
             "comment": {
-                "text": "Deletes the specified number of characters from the given tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nReturns the resulting raw tag value.",
+                "text": "Deletes the specified number of characters from the given tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\r\nReturns the resulting raw tag value.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDelete the last two characters from a tag.\ndeleteTagText(bot, \"myTag\", tags.myTag.length - 2, 2);\n```"
+                        "text": "```ts\nDelete the last two characters from a tag.\r\ndeleteTagText(bot, \"myTag\", tags.myTag.length - 2, 2);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDelete the first 3 characters from a tag.\ndeleteTagText(bot, \"myTag\", 0, 3);\n```"
+                        "text": "```ts\nDelete the first 3 characters from a tag.\r\ndeleteTagText(bot, \"myTag\", 0, 3);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -4365,7 +4365,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the \"color\" tag from this bot.\nlet color = getTag(thisBot, \"color\");\n```"
+                                    "text": "```ts\nGet the \"color\" tag from this bot.\r\nlet color = getTag(thisBot, \"color\");\n```"
                                 }
                             ]
                         },
@@ -4403,7 +4403,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4361,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4361"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4361"
                     }
                 ],
                 "parameters": [
@@ -4458,7 +4458,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the \"color\" tag from this bot.\nlet color = getTag(thisBot, \"color\");\n```"
+                        "text": "```ts\nGet the \"color\" tag from this bot.\r\nlet color = getTag(thisBot, \"color\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -4490,7 +4490,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Inserts the given text into the tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nIf a space is specified, then only the tag mask in that space will be changed."
+                            "text": "Inserts the given text into the tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\r\nIf a space is specified, then only the tag mask in that space will be changed."
                         }
                     ],
                     "blockTags": [
@@ -4499,7 +4499,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAdd some text to the end of a tag mask.\ninsertTagMaskText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n```"
+                                    "text": "```ts\nAdd some text to the end of a tag mask.\r\ninsertTagMaskText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n```"
                                 }
                             ]
                         },
@@ -4508,7 +4508,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAdd some text to the beginning of a tag mask that is in the local space.\ninsertTagMaskText(thisBot, \"myTag\", 0, \"abc\", \"local\");\n```"
+                                    "text": "```ts\nAdd some text to the beginning of a tag mask that is in the local space.\r\ninsertTagMaskText(thisBot, \"myTag\", 0, \"abc\", \"local\");\n```"
                                 }
                             ]
                         },
@@ -4546,7 +4546,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13224,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13224"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13224"
                     }
                 ],
                 "parameters": [
@@ -4667,15 +4667,15 @@
                 }
             },
             "comment": {
-                "text": "Inserts the given text into the tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nIf a space is specified, then only the tag mask in that space will be changed.",
+                "text": "Inserts the given text into the tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\r\nIf a space is specified, then only the tag mask in that space will be changed.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nAdd some text to the end of a tag mask.\ninsertTagMaskText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n```"
+                        "text": "```ts\nAdd some text to the end of a tag mask.\r\ninsertTagMaskText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nAdd some text to the beginning of a tag mask that is in the local space.\ninsertTagMaskText(thisBot, \"myTag\", 0, \"abc\", \"local\");\n```"
+                        "text": "```ts\nAdd some text to the beginning of a tag mask that is in the local space.\r\ninsertTagMaskText(thisBot, \"myTag\", 0, \"abc\", \"local\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -4707,7 +4707,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Inserts the given text into the tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nReturns the resulting raw tag value."
+                            "text": "Inserts the given text into the tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\r\nReturns the resulting raw tag value."
                         }
                     ],
                     "blockTags": [
@@ -4716,7 +4716,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAdd some text to the end of a tag.\ninsertTagText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n```"
+                                    "text": "```ts\nAdd some text to the end of a tag.\r\ninsertTagText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n```"
                                 }
                             ]
                         },
@@ -4725,7 +4725,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAdd some text to the beginning of a tag.\ninsertTagText(thisBot, \"myTag\", 0, \"abc\");\n```"
+                                    "text": "```ts\nAdd some text to the beginning of a tag.\r\ninsertTagText(thisBot, \"myTag\", 0, \"abc\");\n```"
                                 }
                             ]
                         },
@@ -4763,7 +4763,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13189,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13189"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13189"
                     }
                 ],
                 "parameters": [
@@ -4858,15 +4858,15 @@
                 }
             },
             "comment": {
-                "text": "Inserts the given text into the tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nReturns the resulting raw tag value.",
+                "text": "Inserts the given text into the tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\r\nReturns the resulting raw tag value.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nAdd some text to the end of a tag.\ninsertTagText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n```"
+                        "text": "```ts\nAdd some text to the end of a tag.\r\ninsertTagText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nAdd some text to the beginning of a tag.\ninsertTagText(thisBot, \"myTag\", 0, \"abc\");\n```"
+                        "text": "```ts\nAdd some text to the beginning of a tag.\r\ninsertTagText(thisBot, \"myTag\", 0, \"abc\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -4907,7 +4907,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSet a bot's color to \"green\".\nsetTag(this, \"color\", \"green\");\n```"
+                                    "text": "```ts\nSet a bot's color to \"green\".\r\nsetTag(this, \"color\", \"green\");\n```"
                                 }
                             ]
                         },
@@ -4945,7 +4945,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13086,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13086"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13086"
                     }
                 ],
                 "parameters": [
@@ -5048,7 +5048,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSet a bot's color to \"green\".\nsetTag(this, \"color\", \"green\");\n```"
+                        "text": "```ts\nSet a bot's color to \"green\".\r\nsetTag(this, \"color\", \"green\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -5089,7 +5089,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSet a bot's color to \"green\".\nsetTagMask(this, \"color\", \"green\")\n```"
+                                    "text": "```ts\nSet a bot's color to \"green\".\r\nsetTagMask(this, \"color\", \"green\")\n```"
                                 }
                             ]
                         },
@@ -5098,7 +5098,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSet a bot's #color to green in the local space.\nsetTagMask(this, \"#color\", \"green\", \"local\");\n```"
+                                    "text": "```ts\nSet a bot's #color to green in the local space.\r\nsetTagMask(this, \"#color\", \"green\", \"local\");\n```"
                                 }
                             ]
                         },
@@ -5136,7 +5136,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13127,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13127"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13127"
                     }
                 ],
                 "parameters": [
@@ -5261,11 +5261,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSet a bot's color to \"green\".\nsetTagMask(this, \"color\", \"green\")\n```"
+                        "text": "```ts\nSet a bot's color to \"green\".\r\nsetTagMask(this, \"color\", \"green\")\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSet a bot's #color to green in the local space.\nsetTagMask(this, \"#color\", \"green\", \"local\");\n```"
+                        "text": "```ts\nSet a bot's #color to green in the local space.\r\nsetTagMask(this, \"#color\", \"green\", \"local\");\n```"
                     },
                     {
                         "tagName": "dochash",

@@ -82,7 +82,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "Gets the tag name mapper that should be used.\nThis is useful for ensuring that the debugger objects utilize different tag names for the front end."
+                                    "text": "Gets the tag name mapper that should be used.\r\nThis is useful for ensuring that the debugger objects utilize different tag names for the front end."
                                 }
                             ],
                             "blockTags": []
@@ -92,7 +92,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1740,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1740"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1740"
                             }
                         ],
                         "type": {
@@ -119,7 +119,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1735,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1735"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1735"
                     }
                 ]
             },
@@ -209,7 +209,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1915,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1915"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1915"
                             }
                         ],
                         "type": {
@@ -232,7 +232,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1920,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1920"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1920"
                             }
                         ],
                         "signatures": [
@@ -256,7 +256,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1920,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1920"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1920"
                                     }
                                 ],
                                 "type": {
@@ -284,7 +284,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1927,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1927"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1927"
                             }
                         ],
                         "signatures": [
@@ -308,7 +308,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1927,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1927"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1927"
                                     }
                                 ],
                                 "parameters": [
@@ -381,7 +381,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1911,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1911"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1911"
                     }
                 ]
             },
@@ -461,7 +461,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1945,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1945"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1945"
                             }
                         ],
                         "type": {
@@ -491,7 +491,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1960,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1960"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1960"
                             }
                         ],
                         "type": {
@@ -521,7 +521,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1955,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1955"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1955"
                             }
                         ],
                         "type": {
@@ -551,7 +551,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1940,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1940"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1940"
                             }
                         ],
                         "type": {
@@ -581,7 +581,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1950,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1950"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1950"
                             }
                         ],
                         "type": {
@@ -607,7 +607,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1936,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1936"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1936"
                     }
                 ]
             },
@@ -685,7 +685,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1902,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1902"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1902"
                             }
                         ],
                         "type": {
@@ -720,7 +720,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1881,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1881"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1881"
                             }
                         ],
                         "type": {
@@ -759,7 +759,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1897,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1897"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1897"
                             }
                         ],
                         "type": {
@@ -777,7 +777,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The state of the pause.\nIndicates whether the pause is before or after the node was executed."
+                                    "text": "The state of the pause.\r\nIndicates whether the pause is before or after the node was executed."
                                 }
                             ],
                             "blockTags": []
@@ -787,7 +787,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1892,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1892"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1892"
                             }
                         ],
                         "type": {
@@ -824,7 +824,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1886,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1886"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1886"
                             }
                         ],
                         "type": {
@@ -854,7 +854,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1877,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1877"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1877"
                     }
                 ]
             },
@@ -932,7 +932,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1695,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1695"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1695"
                             }
                         ],
                         "type": {
@@ -967,7 +967,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1710,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1710"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1710"
                             }
                         ],
                         "type": {
@@ -1002,7 +1002,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1705,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1705"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1705"
                             }
                         ],
                         "type": {
@@ -1037,7 +1037,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1723,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1723"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1723"
                             }
                         ],
                         "type": {
@@ -1065,7 +1065,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1700,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1700"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1700"
                             }
                         ],
                         "type": {
@@ -1098,7 +1098,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1719,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1719"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1719"
                     }
                 ],
                 "extendedTypes": [
@@ -1186,7 +1186,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1695,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1695"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1695"
                             }
                         ],
                         "type": {
@@ -1214,7 +1214,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1710,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1710"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1710"
                             }
                         ],
                         "type": {
@@ -1242,7 +1242,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1705,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1705"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1705"
                             }
                         ],
                         "type": {
@@ -1270,7 +1270,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1700,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1700"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1700"
                             }
                         ],
                         "type": {
@@ -1295,7 +1295,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1691,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1691"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1691"
                     }
                 ],
                 "extendedBy": [
@@ -1384,7 +1384,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1997,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1997"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1997"
                             }
                         ],
                         "type": {
@@ -1412,7 +1412,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1973,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1973"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1973"
                             }
                         ],
                         "type": {
@@ -1430,7 +1430,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The scope that the variable exists in.\n\n\"block\" indicates that the variable was defined in and exists only in the current block.\n\"frame\" indicates that the variable was defined in and exists in the current stack frame.\n\"closure\" indicates that the variable was inherited from a parent stack frame."
+                                    "text": "The scope that the variable exists in.\r\n\r\n\"block\" indicates that the variable was defined in and exists only in the current block.\r\n\"frame\" indicates that the variable was defined in and exists in the current stack frame.\r\n\"closure\" indicates that the variable was inherited from a parent stack frame."
                                 }
                             ],
                             "blockTags": []
@@ -1440,7 +1440,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1987,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1987"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1987"
                             }
                         ],
                         "type": {
@@ -1481,7 +1481,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1978,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1978"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1978"
                             }
                         ],
                         "type": {
@@ -1509,7 +1509,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1992,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1992"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1992"
                             }
                         ],
                         "type": {
@@ -1535,7 +1535,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1969,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1969"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1969"
                     }
                 ]
             },
@@ -1568,7 +1568,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface that contains options for a normal debugger.\nThat is, a debugger that is not pausable."
+                            "text": "Defines an interface that contains options for a normal debugger.\r\nThat is, a debugger that is not pausable."
                         }
                     ],
                     "blockTags": [
@@ -1605,7 +1605,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "Whether to allow scripts to be asynchronous.\nIf false, then all scripts will be forced to be synchronous.\nDefaults to true."
+                                    "text": "Whether to allow scripts to be asynchronous.\r\nIf false, then all scripts will be forced to be synchronous.\r\nDefaults to true."
                                 }
                             ],
                             "blockTags": []
@@ -1615,7 +1615,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1757,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1757"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1757"
                             }
                         ],
                         "type": {
@@ -1640,7 +1640,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The data that the configBot should be created from.\nCan be a mod or another bot."
+                                    "text": "The data that the configBot should be created from.\r\nCan be a mod or another bot."
                                 }
                             ],
                             "blockTags": []
@@ -1650,7 +1650,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1763,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1763"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1763"
                             }
                         ],
                         "type": {
@@ -1693,7 +1693,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1774,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1774"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1774"
                             }
                         ],
                         "type": {
@@ -1723,7 +1723,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1750,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1750"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1750"
                             }
                         ],
                         "type": {
@@ -1753,7 +1753,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1773,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1773"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1773"
                     }
                 ],
                 "extendedTypes": [
@@ -1769,7 +1769,7 @@
                 ]
             },
             "comment": {
-                "text": "Defines an interface that contains options for a normal debugger.\nThat is, a debugger that is not pausable.",
+                "text": "Defines an interface that contains options for a normal debugger.\r\nThat is, a debugger that is not pausable.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1797,7 +1797,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface that contains options for a pausable debugger.\nThat is, a debugger that is pausable."
+                            "text": "Defines an interface that contains options for a pausable debugger.\r\nThat is, a debugger that is pausable."
                         }
                     ],
                     "blockTags": [
@@ -1834,7 +1834,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "Whether to allow scripts to be asynchronous.\nIf false, then all scripts will be forced to be synchronous.\nDefaults to true."
+                                    "text": "Whether to allow scripts to be asynchronous.\r\nIf false, then all scripts will be forced to be synchronous.\r\nDefaults to true."
                                 }
                             ],
                             "blockTags": []
@@ -1844,7 +1844,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1757,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1757"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1757"
                             }
                         ],
                         "type": {
@@ -1869,7 +1869,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The data that the configBot should be created from.\nCan be a mod or another bot."
+                                    "text": "The data that the configBot should be created from.\r\nCan be a mod or another bot."
                                 }
                             ],
                             "blockTags": []
@@ -1879,7 +1879,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1763,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1763"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1763"
                             }
                         ],
                         "type": {
@@ -1920,7 +1920,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1785,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1785"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1785"
                             }
                         ],
                         "type": {
@@ -1950,7 +1950,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1750,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1750"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1750"
                             }
                         ],
                         "type": {
@@ -1980,7 +1980,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1784,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1784"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1784"
                     }
                 ],
                 "extendedTypes": [
@@ -1996,7 +1996,7 @@
                 ]
             },
             "comment": {
-                "text": "Defines an interface that contains options for a pausable debugger.\nThat is, a debugger that is pausable.",
+                "text": "Defines an interface that contains options for a pausable debugger.\r\nThat is, a debugger that is pausable.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -2069,7 +2069,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1864,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1864"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1864"
                             }
                         ],
                         "type": {
@@ -2097,7 +2097,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1834,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1834"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1834"
                             }
                         ],
                         "type": {
@@ -2124,7 +2124,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "Whether the trigger is enabled.\nDefaults to true."
+                                    "text": "Whether the trigger is enabled.\r\nDefaults to true."
                                 }
                             ],
                             "blockTags": []
@@ -2134,7 +2134,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1846,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1846"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1846"
                             }
                         ],
                         "type": {
@@ -2169,7 +2169,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1829,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1829"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1829"
                             }
                         ],
                         "type": {
@@ -2196,7 +2196,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The states that the trigger should use.\nDefaults to [\"before\"] if not specified."
+                                    "text": "The states that the trigger should use.\r\nDefaults to [\"before\"] if not specified."
                                 }
                             ],
                             "blockTags": []
@@ -2206,7 +2206,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1840,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1840"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1840"
                             }
                         ],
                         "type": {
@@ -2253,7 +2253,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1869,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1869"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1869"
                             }
                         ],
                         "type": {
@@ -2281,7 +2281,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1859,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1859"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1859"
                             }
                         ],
                         "type": {
@@ -2309,7 +2309,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1855,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1855"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1855"
                     }
                 ],
                 "extendedTypes": [
@@ -2397,7 +2397,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1834,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1834"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1834"
                             }
                         ],
                         "type": {
@@ -2417,7 +2417,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "Whether the trigger is enabled.\nDefaults to true."
+                                    "text": "Whether the trigger is enabled.\r\nDefaults to true."
                                 }
                             ],
                             "blockTags": []
@@ -2427,7 +2427,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1846,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1846"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1846"
                             }
                         ],
                         "type": {
@@ -2455,7 +2455,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1829,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1829"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1829"
                             }
                         ],
                         "type": {
@@ -2475,7 +2475,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The states that the trigger should use.\nDefaults to [\"before\"] if not specified."
+                                    "text": "The states that the trigger should use.\r\nDefaults to [\"before\"] if not specified."
                                 }
                             ],
                             "blockTags": []
@@ -2485,7 +2485,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1840,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1840"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1840"
                             }
                         ],
                         "type": {
@@ -2522,7 +2522,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1825,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1825"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1825"
                     }
                 ],
                 "extendedBy": [
@@ -2609,7 +2609,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1667,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1667"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1667"
                             }
                         ],
                         "type": {
@@ -2637,7 +2637,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1662,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1662"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1662"
                             }
                         ],
                         "type": {
@@ -2665,7 +2665,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1672,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1672"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1672"
                             }
                         ],
                         "type": {
@@ -2693,7 +2693,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1658,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1658"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1658"
                     }
                 ]
             },
@@ -2755,7 +2755,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1681,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1681"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1681"
                     }
                 ],
                 "type": {

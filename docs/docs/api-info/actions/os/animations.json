@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Animates multiple tags on the given bot based on the specified parameters.\n\nThis works similarly to "
+                            "text": "Animates multiple tags on the given bot based on the specified parameters.\r\n\r\nThis works similarly to "
                         },
                         {
                             "kind": "text",
@@ -26,7 +26,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " but instead of providing a tag name, you instead provide an object for the fromValue and toValue options which contains the tags that should be animated.\n\nReturns a promise that resolves when the animation is finished and throws an error when the animation is canceled. This is useful for gradually changing a set of tags on a bot over time. For example, moving a bot from point A to point B without teleporting it.\n\nUnlike calling "
+                            "text": " but instead of providing a tag name, you instead provide an object for the fromValue and toValue options which contains the tags that should be animated.\r\n\r\nReturns a promise that resolves when the animation is finished and throws an error when the animation is canceled. This is useful for gradually changing a set of tags on a bot over time. For example, moving a bot from point A to point B without teleporting it.\r\n\r\nUnlike calling "
                         },
                         {
                             "kind": "text",
@@ -34,7 +34,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " multiple times, animations started with this function are grouped together. This means that canceling one animation in the group will also cancel the others.\n\nThis function is fully integrated with tag masks. This lets you animate tag values in the tempLocal, local, player, and shared spaces."
+                            "text": " multiple times, animations started with this function are grouped together. This means that canceling one animation in the group will also cancel the others.\r\n\r\nThis function is fully integrated with tag masks. This lets you animate tag values in the tempLocal, local, player, and shared spaces."
                         }
                     ],
                     "blockTags": [
@@ -43,7 +43,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAnimate the #count tag from 0 to 1 over 5 seconds.\nawait animateTag(bot, {\n    fromValue: {\n        homeX: 0,\n        homeY: 0,\n    },\n    toValue: {\n        homeX: 1,\n        homeY: 1\n    },\n    duration: 5\n});\n\nos.toast(\"Animation finished!\");\n```"
+                                    "text": "```ts\nAnimate the #count tag from 0 to 1 over 5 seconds.\r\nawait animateTag(bot, {\r\n    fromValue: {\r\n        homeX: 0,\r\n        homeY: 0,\r\n    },\r\n    toValue: {\r\n        homeX: 1,\r\n        homeY: 1\r\n    },\r\n    duration: 5\r\n});\r\n\r\nos.toast(\"Animation finished!\");\n```"
                                 }
                             ]
                         },
@@ -52,7 +52,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAnimate tags in tempShared space.\nawait animateTag(bot, {\n    fromValue: {\n        homeX: 0,\n        homeY: 0,\n    },\n    toValue: {\n        homeX: 5,\n        homeY: 5\n    },\n    duration: 2,\n    tagMaskSpace: 'tempShared'\n});\n```"
+                                    "text": "```ts\nAnimate tags in tempShared space.\r\nawait animateTag(bot, {\r\n    fromValue: {\r\n        homeX: 0,\r\n        homeY: 0,\r\n    },\r\n    toValue: {\r\n        homeX: 5,\r\n        homeY: 5\r\n    },\r\n    duration: 2,\r\n    tagMaskSpace: 'tempShared'\r\n});\n```"
                                 }
                             ]
                         },
@@ -99,7 +99,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10353,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10353"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10353"
                     }
                 ],
                 "parameters": [
@@ -198,15 +198,15 @@
                 }
             },
             "comment": {
-                "text": "Animates multiple tags on the given bot based on the specified parameters.\n\nThis works similarly to animateTag-byTag but instead of providing a tag name, you instead provide an object for the fromValue and toValue options which contains the tags that should be animated.\n\nReturns a promise that resolves when the animation is finished and throws an error when the animation is canceled. This is useful for gradually changing a set of tags on a bot over time. For example, moving a bot from point A to point B without teleporting it.\n\nUnlike calling animateTag-byTag multiple times, animations started with this function are grouped together. This means that canceling one animation in the group will also cancel the others.\n\nThis function is fully integrated with tag masks. This lets you animate tag values in the tempLocal, local, player, and shared spaces.",
+                "text": "Animates multiple tags on the given bot based on the specified parameters.\r\n\r\nThis works similarly to animateTag-byTag but instead of providing a tag name, you instead provide an object for the fromValue and toValue options which contains the tags that should be animated.\r\n\r\nReturns a promise that resolves when the animation is finished and throws an error when the animation is canceled. This is useful for gradually changing a set of tags on a bot over time. For example, moving a bot from point A to point B without teleporting it.\r\n\r\nUnlike calling animateTag-byTag multiple times, animations started with this function are grouped together. This means that canceling one animation in the group will also cancel the others.\r\n\r\nThis function is fully integrated with tag masks. This lets you animate tag values in the tempLocal, local, player, and shared spaces.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nAnimate the #count tag from 0 to 1 over 5 seconds.\nawait animateTag(bot, {\n    fromValue: {\n        homeX: 0,\n        homeY: 0,\n    },\n    toValue: {\n        homeX: 1,\n        homeY: 1\n    },\n    duration: 5\n});\n\nos.toast(\"Animation finished!\");\n```"
+                        "text": "```ts\nAnimate the #count tag from 0 to 1 over 5 seconds.\r\nawait animateTag(bot, {\r\n    fromValue: {\r\n        homeX: 0,\r\n        homeY: 0,\r\n    },\r\n    toValue: {\r\n        homeX: 1,\r\n        homeY: 1\r\n    },\r\n    duration: 5\r\n});\r\n\r\nos.toast(\"Animation finished!\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nAnimate tags in tempShared space.\nawait animateTag(bot, {\n    fromValue: {\n        homeX: 0,\n        homeY: 0,\n    },\n    toValue: {\n        homeX: 5,\n        homeY: 5\n    },\n    duration: 2,\n    tagMaskSpace: 'tempShared'\n});\n```"
+                        "text": "```ts\nAnimate tags in tempShared space.\r\nawait animateTag(bot, {\r\n    fromValue: {\r\n        homeX: 0,\r\n        homeY: 0,\r\n    },\r\n    toValue: {\r\n        homeX: 5,\r\n        homeY: 5\r\n    },\r\n    duration: 2,\r\n    tagMaskSpace: 'tempShared'\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -242,7 +242,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Animates the tag on the given bot based on the specified parameters.\nReturns a promise that resolves when the animation is finished and throws an error when the animation is canceled.\nThis is useful for gradually changing a tag on a bot over time. For example, moving a bot from point A to point B without teleporting it.\n\n"
+                            "text": "Animates the tag on the given bot based on the specified parameters.\r\nReturns a promise that resolves when the animation is finished and throws an error when the animation is canceled.\r\nThis is useful for gradually changing a tag on a bot over time. For example, moving a bot from point A to point B without teleporting it.\r\n\r\n"
                         },
                         {
                             "kind": "text",
@@ -291,7 +291,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAnimate the #count tag from 0 to 1 over 5 seconds.\nawait animateTag(bot, \"count\", {\n    fromValue: 0,\n    toValue: 1,\n    duration: 5\n});\nos.toast(\"Animation finished!\");\n```"
+                                    "text": "```ts\nAnimate the #count tag from 0 to 1 over 5 seconds.\r\nawait animateTag(bot, \"count\", {\r\n    fromValue: 0,\r\n    toValue: 1,\r\n    duration: 5\r\n});\r\nos.toast(\"Animation finished!\");\n```"
                                 }
                             ]
                         },
@@ -300,7 +300,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRun 2 animations in sequence.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2\n});\n\nawait animateTag(bot, \"homeY\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2\n});\n```"
+                                    "text": "```ts\nRun 2 animations in sequence.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2\r\n});\r\n\r\nawait animateTag(bot, \"homeY\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2\r\n});\n```"
                                 }
                             ]
                         },
@@ -309,7 +309,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRun an animation while the #loop tag is true.\nwhile(tags.loop) {\n    await animateTag(bot, \"homeX\", {\n        fromValue: 0,\n        toValue: 5,\n        duration: 2\n    });\n}\n```"
+                                    "text": "```ts\nRun an animation while the #loop tag is true.\r\nwhile(tags.loop) {\r\n    await animateTag(bot, \"homeX\", {\r\n        fromValue: 0,\r\n        toValue: 5,\r\n        duration: 2\r\n    });\r\n}\n```"
                                 }
                             ]
                         },
@@ -318,7 +318,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRun an animation with a \"bouncy\" easing mode.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2,\n    easing: {\n        type: \"elastic\",\n        mode: \"out\"\n    }\n});\n```"
+                                    "text": "```ts\nRun an animation with a \"bouncy\" easing mode.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2,\r\n    easing: {\r\n        type: \"elastic\",\r\n        mode: \"out\"\r\n    }\r\n});\n```"
                                 }
                             ]
                         },
@@ -327,7 +327,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRun an animation with a custom easing function that causes the animation to progress in 10 distinct steps.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2,\n    easing: (k) => {\n        return Math.floor(k * 10) / 10;\n    }\n});\n```"
+                                    "text": "```ts\nRun an animation with a custom easing function that causes the animation to progress in 10 distinct steps.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2,\r\n    easing: (k) => {\r\n        return Math.floor(k * 10) / 10;\r\n    }\r\n});\n```"
                                 }
                             ]
                         },
@@ -336,7 +336,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRun an animation that starts in 1 second.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2,\n    startTime: os.localTime + 1000,\n});\n```"
+                                    "text": "```ts\nRun an animation that starts in 1 second.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2,\r\n    startTime: os.localTime + 1000,\r\n});\n```"
                                 }
                             ]
                         },
@@ -345,7 +345,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAnimate a tag in tempShared space.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2,\n    tagMaskSpace: 'tempShared'\n});\n```"
+                                    "text": "```ts\nAnimate a tag in tempShared space.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2,\r\n    tagMaskSpace: 'tempShared'\r\n});\n```"
                                 }
                             ]
                         },
@@ -354,7 +354,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCancel animations on the #homeX tag.\nanimateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2\n}).then(() => {\n    os.toast(\"Animation Finished!\");\n}).catch(() => {\n    os.toast(\"Animation Canceled!\");\n});\n\nawait os.sleep(500);\n\nanimateTag(bot, \"homeX\", null);\n```"
+                                    "text": "```ts\nCancel animations on the #homeX tag.\r\nanimateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2\r\n}).then(() => {\r\n    os.toast(\"Animation Finished!\");\r\n}).catch(() => {\r\n    os.toast(\"Animation Canceled!\");\r\n});\r\n\r\nawait os.sleep(500);\r\n\r\nanimateTag(bot, \"homeX\", null);\n```"
                                 }
                             ]
                         },
@@ -401,7 +401,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10295,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10295"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10295"
                     }
                 ],
                 "parameters": [
@@ -520,39 +520,39 @@
                 }
             },
             "comment": {
-                "text": "Animates the tag on the given bot based on the specified parameters.\nReturns a promise that resolves when the animation is finished and throws an error when the animation is canceled.\nThis is useful for gradually changing a tag on a bot over time. For example, moving a bot from point A to point B without teleporting it.\n\nanimateTag-byTag is fully integrated with tag masks. This lets you animate tag values in the `tempLocal`, `local`, `player`, and `shared` spaces.",
+                "text": "Animates the tag on the given bot based on the specified parameters.\r\nReturns a promise that resolves when the animation is finished and throws an error when the animation is canceled.\r\nThis is useful for gradually changing a tag on a bot over time. For example, moving a bot from point A to point B without teleporting it.\r\n\r\nanimateTag-byTag is fully integrated with tag masks. This lets you animate tag values in the `tempLocal`, `local`, `player`, and `shared` spaces.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nAnimate the #count tag from 0 to 1 over 5 seconds.\nawait animateTag(bot, \"count\", {\n    fromValue: 0,\n    toValue: 1,\n    duration: 5\n});\nos.toast(\"Animation finished!\");\n```"
+                        "text": "```ts\nAnimate the #count tag from 0 to 1 over 5 seconds.\r\nawait animateTag(bot, \"count\", {\r\n    fromValue: 0,\r\n    toValue: 1,\r\n    duration: 5\r\n});\r\nos.toast(\"Animation finished!\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRun 2 animations in sequence.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2\n});\n\nawait animateTag(bot, \"homeY\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2\n});\n```"
+                        "text": "```ts\nRun 2 animations in sequence.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2\r\n});\r\n\r\nawait animateTag(bot, \"homeY\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRun an animation while the #loop tag is true.\nwhile(tags.loop) {\n    await animateTag(bot, \"homeX\", {\n        fromValue: 0,\n        toValue: 5,\n        duration: 2\n    });\n}\n```"
+                        "text": "```ts\nRun an animation while the #loop tag is true.\r\nwhile(tags.loop) {\r\n    await animateTag(bot, \"homeX\", {\r\n        fromValue: 0,\r\n        toValue: 5,\r\n        duration: 2\r\n    });\r\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRun an animation with a \"bouncy\" easing mode.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2,\n    easing: {\n        type: \"elastic\",\n        mode: \"out\"\n    }\n});\n```"
+                        "text": "```ts\nRun an animation with a \"bouncy\" easing mode.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2,\r\n    easing: {\r\n        type: \"elastic\",\r\n        mode: \"out\"\r\n    }\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRun an animation with a custom easing function that causes the animation to progress in 10 distinct steps.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2,\n    easing: (k) => {\n        return Math.floor(k * 10) / 10;\n    }\n});\n```"
+                        "text": "```ts\nRun an animation with a custom easing function that causes the animation to progress in 10 distinct steps.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2,\r\n    easing: (k) => {\r\n        return Math.floor(k * 10) / 10;\r\n    }\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRun an animation that starts in 1 second.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2,\n    startTime: os.localTime + 1000,\n});\n```"
+                        "text": "```ts\nRun an animation that starts in 1 second.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2,\r\n    startTime: os.localTime + 1000,\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nAnimate a tag in tempShared space.\nawait animateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2,\n    tagMaskSpace: 'tempShared'\n});\n```"
+                        "text": "```ts\nAnimate a tag in tempShared space.\r\nawait animateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2,\r\n    tagMaskSpace: 'tempShared'\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCancel animations on the #homeX tag.\nanimateTag(bot, \"homeX\", {\n    fromValue: 0,\n    toValue: 5,\n    duration: 2\n}).then(() => {\n    os.toast(\"Animation Finished!\");\n}).catch(() => {\n    os.toast(\"Animation Canceled!\");\n});\n\nawait os.sleep(500);\n\nanimateTag(bot, \"homeX\", null);\n```"
+                        "text": "```ts\nCancel animations on the #homeX tag.\r\nanimateTag(bot, \"homeX\", {\r\n    fromValue: 0,\r\n    toValue: 5,\r\n    duration: 2\r\n}).then(() => {\r\n    os.toast(\"Animation Finished!\");\r\n}).catch(() => {\r\n    os.toast(\"Animation Canceled!\");\r\n});\r\n\r\nawait os.sleep(500);\r\n\r\nanimateTag(bot, \"homeX\", null);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -588,7 +588,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Cancels the animations that are running on the given bot(s).\nIf a tag is specified then only animations for the given tag will be canceled."
+                            "text": "Cancels the animations that are running on the given bot(s).\r\nIf a tag is specified then only animations for the given tag will be canceled."
                         }
                     ],
                     "blockTags": [
@@ -626,7 +626,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10609,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10609"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10609"
                     }
                 ],
                 "parameters": [
@@ -724,7 +724,7 @@
                 }
             },
             "comment": {
-                "text": "Cancels the animations that are running on the given bot(s).\nIf a tag is specified then only animations for the given tag will be canceled.",
+                "text": "Cancels the animations that are running on the given bot(s).\r\nIf a tag is specified then only animations for the given tag will be canceled.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -756,7 +756,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Starts the given animation on the given bot or list of bots using the given options. Returns a promise that resolves once the animation(s) have been started.\n\nTriggers the "
+                            "text": "Starts the given animation on the given bot or list of bots using the given options. Returns a promise that resolves once the animation(s) have been started.\r\n\r\nTriggers the "
                         },
                         {
                             "kind": "text",
@@ -781,7 +781,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStart the \"Run\" animation on this bot\nawait os.startFormAnimation(thisBot, \"Run\");\n```"
+                                    "text": "```ts\nStart the \"Run\" animation on this bot\r\nawait os.startFormAnimation(thisBot, \"Run\");\n```"
                                 }
                             ]
                         },
@@ -790,7 +790,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStart the \"Run\" animation on every bot in the home dimension\nawait os.startFormAnimation(getBots(inDimension(\"home\")), \"Run\");\n```"
+                                    "text": "```ts\nStart the \"Run\" animation on every bot in the home dimension\r\nawait os.startFormAnimation(getBots(inDimension(\"home\")), \"Run\");\n```"
                                 }
                             ]
                         },
@@ -799,7 +799,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStart an animation that loops 5 times\nawait os.startFormAnimation(thisBot, \"Run\", {\n    loop: {\n        mode: 'repeat',\n        count: 5\n    }\n});\n```"
+                                    "text": "```ts\nStart an animation that loops 5 times\r\nawait os.startFormAnimation(thisBot, \"Run\", {\r\n    loop: {\r\n        mode: 'repeat',\r\n        count: 5\r\n    }\r\n});\n```"
                                 }
                             ]
                         },
@@ -808,7 +808,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStart an animation which starts playing 5 seconds in the future\nawait os.startFormAnimation(thisBot, \"Run\", {\n    startTime: os.localTime + 5000\n});\n```"
+                                    "text": "```ts\nStart an animation which starts playing 5 seconds in the future\r\nawait os.startFormAnimation(thisBot, \"Run\", {\r\n    startTime: os.localTime + 5000\r\n});\n```"
                                 }
                             ]
                         },
@@ -817,7 +817,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStart an animation which plays at half its normal speed\nawait os.startFormAnimation(thisBot, \"Run\", {\n    timeScale: 0.5\n});\n```"
+                                    "text": "```ts\nStart an animation which plays at half its normal speed\r\nawait os.startFormAnimation(thisBot, \"Run\", {\r\n    timeScale: 0.5\r\n});\n```"
                                 }
                             ]
                         },
@@ -891,7 +891,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9422,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9422"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9422"
                     }
                 ],
                 "parameters": [
@@ -1021,27 +1021,27 @@
                 }
             },
             "comment": {
-                "text": "Starts the given animation on the given bot or list of bots using the given options. Returns a promise that resolves once the animation(s) have been started.\n\nTriggers the @onFormAnimationStarted and @onAnyFormAnimationStarted listeners once the animation has started.",
+                "text": "Starts the given animation on the given bot or list of bots using the given options. Returns a promise that resolves once the animation(s) have been started.\r\n\r\nTriggers the @onFormAnimationStarted and @onAnyFormAnimationStarted listeners once the animation has started.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nStart the \"Run\" animation on this bot\nawait os.startFormAnimation(thisBot, \"Run\");\n```"
+                        "text": "```ts\nStart the \"Run\" animation on this bot\r\nawait os.startFormAnimation(thisBot, \"Run\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nStart the \"Run\" animation on every bot in the home dimension\nawait os.startFormAnimation(getBots(inDimension(\"home\")), \"Run\");\n```"
+                        "text": "```ts\nStart the \"Run\" animation on every bot in the home dimension\r\nawait os.startFormAnimation(getBots(inDimension(\"home\")), \"Run\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nStart an animation that loops 5 times\nawait os.startFormAnimation(thisBot, \"Run\", {\n    loop: {\n        mode: 'repeat',\n        count: 5\n    }\n});\n```"
+                        "text": "```ts\nStart an animation that loops 5 times\r\nawait os.startFormAnimation(thisBot, \"Run\", {\r\n    loop: {\r\n        mode: 'repeat',\r\n        count: 5\r\n    }\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nStart an animation which starts playing 5 seconds in the future\nawait os.startFormAnimation(thisBot, \"Run\", {\n    startTime: os.localTime + 5000\n});\n```"
+                        "text": "```ts\nStart an animation which starts playing 5 seconds in the future\r\nawait os.startFormAnimation(thisBot, \"Run\", {\r\n    startTime: os.localTime + 5000\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nStart an animation which plays at half its normal speed\nawait os.startFormAnimation(thisBot, \"Run\", {\n    timeScale: 0.5\n});\n```"
+                        "text": "```ts\nStart an animation which plays at half its normal speed\r\nawait os.startFormAnimation(thisBot, \"Run\", {\r\n    timeScale: 0.5\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1089,7 +1089,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Stops the animations that are running on the given bot or list of bots using the given options. Returns a promise that resolves once the animations have been stopped.\n\nThis function only works for animations that have been started by "
+                            "text": "Stops the animations that are running on the given bot or list of bots using the given options. Returns a promise that resolves once the animations have been stopped.\r\n\r\nThis function only works for animations that have been started by "
                         },
                         {
                             "kind": "text",
@@ -1097,7 +1097,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\n\nTriggers the "
+                            "text": ".\r\n\r\nTriggers the "
                         },
                         {
                             "kind": "text",
@@ -1122,7 +1122,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStop the animations on this bot\nawait os.stopFormAnimation(thisBot);\n```"
+                                    "text": "```ts\nStop the animations on this bot\r\nawait os.stopFormAnimation(thisBot);\n```"
                                 }
                             ]
                         },
@@ -1131,7 +1131,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSlowly stop the animations on this bot\nawait os.stopFormAnimation(thisBot, {\n    fadeDuration: 1000 // Take 1 second to stop the animation\n});\n```"
+                                    "text": "```ts\nSlowly stop the animations on this bot\r\nawait os.stopFormAnimation(thisBot, {\r\n    fadeDuration: 1000 // Take 1 second to stop the animation\r\n});\n```"
                                 }
                             ]
                         },
@@ -1140,7 +1140,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStop the current animation 5 seconds in the future\nawait os.stopFormAnimation(thisBot, {\n    stopTime: os.localTime + 5000\n});\n```"
+                                    "text": "```ts\nStop the current animation 5 seconds in the future\r\nawait os.stopFormAnimation(thisBot, {\r\n    stopTime: os.localTime + 5000\r\n});\n```"
                                 }
                             ]
                         },
@@ -1187,7 +1187,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9470,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9470"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9470"
                     }
                 ],
                 "parameters": [
@@ -1288,19 +1288,19 @@
                 }
             },
             "comment": {
-                "text": "Stops the animations that are running on the given bot or list of bots using the given options. Returns a promise that resolves once the animations have been stopped.\n\nThis function only works for animations that have been started by os.startFormAnimation.\n\nTriggers the @onFormAnimationStopped and @onAnyFormAnimationStopped listeners once the animation has stopped.",
+                "text": "Stops the animations that are running on the given bot or list of bots using the given options. Returns a promise that resolves once the animations have been stopped.\r\n\r\nThis function only works for animations that have been started by os.startFormAnimation.\r\n\r\nTriggers the @onFormAnimationStopped and @onAnyFormAnimationStopped listeners once the animation has stopped.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nStop the animations on this bot\nawait os.stopFormAnimation(thisBot);\n```"
+                        "text": "```ts\nStop the animations on this bot\r\nawait os.stopFormAnimation(thisBot);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSlowly stop the animations on this bot\nawait os.stopFormAnimation(thisBot, {\n    fadeDuration: 1000 // Take 1 second to stop the animation\n});\n```"
+                        "text": "```ts\nSlowly stop the animations on this bot\r\nawait os.stopFormAnimation(thisBot, {\r\n    fadeDuration: 1000 // Take 1 second to stop the animation\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nStop the current animation 5 seconds in the future\nawait os.stopFormAnimation(thisBot, {\n    stopTime: os.localTime + 5000\n});\n```"
+                        "text": "```ts\nStop the current animation 5 seconds in the future\r\nawait os.stopFormAnimation(thisBot, {\r\n    stopTime: os.localTime + 5000\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1336,7 +1336,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Retrieves the list of animations that are available on the given bot or GLTF mesh address.\nReturns a promise that resolves with the list of available animations."
+                            "text": "Retrieves the list of animations that are available on the given bot or GLTF mesh address.\r\nReturns a promise that resolves with the list of available animations."
                         }
                     ],
                     "blockTags": [
@@ -1345,7 +1345,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the list of animations on this bot\nconst animations = await os.listFormAnimations(thisBot);\n```"
+                                    "text": "```ts\nGet the list of animations on this bot\r\nconst animations = await os.listFormAnimations(thisBot);\n```"
                                 }
                             ]
                         },
@@ -1354,7 +1354,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the list of animations for a specific address\nconst animations = await os.listFormAnimations('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');\n```"
+                                    "text": "```ts\nGet the list of animations for a specific address\r\nconst animations = await os.listFormAnimations('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');\n```"
                                 }
                             ]
                         },
@@ -1401,7 +1401,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9501,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9501"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9501"
                     }
                 ],
                 "parameters": [
@@ -1463,15 +1463,15 @@
                 }
             },
             "comment": {
-                "text": "Retrieves the list of animations that are available on the given bot or GLTF mesh address.\nReturns a promise that resolves with the list of available animations.",
+                "text": "Retrieves the list of animations that are available on the given bot or GLTF mesh address.\r\nReturns a promise that resolves with the list of available animations.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the list of animations on this bot\nconst animations = await os.listFormAnimations(thisBot);\n```"
+                        "text": "```ts\nGet the list of animations on this bot\r\nconst animations = await os.listFormAnimations(thisBot);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the list of animations for a specific address\nconst animations = await os.listFormAnimations('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');\n```"
+                        "text": "```ts\nGet the list of animations for a specific address\r\nconst animations = await os.listFormAnimations('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1507,7 +1507,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Pre-caches the given GLTF mesh address so that it will load instantly when used on a bot later.\nReturns a promise that resolves once the address has been cached."
+                            "text": "Pre-caches the given GLTF mesh address so that it will load instantly when used on a bot later.\r\nReturns a promise that resolves once the address has been cached."
                         }
                     ],
                     "blockTags": [
@@ -1516,7 +1516,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nBuffer a specific GLTF\nawait os.bufferFormAddressGLTF('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');\nos.toast(\"Buffered!\");\n```"
+                                    "text": "```ts\nBuffer a specific GLTF\r\nawait os.bufferFormAddressGLTF('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');\r\nos.toast(\"Buffered!\");\n```"
                                 }
                             ]
                         },
@@ -1545,7 +1545,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9375,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9375"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9375"
                     }
                 ],
                 "parameters": [
@@ -1587,11 +1587,11 @@
                 }
             },
             "comment": {
-                "text": "Pre-caches the given GLTF mesh address so that it will load instantly when used on a bot later.\nReturns a promise that resolves once the address has been cached.",
+                "text": "Pre-caches the given GLTF mesh address so that it will load instantly when used on a bot later.\r\nReturns a promise that resolves once the address has been cached.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nBuffer a specific GLTF\nawait os.bufferFormAddressGLTF('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');\nos.toast(\"Buffered!\");\n```"
+                        "text": "```ts\nBuffer a specific GLTF\r\nawait os.bufferFormAddressGLTF('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');\r\nos.toast(\"Buffered!\");\n```"
                     },
                     {
                         "tagName": "dochash",

@@ -26,7 +26,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ").\n\nReturns a promise that resolves when the command has been executed."
+                            "text": ").\r\n\r\nReturns a promise that resolves when the command has been executed."
                         }
                     ],
                     "blockTags": [
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nChange user's meet display name\nos.meetCommand('displayName', 'ABC123');\n```"
+                                    "text": "```ts\nChange user's meet display name\r\nos.meetCommand('displayName', 'ABC123');\n```"
                                 }
                             ]
                         },
@@ -44,7 +44,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nClose the meet.\nos.meetCommand('hangup')\n```"
+                                    "text": "```ts\nClose the meet.\r\nos.meetCommand('hangup')\n```"
                                 }
                             ]
                         },
@@ -109,7 +109,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11195,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11195"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11195"
                     }
                 ],
                 "parameters": [
@@ -173,15 +173,15 @@
                 }
             },
             "comment": {
-                "text": "Send a [command](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe-commands) to the Jitsi Meet API. The commands are only valid if the meet portal is fully loaded (see @onMeetLoaded).\n\nReturns a promise that resolves when the command has been executed.",
+                "text": "Send a [command](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe-commands) to the Jitsi Meet API. The commands are only valid if the meet portal is fully loaded (see @onMeetLoaded).\r\n\r\nReturns a promise that resolves when the command has been executed.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nChange user's meet display name\nos.meetCommand('displayName', 'ABC123');\n```"
+                        "text": "```ts\nChange user's meet display name\r\nos.meetCommand('displayName', 'ABC123');\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nClose the meet.\nos.meetCommand('hangup')\n```"
+                        "text": "```ts\nClose the meet.\r\nos.meetCommand('hangup')\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -234,7 +234,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet a list of all the participants.\nconst participants = await os.meetFunction('getParticipantsInfo')\n```"
+                                    "text": "```ts\nGet a list of all the participants.\r\nconst participants = await os.meetFunction('getParticipantsInfo')\n```"
                                 }
                             ]
                         },
@@ -243,7 +243,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet a list of available breakout rooms.\nconst rooms = await os.meetFunction('listBreakoutRooms');\n```"
+                                    "text": "```ts\nGet a list of available breakout rooms.\r\nconst rooms = await os.meetFunction('listBreakoutRooms');\n```"
                                 }
                             ]
                         },
@@ -281,7 +281,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11217,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11217"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11217"
                     }
                 ],
                 "parameters": [
@@ -352,11 +352,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet a list of all the participants.\nconst participants = await os.meetFunction('getParticipantsInfo')\n```"
+                        "text": "```ts\nGet a list of all the participants.\r\nconst participants = await os.meetFunction('getParticipantsInfo')\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet a list of available breakout rooms.\nconst rooms = await os.meetFunction('listBreakoutRooms');\n```"
+                        "text": "```ts\nGet a list of available breakout rooms.\r\nconst rooms = await os.meetFunction('listBreakoutRooms');\n```"
                     },
                     {
                         "tagName": "dochash",

@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Converts the given [Base64](https://en.wikipedia.org/wiki/Base64) string into a byte array that contains the data represented by the string.\nReturns the new Uint8Array array."
+                            "text": "Converts the given [Base64](https://en.wikipedia.org/wiki/Base64) string into a byte array that contains the data represented by the string.\r\nReturns the new Uint8Array array."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nConvert a Base64 string into bytes\nconst data = bytes.fromBase64String('aGVsbG8='); // \"hello\" encoded in Base64\n```"
+                                    "text": "```ts\nConvert a Base64 string into bytes\r\nconst data = bytes.fromBase64String('aGVsbG8='); // \"hello\" encoded in Base64\n```"
                                 }
                             ]
                         },
@@ -56,7 +56,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4619,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4619"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4619"
                     }
                 ],
                 "parameters": [
@@ -92,11 +92,11 @@
                 }
             },
             "comment": {
-                "text": "Converts the given [Base64](https://en.wikipedia.org/wiki/Base64) string into a byte array that contains the data represented by the string.\nReturns the new Uint8Array array.",
+                "text": "Converts the given [Base64](https://en.wikipedia.org/wiki/Base64) string into a byte array that contains the data represented by the string.\r\nReturns the new Uint8Array array.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nConvert a Base64 string into bytes\nconst data = bytes.fromBase64String('aGVsbG8='); // \"hello\" encoded in Base64\n```"
+                        "text": "```ts\nConvert a Base64 string into bytes\r\nconst data = bytes.fromBase64String('aGVsbG8='); // \"hello\" encoded in Base64\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -124,7 +124,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.\n\nReturns a blob that contains the binary data. Returns null if the URL is not a valid Data URL."
+                            "text": "Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.\r\n\r\nReturns a blob that contains the binary data. Returns null if the URL is not a valid Data URL."
                         }
                     ],
                     "blockTags": [
@@ -133,7 +133,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nConvert a data URL to a blob\nconst blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // \"hello\" encoded in Base64\n```"
+                                    "text": "```ts\nConvert a data URL to a blob\r\nconst blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // \"hello\" encoded in Base64\n```"
                                 }
                             ]
                         },
@@ -162,7 +162,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4690,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4690"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4690"
                     }
                 ],
                 "parameters": [
@@ -198,11 +198,11 @@
                 }
             },
             "comment": {
-                "text": "Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.\n\nReturns a blob that contains the binary data. Returns null if the URL is not a valid Data URL.",
+                "text": "Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.\r\n\r\nReturns a blob that contains the binary data. Returns null if the URL is not a valid Data URL.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nConvert a data URL to a blob\nconst blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // \"hello\" encoded in Base64\n```"
+                        "text": "```ts\nConvert a data URL to a blob\r\nconst blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // \"hello\" encoded in Base64\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -239,7 +239,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nConvert a hex string into bytes\nconst data = bytes.fromHexString('fffefd'); // 255, 254, 253 in hex\n```"
+                                    "text": "```ts\nConvert a hex string into bytes\r\nconst data = bytes.fromHexString('fffefd'); // 255, 254, 253 in hex\n```"
                                 }
                             ]
                         },
@@ -268,7 +268,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4649,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4649"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4649"
                     }
                 ],
                 "parameters": [
@@ -308,7 +308,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nConvert a hex string into bytes\nconst data = bytes.fromHexString('fffefd'); // 255, 254, 253 in hex\n```"
+                        "text": "```ts\nConvert a hex string into bytes\r\nconst data = bytes.fromHexString('fffefd'); // 255, 254, 253 in hex\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -336,7 +336,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Formats the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) representation of the given data.\nReturns the Base64 string."
+                            "text": "Formats the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) representation of the given data.\r\nReturns the Base64 string."
                         }
                     ],
                     "blockTags": [
@@ -345,7 +345,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFormat a byte array into Base64\nos.toast(bytes.toBase64String(new Uint8Array([ 255, 254, 253 ])));\n```"
+                                    "text": "```ts\nFormat a byte array into Base64\r\nos.toast(bytes.toBase64String(new Uint8Array([ 255, 254, 253 ])));\n```"
                                 }
                             ]
                         },
@@ -410,7 +410,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4604,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4604"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4604"
                     }
                 ],
                 "parameters": [
@@ -446,11 +446,11 @@
                 }
             },
             "comment": {
-                "text": "Formats the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) representation of the given data.\nReturns the Base64 string.",
+                "text": "Formats the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) representation of the given data.\r\nReturns the Base64 string.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFormat a byte array into Base64\nos.toast(bytes.toBase64String(new Uint8Array([ 255, 254, 253 ])));\n```"
+                        "text": "```ts\nFormat a byte array into Base64\r\nos.toast(bytes.toBase64String(new Uint8Array([ 255, 254, 253 ])));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -503,7 +503,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nConvert some bytes to a base 64 image/png data URL\nconst data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));\n```"
+                                    "text": "```ts\nConvert some bytes to a base 64 image/png data URL\r\nconst data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));\n```"
                                 }
                             ]
                         },
@@ -512,7 +512,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nConvert a base 64 string to a text/plain base 64 data URL\nconst data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // \"hello\" encoded in Base64\n```"
+                                    "text": "```ts\nConvert a base 64 string to a text/plain base 64 data URL\r\nconst data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // \"hello\" encoded in Base64\n```"
                                 }
                             ]
                         },
@@ -541,7 +541,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4668,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4668"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4668"
                     }
                 ],
                 "parameters": [
@@ -591,7 +591,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) of the data.\nIf omitted, then "
+                                    "text": "The [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) of the data.\r\nIf omitted, then "
                                 },
                                 {
                                     "kind": "code",
@@ -620,11 +620,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nConvert some bytes to a base 64 image/png data URL\nconst data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));\n```"
+                        "text": "```ts\nConvert some bytes to a base 64 image/png data URL\r\nconst data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nConvert a base 64 string to a text/plain base 64 data URL\nconst data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // \"hello\" encoded in Base64\n```"
+                        "text": "```ts\nConvert a base 64 string to a text/plain base 64 data URL\r\nconst data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // \"hello\" encoded in Base64\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -652,7 +652,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Formats the given bytes into a string that contains the [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) representation of the given data.\nReturns the hex string."
+                            "text": "Formats the given bytes into a string that contains the [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) representation of the given data.\r\nReturns the hex string."
                         }
                     ],
                     "blockTags": [
@@ -661,7 +661,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFormat a byte array into hexadecimal\nos.toast(bytes.toHexString(new Uint8Array([ 255, 254, 253 ]))); // fffefd in bytes\n```"
+                                    "text": "```ts\nFormat a byte array into hexadecimal\r\nos.toast(bytes.toHexString(new Uint8Array([ 255, 254, 253 ]))); // fffefd in bytes\n```"
                                 }
                             ]
                         },
@@ -690,7 +690,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4635,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4635"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4635"
                     }
                 ],
                 "parameters": [
@@ -726,11 +726,11 @@
                 }
             },
             "comment": {
-                "text": "Formats the given bytes into a string that contains the [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) representation of the given data.\nReturns the hex string.",
+                "text": "Formats the given bytes into a string that contains the [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) representation of the given data.\r\nReturns the hex string.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFormat a byte array into hexadecimal\nos.toast(bytes.toHexString(new Uint8Array([ 255, 254, 253 ]))); // fffefd in bytes\n```"
+                        "text": "```ts\nFormat a byte array into hexadecimal\r\nos.toast(bytes.toHexString(new Uint8Array([ 255, 254, 253 ]))); // fffefd in bytes\n```"
                     },
                     {
                         "tagName": "dochash",
