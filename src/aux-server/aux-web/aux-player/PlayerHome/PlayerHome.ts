@@ -85,8 +85,10 @@ function isStaticInst(
     );
 }
 
-function isJoinCode(biosOption: BiosOption): biosOption is 'enter join code' {
-    return biosOption === 'enter join code';
+function isJoinCode(
+    biosOption: BiosOption
+): biosOption is 'enter join code' | 'join inst' {
+    return biosOption === 'enter join code' || biosOption === 'join inst';
 }
 
 const MdOption = Vue.component('MdOption');
@@ -322,7 +324,7 @@ export default class PlayerHome extends Vue {
                         ) {
                             this.biosSelection = bios;
                             if (
-                                bios !== 'enter join code' &&
+                                !isJoinCode(bios) &&
                                 bios !== 'sign up' &&
                                 bios !== 'sign in' &&
                                 bios !== 'sign out'
@@ -366,6 +368,10 @@ export default class PlayerHome extends Vue {
 
     async signUp() {
         await this.executeBiosOption('sign up', null, null, null);
+    }
+
+    isJoinCode(option: BiosOption) {
+        return isJoinCode(option);
     }
 
     async executeBiosOption(
@@ -511,7 +517,7 @@ export default class PlayerHome extends Vue {
         const authenticated = await appManager.auth.primary.isAuthenticated();
         return (
             appManager.config.allowedBiosOptions ?? [
-                'enter join code',
+                'join inst',
                 'local inst',
                 'studio inst',
                 'free inst',
@@ -547,10 +553,7 @@ export default class PlayerHome extends Vue {
                 }
             } else if (option === 'sign out' && authenticated) {
                 return true;
-            } else if (
-                option === 'enter join code' &&
-                privacyFeatures.allowPublicInsts
-            ) {
+            } else if (isJoinCode(option) && privacyFeatures.allowPublicInsts) {
                 return true;
             } else {
                 return false;

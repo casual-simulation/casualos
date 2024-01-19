@@ -16,6 +16,7 @@ import {
  */
 export type BiosOption =
     | 'enter join code'
+    | 'join inst'
     | 'static inst'
     | 'local inst'
     | 'local'

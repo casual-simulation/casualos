@@ -38,7 +38,7 @@
                     >{{ getOptionDescription(biosSelection) }}</span
                 >
 
-                <md-field v-if="biosSelection === 'enter join code'" :class="joinCodeClass">
+                <md-field v-if="isJoinCode(biosSelection)" :class="joinCodeClass">
                     <label for="joinCode">joinCode=</label>
                     <md-input name="joinCode" id="joinCode" v-model="joinCode" />
                     <field-errors field="joinCode" :errors="errors" />
