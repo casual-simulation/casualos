@@ -85,6 +85,10 @@ function isStaticInst(
     );
 }
 
+function isJoinCode(biosOption: BiosOption): biosOption is 'enter join code' {
+    return biosOption === 'enter join code';
+}
+
 const MdOption = Vue.component('MdOption');
 const BiosOptionComponent = MdOption.extend({
     methods: {
@@ -169,7 +173,8 @@ export default class PlayerHome extends Vue {
         if (
             isPrivateInst(option) ||
             isPublicInst(option) ||
-            isStaticInst(option)
+            isStaticInst(option) ||
+            isJoinCode(option)
         ) {
             return true;
         }
@@ -184,6 +189,8 @@ export default class PlayerHome extends Vue {
             return 'bots are stored in the cloud and shared with studio members';
         } else if (isPublicInst(option)) {
             return 'bots are stored in the cloud and shared publicly, expires in 24h';
+        } else if (isJoinCode(option)) {
+            return 'enter a join code to load an existing inst';
         }
         return '';
     }
