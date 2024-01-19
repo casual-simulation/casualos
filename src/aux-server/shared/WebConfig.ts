@@ -7,18 +7,25 @@ import {
  * The possible BIOS options.
  *
  * - "enter join code" indicates that the user should be prompted to enter a join code.
- * - "staticInst" indicates that the instance should be loaded statically.
- * - "publicInst" indicates that the instance should be loaded from the public partition.
- * - "privateInst" indicates that the instance should be loaded from the private partition.
+ * - "static inst", "local inst", and "local" indicates that the instance should be loaded statically.
+ * - "public inst", "free inst", and "free" indicates that the instance should be loaded from the public partition.
+ * - "private inst", "studio inst", and "studio" indicates that the instance should be loaded from the private partition.
  * - "sign in" indicates that the user should be prompted to sign in.
  * - "sign up" indicates that the user should be prompted to sign up.
  * - "sign out" indicates that the user should be logged out.
  */
 export type BiosOption =
     | 'enter join code'
+    | 'join inst'
     | 'static inst'
+    | 'local inst'
+    | 'local'
     | 'public inst'
     | 'private inst'
+    | 'free inst'
+    | 'free'
+    | 'studio inst'
+    | 'studio'
     | 'sign in'
     | 'sign up'
     | 'sign out';
@@ -131,23 +138,13 @@ export interface WebConfig {
 
     /**
      * The default BIOS option.
-     * If specified, then
+     * If specified, then the BIOS will automatically select this option when shown.
      */
     defaultBiosOption?: BiosOption;
 
-    // /**
-    //  * Whether to require that age verification runs before the user can access collaboration features.
-    //  * Defaults to false.
-    //  */
-    // requirePrivoAgeVerification?: boolean;
-
-    // /**
-    //  * The URL that the Privo Age Verification API script should be loaded from.
-    //  */
-    // privoAgeVerificationApiScriptUrl?: string;
-
-    // /**
-    //  * The service identifier that should be used for the Privo Age Verification API.
-    //  */
-    // privoAgeVerificationServiceId?: string;
+    /**
+     * The automatic BIOS option.
+     * If specified, then the BIOS will automatically execute this option.
+     */
+    automaticBiosOption?: BiosOption;
 }

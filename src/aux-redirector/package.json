@@ -1,7 +1,7 @@
 {
     "name": "@casual-simulation/aux-redirector",
     "private": true,
-    "version": "3.1.11",
+    "version": "3.2.7",
     "description": "A simple web service that redirects old style aux URLs to the new version.",
     "keywords": [
         "aux"
@@ -27,7 +27,7 @@
         "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
-        "build": "node ./script/build-redirector.js",
+        "build": "node ./script/build-redirector.mjs",
         "package": "docker build -t casualsimulation/aux-redirector -f Dockerfile .",
         "start": "node dist/main.js"
     },
@@ -38,6 +38,7 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
+        "body-parser": "1.20.2",
         "express": "^4.16.4"
     }
 }

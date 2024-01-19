@@ -6,11 +6,16 @@ import {
     LoginStatus,
     LoginUIStatus,
     OAuthRedirectRequest,
+    PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import { AuthData, hasValue } from '@casual-simulation/aux-common';
+import {
+    AuthData,
+    RemoteCausalRepoProtocol,
+    hasValue,
+} from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
@@ -46,6 +51,8 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
+    private _websocketOrigin: string;
+    private _websocketProtocol: RemoteCausalRepoProtocol;
     private _newTab: Window;
     private _tabCloseInterval: any;
     private _requirePrivoLogin: boolean;
@@ -183,6 +190,11 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             this._recordsOrigin = await this._proxy.getRecordsOrigin();
         }
 
+        if (this._protocolVersion >= 9) {
+            this._websocketOrigin = await this._proxy.getWebsocketOrigin();
+            this._websocketProtocol = await this._proxy.getWebsocketProtocol();
+        }
+
         this._loginUIStatus.subscribe((status) => {
             if (!this._iframe) {
                 return;
@@ -260,9 +272,6 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!hasValue(this._origin)) {
             return null;
         }
-        this._loginStatus.next({
-            isLoggingIn: true,
-        });
         if (!this._initialized) {
             await this._init();
         }
@@ -314,6 +323,36 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return (
             this._recordsOrigin ?? this._defaultRecordsOrigin ?? this._origin
         );
+    }
+
+    async getWebsocketOrigin(): Promise<string> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 9) {
+            return null;
+        }
+
+        return this._websocketOrigin;
+    }
+
+    async getWebsocketProtocol(): Promise<RemoteCausalRepoProtocol> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 9) {
+            return null;
+        }
+
+        return this._websocketProtocol ?? null;
     }
 
     async getRecordKeyPolicy(
@@ -527,6 +566,25 @@ export class AuthEndpointHelper implements AuthHelperInterface {
 
     protected async _logoutCore() {
         return await this._proxy.logout();
+    }
+
+    async getPolicyUrls(): Promise<PolicyUrls> {
+        if (!hasValue(this._origin)) {
+            return {
+                privacyPolicyUrl: null,
+                termsOfServiceUrl: null,
+            };
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                privacyPolicyUrl: null,
+                termsOfServiceUrl: null,
+            };
+        }
+        return await this._proxy.getPolicyUrls();
     }
 
     private _createNewTab() {

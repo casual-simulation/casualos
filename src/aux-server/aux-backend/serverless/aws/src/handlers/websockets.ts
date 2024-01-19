@@ -5,10 +5,11 @@ import {
     Context,
 } from 'aws-lambda';
 import { constructServerBuilder } from '../LoadServer';
+import { GenericHttpHeaders } from '@casual-simulation/aux-common';
 
 const builder = constructServerBuilder();
 
-const { server } = builder.build();
+const { server, redisClient } = builder.build();
 
 export async function connect(
     event: APIGatewayProxyEvent,
@@ -20,11 +21,30 @@ export async function connect(
 [handler] IP Address: ${event.requestContext.identity.sourceIp}
 `);
     await builder.ensureInitialized();
+
+    console.log('[handler] Headers:', event.headers);
+    const headers: GenericHttpHeaders = {};
+    for (let key in event.headers) {
+        const value = event.headers[key];
+        headers[key.toLowerCase()] = value;
+    }
+
+    const origin = headers['origin'];
+    console.log(`[handler] Origin: ${origin}`);
+    const connectionId: string = event.requestContext.connectionId as string;
+    if (redisClient && origin) {
+        console.log(`[handler] Origin: ${origin}`);
+        const originKey = `origin:${connectionId}`;
+        await redisClient.set(originKey, origin);
+        await redisClient.expire(originKey, 60 * 60 * 24); // 24 hours
+    }
+
     await server.handleWebsocketRequest({
         type: 'connect',
         connectionId: event.requestContext.connectionId as string,
         ipAddress: event.requestContext.identity.sourceIp,
         body: event.body,
+        origin,
     });
 
     return {
@@ -40,11 +60,20 @@ export async function disconnect(
         `[handler] Got WebSocket disconnect: ${event.requestContext.connectionId}`
     );
     await builder.ensureInitialized();
+
+    const connectionId = event.requestContext.connectionId as string;
+    const origin = await getOrigin(connectionId, event);
+
+    if (redisClient && origin) {
+        await redisClient.del(`origin:${connectionId}`);
+    }
+
     await server.handleWebsocketRequest({
         type: 'disconnect',
-        connectionId: event.requestContext.connectionId as string,
+        connectionId,
         ipAddress: event.requestContext.identity.sourceIp,
         body: event.body,
+        origin,
     });
 
     return {
@@ -56,17 +85,36 @@ export async function message(
     event: APIGatewayProxyEvent,
     context: any
 ): Promise<APIGatewayProxyStructuredResultV2> {
+    console.log('[handler] Got WebSocket message');
     await builder.ensureInitialized();
+    const connectionId = event.requestContext.connectionId as string;
     await server.handleWebsocketRequest({
         type: 'message',
-        connectionId: event.requestContext.connectionId as string,
+        connectionId,
         ipAddress: event.requestContext.identity.sourceIp,
         body: event.body,
+        origin: await getOrigin(connectionId, event),
     });
 
     return {
         statusCode: 200,
     };
+}
+
+async function getOrigin(
+    connectionId: string,
+    event: APIGatewayProxyEvent
+): Promise<string> {
+    if (redisClient) {
+        const origin =
+            (await redisClient.get(`origin:${connectionId}`)) ??
+            event.headers?.origin ??
+            null;
+
+        console.log(`[handler] Origin: ${origin}`);
+        return origin;
+    }
+    return event.headers?.origin ?? null;
 }
 
 // export async function webhook(

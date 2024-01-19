@@ -3,10 +3,39 @@
         <update-password-card
             v-if="updatePasswordUrl"
             :updatePasswordUrl="updatePasswordUrl"
+            :requireParentEmail="requireParentEmail"
             @close="goHome()"
         ></update-password-card>
         <md-card v-else>
-            <form @submit.prevent="register">
+            <form v-if="enterDateOfBirth" @submit.prevent="provideDateOfBirth()">
+                <md-card-header><div class="md-title">Register</div></md-card-header>
+                <md-card-content>
+                    <div class="md-layout md-gutter">
+                        <div class="md-layout-item">
+                            <md-datepicker
+                                v-model="dateOfBirth"
+                                :class="dateOfBirthFieldClass"
+                                :md-model-type="Date"
+                                :md-disabled-dates="disabledDates"
+                            >
+                                <label>Date of Birth</label>
+
+                                <field-errors field="dateOfBirth" :errors="errors" />
+                            </md-datepicker>
+                        </div>
+                    </div>
+                    <field-errors :field="null" :errors="errors" />
+                    <p>
+                        <a target="_blank" href="/privacy-policy">Privacy Policy</a>
+                    </p>
+                </md-card-content>
+                <md-card-actions>
+                    <md-button type="button" @click="provideDateOfBirth()" :disabled="processing">
+                        <span>Continue</span>
+                    </md-button>
+                </md-card-actions>
+            </form>
+            <form v-else @submit.prevent="register">
                 <md-card-header><div class="md-title">Register</div></md-card-header>
                 <md-card-content class="input-dialog-content">
                     <div class="md-layout md-gutter">
@@ -20,44 +49,35 @@
                                     :disabled="processing"
                                     @blur="checkDisplayName()"
                                 />
-                                <span v-if="showDisplayNameError" class="md-error"
-                                    >This display name is not allowed</span
-                                >
-                                <span v-if="showDisplayNameContainsNameError" class="md-error"
-                                    >The display name cannot contain your name.</span
-                                >
+                                <field-errors field="displayName" :errors="errors" />
                             </md-field>
 
                             <md-field :class="nameFieldClass">
-                                <label for="name">Name</label>
+                                <label for="firstName">First Name</label>
                                 <md-input
-                                    name="name"
-                                    id="name"
+                                    name="firstName"
+                                    id="firstName"
                                     autocomplete="given-name"
                                     v-model="name"
                                     :disabled="processing"
                                     @blur="checkDisplayName()"
                                 />
-                                <span v-if="showNameError" class="md-error"
-                                    >This name is not allowed</span
-                                >
+                                <field-errors field="name" :errors="errors" />
                             </md-field>
 
-                            <md-datepicker
-                                v-model="dateOfBirth"
-                                :class="dateOfBirthFieldClass"
-                                :md-model-type="Date"
-                                :md-disabled-dates="disabledDates"
-                            >
-                                <label>Date of Birth</label>
-
-                                <span v-if="showDateOfBirthError" class="md-error">
-                                    This Date of Birth is not allowed
-                                </span>
-                            </md-datepicker>
+                            <md-field :class="dateOfBirthFieldClass">
+                                <label for="dateOfBirth">Date of Birth</label>
+                                <md-input
+                                    name="dateOfBirth"
+                                    id="dateOfBirth"
+                                    :value="dateOfBirthText"
+                                    disabled
+                                />
+                                <field-errors field="dateOfBirth" :errors="errors" />
+                            </md-field>
 
                             <md-field v-if="showEmail" :class="emailFieldClass">
-                                <label for="email">Email</label>
+                                <label for="email">{{ registerEmailFieldHint }}</label>
                                 <md-input
                                     name="email"
                                     id="email"
@@ -66,18 +86,7 @@
                                     :disabled="processing"
                                     @blur="checkEmail()"
                                 />
-                                <span v-if="showEmailError" class="md-error"
-                                    >This email is not allowed</span
-                                >
-                                <span v-else-if="showInvalidAddressError" class="md-error"
-                                    >This value is not recognized as an email address</span
-                                >
-                                <span v-else-if="showEnterAddressError" class="md-error"
-                                    >Please enter an email address</span
-                                >
-                                <span v-else-if="showBannedUserError" class="md-error"
-                                    >This user has been banned</span
-                                >
+                                <field-errors field="email" :errors="errors" />
                             </md-field>
 
                             <md-field v-if="requireParentEmail" :class="parentEmailFieldClass">
@@ -89,22 +98,12 @@
                                     v-model="parentEmail"
                                     :disabled="processing"
                                 />
-                                <span v-if="showParentEmailError" class="md-error"
-                                    >This email is not allowed</span
-                                >
-                                <span v-else-if="showEnterParentEmailError" class="md-error">
-                                    Please enter an email address
-                                </span>
-                                <span v-else-if="showInvalidParentEmailError" class="md-error"
-                                    >This value is not recognized as an email address</span
-                                >
+                                <field-errors field="parentEmail" :errors="errors" />
                             </md-field>
                         </div>
                     </div>
                     <div class="terms-of-service-container" v-if="requireTermsOfService">
-                        <div v-show="showTermsOfServiceError" class="terms-of-service-error">
-                            Please accept the terms of service.
-                        </div>
+                        <field-errors field="termsOfService" :errors="errors" />
                         <div class="terms-of-service-wrapper">
                             <md-checkbox v-model="acceptedTerms" id="terms-of-service">
                             </md-checkbox>
@@ -114,17 +113,13 @@
                             </label>
                         </div>
                     </div>
+                    <field-errors :field="null" :errors="errors" />
                     <p>
                         <a target="_blank" href="/privacy-policy">Privacy Policy</a>
                     </p>
                 </md-card-content>
                 <md-card-actions>
-                    <md-button
-                        type="button"
-                        class="md-primary"
-                        @click="register()"
-                        :disabled="processing"
-                    >
+                    <md-button type="button" @click="register()" :disabled="processing">
                         <md-progress-spinner
                             v-if="processing"
                             md-mode="indeterminate"

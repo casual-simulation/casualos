@@ -1,8 +1,74 @@
 # CasualOS Changelog
 
-## V3.2.7
+## V3.2.11
 
 #### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `join inst,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
+### :rocket: Features
+
+-   Added the `join inst` BIOS option as an alternative to `enter join code`.
+-   Added buttons for the `sign in`, `sign up`, and `sign out` BIOS options.
+-   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
+    -   Configurable by the `redis.tempInstRecordsLifetimeSeconds`, `redis.tempInstRecordsLifetimeExpireMode`, `redis.connectionExpireSeconds`, and `redis.connectionExpireMode` options in SERVER_CONFIG.
+    -   Defaults:
+        -   `redis.tempInstRecordsLifetimeSeconds` defaults to `60 * 60 * 24` (24 hours)
+        -   `redis.tempInstRecordsLifetimeExpireMode` defaults to `null`
+        -   `redis.connectionExpireSeconds` defaults to `60 * 60 * 3` (3 hours)
+        -   `redis.connectionExpireMode` defaults to `null`
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where branch info was being duplicated for temporary branches.
+
+## V3.2.10
+
+#### Date: 1/17/2024
+
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
+### :rocket: Features
+
+-   Added new BIOS options.
+    -   `local inst` - Works exactly like `static inst`.
+    -   `local` - Shorthand `local inst`.
+    -   `free inst` - Works exactly like `public inst`.
+    -   `free` - Shorthand for `free inst`.
+    -   `studio inst` - Works exactly like `private inst`.
+    -   `studio` - Shorthand for `studio inst`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using the keyboard to select a tag in the sheetPortal would cause the page to refresh.
+-   Fixed an issue where loading a studio inst for the first time after creating an account could fail.
+-   Fixed an issue where gridPortal input did not work in the OculusBrowser.
+
+## V3.2.9
+
+#### Date: 1/3/2024
+
+### :bug: Bug Fixes
+
+-   Fixed some visual issues with studio subscriptions.
+-   Fixed an issue where it was possible for a studio to have default user features when subscribed.
+
+## V3.2.8
+
+#### Date: 12/29/2023
+
+### :bug: Bug Fixes
+
+-   Fix issues with Docker ARM32 and ARM64 builds.
+-   Fixed an issue where objects could not be stored as data if a max data size was set.
+
+## V3.2.7
+
+#### Date: 12/22/2023
 
 ### :boom: Breaking Changes
 
@@ -87,9 +153,23 @@
     -   Returns `null` if the user is not signed in.
 -   Added the `REQUIRE_PRIVO_LOGIN` environment variable during build to control whether login with Privo is required.
 -   Added the `DEFAULT_BIOS_OPTION` environment variable during build to control which BIOS option is selected by default.
+-   Added the `AUTOMATIC_BIOS_OPTION` environment variable during build to specify the BIOS option that should be executed by default. Setting this to a valid BIOS value will skip the BIOS screen.
+-   Added the `AUTH_WEBSOCKET_ENDPOINT` environment variable during build to control the websocket endpoint that the auth site looks for.
+-   Added the ability to limit how large data records can be in `tiers.data.maxItemSizeInBytes`.
+    -   If no value is specified, then `500000` (500KB) is used.
+    -   `null` can be used to remove the limit.
+-   Added the `privacyFeatures` tag to the `authBot`. It is an object with the following properties:
+    -   `publishData` - A boolean that specifies whether the user is allowed to publish any data at all.
+    -   `allowPublicData` - A boolean that specifies whether the user is allowed to publish or access public data.
+    -   `allowAI` - A boolean that specifies whether the user is allowed to access AI features.
+    -   `allowPublicInsts` - A boolean that specifies whether the user is allowed to access public insts.
+-   Added the `os.reportInst()` function.
+    -   Opens the "Report Inst" dialog that gives the user an opportunity to describe what they are seeing and report it.
+    -   Returns a promise that resolves when the inst has been reported.
 
 ### :bug: Bug Fixes
 
+-   Fixed an issue where `os.getCurrentInst` would not work properly if multiple instances are loaded
 -   Fixed an issue where work state was not retained in systemPortal after switching to diff panel
 -   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
 -   Fixed an issue where labels were broken when setting labelPosition and labelAlignment to left or right

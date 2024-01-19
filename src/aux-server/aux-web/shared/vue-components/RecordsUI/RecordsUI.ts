@@ -62,6 +62,7 @@ export default class RecordsUI extends Vue {
     showGrantInstAdminPermission: boolean = false;
     completedGrantInstAdminPermission: boolean = false;
     grantInstId: string = '';
+    grantRecordsOrigin: string = '';
 
     private _requestRecordTaskId: number | string;
     private _requestRecordSimulation: BrowserSimulation;
@@ -96,7 +97,7 @@ export default class RecordsUI extends Vue {
         this._sub.add(sub);
 
         sub.add(
-            sim.localEvents.subscribe((e) => {
+            sim.localEvents.subscribe(async (e) => {
                 if (e.type === 'get_public_record_key') {
                     this.showRequestPublicRecord = true;
                     this.requestRecordName = e.recordName;
@@ -145,6 +146,8 @@ export default class RecordsUI extends Vue {
                     this.grantInstPermissionEvent = e;
                     this.allowRecordName = e.recordName;
                     this.grantInstId = sim.inst;
+                    this.grantRecordsOrigin =
+                        await sim.auth.primary.getRecordsOrigin();
                 }
             })
         );

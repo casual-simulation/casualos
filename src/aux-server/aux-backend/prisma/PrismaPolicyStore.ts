@@ -14,7 +14,7 @@ import {
     UserPolicyRecord,
     getExpireTime,
 } from '@casual-simulation/aux-records';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from './generated';
 import { convertMarkers, convertToDate, convertToMillis } from './Utils';
 import {
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
@@ -64,11 +64,13 @@ export class PrismaPolicyStore implements PolicyStore {
         if (policy) {
             policies.push(policy.document as unknown as PolicyDocument);
         }
-        const userResult = await this._client.user.findUnique({
-            where: {
-                id: userId,
-            },
-        });
+        const userResult = userId
+            ? await this._client.user.findUnique({
+                  where: {
+                      id: userId,
+                  },
+              })
+            : null;
 
         return {
             policies,

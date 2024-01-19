@@ -1999,16 +1999,6 @@ export interface EnableCustomDraggingAction extends Action {
 }
 
 /**
- * The list of types of output that custom portals support.
- */
-export type CustomAppOutputType = 'html';
-
-/**
- * the list of modes that custom portals support.
- */
-export type CustomPortalOutputMode = 'push' | 'pull';
-
-/**
  * Defines an event that registers a custom portal.
  */
 export interface RegisterCustomAppAction extends AsyncAction {
@@ -2034,23 +2024,12 @@ export interface RegisterCustomAppAction extends AsyncAction {
  * The options for a register custom portal action.
  */
 export interface RegisterCustomAppOptions {
-    /**
-     * The type of the custom portal.
-     * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
-     */
-    type: CustomAppOutputType;
 
     /**
      * The kind of the custom portal.
      * Used to make it easy to register multiple custom portals that rely on the same kind of renderers.
      */
     kind?: string;
-
-    /**
-     * The output mode of the custom portal.
-     * Used to make it easy to control how a custom portal recieves updates.
-     */
-    outputMode?: CustomPortalOutputMode;
 }
 
 
@@ -10562,7 +10541,7 @@ interface Os {
      *     cameraType: "front"
      * });
      *
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @doctitle Camera Actions
      * @docsidebar Camera
      * @docdescription Actions for taking photos.
@@ -10576,7 +10555,7 @@ interface Os {
      * @example Close the photo camera
      * await os.closePhotoCamera();
      * 
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @docname os.closePhotoCamera
      */
     closePhotoCamera(): Promise<void>;
@@ -10596,7 +10575,7 @@ interface Os {
      *     cameraType: "front"
      * });
      *
-     * @dochash actions/camera
+     * @dochash actions/os/camera
      * @doctitle Camera Actions
      * @docsidebar Camera
      * @docdescription Actions for taking photos.
@@ -11060,6 +11039,19 @@ interface Os {
     listBuiltinTags(): string[];
 
     /**
+     * Shows the "report inst" dialog to the user.
+     * 
+     * Returns a promise that resolves once the dialog has been closed.
+     * 
+     * @example Show the "report inst" dialog.
+     * await os.reportInst();
+     * 
+     * @dochash actions/os/moderation
+     * @docname os.reportInst
+     */
+    reportInst(): Promise<void>;
+
+    /**
      * Requests that an "authentication" bot be added to the inst for the current browser tab.
      * Auth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.
      *
@@ -11076,7 +11068,7 @@ interface Os {
      * await os.requestAuthBot();
      * os.toast("Logged in!");
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @doctitle Records Actions
      * @docsidebar Records
      * @docdescription Records are a way to store permenent data in CasualOS.
@@ -11108,7 +11100,7 @@ interface Os {
      *     os.toast("Not logged in.");
      * }
      *
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @doctitle Records Actions
      * @docsidebar Records
      * @docdescription Records are a way to store permenent data in CasualOS.
@@ -11456,7 +11448,7 @@ interface Os {
      *      os.toast('Failed to get studios ' + result.errorMessage);
      * }
      * 
-     * @dochash actions/records
+     * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.listUserStudios
      */

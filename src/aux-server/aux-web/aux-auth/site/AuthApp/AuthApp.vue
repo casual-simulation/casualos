@@ -154,7 +154,7 @@
                     <md-field>
                         <label>Studio</label>
                         <md-select v-model="createRecordStudioId">
-                            <md-option :value="''"> My Studio </md-option>
+                            <md-option :value="''"> Player Studio </md-option>
                             <md-option
                                 v-for="studio of studios"
                                 :key="studio.studioId"

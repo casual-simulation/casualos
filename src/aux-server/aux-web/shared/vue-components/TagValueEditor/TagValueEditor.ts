@@ -6,7 +6,7 @@ import SimpleTagEditor from '../SimpleTagEditor/SimpleTagEditor';
 import MonacoLoader from '../MonacoLoader/MonacoLoader';
 import MonacoLoaderError from '../MonacoLoaderError/MonacoLoaderError';
 import type MonacoTagEditor from '../MonacoTagEditor/MonacoTagEditor';
-import type monaco from 'monaco-editor';
+import type monaco from '@casual-simulation/monaco-editor';
 
 const MonacoAsync = () => ({
     component: import('../MonacoTagEditor/MonacoTagEditor').catch((err) => {

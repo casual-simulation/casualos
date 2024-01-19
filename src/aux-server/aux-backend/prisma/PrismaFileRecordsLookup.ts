@@ -19,7 +19,7 @@ import {
     ListFilesLookupResult,
     UpdateFileResult,
 } from '@casual-simulation/aux-records/FileRecordsStore';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from './generated';
 import { convertMarkers } from './Utils';
 
 /**

@@ -43,6 +43,7 @@
                 </div>
             </md-dialog-content>
             <md-dialog-actions>
+                <md-button @click="showReportInst()">Report Inst</md-button>
                 <md-button class="md-primary" @click="openAccountDashboard()"
                     >Manage Account</md-button
                 >

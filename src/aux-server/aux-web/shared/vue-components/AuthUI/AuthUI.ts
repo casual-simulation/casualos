@@ -100,4 +100,12 @@ export default class AuthUI extends Vue {
     async newInst() {
         location.href = location.origin;
     }
+
+    async showReportInst() {
+        if (this._simId) {
+            const simId = this._simId;
+            this.closeAccountInfo();
+            await appManager.authCoordinator.showReportInst(simId);
+        }
+    }
 }

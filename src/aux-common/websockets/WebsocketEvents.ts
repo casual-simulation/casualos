@@ -12,6 +12,11 @@ import {
     deviceActionsSchema,
 } from '../common/RemoteActions';
 import { ZodIssue, z } from 'zod';
+import {
+    GenericHttpRequest,
+    GenericHttpResponse,
+    genericHttpRequestSchema,
+} from '../http/GenericHttpInterface';
 
 /**
  * Defines a websocket event.
@@ -192,7 +197,8 @@ export type WebsocketResponseMessage =
     | ReceiveDeviceActionMessage
     | ConnectedToBranchMessage
     | DisconnectedFromBranchMessage
-    | RateLimitExceededMessage;
+    | RateLimitExceededMessage
+    | WebsocketHttpResponseMessage;
 
 export type WebsocketRequestMessage =
     | LoginMessage
@@ -204,7 +210,8 @@ export type WebsocketRequestMessage =
     | UnwatchBranchDevicesMessage
     | ConnectionCountMessage
     | TimeSyncRequestMessage
-    | GetUpdatesMessage;
+    | GetUpdatesMessage
+    | WebsocketHttpRequestMessage;
 
 export type WebsocketMessage =
     | WebsocketRequestMessage
@@ -591,6 +598,42 @@ type ZodGetUpdatesMessageAssertion = HasType<
     ZodGetUpdatesMessage,
     GetUpdatesMessage
 >;
+
+/**
+ * Defines an event which indicates that an HTTP request should be made.
+ */
+export interface WebsocketHttpRequestMessage {
+    type: 'http_request';
+
+    /**
+     * The ID of the request.
+     */
+    id: number;
+
+    /**
+     * The HTTP request.
+     */
+    request: Omit<GenericHttpRequest, 'ipAddress'>;
+}
+export const websocketHttpRequestMessageSchema = z.object({
+    type: z.literal('http_request'),
+    request: genericHttpRequestSchema,
+    id: z.number(),
+});
+
+export interface WebsocketHttpResponseMessage {
+    type: 'http_response';
+
+    /**
+     * The ID of the request that this response is for.
+     */
+    id: number;
+
+    /**
+     * The response.
+     */
+    response: GenericHttpResponse;
+}
 
 /**
  * Defines an event which indicates that some arbitrary updates where added for the given branch.
@@ -1104,6 +1147,7 @@ export const websocketRequestMessageSchema = z.discriminatedUnion('type', [
     connectionCountMessageSchema,
     timeSyncRequestMessageSchema,
     getUpdatesMessageSchema,
+    websocketHttpRequestMessageSchema,
 ]);
 type ZodWebsocketRequestMessage = z.infer<typeof websocketRequestMessageSchema>;
 type ZodWebsocketRequestMessageAssertion = HasType<

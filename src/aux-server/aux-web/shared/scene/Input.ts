@@ -100,6 +100,7 @@ export class Input {
 
     private _htmlElements: () => HTMLElement[];
     private _zoomElements: () => HTMLElement[];
+    private _isOculusBrowser: boolean;
 
     get time() {
         return this._game.getTime();
@@ -125,6 +126,15 @@ export class Input {
      */
     set currentInputType(inputType: InputType) {
         this._inputType = inputType;
+    }
+
+    /**
+     * Whether or not the input system supports updating the current target based on mouse/pointer move events.
+     */
+    get supportsHoverEvents(): boolean {
+        return (
+            this.currentInputType === InputType.Mouse || this._usePointerEvents
+        );
     }
 
     /**
@@ -359,6 +369,7 @@ export class Input {
         const isOculusBrowser = browser.test(/OculusBrowser\/[\d\.]+/);
         const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
 
+        this._isOculusBrowser = isOculusBrowser;
         this._usePointerEvents = isOculusBrowser && isOculusVR;
         if (this.debugLevel > 0) {
             console.log(`[input] usePointerEvents: ${this._usePointerEvents}`);
@@ -820,7 +831,7 @@ export class Input {
      * If on mobile device, will return the page position of the first finger touching the screen.
      */
     public getMousePagePos(): Vector2 {
-        if (this._inputType == InputType.Mouse) {
+        if (this._usePointerEvents || this._inputType == InputType.Mouse) {
             return this._mouseData.pagePos;
         } else if (this._inputType == InputType.Touch) {
             return this._lastPrimaryTouchData.pagePos;
@@ -1194,6 +1205,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
+        return this._handleMouseDownCore(event);
+    }
+
+    private _handleMouseDownCore(event: MouseEvent) {
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1232,6 +1247,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
+        return this._handleMouseUpCore(event);
+    }
+
+    private _handleMouseUpCore(event: MouseEvent) {
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1306,10 +1325,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
-        if (!this._updateInputType(InputType.Mouse)) {
-            return;
-        }
+        return this._handleMouseMoveCore(event);
+    }
 
+    private _handleMouseMoveCore(event: MouseEvent) {
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
@@ -1755,7 +1774,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerCancel(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerCancel(event);
         }
 
@@ -1814,7 +1833,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerDown(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerDown(event);
         }
 
@@ -1830,7 +1849,7 @@ export class Input {
             return;
         }
 
-        this._handleMouseDown(event);
+        this._handleMouseDownCore(event);
     }
 
     private _handleTouchPointerDown(event: PointerEvent) {
@@ -1886,7 +1905,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerEnter(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerEnter(event);
         }
 
@@ -1916,7 +1935,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerLeave(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerLeave(event);
         }
 
@@ -1958,18 +1977,10 @@ export class Input {
     }
 
     private _handleMousePointerMove(event: PointerEvent) {
-        if (!this._updateInputType(InputType.Mouse)) {
-            return;
-        }
-
-        this._handleMouseMove(event);
+        this._handleMouseMoveCore(event);
     }
 
     private _handlerTouchPointerMove(event: PointerEvent) {
-        if (!this._updateInputType(InputType.Touch)) {
-            return;
-        }
-
         event.stopImmediatePropagation();
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
@@ -2017,7 +2028,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerUp(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerUp(event);
         }
 
@@ -2033,7 +2044,7 @@ export class Input {
             return;
         }
 
-        this._handleMouseUp(event);
+        this._handleMouseUpCore(event);
     }
 
     private _handlerTouchPointerUp(event: PointerEvent) {
@@ -2418,6 +2429,14 @@ export class InputState {
      */
     isUpOnFrame(frame: number): boolean {
         return frame === this._upFrame;
+    }
+
+    /**
+     * Is the input up on or after the requested frame.
+     * @param frame The frame to compare against.
+     */
+    isUpByFrame(frame: number): boolean {
+        return frame >= this._upFrame;
     }
 
     /**

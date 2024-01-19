@@ -50,6 +50,16 @@ export const subscriptionFeaturesSchema = z.object({
             .int()
             .positive()
             .optional(),
+        maxItemSizeInBytes: z
+            .number()
+            .describe(
+                'The maximum number of bytes that can be stored in a single data item. If set to null, then there is no limit. If omitted, then the limit is 500,000 bytes (500KB)'
+            )
+            .int()
+            .positive()
+            .nullable()
+            .optional()
+            .default(500000),
     }),
     files: z.object({
         allowed: z
@@ -163,39 +173,37 @@ export const subscriptionFeaturesSchema = z.object({
                 .optional(),
         }),
     }),
-    insts: z
-        .object({
-            allowed: z
-                .boolean()
-                .describe(
-                    'Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.'
-                ),
-            maxInsts: z
-                .number()
-                .describe(
-                    'The maximum number of private insts that are allowed for the subscription. If omitted, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-            maxBytesPerInst: z
-                .number()
-                .describe(
-                    'The maximum number of bytes that can be stored in an inst. If omitted, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-            maxActiveConnectionsPerInst: z
-                .number()
-                .describe(
-                    'The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-        })
-        .optional(),
+    insts: z.object({
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.'
+            ),
+        maxInsts: z
+            .number()
+            .describe(
+                'The maximum number of private insts that are allowed for the subscription. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxBytesPerInst: z
+            .number()
+            .describe(
+                'The maximum number of bytes that can be stored in an inst. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+        maxActiveConnectionsPerInst: z
+            .number()
+            .describe(
+                'The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+    }),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -345,12 +353,13 @@ export const subscriptionConfigSchema = z.object({
                 .optional(),
             defaultPeriodLength: z
                 .object({
-                    days: z.number().int().positive().optional(),
-                    months: z.number().int().positive().optional(),
+                    days: z.number().int().nonnegative().optional(),
+                    months: z.number().int().nonnegative().optional(),
                 })
                 .describe(
                     'The length of the period for users that do not have a subscription. Defaults to 1 month and 0 days.'
                 )
+                .optional()
                 .default({
                     days: 0,
                     months: 1,
@@ -652,6 +661,13 @@ export interface DataFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxWritesPerPeriod?: number;
+
+    /**
+     * The maximum number of bytes that can be stored in a single data item.
+     * If not specified, then the limit is 500,000 bytes (500KB).
+     * If set to null, then there is no limit.
+     */
+    maxItemSizeInBytes?: number;
 }
 
 export interface FileFeaturesConfiguration {

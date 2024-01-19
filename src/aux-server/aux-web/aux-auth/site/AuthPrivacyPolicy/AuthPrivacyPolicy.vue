@@ -5,7 +5,21 @@
                 <h1 class="md-title">{{ hostname }} Privacy Policy</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on April 6th, 2022</em></p>
+                <p>
+                    You can find a plain-text version of this privacy policy
+                    <a href="/privacy-policy.txt">here</a>.
+                </p>
+
+                <p>
+                    By using our products or services, you agree to this Privacy Policy as well as
+                    our
+                    <router-link to="/acceptable-use-policy">Acceptable Use Policy</router-link> and
+                    <router-link to="/terms">Terms of Service</router-link>.
+                </p>
+
+                <div v-html="privacyPolicyHtml"></div>
+
+                <!-- <p><em>Last updated on April 6th, 2022</em></p>
                 <p>
                     You can find a plain-text version of this privacy policy
                     <a href="/privacy-policy.txt">here</a>.
@@ -235,7 +249,7 @@
                         no responsibility for the content, safety, or security of any third party
                         Services.
                     </p>
-                </div>
+                </div> -->
             </md-card-content>
         </md-card>
     </div>

@@ -31,6 +31,11 @@ import {
     MultiCache,
     CachingPolicyStore,
     CachingConfigStore,
+    notificationsSchema,
+    NotificationMessenger,
+    MultiNotificationMessenger,
+    ModerationController,
+    ModerationStore,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -90,7 +95,7 @@ import {
     STUDIOS_COLLECTION_NAME,
 } from '../mongo';
 import { sortBy } from 'lodash';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../prisma/generated';
 import {
     PrismaAuthStore,
     PrismaConfigurationStore,
@@ -116,11 +121,38 @@ import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
 import { RedisMultiCache } from '../redis/RedisMultiCache';
 import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
-import { PrismaPrivoStore } from 'aux-backend/prisma/PrismaPrivoStore';
+import { PrismaPrivoStore } from '../prisma/PrismaPrivoStore';
 import {
     PrivoConfiguration,
     privoSchema,
 } from '@casual-simulation/aux-records/PrivoConfiguration';
+import { SlackNotificationMessenger } from '../notifications/SlackNotificationMessenger';
+import { TelegramNotificationMessenger } from '../notifications/TelegramNotificationMessenger';
+import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
+import {
+    ModerationConfiguration,
+    moderationSchema,
+} from '@casual-simulation/aux-records/ModerationConfiguration';
+
+export interface BuildReturn {
+    server: RecordsServer;
+    authController: AuthController;
+    recordsController: RecordsController;
+    eventsController: EventRecordsController;
+    dataController: DataRecordsController;
+    manualDataController: DataRecordsController;
+    filesController: FileRecordsController;
+    filesStore: FileRecordsStore;
+    subscriptionController: SubscriptionController;
+    rateLimitController: RateLimitController;
+    policyController: PolicyController;
+    websocketController: WebsocketController;
+    dynamodbClient: DocumentClient;
+    mongoClient: MongoClient;
+    mongoDatabase: Db;
+    websocketMessenger: WebsocketMessenger;
+    redisClient: RedisClientType;
+}
 
 export class ServerBuilder implements SubscriptionLike {
     private _docClient: DocumentClient;
@@ -171,6 +203,11 @@ export class ServerBuilder implements SubscriptionLike {
     private _chatInterface: AIChatInterface = null;
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
+
+    private _moderationStore: ModerationStore = null;
+    private _moderationController: ModerationController;
+
+    private _notificationMessenger: MultiNotificationMessenger;
 
     private _redis: RedisClientType | null = null;
     private _s3: S3;
@@ -246,8 +283,10 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useMongoDB(
-        options: Pick<BuilderOptions, 'mongodb' | 'subscriptions'> = this
-            ._options
+        options: Pick<
+            BuilderOptions,
+            'mongodb' | 'subscriptions' | 'moderation'
+        > = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB.');
 
@@ -289,6 +328,8 @@ export class ServerBuilder implements SubscriptionLike {
                     {
                         subscriptions:
                             options.subscriptions as SubscriptionConfiguration,
+                        moderation:
+                            options.moderation as ModerationConfiguration,
                     },
                     configuration
                 );
@@ -332,8 +373,10 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     usePrismaWithS3(
-        options: Pick<BuilderOptions, 'prisma' | 's3' | 'subscriptions'> = this
-            ._options
+        options: Pick<
+            BuilderOptions,
+            'prisma' | 's3' | 'subscriptions' | 'moderation'
+        > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with S3.');
         if (!options.prisma) {
@@ -377,6 +420,7 @@ export class ServerBuilder implements SubscriptionLike {
             undefined
         );
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
 
         return this;
     }
@@ -418,6 +462,7 @@ export class ServerBuilder implements SubscriptionLike {
         this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
 
         this._actions.push({
             priority: 0,
@@ -453,7 +498,9 @@ export class ServerBuilder implements SubscriptionLike {
         this._websocketConnectionStore = new RedisWebsocketConnectionStore(
             options.redis.websocketConnectionNamespace,
             redis,
-            options.redis.connectionAuthorizationCacheSeconds
+            options.redis.connectionAuthorizationCacheSeconds,
+            options.redis.connectionExpireSeconds,
+            options.redis.connectionExpireMode
         );
 
         return this;
@@ -549,14 +596,18 @@ export class ServerBuilder implements SubscriptionLike {
 
         this._tempInstRecordsStore = new RedisTempInstRecordsStore(
             options.redis.tempInstRecordsStoreNamespace,
-            redis
+            redis,
+            options.redis.tempInstRecordsLifetimeSeconds,
+            options.redis.tempInstRecordsLifetimeExpireMode,
+            false
         );
         this._instRecordsStore = new SplitInstRecordsStore(
             new RedisTempInstRecordsStore(
                 options.redis.instRecordsStoreNamespace,
                 redis,
                 options.redis.publicInstRecordsLifetimeSeconds,
-                options.redis.publicInstRecordsLifetimeExpireMode
+                options.redis.publicInstRecordsLifetimeExpireMode,
+                true
             ),
             new PrismaInstRecordsStore(prisma)
         );
@@ -734,6 +785,36 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useNotifications(
+        options: Pick<BuilderOptions, 'notifications'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using notifications.');
+        if (!options.notifications) {
+            throw new Error('Notifications options must be provided.');
+        }
+
+        const notifications = options.notifications;
+        this._notificationMessenger = new MultiNotificationMessenger(
+            notifications
+        );
+
+        if (notifications.slack) {
+            console.log('[ServerBuilder] Using Slack notifications.');
+            this._notificationMessenger.addMessenger(
+                new SlackNotificationMessenger(notifications.slack)
+            );
+        }
+
+        if (notifications.telegram) {
+            console.log('[ServerBuilder] Using Telegram notifications.');
+            this._notificationMessenger.addMessenger(
+                new TelegramNotificationMessenger(notifications.telegram)
+            );
+        }
+
+        return this;
+    }
+
     usePrivo(options: Pick<BuilderOptions, 'privo'> = this._options): this {
         console.log('[ServerBuilder] Using Privo.');
         if (!options.privo) {
@@ -867,7 +948,7 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    async buildAsync() {
+    async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
 
         for (let action of actions) {
@@ -877,7 +958,7 @@ export class ServerBuilder implements SubscriptionLike {
         return this.build();
     }
 
-    build() {
+    build(): BuildReturn {
         if (this._actions.length > 0) {
             throw new Error(
                 'Some setup actions require async setup. Use buildAsync() instead.'
@@ -986,6 +1067,14 @@ export class ServerBuilder implements SubscriptionLike {
             this._aiController = new AIController(this._aiConfiguration);
         }
 
+        if (this._moderationStore) {
+            this._moderationController = new ModerationController(
+                this._moderationStore,
+                this._configStore,
+                this._notificationMessenger
+            );
+        }
+
         if (
             this._websocketConnectionStore &&
             this._websocketMessenger &&
@@ -1019,7 +1108,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._rateLimitController,
             this._policyController,
             this._aiController,
-            this._websocketController
+            this._websocketController,
+            this._moderationController
         );
 
         return {
@@ -1040,6 +1130,7 @@ export class ServerBuilder implements SubscriptionLike {
             mongoClient: this._mongoClient,
             mongoDatabase: this._mongoDb,
             websocketMessenger: this._websocketMessenger,
+            redisClient: this._redis,
         };
     }
 
@@ -1170,11 +1261,15 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _ensurePrismaConfigurationStore(
         prismaClient: PrismaClient,
-        options: Pick<BuilderOptions, 'prisma' | 'subscriptions' | 'privo'>
+        options: Pick<
+            BuilderOptions,
+            'prisma' | 'subscriptions' | 'moderation' | 'privo'
+        >
     ): ConfigurationStore {
         const configStore = new PrismaConfigurationStore(prismaClient, {
             subscriptions: options.subscriptions as SubscriptionConfiguration,
             privo: options.privo as PrivoConfiguration,
+            moderation: options.moderation as ModerationConfiguration,
         });
         if (this._multiCache && options.prisma.configurationCacheSeconds) {
             const cache = this._multiCache.getCache('config');
@@ -1308,6 +1403,14 @@ const sesSchema = z.object({
     ),
 });
 
+const expireModeSchema = z.union([
+    z.literal('NX').describe('The Redis NX expire mode.'),
+    z.literal('XX').describe('The Redis XX expire mode.'),
+    z.literal('GT').describe('The Redis GT expire mode.'),
+    z.literal('LT').describe('The Redis LT expire mode.'),
+    z.null().describe('The expiration will be updated every time.'),
+]);
+
 const redisSchema = z.object({
     url: z
         .string()
@@ -1372,14 +1475,7 @@ const redisSchema = z.object({
         .nullable()
         .optional()
         .default(60 * 60 * 24),
-    publicInstRecordsLifetimeExpireMode: z
-        .union([
-            z.literal('NX').describe('The Redis NX expire mode.'),
-            z.literal('XX').describe('The Redis XX expire mode.'),
-            z.literal('GT').describe('The Redis GT expire mode.'),
-            z.literal('LT').describe('The Redis LT expire mode.'),
-            z.null().describe('The expiration will be updated every time.'),
-        ])
+    publicInstRecordsLifetimeExpireMode: expireModeSchema
         .describe(
             'The Redis expire mode that should be used for public inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
         )
@@ -1389,9 +1485,24 @@ const redisSchema = z.object({
     tempInstRecordsStoreNamespace: z
         .string()
         .describe(
-            'The namespace that temporary inst records are stored under. If omitted, then redis inst records are not possible.'
+            'The namespace that temporary inst records are stored under (e.g. tempShared space). If omitted, then redis inst records are not possible.'
         )
         .optional(),
+    tempInstRecordsLifetimeSeconds: z
+        .number()
+        .describe(
+            'The lifetime of temporary inst records data in seconds (e.g. tempShared space). Intended to clean up temporary branches that have not been changed for some amount of time. If null, then temporary inst branches never expire. Defaults to 24 hours.'
+        )
+        .positive()
+        .nullable()
+        .optional()
+        .default(60 * 60 * 24),
+    tempInstRecordsLifetimeExpireMode: expireModeSchema
+        .describe(
+            'The Redis expire mode that should be used for temporary inst branches (e.g. tempShared space). Defaults to null. If null, then the expiration will not have a mode. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
+        )
+        .optional()
+        .default(null),
 
     // The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
     // Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often.
@@ -1414,6 +1525,22 @@ Because repo/add_updates is a very common permission, we periodically cache perm
         .nullable()
         .optional()
         .default('/cache'),
+
+    connectionExpireSeconds: z
+        .number()
+        .describe(
+            'The maximum lifetime of websocket connections in seconds. Intended to clean up any keys under websocketConnectionNamespace that have not been changed after an amount of time. It is recomended to set this longer than the maximum websocket connection length. Defaults to 3 hours. Set to null to disable.'
+        )
+        .positive()
+        .optional()
+        .nullable()
+        .default(60 * 60 * 3),
+    connectionExpireMode: expireModeSchema
+        .describe(
+            'The Redis expire mode that should be used for connections. Defaults to null. If null, then the expiration will not have a mode. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
+        )
+        .optional()
+        .default(null),
 });
 
 const rateLimitSchema = z.object({
@@ -1741,6 +1868,16 @@ export const optionsSchema = z.object({
     stripe: stripeSchema
         .describe(
             'Stripe options. If omitted, then Stripe features will be disabled.'
+        )
+        .optional(),
+    notifications: notificationsSchema
+        .describe(
+            'Notification configuration options. If omitted, then server notifications will be disabled.'
+        )
+        .optional(),
+    moderation: moderationSchema
+        .describe(
+            'Moderation configuration options. If omitted, then moderation features will be disabled unless overridden in the database.'
         )
         .optional(),
 });

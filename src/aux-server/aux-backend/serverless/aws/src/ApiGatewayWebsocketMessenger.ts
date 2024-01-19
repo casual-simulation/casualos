@@ -147,7 +147,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
                     try {
                         await this.sendEvent(id, event);
                     } catch (err) {
-                        if (err.code === 'GoneException') {
+                        if (err.name === 'GoneException') {
                             // The connection no longer exists. We should remove it.
                             console.log(
                                 `[ApiGatewayMessenger] Connection ${id} missing. Expiring.`
@@ -171,7 +171,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
                     try {
                         await this.sendEvent(id, event);
                     } catch (err) {
-                        if (err.code === 'GoneException') {
+                        if (err.name === 'GoneException') {
                             // The connection no longer exists. We should remove it.
                             console.log(
                                 `[ApiGatewayMessenger] Connection ${id} missing. Expiring.`

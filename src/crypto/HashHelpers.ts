@@ -1,6 +1,5 @@
 import { hmac, sha256 } from 'hash.js';
-import stringify from 'fast-json-stable-stringify';
-import scrypt from 'scrypt-async';
+import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { randomBytes } from 'tweetnacl';
 import { deriveKey } from './Encryption';
 import { fromByteArray, toByteArray } from 'base64-js';

@@ -114,3 +114,8 @@ interface Window {
 }
 
 declare function importScripts(...scripts: string[]): void;
+
+declare module '*.md' {
+    const content: string;
+    export default content;
+}

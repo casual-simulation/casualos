@@ -1,6 +1,6 @@
 /**
  * Contains information about the version of AUX that is running.
- * @dochash types/os
+ * @dochash types/os/system
  * @docname CasualOSVersion
  */
 export interface AuxVersion {

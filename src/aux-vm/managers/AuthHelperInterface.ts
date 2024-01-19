@@ -1,4 +1,7 @@
-import { AuthData } from '@casual-simulation/aux-common';
+import type {
+    AuthData,
+    RemoteCausalRepoProtocol,
+} from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
@@ -10,6 +13,7 @@ import {
     LoginHint,
     LoginStatus,
     LoginUIStatus,
+    PolicyUrls,
     PrivoSignUpInfo,
 } from '../auth/AuxAuth';
 
@@ -46,6 +50,18 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Gets the HTTP origin that should be queried for Records API requests.
      */
     getRecordsOrigin(): Promise<string>;
+
+    /**
+     * Gets the HTTP origin that should be used for Records API requests that are sent over WebSockets.
+     * Returns null if not supported by the auth helper.
+     */
+    getWebsocketOrigin(): Promise<string>;
+
+    /**
+     * Gets the protocol that should be used for the Records API requests that are sent over WebSockets.
+     * Returns null if not supported by the auth helper.
+     */
+    getWebsocketProtocol(): Promise<RemoteCausalRepoProtocol>;
 
     /**
      * Determines whether the user is currently authenticated.
@@ -169,4 +185,9 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Logs the user out.
      */
     logout(): Promise<void>;
+
+    /**
+     * Gets the URLs for the different policies (privacy policy, terms of service, etc.).
+     */
+    getPolicyUrls(): Promise<PolicyUrls>;
 }

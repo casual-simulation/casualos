@@ -5,60 +5,94 @@
     "pageSidebarLabel": "Roles",
     "contents": [
         {
-            "id": 3179,
+            "id": 3773,
             "order": 0,
             "name": "GrantRoleResult",
             "reflection": {
-                "id": 3179,
+                "id": 3773,
                 "name": "GrantRoleResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "variant": "declaration",
+                "kind": 2097152,
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines the possible results of granting a role.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/roles"
+                            "kind": "text",
+                            "text": "Defines the possible results of granting a role."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/roles"
+                                }
+                            ]
                         },
                         {
-                            "tag": "doctitle",
-                            "paramName": "",
-                            "text": "Role Types"
+                            "tag": "@doctitle",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Role Types"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docsidebar",
-                            "paramName": "",
-                            "text": "Roles"
+                            "tag": "@docsidebar",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Roles"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docdescription",
-                            "paramName": "",
-                            "text": "Types for working with roles."
+                            "tag": "@docdescription",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "Types for working with roles."
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-grant"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-grant"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "0"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "0"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "GrantRoleResult\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "GrantRoleResult"
+                                }
+                            ]
                         }
                     ]
                 },
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyController.ts",
-                        "line": 5206,
-                        "character": 12
+                        "line": 6163,
+                        "character": 12,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6163"
                     }
                 ],
                 "type": {
@@ -66,107 +100,127 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 3180,
-                            "name": "GrantRoleSuccess"
+                            "target": 3774,
+                            "name": "GrantRoleSuccess",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3774,
+                            "qualifiedName": "GrantRoleSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3182,
-                            "name": "GrantRoleFailure"
+                            "target": 3776,
+                            "name": "GrantRoleFailure",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3776,
+                            "qualifiedName": "GrantRoleFailure"
                         }
                     ]
                 }
             },
             "comment": {
-                "shortText": "Defines the possible results of granting a role.",
-                "text": "",
+                "text": "Defines the possible results of granting a role.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/roles"
                     },
                     {
                         "tagName": "doctitle",
-                        "paramName": "",
                         "text": "Role Types"
                     },
                     {
                         "tagName": "docsidebar",
-                        "paramName": "",
                         "text": "Roles"
                     },
                     {
                         "tagName": "docdescription",
-                        "paramName": "",
                         "text": "Types for working with roles."
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-grant"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "0"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "GrantRoleResult\n"
+                        "text": "GrantRoleResult"
                     }
                 ]
             },
             "group": "01-grant"
         },
         {
-            "id": 3180,
+            "id": 3774,
             "order": 1,
             "name": "GrantRoleSuccess",
             "reflection": {
-                "id": 3180,
+                "id": 3774,
                 "name": "GrantRoleSuccess",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a successful request to grant a role.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/roles"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a successful request to grant a role."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/roles"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-grant"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-grant"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "1"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "1"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "GrantRoleSuccess\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "GrantRoleSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3181,
+                        "id": 3775,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyController.ts",
-                                "line": 5217,
-                                "character": 4
+                                "line": 6174,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6174"
                             }
                         ],
                         "type": {
@@ -178,99 +232,121 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3181
+                            3775
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyController.ts",
-                        "line": 5216,
-                        "character": 17
+                        "line": 6173,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6173"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a successful request to grant a role.",
-                "text": "",
+                "text": "Defines an interface that represents a successful request to grant a role.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/roles"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-grant"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "1"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "GrantRoleSuccess\n"
+                        "text": "GrantRoleSuccess"
                     }
                 ]
             },
             "group": "01-grant"
         },
         {
-            "id": 3182,
+            "id": 3776,
             "order": 2,
             "name": "GrantRoleFailure",
             "reflection": {
-                "id": 3182,
+                "id": 3776,
                 "name": "GrantRoleFailure",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a failed request to grant a role.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/roles"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a failed request to grant a role."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/roles"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-grant"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-grant"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "2"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "2"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "GrantRoleFailure\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "GrantRoleFailure"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3184,
+                        "id": 3778,
                         "name": "errorCode",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error code that indicates why the request failed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error code that indicates why the request failed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyController.ts",
-                                "line": 5233,
-                                "character": 4
+                                "line": 6190,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6190"
                             }
                         ],
                         "type": {
@@ -282,11 +358,11 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "not_logged_in"
+                                    "value": "invalid_record_key"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "invalid_record_key"
+                                    "value": "unacceptable_request"
                                 },
                                 {
                                     "type": "literal",
@@ -294,19 +370,19 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "action_not_supported"
-                                },
-                                {
-                                    "type": "literal",
                                     "value": "not_authorized"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "subscription_limit_reached"
+                                    "value": "action_not_supported"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "unacceptable_request"
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "subscription_limit_reached"
                                 },
                                 {
                                     "type": "literal",
@@ -316,20 +392,26 @@
                         }
                     },
                     {
-                        "id": 3185,
+                        "id": 3779,
                         "name": "errorMessage",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error message that indicates why the request failed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error message that indicates why the request failed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyController.ts",
-                                "line": 5241,
-                                "character": 4
+                                "line": 6198,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6198"
                             }
                         ],
                         "type": {
@@ -338,16 +420,17 @@
                         }
                     },
                     {
-                        "id": 3183,
+                        "id": 3777,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyController.ts",
-                                "line": 5229,
-                                "character": 4
+                                "line": 6186,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6186"
                             }
                         ],
                         "type": {
@@ -359,90 +442,107 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3184,
-                            3185,
-                            3183
+                            3778,
+                            3779,
+                            3777
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyController.ts",
-                        "line": 5228,
-                        "character": 17
+                        "line": 6185,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6185"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a failed request to grant a role.",
-                "text": "",
+                "text": "Defines an interface that represents a failed request to grant a role.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/roles"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-grant"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "2"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "GrantRoleFailure\n"
+                        "text": "GrantRoleFailure"
                     }
                 ]
             },
             "group": "01-grant"
         },
         {
-            "id": 3186,
+            "id": 3780,
             "order": 0,
             "name": "RevokeRoleResult",
             "reflection": {
-                "id": 3186,
+                "id": 3780,
                 "name": "RevokeRoleResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "variant": "declaration",
+                "kind": 2097152,
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines the possible results of revoking a role.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/roles"
+                            "kind": "text",
+                            "text": "Defines the possible results of revoking a role."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/roles"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-revoke"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-revoke"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "0"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "0"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RevokeRoleResult\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RevokeRoleResult"
+                                }
+                            ]
                         }
                     ]
                 },
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyController.ts",
-                        "line": 5258,
-                        "character": 12
+                        "line": 6215,
+                        "character": 12,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6215"
                     }
                 ],
                 "type": {
@@ -450,92 +550,115 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 3187,
-                            "name": "RevokeRoleSuccess"
+                            "target": 3781,
+                            "name": "RevokeRoleSuccess",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3781,
+                            "qualifiedName": "RevokeRoleSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3189,
-                            "name": "RevokeRoleFailure"
+                            "target": 3783,
+                            "name": "RevokeRoleFailure",
+                            "package": "@casual-simulation/aux-records",
+                            "id": 3783,
+                            "qualifiedName": "RevokeRoleFailure"
                         }
                     ]
                 }
             },
             "comment": {
-                "shortText": "Defines the possible results of revoking a role.",
-                "text": "",
+                "text": "Defines the possible results of revoking a role.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/roles"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-revoke"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "0"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RevokeRoleResult\n"
+                        "text": "RevokeRoleResult"
                     }
                 ]
             },
             "group": "01-revoke"
         },
         {
-            "id": 3187,
+            "id": 3781,
             "order": 1,
             "name": "RevokeRoleSuccess",
             "reflection": {
-                "id": 3187,
+                "id": 3781,
                 "name": "RevokeRoleSuccess",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a successful request to revoke a role.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/roles"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a successful request to revoke a role."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/roles"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-revoke"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-revoke"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "1"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "1"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RevokeRoleSuccess\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RevokeRoleSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3188,
+                        "id": 3782,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyController.ts",
-                                "line": 5269,
-                                "character": 4
+                                "line": 6226,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6226"
                             }
                         ],
                         "type": {
@@ -547,99 +670,121 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3188
+                            3782
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyController.ts",
-                        "line": 5268,
-                        "character": 17
+                        "line": 6225,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6225"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a successful request to revoke a role.",
-                "text": "",
+                "text": "Defines an interface that represents a successful request to revoke a role.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/roles"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-revoke"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "1"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RevokeRoleSuccess\n"
+                        "text": "RevokeRoleSuccess"
                     }
                 ]
             },
             "group": "01-revoke"
         },
         {
-            "id": 3189,
+            "id": 3783,
             "order": 2,
             "name": "RevokeRoleFailure",
             "reflection": {
-                "id": 3189,
+                "id": 3783,
                 "name": "RevokeRoleFailure",
+                "variant": "declaration",
                 "kind": 256,
-                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents a failed request to revoke a role.",
-                    "tags": [
+                    "summary": [
                         {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/roles"
+                            "kind": "text",
+                            "text": "Defines an interface that represents a failed request to revoke a role."
+                        }
+                    ],
+                    "blockTags": [
+                        {
+                            "tag": "@dochash",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "types/records/roles"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-revoke"
+                            "tag": "@docgroup",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "01-revoke"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "2"
+                            "tag": "@docorder",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "2"
+                                }
+                            ]
                         },
                         {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "RevokeRoleFailure\n"
+                            "tag": "@docname",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "RevokeRoleFailure"
+                                }
+                            ]
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 3191,
+                        "id": 3785,
                         "name": "errorCode",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error code that indicates why the request failed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error code that indicates why the request failed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyController.ts",
-                                "line": 5286,
-                                "character": 4
+                                "line": 6243,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6243"
                             }
                         ],
                         "type": {
@@ -651,11 +796,11 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "not_logged_in"
+                                    "value": "invalid_record_key"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "invalid_record_key"
+                                    "value": "unacceptable_request"
                                 },
                                 {
                                     "type": "literal",
@@ -663,19 +808,19 @@
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "action_not_supported"
-                                },
-                                {
-                                    "type": "literal",
                                     "value": "not_authorized"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "subscription_limit_reached"
+                                    "value": "action_not_supported"
                                 },
                                 {
                                     "type": "literal",
-                                    "value": "unacceptable_request"
+                                    "value": "not_logged_in"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "subscription_limit_reached"
                                 },
                                 {
                                     "type": "literal",
@@ -685,20 +830,26 @@
                         }
                     },
                     {
-                        "id": 3192,
+                        "id": 3786,
                         "name": "errorMessage",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The error message that indicates why the request failed.",
-                            "tags": []
+                            "summary": [
+                                {
+                                    "kind": "text",
+                                    "text": "The error message that indicates why the request failed."
+                                }
+                            ],
+                            "blockTags": []
                         },
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyController.ts",
-                                "line": 5294,
-                                "character": 4
+                                "line": 6251,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6251"
                             }
                         ],
                         "type": {
@@ -707,16 +858,17 @@
                         }
                     },
                     {
-                        "id": 3190,
+                        "id": 3784,
                         "name": "success",
+                        "variant": "declaration",
                         "kind": 1024,
-                        "kindString": "Property",
                         "flags": {},
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyController.ts",
-                                "line": 5281,
-                                "character": 4
+                                "line": 6238,
+                                "character": 4,
+                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6238"
                             }
                         ],
                         "type": {
@@ -728,45 +880,40 @@
                 "groups": [
                     {
                         "title": "Properties",
-                        "kind": 1024,
                         "children": [
-                            3191,
-                            3192,
-                            3190
+                            3785,
+                            3786,
+                            3784
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyController.ts",
-                        "line": 5280,
-                        "character": 17
+                        "line": 6237,
+                        "character": 17,
+                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/PolicyController.ts#L6237"
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a failed request to revoke a role.",
-                "text": "",
+                "text": "Defines an interface that represents a failed request to revoke a role.",
                 "tags": [
                     {
                         "tagName": "dochash",
-                        "paramName": "",
                         "text": "types/records/roles"
                     },
                     {
                         "tagName": "docgroup",
-                        "paramName": "",
                         "text": "01-revoke"
                     },
                     {
                         "tagName": "docorder",
-                        "paramName": "",
                         "text": "2"
                     },
                     {
                         "tagName": "docname",
-                        "paramName": "",
-                        "text": "RevokeRoleFailure\n"
+                        "text": "RevokeRoleFailure"
                     }
                 ]
             },
@@ -775,890 +922,1060 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2953": "CasualOSError",
+        "id-3546": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3358": "Quaternion",
+        "id-127": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3390": "Rotation",
+        "id-154": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3224": "Vector2",
+        "id-1": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3281": "Vector3",
+        "id-58": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2972": "AIChatMessage",
+        "id-3565": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2750": "AIChatOptions",
+        "id-3334": "AIChatOptions",
         "AIGenerateImageSuccess": "types/ai",
-        "id-2555": "AIGenerateImageSuccess",
+        "id-2481": "AIGenerateImageSuccess",
         "AIGenerateImageOptions": "types/ai",
-        "id-2764": "AIGenerateImageOptions",
+        "id-3348": "AIGenerateImageOptions",
         "AIGenerateSkyboxOptions": "types/ai",
-        "id-2760": "AIGenerateSkyboxOptions",
+        "id-3344": "AIGenerateSkyboxOptions",
         "AIGenerateSkyboxRequest": "types/ai",
-        "id-2548": "AIGenerateSkyboxRequest",
+        "id-2474": "AIGenerateSkyboxRequest",
         "AIGenerateSkyboxResult": "types/ai",
-        "id-2552": "AIGenerateSkyboxResult",
+        "id-2478": "AIGenerateSkyboxResult",
         "AIGeneratedImage": "types/ai",
-        "id-2558": "AIGeneratedImage",
+        "id-2484": "AIGeneratedImage",
+        "ARSupportedAction": "types/os/xr",
+        "id-3076": "ARSupportedAction",
         "AddCountFailure": "types/records/events",
-        "id-3157": "AddCountFailure",
+        "id-3751": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3152": "AddCountSuccess",
+        "id-3746": "AddCountSuccess",
+        "AddDropSnapAction": "types/os/portals",
+        "id-2705": "AddDropSnapAction",
+        "AddDropSnapPointsAction": "types/os/portals",
+        "id-2709": "AddDropSnapPointsAction",
+        "AnalyticsRecordEventAction": "types/os/portals",
+        "id-3279": "AnalyticsRecordEventAction",
         "AnimateTagOptions": "types/animation",
-        "id-2153": "AnimateTagOptions",
+        "id-2078": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2528": "AttachDebuggerOptions",
-        "CasualOSDevice": "types/os",
-        "id-2941": "CasualOSDevice",
-        "CasualOSVersion": "types/os",
-        "id-2933": "CasualOSVersion",
+        "id-2454": "AttachDebuggerOptions",
+        "AuthData": "types/os/records",
+        "id-3218": "AuthData",
+        "CasualOSDevice": "types/os/system",
+        "id-3533": "CasualOSDevice",
+        "CasualOSVersion": "types/os/system",
+        "id-3525": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3436": "AxisAndAngle",
+        "id-200": "AxisAndAngle",
+        "BeginRecordingAction": "types/os/audio",
+        "id-3161": "BeginRecordingAction",
         "BotTagMasks": "types/core",
-        "id-2910": "BotTagMasks",
+        "id-3501": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2825": "BotTags",
+        "id-3416": "BotTags",
         "BotState": "types/core",
-        "id-2923": "BotState",
+        "id-3514": "BotState",
+        "BufferFormAddressGLTFAction": "types/os/portals",
+        "id-3286": "BufferFormAddressGLTFAction",
+        "BufferSoundAction": "types/os/audio",
+        "id-2887": "BufferSoundAction",
+        "CalculateRayFromCameraAction": "types/os/portals",
+        "id-3259": "CalculateRayFromCameraAction",
+        "CancelSoundAction": "types/os/audio",
+        "id-2893": "CancelSoundAction",
         "CompiledBotListeners": "types/core",
-        "id-2904": "CompiledBotListeners",
-        "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2585": "ConvertGeolocationToWhat3WordsOptions",
+        "id-3495": "CompiledBotListeners",
+        "ConfigureWakeLockAction": "types/os/portals",
+        "id-3266": "ConfigureWakeLockAction",
+        "ConvertGeolocationToWhat3WordsAction": "types/os/geolocation",
+        "id-2651": "ConvertGeolocationToWhat3WordsAction",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os/geolocation",
+        "id-2640": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2983": "CreatePublicRecordKeyFailure",
+        "id-3687": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2979": "CreatePublicRecordKeySuccess",
+        "id-3683": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2481": "DebuggerCallFrame",
+        "id-2407": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2516": "DebuggerFunctionLocation",
+        "id-2442": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2510": "DebuggerPause",
+        "id-2436": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2489": "DebuggerTagMaskUpdate",
+        "id-2415": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2495": "DebuggerTagUpdate",
+        "id-2421": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2522": "DebuggerVariable",
+        "id-2448": "DebuggerVariable",
+        "DefineGlobalBotAction": "types/os/portals",
+        "id-2644": "DefineGlobalBotAction",
+        "DownloadAction": "types/os/files",
+        "id-2899": "DownloadAction",
         "Easing": "types/animation",
-        "id-2565": "Easing",
-        "EnableXROptions": "types/os",
-        "id-2659": "EnableXROptions",
+        "id-2622": "Easing",
+        "EnableARAction": "types/os/xr",
+        "id-3072": "EnableARAction",
+        "EnableCollaborationAction": "types/os/spaces",
+        "id-3031": "EnableCollaborationAction",
+        "EnableCustomDraggingAction": "types/os/portals",
+        "id-2735": "EnableCustomDraggingAction",
+        "EnablePOVAction": "types/os/portals",
+        "id-3090": "EnablePOVAction",
+        "EnableVRAction": "types/os/xr",
+        "id-3086": "EnableVRAction",
+        "EnableXROptions": "types/os/xr",
+        "id-2942": "EnableXROptions",
+        "EndRecordingAction": "types/os/audio",
+        "id-3169": "EndRecordingAction",
         "EraseDataFailure": "types/records/data",
-        "id-3128": "EraseDataFailure",
+        "id-3722": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3124": "EraseDataSuccess",
+        "id-3718": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3147": "EraseFileFailure",
+        "id-3741": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3143": "EraseFileSuccess",
+        "id-3737": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3439": "EulerAnglesRotation",
-        "FocusOnOptions": "types/os",
-        "id-2619": "FocusOnOptions",
-        "FocusOnRotation": "types/os",
-        "id-2631": "FocusOnRotation",
-        "FormAnimationData": "types/os",
-        "id-2677": "FormAnimationData",
+        "id-203": "EulerAnglesRotation",
+        "ExitFullscreenAction": "types/os/portals",
+        "id-3105": "ExitFullscreenAction",
+        "FocusOnOptions": "types/os/camera",
+        "id-2689": "FocusOnOptions",
+        "FocusOnRotation": "types/os/camera",
+        "id-2701": "FocusOnRotation",
+        "FormAnimationData": "types/os/animations",
+        "id-2987": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3433": "FromToRotation",
+        "id-197": "FromToRotation",
         "GenericError": "types/error",
-        "id-2950": "GenericError",
+        "id-3543": "GenericError",
+        "GetAverageFrameRateAction": "types/os/portals",
+        "id-3239": "GetAverageFrameRateAction",
         "GetCountFailure": "types/records/events",
-        "id-3168": "GetCountFailure",
+        "id-3762": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3162": "GetCountSuccess",
+        "id-3756": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3119": "GetDataFailure",
+        "id-3713": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3110": "GetDataSuccess",
-        "GetRoomOptionsFailure": "types/os",
-        "id-2243": "GetRoomOptionsFailure",
-        "GetRoomOptionsSuccess": "types/os",
-        "id-2239": "GetRoomOptionsSuccess",
-        "GetRoomRemoteOptionsFailure": "types/os",
-        "id-2286": "GetRoomRemoteOptionsFailure",
-        "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-2281": "GetRoomRemoteOptionsSuccess",
-        "GetRoomTrackOptionsFailure": "types/os",
-        "id-2262": "GetRoomTrackOptionsFailure",
-        "GetRoomTrackOptionsSuccess": "types/os",
-        "id-2257": "GetRoomTrackOptionsSuccess",
+        "id-3704": "GetDataSuccess",
+        "GetGeolocationAction": "types/os/geolocation",
+        "id-3202": "GetGeolocationAction",
+        "GetRoomOptionsFailure": "types/os/portals",
+        "id-2169": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os/portals",
+        "id-2165": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os/portals",
+        "id-2212": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os/portals",
+        "id-2207": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os/portals",
+        "id-2188": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os/portals",
+        "id-2183": "GetRoomTrackOptionsSuccess",
+        "GetVoicesAction": "types/os/audio",
+        "id-3197": "GetVoicesAction",
+        "GetWakeLockConfigurationAction": "types/os/portals",
+        "id-3272": "GetWakeLockConfigurationAction",
+        "GoToTagAction": "types/os/portals",
+        "id-3207": "GoToTagAction",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3196": "GrantMarkerPermissionFailure",
+        "id-3790": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3194": "GrantMarkerPermissionSuccess",
+        "id-3788": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3182": "GrantRoleFailure",
+        "id-3776": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3180": "GrantRoleSuccess",
-        "ImageClassifierOptions": "types/os",
-        "id-2637": "ImageClassifierOptions",
-        "InstUpdate": "types/os",
-        "id-2946": "InstUpdate",
-        "JoinRoomFailure": "types/os",
-        "id-2224": "JoinRoomFailure",
-        "JoinRoomSuccess": "types/os",
-        "id-2221": "JoinRoomSuccess",
-        "LeaveRoomFailure": "types/os",
-        "id-2233": "LeaveRoomFailure",
-        "LeaveRoomSuccess": "types/os",
-        "id-2230": "LeaveRoomSuccess",
+        "id-3774": "GrantRoleSuccess",
+        "HideHtmlAction": "types/os/portals",
+        "id-2541": "HideHtmlAction",
+        "HideTooltipAction": "types/os/portals",
+        "id-2530": "HideTooltipAction",
+        "HtmlAppEventAction": "types/os/portals",
+        "id-2551": "HtmlAppEventAction",
+        "HtmlAppMethodCallAction": "types/os/portals",
+        "id-2556": "HtmlAppMethodCallAction",
+        "ImageClassifierOptions": "types/os/image-classification",
+        "id-2740": "ImageClassifierOptions",
+        "InstUpdate": "types/os/spaces",
+        "id-3539": "InstUpdate",
+        "JoinRoomFailure": "types/os/portals",
+        "id-2150": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os/portals",
+        "id-2147": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os/portals",
+        "id-2159": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os/portals",
+        "id-2156": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3138": "ListDataFailure",
+        "id-3732": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3133": "ListDataSuccess",
+        "id-3727": "ListDataSuccess",
+        "ListFormAnimationsAction": "types/os/animations",
+        "id-2991": "ListFormAnimationsAction",
         "ListStudiosFailure": "types/records/studios",
-        "id-3211": "ListStudiosFailure",
+        "id-3805": "ListStudiosFailure",
         "ListStudiosSuccess": "types/records/studios",
-        "id-3208": "ListStudiosSuccess",
+        "id-3802": "ListStudiosSuccess",
         "ListedStudio": "types/records/studios",
-        "id-3215": "ListedStudio",
+        "id-3809": "ListedStudio",
+        "LoadInstAction": "types/os/spaces",
+        "id-2812": "LoadInstAction",
+        "LoadSpaceAction": "types/os/spaces",
+        "id-2932": "LoadSpaceAction",
+        "LocalFormAnimationAction": "types/os/animations",
+        "id-3043": "LocalFormAnimationAction",
+        "LocalPositionTweenAction": "types/os/animations",
+        "id-3057": "LocalPositionTweenAction",
+        "LocalTweenAction": "types/os/animations",
+        "id-3047": "LocalTweenAction",
         "LookRotation": "types/math/rotations",
-        "id-3456": "LookRotation",
-        "MediaPermissionOptions": "types/os",
-        "id-2656": "MediaPermissionOptions",
+        "id-211": "LookRotation",
+        "MediaPermissionAction": "types/os/media",
+        "id-3232": "MediaPermissionAction",
+        "MediaPermissionOptions": "types/os/media",
+        "id-2939": "MediaPermissionOptions",
+        "MeetCommandAction": "types/os/meets",
+        "id-3174": "MeetCommandAction",
+        "MeetFunctionAction": "types/os/meets",
+        "id-3181": "MeetFunctionAction",
         "Debugger": "types/debuggers/debugger",
-        "id-2293": "Debugger",
+        "id-2219": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2500": "NormalDebuggerOptions",
+        "id-2426": "NormalDebuggerOptions",
+        "OpenCircleWipeAction": "types/os/portals",
+        "id-3151": "OpenCircleWipeAction",
+        "OpenCircleWipeOptions": "types/os/portals",
+        "id-3158": "OpenCircleWipeOptions",
+        "OpenConsoleAction": "types/os/system",
+        "id-2787": "OpenConsoleAction",
         "PhotoCameraOptions": "types/camera",
-        "id-2734": "PhotoCameraOptions",
+        "id-3015": "PhotoCameraOptions",
+        "OpenURLAction": "types/os/portals",
+        "id-2876": "OpenURLAction",
         "ParsedBotLink": "types/core",
-        "id-2929": "ParsedBotLink",
+        "id-3520": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2926": "PartialBotState",
+        "id-3517": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2349": "PausableDebugger",
+        "id-2275": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2505": "PausableDebuggerOptions",
+        "id-2431": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2468": "PauseTrigger",
+        "id-2394": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2476": "PauseTriggerOptions",
+        "id-2402": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2746": "Photo",
+        "id-3027": "Photo",
+        "PlaySoundAction": "types/os/audio",
+        "id-2880": "PlaySoundAction",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2463": "PossiblePauseTriggerLocation",
+        "id-2389": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2537": "PseudoRandomNumberGenerator",
+        "id-2463": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3449": "QuaternionRotation",
-        "RaycastRay": "types/os",
-        "id-2217": "RaycastRay",
-        "RaycastResult": "types/os",
-        "id-2214": "RaycastResult",
+        "id-215": "QuaternionRotation",
+        "RaycastFromCameraAction": "types/os/portals",
+        "id-3244": "RaycastFromCameraAction",
+        "RaycastInPortalAction": "types/os/portals",
+        "id-3251": "RaycastInPortalAction",
+        "RaycastRay": "types/os/portals",
+        "id-2143": "RaycastRay",
+        "RaycastResult": "types/os/portals",
+        "id-2140": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2568": "RecordActionOptions",
+        "id-3297": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3104": "RecordDataFailure",
+        "id-3697": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3100": "RecordDataSuccess",
+        "id-3693": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-2184": "RecordFileFailure",
+        "id-2110": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-2180": "RecordFileSuccess",
+        "id-2106": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2721": "RecordedFile",
+        "id-3002": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2719": "Recording",
+        "id-3000": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2726": "RecordingOptions",
+        "id-3007": "RecordingOptions",
+        "RegisterBuiltinPortalAction": "types/os/portals",
+        "id-3115": "RegisterBuiltinPortalAction",
+        "RegisterCustomAppAction": "types/os/portals",
+        "id-3121": "RegisterCustomAppAction",
+        "RegisterHtmlAppAction": "types/os/portals",
+        "id-3134": "RegisterHtmlAppAction",
         "RegisterPrefixOptions": "types/core",
-        "id-2716": "RegisterPrefixOptions",
+        "id-2997": "RegisterPrefixOptions",
+        "RejectAction": "types/os/event",
+        "id-2905": "RejectAction",
+        "RemoteAction": "types/os/event",
+        "id-3815": "RemoteAction",
+        "ReportInstAction": "types/os/moderation",
+        "id-3292": "ReportInstAction",
+        "RequestAuthDataAction": "types/os/records",
+        "id-3212": "RequestAuthDataAction",
+        "RequestFullscreenAction": "types/os/portals",
+        "id-3103": "RequestFullscreenAction",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3203": "RevokeMarkerPermissionFailure",
+        "id-3797": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3201": "RevokeMarkerPermissionSuccess",
+        "id-3795": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3189": "RevokeRoleFailure",
+        "id-3783": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3187": "RevokeRoleSuccess",
-        "RoomJoinOptions": "types/os",
-        "id-2682": "RoomJoinOptions",
-        "RoomOptions": "types/os",
-        "id-2691": "RoomOptions",
-        "RoomRemoteOptions": "types/os",
-        "id-2707": "RoomRemoteOptions",
-        "RoomTrackOptions": "types/os",
-        "id-2695": "RoomTrackOptions",
+        "id-3781": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os/portals",
+        "id-3300": "RoomJoinOptions",
+        "RoomOptions": "types/os/portals",
+        "id-3309": "RoomOptions",
+        "RoomRemoteOptions": "types/os/portals",
+        "id-3325": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os/portals",
+        "id-3313": "RoomTrackOptions",
+        "RunScriptAction": "types/os/system",
+        "id-2919": "RunScriptAction",
         "RuntimeBot": "types/core",
-        "id-2777": "RuntimeBot",
+        "id-3361": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2916": "RuntimeBotLinks",
+        "id-3507": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2913": "RuntimeBotVars",
+        "id-3504": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3447": "SequenceRotation",
-        "SetRoomOptionsSuccess": "types/os",
-        "id-2248": "SetRoomOptionsSuccess",
-        "SetRoomTrackOptions": "types/os",
-        "id-2713": "SetRoomTrackOptions",
-        "SetRoomTrackOptionsFailure": "types/os",
-        "id-2274": "SetRoomTrackOptionsFailure",
-        "SetRoomTrackOptionsSuccess": "types/os",
-        "id-2269": "SetRoomTrackOptionsSuccess",
-        "ShareOptions": "types/os",
-        "id-2615": "ShareOptions",
-        "ShowChatOptions": "types/os",
-        "id-2609": "ShowChatOptions",
-        "ShowConfirmOptions": "types/os",
-        "id-2651": "ShowConfirmOptions",
-        "ShowInputOptions": "types/os",
-        "id-2642": "ShowInputOptions",
-        "SnapAxis": "types/os",
-        "id-2589": "SnapAxis",
-        "SnapGridTarget": "types/os",
-        "id-2189": "SnapGridTarget",
-        "SnapPoint": "types/os",
-        "id-2601": "SnapPoint",
+        "id-222": "SequenceRotation",
+        "SerializableMutationRecord": "types/os/portals",
+        "id-2565": "SerializableMutationRecord",
+        "SessionSelector": "types/os/event",
+        "id-2489": "SessionSelector",
+        "SetAppOutputAction": "types/os/portals",
+        "id-3146": "SetAppOutputAction",
+        "SetClipboardAction": "types/os/clipboard",
+        "id-2908": "SetClipboardAction",
+        "SetRoomOptionsSuccess": "types/os/portals",
+        "id-2174": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os/portals",
+        "id-3331": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os/portals",
+        "id-2200": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os/portals",
+        "id-2195": "SetRoomTrackOptionsSuccess",
+        "ShareAction": "types/os/input",
+        "id-3107": "ShareAction",
+        "ShareOptions": "types/os/input",
+        "id-2685": "ShareOptions",
+        "ShowChatBarAction": "types/os/input",
+        "id-2911": "ShowChatBarAction",
+        "ShowChatOptions": "types/os/input",
+        "id-2679": "ShowChatOptions",
+        "ShowConfirmAction": "types/os/input",
+        "id-2761": "ShowConfirmAction",
+        "ShowConfirmOptions": "types/os/input",
+        "id-2756": "ShowConfirmOptions",
+        "ShowHtmlAction": "types/os/portals",
+        "id-2536": "ShowHtmlAction",
+        "ShowInputOptions": "types/os/input",
+        "id-2745": "ShowInputOptions",
+        "ShowJoinCodeAction": "types/os/barcodes",
+        "id-3099": "ShowJoinCodeAction",
+        "ShowToastAction": "types/os/portals",
+        "id-2516": "ShowToastAction",
+        "ShowTooltipAction": "types/os/portals",
+        "id-2521": "ShowTooltipAction",
+        "ShowUploadAuxFileAction": "types/os/input",
+        "id-2925": "ShowUploadAuxFileAction",
+        "ShowUploadFilesAction": "types/os/input",
+        "id-2927": "ShowUploadFilesAction",
+        "SnapAxis": "types/os/portals",
+        "id-2659": "SnapAxis",
+        "SnapGrid": "types/os/portals",
+        "id-2714": "SnapGrid",
+        "SnapGridTarget": "types/os/portals",
+        "id-2115": "SnapGridTarget",
+        "SnapPoint": "types/os/portals",
+        "id-2671": "SnapPoint",
+        "SpeakTextAction": "types/os/audio",
+        "id-3188": "SpeakTextAction",
         "SpeakTextOptions": "types/experimental",
-        "id-2533": "SpeakTextOptions",
-        "StartFormAnimationOptions": "types/os",
-        "id-2661": "StartFormAnimationOptions",
-        "StopFormAnimationOptions": "types/os",
-        "id-2674": "StopFormAnimationOptions",
-        "SuccessfulGeolocation": "types/os",
-        "id-2571": "SuccessfulGeolocation",
+        "id-2459": "SpeakTextOptions",
+        "StartFormAnimationAction": "types/os/animations",
+        "id-2968": "StartFormAnimationAction",
+        "StartFormAnimationOptions": "types/os/animations",
+        "id-2944": "StartFormAnimationOptions",
+        "StopFormAnimationAction": "types/os/animations",
+        "id-2957": "StopFormAnimationAction",
+        "StopFormAnimationOptions": "types/os/animations",
+        "id-2965": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os/geolocation",
+        "id-2626": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2730": "SyntheticVoice",
+        "id-3011": "SyntheticVoice",
         "TweenOptions": "types/experimental",
-        "id-2530": "TweenOptions",
-        "UnsuccessfulGeolocation": "types/os",
-        "id-2581": "UnsuccessfulGeolocation",
+        "id-2456": "TweenOptions",
+        "UnloadInstAction": "types/os/spaces",
+        "id-2816": "UnloadInstAction",
+        "UnregisterCustomAppAction": "types/os/portals",
+        "id-3128": "UnregisterCustomAppAction",
+        "UnregisterHtmlAppAction": "types/os/portals",
+        "id-3141": "UnregisterHtmlAppAction",
+        "UnsuccessfulGeolocation": "types/os/geolocation",
+        "id-2636": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3175": "UpdateEventRecordFailure",
+        "id-3769": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3173": "UpdateEventRecordSuccess",
-        "UploadedFile": "types/os",
-        "id-2210": "UploadedFile",
+        "id-3767": "UpdateEventRecordSuccess",
+        "UpdateHtmlAppAction": "types/os/portals",
+        "id-2545": "UpdateHtmlAppAction",
+        "UploadedFile": "types/os/files",
+        "id-2136": "UploadedFile",
+        "VRSupportedAction": "types/os/xr",
+        "id-3081": "VRSupportedAction",
+        "WakeLockConfiguration": "types/os/portals",
+        "id-3277": "WakeLockConfiguration",
         "WebhookOptions": "types/web",
-        "id-2134": "WebhookOptions",
+        "id-2059": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-2146": "WebhookResult",
+        "id-2071": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3151": "AddCountResult",
+        "id-3745": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2988": "AvailablePermissions",
-        "BarcodeFormat": "types/os",
-        "id-2636": "BarcodeFormat",
+        "id-3571": "AvailablePermissions",
+        "BarcodeFormat": "types/os/barcodes",
+        "id-2739": "BarcodeFormat",
+        "BotAnchorPoint": "types/core",
+        "id-3524": "BotAnchorPoint",
         "BotFilter": "types/core",
-        "id-2168": "BotFilter",
+        "id-2093": "BotFilter",
         "BotSpace": "types/core",
-        "id-2900": "BotSpace",
-        "CameraType": "types/os",
-        "id-2635": "CameraType",
+        "id-3491": "BotSpace",
+        "CameraType": "types/os/camera",
+        "id-2738": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2978": "CreatePublicRecordKeyResult",
+        "id-3682": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
-        "id-2564": "EaseMode",
+        "id-2621": "EaseMode",
         "EaseType": "types/animation",
-        "id-2563": "EaseType",
+        "id-2620": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3123": "EraseDataResult",
+        "id-3717": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3142": "EraseFileResult",
-        "Geolocation": "types/os",
-        "id-2570": "Geolocation",
+        "id-3736": "EraseFileResult",
+        "Geolocation": "types/os/geolocation",
+        "id-2625": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3161": "GetCountResult",
+        "id-3755": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3109": "GetDataResult",
-        "GetRoomOptionsResult": "types/os",
-        "id-2238": "GetRoomOptionsResult",
-        "GetRoomRemoteOptionsResult": "types/os",
-        "id-2280": "GetRoomRemoteOptionsResult",
-        "GetRoomTrackOptionsResult": "types/os",
-        "id-2256": "GetRoomTrackOptionsResult",
+        "id-3703": "GetDataResult",
+        "GetRoomOptionsResult": "types/os/portals",
+        "id-2164": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os/portals",
+        "id-2206": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os/portals",
+        "id-2182": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3193": "GrantMarkerPermissionResult",
+        "id-3787": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3179": "GrantRoleResult",
-        "JoinRoomResult": "types/os",
-        "id-2220": "JoinRoomResult",
-        "LeaveRoomResult": "types/os",
-        "id-2229": "LeaveRoomResult",
+        "id-3773": "GrantRoleResult",
+        "JoinRoomResult": "types/os/portals",
+        "id-2146": "JoinRoomResult",
+        "LeaveRoomResult": "types/os/portals",
+        "id-2155": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3132": "ListDataResult",
+        "id-3726": "ListDataResult",
         "ListStudiosResult": "types/records/studios",
-        "id-3207": "ListStudiosResult",
+        "id-3801": "ListStudiosResult",
         "Mod": "types/core",
-        "id-2163": "Mod",
+        "id-2088": "Mod",
         "PortalType": "types/core",
-        "id-2932": "PortalType",
+        "id-3523": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2467": "PossiblePauseTriggerStates",
+        "id-2393": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3099": "RecordDataResult",
+        "id-3692": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-2179": "RecordFileResult",
+        "id-2105": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3200": "RevokeMarkerPermissionResult",
+        "id-3794": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3186": "RevokeRoleResult",
-        "SetRoomOptionsResult": "types/os",
-        "id-2247": "SetRoomOptionsResult",
-        "SetRoomTrackOptionsResult": "types/os",
-        "id-2268": "SetRoomTrackOptionsResult",
-        "SnapTarget": "types/os",
-        "id-2608": "SnapTarget",
+        "id-3780": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os/portals",
+        "id-2173": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os/portals",
+        "id-2194": "SetRoomTrackOptionsResult",
+        "ShowInputSuptype": "types/os/input",
+        "id-2755": "ShowInputSuptype",
+        "ShowInputType": "types/os/input",
+        "id-2754": "ShowInputType",
+        "SnapTarget": "types/os/portals",
+        "id-2678": "SnapTarget",
         "TagFilter": "types/core",
-        "id-2164": "TagFilter",
+        "id-2089": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3172": "UpdateEventRecordResult",
-        "animateTag-byOptions": "actions/utility",
-        "id-364": "animateTag-byOptions",
+        "id-3766": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/os/animations",
+        "id-591": "animateTag-byOptions",
         "getbot-tag": "actions/data",
-        "id-33": "getbot-tag",
+        "id-256": "getbot-tag",
         "getbots-tag": "actions/data",
-        "id-17": "getbots-tag",
-        "animateTag-byTag": "actions/utility",
-        "id-358": "animateTag-byTag",
+        "id-240": "getbots-tag",
+        "animateTag-byTag": "actions/os/animations",
+        "id-585": "animateTag-byTag",
         "changeState": "actions/data",
-        "id-177": "changeState",
+        "id-401": "changeState",
         "create": "actions/data",
-        "id-162": "create",
+        "id-385": "create",
         "destroy": "actions/data",
-        "id-166": "destroy",
+        "id-389": "destroy",
         "getbot-filters": "actions/data",
-        "id-26": "getbot-filters",
+        "id-249": "getbot-filters",
         "getbots-filters": "actions/data",
-        "id-10": "getbots-filters",
-        "priorityShout": "actions/event",
-        "id-225": "priorityShout",
-        "shout": "actions/event",
-        "id-237": "shout",
+        "id-233": "getbots-filters",
+        "priorityShout": "actions/os/event",
+        "id-450": "priorityShout",
+        "shout": "actions/os/event",
+        "id-463": "shout",
         "updateBotLinks": "actions/data",
-        "id-198": "updateBotLinks",
-        "whisper": "actions/event",
-        "id-263": "whisper",
-        "action.perform": "actions/event",
-        "id-1634": "action.perform",
-        "action.reject": "actions/event",
-        "id-1638": "action.reject",
+        "id-423": "updateBotLinks",
+        "whisper": "actions/os/event",
+        "id-489": "whisper",
+        "action.perform": "actions/os/event",
+        "id-1594": "action.perform",
+        "action.reject": "actions/os/event",
+        "id-1598": "action.reject",
         "ai.chat-string": "actions/ai",
-        "id-423": "ai.chat-string",
+        "id-650": "ai.chat-string",
         "ai.chat-message": "actions/ai",
-        "id-426": "ai.chat-message",
+        "id-653": "ai.chat-message",
         "ai.chat-messages": "actions/ai",
-        "id-429": "ai.chat-messages",
+        "id-656": "ai.chat-messages",
         "ai.generateImage-string": "actions/ai",
-        "id-442": "ai.generateImage-string",
+        "id-669": "ai.generateImage-string",
         "ai.generateImage-request": "actions/ai",
-        "id-446": "ai.generateImage-request",
+        "id-673": "ai.generateImage-request",
         "ai.generateSkybox-string": "actions/ai",
-        "id-434": "ai.generateSkybox-string",
+        "id-661": "ai.generateSkybox-string",
         "ai.generateSkybox-request": "actions/ai",
-        "id-438": "ai.generateSkybox-request",
+        "id-665": "ai.generateSkybox-request",
         "applyDiffToSnapshot": "actions/data",
-        "id-83": "applyDiffToSnapshot",
+        "id-306": "applyDiffToSnapshot",
         "applyMod": "actions/mods",
-        "id-152": "applyMod",
+        "id-375": "applyMod",
         "assert": "actions/debuggers",
-        "id-407": "assert",
+        "id-634": "assert",
         "assertEqual": "actions/debuggers",
-        "id-412": "assertEqual",
+        "id-639": "assertEqual",
         "atPosition": "actions/bot-filters",
-        "id-293": "atPosition",
+        "id-520": "atPosition",
         "byCreator": "actions/bot-filters",
-        "id-314": "byCreator",
+        "id-541": "byCreator",
         "byID": "actions/bot-filters",
-        "id-281": "byID",
+        "id-508": "byID",
         "byMod": "actions/bot-filters",
-        "id-285": "byMod",
+        "id-512": "byMod",
         "bySpace": "actions/bot-filters",
-        "id-310": "bySpace",
+        "id-537": "bySpace",
         "byTag": "actions/bot-filters",
-        "id-276": "byTag",
+        "id-503": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1858": "bytes.fromBase64String",
+        "id-1807": "bytes.fromBase64String",
         "bytes.fromBase64Url": "actions/bytes",
-        "id-1875": "bytes.fromBase64Url",
+        "id-1824": "bytes.fromBase64Url",
         "bytes.fromHexString": "actions/bytes",
-        "id-1866": "bytes.fromHexString",
+        "id-1815": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1854": "bytes.toBase64String",
+        "id-1803": "bytes.toBase64String",
         "bytes.toBase64Url": "actions/bytes",
-        "id-1870": "bytes.toBase64Url",
+        "id-1819": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
-        "id-1862": "bytes.toHexString",
-        "clearAnimations": "actions/utility",
-        "id-378": "clearAnimations",
+        "id-1811": "bytes.toHexString",
+        "clearAnimations": "actions/os/animations",
+        "id-605": "clearAnimations",
         "clearTagMasks": "actions/data",
-        "id-106": "clearTagMasks",
+        "id-329": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1881": "crypto.hash-raw",
+        "id-1830": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1887": "crypto.hash-string",
+        "id-1836": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1918": "crypto.hmac-raw",
+        "id-1867": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1911": "crypto.hmac-string",
+        "id-1860": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1976": "crypto.asymmetric.decrypt",
+        "id-1925": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1971": "crypto.asymmetric.encrypt",
+        "id-1920": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1982": "crypto.asymmetric.isEncrypted",
+        "id-1931": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1967": "crypto.asymmetric.isKeypair",
+        "id-1916": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1963": "crypto.asymmetric.keypair",
+        "id-1912": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1947": "crypto.encrypt",
+        "id-1896": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1937": "crypto.hmacSha256",
+        "id-1886": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1942": "crypto.hmacSha512",
+        "id-1891": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1957": "crypto.isEncrypted",
+        "id-1906": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1986": "crypto.keypair",
+        "id-1935": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1903": "crypto.sha256",
+        "id-1852": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1907": "crypto.sha512",
+        "id-1856": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1990": "crypto.sign",
+        "id-1939": "crypto.sign",
         "deleteTagMaskText": "actions/data",
-        "id-133": "deleteTagMaskText",
+        "id-356": "deleteTagMaskText",
         "deleteTagText": "actions/data",
-        "id-126": "deleteTagText",
+        "id-349": "deleteTagText",
         "diffSnapshots": "actions/data",
-        "id-78": "diffSnapshots",
+        "id-301": "diffSnapshots",
         "either": "actions/bot-filters",
-        "id-318": "either",
-        "os.beginAudioRecording": "actions/audio",
-        "id-1692": "os.beginAudioRecording",
+        "id-545": "either",
+        "os.beginAudioRecording": "actions/os/audio",
+        "id-1641": "os.beginAudioRecording",
         "experiment.beginRecording": "actions/experimental",
-        "id-1699": "experiment.beginRecording",
-        "os.endAudioRecording": "actions/audio",
-        "id-1696": "os.endAudioRecording",
+        "id-1648": "experiment.beginRecording",
+        "os.endAudioRecording": "actions/os/audio",
+        "id-1645": "os.endAudioRecording",
         "experiment.endRecording": "actions/experimental",
-        "id-1703": "experiment.endRecording",
+        "id-1652": "experiment.endRecording",
         "experiment.getAnchorPointPosition": "actions/experimental",
-        "id-1682": "experiment.getAnchorPointPosition",
+        "id-1631": "experiment.getAnchorPointPosition",
         "experiment.getVoices": "actions/experimental",
-        "id-1711": "experiment.getVoices",
+        "id-1660": "experiment.getVoices",
         "experiment.localFormAnimation": "actions/experimental",
-        "id-1655": "experiment.localFormAnimation",
+        "id-1604": "experiment.localFormAnimation",
         "experiment.localPositionTween": "actions/experimental",
-        "id-1660": "experiment.localPositionTween",
+        "id-1609": "experiment.localPositionTween",
         "experiment.localRotationTween": "actions/experimental",
-        "id-1671": "experiment.localRotationTween",
+        "id-1620": "experiment.localRotationTween",
         "experiment.speakText": "actions/experimental",
-        "id-1706": "experiment.speakText",
+        "id-1655": "experiment.speakText",
         "getBotLinks": "actions/data",
-        "id-194": "getBotLinks",
+        "id-419": "getBotLinks",
         "getBotPosition": "actions/data",
-        "id-52": "getBotPosition",
+        "id-275": "getBotPosition",
         "getBotRotation": "actions/data",
-        "id-57": "getBotRotation",
+        "id-280": "getBotRotation",
         "getBotTagValues": "actions/data",
-        "id-42": "getBotTagValues",
+        "id-265": "getBotTagValues",
         "getFormattedJSON": "actions/data",
-        "id-70": "getFormattedJSON",
+        "id-293": "getFormattedJSON",
         "getID": "actions/data",
-        "id-62": "getID",
+        "id-285": "getID",
         "getJSON": "actions/data",
-        "id-66": "getJSON",
+        "id-289": "getJSON",
         "getLink": "actions/data",
-        "id-190": "getLink",
+        "id-415": "getLink",
         "getMod": "actions/mods",
-        "id-47": "getMod",
+        "id-270": "getMod",
         "getSnapshot": "actions/data",
-        "id-74": "getSnapshot",
+        "id-297": "getSnapshot",
         "getTag": "actions/data",
-        "id-88": "getTag",
+        "id-311": "getTag",
         "inDimension": "actions/bot-filters",
-        "id-289": "inDimension",
+        "id-516": "inDimension",
         "inStack": "actions/bot-filters",
-        "id-299": "inStack",
+        "id-526": "inStack",
         "insertTagMaskText": "actions/data",
-        "id-118": "insertTagMaskText",
+        "id-341": "insertTagMaskText",
         "insertTagText": "actions/data",
-        "id-111": "insertTagText",
+        "id-334": "insertTagText",
         "math.abs": "actions/math",
-        "id-1728": "math.abs",
+        "id-1677": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1798": "math.addVectors",
+        "id-1747": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1829": "math.areClose",
+        "id-1778": "math.areClose",
         "math.avg": "actions/math",
-        "id-1720": "math.avg",
+        "id-1669": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1754": "math.degreesToRadians",
+        "id-1703": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1794": "math.getAnchorPointOffset",
+        "id-1743": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1762": "math.getForwardDirection",
+        "id-1711": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1736": "math.getSeededRandomNumberGenerator",
+        "id-1685": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1771": "math.intersectPlane",
+        "id-1720": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1808": "math.negateVector",
+        "id-1757": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1813": "math.normalizeVector",
+        "id-1762": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1758": "math.radiansToDegrees",
+        "id-1707": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1749": "math.random",
+        "id-1698": "math.random",
         "math.randomInt": "actions/math",
-        "id-1744": "math.randomInt",
+        "id-1693": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1823": "math.scaleVector",
+        "id-1772": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1740": "math.setRandomSeed",
+        "id-1689": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1724": "math.sqrt",
+        "id-1673": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1732": "math.stdDev",
+        "id-1681": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1803": "math.subtractVectors",
+        "id-1752": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1716": "math.sum",
+        "id-1665": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1818": "math.vectorLength",
+        "id-1767": "math.vectorLength",
         "neighboring": "actions/bot-filters",
-        "id-304": "neighboring",
+        "id-531": "neighboring",
         "not": "actions/bot-filters",
-        "id-325": "not",
+        "id-552": "not",
         "os.attachDebugger": "actions/debuggers",
-        "id-1332": "os.attachDebugger",
+        "id-1550": "os.attachDebugger",
         "os.createDebugger-normal": "actions/debuggers",
-        "id-1321": "os.createDebugger-normal",
+        "id-1539": "os.createDebugger-normal",
         "os.createDebugger-pausable": "actions/debuggers",
-        "id-1325": "os.createDebugger-pausable",
-        "os.focusOn-bot": "actions/portals",
-        "id-510": "os.focusOn-bot",
-        "os.focusOn-position": "actions/portals",
-        "id-515": "os.focusOn-position",
+        "id-1543": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/os/portals",
+        "id-737": "os.focusOn-bot",
+        "os.focusOn-position": "actions/os/portals",
+        "id-742": "os.focusOn-position",
         "os.getExecutingDebugger": "actions/debuggers",
-        "id-1329": "os.getExecutingDebugger",
-        "showChat-options": "actions/os",
-        "id-537": "showChat-options",
-        "showChat-placeholder": "actions/os",
-        "id-533": "showChat-placeholder",
-        "os.showInput": "actions/portals",
-        "id-753": "os.showInput",
-        "os.addBotDropGrid": "actions/portals",
-        "id-827": "os.addBotDropGrid",
-        "os.addBotDropSnap": "actions/portals",
-        "id-818": "os.addBotDropSnap",
-        "os.addDropGrid": "actions/portals",
-        "id-823": "os.addDropGrid",
-        "os.addDropSnap": "actions/portals",
-        "id-814": "os.addDropSnap",
-        "os.applyUpdatesToInst": "actions/os",
-        "id-1275": "os.applyUpdatesToInst",
-        "os.arSupported": "actions/xr",
-        "id-578": "os.arSupported",
-        "os.bufferFormAddressGLTF": "actions/animations",
-        "id-1228": "os.bufferFormAddressGLTF",
-        "os.bufferSound": "actions/audio",
-        "id-790": "os.bufferSound",
-        "os.calculateRayFromCamera": "actions/portals",
-        "id-1223": "os.calculateRayFromCamera",
-        "os.cancelSound": "actions/audio",
-        "id-794": "os.cancelSound",
-        "os.capturePhoto": "actions/camera",
-        "id-673": "os.capturePhoto",
-        "os.closeBarcodeScanner": "actions/barcodes",
-        "id-651": "os.closeBarcodeScanner",
-        "os.closeCircleWipe": "actions/portals",
-        "id-806": "os.closeCircleWipe",
-        "os.closeImageClassifier": "actions/image-classification",
-        "id-666": "os.closeImageClassifier",
-        "os.closePhotoCamera": "actions/camera",
-        "id-677": "os.closePhotoCamera",
-        "os.closeQRCodeScanner": "actions/barcodes",
-        "id-637": "os.closeQRCodeScanner",
-        "os.compileApp": "actions/app",
-        "id-941": "os.compileApp",
-        "os.convertGeolocationToWhat3Words": "actions/os",
-        "id-1208": "os.convertGeolocationToWhat3Words",
-        "os.countEvents": "actions/records",
-        "id-1198": "os.countEvents",
-        "os.createInitializationUpdate": "actions/os",
-        "id-1271": "os.createInitializationUpdate",
-        "os.device": "actions/os",
-        "id-555": "os.device",
-        "os.disableAR": "actions/xr",
-        "id-568": "os.disableAR",
-        "os.disablePointOfView": "actions/portals",
-        "id-593": "os.disablePointOfView",
-        "os.disableVR": "actions/xr",
-        "id-575": "os.disableVR",
-        "os.disableWakeLock": "actions/os",
-        "id-599": "os.disableWakeLock",
-        "os.download": "actions/files",
-        "id-605": "os.download",
-        "os.downloadBots": "actions/files",
-        "id-611": "os.downloadBots",
-        "os.downloadBotsAsInitialzationUpdate": "actions/files",
-        "id-616": "os.downloadBotsAsInitialzationUpdate",
-        "os.downloadInst": "actions/files",
-        "id-624": "os.downloadInst",
-        "os.enableAR": "actions/xr",
-        "id-564": "os.enableAR",
-        "os.enableCustomDragging": "actions/portals",
-        "id-832": "os.enableCustomDragging",
-        "os.enablePointOfView": "actions/portals",
-        "id-584": "os.enablePointOfView",
-        "os.enableVR": "actions/xr",
-        "id-571": "os.enableVR",
-        "os.eraseData": "actions/records",
-        "id-1141": "os.eraseData",
-        "os.eraseManualApprovalData": "actions/records",
-        "id-1147": "os.eraseManualApprovalData",
-        "os.exitFullscreenMode": "actions/portals",
-        "id-481": "os.exitFullscreenMode",
-        "os.getAverageFrameRate": "actions/os",
-        "id-889": "os.getAverageFrameRate",
-        "os.getCameraPosition": "actions/portals",
-        "id-845": "os.getCameraPosition",
-        "os.getCameraRotation": "actions/portals",
-        "id-849": "os.getCameraRotation",
-        "os.getCurrentDimension": "actions/portals",
-        "id-724": "os.getCurrentDimension",
-        "os.getCurrentInst": "actions/portals",
-        "id-730": "os.getCurrentInst",
-        "os.getCurrentInstUpdate": "actions/os",
-        "id-1279": "os.getCurrentInstUpdate",
-        "os.getData": "actions/records",
-        "id-1123": "os.getData",
-        "os.getDimensionalDepth": "actions/portals",
-        "id-743": "os.getDimensionalDepth",
-        "os.getFocusPoint": "actions/portals",
-        "id-857": "os.getFocusPoint",
-        "os.getGeolocation": "actions/os",
-        "id-839": "os.getGeolocation",
-        "os.getInputList": "actions/portals",
-        "id-882": "os.getInputList",
-        "os.getInputState": "actions/portals",
-        "id-877": "os.getInputState",
-        "os.getInstStateFromUpdates": "actions/os",
-        "id-1267": "os.getInstStateFromUpdates",
-        "os.getManualApprovalData": "actions/records",
-        "id-1129": "os.getManualApprovalData",
-        "os.getMediaPermission": "actions/os",
-        "id-885": "os.getMediaPermission",
-        "os.getMenuDimension": "actions/portals",
-        "id-733": "os.getMenuDimension",
-        "os.getMiniPortalDimension": "actions/portals",
-        "id-736": "os.getMiniPortalDimension",
-        "os.getPointerDirection": "actions/portals",
-        "id-873": "os.getPointerDirection",
-        "os.getPointerPosition": "actions/portals",
-        "id-861": "os.getPointerPosition",
-        "os.getPointerRotation": "actions/portals",
-        "id-865": "os.getPointerRotation",
-        "os.getPortalDimension": "actions/portals",
-        "id-739": "os.getPortalDimension",
-        "os.getPublicRecordKey": "actions/records",
-        "id-1048": "os.getPublicRecordKey",
-        "os.getRoomOptions": "actions/rooms",
-        "id-907": "os.getRoomOptions",
-        "os.getRoomRemoteOptions": "actions/rooms",
-        "id-922": "os.getRoomRemoteOptions",
-        "os.getRoomTrackOptions": "actions/rooms",
-        "id-911": "os.getRoomTrackOptions",
-        "os.getSubjectlessPublicRecordKey": "actions/records",
-        "id-1052": "os.getSubjectlessPublicRecordKey",
-        "os.getWakeLockConfiguration": "actions/os",
-        "id-602": "os.getWakeLockConfiguration",
-        "os.goToDimension": "actions/portals",
-        "id-767": "os.goToDimension",
-        "os.goToURL": "actions/portals",
-        "id-771": "os.goToURL",
-        "os.grantInstAdminPermission": "actions/records",
-        "id-1070": "os.grantInstAdminPermission",
-        "os.grantInstRole": "actions/records",
-        "id-1090": "os.grantInstRole",
-        "os.grantRecordMarkerPermission": "actions/records",
-        "id-1056": "os.grantRecordMarkerPermission",
-        "os.grantUserRole": "actions/records",
-        "id-1075": "os.grantUserRole",
-        "os.hasBotInMiniPortal": "actions/portals",
-        "id-798": "os.hasBotInMiniPortal",
-        "os.hideBarcode": "actions/barcodes",
-        "id-659": "os.hideBarcode",
-        "os.hideChat": "actions/os",
-        "id-545": "os.hideChat",
-        "os.hideHtml": "actions/os",
-        "id-488": "os.hideHtml",
-        "os.hideQRCode": "actions/barcodes",
-        "id-644": "os.hideQRCode",
-        "os.hideTips": "actions/portals",
-        "id-469": "os.hideTips",
-        "os.importAUX": "actions/files",
-        "id-708": "os.importAUX",
-        "os.inSheet": "actions/portals",
-        "id-842": "os.inSheet",
-        "os.instStatuses": "actions/os",
-        "id-1296": "os.instStatuses",
-        "os.instances": "actions/os",
-        "id-1286": "os.instances",
-        "os.isCollaborative": "actions/os",
-        "id-558": "os.isCollaborative",
-        "os.isInDimension": "actions/portals",
-        "id-720": "os.isInDimension",
-        "os.isRecordKey": "actions/records",
-        "id-1105": "os.isRecordKey",
-        "os.joinRoom": "actions/rooms",
-        "id-892": "os.joinRoom",
-        "os.leaveRoom": "actions/rooms",
-        "id-897": "os.leaveRoom",
-        "os.listBuiltinTags": "actions/app",
-        "id-1042": "os.listBuiltinTags",
-        "os.listData": "actions/records",
-        "id-1135": "os.listData",
-        "os.listFormAnimations": "actions/animations",
-        "id-1243": "os.listFormAnimations",
-        "os.listInstUpdates": "actions/os",
-        "id-1264": "os.listInstUpdates",
-        "os.listUserStudios": "actions/records",
-        "id-1204": "os.listUserStudios",
-        "os.loadInst": "actions/os",
-        "id-700": "os.loadInst",
-        "os.log": "actions/os",
-        "id-835": "os.log",
-        "os.meetCommand": "actions/os",
-        "id-1309": "os.meetCommand",
-        "os.meetFunction": "actions/os",
-        "id-1314": "os.meetFunction",
-        "os.openBarcodeScanner": "actions/barcodes",
-        "id-647": "os.openBarcodeScanner",
-        "os.openCircleWipe": "actions/portals",
-        "id-810": "os.openCircleWipe",
-        "os.openDevConsole": "actions/os",
-        "id-779": "os.openDevConsole",
-        "os.openImageClassifier": "actions/image-classification",
-        "id-662": "os.openImageClassifier",
-        "os.openPhotoCamera": "actions/camera",
-        "id-669": "os.openPhotoCamera",
-        "os.openQRCodeScanner": "actions/barcodes",
-        "id-633": "os.openQRCodeScanner",
-        "os.openURL": "actions/portals",
-        "id-775": "os.openURL",
-        "os.parseBotsFromData": "actions/files",
-        "id-712": "os.parseBotsFromData",
-        "os.playSound": "actions/audio",
-        "id-786": "os.playSound",
-        "os.raycast": "actions/portals",
-        "id-1217": "os.raycast",
-        "os.raycastFromCamera": "actions/portals",
-        "id-1212": "os.raycastFromCamera",
-        "os.recordData": "actions/records",
-        "id-1109": "os.recordData",
-        "os.recordEvent": "actions/records",
-        "id-1192": "os.recordEvent",
-        "os.recordFile": "actions/records",
-        "id-1153": "os.recordFile",
-        "os.recordManualApprovalData": "actions/records",
-        "id-1116": "os.recordManualApprovalData",
-        "os.registerApp": "actions/app",
-        "id-932": "os.registerApp",
-        "os.registerTagPrefix": "actions/app",
-        "id-927": "os.registerTagPrefix",
-        "os.remoteCount": "actions/os",
-        "id-1289": "os.remoteCount",
-        "os.remotes": "actions/os",
-        "id-1261": "os.remotes",
-        "os.replaceDragBot": "actions/portals",
-        "id-716": "os.replaceDragBot",
-        "os.requestAuthBot": "actions/records",
-        "id-1045": "os.requestAuthBot",
-        "os.requestFullscreenMode": "actions/portals",
-        "id-478": "os.requestFullscreenMode",
-        "os.requestWakeLock": "actions/os",
-        "id-596": "os.requestWakeLock",
-        "os.revokeInstRole": "actions/records",
-        "id-1098": "os.revokeInstRole",
-        "os.revokeRecordMarkerPermission": "actions/records",
-        "id-1063": "os.revokeRecordMarkerPermission",
-        "os.revokeUserRole": "actions/records",
-        "id-1083": "os.revokeUserRole",
-        "os.run": "actions/os",
-        "id-548": "os.run",
-        "os.setClipboard": "actions/os",
-        "id-491": "os.setClipboard",
-        "os.setRoomOptions": "actions/rooms",
-        "id-902": "os.setRoomOptions",
-        "os.setRoomTrackOptions": "actions/rooms",
-        "id-916": "os.setRoomTrackOptions",
-        "os.share": "actions/os",
-        "id-802": "os.share",
-        "os.showBarcode": "actions/barcodes",
-        "id-654": "os.showBarcode",
-        "os.showConfirm": "actions/portals",
-        "id-763": "os.showConfirm",
-        "os.showHtml": "actions/os",
-        "id-484": "os.showHtml",
-        "os.showInputForTag": "actions/portals",
-        "id-747": "os.showInputForTag",
-        "os.showJoinCode": "actions/barcodes",
-        "id-473": "os.showJoinCode",
-        "os.showQRCode": "actions/barcodes",
-        "id-640": "os.showQRCode",
-        "os.showUploadAuxFile": "actions/files",
-        "id-627": "os.showUploadAuxFile",
-        "os.showUploadFiles": "actions/files",
-        "id-630": "os.showUploadFiles",
-        "os.sleep": "actions/os",
-        "id-453": "os.sleep",
-        "os.startFormAnimation": "actions/animations",
-        "id-1232": "os.startFormAnimation",
-        "os.stopFormAnimation": "actions/animations",
-        "id-1238": "os.stopFormAnimation",
-        "os.tip": "actions/portals",
-        "id-462": "os.tip",
-        "os.toast": "actions/os",
-        "id-457": "os.toast",
-        "os.totalRemoteCount": "actions/os",
-        "id-1293": "os.totalRemoteCount",
-        "os.unloadInst": "actions/os",
-        "id-704": "os.unloadInst",
-        "os.unregisterApp": "actions/app",
-        "id-937": "os.unregisterApp",
-        "os.version": "actions/os",
-        "id-552": "os.version",
-        "os.vrSupported": "actions/xr",
-        "id-581": "os.vrSupported",
-        "os.agreedUponTime": "actions/time",
-        "id-681": "os.agreedUponTime",
-        "os.deadReckoningTime": "actions/time",
-        "id-689": "os.deadReckoningTime",
-        "os.instLatency": "actions/time",
-        "id-683": "os.instLatency",
-        "os.instTimeOffset": "actions/time",
-        "id-685": "os.instTimeOffset",
-        "os.instTimeOffsetSpread": "actions/time",
-        "id-687": "os.instTimeOffsetSpread",
-        "os.localTime": "actions/time",
-        "id-679": "os.localTime",
+        "id-1547": "os.getExecutingDebugger",
+        "showChat-options": "actions/os/input",
+        "id-764": "showChat-options",
+        "showChat-placeholder": "actions/os/input",
+        "id-760": "showChat-placeholder",
+        "os.showInput": "actions/os/portals",
+        "id-983": "os.showInput",
+        "os.addBotDropGrid": "actions/os/portals",
+        "id-1053": "os.addBotDropGrid",
+        "os.addBotDropSnap": "actions/os/portals",
+        "id-1044": "os.addBotDropSnap",
+        "os.addDropGrid": "actions/os/portals",
+        "id-1049": "os.addDropGrid",
+        "os.addDropSnap": "actions/os/portals",
+        "id-1040": "os.addDropSnap",
+        "os.applyUpdatesToInst": "actions/os/spaces",
+        "id-1502": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/os/xr",
+        "id-808": "os.arSupported",
+        "os.bufferFormAddressGLTF": "actions/os/animations",
+        "id-1460": "os.bufferFormAddressGLTF",
+        "os.bufferSound": "actions/os/audio",
+        "id-1016": "os.bufferSound",
+        "os.calculateRayFromCamera": "actions/os/portals",
+        "id-1455": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/os/audio",
+        "id-1020": "os.cancelSound",
+        "os.capturePhoto": "actions/os/camera",
+        "id-903": "os.capturePhoto",
+        "os.closeBarcodeScanner": "actions/os/barcodes",
+        "id-881": "os.closeBarcodeScanner",
+        "os.closeCircleWipe": "actions/os/portals",
+        "id-1032": "os.closeCircleWipe",
+        "os.closeImageClassifier": "actions/os/image-classification",
+        "id-896": "os.closeImageClassifier",
+        "os.closePhotoCamera": "actions/os/camera",
+        "id-907": "os.closePhotoCamera",
+        "os.closeQRCodeScanner": "actions/os/barcodes",
+        "id-867": "os.closeQRCodeScanner",
+        "os.compileApp": "actions/os/app",
+        "id-1167": "os.compileApp",
+        "os.convertGeolocationToWhat3Words": "actions/os/geolocation",
+        "id-1440": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/os/records",
+        "id-1430": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os/spaces",
+        "id-1498": "os.createInitializationUpdate",
+        "os.device": "actions/os/system",
+        "id-782": "os.device",
+        "os.disableAR": "actions/os/xr",
+        "id-798": "os.disableAR",
+        "os.disablePointOfView": "actions/os/portals",
+        "id-823": "os.disablePointOfView",
+        "os.disableVR": "actions/os/xr",
+        "id-805": "os.disableVR",
+        "os.disableWakeLock": "actions/os/portals",
+        "id-829": "os.disableWakeLock",
+        "os.download": "actions/os/files",
+        "id-835": "os.download",
+        "os.downloadBots": "actions/os/files",
+        "id-841": "os.downloadBots",
+        "os.downloadBotsAsInitialzationUpdate": "actions/os/files",
+        "id-846": "os.downloadBotsAsInitialzationUpdate",
+        "os.downloadInst": "actions/os/files",
+        "id-854": "os.downloadInst",
+        "os.enableAR": "actions/os/xr",
+        "id-794": "os.enableAR",
+        "os.enableCollaboration": "actions/os/spaces",
+        "id-788": "os.enableCollaboration",
+        "os.enableCustomDragging": "actions/os/portals",
+        "id-1058": "os.enableCustomDragging",
+        "os.enablePointOfView": "actions/os/portals",
+        "id-814": "os.enablePointOfView",
+        "os.enableVR": "actions/os/xr",
+        "id-801": "os.enableVR",
+        "os.eraseData": "actions/os/records",
+        "id-1373": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/os/records",
+        "id-1379": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/os/portals",
+        "id-708": "os.exitFullscreenMode",
+        "os.getAverageFrameRate": "actions/os/portals",
+        "id-1115": "os.getAverageFrameRate",
+        "os.getCameraPosition": "actions/os/portals",
+        "id-1071": "os.getCameraPosition",
+        "os.getCameraRotation": "actions/os/portals",
+        "id-1075": "os.getCameraRotation",
+        "os.getCurrentDimension": "actions/os/portals",
+        "id-954": "os.getCurrentDimension",
+        "os.getCurrentInst": "actions/os/portals",
+        "id-960": "os.getCurrentInst",
+        "os.getCurrentInstUpdate": "actions/os/spaces",
+        "id-1506": "os.getCurrentInstUpdate",
+        "os.getData": "actions/os/records",
+        "id-1355": "os.getData",
+        "os.getDimensionalDepth": "actions/os/portals",
+        "id-973": "os.getDimensionalDepth",
+        "os.getFocusPoint": "actions/os/portals",
+        "id-1083": "os.getFocusPoint",
+        "os.getGeolocation": "actions/os/geolocation",
+        "id-1065": "os.getGeolocation",
+        "os.getInputList": "actions/os/portals",
+        "id-1108": "os.getInputList",
+        "os.getInputState": "actions/os/portals",
+        "id-1103": "os.getInputState",
+        "os.getInstStateFromUpdates": "actions/os/spaces",
+        "id-1494": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/os/records",
+        "id-1361": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os/media",
+        "id-1111": "os.getMediaPermission",
+        "os.getMenuDimension": "actions/os/portals",
+        "id-963": "os.getMenuDimension",
+        "os.getMiniPortalDimension": "actions/os/portals",
+        "id-966": "os.getMiniPortalDimension",
+        "os.getPointerDirection": "actions/os/portals",
+        "id-1099": "os.getPointerDirection",
+        "os.getPointerPosition": "actions/os/portals",
+        "id-1087": "os.getPointerPosition",
+        "os.getPointerRotation": "actions/os/portals",
+        "id-1091": "os.getPointerRotation",
+        "os.getPortalDimension": "actions/os/portals",
+        "id-969": "os.getPortalDimension",
+        "os.getPublicRecordKey": "actions/os/records",
+        "id-1280": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/os/rooms",
+        "id-1133": "os.getRoomOptions",
+        "os.getRoomRemoteOptions": "actions/os/rooms",
+        "id-1148": "os.getRoomRemoteOptions",
+        "os.getRoomTrackOptions": "actions/os/rooms",
+        "id-1137": "os.getRoomTrackOptions",
+        "os.getSubjectlessPublicRecordKey": "actions/os/records",
+        "id-1284": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os/portals",
+        "id-832": "os.getWakeLockConfiguration",
+        "os.goToDimension": "actions/os/portals",
+        "id-997": "os.goToDimension",
+        "os.goToURL": "actions/os/portals",
+        "id-1001": "os.goToURL",
+        "os.grantInstAdminPermission": "actions/os/records",
+        "id-1302": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/os/records",
+        "id-1322": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/os/records",
+        "id-1288": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/os/records",
+        "id-1307": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/os/portals",
+        "id-1024": "os.hasBotInMiniPortal",
+        "os.hideBarcode": "actions/os/barcodes",
+        "id-889": "os.hideBarcode",
+        "os.hideChat": "actions/os/input",
+        "id-772": "os.hideChat",
+        "os.hideHtml": "actions/os/portals",
+        "id-715": "os.hideHtml",
+        "os.hideQRCode": "actions/os/barcodes",
+        "id-874": "os.hideQRCode",
+        "os.hideTips": "actions/os/portals",
+        "id-696": "os.hideTips",
+        "os.importAUX": "actions/os/files",
+        "id-938": "os.importAUX",
+        "os.inSheet": "actions/os/portals",
+        "id-1068": "os.inSheet",
+        "os.isCollaborative": "actions/os/spaces",
+        "id-785": "os.isCollaborative",
+        "os.isInDimension": "actions/os/portals",
+        "id-950": "os.isInDimension",
+        "os.isRecordKey": "actions/os/records",
+        "id-1337": "os.isRecordKey",
+        "os.joinRoom": "actions/os/rooms",
+        "id-1118": "os.joinRoom",
+        "os.leaveRoom": "actions/os/rooms",
+        "id-1123": "os.leaveRoom",
+        "os.listBuiltinTags": "actions/os/app",
+        "id-1268": "os.listBuiltinTags",
+        "os.listData": "actions/os/records",
+        "id-1367": "os.listData",
+        "os.listFormAnimations": "actions/os/animations",
+        "id-1475": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os/spaces",
+        "id-1491": "os.listInstUpdates",
+        "os.listUserStudios": "actions/os/records",
+        "id-1436": "os.listUserStudios",
+        "os.loadInst": "actions/os/spaces",
+        "id-930": "os.loadInst",
+        "os.log": "actions/os/system",
+        "id-1061": "os.log",
+        "os.meetCommand": "actions/os/meets",
+        "id-1527": "os.meetCommand",
+        "os.meetFunction": "actions/os/meets",
+        "id-1532": "os.meetFunction",
+        "os.mergeInstUpdates": "actions/os/spaces",
+        "id-1509": "os.mergeInstUpdates",
+        "os.openBarcodeScanner": "actions/os/barcodes",
+        "id-877": "os.openBarcodeScanner",
+        "os.openCircleWipe": "actions/os/portals",
+        "id-1036": "os.openCircleWipe",
+        "os.openDevConsole": "actions/os/system",
+        "id-1009": "os.openDevConsole",
+        "os.openImageClassifier": "actions/os/image-classification",
+        "id-892": "os.openImageClassifier",
+        "os.openPhotoCamera": "actions/os/camera",
+        "id-899": "os.openPhotoCamera",
+        "os.openQRCodeScanner": "actions/os/barcodes",
+        "id-863": "os.openQRCodeScanner",
+        "os.openURL": "actions/os/portals",
+        "id-1005": "os.openURL",
+        "os.parseBotsFromData": "actions/os/files",
+        "id-942": "os.parseBotsFromData",
+        "os.playSound": "actions/os/audio",
+        "id-1012": "os.playSound",
+        "os.raycast": "actions/os/portals",
+        "id-1449": "os.raycast",
+        "os.raycastFromCamera": "actions/os/portals",
+        "id-1444": "os.raycastFromCamera",
+        "os.recordData": "actions/os/records",
+        "id-1341": "os.recordData",
+        "os.recordEvent": "actions/os/records",
+        "id-1424": "os.recordEvent",
+        "os.recordFile": "actions/os/records",
+        "id-1385": "os.recordFile",
+        "os.recordManualApprovalData": "actions/os/records",
+        "id-1348": "os.recordManualApprovalData",
+        "os.registerApp": "actions/os/app",
+        "id-1158": "os.registerApp",
+        "os.registerTagPrefix": "actions/os/app",
+        "id-1153": "os.registerTagPrefix",
+        "os.remoteCount": "actions/os/remotes",
+        "id-1513": "os.remoteCount",
+        "os.remotes": "actions/os/remotes",
+        "id-1488": "os.remotes",
+        "os.replaceDragBot": "actions/os/portals",
+        "id-946": "os.replaceDragBot",
+        "os.reportInst": "actions/os/moderation",
+        "id-1271": "os.reportInst",
+        "os.requestAuthBot": "actions/os/records",
+        "id-1274": "os.requestAuthBot",
+        "os.requestAuthBotInBackground": "actions/os/records",
+        "id-1277": "os.requestAuthBotInBackground",
+        "os.requestFullscreenMode": "actions/os/portals",
+        "id-705": "os.requestFullscreenMode",
+        "os.requestWakeLock": "actions/os/portals",
+        "id-826": "os.requestWakeLock",
+        "os.revokeInstRole": "actions/os/records",
+        "id-1330": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/os/records",
+        "id-1295": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/os/records",
+        "id-1315": "os.revokeUserRole",
+        "os.run": "actions/os/system",
+        "id-775": "os.run",
+        "os.setClipboard": "actions/os/clipboard",
+        "id-718": "os.setClipboard",
+        "os.setRoomOptions": "actions/os/rooms",
+        "id-1128": "os.setRoomOptions",
+        "os.setRoomTrackOptions": "actions/os/rooms",
+        "id-1142": "os.setRoomTrackOptions",
+        "os.share": "actions/os/input",
+        "id-1028": "os.share",
+        "os.showBarcode": "actions/os/barcodes",
+        "id-884": "os.showBarcode",
+        "os.showConfirm": "actions/os/portals",
+        "id-993": "os.showConfirm",
+        "os.showHtml": "actions/os/portals",
+        "id-711": "os.showHtml",
+        "os.showInputForTag": "actions/os/portals",
+        "id-977": "os.showInputForTag",
+        "os.showJoinCode": "actions/os/barcodes",
+        "id-700": "os.showJoinCode",
+        "os.showQRCode": "actions/os/barcodes",
+        "id-870": "os.showQRCode",
+        "os.showUploadAuxFile": "actions/os/files",
+        "id-857": "os.showUploadAuxFile",
+        "os.showUploadFiles": "actions/os/files",
+        "id-860": "os.showUploadFiles",
+        "os.sleep": "actions/os/system",
+        "id-680": "os.sleep",
+        "os.startFormAnimation": "actions/os/animations",
+        "id-1464": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/os/animations",
+        "id-1470": "os.stopFormAnimation",
+        "os.tip": "actions/os/portals",
+        "id-689": "os.tip",
+        "os.toast": "actions/os/portals",
+        "id-684": "os.toast",
+        "os.totalRemoteCount": "actions/os/remotes",
+        "id-1517": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os/spaces",
+        "id-934": "os.unloadInst",
+        "os.unregisterApp": "actions/os/app",
+        "id-1163": "os.unregisterApp",
+        "os.version": "actions/os/system",
+        "id-779": "os.version",
+        "os.vrSupported": "actions/os/xr",
+        "id-811": "os.vrSupported",
+        "os.agreedUponTime": "actions/os/time",
+        "id-911": "os.agreedUponTime",
+        "os.deadReckoningTime": "actions/os/time",
+        "id-919": "os.deadReckoningTime",
+        "os.instLatency": "actions/os/time",
+        "id-913": "os.instLatency",
+        "os.instTimeOffset": "actions/os/time",
+        "id-915": "os.instTimeOffset",
+        "os.instTimeOffsetSpread": "actions/os/time",
+        "id-917": "os.instTimeOffsetSpread",
+        "os.localTime": "actions/os/time",
+        "id-909": "os.localTime",
+        "remote": "actions/os/event",
+        "id-559": "remote",
+        "sendRemoteData": "actions/os/event",
+        "id-571": "sendRemoteData",
         "removeTags": "actions/data",
-        "id-141": "removeTags",
+        "id-364": "removeTags",
         "renameTag": "actions/data",
-        "id-146": "renameTag",
+        "id-369": "renameTag",
         "setTag": "actions/data",
-        "id-93": "setTag",
+        "id-316": "setTag",
         "setTagMask": "actions/data",
-        "id-99": "setTagMask",
+        "id-322": "setTagMask",
         "subtractMods": "actions/mods",
-        "id-157": "subtractMods",
-        "superShout": "actions/event",
-        "id-220": "superShout",
+        "id-380": "subtractMods",
+        "superShout": "actions/os/event",
+        "id-445": "superShout",
         "uuid": "actions/data",
-        "id-355": "uuid",
+        "id-582": "uuid",
         "web.get": "actions/web",
-        "id-2033": "web.get",
+        "id-1958": "web.get",
         "web.hook": "actions/web",
-        "id-2044": "web.hook",
+        "id-1969": "web.hook",
         "web.post": "actions/web",
-        "id-2038": "web.post",
-        "configBot": "actions/os",
-        "id-418": "configBot"
+        "id-1963": "web.post",
+        "configBot": "actions/os/system",
+        "id-645": "configBot"
     }
 }

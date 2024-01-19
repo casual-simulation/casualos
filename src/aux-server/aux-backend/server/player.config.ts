@@ -45,6 +45,8 @@ const config: ClientConfig = {
             null) as BiosOption[],
         defaultBiosOption: (process.env.DEFAULT_BIOS_OPTION ||
             null) as BiosOption,
+        automaticBiosOption: (process.env.AUTOMATIC_BIOS_OPTION ||
+            null) as BiosOption,
     },
 };
 

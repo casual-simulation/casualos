@@ -2,7 +2,7 @@
 import {
     GenericHttpRequest,
     GenericHttpHeaders,
-} from '@casual-simulation/aux-records';
+} from '@casual-simulation/aux-common';
 import type {
     APIGatewayProxyEvent,
     APIGatewayProxyResult,

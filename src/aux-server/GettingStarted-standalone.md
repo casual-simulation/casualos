@@ -71,15 +71,15 @@ To access CasualOS, simply visit `http://{your_ip_address}` in a web browser.
 
 The CasualOS Docker image can be configured using the following environment variables:
 
-### Required
-
-The following environment variables are required:
-
--   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage. (REQUIRED)
-
 ### Optional
 
 The following environment variables are optional:
+
+#### CockroachDB Support
+
+CockroachDB support can be enabled by providing the following environment variables:
+
+-   `DATABASE_URL`: The URL that the CockroachDB database should be loaded from. See [Client Connection Parameters](https://www.cockroachlabs.com/docs/stable/connection-parameters) for more info.
 
 #### ab-1
 
@@ -101,8 +101,23 @@ Use the following environment variables to configure the inst collaboration feat
 -   `FRONTEND_ORIGIN`: The HTTP Origin that the CasualOS frontend is available at.
 -   `COLLABORATIVE_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for shared inst data. Currently experimental and may not work properly when enabled. Defaults to `false`.
 -   `STATIC_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for static inst data. Defaults to `true`.
--   `BIOS_OPTIONS`: The comma-separated list of allowed bios options. If omitted, then all options are enabled. Possible options are `enter join code`, `static inst`, `public inst`, `private inst`, `sign in`, `sign up`, `sign out`.
--   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default.
+-   `BIOS_OPTIONS`: The comma-separated list of allowed bios options. If omitted, then all options are enabled. Possible options are:
+    -   `enter join code`
+    -   `local inst` - The data is stored on the device and not uploaded to the server.
+    -   `local` - Same as `local inst`.
+    -   `static inst` - Same as `local inst`.
+    -   `free inst` - The data is stored in a temporary public inst on the server.
+    -   `free` - Same as `free inst`.
+    -   `public inst` - Same as `free inst`.
+    -   `studio inst` - The data is stored in a private inst on the server.
+    -   `studio` - Same as `studio inst`.
+    -   `private inst` - Same as `studio inst`.
+    -   `sign in`
+    -   `sign up`
+    -   `sign out`
+    -   The default options are: `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
+-   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default when the BIOS is shown.
+-   `AUTOMATIC_BIOS_OPTION`: The BIOS option that should be executed automatically by the BIOS. Setting this to a valid BIOS value will skip the BIOS screen.
 
 #### Privo Features
 
@@ -121,7 +136,7 @@ To use Redis for inst data storage, use the following:
 
 To configure MongoDB, use the following:
 
--   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage. (REQUIRED)
+-   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage.
 -   `MONGO_USE_NEW_URL_PARSER` - Whether to use the [new MongoDB URL parser](https://stackoverflow.com/q/50448272/1832856). (Defaults to false)
 -   `MONGO_USE_UNIFIED_TOPOLOGY` - Whether to enable the new unified topology layer. (Defaults to false)
 
@@ -149,6 +164,9 @@ Use the following to configure the meetPortal:
 Use the following to configure the records system:
 
 -   `SERVER_CONFIG`: The configuration that should be used for the authentication backend. Should be formatted as a JSON string. Find the full list of supported properties at the bottom of [this file](https://github.com/casual-simulation/casualos/blob/feature/consolidation/src/aux-server/aux-backend/shared/ServerBuilder.ts). If not specified or left empty, then authentication features will be automatically disabled.
+-   `AUTH_API_ENDPOINT`: The HTTP endpoint that the auth site should use to access the records API.
+-   `AUTH_WEBSOCKET_ENDPOINT`: The HTTP endpoint that the auth site should use to access the records websocket API.
+-   `AUTH_WEBSOCKET_PROTOCOL`: The connection protocol that should be used for the records websocket API. Possible options are `websocket` and `apiary-aws`. The `websocket` protocol works with Raspberry PIs and self-hosted servers (like in development). The `apiary-aws` protocol works with [CasualOS apiaries hosted on AWS](https://github.com/casual-simulation/casualos). Defaults to `websocket`.
 -   `AUTH_ORIGIN`: The HTTP Origin that the player should use for auth. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `ENABLE_SMS_AUTHENTICATION`: Whether SMS phone numbers are allowed to be entered into the front-end and used for authentication. Defaults to `false`.
@@ -165,6 +183,12 @@ Use the following environment variables to configure infrastructure-related opti
 -   `PROXY_IP_RANGE`: The [Express trust proxy](https://expressjs.com/en/guide/behind-proxies.html) value that should be used to tell Express which IP Addresses to trust as Proxies. (Required if using Nginx as a reverse proxy)
 -   `DEBUG`: Whether to enable debug mode. Setting this to `true` will enable some more debug logs, particularly for Deno.
 -   `STAGE_TYPE`: The type of stage store that should be used for atoms that have not yet been committed. Possible options are `mongodb` and `redis`. `mongodb` uses MongoDB to store atoms while `redis` uses Redis. Note that `redis` is not persistent which makes data loss more likely. Defaults to `redis`.
+
+#### Policies Customization
+
+-   `TERMS_OF_SERVICE`: The Markdown of the terms of service that the sites should use.
+-   `PRIVACY_POLICY`: The Markkdown of the privacy policy that the sites should use.
+-   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
 
 ## Security Note
 

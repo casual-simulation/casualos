@@ -1,5 +1,6 @@
 import {
     ConfigurationStore,
+    MODERATION_CONFIG_KEY,
     MemoryConfiguration,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
@@ -10,7 +11,8 @@ import {
     PrivoConfiguration,
     parsePrivoConfiguration,
 } from '@casual-simulation/aux-records/PrivoConfiguration';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated';
+import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 
 export class PrismaConfigurationStore implements ConfigurationStore {
     private _client: PrismaClient;
@@ -44,6 +46,21 @@ export class PrismaConfigurationStore implements ConfigurationStore {
         return parsePrivoConfiguration(
             result?.data,
             this._defaultConfiguration.privo
+        );
+    }
+
+    async getModerationConfig(): Promise<{
+        allowUnauthenticatedReports?: boolean;
+    }> {
+        const result = await this._client.configuration.findUnique({
+            where: {
+                key: MODERATION_CONFIG_KEY,
+            },
+        });
+
+        return parseModerationConfiguration(
+            result?.data,
+            this._defaultConfiguration.moderation
         );
     }
 }

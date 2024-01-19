@@ -1,21 +1,23 @@
-FROM arm32v7/node:16
+FROM arm32v7/node:18
 
 WORKDIR /usr/src/app
 
-COPY ./script/remove-dev-dependencies.js ./script/remove-dev-dependencies.js
-COPY ./src/aux-server/package*.json ./
+# Setup Global NPM package path
+ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
+ENV PATH "/root/.deno/bin:/home/node/.npm-global/bin:${PATH}"
 
-RUN node ./script/remove-dev-dependencies.js ./package.json
-RUN npm install
-
-COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
-COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
-COPY ./src/aux-server/aux-web/aux-auth/dist ./aux-web/aux-auth/dist/
-
+ENV NODE_ENV production
 ENV PRODUCTION 1
 
 # Specify no sandbox since Deno doesn't support Arm32
 ENV SANDBOX_TYPE "none"
+
+COPY ./src/aux-server/package*.json ./
+COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
+COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
+COPY ./src/aux-server/aux-web/aux-auth/dist ./aux-web/aux-auth/dist/
+COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
+COPY ./src/aux-server/aux-backend/schemas/migrations ./aux-backend/schemas/migrations
 
 # HTTP
 EXPOSE 3000

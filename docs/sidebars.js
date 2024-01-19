@@ -1,11 +1,5 @@
-/**
- * Copyright (c) 2017-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
 
-module.exports = {
+export default {
     docs: [
         {
             type: 'category',
@@ -34,27 +28,40 @@ module.exports = {
                     label: 'Actions',
                     items: [
                         'actions/ai',
-                        'actions/animations',
-                        'actions/app',
-                        'actions/audio',
-                        'actions/barcodes',
                         'actions/bot-filters',
                         'actions/bytes',
-                        'actions/camera',
                         'actions/crypto',
                         'actions/data',
                         'actions/debuggers',
-                        'actions/event',
                         'actions/experimental',
-                        'actions/files',
                         'actions/math',
                         'actions/mods',
-                        'actions/os',
-                        'actions/portals',
-                        'actions/records',
-                        'actions/rooms',
-                        'actions/time',
-                        'actions/utility',
+                        {
+                            type: 'category',
+                            label: 'OS',
+                            items: [
+                                'actions/os/animations',
+                                'actions/os/app',
+                                'actions/os/audio',
+                                'actions/os/barcodes',
+                                'actions/os/camera',
+                                'actions/os/clipboard',
+                                'actions/os/event',
+                                'actions/os/files',
+                                'actions/os/geolocation',
+                                'actions/os/image-classification',
+                                'actions/os/input',
+                                'actions/os/media',
+                                'actions/os/moderation',
+                                'actions/os/portals',
+                                'actions/os/system',
+                                'actions/os/records',
+                                'actions/os/remotes',
+                                'actions/os/rooms',
+                                'actions/os/time',
+                                'actions/os/xr',
+                            ]
+                        },
                         'actions/web',
                     ]
                 },
@@ -63,8 +70,6 @@ module.exports = {
                     label: 'Types',
                     items: [
                         'types/ai',
-                        'types/animation',
-                        'types/camera',
                         'types/core',
                         {
                             type: 'category',
@@ -85,7 +90,27 @@ module.exports = {
                                 'types/math/rotations'
                             ]
                         },
-                        'types/os',
+                        {
+                            type: 'category',
+                            label: 'OS',
+                            items: [
+                                'types/os/animations',
+                                'types/os/audio',
+                                'types/os/barcodes',
+                                'types/os/camera',
+                                'types/os/clipboard',
+                                'types/os/event',
+                                'types/os/files',
+                                'types/os/geolocation',
+                                'types/os/image-classification',
+                                'types/os/input',
+                                'types/os/media',
+                                'types/os/moderation',
+                                'types/os/portals',
+                                'types/os/system',
+                                'types/os/xr',
+                            ]
+                        },
                         'types/permissions',
                         {
                             type: 'category',

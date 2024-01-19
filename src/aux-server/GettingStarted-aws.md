@@ -56,7 +56,7 @@ To deploy this project to AWS Lambda, follow these steps:
 
 ## Configuration
 
-The build can be configured using the following environment variables. All the options and defaults are handled in `prerender-web-config.js`.
+The build can be configured using the following environment variables. All the options and defaults are handled in `prerender-web-config.mjs`.
 
 #### ab-1
 
@@ -77,8 +77,23 @@ Use the following environment variables to configure the inst collaboration feat
 -   `FRONTEND_ORIGIN`: The HTTP Origin that the CasualOS frontend is available at.
 -   `COLLABORATIVE_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for shared inst data. Currently experimental and may not work properly when enabled. Defaults to `false`.
 -   `STATIC_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for static inst data. Defaults to `true`.
--   `BIOS_OPTIONS`: The comma-separated list of allowed bios options. If omitted, then all options are enabled. Possible options are `enter join code`, `static inst`, `public inst`, `private inst`, `sign in`, `sign up`, `sign out`.
--   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default.
+-   `BIOS_OPTIONS`: The comma-separated list of allowed bios options. If omitted, then all options are enabled. Possible options are:
+    -   `enter join code`
+    -   `local inst` - The data is stored on the device and not uploaded to the server.
+    -   `local` - Same as `local inst`.
+    -   `static inst` - Same as `local inst`.
+    -   `free inst` - The data is stored in a temporary public inst on the server.
+    -   `free` - Same as `free inst`.
+    -   `public inst` - Same as `free inst`.
+    -   `studio inst` - The data is stored in a private inst on the server.
+    -   `studio` - Same as `studio inst`.
+    -   `private inst` - Same as `studio inst`.
+    -   `sign in`
+    -   `sign up`
+    -   `sign out`
+    -   The default options are: `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
+-   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default when the BIOS is shown.
+-   `AUTOMATIC_BIOS_OPTION`: The BIOS option that should be executed automatically by the BIOS. Setting this to a valid BIOS value will skip the BIOS screen.
 
 #### Privo Features
 
@@ -103,9 +118,19 @@ Use the following to configure the meetPortal:
 
 Use the following to configure the records system:
 
+-   `SERVER_CONFIG`: The configuration that should be used for the authentication backend. Should be formatted as a JSON string. Find the full list of supported properties at the bottom of [this file](https://github.com/casual-simulation/casualos/blob/feature/consolidation/src/aux-server/aux-backend/shared/ServerBuilder.ts). If not specified or left empty, then authentication features will be automatically disabled.
+-   `AUTH_API_ENDPOINT`: The HTTP endpoint that the auth site should use to access the records API.
+-   `AUTH_WEBSOCKET_ENDPOINT`: The HTTP endpoint that the auth site should use to access the records websocket API.
+-   `AUTH_WEBSOCKET_PROTOCOL`: The connection protocol that should be used for the records websocket API. Possible options are `websocket` and `apiary-aws`. The `websocket` protocol works with Raspberry PIs and self-hosted servers (like in development). The `apiary-aws` protocol works with [CasualOS apiaries hosted on AWS](https://github.com/casual-simulation/casualos). Defaults to `websocket`.
 -   `AUTH_ORIGIN`: The HTTP Origin that the player should use for auth. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `ENABLE_SMS_AUTHENTICATION`: Whether SMS phone numbers are allowed to be entered into the front-end and used for authentication. Defaults to `false`.
+
+#### Policies Customization
+
+-   `TERMS_OF_SERVICE`: The Markdown of the terms of service that the sites should use.
+-   `PRIVACY_POLICY`: The Markkdown of the privacy policy that the sites should use.
+-   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
 
 ## Security Note
 

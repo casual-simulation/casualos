@@ -56,6 +56,7 @@ import type {
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
+import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -70,7 +71,7 @@ if (typeof (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED === 'undefined') {
 }
 
 console.log(
-    `[AppManager] Assume subscriptions supported: ${ASSUME_SUBSCRIPTIONS_SUPPORTED}`
+    `[AuthManager] Assume subscriptions supported: ${ASSUME_SUBSCRIPTIONS_SUPPORTED}`
 );
 
 declare const ASSUME_STUDIOS_SUPPORTED: boolean;
@@ -80,7 +81,7 @@ if (typeof (globalThis as any).ASSUME_STUDIOS_SUPPORTED === 'undefined') {
 }
 
 console.log(
-    `[AppManager] Assume studios supported: ${ASSUME_STUDIOS_SUPPORTED}`
+    `[AuthManager] Assume studios supported: ${ASSUME_STUDIOS_SUPPORTED}`
 );
 
 declare const USE_PRIVO_LOGIN: boolean;
@@ -89,7 +90,7 @@ if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
     (globalThis as any).USE_PRIVO_LOGIN = false;
 }
 
-console.log(`[AppManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
+console.log(`[AuthManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
 
 export class AuthManager {
     private _userId: string;
@@ -101,10 +102,19 @@ export class AuthManager {
 
     private _loginState: Subject<boolean>;
     private _apiEndpoint: string;
+    private _websocketEndpoint: string;
+    private _websocketProtocol: RemoteCausalRepoProtocol;
     private _gitTag: string;
 
-    constructor(apiEndpoint: string, gitTag: string) {
+    constructor(
+        apiEndpoint: string,
+        websocketEndpoint: string,
+        websocketProtocol: RemoteCausalRepoProtocol,
+        gitTag: string
+    ) {
         this._apiEndpoint = apiEndpoint;
+        this._websocketEndpoint = websocketEndpoint;
+        this._websocketProtocol = websocketProtocol;
         this._gitTag = gitTag;
         this._loginState = new BehaviorSubject<boolean>(false);
         this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
@@ -176,8 +186,17 @@ export class AuthManager {
         return this._loginState;
     }
 
-    async validateEmail(email: string): Promise<boolean> {
-        const result = await this.isValidEmailAddress(email);
+    /**
+     * Determines if the given email address is valid.
+     * @param email The email address to check.
+     * @param structureOnly Whether to only check that the email address is structured correctly.
+     * @returns
+     */
+    async validateEmail(
+        email: string,
+        structureOnly?: boolean
+    ): Promise<boolean> {
+        const result = await this.isValidEmailAddress(email, structureOnly);
 
         if (result.success) {
             return result.allowed;
@@ -187,8 +206,15 @@ export class AuthManager {
         }
     }
 
+    /**
+     * Determines if the given email address is valid.
+     * @param email The email address to check.
+     * @param structureOnly Whether to only check that the email address is structured correctly.
+     * @returns
+     */
     async isValidEmailAddress(
-        email: string
+        email: string,
+        structureOnly?: boolean
     ): Promise<IsValidEmailAddressResult> {
         // Validation is handled on the server
         const indexOfAt = email.indexOf('@');
@@ -196,6 +222,13 @@ export class AuthManager {
             return {
                 success: true,
                 allowed: false,
+            };
+        }
+
+        if (structureOnly) {
+            return {
+                success: true,
+                allowed: true,
             };
         }
 
@@ -887,11 +920,11 @@ export class AuthManager {
                 email: !!info.email ? info.email : undefined,
                 displayName: info.displayName,
                 name: info.name,
-                dateOfBirth: info.dateOfBirth.toJSON(),
+                dateOfBirth: info.dateOfBirth?.toJSON(),
                 parentEmail: info.parentEmail || undefined,
             },
             {
-                validateStatus: (status) => status < 500,
+                validateStatus: (status) => true,
             }
         );
 
@@ -1167,6 +1200,14 @@ export class AuthManager {
 
     get apiEndpoint(): string {
         return this._apiEndpoint ?? location.origin;
+    }
+
+    get websocketEndpoint(): string {
+        return this._websocketEndpoint ?? location.origin;
+    }
+
+    get websocketProtocol(): RemoteCausalRepoProtocol {
+        return this._websocketProtocol ?? 'websocket';
     }
 }
 

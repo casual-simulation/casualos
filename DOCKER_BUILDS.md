@@ -54,7 +54,7 @@ Build the entire project on the Raspberry PI
 3. Make sure NVM is installed
     - `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash`
     - Make sure to run the commands they indicate so bash knows where to find nvm.
-4. Make sure Node.js 10.13.0 or later is installed
+4. Make sure Node.js 18.18.2 or later is installed
     - `nvm install node`
 5. Make sure lerna is installed
     - `npm install -g lerna`

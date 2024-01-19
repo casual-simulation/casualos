@@ -14,6 +14,7 @@ import {
     isActiveSubscription,
     getMarkersOrDefault,
     parseInstancesList,
+    byteLengthOfString,
 } from './Utils';
 
 describe('signRequest()', () => {
@@ -653,5 +654,13 @@ describe('getMarkersOrDefault()', () => {
 
     it('should return the default markers if the given list is null', () => {
         expect(getMarkersOrDefault(null)).toEqual([PUBLIC_READ_MARKER]);
+    });
+});
+
+describe('byteLengthOfString()', () => {
+    it('should return the byte length of the given string', () => {
+        expect(byteLengthOfString('abc')).toBe(3);
+        expect(byteLengthOfString('')).toBe(0);
+        expect(byteLengthOfString('😀')).toBe(4);
     });
 });

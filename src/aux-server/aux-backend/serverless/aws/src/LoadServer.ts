@@ -127,5 +127,9 @@ export function constructServerBuilder() {
         builder.usePrivo();
     }
 
+    if (config.notifications) {
+        builder.useNotifications();
+    }
+
     return builder;
 }

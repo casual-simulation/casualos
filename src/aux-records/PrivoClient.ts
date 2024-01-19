@@ -3,9 +3,10 @@ import { PrivoConfiguration } from './PrivoConfiguration';
 import { PrivoClientCredentials, PrivoStore } from './PrivoStore';
 import { Client, Issuer, TokenSet, generators } from 'openid-client';
 import { v4 as uuid } from 'uuid';
-import axios, { AxiosRequestHeaders } from 'axios';
+import axios, { RawAxiosRequestHeaders } from 'axios';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
+import { ServerError } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for objects that can interface with the Privo API.
@@ -245,8 +246,23 @@ export class PrivoClient implements PrivoClientInterface {
             },
             {
                 headers,
+                validateStatus: (status) => status < 500,
             }
         );
+
+        if (result.status >= 400) {
+            console.error(
+                `[PrivoClient] [createChildAccount] Error creating child account: ${result.status} ${result.statusText}`,
+                result.data
+            );
+
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The request contains one or more invalid fields.',
+            };
+        }
 
         const data = result.data;
 
@@ -273,6 +289,7 @@ export class PrivoClient implements PrivoClientInterface {
         const validated = schema.parse(data);
 
         return {
+            success: true,
             parentServiceId: validated.to.service_id,
             childServiceId: validated.to.connected_profiles[0].service_id,
             updatePasswordLink:
@@ -320,8 +337,23 @@ export class PrivoClient implements PrivoClientInterface {
             },
             {
                 headers,
+                validateStatus: (status) => status < 500,
             }
         );
+
+        if (result.status >= 400) {
+            console.error(
+                `[PrivoClient] [createAdultAccount] Error creating adult account: ${result.status} ${result.statusText}`,
+                result.data
+            );
+
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The request contains one or more invalid fields.',
+            };
+        }
 
         const data = result.data;
 
@@ -341,6 +373,7 @@ export class PrivoClient implements PrivoClientInterface {
         const validated = schema.parse(data);
 
         return {
+            success: true,
             adultServiceId: validated.to.service_id,
             updatePasswordLink: validated.to.update_password_link,
             features: validated.to.features.map((f: any) => ({
@@ -562,7 +595,7 @@ export class PrivoClient implements PrivoClientInterface {
 
     private async _getRequestHeaders(
         config: PrivoConfiguration
-    ): Promise<AxiosRequestHeaders> {
+    ): Promise<RawAxiosRequestHeaders> {
         const credentials = await this._getClientCredentials(config);
         if (!credentials) {
             throw new Error('No Privo credentials found.');
@@ -644,7 +677,13 @@ export interface CreateChildAccountRequest {
     featureIds: string[];
 }
 
-export interface CreateChildAccountResponse {
+export type CreateChildAccountResponse =
+    | CreateChildAccountSuccess
+    | CreateChildAccountFailure;
+
+export interface CreateChildAccountSuccess {
+    success: true;
+
     /**
      * The parent service ID.
      */
@@ -664,6 +703,12 @@ export interface CreateChildAccountResponse {
      * The list of features and statuses for the child account.
      */
     features: PrivoFeatureStatus[];
+}
+
+export interface CreateChildAccountFailure {
+    success: false;
+    errorCode: ServerError | 'unacceptable_request';
+    errorMessage: string;
 }
 
 export interface PrivoFeatureStatus {
@@ -705,7 +750,13 @@ export interface CreateAdultAccountRequest {
     featureIds: string[];
 }
 
-export interface CreateAdultAccountResponse {
+export type CreateAdultAccountResponse =
+    | CreateAdultAccountSuccess
+    | CreateAdultAccountFailure;
+
+export interface CreateAdultAccountSuccess {
+    success: true;
+
     /**
      * The adult's service ID.
      */
@@ -720,6 +771,12 @@ export interface CreateAdultAccountResponse {
      * The list of features and statuses for the child account.
      */
     features: PrivoFeatureStatus[];
+}
+
+export interface CreateAdultAccountFailure {
+    success: false;
+    errorCode: ServerError | 'unacceptable_request';
+    errorMessage: string;
 }
 
 export interface PrivoGetUserInfoResponse {

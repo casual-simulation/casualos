@@ -14,7 +14,7 @@ import {
     StudioAssignmentRole,
     CountRecordsFilter,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from './generated';
 
 export class PrismaRecordsStore implements RecordsStore {
     private _client: PrismaClient;
@@ -24,41 +24,13 @@ export class PrismaRecordsStore implements RecordsStore {
     }
 
     async updateRecord(record: Record): Promise<void> {
-        await this._client.record.upsert({
-            where: {
-                name: record.name,
-            },
-            create: {
-                name: record.name,
-                ownerId: record.ownerId,
-                studioId: record.studioId,
-                secretHashes: record.secretHashes,
-                secretSalt: record.secretSalt,
-            },
-            update: {
-                name: record.name,
-                ownerId: record.ownerId,
-                studioId: record.studioId,
-                secretHashes: record.secretHashes,
-                secretSalt: record.secretSalt,
-            },
-        });
+        await this._client
+            .$executeRaw`UPSERT INTO public."Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "updatedAt")
+            VALUES (${record.name}, ${record.ownerId}, ${record.studioId}, ${record.secretHashes}, ${record.secretSalt}, NOW())`;
     }
 
     async addRecord(record: Record): Promise<void> {
-        await this._client.record.upsert({
-            where: {
-                name: record.name,
-            },
-            create: {
-                name: record.name,
-                ownerId: record.ownerId,
-                studioId: record.studioId,
-                secretHashes: record.secretHashes,
-                secretSalt: record.secretSalt,
-            },
-            update: {},
-        });
+        await this.updateRecord(record);
     }
 
     async getRecordByName(name: string): Promise<Record> {

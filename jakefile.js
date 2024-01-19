@@ -45,7 +45,7 @@ let patterns = [
     `/*.tsbuildinfo`,
 ];
 
-let negativePatterns = [`/typings/**/*`];
+let negativePatterns = [`/typings/**/*`, `/node_modules/**/*`];
 
 let globs = [`${__dirname}/src/aux-server/aux-web/dist`];
 folders.forEach((f) => {

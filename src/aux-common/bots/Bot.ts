@@ -195,7 +195,7 @@ export interface RuntimeBot {
      * @example Get the links of a bot
      * let links = bot.links;
      *
-     * @example Get the @onClick listener of a bot
+     * @example Get the \@onClick listener of a bot
      * let onClick = bot.onClick;
      *
      * @example Get a property on a bot by a variable

@@ -1,3 +1,5 @@
+import { ZodIssue } from 'zod';
+
 export type DirectoryResult =
     | QueryResult
     | EntryUpdatedResult
@@ -25,10 +27,5 @@ export interface NotAuthorizedResult {
 
 export interface BadRequestResult {
     type: 'bad_request';
-    errors: BadRequestError[];
-}
-
-export interface BadRequestError {
-    path: (string | number)[];
-    message: string;
+    errors: ZodIssue[];
 }

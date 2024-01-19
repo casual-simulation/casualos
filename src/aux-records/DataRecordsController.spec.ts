@@ -116,6 +116,87 @@ describe('DataRecordsController', () => {
             });
         });
 
+        it('should store objects in the data store', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                { thisIsMyData: true },
+                'subjectId',
+                null,
+                null
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: { thisIsMyData: true },
+                publisherId: userId,
+                subjectId: 'subjectId',
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should store booleans in the data store', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                true,
+                'subjectId',
+                null,
+                null
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: true,
+                publisherId: userId,
+                subjectId: 'subjectId',
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should store numbers in the data store', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                123,
+                'subjectId',
+                null,
+                null
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: 123,
+                publisherId: userId,
+                subjectId: 'subjectId',
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
         it('should reject the request if given an invalid key', async () => {
             const result = (await manager.recordData(
                 'not_a_key',
@@ -700,6 +781,75 @@ describe('DataRecordsController', () => {
                 errorMessage:
                     'The maximum number of items has been reached for your subscription.',
                 errorReason: 'too_many_items',
+            });
+
+            await expect(
+                store.getData('testRecord', 'address2')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should reject the request if the item is over the maximum size', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                data: {
+                                    maxItemSizeInBytes: 5,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = (await manager.recordData(
+                key,
+                'address2',
+                'data123',
+                'subjectId',
+                null,
+                null
+            )) as RecordDataFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The size of the item is larger than the subscription allows.',
+                errorReason: 'data_too_large',
+                issues: [
+                    {
+                        code: 'too_big',
+                        exact: false,
+                        inclusive: true,
+                        maximum: 5,
+                        message: 'Number must be less than or equal to 5',
+                        path: ['data', 'sizeInBytes'],
+                        type: 'number',
+                    },
+                ],
             });
 
             await expect(

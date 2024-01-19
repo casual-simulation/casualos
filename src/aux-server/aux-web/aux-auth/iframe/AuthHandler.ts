@@ -5,9 +5,13 @@ import {
     LoginUIAddressStatus,
     LoginUIStatus,
     OAuthRedirectRequest,
+    PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
-import { AuthData } from '@casual-simulation/aux-common';
+import {
+    AuthData,
+    RemoteCausalRepoProtocol,
+} from '@casual-simulation/aux-common';
 import {
     listenForChannel,
     listenForChannels,
@@ -84,6 +88,8 @@ export class AuthHandler implements AuxAuth {
     private _oauthChannel: BroadcastChannel = new BroadcastChannel(
         OAUTH_LOGIN_CHANNEL_NAME
     );
+    private _initialized: boolean = false;
+    private _initPromise: Promise<void> = null;
 
     constructor() {
         this._oauthChannel.addEventListener('message', (event) => {
@@ -94,11 +100,38 @@ export class AuthHandler implements AuxAuth {
         });
     }
 
+    private _init() {
+        if (this._initPromise) {
+            return this._initPromise;
+        }
+        return (this._initPromise = this._initAsync());
+    }
+
+    private async _initAsync() {
+        if (this._initialized) {
+            return;
+        }
+        this._initialized = true;
+
+        console.log('[AuthHandler] Checking initial login status...');
+        if (await this._checkLoginStatus()) {
+            await this._loadUserInfo();
+        }
+    }
+
+    async getPolicyUrls(): Promise<PolicyUrls> {
+        return {
+            privacyPolicyUrl: this.privacyPolicyUrl,
+            termsOfServiceUrl: this.termsOfServiceUrl,
+        };
+    }
+
     async provideOAuthLoginComplete(): Promise<void> {
         this._oauthRedirectComplete.next();
     }
 
     async isLoggedIn(): Promise<boolean> {
+        await this._init();
         if (this._loggedIn) {
             const expiry = this._getTokenExpirationTime(this._token);
             if (Date.now() < expiry) {
@@ -231,6 +264,14 @@ export class AuthHandler implements AuxAuth {
 
     async getRecordsOrigin(): Promise<string> {
         return Promise.resolve(authManager.apiEndpoint);
+    }
+
+    async getWebsocketOrigin(): Promise<string> {
+        return Promise.resolve(authManager.websocketEndpoint);
+    }
+
+    async getWebsocketProtocol(): Promise<RemoteCausalRepoProtocol> {
+        return Promise.resolve(authManager.websocketProtocol);
     }
 
     async openAccountPage(): Promise<void> {
@@ -448,11 +489,12 @@ export class AuthHandler implements AuxAuth {
         }
 
         if (info.parentEmail) {
-            if (!(await authManager.validateEmail(info.parentEmail))) {
+            if (!(await authManager.validateEmail(info.parentEmail, true))) {
                 errors.push({
                     for: PARENT_EMAIL_FIELD,
                     errorCode: 'invalid_parent_email',
-                    errorMessage: 'The provided email is not accepted.',
+                    errorMessage:
+                        'The provided email must be a valid email address.',
                 });
             }
         }
@@ -795,6 +837,7 @@ export class AuthHandler implements AuxAuth {
             this._loginUIStatus.next({
                 page: 'show_update_password_link',
                 updatePasswordUrl: result.updatePasswordUrl,
+                providedParentEmail: !!info.parentEmail,
             });
 
             return authManager.userId;
@@ -892,10 +935,4 @@ export class AuthHandler implements AuxAuth {
     private get _supportsSms() {
         return ENABLE_SMS_AUTHENTICATION === true;
     }
-}
-
-interface ProvidedPrivoInfo {
-    email: string;
-    name: string | undefined | null;
-    dateOfBirth: Date | undefined | null;
 }

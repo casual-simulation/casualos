@@ -1,5 +1,3 @@
-export * from './GenericHttpInterface';
-
 export * from './AuthController';
 export * from './AuthStore';
 
@@ -45,6 +43,10 @@ export * from './MemoryFileRecordsLookup';
 export * from './Cache';
 export * from './CachingPolicyStore';
 export * from './CachingConfigStore';
+
+export * from './ModerationController';
+export * from './ModerationStore';
+export * from './NotificationMessenger';
 
 export * from './websockets';
 export * from './forms';

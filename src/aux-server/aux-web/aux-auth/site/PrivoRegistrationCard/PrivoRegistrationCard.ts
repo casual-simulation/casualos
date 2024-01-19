@@ -3,10 +3,21 @@ import { DateTime } from 'luxon';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import UpdatePasswordCard from '../UpdatePasswordCard/UpdatePasswordCard';
+import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
+import {
+    DATE_OF_BIRTH_FIELD,
+    DISPLAY_NAME_FIELD,
+    EMAIL_FIELD,
+    FormError,
+    NAME_FIELD,
+    PARENT_EMAIL_FIELD,
+    getFormErrors,
+} from '@casual-simulation/aux-records';
 
 @Component({
     components: {
         'update-password-card': UpdatePasswordCard,
+        'field-errors': FieldErrors,
     },
 })
 export default class PrivoRegistrationCard extends Vue {
@@ -17,52 +28,57 @@ export default class PrivoRegistrationCard extends Vue {
     dateOfBirth: Date = null;
     parentEmail: string = null;
     updatePasswordUrl: string = '';
+    enterDateOfBirth: boolean = true;
 
-    showEmailError: boolean = false;
-    showNameError: boolean = false;
-    showDateOfBirthError: boolean = false;
-    showEnterAddressError: boolean = false;
-    showInvalidAddressError: boolean = false;
-    showTermsOfServiceError: boolean = false;
-    showBannedUserError: boolean = false;
-    showDisplayNameError: boolean = false;
-    showDisplayNameContainsNameError: boolean = false;
-    showParentEmailError: boolean = false;
-    showInvalidParentEmailError: boolean = false;
-    showEnterParentEmailError: boolean = false;
+    errors: FormError[] = [];
 
     processing: boolean = false;
 
     get emailFieldClass() {
-        return this.showEmailError ||
-            this.showEnterAddressError ||
-            this.showInvalidAddressError ||
-            this.showBannedUserError
-            ? 'md-invalid'
-            : '';
+        const hasEmailError = this.errors.some((e) => e.for === EMAIL_FIELD);
+        return hasEmailError ? 'md-invalid' : '';
     }
 
     get dateOfBirthFieldClass() {
-        return this.showDateOfBirthError ? 'md-invalid' : '';
+        const hasDOBError = this.errors.some(
+            (e) => e.for === DATE_OF_BIRTH_FIELD
+        );
+        return hasDOBError ? 'md-invalid' : '';
     }
 
     get nameFieldClass() {
-        return this.showNameError ? 'md-invalid' : '';
+        const hasNameError = this.errors.some((e) => e.for === NAME_FIELD);
+        return hasNameError ? 'md-invalid' : '';
     }
 
     get displayNameFieldClass() {
-        return this.showDisplayNameError ||
-            this.showDisplayNameContainsNameError
-            ? 'md-invalid'
-            : '';
+        const hasDisplayNameError = this.errors.some(
+            (e) => e.for === DISPLAY_NAME_FIELD
+        );
+        return hasDisplayNameError ? 'md-invalid' : '';
     }
 
     get parentEmailFieldClass() {
-        return this.showParentEmailError ||
-            this.showEnterParentEmailError ||
-            this.showInvalidParentEmailError
-            ? 'md-invalid'
-            : '';
+        const hasParentEmailError = this.errors.some(
+            (e) => e.for === PARENT_EMAIL_FIELD
+        );
+        return hasParentEmailError ? 'md-invalid' : '';
+    }
+
+    get registerEmailFieldHint() {
+        if (this.requireEmail) {
+            return 'Email';
+        } else {
+            return 'Email (Optional)';
+        }
+    }
+
+    get requireEmail() {
+        if (this.dateOfBirth) {
+            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            return Math.abs(dob.diffNow('years').years) >= 18;
+        }
+        return false;
     }
 
     get requireParentEmail() {
@@ -85,7 +101,16 @@ export default class PrivoRegistrationCard extends Vue {
         return !!this.dateOfBirth;
     }
 
+    get dateOfBirthText() {
+        if (this.dateOfBirth) {
+            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            return dob.toLocaleString(DateTime.DATE_MED);
+        }
+        return '';
+    }
+
     created() {
+        this.enterDateOfBirth = true;
         this.resetFields();
         this.resetErrors();
     }
@@ -99,45 +124,78 @@ export default class PrivoRegistrationCard extends Vue {
     }
 
     async checkEmail() {
-        if (this.email) {
-            let isValid = await authManager.validateEmail(this.email);
-            this.showEmailError = !isValid;
+        if (!this.email) {
+            return;
+        }
+        const result = await authManager.isValidEmailAddress(this.email);
+
+        const valid = !result.success || result.allowed;
+
+        if (result.success === false) {
+            this.errors = getFormErrors(result);
+        } else if (valid) {
+            this.errors = this.errors.filter((e) => e.for !== EMAIL_FIELD);
+        } else {
+            this.errors = [
+                ...this.errors.filter((e) => e.for !== EMAIL_FIELD),
+                {
+                    for: EMAIL_FIELD,
+                    errorCode: 'invalid_email',
+                    errorMessage: 'This email is not allowed.',
+                },
+            ];
         }
     }
 
     async checkDisplayName() {
-        if (this.displayName) {
-            let result = await authManager.isValidDisplayName(
-                this.displayName,
-                this.name
+        if (!this.displayName || !this.name) {
+            return;
+        }
+        const result = await authManager.isValidDisplayName(
+            this.displayName,
+            this.name
+        );
+
+        const valid = !result.success || result.allowed;
+
+        if (result.success === false) {
+            this.errors = getFormErrors(result);
+        } else if (valid) {
+            this.errors = this.errors.filter(
+                (e) => e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
             );
-            if (result.success && !result.allowed) {
-                if (result.containsName) {
-                    this.showDisplayNameContainsNameError = true;
-                } else {
-                    this.showDisplayNameError = true;
-                    this.showDisplayNameContainsNameError = false;
-                }
+        } else {
+            if (result.containsName) {
+                this.errors = [
+                    ...this.errors.filter(
+                        (e) =>
+                            e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
+                    ),
+                    {
+                        for: DISPLAY_NAME_FIELD,
+                        errorCode: 'invalid_display_name',
+                        errorMessage:
+                            'The display name cannot contain your name.',
+                    },
+                ];
             } else {
-                this.showDisplayNameContainsNameError = false;
-                this.showDisplayNameError = false;
+                this.errors = [
+                    ...this.errors.filter(
+                        (e) =>
+                            e.for !== DISPLAY_NAME_FIELD && e.for !== NAME_FIELD
+                    ),
+                    {
+                        for: DISPLAY_NAME_FIELD,
+                        errorCode: 'invalid_display_name',
+                        errorMessage: 'This display name is not allowed.',
+                    },
+                ];
             }
         }
     }
 
     resetErrors() {
-        this.showEmailError = false;
-        this.showNameError = false;
-        this.showDateOfBirthError = false;
-        this.showEnterAddressError = false;
-        this.showInvalidAddressError = false;
-        this.showTermsOfServiceError = false;
-        this.showBannedUserError = false;
-        this.showDisplayNameError = false;
-        this.showParentEmailError = false;
-        this.showInvalidParentEmailError = false;
-        this.showEnterParentEmailError = false;
-        this.showDisplayNameContainsNameError = false;
+        this.errors = [];
     }
 
     resetFields() {
@@ -149,67 +207,65 @@ export default class PrivoRegistrationCard extends Vue {
         this.parentEmail = null;
     }
 
+    async provideDateOfBirth() {
+        if (!this.dateOfBirth) {
+            this.errors = [
+                {
+                    for: DATE_OF_BIRTH_FIELD,
+                    errorCode: 'invalid_date_of_birth',
+                    errorMessage: 'Please enter a valid date of birth.',
+                },
+            ];
+            return;
+        }
+
+        this.errors = [];
+        this.enterDateOfBirth = false;
+    }
+
     async register() {
         try {
             this.processing = true;
             this.resetErrors();
 
-            this.email = this.email.trim();
-            if (!this.email) {
-                this.showEnterAddressError = true;
-                return;
-            }
-            if (!(await authManager.validateEmail(this.email))) {
-                this.showEmailError = true;
-                return;
-            }
-
             this.displayName = this.displayName.trim();
-            if (!this.displayName) {
-                this.showDisplayNameError = true;
-                return;
-            }
-            const displayNameResult = await authManager.isValidDisplayName(
-                this.displayName,
-                this.name
-            );
-            if (!displayNameResult.success || !displayNameResult.allowed) {
-                this.showDisplayNameError = true;
-                return;
-            }
             this.name = this.name.trim();
-            if (!this.name) {
-                this.showNameError = true;
-                return;
-            }
-            if (!this.dateOfBirth) {
-                this.showDateOfBirthError = true;
-                return;
-            }
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
-            if (dob > DateTime.now()) {
-                this.showDateOfBirthError = true;
-                return;
-            }
-
-            if (Math.abs(dob.diffNow('years').as('years')) < 18) {
-                if (!this.parentEmail) {
-                    this.showEnterParentEmailError = true;
-                    return;
-                }
-            } else {
-                if (!this.acceptedTerms) {
-                    this.showTermsOfServiceError = true;
-                    return;
-                }
-            }
-
+            this.email = this.email?.trim();
             this.parentEmail = this.parentEmail?.trim();
-            if (this.parentEmail) {
-                if (!(await authManager.validateEmail(this.parentEmail))) {
-                    this.showInvalidParentEmailError = true;
-                    return;
-                }
+
+            if (!this.displayName) {
+                this.errors.push({
+                    for: DISPLAY_NAME_FIELD,
+                    errorCode: 'invalid_display_name',
+                    errorMessage: 'Please enter a display name.',
+                });
+            }
+            if (!this.name) {
+                this.errors.push({
+                    for: NAME_FIELD,
+                    errorCode: 'invalid_name',
+                    errorMessage: 'Please enter a name.',
+                });
+            }
+
+            if (this.requireEmail && !this.email) {
+                this.errors.push({
+                    for: EMAIL_FIELD,
+                    errorCode: 'invalid_email',
+                    errorMessage: 'Please enter an email.',
+                });
+            }
+
+            if (this.requireParentEmail && !this.parentEmail) {
+                this.errors.push({
+                    for: PARENT_EMAIL_FIELD,
+                    errorCode: 'invalid_parent_email',
+                    errorMessage: 'Please enter a parent email.',
+                });
+            }
+
+            if (this.errors.length > 0) {
+                return;
             }
 
             const result = await authManager.signUpWithPrivo({
@@ -223,6 +279,8 @@ export default class PrivoRegistrationCard extends Vue {
 
             if (result.success) {
                 this.updatePasswordUrl = result.updatePasswordUrl;
+            } else if (result.success === false) {
+                this.errors = getFormErrors(result);
             }
         } finally {
             this.processing = false;

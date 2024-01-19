@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/websocket",
-    "version": "3.1.11",
+    "version": "3.2.7",
     "description": "Minimal WebSocket implementation",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -35,5 +35,8 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "dependencies": {
+        "rxjs": "7.5.7"
     }
 }

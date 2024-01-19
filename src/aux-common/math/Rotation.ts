@@ -5,11 +5,11 @@ import { Vector3 } from './Vector3';
 /**
  * Defines a class that can represent geometric rotations.
  *
- * @docHash types/math/rotations
- * @docOrder 0
- * @docTitle Rotations
- * @docSidebar Rotations
- * @docDescription Rotations help represent orientation.
+ * @dochash types/math/rotations
+ * @docorder 0
+ * @doctitle Rotations
+ * @docsidebar Rotations
+ * @docdescription Rotations help represent orientation.
  * @docname Rotation
  */
 export class Rotation {
@@ -455,11 +455,11 @@ export class Rotation {
  * Defines an interface that represents a from/to rotation.
  * That is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction.
  *
- * @docHash types/math/rotations
- * @docOrder 3
- * @docTitle Rotations
- * @docSidebar Rotations
- * @docDescription Rotations help represent orientation.
+ * @dochash types/math/rotations
+ * @docorder 3
+ * @doctitle Rotations
+ * @docsidebar Rotations
+ * @docdescription Rotations help represent orientation.
  * @docname FromToRotation
  */
 export interface FromToRotation {
@@ -477,11 +477,11 @@ export interface FromToRotation {
 /**
  * Defines an interface that represents an Axis and Angle pair.
  *
- * @docHash types/math/rotations
- * @docOrder 2
- * @docTitle Rotations
- * @docSidebar Rotations
- * @docDescription Rotations help represent orientation.
+ * @dochash types/math/rotations
+ * @docorder 2
+ * @doctitle Rotations
+ * @docsidebar Rotations
+ * @docdescription Rotations help represent orientation.
  * @docname AxisAndAngle
  */
 export interface AxisAndAngle {
@@ -499,11 +499,11 @@ export interface AxisAndAngle {
 /**
  * Defines an interface that represents an Euler Angles rotation.
  *
- * @docHash types/math/rotations
- * @docOrder 4
- * @docTitle Rotations
- * @docSidebar Rotations
- * @docDescription Rotations help represent orientation.
+ * @dochash types/math/rotations
+ * @docorder 4
+ * @doctitle Rotations
+ * @docsidebar Rotations
+ * @docdescription Rotations help represent orientation.
  * @docname EulerAnglesRotation
  */
 export interface EulerAnglesRotation {
@@ -540,11 +540,11 @@ export interface EulerAnglesRotation {
 /**
  * Defines an interface that represents a sequence of rotations.
  *
- * @docHash types/math/rotations
- * @docOrder 5
- * @docTitle Rotations
- * @docSidebar Rotations
- * @docDescription Rotations help represent orientation.
+ * @dochash types/math/rotations
+ * @docorder 5
+ * @doctitle Rotations
+ * @docsidebar Rotations
+ * @docdescription Rotations help represent orientation.
  * @docname SequenceRotation
  */
 export interface SequenceRotation {
@@ -557,11 +557,11 @@ export interface SequenceRotation {
 /**
  * Defines an interface that represents a rotation constructed from a Quaternion.
  *
- * @docHash types/math/rotations
- * @docOrder 6
- * @docTitle Rotations
- * @docSidebar Rotations
- * @docDescription Rotations help represent orientation.
+ * @dochash types/math/rotations
+ * @docorder 6
+ * @doctitle Rotations
+ * @docsidebar Rotations
+ * @docdescription Rotations help represent orientation.
  * @docname QuaternionRotation
  */
 export interface QuaternionRotation {
@@ -571,11 +571,11 @@ export interface QuaternionRotation {
 /**
  * Defines an interface that represents a rotation transforms (0, 1, 0) and (0, 0, 1) to look along the given direction and upwards axes.
  *
- * @docHash types/math/rotations
- * @docOrder 7
- * @docTitle Rotations
- * @docSidebar Rotations
- * @docDescription Rotations help represent orientation.
+ * @dochash types/math/rotations
+ * @docorder 7
+ * @doctitle Rotations
+ * @docsidebar Rotations
+ * @docdescription Rotations help represent orientation.
  * @docname LookRotation
  */
 export interface LookRotation {

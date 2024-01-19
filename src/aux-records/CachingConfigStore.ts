@@ -2,6 +2,7 @@ import { PrivoConfiguration } from './PrivoConfiguration';
 import { Cache } from './Cache';
 import { ConfigurationStore } from './ConfigurationStore';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { ModerationConfiguration } from './ModerationConfiguration';
 
 /**
  * Defines a config store that uses a cache.
@@ -54,6 +55,23 @@ export class CachingConfigStore implements ConfigurationStore {
         const result = await this._store.getPrivoConfiguration();
         if (result) {
             await this._cache.store('privo', result, this._cacheSeconds);
+        }
+
+        return result;
+    }
+
+    async getModerationConfig(): Promise<ModerationConfiguration> {
+        const cached = await this._cache.retrieve<ModerationConfiguration>(
+            'moderation'
+        );
+
+        if (cached) {
+            return cached;
+        }
+
+        const result = await this._store.getModerationConfig();
+        if (result) {
+            await this._cache.store('moderation', result, this._cacheSeconds);
         }
 
         return result;

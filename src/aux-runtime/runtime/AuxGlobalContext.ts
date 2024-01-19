@@ -41,6 +41,7 @@ import type {
 } from '@casual-simulation/js-interpreter';
 import { isGenerator } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { RuntimeActions } from './RuntimeEvents';
+import seedrandom from 'seedrandom';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().
@@ -120,7 +121,7 @@ export interface AuxGlobalContext {
     /**
      * The pseudo-random number generator that should be used by the context.
      */
-    pseudoRandomNumberGenerator: seedrandom.prng;
+    pseudoRandomNumberGenerator: seedrandom.PRNG;
 
     /**
      * Gets or sets the calculated latency between this client and the inst server in miliseconds.
@@ -642,7 +643,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      */
     mockAsyncActions: boolean;
 
-    pseudoRandomNumberGenerator: seedrandom.prng;
+    pseudoRandomNumberGenerator: seedrandom.PRNG;
 
     global: any = {};
 

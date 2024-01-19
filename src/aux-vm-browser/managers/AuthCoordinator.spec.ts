@@ -10,6 +10,7 @@ import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import {
     AuthHelperInterface,
     SimulationManager,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
 import {
     AuthData,
@@ -101,6 +102,9 @@ describe('AuthCoordinator', () => {
             isValidEmailAddress: jest.fn(),
             provideHasAccount: jest.fn(),
             providePrivoSignUpInfo: jest.fn(),
+            getPolicyUrls: jest.fn(),
+            getWebsocketOrigin: jest.fn(),
+            getWebsocketProtocol: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },

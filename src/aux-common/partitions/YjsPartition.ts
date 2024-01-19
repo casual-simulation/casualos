@@ -117,6 +117,7 @@ export class YjsPartitionImpl implements YjsPartition {
 
     private _isLocalTransaction: boolean = true;
     private _remoteEvents: PartitionRemoteEvents | boolean;
+    private _connectionId: string;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -192,6 +193,7 @@ export class YjsPartitionImpl implements YjsPartition {
         this.private = config.private || false;
         this._persistence = config.localPersistence;
         this._remoteEvents = config.remoteEvents;
+        this._connectionId = config.connectionId;
         this._localId = this._doc.clientID;
         this._remoteId = new Doc().clientID;
         this._bots = this._doc.getMap('bots');
@@ -258,6 +260,14 @@ export class YjsPartitionImpl implements YjsPartition {
             if (event.type === 'remote') {
                 if (event.event.type === 'get_remote_count') {
                     this._onEvents.next([asyncResult(event.taskId, 1)]);
+                } else if (event.event.type === 'get_remotes') {
+                    if (this._connectionId) {
+                        this._onEvents.next([
+                            asyncResult(event.taskId, [this._connectionId]),
+                        ]);
+                    } else {
+                        this._onEvents.next([asyncResult(event.taskId, [])]);
+                    }
                 } else if (event.event.type === 'list_inst_updates') {
                     try {
                         const updates: InstUpdate[] = [

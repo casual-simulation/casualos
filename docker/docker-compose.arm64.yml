@@ -1,0 +1,39 @@
+version: '3.7'
+services:
+    server:
+        image: 'ghcr.io/casual-simulation/casualos-arm64:latest'
+        restart: always
+        ports:
+            - '80:3000'
+            - '3002:3002'
+            - '4567:4567'
+        depends_on:
+            - mongo
+            - redis
+            - cockroach
+        env_file:
+            - ./docker-compose.arm64.env
+    mongo:
+        image: 'mongo:7.0.4'
+        restart: always
+        volumes:
+            - mongo-data:/data/db
+    redis:
+        image: 'redis:7.2'
+        restart: always
+        ports:
+            - '6379:6379'
+        volumes:
+            - redis-data:/data
+    cockroach:
+        image: 'cockroachdb/cockroach:v23.1.13'
+        restart: always
+        command: start-single-node --insecure
+        ports:
+            - '8080:8080'
+        volumes:
+            - cockroach-single:/cockroach/cockroach-data
+volumes:
+    cockroach-single:
+    mongo-data:
+    redis-data:

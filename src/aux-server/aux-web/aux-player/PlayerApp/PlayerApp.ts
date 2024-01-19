@@ -90,6 +90,7 @@ import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
 import WakeLock from '../../shared/vue-components/WakeLock/WakeLock';
 import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
 import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
+import ReportInstDialog from '../../shared/vue-components/ReportInstDialog/ReportInstDialog';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -145,6 +146,7 @@ declare function sa_event(name: string, callback: Function): void;
         'bot-tooltips': Tooltips,
         'wake-lock': WakeLock,
         'photo-camera': PhotoCamera,
+        'report-inst-dialog': ReportInstDialog,
     },
 })
 export default class PlayerApp extends Vue {
@@ -447,7 +449,7 @@ export default class PlayerApp extends Vue {
         });
     }
 
-    onRecordsUIVisisble() {
+    onRecordsUIVisible() {
         this.recordsUIVisible = false;
     }
 

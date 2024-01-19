@@ -13,7 +13,7 @@ import {
     PrismaClient,
     DataRecord as PrismaDataRecord,
     Prisma,
-} from '@prisma/client';
+} from './generated';
 import z from 'zod';
 import { convertMarkers } from './Utils';
 
@@ -72,7 +72,10 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         recordName: string,
         address: string
     ): Promise<GetDataStoreResult> {
-        const record = await this._collection.findUnique({
+        const record = await (
+            this._collection
+                .findUnique as PrismaClient['dataRecord']['findUnique']
+        )({
             where: {
                 recordName_address: {
                     recordName: recordName,
@@ -118,12 +121,16 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         if (!!address) {
             query.address = { gt: address };
         }
-        const count = await this._collection.count({
+        const count = await (
+            this._collection.count as PrismaClient['dataRecord']['count']
+        )({
             where: {
                 recordName: recordName,
             },
         });
-        const records = await this._collection.findMany({
+        const records = await (
+            this._collection.findMany as PrismaClient['dataRecord']['findMany']
+        )({
             where: query,
             orderBy: {
                 address: 'asc',
@@ -152,7 +159,9 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         address: string
     ): Promise<EraseDataStoreResult> {
         try {
-            await this._collection.delete({
+            await (
+                this._collection.delete as PrismaClient['dataRecord']['delete']
+            )({
                 where: {
                     recordName_address: {
                         recordName: recordName,

@@ -61,16 +61,12 @@ import '@casual-simulation/aux-components/fonts/MaterialIcons/MaterialIcons.css'
 import '@casual-simulation/aux-components/fonts/Roboto/Roboto.css';
 import '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR.css';
 
-import { polyfill } from 'es6-promise';
 import '@casual-simulation/aux-components/SVGPolyfill';
 
 import { appManager, AppType } from '../shared/AppManager';
 import PlayerApp from './PlayerApp/PlayerApp';
 import PlayerHome from './PlayerHome/PlayerHome';
 import { setTheme } from '../shared/StyleHelpers';
-
-// Setup the Promise shim for browsers that don't support promises.
-polyfill();
 
 appManager.appType = AppType.Player;
 Vue.use(VueRouter);

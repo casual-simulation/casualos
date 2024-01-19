@@ -35,7 +35,9 @@ import {
   Example,
   AnyCursorValues,
   TypeLink,
-} from './components.mdx';
+  ImuPortalBadge,
+  MapPortalBadge,
+} from './components.jsx';
 
 import { GlossaryRef } from './glossary/index';
 
@@ -2964,14 +2966,23 @@ The BIOS option that was used to initialize CasualOS.
   <PossibleValueCode value='null'>
     No BIOS option was used. This will cause a selection box to appear asking the user what their preference is. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='static inst'>
-    A new static inst will be generated.
+  <PossibleValueCode value='local inst'>
+    A new local inst will be created. Bots are stored in the browser on the device.
   </PossibleValueCode>
-  <PossibleValueCode value='private inst'>
-    A new private inst will be generated in "My Studio".
+  <PossibleValueCode value='local'>
+    Shorthand for "local inst".
   </PossibleValueCode>
-  <PossibleValueCode value='public inst'>
-    A new public inst will be generated.
+  <PossibleValueCode value='studio inst'>
+    A new private inst will be generated in "My Studio". Bots are stored in the cloud and shared with studio members.
+  </PossibleValueCode>
+  <PossibleValueCode value='studio'>
+    Shorthand for "studio inst".
+  </PossibleValueCode>
+  <PossibleValueCode value='free inst'>
+    A new public inst will be generated. Bots are stored in the cloud and shared publicly, expires in 24h.
+  </PossibleValueCode>
+  <PossibleValueCode value='free'>
+    Shorthand for "free inst".
   </PossibleValueCode>
   <PossibleValueCode value='enter join code'>
     The BIOS selection box will be shown with the "enter join code" option selected.
@@ -3759,6 +3770,37 @@ On deployments that do not support subscriptions, this is always `true`.
 ### `subscriptionTier`
 
 The subscription tier that is currently active for the user. It is a string containing the feature level that should be active for the user.
+
+### `privacyFeatures`
+
+The privacy features that are currently active for the user. If is an object with the following properties:
+
+```typescript
+/**
+ * The privacy-related features that a user can have access to.
+ */
+let privacyFeatures: {
+    /**
+     * Whether the user is allowed to publish data.
+     */
+    publishData: boolean;
+
+    /**
+     * Whether the user is allowed to publish or access public data.
+     */
+    allowPublicData: boolean;
+
+    /**
+     * Whether the user is allowed to access AI features.
+     */
+    allowAI: boolean;
+
+    /**
+     * Whether the user is allowed to access public insts.
+     */
+    allowPublicInsts: boolean;
+}
+```
 
 ## Hidden Tags
 

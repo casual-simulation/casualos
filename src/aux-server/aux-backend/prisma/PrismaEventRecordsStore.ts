@@ -7,7 +7,7 @@ import {
     UpdateEventResult,
     cleanupObject,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from './generated';
 import { convertMarkers } from './Utils';
 
 export class PrismaEventRecordsStore implements EventRecordsStore {

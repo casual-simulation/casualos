@@ -46,16 +46,76 @@ import { getInstParameters, getPermalink } from '../UrlUtils';
 import { BiosOption } from 'shared/WebConfig';
 import { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
+import { MdField } from 'vue-material/dist/components';
+
+Vue.use(MdField);
 
 const namesConfig: Config = {
     dictionaries: [adjectives, colors, animals],
     separator: '-',
 };
 
+function isPrivateInst(
+    biosOption: BiosOption
+): biosOption is 'private inst' | 'studio inst' | 'studio' {
+    return (
+        biosOption === 'private inst' ||
+        biosOption === 'studio inst' ||
+        biosOption === 'studio'
+    );
+}
+
+function isPublicInst(
+    biosOption: BiosOption
+): biosOption is 'public inst' | 'free inst' | 'free' {
+    return (
+        biosOption === 'public inst' ||
+        biosOption === 'free inst' ||
+        biosOption === 'free'
+    );
+}
+
+function isStaticInst(
+    biosOption: BiosOption
+): biosOption is 'static inst' | 'local inst' | 'local' {
+    return (
+        biosOption === 'static inst' ||
+        biosOption === 'local inst' ||
+        biosOption === 'local'
+    );
+}
+
+function isJoinCode(
+    biosOption: BiosOption
+): biosOption is 'enter join code' | 'join inst' {
+    return biosOption === 'enter join code' || biosOption === 'join inst';
+}
+
+const MdOption = Vue.component('MdOption');
+const BiosOptionComponent = MdOption.extend({
+    methods: {
+        getTextContent() {
+            const el = this.$el as HTMLElement;
+            if (el) {
+                const queryResult = el.querySelector(
+                    '.md-list-item-text > span'
+                );
+                if (queryResult) {
+                    return queryResult.textContent;
+                }
+                return el.textContent;
+            }
+            const slot = this.$slots.default;
+            return slot ? slot[0].text.trim() : '';
+        },
+    },
+});
+
 @Component({
     components: {
         'game-view': PlayerGameView,
         'field-errors': FieldErrors,
+        'bios-option': BiosOptionComponent,
     },
 })
 export default class PlayerHome extends Vue {
@@ -75,6 +135,8 @@ export default class PlayerHome extends Vue {
     recordSelection: string = null;
     instSelection: string = null;
     joinCode: string = null;
+    privacyPolicyUrl: string = null;
+    termsOfServiceUrl: string = null;
 
     errors: FormError[] = [];
 
@@ -93,14 +155,59 @@ export default class PlayerHome extends Vue {
 
     get startButtonLabel() {
         if (
-            this.biosSelection === 'private inst' ||
-            this.biosSelection === 'public inst' ||
-            this.biosSelection === 'static inst'
+            isPublicInst(this.biosSelection) ||
+            isPrivateInst(this.biosSelection) ||
+            isStaticInst(this.biosSelection) ||
+            isJoinCode(this.biosSelection)
         ) {
             return 'Load';
+        } else if (
+            this.biosSelection === 'sign in' ||
+            this.biosSelection === 'sign up' ||
+            this.biosSelection === 'sign out'
+        ) {
+            return 'Continue';
         } else {
             return 'Start';
         }
+    }
+
+    hasOptionDescription(option: BiosOption): boolean {
+        if (
+            isPrivateInst(option) ||
+            isPublicInst(option) ||
+            isStaticInst(option) ||
+            isJoinCode(option)
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    getOptionDescription(option: BiosOption): string {
+        if (isStaticInst(option)) {
+            return 'bots are stored in your browser on your device';
+        } else if (isPrivateInst(option)) {
+            return 'bots are stored in the cloud and shared with studio members';
+        } else if (isPublicInst(option)) {
+            return 'bots are stored in the cloud and shared publicly, expires in 24h';
+        } else if (isJoinCode(option)) {
+            return 'enter a join code to load an existing inst';
+        }
+        return '';
+    }
+
+    canSignOut(): boolean {
+        return this.biosOptions.some((option) => option === 'sign out');
+    }
+
+    canSignIn(): boolean {
+        return this.biosOptions.some((option) => option === 'sign in');
+    }
+
+    canSignUp(): boolean {
+        return this.biosOptions.some((option) => option === 'sign up');
     }
 
     @Watch('query')
@@ -141,7 +248,7 @@ export default class PlayerHome extends Vue {
 
     @Watch('biosSelection')
     async onBiosSelectionChanged() {
-        if (this.biosSelection === 'static inst') {
+        if (isStaticInst(this.biosSelection)) {
             this.instOptions = await appManager.listStaticInsts();
         } else {
             this.instOptions = [];
@@ -197,17 +304,27 @@ export default class PlayerHome extends Vue {
                         : joinCode;
                     this._loadJoinCode(code);
                 } else {
-                    const biosOption = this.query['bios'];
+                    const biosOption =
+                        this.query['bios'] ??
+                        appManager.config.automaticBiosOption;
 
                     let hasValidBiosOption = false;
                     if (biosOption) {
                         const bios = getFirst(biosOption) as BiosOption;
                         const options = await this._getBiosOptions();
 
-                        if (options.some((o) => o === bios)) {
+                        if (
+                            options.some(
+                                (o) =>
+                                    o === bios ||
+                                    (isStaticInst(o) && isStaticInst(bios)) ||
+                                    (isPrivateInst(o) && isPrivateInst(bios)) ||
+                                    (isPublicInst(o) && isPublicInst(bios))
+                            )
+                        ) {
                             this.biosSelection = bios;
                             if (
-                                bios !== 'enter join code' &&
+                                !isJoinCode(bios) &&
                                 bios !== 'sign up' &&
                                 bios !== 'sign in' &&
                                 bios !== 'sign out'
@@ -228,12 +345,33 @@ export default class PlayerHome extends Vue {
                 }
             }
         }
+
+        appManager.auth.primary.getPolicyUrls().then((urls) => {
+            this.privacyPolicyUrl = urls.privacyPolicyUrl;
+            this.termsOfServiceUrl = urls.termsOfServiceUrl;
+        });
     }
 
     private async _showBiosOptions() {
         this.showBios = true;
         const options = await this._getBiosOptions();
         this.biosOptions = options;
+    }
+
+    async signIn() {
+        await this.executeBiosOption('sign in', null, null, null);
+    }
+
+    async signOut() {
+        await this.executeBiosOption('sign out', null, null, null);
+    }
+
+    async signUp() {
+        await this.executeBiosOption('sign up', null, null, null);
+    }
+
+    isJoinCode(option: BiosOption) {
+        return isJoinCode(option);
     }
 
     async executeBiosOption(
@@ -259,14 +397,16 @@ export default class PlayerHome extends Vue {
             await appManager.auth.primary.logout();
             this.biosSelection = null;
             this._showBiosOptions();
-        } else if (option === 'static inst') {
+        } else if (isStaticInst(option)) {
             this._loadStaticInst(inst);
-        } else if (option === 'private inst') {
+        } else if (isPrivateInst(option)) {
             this._loadPrivateInst();
-        } else if (option === 'public inst') {
+        } else if (isPublicInst(option)) {
             this._loadPublicInst();
         } else if (option === 'enter join code') {
             this._loadJoinCode(joinCode);
+        } else {
+            this.showBios = true;
         }
     }
 
@@ -377,27 +517,27 @@ export default class PlayerHome extends Vue {
         const authenticated = await appManager.auth.primary.isAuthenticated();
         return (
             appManager.config.allowedBiosOptions ?? [
-                'enter join code',
-                'static inst',
-                'private inst',
-                'public inst',
+                'join inst',
+                'local inst',
+                'studio inst',
+                'free inst',
                 'sign in',
                 'sign up',
                 'sign out',
             ]
         ).filter((option) => {
             if (
-                option === 'private inst' &&
+                isPrivateInst(option) &&
                 privacyFeatures.publishData &&
                 authenticated
             ) {
                 return true;
             } else if (
-                option === 'public inst' &&
+                isPublicInst(option) &&
                 privacyFeatures.allowPublicInsts
             ) {
                 return true;
-            } else if (option === 'static inst') {
+            } else if (isStaticInst(option)) {
                 return true;
             } else if (
                 (option === 'sign in' || option === 'sign up') &&
@@ -413,10 +553,7 @@ export default class PlayerHome extends Vue {
                 }
             } else if (option === 'sign out' && authenticated) {
                 return true;
-            } else if (
-                option === 'enter join code' &&
-                privacyFeatures.allowPublicInsts
-            ) {
+            } else if (isJoinCode(option) && privacyFeatures.allowPublicInsts) {
                 return true;
             } else {
                 return false;
