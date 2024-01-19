@@ -115,6 +115,7 @@ export abstract class Game {
     protected disposed: boolean = false;
     private _pixelRatio: number = window.devicePixelRatio || 1;
     private _currentBackgroundAddress: string;
+    private _currentHDRAddress: string;
     private _backgroundVideoElement: HTMLVideoElement;
     private _backgroundVideoSubscription: Subscription;
     private _ambientLight: AmbientLight;
@@ -230,6 +231,7 @@ export abstract class Game {
     loadEXRTextureIntoScene(portalHDRAddress: string, scene: Scene) {
         if (!hasValue(this.exrLoader)) {
             this.exrLoader = new EXRLoader();
+            this.exrLoader.setCrossOrigin('anonymous');
         }
 
         this.exrLoader.load(portalHDRAddress, (texture) => {
@@ -240,6 +242,7 @@ export abstract class Game {
             texture.mapping = EquirectangularReflectionMapping;
             let renderTarget = this.pmremGenerator.fromEquirectangular(texture);
             scene.environment = renderTarget.texture;
+            console.log('[Game] EXR texture loaded into scene.');
         });
     }
 
@@ -700,11 +703,15 @@ export abstract class Game {
 
     protected mainScenePortalHDRAddressUpdate() {
         const address = this.getPortalHDRAddress();
-        if (this.mainScenePortalHDRAddressUpdate) {
-            this._setBackgroundAddress(address);
-            if (address) {
-                this.loadEXRTextureIntoScene(address, this.mainScene);
-            }
+        if (this._currentHDRAddress === address) {
+            return;
+        }
+        this._currentHDRAddress = address;
+        //this._setBackgroundAddress(address);
+        if (address) {
+            this.loadEXRTextureIntoScene(address, this.mainScene);
+        } else {
+            this.mainScene.environment = null;
         }
     }
 
@@ -1021,8 +1028,8 @@ export abstract class Game {
         this.renderer.clear();
         if (renderBackground) {
             this.mainSceneBackgroundUpdate();
+            this.mainScenePortalHDRAddressUpdate();
         }
-        this.mainScenePortalHDRAddressUpdate();
 
         const defaultLighting = this.getDefaultLighting();
 
