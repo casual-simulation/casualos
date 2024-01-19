@@ -70,6 +70,11 @@
                 </p>
             </md-dialog-content>
             <md-dialog-actions>
+                <md-button v-if="canSignIn()" @click="signIn()">Sign In</md-button>
+                <md-button v-if="canSignUp()" @click="signUp()">Sign Up</md-button>
+                <md-button v-if="canSignOut()" @click="signOut()">Sign Out</md-button>
+                <span class="spacer"></span>
+
                 <md-button
                     @click="
                         executeBiosOption(biosSelection, recordSelection, instSelection, joinCode)

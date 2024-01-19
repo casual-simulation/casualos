@@ -195,6 +195,18 @@ export default class PlayerHome extends Vue {
         return '';
     }
 
+    canSignOut(): boolean {
+        return this.biosOptions.some((option) => option === 'sign out');
+    }
+
+    canSignIn(): boolean {
+        return this.biosOptions.some((option) => option === 'sign in');
+    }
+
+    canSignUp(): boolean {
+        return this.biosOptions.some((option) => option === 'sign up');
+    }
+
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
         const staticInst = this.query['staticInst'] as string | string[];
@@ -341,6 +353,18 @@ export default class PlayerHome extends Vue {
         this.showBios = true;
         const options = await this._getBiosOptions();
         this.biosOptions = options;
+    }
+
+    async signIn() {
+        await this.executeBiosOption('sign in', null, null, null);
+    }
+
+    async signOut() {
+        await this.executeBiosOption('sign out', null, null, null);
+    }
+
+    async signUp() {
+        await this.executeBiosOption('sign up', null, null, null);
     }
 
     async executeBiosOption(
