@@ -15,7 +15,7 @@
         >
             <md-dialog-title>BIOS</md-dialog-title>
             <md-dialog-content>
-                <md-field>
+                <md-field class="bios-selection-field">
                     <label for="biosOption">bios=</label>
                     <md-select v-model="biosSelection" name="biosOption" id="biosOption">
                         <bios-option
@@ -32,8 +32,13 @@
                         </bios-option>
                     </md-select>
                 </md-field>
+                <span
+                    class="selection-bios-description"
+                    v-if="hasOptionDescription(biosSelection)"
+                    >{{ getOptionDescription(biosSelection) }}</span
+                >
 
-                <md-field v-if="biosSelection === 'enter join code'" :class="joinCodeClass">
+                <md-field v-if="isJoinCode(biosSelection)" :class="joinCodeClass">
                     <label for="joinCode">joinCode=</label>
                     <md-input name="joinCode" id="joinCode" v-model="joinCode" />
                     <field-errors field="joinCode" :errors="errors" />
@@ -65,6 +70,11 @@
                 </p>
             </md-dialog-content>
             <md-dialog-actions>
+                <md-button v-if="canSignIn()" @click="signIn()">Sign In</md-button>
+                <md-button v-if="canSignUp()" @click="signUp()">Sign Up</md-button>
+                <md-button v-if="canSignOut()" @click="signOut()">Sign Out</md-button>
+                <span class="spacer"></span>
+
                 <md-button
                     @click="
                         executeBiosOption(biosSelection, recordSelection, instSelection, joinCode)
