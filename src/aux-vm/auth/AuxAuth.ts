@@ -3,6 +3,7 @@ import type {
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 import {
+    ComIdWebConfig,
     CreatePublicRecordKeyResult,
     FormError,
     IsValidDisplayNameResult,
@@ -399,4 +400,10 @@ export interface AuxAuth {
      * Only supported on protocol version 9 or more.
      */
     getPolicyUrls(): Promise<PolicyUrls>;
+
+    /**
+     * Gets the comId web config for the given comId.
+     * @param comId The comId.
+     */
+    getComIdWebConfig(comId: string): Promise<ComIdWebConfig>;
 }

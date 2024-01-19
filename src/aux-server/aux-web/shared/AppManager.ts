@@ -19,7 +19,7 @@ import {
     isStoredVersion2,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
-import { WebConfig } from '../../shared/WebConfig';
+import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
 import {
     SimulationManager,
     AuxConfig,
@@ -42,7 +42,10 @@ import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
-import { PrivacyFeatures } from '@casual-simulation/aux-records';
+import {
+    ComIdWebConfig,
+    PrivacyFeatures,
+} from '@casual-simulation/aux-records';
 import { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
@@ -98,6 +101,8 @@ export class AppManager {
     private _arSupported: boolean;
     private _vrSupported: boolean;
     private _ab1BootstrapUrl: string;
+    private _comId: string;
+    private _comIdConfig: ComIdWebConfig;
 
     get loadingProgress(): Observable<ProgressMessage> {
         return this._progress;
@@ -385,6 +390,7 @@ export class AppManager {
                 this._reportTime('Time to auth');
             }),
         ]);
+        await this._initComId();
         this._reportTime('Time to init');
         this._sendProgress('Initialized.', 1, true);
     }
@@ -536,12 +542,35 @@ export class AppManager {
 
     private async _initConfig() {
         console.log('[AppManager] Fetching config...');
-        this._config = await this._getConfig();
-        await this._saveConfig();
+        this._config = await this._getBaseConfig();
+        await this._saveBaseConfig();
         if (!this._config) {
             console.warn(
                 '[AppManager] Config not able to be fetched from the server or local storage.'
             );
+        }
+    }
+
+    private async _initComId() {
+        const params = new URLSearchParams(location.search);
+        if (params.has('comId')) {
+            this._comId = params.get('comId');
+        }
+
+        if (this._comId) {
+            console.log('[AppManager] Using comId:', this._comId);
+            const config = await this._getComIdConfig();
+
+            if (config && config.playerConfig) {
+                console.log(
+                    '[AppManager] Updating player config with comId config',
+                    config.playerConfig
+                );
+                this._config = {
+                    ...this._config,
+                    ...config.playerConfig,
+                };
+            }
         }
     }
 
@@ -718,7 +747,22 @@ export class AppManager {
         return insts.map((i) => i.origin.inst);
     }
 
-    private async _getConfig(): Promise<WebConfig> {
+    private async _getComIdConfig(): Promise<ComIdWebConfig> {
+        try {
+            this._comIdConfig = await this._auth.primary.getComIdWebConfig(
+                this._comId
+            );
+            return this._comIdConfig;
+        } catch (err) {
+            console.error(
+                '[AppManager] Unable to fetch config from server: ',
+                err
+            );
+            return null;
+        }
+    }
+
+    private async _getBaseConfig(): Promise<WebConfig> {
         const serverConfig = await this._fetchConfigFromServer();
         if (serverConfig) {
             return serverConfig;
@@ -741,13 +785,13 @@ export class AppManager {
         }
     }
 
-    private async _saveConfig() {
+    private async _saveBaseConfig() {
         try {
             const completed = await Promise.race([
                 new Promise<void>((resolve) =>
                     setTimeout(resolve, SAVE_CONFIG_TIMEOUT_MILISECONDS)
                 ).then(() => false),
-                this._saveConfigCore().then(() => true),
+                this._saveBaseConfigCore().then(() => true),
             ]);
 
             if (!completed) {
@@ -760,7 +804,7 @@ export class AppManager {
         }
     }
 
-    private async _saveConfigCore() {
+    private async _saveBaseConfigCore() {
         if (this.config) {
             await putItem(this._db, 'keyval', {
                 key: 'config',

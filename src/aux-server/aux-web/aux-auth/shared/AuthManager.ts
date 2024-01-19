@@ -27,6 +27,7 @@ import type {
     CreateRecordResult,
     ListInstsResult,
     EraseInstResult,
+    ComIdWebConfig,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -819,6 +820,17 @@ export class AuthManager {
                 result
             );
         }
+    }
+
+    async getComIdWebConfig(comId: string): Promise<ComIdWebConfig> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/comId/webConfig`);
+        url.searchParams.set('comId', comId);
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+        });
+
+        const result = response.data as ComIdWebConfig;
+        return result;
     }
 
     private async _revokeSessionKey(sessionKey: string): Promise<void> {
