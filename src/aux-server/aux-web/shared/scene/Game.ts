@@ -707,7 +707,7 @@ export abstract class Game {
             return;
         }
         this._currentHDRAddress = address;
-        //this._setBackgroundAddress(address);
+
         if (address) {
             this.loadEXRTextureIntoScene(address, this.mainScene);
         } else {

@@ -10,6 +10,7 @@
 
 ### :rocket: Features
 
+-   Added `portalHDRAddress` tag.
 -   Added the `join inst` BIOS option as an alternative to `enter join code`.
 -   Added buttons for the `sign in`, `sign up`, and `sign out` BIOS options.
 -   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
