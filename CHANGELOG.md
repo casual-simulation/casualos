@@ -23,6 +23,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where branch info was being duplicated for temporary branches.
+-   Fixed an issue where 'onSpaceRateLimitExceeded' was missing from 'Add New Tag' autocomplete list.
 
 ## V3.2.10
 
