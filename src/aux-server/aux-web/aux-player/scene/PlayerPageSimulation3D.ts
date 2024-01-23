@@ -29,7 +29,6 @@ import {
 } from '../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
-import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 
 const wristOffsets = {
     generic_hand_right: {

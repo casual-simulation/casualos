@@ -449,7 +449,7 @@ export class PlayerGame extends Game {
 
     getMiniPortalHDRAddress() {
         return this._getSimulationValue(
-            this.playerSimulations,
+            this.miniSimulations,
             'portalHDRAddress'
         );
     }

@@ -1028,8 +1028,8 @@ export abstract class Game {
         this.renderer.clear();
         if (renderBackground) {
             this.mainSceneBackgroundUpdate();
-            this.mainScenePortalHDRAddressUpdate();
         }
+        this.mainScenePortalHDRAddressUpdate();
 
         const defaultLighting = this.getDefaultLighting();
 
