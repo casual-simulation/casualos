@@ -748,6 +748,15 @@ export class RecordsServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/studios'
+        ) {
+            return formatResponse(
+                request,
+                await this._getStudio(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'POST' &&
             request.path === '/api/v2/studios'
         ) {
@@ -2283,6 +2292,46 @@ export class RecordsServer {
             userSubscriptionTier: sessionKeyValidation.subscriptionTier,
         });
 
+        return returnResult(result);
+    }
+
+    private async _getStudio(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .min(1)
+                .max(128),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.getStudio(
+            studioId,
+            sessionKeyValidation.userId
+        );
         return returnResult(result);
     }
 

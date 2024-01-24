@@ -10419,6 +10419,72 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/studios', () => {
+        beforeEach(async () => {
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowAnyoneToCreateStudios: true,
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                },
+                userId
+            );
+        });
+
+        it('should get the data for the studio', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/studios?studioId=${'studioId'}`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    studio: {
+                        id: 'studioId',
+                        displayName: 'my studio',
+                        comId: 'comId',
+                        logoUrl: 'logoUrl',
+                        comIdConfig: {
+                            allowAnyoneToCreateStudios: true,
+                        },
+                        playerConfig: {
+                            ab1BootstrapURL: 'ab1BootstrapURL',
+                        },
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/studios?studioId=${'studioId'}`,
+                authenticatedHeaders
+            )
+        );
+        testOrigin('GET', '/api/v2/studios');
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/studios?studioId=${'studioId'}`,
+                authenticatedHeaders
+            )
+        );
+    });
+
     describe('POST /api/v2/studios', () => {
         it('should create a studio and return the ID', async () => {
             const result = await server.handleHttpRequest(
