@@ -182,6 +182,21 @@ model Studio {
     id String @id
     displayName String
 
+    // The comId for this studio. (i.e. a name/uuid that can be used to access this studio as a comId)
+    comId String? @unique
+
+    logoUrl String?
+
+    // The comId that this studio belongs to. (i.e. The comId of the studio that this studio belongs to)
+    ownerStudioComId String?
+    ownerStudio Studio? @relation(fields: [ownerStudioComId], references: [comId], onUpdate: Cascade, onDelete: SetNull, map: "Studio_ownerStudioComId_fkey1", name: "OwnerStudio")
+
+    // The player web config for this studio.
+    playerConfig Json?
+
+    // The comId config for this studio.
+    comIdConfig Json?
+
     records Record[]
     assignments StudioAssignment[]
 
@@ -197,6 +212,8 @@ model Studio {
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
+
+    childStudios Studio[] @relation("OwnerStudio")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
