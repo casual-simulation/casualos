@@ -3,6 +3,56 @@
         <h2>{{ studioName }}</h2>
         <auth-subscription :studioId="studioId" />
 
+        <h2>Settings</h2>
+
+        <div v-if="isLoadingInfo">
+            <div>
+                <md-progress-spinner
+                    md-mode="indeterminate"
+                    :md-diameter="20"
+                    :md-stroke="2"
+                ></md-progress-spinner>
+            </div>
+            <p class="sr-only">Info Loading...</p>
+        </div>
+        <div v-else>
+            <md-field :class="displayNameFieldClass">
+                <label for="displayName">Name</label>
+                <md-input
+                    id="displayName"
+                    v-model="displayName"
+                    type="text"
+                    placeholder="Studio Name"
+                ></md-input>
+                <field-errors field="displayName" :errors="errors" />
+            </md-field>
+
+            <md-field :class="logoUrlFieldClass">
+                <label for="logoUrl">Logo URL</label>
+                <md-input
+                    id="logoUrl"
+                    v-model="logoUrl"
+                    type="text"
+                    placeholder="Logo URL"
+                ></md-input>
+                <field-errors field="logoUrl" :errors="errors" />
+            </md-field>
+
+            <div v-if="allowComId">
+                <h3>comId Settings</h3>
+                <md-field :class="comIdFieldClass">
+                    <label for="comId">comId</label>
+                    <md-input
+                        id="comId"
+                        v-model="comId"
+                        type="text"
+                        placeholder="Logo URL"
+                    ></md-input>
+                    <field-errors field="comId" :errors="errors" />
+                </md-field>
+            </div>
+        </div>
+
         <h2>Members</h2>
         <div v-if="loadingMembers">
             <div>

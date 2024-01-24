@@ -28,6 +28,7 @@ import type {
     ListInstsResult,
     EraseInstResult,
     ComIdWebConfig,
+    GetStudioResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -463,6 +464,25 @@ export class AuthManager {
         }
 
         return null;
+    }
+
+    async getStudio(studioId: string): Promise<GetStudioResult> {
+        const url = new URL(
+            `${this.apiEndpoint}/api/v2/studios?studioId=${encodeURIComponent(
+                studioId
+            )}`
+        );
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+        });
+
+        const result = response.data as GetStudioResult;
+        if (result.success === true) {
+            return result;
+        } else {
+            return null;
+        }
     }
 
     async listStudioMembers(studioId: string): Promise<ListedStudioMember[]> {

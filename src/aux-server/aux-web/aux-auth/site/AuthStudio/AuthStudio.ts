@@ -6,8 +6,10 @@ import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
 import {
+    FormError,
     ListedStudioMember,
     StudioAssignmentRole,
+    StudioComIdFeaturesConfiguration,
 } from '@casual-simulation/aux-records';
 
 @Component({
@@ -30,16 +32,44 @@ export default class AuthStudio extends Vue {
     addMemberEmail: string = '';
     addMemberRole: string = 'member';
     addingMember: boolean = false;
-
     addMemberErrorCode: string = null;
+
+    displayName: string = null;
+    comId: string = null;
+    ownerStudioComId: string = null;
+    logoUrl: string = null;
+    comIdFeatures: StudioComIdFeaturesConfiguration = {
+        allowed: false,
+    };
+    allowAnyoneToCreateStudios: boolean = false;
+    ab1BootstrapUrl: string = null;
+    isLoadingInfo: boolean = false;
+
+    errors: FormError[] = [];
 
     get addressFieldClass() {
         return this.addMemberErrorCode ? 'md-invalid' : '';
     }
 
+    get displayNameFieldClass() {
+        return this.errors.find((e) => e.for === 'displayName');
+    }
+
+    get logoUrlFieldClass() {
+        return this.errors.find((e) => e.for === 'logoUrl');
+    }
+
+    get comIdFieldClass() {
+        return this.errors.find((e) => e.for === 'comId');
+    }
+
+    get allowComId() {
+        return this.comIdFeatures?.allowed;
+    }
+
     @Watch('studioId')
     studioIdChanged() {
-        this._loadMembers();
+        this._loadPageInfo();
     }
 
     created() {}
@@ -54,17 +84,46 @@ export default class AuthStudio extends Vue {
         this.addMemberErrorCode = null;
         this.members = [];
 
+        this._loadPageInfo();
+    }
+
+    private async _loadPageInfo() {
+        this._loadStudioInfo();
         this._loadMembers();
+    }
+
+    private async _loadStudioInfo() {
+        try {
+            const studioId = this.studioId;
+            this.isLoadingInfo = true;
+            const result = await authManager.getStudio(this.studioId);
+            if (studioId === this.studioId && result.success === true) {
+                this.displayName = result.studio.displayName;
+                this.logoUrl = result.studio.logoUrl;
+                this.comId = result.studio.comId;
+                this.ownerStudioComId = result.studio.ownerStudioComId;
+                this.comIdFeatures = result.studio.comIdFeatures;
+                this.allowAnyoneToCreateStudios =
+                    !!result.studio.comIdConfig?.allowAnyoneToCreateStudios;
+                this.ab1BootstrapUrl =
+                    result.studio.playerConfig?.ab1BootstrapURL ?? null;
+            }
+        } finally {
+            this.isLoadingInfo = false;
+        }
     }
 
     private async _loadMembers() {
         try {
+            const studioId = this.studioId;
             this.loadingMembers = true;
-            this.members = await authManager.listStudioMembers(this.studioId);
-
-            const userId = authManager.userId;
-            const user = this.members.find((m) => m.userId === userId);
-            this.isAdmin = user?.role === 'admin';
+            const members = await authManager.listStudioMembers(this.studioId);
+            if (studioId === this.studioId) {
+                this.members = members;
+                const userId = authManager.userId;
+                const user = this.members.find((m) => m.userId === userId);
+                this.isAdmin = user?.role === 'admin';
+            }
         } finally {
             this.loadingMembers = false;
         }
