@@ -2022,6 +2022,231 @@ describe('RecordsController', () => {
         });
     });
 
+    describe('createStudioInComId()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowCustomComId: true,
+                                    allowed: true,
+                                    maxStudios: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                name: 'test user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: 'studioId1',
+                    displayName: 'studio 1',
+                    comId: 'comId1',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                'userId'
+            );
+        });
+
+        it('should be able to create a studio in a comId', async () => {
+            uuidMock.mockReturnValueOnce('studioId2');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'userId',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                studioId: 'studioId2',
+            });
+
+            const studio = await store.getStudioById('studioId2');
+
+            expect(studio).toEqual({
+                id: 'studioId2',
+                displayName: 'my studio',
+                ownerStudioComId: 'comId1',
+            });
+        });
+
+        it('should return comId_not_found if the a studio does not exist for the given comId', async () => {
+            uuidMock.mockReturnValueOnce('studioId2');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'userId',
+                'missingComId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'comId_not_found',
+                errorMessage: 'The given comId was not found.',
+            });
+
+            const studio = await store.getStudioById('studioId2');
+            expect(studio).toBeFalsy();
+        });
+
+        it('should return not_authorized if the user is not a member of the comId studio', async () => {
+            uuidMock.mockReturnValueOnce('studioId2');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'otherUserId',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to create a studio in this comId.',
+            });
+
+            const studio = await store.getStudioById('studioId2');
+            expect(studio).toBeFalsy();
+        });
+
+        it('should return not_authorized if the subscription does not allow comId', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowCustomComId: true,
+                                    allowed: false,
+                                    maxStudios: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            uuidMock.mockReturnValueOnce('studioId3');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'userId',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'comId features are not allowed for this comId. Make sure you have an active subscription that provides comId features.',
+            });
+
+            const studio = await store.getStudioById('studioId3');
+            expect(studio).toBeFalsy();
+        });
+
+        it('should return subscription_limit_reached if creating the studio would exceed the maximum number of allowed studios', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowCustomComId: true,
+                                    allowed: true,
+                                    maxStudios: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                name: 'test user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: 'studioId1',
+                    displayName: 'studio 1',
+                    comId: 'comId1',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                'userId'
+            );
+
+            await store.addStudio({
+                id: 'studioId2',
+                displayName: 'studio 2',
+                ownerStudioComId: 'comId1',
+            });
+
+            uuidMock.mockReturnValueOnce('studioId3');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'userId',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The maximum number of studios allowed for your comId subscription has been reached.',
+            });
+
+            const studio = await store.getStudioById('studioId3');
+            expect(studio).toBeFalsy();
+        });
+    });
+
     describe('listStudios()', () => {
         beforeEach(async () => {
             await store.saveNewUser({

@@ -520,6 +520,13 @@ export class MemoryStore
         }));
     }
 
+    async countStudiosInComId(comId: string): Promise<number> {
+        const studios = this._studios.filter(
+            (s) => s.ownerStudioComId === comId
+        );
+        return studios.length;
+    }
+
     async addStudioAssignment(assignment: StudioAssignment): Promise<void> {
         const existingAssignmentIndex = this._studioAssignments.findIndex(
             (r) =>

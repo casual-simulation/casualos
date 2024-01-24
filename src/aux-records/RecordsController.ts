@@ -30,6 +30,7 @@ import { v4 as uuid } from 'uuid';
 import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
+    getComIdFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
 } from './SubscriptionConfiguration';
@@ -894,6 +895,100 @@ export class RecordsController {
     }
 
     /**
+     * Attempts to create a new studio in the given comId. That is, an entity that can be used to group records.
+     * @param studioName The name of the studio.
+     * @param userId The ID of the user that is creating the studio.
+     * @param comId The comId of the studio that this studio should belong to.
+     */
+    async createStudioInComId(
+        studioName: string,
+        userId: string,
+        comId: string
+    ): Promise<CreateStudioInComIdResult> {
+        try {
+            const studioId = uuid();
+
+            const existingStudio = await this._store.getStudioByComId(comId);
+
+            if (!existingStudio) {
+                return {
+                    success: false,
+                    errorCode: 'comId_not_found',
+                    errorMessage: 'The given comId was not found.',
+                };
+            }
+
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getComIdFeatures(
+                config,
+                existingStudio.subscriptionStatus,
+                existingStudio.subscriptionId
+            );
+
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'comId features are not allowed for this comId. Make sure you have an active subscription that provides comId features.',
+                };
+            }
+
+            if (typeof features.maxStudios === 'number') {
+                const count = await this._store.countStudiosInComId(comId);
+                if (count >= features.maxStudios) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The maximum number of studios allowed for your comId subscription has been reached.',
+                    };
+                }
+            }
+
+            const assignments = await this._store.listStudioAssignments(
+                existingStudio.id,
+                {
+                    userId: userId,
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to create a studio in this comId.',
+                };
+            }
+
+            await this._store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: studioName,
+                    ownerStudioComId: comId,
+                },
+                userId
+            );
+
+            return {
+                success: true,
+                studioId: studioId,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [createStudio] An error occurred while creating a studio in a comId:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Gets the list of studios that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
@@ -1454,6 +1549,21 @@ export interface CreateStudioSuccess {
 export interface CreateStudioFailure {
     success: false;
     errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export type CreateStudioInComIdResult =
+    | CreateStudioSuccess
+    | CreateStudioInComIdFailure;
+
+export interface CreateStudioInComIdFailure {
+    success: false;
+    errorCode:
+        | 'comId_not_found'
+        | 'subscription_limit_reached'
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ServerError;
     errorMessage: string;
 }
 

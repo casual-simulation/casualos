@@ -364,7 +364,8 @@ export type KnownErrorCodes =
     | 'policy_too_large'
     | 'invalid_policy'
     | 'not_completed'
-    | 'invalid_display_name';
+    | 'invalid_display_name'
+    | 'comId_not_found';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -455,6 +456,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'action_not_supported') {
             return 500;
         } else if (response.errorCode === 'policy_not_found') {
+            return 404;
+        } else if (response.errorCode === 'comId_not_found') {
             return 404;
         } else {
             return 400;

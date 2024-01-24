@@ -127,6 +127,12 @@ export interface RecordsStore {
     ): Promise<StoreListedStudio[]>;
 
     /**
+     * Gets the number of studios that are owned by the given comId.
+     * @param comId The comId.
+     */
+    countStudiosInComId(comId: string): Promise<number>;
+
+    /**
      * Adds the given studio assignment to the store.
      * @param assignment The assignment to add.
      */

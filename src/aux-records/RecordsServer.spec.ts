@@ -26,7 +26,12 @@ import {
 } from './AuthUtils';
 import { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
-import { isRecordKey, RecordsController } from './RecordsController';
+import {
+    CreateStudioInComIdResult,
+    CreateStudioSuccess,
+    isRecordKey,
+    RecordsController,
+} from './RecordsController';
 import { RecordsStore, Studio } from './RecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
@@ -38,6 +43,7 @@ import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
 import { StripeInterface, StripeProduct } from './StripeInterface';
 import {
+    FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
@@ -51,7 +57,7 @@ import {
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
-import { createTestUser } from './TestUtils';
+import { createTestSubConfiguration, createTestUser } from './TestUtils';
 import { AIController } from './AIController';
 import {
     AIChatInterfaceRequest,
@@ -66,7 +72,7 @@ import {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
-import { sortBy } from 'lodash';
+import { merge, sortBy } from 'lodash';
 import { MemoryStore } from './MemoryStore';
 import { WebsocketController } from './websockets/WebsocketController';
 import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
@@ -10432,6 +10438,89 @@ describe('RecordsServer', () => {
                     studioId: expect.any(String),
                 },
                 headers: accountCorsHeaders,
+            });
+        });
+
+        describe('comId', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    comId: {
+                                        allowCustomComId: true,
+                                        allowed: true,
+                                        maxStudios: 1,
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                // await store.saveNewUser({
+                //     id: 'userId',
+                //     email: 'test@example.com',
+                //     name: 'test user',
+                //     phoneNumber: null,
+                //     allSessionRevokeTimeMs: null,
+                //     currentLoginRequestId: null,
+                // });
+
+                await store.createStudioForUser(
+                    {
+                        id: 'studioId1',
+                        displayName: 'studio 1',
+                        comId: 'comId1',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+            });
+
+            it('should be able to create a studio in the given comId', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios',
+                        JSON.stringify({
+                            displayName: 'my studio',
+                            ownerStudioComId: 'comId1',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        studioId: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const resultBody = JSON.parse(
+                    result.body
+                ) as CreateStudioSuccess;
+                const studio = await store.getStudioById(resultBody.studioId);
+
+                expect(studio).toEqual({
+                    id: resultBody.studioId,
+                    displayName: 'my studio',
+                    ownerStudioComId: 'comId1',
+                });
             });
         });
 

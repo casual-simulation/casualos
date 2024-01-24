@@ -204,17 +204,24 @@ export const subscriptionFeaturesSchema = z.object({
             .positive()
             .optional(),
     }),
-
     comId: z
         .object({
             allowed: z
                 .boolean()
                 .describe('Whether comId features are granted to the studio.'),
-            allowCustomComId: z
-                .boolean()
+            // allowCustomComId: z
+            //     .boolean()
+            //     .describe(
+            //         'Whether the studio is allowed to set their own comId. If false, then the user will be able to request changes to their comId, but they will not automatically apply.'
+            //     ),
+            maxStudios: z
+                .number()
                 .describe(
-                    'Whether the studio is allowed to set their own comId. If false, then the user will be able to request changes to their comId, but they will not automatically apply.'
-                ),
+                    'The maximum number of studios that can be created in this comId. If omitted, then there is no limit.'
+                )
+                .positive()
+                .int()
+                .optional(),
         })
         .describe(
             'The configuration for comId features for studios. Defaults to not allowed.'
@@ -222,7 +229,7 @@ export const subscriptionFeaturesSchema = z.object({
         .optional()
         .default({
             allowed: false,
-            allowCustomComId: false,
+            // allowCustomComId: false,
         }),
 });
 
@@ -827,11 +834,18 @@ export interface StudioComIdFeaturesConfiguration {
      */
     allowed: boolean;
 
+    // TODO:
+    // /**
+    //  * Whether the studio is allowed to set their own comId.
+    //  * If false, then the user will be able to request changes to their comId, but they will not automatically apply.
+    //  */
+    // allowCustomComId: boolean;
+
     /**
-     * Whether the studio is allowed to set their own comId.
-     * If false, then the user will be able to request changes to their comId, but they will not automatically apply.
+     * The maximum number of studios that are allowed to be created in this comId.
+     * If not specified, then there is no limit.
      */
-    allowCustomComId: boolean;
+    maxStudios?: number;
 }
 
 export function allowAllFeatures(): FeaturesConfiguration {
@@ -863,6 +877,31 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
     };
+}
+
+/**
+ * Gets the comId features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ */
+export function getComIdFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string
+): StudioComIdFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        'studio'
+    );
+    return (
+        features.comId ?? {
+            allowed: false,
+            // allowCustomComId: false,
+        }
+    );
 }
 
 /**

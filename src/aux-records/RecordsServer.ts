@@ -2310,6 +2310,13 @@ export class RecordsServer {
                     required_error: 'displayName is required.',
                 })
                 .nonempty('displayName must not be empty'),
+            ownerStudioComId: z
+                .string({
+                    invalid_type_error: 'ownerStudioComId must be a string.',
+                    required_error: 'ownerStudioComId is required.',
+                })
+                .nonempty('ownerStudioComId must not be empty')
+                .optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -2318,7 +2325,7 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { displayName } = parseResult.data;
+        const { displayName, ownerStudioComId } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -2328,11 +2335,20 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._records.createStudio(
-            displayName,
-            sessionKeyValidation.userId
-        );
-        return returnResult(result);
+        if (!ownerStudioComId) {
+            const result = await this._records.createStudio(
+                displayName,
+                sessionKeyValidation.userId
+            );
+            return returnResult(result);
+        } else {
+            const result = await this._records.createStudioInComId(
+                displayName,
+                sessionKeyValidation.userId,
+                ownerStudioComId
+            );
+            return returnResult(result);
+        }
     }
 
     private async _listStudios(
