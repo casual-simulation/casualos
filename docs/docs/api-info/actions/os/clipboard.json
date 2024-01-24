@@ -34,7 +34,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\nOn Safari and all iOS browsers this will open a popup which prompts the player to copy the text."
+                            "text": ".\r\nOn Safari and all iOS browsers this will open a popup which prompts the player to copy the text."
                         }
                     ],
                     "blockTags": [
@@ -43,7 +43,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCopy \"hello\" to the player's clipboard.\nos.setClipboard(\"hello\");\n```"
+                                    "text": "```ts\nCopy \"hello\" to the player's clipboard.\r\nos.setClipboard(\"hello\");\n```"
                                 }
                             ]
                         },
@@ -99,7 +99,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5292,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5292"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5292"
                     }
                 ],
                 "parameters": [
@@ -134,11 +134,11 @@
                 }
             },
             "comment": {
-                "text": "Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`.\nOn Safari and all iOS browsers this will open a popup which prompts the player to copy the text.",
+                "text": "Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`.\r\nOn Safari and all iOS browsers this will open a popup which prompts the player to copy the text.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCopy \"hello\" to the player's clipboard.\nos.setClipboard(\"hello\");\n```"
+                        "text": "```ts\nCopy \"hello\" to the player's clipboard.\r\nos.setClipboard(\"hello\");\n```"
                     },
                     {
                         "tagName": "dochash",

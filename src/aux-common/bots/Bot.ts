@@ -2618,6 +2618,7 @@ export const KNOWN_TAGS: string[] = [
     'portalCursorHotspotY',
     'portalCursorHotspot',
     'portalBackgroundAddress',
+    'portalHDRAddress',
     'portalLocked',
     'portalPannable',
     `portalPannableMinX`,

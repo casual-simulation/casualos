@@ -81,7 +81,7 @@
                                 "fileName": "src/aux-runtime/runtime/CasualOSError.ts",
                                 "line": 39,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/CasualOSError.ts#L39"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/CasualOSError.ts#L39"
                             }
                         ],
                         "signatures": [
@@ -96,7 +96,7 @@
                                         "fileName": "src/aux-runtime/runtime/CasualOSError.ts",
                                         "line": 39,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/CasualOSError.ts#L39"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/CasualOSError.ts#L39"
                                     }
                                 ],
                                 "parameters": [
@@ -166,7 +166,7 @@
                                 "fileName": "src/aux-runtime/runtime/CasualOSError.ts",
                                 "line": 32,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/CasualOSError.ts#L32"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/CasualOSError.ts#L32"
                             }
                         ],
                         "type": {
@@ -194,7 +194,7 @@
                                 "fileName": "src/aux-runtime/runtime/CasualOSError.ts",
                                 "line": 37,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/CasualOSError.ts#L37"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/CasualOSError.ts#L37"
                             }
                         ],
                         "type": {
@@ -553,7 +553,7 @@
                         "fileName": "src/aux-runtime/runtime/CasualOSError.ts",
                         "line": 28,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/CasualOSError.ts#L28"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/CasualOSError.ts#L28"
                     }
                 ],
                 "extendedTypes": [
@@ -654,7 +654,7 @@
                                 "fileName": "src/aux-runtime/runtime/CasualOSError.ts",
                                 "line": 11,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/CasualOSError.ts#L11"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/CasualOSError.ts#L11"
                             }
                         ],
                         "type": {
@@ -682,7 +682,7 @@
                                 "fileName": "src/aux-runtime/runtime/CasualOSError.ts",
                                 "line": 16,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/CasualOSError.ts#L16"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/CasualOSError.ts#L16"
                             }
                         ],
                         "type": {
@@ -705,7 +705,7 @@
                         "fileName": "src/aux-runtime/runtime/CasualOSError.ts",
                         "line": 7,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/CasualOSError.ts#L7"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/CasualOSError.ts#L7"
                     }
                 ]
             },

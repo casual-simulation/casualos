@@ -118,7 +118,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1224,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1224"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1224"
                             }
                         ],
                         "type": {
@@ -180,7 +180,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1210,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1210"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1210"
                             }
                         ],
                         "type": {
@@ -242,7 +242,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1202,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1202"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1202"
                             }
                         ],
                         "type": {
@@ -276,7 +276,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1367,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1367"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1367"
                             }
                         ],
                         "signatures": [
@@ -290,7 +290,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Registers or updates a pause trigger with this debugger.\nPause triggers can be used to tell the debugger when you want it to stop execution.\nYou specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location."
+                                            "text": "Registers or updates a pause trigger with this debugger.\r\nPause triggers can be used to tell the debugger when you want it to stop execution.\r\nYou specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location."
                                         }
                                     ],
                                     "blockTags": [
@@ -299,7 +299,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nSet a pause trigger on a script\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\nconst b = await debug.create({\n    test: '@os.toast(\"Hello, World!\")'\n});\n\nconst trigger = debug.setPauseTrigger(b, 'test', {\n    lineNumber: 1,\n    columnNumber: 1\n});\n```"
+                                                    "text": "```ts\nSet a pause trigger on a script\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst b = await debug.create({\r\n    test: '@os.toast(\"Hello, World!\")'\r\n});\r\n\r\nconst trigger = debug.setPauseTrigger(b, 'test', {\r\n    lineNumber: 1,\r\n    columnNumber: 1\r\n});\n```"
                                                 }
                                             ]
                                         },
@@ -308,7 +308,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nUpdate a pause trigger on a script\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\nconst b = await debug.create({\n    test: '@os.toast(\"Hello, World!\")'\n});\n\nlet trigger = debug.setPauseTrigger(b, 'test', {\n    lineNumber: 1,\n    columnNumber: 1\n});\n\ntrigger = debug.setPauseTrigger({\n    ...trigger,\n    states: ['before', 'after']\n});\n```"
+                                                    "text": "```ts\nUpdate a pause trigger on a script\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst b = await debug.create({\r\n    test: '@os.toast(\"Hello, World!\")'\r\n});\r\n\r\nlet trigger = debug.setPauseTrigger(b, 'test', {\r\n    lineNumber: 1,\r\n    columnNumber: 1\r\n});\r\n\r\ntrigger = debug.setPauseTrigger({\r\n    ...trigger,\r\n    states: ['before', 'after']\r\n});\n```"
                                                 }
                                             ]
                                         },
@@ -337,7 +337,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1367,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1367"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1367"
                                     }
                                 ],
                                 "parameters": [
@@ -445,7 +445,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1321,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1321"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1321"
                             }
                         ],
                         "signatures": [
@@ -459,7 +459,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Registers or updates a pause trigger with a debugger. Returns the newly created trigger.\n\nPause triggers can be used to tell the debugger where you want it to temporarily stop execution. You specify the bot, tag, line and column numbers, and the debugger will stop before it executes the code at that location.\nAdditionally, the debugger will call all handlers that have been registered with "
+                                            "text": "Registers or updates a pause trigger with a debugger. Returns the newly created trigger.\r\n\r\nPause triggers can be used to tell the debugger where you want it to temporarily stop execution. You specify the bot, tag, line and column numbers, and the debugger will stop before it executes the code at that location.\r\nAdditionally, the debugger will call all handlers that have been registered with "
                                         },
                                         {
                                             "kind": "text",
@@ -496,7 +496,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1321,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1321"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1321"
                                     }
                                 ],
                                 "parameters": [
@@ -547,7 +547,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1649,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1649"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1649"
                             }
                         ],
                         "signatures": [
@@ -571,7 +571,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1649,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1649"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1649"
                                     }
                                 ],
                                 "parameters": [
@@ -671,7 +671,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1584,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1584"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1584"
                             }
                         ],
                         "signatures": [
@@ -703,7 +703,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a red bot without a parent.\nlet debugger = await os.createDebugger({\n    pausable: true\n});\nlet redBot = await debugger.create(null, { \"color\": \"red\" });\n```"
+                                                    "text": "```ts\nCreate a red bot without a parent.\r\nlet debugger = await os.createDebugger({\r\n    pausable: true\r\n});\r\nlet redBot = await debugger.create(null, { \"color\": \"red\" });\n```"
                                                 }
                                             ]
                                         },
@@ -712,7 +712,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a red bot and a blue bot with `this` as the parent.\nlet debugger = await os.createDebugger({\n    pausable: true\n});\nlet [redBot, blueBot] = await debugger.create(this, [\n   { \"color\": \"red\" },\n   { \"color\": \"blue\" }\n]);\n```"
+                                                    "text": "```ts\nCreate a red bot and a blue bot with `this` as the parent.\r\nlet debugger = await os.createDebugger({\r\n    pausable: true\r\n});\r\nlet [redBot, blueBot] = await debugger.create(this, [\r\n   { \"color\": \"red\" },\r\n   { \"color\": \"blue\" }\r\n]);\n```"
                                                 }
                                             ]
                                         }
@@ -723,7 +723,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1584,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1584"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1584"
                                     }
                                 ],
                                 "parameters": [
@@ -806,7 +806,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1590,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1590"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1590"
                             }
                         ],
                         "signatures": [
@@ -830,7 +830,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1590,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1590"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1590"
                                     }
                                 ],
                                 "parameters": [
@@ -908,7 +908,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1417,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1417"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1417"
                             }
                         ],
                         "signatures": [
@@ -922,7 +922,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Disables the given pause trigger.\nDisabled pause triggers will continue to be listed with "
+                                            "text": "Disables the given pause trigger.\r\nDisabled pause triggers will continue to be listed with "
                                         },
                                         {
                                             "kind": "text",
@@ -939,7 +939,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDisable a pause trigger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\nconst b = await debug.create({\n    test: '@os.toast(\"Hello, World!\")'\n});\n\nconst trigger = debug.setPauseTrigger(b, 'test', {\n    lineNumber: 1,\n    columnNumber: 1\n});\n\ndebug.disablePauseTrigger(trigger);\n```"
+                                                    "text": "```ts\nDisable a pause trigger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst b = await debug.create({\r\n    test: '@os.toast(\"Hello, World!\")'\r\n});\r\n\r\nconst trigger = debug.setPauseTrigger(b, 'test', {\r\n    lineNumber: 1,\r\n    columnNumber: 1\r\n});\r\n\r\ndebug.disablePauseTrigger(trigger);\n```"
                                                 }
                                             ]
                                         }
@@ -950,7 +950,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1417,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1417"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1417"
                                     }
                                 ],
                                 "parameters": [
@@ -1006,7 +1006,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1440,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1440"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1440"
                             }
                         ],
                         "signatures": [
@@ -1029,7 +1029,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nEnable a pause trigger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\nconst b = await debug.create({\n    test: '@os.toast(\"Hello, World!\")'\n});\n\nconst trigger = debug.setPauseTrigger(b, 'test', {\n    lineNumber: 1,\n    columnNumber: 1,\n    enabled: false\n});\n\ndebug.enablePauseTrigger(trigger);\n```"
+                                                    "text": "```ts\nEnable a pause trigger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst b = await debug.create({\r\n    test: '@os.toast(\"Hello, World!\")'\r\n});\r\n\r\nconst trigger = debug.setPauseTrigger(b, 'test', {\r\n    lineNumber: 1,\r\n    columnNumber: 1,\r\n    enabled: false\r\n});\r\n\r\ndebug.enablePauseTrigger(trigger);\n```"
                                                 }
                                             ]
                                         }
@@ -1040,7 +1040,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1440,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1440"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1440"
                                     }
                                 ],
                                 "parameters": [
@@ -1096,7 +1096,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 974,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L974"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L974"
                             }
                         ],
                         "signatures": [
@@ -1110,7 +1110,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Gets the list of action objects that have been performed by bots in the current debugger.\nAction objects are used by CasualOS to represent changes to bots or external effects that should be performed.\nExamples of this are "
+                                            "text": "Gets the list of action objects that have been performed by bots in the current debugger.\r\nAction objects are used by CasualOS to represent changes to bots or external effects that should be performed.\r\nExamples of this are "
                                         },
                                         {
                                             "kind": "text",
@@ -1143,7 +1143,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the list of bot changes and actions that have been performed in a debugger\nconst debug = await os.createDebugger();\ndebug.create({\n    test: '@os.toast(\"Hello\")'\n});\ndebug.shout(\"test\");\n\nconst actions = debug.getAllActions();\n\nassertEqual(actions, [\n    {\n        type: 'add_bot',\n        id: 'uuid-1',\n        bot: {\n            id: 'uuid-1',\n            tags: {\n                test: '@os.toast(\"Hello\")'\n            }\n        }\n    },\n    {\n        type: 'show_toast',\n        message: 'Hello',\n        duration: 2000\n    }\n]);\n```"
+                                                    "text": "```ts\nGet the list of bot changes and actions that have been performed in a debugger\r\nconst debug = await os.createDebugger();\r\ndebug.create({\r\n    test: '@os.toast(\"Hello\")'\r\n});\r\ndebug.shout(\"test\");\r\n\r\nconst actions = debug.getAllActions();\r\n\r\nassertEqual(actions, [\r\n    {\r\n        type: 'add_bot',\r\n        id: 'uuid-1',\r\n        bot: {\r\n            id: 'uuid-1',\r\n            tags: {\r\n                test: '@os.toast(\"Hello\")'\r\n            }\r\n        }\r\n    },\r\n    {\r\n        type: 'show_toast',\r\n        message: 'Hello',\r\n        duration: 2000\r\n    }\r\n]);\n```"
                                                 }
                                             ]
                                         }
@@ -1154,7 +1154,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 974,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L974"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L974"
                                     }
                                 ],
                                 "type": {
@@ -1193,7 +1193,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1030,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1030"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1030"
                             }
                         ],
                         "signatures": [
@@ -1207,7 +1207,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Gets the list of bot actions that have been performed by bots in the current debugger.\nAction objects are used by CasualOS to represent changes to bots or external effects that should be performed.\nBot actions are actions that immediately change bots or bot tags or masks.\n\nExamples of bot actions are "
+                                            "text": "Gets the list of bot actions that have been performed by bots in the current debugger.\r\nAction objects are used by CasualOS to represent changes to bots or external effects that should be performed.\r\nBot actions are actions that immediately change bots or bot tags or masks.\r\n\r\nExamples of bot actions are "
                                         },
                                         {
                                             "kind": "text",
@@ -1240,7 +1240,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the list of bot changes that have been performed in a debugger\nconst debug = await os.createDebugger();\ndebug.create({\n    test: '@os.toast(\"Hello\")'\n});\ndebug.shout(\"test\");\n\nconst actions = debug.getBotActions();\n\nassertEqual(actions, [\n    {\n        type: 'add_bot',\n        id: 'uuid-1',\n        bot: {\n            id: 'uuid-1',\n            tags: {\n                test: '@os.toast(\"Hello\")'\n            }\n        }\n    },\n]);\n```"
+                                                    "text": "```ts\nGet the list of bot changes that have been performed in a debugger\r\nconst debug = await os.createDebugger();\r\ndebug.create({\r\n    test: '@os.toast(\"Hello\")'\r\n});\r\ndebug.shout(\"test\");\r\n\r\nconst actions = debug.getBotActions();\r\n\r\nassertEqual(actions, [\r\n    {\r\n        type: 'add_bot',\r\n        id: 'uuid-1',\r\n        bot: {\r\n            id: 'uuid-1',\r\n            tags: {\r\n                test: '@os.toast(\"Hello\")'\r\n            }\r\n        }\r\n    },\r\n]);\n```"
                                                 }
                                             ]
                                         }
@@ -1251,7 +1251,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1030,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1030"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1030"
                                     }
                                 ],
                                 "type": {
@@ -1290,7 +1290,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1561,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1561"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1561"
                             }
                         ],
                         "signatures": [
@@ -1313,7 +1313,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the call stack from a debugger\nconst debug = os.createDebugger({\n    pausable: true\n});\n\nconst callStack = debug.getCallStack();\n```"
+                                                    "text": "```ts\nGet the call stack from a debugger\r\nconst debug = os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst callStack = debug.getCallStack();\n```"
                                                 }
                                             ]
                                         }
@@ -1324,7 +1324,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1561,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1561"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1561"
                                     }
                                 ],
                                 "type": {
@@ -1352,7 +1352,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 999,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L999"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L999"
                             }
                         ],
                         "signatures": [
@@ -1366,7 +1366,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Gets the list of common action objects that have been performed by bots in the current debugger. Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.\nCommon actions are actions that do not immediately change bots or bot tags or masks.\n\nExamples of common actions are "
+                                            "text": "Gets the list of common action objects that have been performed by bots in the current debugger. Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.\r\nCommon actions are actions that do not immediately change bots or bot tags or masks.\r\n\r\nExamples of common actions are "
                                         },
                                         {
                                             "kind": "text",
@@ -1391,7 +1391,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the list of actions that have been performed in a debugger\nconst debug = await os.createDebugger();\ndebug.create({\n    test: '@os.toast(\"Hello\")'\n});\ndebug.shout(\"test\");\n\nconst actions = debug.getCommonActions();\n\nassertEqual(actions, [\n    {\n        type: 'show_toast',\n        message: 'Hello',\n        duration: 2000\n    }\n]);\n```"
+                                                    "text": "```ts\nGet the list of actions that have been performed in a debugger\r\nconst debug = await os.createDebugger();\r\ndebug.create({\r\n    test: '@os.toast(\"Hello\")'\r\n});\r\ndebug.shout(\"test\");\r\n\r\nconst actions = debug.getCommonActions();\r\n\r\nassertEqual(actions, [\r\n    {\r\n        type: 'show_toast',\r\n        message: 'Hello',\r\n        duration: 2000\r\n    }\r\n]);\n```"
                                                 }
                                             ]
                                         }
@@ -1402,7 +1402,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 999,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L999"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L999"
                                     }
                                 ],
                                 "type": {
@@ -1441,7 +1441,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1050,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1050"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1050"
                             }
                         ],
                         "signatures": [
@@ -1455,7 +1455,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Gets the list of errors that have occurred in the current debugger. Errors occur when an exceptional event happens in a script and prevents the rest of the script from executing.\n\nDebuggers capture these errors and let you inspect them afterwards."
+                                            "text": "Gets the list of errors that have occurred in the current debugger. Errors occur when an exceptional event happens in a script and prevents the rest of the script from executing.\r\n\r\nDebuggers capture these errors and let you inspect them afterwards."
                                         }
                                     ],
                                     "blockTags": [
@@ -1464,7 +1464,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the list of errors that have happened in a debugger\nconst debug = await os.createDebugger();\ndebug.create({\n    test: '@throw new Error(\"My Error\")'\n});\ndebug.shout(\"test\");\n\nconst errors = debug.getErrors();\n\nassertEqual(errors.length, 1);\nassertEqual(errors[0].error, new Error(\"My Error\"));\nassertEqual(errors[0].tag, \"test\");\n```"
+                                                    "text": "```ts\nGet the list of errors that have happened in a debugger\r\nconst debug = await os.createDebugger();\r\ndebug.create({\r\n    test: '@throw new Error(\"My Error\")'\r\n});\r\ndebug.shout(\"test\");\r\n\r\nconst errors = debug.getErrors();\r\n\r\nassertEqual(errors.length, 1);\r\nassertEqual(errors[0].error, new Error(\"My Error\"));\r\nassertEqual(errors[0].tag, \"test\");\n```"
                                                 }
                                             ]
                                         }
@@ -1475,7 +1475,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1050,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1050"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1050"
                                     }
                                 ],
                                 "type": {
@@ -1509,7 +1509,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 940,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L940"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L940"
                             }
                         ],
                         "signatures": [
@@ -1533,7 +1533,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 940,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L940"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L940"
                                     }
                                 ],
                                 "type": {
@@ -1583,7 +1583,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1501,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1501"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1501"
                             }
                         ],
                         "signatures": [
@@ -1606,7 +1606,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nList common trigger locations for a script\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\nconst b = await debug.create({\n    test: '@os.toast(\"Hello, World!\")'\n});\n\nconst triggerLocations = debug.listCommonPauseTriggers(b, 'test');\n```"
+                                                    "text": "```ts\nList common trigger locations for a script\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst b = await debug.create({\r\n    test: '@os.toast(\"Hello, World!\")'\r\n});\r\n\r\nconst triggerLocations = debug.listCommonPauseTriggers(b, 'test');\n```"
                                                 }
                                             ]
                                         },
@@ -1615,7 +1615,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nRegister a trigger from a common location\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\nconst b = await debug.create({\n    test: '@os.toast(\"Hello, World!\")'\n});\n\nconst triggerLocations = debug.listCommonPauseTriggers(b, 'test');\n\nconst trigger = debug.setPauseTrigger(b, 'test', {\n    lineNumber: triggerLocations[0].lineNumber,\n    columnNumber: triggerLocations[0].columnNumber,\n    states: triggerLocations[0].possibleStates\n});\n```"
+                                                    "text": "```ts\nRegister a trigger from a common location\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst b = await debug.create({\r\n    test: '@os.toast(\"Hello, World!\")'\r\n});\r\n\r\nconst triggerLocations = debug.listCommonPauseTriggers(b, 'test');\r\n\r\nconst trigger = debug.setPauseTrigger(b, 'test', {\r\n    lineNumber: triggerLocations[0].lineNumber,\r\n    columnNumber: triggerLocations[0].columnNumber,\r\n    states: triggerLocations[0].possibleStates\r\n});\n```"
                                                 }
                                             ]
                                         }
@@ -1626,7 +1626,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1501,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1501"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1501"
                                     }
                                 ],
                                 "parameters": [
@@ -1709,7 +1709,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1465,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1465"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1465"
                             }
                         ],
                         "signatures": [
@@ -1732,7 +1732,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nList the triggers that are set on this debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\nconst b = await debug.create({\n    test: '@os.toast(\"Hello, World!\")'\n});\n\nconst trigger = debug.setPauseTrigger(b, 'test', {\n    lineNumber: 1,\n    columnNumber: 1,\n    enabled: false\n});\n\nconst triggers = debug.listPauseTriggers();\n```"
+                                                    "text": "```ts\nList the triggers that are set on this debugger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst b = await debug.create({\r\n    test: '@os.toast(\"Hello, World!\")'\r\n});\r\n\r\nconst trigger = debug.setPauseTrigger(b, 'test', {\r\n    lineNumber: 1,\r\n    columnNumber: 1,\r\n    enabled: false\r\n});\r\n\r\nconst triggers = debug.listPauseTriggers();\n```"
                                                 }
                                             ]
                                         },
@@ -1761,7 +1761,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1465,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1465"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1465"
                                     }
                                 ],
                                 "type": {
@@ -1789,7 +1789,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1062,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1062"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1062"
                             }
                         ],
                         "signatures": [
@@ -1813,7 +1813,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1062,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1062"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1062"
                                     }
                                 ],
                                 "parameters": [
@@ -1845,7 +1845,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 1062,
                                                         "character": 27,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1062"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1062"
                                                     }
                                                 ],
                                                 "signatures": [
@@ -1860,7 +1860,7 @@
                                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                                 "line": 1062,
                                                                 "character": 27,
-                                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1062"
+                                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1062"
                                                             }
                                                         ],
                                                         "parameters": [
@@ -1919,7 +1919,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1150,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1150"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1150"
                             }
                         ],
                         "signatures": [
@@ -1942,7 +1942,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nListen for tag updates in a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever a tag is updated.\ndebug.onAfterScriptUpdatedTag(update => {\n    console.log('tag updated', update);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls\n```"
+                                                    "text": "```ts\nListen for tag updates in a debugger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\n// Register a listener that gets called whenever a tag is updated.\r\ndebug.onAfterScriptUpdatedTag(update => {\r\n    console.log('tag updated', update);\r\n});\r\n\r\n// Because the debugger is pausable, the create() function returns a promise\r\n// because it calls\n```"
                                                 }
                                             ]
                                         },
@@ -1951,7 +1951,7 @@
                                             "content": [
                                                 {
                                                     "kind": "text",
-                                                    "text": "which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    test: '@tags.message = \"hello, world\";'\n});\n\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\nawait debug.shout('test');"
+                                                    "text": "which could cause a pause trigger to be hit.\r\nconst debuggerBot = await debug.create({\r\n    test: '@tags.message = \"hello, world\";'\r\n});\r\n\r\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\r\nawait debug.shout('test');"
                                                 }
                                             ]
                                         }
@@ -1962,7 +1962,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1150,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1150"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1150"
                                     }
                                 ],
                                 "parameters": [
@@ -1994,7 +1994,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 1151,
                                                         "character": 18,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1151"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1151"
                                                     }
                                                 ],
                                                 "signatures": [
@@ -2009,7 +2009,7 @@
                                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                                 "line": 1151,
                                                                 "character": 18,
-                                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1151"
+                                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1151"
                                                             }
                                                         ],
                                                         "parameters": [
@@ -2067,7 +2067,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1178,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1178"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1178"
                             }
                         ],
                         "signatures": [
@@ -2090,7 +2090,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nListen for tag mask updates in a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever a tag mask is updated.\ndebug.onAfterScriptUpdatedTagMask(update => {\n    console.log('tag mask updated', update);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls\n```"
+                                                    "text": "```ts\nListen for tag mask updates in a debugger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\n// Register a listener that gets called whenever a tag mask is updated.\r\ndebug.onAfterScriptUpdatedTagMask(update => {\r\n    console.log('tag mask updated', update);\r\n});\r\n\r\n// Because the debugger is pausable, the create() function returns a promise\r\n// because it calls\n```"
                                                 }
                                             ]
                                         },
@@ -2099,7 +2099,7 @@
                                             "content": [
                                                 {
                                                     "kind": "text",
-                                                    "text": "which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    test: '@masks.message = \"hello, world\";'\n});\n\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\nawait debug.shout('test');"
+                                                    "text": "which could cause a pause trigger to be hit.\r\nconst debuggerBot = await debug.create({\r\n    test: '@masks.message = \"hello, world\";'\r\n});\r\n\r\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\r\nawait debug.shout('test');"
                                                 }
                                             ]
                                         }
@@ -2110,7 +2110,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1178,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1178"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1178"
                                     }
                                 ],
                                 "parameters": [
@@ -2142,7 +2142,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 1179,
                                                         "character": 18,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1179"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1179"
                                                     }
                                                 ],
                                                 "signatures": [
@@ -2157,7 +2157,7 @@
                                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                                 "line": 1179,
                                                                 "character": 18,
-                                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1179"
+                                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1179"
                                                             }
                                                         ],
                                                         "parameters": [
@@ -2215,7 +2215,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1056,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1056"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1056"
                             }
                         ],
                         "signatures": [
@@ -2239,7 +2239,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1056,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1056"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1056"
                                     }
                                 ],
                                 "parameters": [
@@ -2271,7 +2271,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 1056,
                                                         "character": 28,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1056"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1056"
                                                     }
                                                 ],
                                                 "signatures": [
@@ -2286,7 +2286,7 @@
                                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                                 "line": 1056,
                                                                 "character": 28,
-                                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1056"
+                                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1056"
                                                             }
                                                         ],
                                                         "parameters": [
@@ -2345,7 +2345,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1095,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1095"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1095"
                             }
                         ],
                         "signatures": [
@@ -2359,7 +2359,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Registers the given handler function to be called before a user action is performed in the debugger.\n\nUser actions are like normal actions, except they are generated by the CasualOS frontend.\nGenerally, this only happens for built-in shouts and whispers.\nAdditionally, these actions can only be automatically created for debuggers that are attached using "
+                                            "text": "Registers the given handler function to be called before a user action is performed in the debugger.\r\n\r\nUser actions are like normal actions, except they are generated by the CasualOS frontend.\r\nGenerally, this only happens for built-in shouts and whispers.\r\nAdditionally, these actions can only be automatically created for debuggers that are attached using "
                                         },
                                         {
                                             "kind": "text",
@@ -2376,7 +2376,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nListen for tag updates in a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever a user action is about to be performed.\ndebug.onBeforeUserAction(update => {\n    console.log('user action', update);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls\n```"
+                                                    "text": "```ts\nListen for tag updates in a debugger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\n// Register a listener that gets called whenever a user action is about to be performed.\r\ndebug.onBeforeUserAction(update => {\r\n    console.log('user action', update);\r\n});\r\n\r\n// Because the debugger is pausable, the create() function returns a promise\r\n// because it calls\n```"
                                                 }
                                             ]
                                         },
@@ -2385,7 +2385,7 @@
                                             "content": [
                                                 {
                                                     "kind": "text",
-                                                    "text": "which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    home: true,\n});\n\n// Attach the debugger to the front end\nawait os.attachDebugger(debug);"
+                                                    "text": "which could cause a pause trigger to be hit.\r\nconst debuggerBot = await debug.create({\r\n    home: true,\r\n});\r\n\r\n// Attach the debugger to the front end\r\nawait os.attachDebugger(debug);"
                                                 }
                                             ]
                                         },
@@ -2414,7 +2414,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1095,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1095"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1095"
                                     }
                                 ],
                                 "parameters": [
@@ -2446,7 +2446,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 1095,
                                                         "character": 33,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1095"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1095"
                                                     }
                                                 ],
                                                 "signatures": [
@@ -2461,7 +2461,7 @@
                                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                                 "line": 1095,
                                                                 "character": 33,
-                                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1095"
+                                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1095"
                                                             }
                                                         ],
                                                         "parameters": [
@@ -2520,7 +2520,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1308,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1308"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1308"
                             }
                         ],
                         "signatures": [
@@ -2543,7 +2543,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nListen for pauses on a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\ndebug.onPause(pause => {\n    console.log('pause happened!', pause);\n});\n```"
+                                                    "text": "```ts\nListen for pauses on a debugger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\ndebug.onPause(pause => {\r\n    console.log('pause happened!', pause);\r\n});\n```"
                                                 }
                                             ]
                                         },
@@ -2572,7 +2572,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1308,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1308"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1308"
                                     }
                                 ],
                                 "parameters": [
@@ -2604,7 +2604,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 1308,
                                                         "character": 21,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1308"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1308"
                                                     }
                                                 ],
                                                 "signatures": [
@@ -2619,7 +2619,7 @@
                                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                                 "line": 1308,
                                                                 "character": 21,
-                                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1308"
+                                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1308"
                                                             }
                                                         ],
                                                         "parameters": [
@@ -2667,7 +2667,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1124,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1124"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1124"
                             }
                         ],
                         "signatures": [
@@ -2681,7 +2681,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Registers the given handler function to be called by the debugger whenever a script enqueues an action.\nThis occurrs for common actions like "
+                                            "text": "Registers the given handler function to be called by the debugger whenever a script enqueues an action.\r\nThis occurrs for common actions like "
                                         },
                                         {
                                             "kind": "text",
@@ -2697,7 +2697,7 @@
                                         },
                                         {
                                             "kind": "text",
-                                            "text": ".\n\nEvery action that is enqueued ends up being performed."
+                                            "text": ".\r\n\r\nEvery action that is enqueued ends up being performed."
                                         }
                                     ],
                                     "blockTags": [
@@ -2706,7 +2706,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nListen for actions to be enqueued in a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever an action is scheduled to be performed.\ndebug.onScriptActionEnqueued(action => {\n    console.log('action enqueued', action);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls\n```"
+                                                    "text": "```ts\nListen for actions to be enqueued in a debugger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\n// Register a listener that gets called whenever an action is scheduled to be performed.\r\ndebug.onScriptActionEnqueued(action => {\r\n    console.log('action enqueued', action);\r\n});\r\n\r\n// Because the debugger is pausable, the create() function returns a promise\r\n// because it calls\n```"
                                                 }
                                             ]
                                         },
@@ -2715,7 +2715,7 @@
                                             "content": [
                                                 {
                                                     "kind": "text",
-                                                    "text": "which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    test: '@let abc = 123; os.toast(abc);'\n});\n\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\nawait debug.shout('test');"
+                                                    "text": "which could cause a pause trigger to be hit.\r\nconst debuggerBot = await debug.create({\r\n    test: '@let abc = 123; os.toast(abc);'\r\n});\r\n\r\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\r\nawait debug.shout('test');"
                                                 }
                                             ]
                                         }
@@ -2726,7 +2726,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1124,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1124"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1124"
                                     }
                                 ],
                                 "parameters": [
@@ -2758,7 +2758,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 1124,
                                                         "character": 37,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1124"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1124"
                                                     }
                                                 ],
                                                 "signatures": [
@@ -2773,7 +2773,7 @@
                                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                                 "line": 1124,
                                                                 "character": 37,
-                                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1124"
+                                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1124"
                                                             }
                                                         ],
                                                         "parameters": [
@@ -2832,7 +2832,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1188,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1188"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1188"
                             }
                         ],
                         "signatures": [
@@ -2846,7 +2846,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Performs the given actions in order as if they were user actions.\n\nThis function works similarly to "
+                                            "text": "Performs the given actions in order as if they were user actions.\r\n\r\nThis function works similarly to "
                                         },
                                         {
                                             "kind": "text",
@@ -2872,7 +2872,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1188,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1188"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1188"
                                     }
                                 ],
                                 "parameters": [
@@ -2952,7 +2952,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1598,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1598"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1598"
                             }
                         ],
                         "signatures": [
@@ -2966,7 +2966,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Shouts the given events in order until a bot returns a result.\nReturns the result that was produced or undefined if no result was produced."
+                                            "text": "Shouts the given events in order until a bot returns a result.\r\nReturns the result that was produced or undefined if no result was produced."
                                         }
                                     ],
                                     "blockTags": []
@@ -2976,7 +2976,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1598,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1598"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1598"
                                     }
                                 ],
                                 "parameters": [
@@ -3055,7 +3055,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1393,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1393"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1393"
                             }
                         ],
                         "signatures": [
@@ -3078,7 +3078,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nRemove a pause trigger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\nconst b = await debug.create({\n    test: '@os.toast(\"Hello, World!\")'\n});\n\nconst trigger = debug.setPauseTrigger(b, 'test', {\n    lineNumber: 1,\n    columnNumber: 1\n});\n\ndebug.removePauseTrigger(trigger);\n```"
+                                                    "text": "```ts\nRemove a pause trigger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\nconst b = await debug.create({\r\n    test: '@os.toast(\"Hello, World!\")'\r\n});\r\n\r\nconst trigger = debug.setPauseTrigger(b, 'test', {\r\n    lineNumber: 1,\r\n    columnNumber: 1\r\n});\r\n\r\ndebug.removePauseTrigger(trigger);\n```"
                                                 }
                                             ]
                                         }
@@ -3089,7 +3089,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1393,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1393"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1393"
                                     }
                                 ],
                                 "parameters": [
@@ -3145,7 +3145,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1549,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1549"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1549"
                             }
                         ],
                         "signatures": [
@@ -3168,7 +3168,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nResume execution on a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever a pause happens in this debugger.\ndebug.onPause(pause => {\n    // Get the current stack frame from the pause\n    const currentFrame = pause.callStack[pause.callStack.length - 1];\n\n    // Set the abc variable to 999\n    currentFrame.setVariableValue('abc', 999);\n\n    // Resume execution after the pause.\n    debug.resume(pause);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls\n```"
+                                                    "text": "```ts\nResume execution on a debugger\r\nconst debug = await os.createDebugger({\r\n    pausable: true\r\n});\r\n\r\n// Register a listener that gets called whenever a pause happens in this debugger.\r\ndebug.onPause(pause => {\r\n    // Get the current stack frame from the pause\r\n    const currentFrame = pause.callStack[pause.callStack.length - 1];\r\n\r\n    // Set the abc variable to 999\r\n    currentFrame.setVariableValue('abc', 999);\r\n\r\n    // Resume execution after the pause.\r\n    debug.resume(pause);\r\n});\r\n\r\n// Because the debugger is pausable, the create() function returns a promise\r\n// because it calls\n```"
                                                 }
                                             ]
                                         },
@@ -3177,7 +3177,7 @@
                                             "content": [
                                                 {
                                                     "kind": "text",
-                                                    "text": "which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    test: '@let abc = 123; os.toast(abc);'\n});\n\n// Set a pause trigger in the \"test\" script of the bot we just created\n// at line 1 column 16\nconst trigger = debug.setPauseTrigger(debuggerBot, 'test', {\n    lineNumber: 1,\n    columnNumber: 16\n});\n\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\nawait debug.shout('test');\n\n// Get the resulting actions from the debugger\n// and perform the first one. This should be the os.toast(), but instead of printing 123,\n// it should print 999 because we changed the value of abc during the debugger pause.\nconst actions = debug.getCommonActions();\naction.perform(actions[0]);"
+                                                    "text": "which could cause a pause trigger to be hit.\r\nconst debuggerBot = await debug.create({\r\n    test: '@let abc = 123; os.toast(abc);'\r\n});\r\n\r\n// Set a pause trigger in the \"test\" script of the bot we just created\r\n// at line 1 column 16\r\nconst trigger = debug.setPauseTrigger(debuggerBot, 'test', {\r\n    lineNumber: 1,\r\n    columnNumber: 16\r\n});\r\n\r\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\r\nawait debug.shout('test');\r\n\r\n// Get the resulting actions from the debugger\r\n// and perform the first one. This should be the os.toast(), but instead of printing 123,\r\n// it should print 999 because we changed the value of abc during the debugger pause.\r\nconst actions = debug.getCommonActions();\r\naction.perform(actions[0]);"
                                                 }
                                             ]
                                         }
@@ -3188,7 +3188,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1549,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1549"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1549"
                                     }
                                 ],
                                 "parameters": [
@@ -3243,7 +3243,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1626,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1626"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1626"
                             }
                         ],
                         "signatures": [
@@ -3257,7 +3257,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Asks every bot in the inst to run the given action.\nIn effect, this is like shouting to a bunch of people in a room."
+                                            "text": "Asks every bot in the inst to run the given action.\r\nIn effect, this is like shouting to a bunch of people in a room."
                                         }
                                     ],
                                     "blockTags": [
@@ -3275,7 +3275,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nTell every bot to reset themselves.\nlet debugger = await os.createDebugger({\n    pausable: true\n});\nawait debugger.shout(\"reset()\");\n```"
+                                                    "text": "```ts\nTell every bot to reset themselves.\r\nlet debugger = await os.createDebugger({\r\n    pausable: true\r\n});\r\nawait debugger.shout(\"reset()\");\n```"
                                                 }
                                             ]
                                         },
@@ -3284,7 +3284,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nAsk every bot for its name.\nlet debugger = await os.createDebugger({\n    pausable: true\n});\nconst names = await debugger.shout(\"getName()\");\n```"
+                                                    "text": "```ts\nAsk every bot for its name.\r\nlet debugger = await os.createDebugger({\r\n    pausable: true\r\n});\r\nconst names = await debugger.shout(\"getName()\");\n```"
                                                 }
                                             ]
                                         },
@@ -3293,7 +3293,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nTell every bot say \"Hi\" to you.\nlet debugger = await os.createDebugger({\n    pausable: true\n});\nawait debugger.shout(\"sayHi()\", \"My Name\");\n```"
+                                                    "text": "```ts\nTell every bot say \"Hi\" to you.\r\nlet debugger = await os.createDebugger({\r\n    pausable: true\r\n});\r\nawait debugger.shout(\"sayHi()\", \"My Name\");\n```"
                                                 }
                                             ]
                                         }
@@ -3304,7 +3304,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1626,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1626"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1626"
                                     }
                                 ],
                                 "parameters": [
@@ -3383,7 +3383,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 1637,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1637"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1637"
                             }
                         ],
                         "signatures": [
@@ -3397,7 +3397,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Asks the given bots to run the given action.\nIn effect, this is like whispering to a specific set of people in a room."
+                                            "text": "Asks the given bots to run the given action.\r\nIn effect, this is like whispering to a specific set of people in a room."
                                         }
                                     ],
                                     "blockTags": [
@@ -3417,7 +3417,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 1637,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1637"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1637"
                                     }
                                 ],
                                 "parameters": [
@@ -3584,7 +3584,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 1290,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L1290"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L1290"
                     }
                 ],
                 "extendedTypes": [

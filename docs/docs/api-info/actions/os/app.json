@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.\n\nUsed in tandem with "
+                            "text": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.\r\n\r\nUsed in tandem with "
                         },
                         {
                             "kind": "text",
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisplay a header\nos.compileApp('myApp', <h1>Hello World!</h1>);\n```"
+                                    "text": "```ts\nDisplay a header\r\nos.compileApp('myApp', <h1>Hello World!</h1>);\n```"
                                 }
                             ]
                         },
@@ -44,7 +44,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisplay a button\nos.compileApp('myApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\n        Click Me!\n    </button>\n);\n```"
+                                    "text": "```ts\nDisplay a button\r\nos.compileApp('myApp',\r\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\r\n        Click Me!\r\n    </button>\r\n);\n```"
                                 }
                             ]
                         },
@@ -53,7 +53,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisplay an input box\nos.compileApp('myApp',\n    <input onInput={ (e) => { tags.label = e.target.value } } />\n);\n```"
+                                    "text": "```ts\nDisplay an input box\r\nos.compileApp('myApp',\r\n    <input onInput={ (e) => { tags.label = e.target.value } } />\r\n);\n```"
                                 }
                             ]
                         },
@@ -62,7 +62,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDisplay a slider input\nos.compileApp('myApp',\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\n);\n```"
+                                    "text": "```ts\nDisplay a slider input\r\nos.compileApp('myApp',\r\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\r\n);\n```"
                                 }
                             ]
                         },
@@ -91,7 +91,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7858,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7858"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7858"
                     }
                 ],
                 "parameters": [
@@ -137,23 +137,23 @@
                 }
             },
             "comment": {
-                "text": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.\n\nUsed in tandem with os.registerApp to create custom apps.",
+                "text": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.\r\n\r\nUsed in tandem with os.registerApp to create custom apps.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisplay a header\nos.compileApp('myApp', <h1>Hello World!</h1>);\n```"
+                        "text": "```ts\nDisplay a header\r\nos.compileApp('myApp', <h1>Hello World!</h1>);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisplay a button\nos.compileApp('myApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\n        Click Me!\n    </button>\n);\n```"
+                        "text": "```ts\nDisplay a button\r\nos.compileApp('myApp',\r\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\r\n        Click Me!\r\n    </button>\r\n);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisplay an input box\nos.compileApp('myApp',\n    <input onInput={ (e) => { tags.label = e.target.value } } />\n);\n```"
+                        "text": "```ts\nDisplay an input box\r\nos.compileApp('myApp',\r\n    <input onInput={ (e) => { tags.label = e.target.value } } />\r\n);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nDisplay a slider input\nos.compileApp('myApp',\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\n);\n```"
+                        "text": "```ts\nDisplay a slider input\r\nos.compileApp('myApp',\r\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\r\n);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -181,7 +181,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the list of tag names that are built-in to CasualOS.\n\nIncludes tags like "
+                            "text": "Gets the list of tag names that are built-in to CasualOS.\r\n\r\nIncludes tags like "
                         },
                         {
                             "kind": "text",
@@ -214,7 +214,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the list of built-in tags\nconst builtinTags = os.listBuiltinTags();\nos.toast(builtinTags);\n```"
+                                    "text": "```ts\nGet the list of built-in tags\r\nconst builtinTags = os.listBuiltinTags();\r\nos.toast(builtinTags);\n```"
                                 }
                             ]
                         },
@@ -243,7 +243,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7875,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7875"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7875"
                     }
                 ],
                 "type": {
@@ -255,11 +255,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the list of tag names that are built-in to CasualOS.\n\nIncludes tags like color and gridPortal, but not user-defined ones like [dimension].",
+                "text": "Gets the list of tag names that are built-in to CasualOS.\r\n\r\nIncludes tags like color and gridPortal, but not user-defined ones like [dimension].",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the list of built-in tags\nconst builtinTags = os.listBuiltinTags();\nos.toast(builtinTags);\n```"
+                        "text": "```ts\nGet the list of built-in tags\r\nconst builtinTags = os.listBuiltinTags();\r\nos.toast(builtinTags);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -287,7 +287,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.\n\nOnce setup, CasualOS will send a "
+                            "text": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.\r\n\r\nOnce setup, CasualOS will send a "
                         },
                         {
                             "kind": "text",
@@ -295,7 +295,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " whisper to the given bot.\nAt this point, you can call "
+                            "text": " whisper to the given bot.\r\nAt this point, you can call "
                         },
                         {
                             "kind": "text",
@@ -303,7 +303,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " to set what the app displays.\n\nCasualOS will also define a global variable "
+                            "text": " to set what the app displays.\r\n\r\nCasualOS will also define a global variable "
                         },
                         {
                             "kind": "code",
@@ -311,7 +311,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " that points to the given bot.\n\nApps work by running the HTML you give it by calling "
+                            "text": " that points to the given bot.\r\n\r\nApps work by running the HTML you give it by calling "
                         },
                         {
                             "kind": "text",
@@ -319,15 +319,15 @@
                         },
                         {
                             "kind": "text",
-                            "text": " with the HTML you want the app to show.\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\n\nAt the most basic, JSX is like writing HTML inside JavaScript:\n\n"
+                            "text": " with the HTML you want the app to show.\r\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\r\n\r\nAt the most basic, JSX is like writing HTML inside JavaScript:\r\n\r\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\nlet htmlData = <div>\n    <h1>Hello World</h1>\n</div>;\n```"
+                            "text": "```typescript\r\nlet htmlData = <div>\r\n    <h1>Hello World</h1>\r\n</div>;\r\n```"
                         },
                         {
                             "kind": "text",
-                            "text": "\n\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\n\nCasualOS also includes a helper called "
+                            "text": "\r\n\r\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\r\n\r\nCasualOS also includes a helper called "
                         },
                         {
                             "kind": "code",
@@ -335,15 +335,15 @@
                         },
                         {
                             "kind": "text",
-                            "text": " that can be used to make HTML objects out of a string.\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\n\n"
+                            "text": " that can be used to make HTML objects out of a string.\r\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\r\n\r\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\nlet htmlData = html`\n    <div>\n        <h1>Hello World</h1>\n    </div>\n`;\n```"
+                            "text": "```typescript\r\nlet htmlData = html`\r\n    <div>\r\n        <h1>Hello World</h1>\r\n    </div>\r\n`;\r\n```"
                         },
                         {
                             "kind": "text",
-                            "text": "\n\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages."
+                            "text": "\r\n\r\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages."
                         }
                     ],
                     "blockTags": [
@@ -352,7 +352,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSetup a basic app\nawait os.registerApp('basicApp', thisBot);\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n```"
+                                    "text": "```ts\nSetup a basic app\r\nawait os.registerApp('basicApp', thisBot);\r\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n```"
                                 }
                             ]
                         },
@@ -361,7 +361,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSetup an app with a button\nawait os.registerApp('buttonApp', thisBot);\n\nos.compileApp('buttonApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\n        Click Me!\n    </button>\n);\n```"
+                                    "text": "```ts\nSetup an app with a button\r\nawait os.registerApp('buttonApp', thisBot);\r\n\r\nos.compileApp('buttonApp',\r\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\r\n        Click Me!\r\n    </button>\r\n);\n```"
                                 }
                             ]
                         },
@@ -370,7 +370,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSetup an app with an input box\nawait os.registerApp('inputApp', thisBot);\n\nos.compileApp('inputApp',\n    <input onInput={ (e) => { tags.label = e.target.value } }>\n);\n```"
+                                    "text": "```ts\nSetup an app with an input box\r\nawait os.registerApp('inputApp', thisBot);\r\n\r\nos.compileApp('inputApp',\r\n    <input onInput={ (e) => { tags.label = e.target.value } }>\r\n);\n```"
                                 }
                             ]
                         },
@@ -426,7 +426,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7804,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7804"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7804"
                     }
                 ],
                 "parameters": [
@@ -517,19 +517,19 @@
                 }
             },
             "comment": {
-                "text": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.\n\nOnce setup, CasualOS will send a @onAppSetup whisper to the given bot.\nAt this point, you can call os.compileApp to set what the app displays.\n\nCasualOS will also define a global variable `{app}Bot` that points to the given bot.\n\nApps work by running the HTML you give it by calling os.compileApp with the HTML you want the app to show.\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\n\nAt the most basic, JSX is like writing HTML inside JavaScript:\n\n```typescript\nlet htmlData = <div>\n    <h1>Hello World</h1>\n</div>;\n```\n\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\n\nCasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\n\n```typescript\nlet htmlData = html`\n    <div>\n        <h1>Hello World</h1>\n    </div>\n`;\n```\n\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.",
+                "text": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.\r\n\r\nOnce setup, CasualOS will send a @onAppSetup whisper to the given bot.\r\nAt this point, you can call os.compileApp to set what the app displays.\r\n\r\nCasualOS will also define a global variable `{app}Bot` that points to the given bot.\r\n\r\nApps work by running the HTML you give it by calling os.compileApp with the HTML you want the app to show.\r\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\r\n\r\nAt the most basic, JSX is like writing HTML inside JavaScript:\r\n\r\n```typescript\r\nlet htmlData = <div>\r\n    <h1>Hello World</h1>\r\n</div>;\r\n```\r\n\r\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\r\n\r\nCasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.\r\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\r\n\r\n```typescript\r\nlet htmlData = html`\r\n    <div>\r\n        <h1>Hello World</h1>\r\n    </div>\r\n`;\r\n```\r\n\r\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSetup a basic app\nawait os.registerApp('basicApp', thisBot);\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n```"
+                        "text": "```ts\nSetup a basic app\r\nawait os.registerApp('basicApp', thisBot);\r\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSetup an app with a button\nawait os.registerApp('buttonApp', thisBot);\n\nos.compileApp('buttonApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\n        Click Me!\n    </button>\n);\n```"
+                        "text": "```ts\nSetup an app with a button\r\nawait os.registerApp('buttonApp', thisBot);\r\n\r\nos.compileApp('buttonApp',\r\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\r\n        Click Me!\r\n    </button>\r\n);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSetup an app with an input box\nawait os.registerApp('inputApp', thisBot);\n\nos.compileApp('inputApp',\n    <input onInput={ (e) => { tags.label = e.target.value } }>\n);\n```"
+                        "text": "```ts\nSetup an app with an input box\r\nawait os.registerApp('inputApp', thisBot);\r\n\r\nos.compileApp('inputApp',\r\n    <input onInput={ (e) => { tags.label = e.target.value } }>\r\n);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -569,7 +569,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Specifies that the given prefix should be used to indicate that the tag contains script content.\nUse this function to specify custom prefixes that function similarly to "
+                            "text": "Specifies that the given prefix should be used to indicate that the tag contains script content.\r\nUse this function to specify custom prefixes that function similarly to "
                         },
                         {
                             "kind": "code",
@@ -594,7 +594,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAdd 📖 as an script prefix.\nawait os.registerTagPrefix(\"📖\");\n```"
+                                    "text": "```ts\nAdd 📖 as an script prefix.\r\nawait os.registerTagPrefix(\"📖\");\n```"
                                 }
                             ]
                         },
@@ -603,7 +603,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRegister some arbitrary text as a prefix.\nawait os.registerTagPrefix(\"myPrefix\");\n```"
+                                    "text": "```ts\nRegister some arbitrary text as a prefix.\r\nawait os.registerTagPrefix(\"myPrefix\");\n```"
                                 }
                             ]
                         },
@@ -612,7 +612,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRegister a prefix as JSX code.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n});\n```"
+                                    "text": "```ts\nRegister a prefix as JSX code.\r\nawait os.registerTagPrefix(\"🔺\", {\r\n    language: \"jsx\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -621,7 +621,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRegister a prefix with a name.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n    name: 'Triangle'\n});\n```"
+                                    "text": "```ts\nRegister a prefix with a name.\r\nawait os.registerTagPrefix(\"🔺\", {\r\n    language: \"jsx\"\r\n    name: 'Triangle'\r\n});\n```"
                                 }
                             ]
                         },
@@ -650,7 +650,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7721,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7721"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7721"
                     }
                 ],
                 "parameters": [
@@ -718,23 +718,23 @@
                 }
             },
             "comment": {
-                "text": "Specifies that the given prefix should be used to indicate that the tag contains script content.\nUse this function to specify custom prefixes that function similarly to `@` or `🧬`.",
+                "text": "Specifies that the given prefix should be used to indicate that the tag contains script content.\r\nUse this function to specify custom prefixes that function similarly to `@` or `🧬`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nAdd 📖 as an script prefix.\nawait os.registerTagPrefix(\"📖\");\n```"
+                        "text": "```ts\nAdd 📖 as an script prefix.\r\nawait os.registerTagPrefix(\"📖\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRegister some arbitrary text as a prefix.\nawait os.registerTagPrefix(\"myPrefix\");\n```"
+                        "text": "```ts\nRegister some arbitrary text as a prefix.\r\nawait os.registerTagPrefix(\"myPrefix\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRegister a prefix as JSX code.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n});\n```"
+                        "text": "```ts\nRegister a prefix as JSX code.\r\nawait os.registerTagPrefix(\"🔺\", {\r\n    language: \"jsx\"\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRegister a prefix with a name.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n    name: 'Triangle'\n});\n```"
+                        "text": "```ts\nRegister a prefix with a name.\r\nawait os.registerTagPrefix(\"🔺\", {\r\n    language: \"jsx\"\r\n    name: 'Triangle'\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -771,7 +771,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nUnregister an app\nawait os.unregisterApp('myApp');\n```"
+                                    "text": "```ts\nUnregister an app\r\nawait os.unregisterApp('myApp');\n```"
                                 }
                             ]
                         },
@@ -800,7 +800,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7821,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7821"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7821"
                     }
                 ],
                 "parameters": [
@@ -846,7 +846,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nUnregister an app\nawait os.unregisterApp('myApp');\n```"
+                        "text": "```ts\nUnregister an app\r\nawait os.unregisterApp('myApp');\n```"
                     },
                     {
                         "tagName": "dochash",
