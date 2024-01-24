@@ -10615,6 +10615,102 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('PUT /api/v2/studios', () => {
+        beforeEach(async () => {
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowAnyoneToCreateStudios: true,
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                },
+                userId
+            );
+        });
+
+        it('should update the given studio', async () => {
+            const result = await server.handleHttpRequest(
+                httpPut(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        id: 'studioId',
+                        displayName: 'new name',
+                        logoUrl: 'http://example.com/new-url',
+                        comIdConfig: {
+                            allowAnyoneToCreateStudios: false,
+                        },
+                        playerConfig: {
+                            ab1BootstrapURL: 'new bootstrap',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const studio = await store.getStudioById('studioId');
+
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'new name',
+                logoUrl: 'http://example.com/new-url',
+                comIdConfig: {
+                    allowAnyoneToCreateStudios: false,
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'new bootstrap',
+                },
+                comId: 'comId',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeCustomerId: 'customerId',
+            });
+        });
+
+        testAuthorization(() =>
+            httpPut(
+                '/api/v2/studios',
+                JSON.stringify({
+                    id: 'studioId',
+                    displayName: 'new name',
+                }),
+                authenticatedHeaders
+            )
+        );
+        testOrigin('PUT', '/api/v2/studios', () =>
+            JSON.stringify({
+                id: 'studioId',
+                displayName: 'new name',
+            })
+        );
+        testRateLimit(() =>
+            httpPut(
+                '/api/v2/studios',
+                JSON.stringify({
+                    id: 'studioId',
+                    displayName: 'new name',
+                }),
+                authenticatedHeaders
+            )
+        );
+    });
+
     describe('GET /api/v2/studios/list', () => {
         beforeEach(async () => {
             await store.addStudio({

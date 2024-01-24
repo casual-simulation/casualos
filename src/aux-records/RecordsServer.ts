@@ -55,6 +55,7 @@ import {
     GenericWebsocketRequest,
 } from '@casual-simulation/aux-common';
 import { ModerationController } from './ModerationController';
+import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 
 const NOT_LOGGED_IN_RESULT = {
     success: false as const,
@@ -763,6 +764,15 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._postStudio(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'PUT' &&
+            request.path === '/api/v2/studios'
+        ) {
+            return formatResponse(
+                request,
+                await this._updateStudio(request),
                 this._allowedAccountOrigins
             );
         } else if (
@@ -2398,6 +2408,78 @@ export class RecordsServer {
             );
             return returnResult(result);
         }
+    }
+
+    private async _updateStudio(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            id: z
+                .string({
+                    invalid_type_error: 'id must be a string.',
+                    required_error: 'id is required.',
+                })
+                .min(1)
+                .max(128),
+            displayName: z
+                .string({
+                    invalid_type_error: 'displayName must be a string.',
+                    required_error: 'displayName is required.',
+                })
+                .nonempty('displayName must not be empty'),
+            logoUrl: z
+                .string({
+                    invalid_type_error: 'logoUrl must be a string.',
+                    required_error: 'logoUrl is required.',
+                })
+                .url()
+                .optional(),
+            comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
+            playerConfig: COM_ID_PLAYER_CONFIG.optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { id, displayName, logoUrl, comIdConfig, playerConfig } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.updateStudio({
+            userId: sessionKeyValidation.userId,
+            studio: {
+                id,
+                displayName,
+                logoUrl,
+                comIdConfig,
+                playerConfig,
+            },
+        });
+        return returnResult(result);
     }
 
     private async _listStudios(
