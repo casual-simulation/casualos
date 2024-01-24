@@ -1050,6 +1050,62 @@ export class RecordsController {
         }
     }
 
+    async getStudio(
+        studioId: string,
+        userId: string
+    ): Promise<GetStudioResult> {
+        try {
+            const studio = await this._store.getStudioById(studioId);
+
+            if (!studio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._store.listStudioAssignments(
+                studio.id,
+                {
+                    userId: userId,
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to access this studio.',
+                };
+            }
+
+            return {
+                success: true,
+                studio: {
+                    id: studio.id,
+                    displayName: studio.displayName,
+                    logoUrl: studio.logoUrl,
+                    comId: studio.comId,
+                    ownerStudioComId: studio.ownerStudioComId,
+                    comIdConfig: studio.comIdConfig,
+                    playerConfig: studio.playerConfig,
+                },
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [getStudio] An error occurred while getting a studio:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     /**
      * Gets the list of studios that the user with the given ID has access to.
      * @param userId The ID of the user.
@@ -1874,6 +1930,60 @@ export interface UpdateStudioSuccess {
 }
 
 export interface UpdateStudioFailure {
+    success: false;
+    errorCode:
+        | 'studio_not_found'
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ServerError;
+    errorMessage: string;
+}
+
+export type GetStudioResult = GetStudioSuccess | GetStudioFailure;
+
+export interface GetStudioSuccess {
+    success: true;
+    studio: StudioData;
+}
+
+export interface StudioData {
+    /**
+     * The ID of the studio.
+     */
+    id: string;
+
+    /**
+     * The display name of the studio.
+     */
+    displayName: string;
+
+    /**
+     * The URL of the logo for the studio.
+     */
+    logoUrl?: string;
+
+    /**
+     * The comId of the studio.
+     */
+    comId?: string;
+
+    /**
+     * The comId of the studio that owns this studio.
+     */
+    ownerStudioComId?: string;
+
+    /**
+     * The player configuration for the studio.
+     */
+    playerConfig?: ComIdPlayerConfig;
+
+    /**
+     * The configuration for the studio's comId.
+     */
+    comIdConfig?: ComIdConfig;
+}
+
+export interface GetStudioFailure {
     success: false;
     errorCode:
         | 'studio_not_found'

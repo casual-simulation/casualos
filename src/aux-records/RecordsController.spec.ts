@@ -2468,6 +2468,75 @@ describe('RecordsController', () => {
         });
     });
 
+    describe('getStudio()', () => {
+        beforeEach(async () => {
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowAnyoneToCreateStudios: true,
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                'userId'
+            );
+        });
+
+        it('should return the studio', async () => {
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowAnyoneToCreateStudios: true,
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                },
+            });
+        });
+
+        it('should return studio_not_found if the studio was not found', async () => {
+            const result = await manager.getStudio('missingStudio', 'userId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        });
+
+        it('should return not_authorized if the user is not a member of the studio', async () => {
+            const result = await manager.getStudio('studioId', 'otherUserId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to access this studio.',
+            });
+        });
+    });
+
     describe('listStudios()', () => {
         beforeEach(async () => {
             await store.saveNewUser({
