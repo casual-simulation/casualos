@@ -2512,6 +2512,58 @@ describe('RecordsController', () => {
                     playerConfig: {
                         ab1BootstrapURL: 'https://example.com/ab1',
                     },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                },
+            });
+        });
+
+        it('should include the configured comId features', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowed: true,
+                                    maxStudios: 100,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowAnyoneToCreateStudios: true,
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: true,
+                        maxStudios: 100,
+                    },
                 },
             });
         });

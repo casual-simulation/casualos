@@ -10464,6 +10464,9 @@ describe('RecordsServer', () => {
                         playerConfig: {
                             ab1BootstrapURL: 'ab1BootstrapURL',
                         },
+                        comIdFeatures: {
+                            allowed: false,
+                        },
                     },
                 },
                 headers: accountCorsHeaders,

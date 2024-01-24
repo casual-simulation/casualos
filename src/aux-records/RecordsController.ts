@@ -31,11 +31,13 @@ import { v4 as uuid } from 'uuid';
 import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
+    StudioComIdFeaturesConfiguration,
     getComIdFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
 } from './SubscriptionConfiguration';
 import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
+import { isActiveSubscription } from './Utils';
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
@@ -1086,6 +1088,23 @@ export class RecordsController {
                 };
             }
 
+            let features: StudioComIdFeaturesConfiguration = {
+                allowed: false,
+            };
+
+            if (
+                studio.subscriptionId &&
+                isActiveSubscription(studio.subscriptionStatus)
+            ) {
+                const config =
+                    await this._config.getSubscriptionConfiguration();
+                features = getComIdFeatures(
+                    config,
+                    studio.subscriptionStatus,
+                    studio.subscriptionId
+                );
+            }
+
             return {
                 success: true,
                 studio: {
@@ -1096,6 +1115,7 @@ export class RecordsController {
                     ownerStudioComId: studio.ownerStudioComId,
                     comIdConfig: studio.comIdConfig,
                     playerConfig: studio.playerConfig,
+                    comIdFeatures: features,
                 },
             };
         } catch (err) {
@@ -2022,6 +2042,11 @@ export interface StudioData {
      * The configuration for the studio's comId.
      */
     comIdConfig?: ComIdConfig;
+
+    /**
+     * The comId features that this studio has access to.
+     */
+    comIdFeatures: StudioComIdFeaturesConfiguration;
 }
 
 export interface GetStudioFailure {
