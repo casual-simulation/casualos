@@ -2358,7 +2358,9 @@ export class RecordsServer {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
 
-        const schema = z.object({});
+        const schema = z.object({
+            comId: z.string().nonempty().optional(),
+        });
 
         const parseResult = schema.safeParse(request.query);
 
@@ -2366,7 +2368,7 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const {} = parseResult.data;
+        const { comId } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -2376,10 +2378,18 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._records.listStudios(
-            sessionKeyValidation.userId
-        );
-        return returnResult(result);
+        if (comId) {
+            const result = await this._records.listStudiosByComId(
+                sessionKeyValidation.userId,
+                comId
+            );
+            return returnResult(result);
+        } else {
+            const result = await this._records.listStudios(
+                sessionKeyValidation.userId
+            );
+            return returnResult(result);
+        }
     }
 
     private async _listStudioMembers(

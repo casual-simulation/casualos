@@ -10610,6 +10610,98 @@ describe('RecordsServer', () => {
             });
         });
 
+        describe('?comId', () => {
+            beforeEach(async () => {
+                await store.updateStudio({
+                    id: 'studioId1',
+                    displayName: 'studio 1',
+                    comId: 'comId1',
+                });
+
+                await store.updateStudio({
+                    id: 'studioId2',
+                    displayName: 'studio 2',
+                    ownerStudioComId: 'comId1',
+                });
+
+                await store.updateStudio({
+                    id: 'studioId3',
+                    displayName: 'studio 3',
+                    ownerStudioComId: 'comId1',
+                });
+
+                await store.addStudio({
+                    id: 'studioId4',
+                    displayName: 'studio 4',
+                });
+
+                await store.addStudio({
+                    id: 'studioId5',
+                    displayName: 'studio 5',
+                });
+
+                await store.addStudioAssignment({
+                    studioId: 'studioId2',
+                    userId: userId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+                await store.addStudioAssignment({
+                    studioId: 'studioId3',
+                    userId: userId,
+                    isPrimaryContact: true,
+                    role: 'member',
+                });
+                await store.addStudioAssignment({
+                    studioId: 'studioId4',
+                    userId: userId,
+                    isPrimaryContact: true,
+                    role: 'member',
+                });
+                await store.addStudioAssignment({
+                    studioId: 'studioId5',
+                    userId: userId,
+                    isPrimaryContact: true,
+                    role: 'member',
+                });
+            });
+
+            it('should list the studios that the user has access to', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/studios/list?comId=${'comId1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studioId2',
+                                displayName: 'studio 2',
+                                role: 'admin',
+                                isPrimaryContact: true,
+                                subscriptionTier: null,
+                                ownerStudioComId: 'comId1',
+                            },
+                            {
+                                studioId: 'studioId3',
+                                displayName: 'studio 3',
+                                role: 'member',
+                                isPrimaryContact: true,
+                                subscriptionTier: null,
+                                ownerStudioComId: 'comId1',
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
         testAuthorization(() => httpGet('/api/v2/studios/list', apiHeaders));
         testOrigin('GET', '/api/v2/studios/list');
         testRateLimit(() => httpGet('/api/v2/studios/list', apiHeaders));
