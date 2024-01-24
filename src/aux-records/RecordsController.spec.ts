@@ -2133,6 +2133,130 @@ describe('RecordsController', () => {
         });
     });
 
+    describe('listStudiosByComId()', () => {
+        beforeEach(async () => {
+            await store.saveNewUser({
+                id: 'userId',
+                name: 'test user',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: 'studioId1',
+                displayName: 'studio 1',
+                comId: 'comId1',
+            });
+
+            await store.addStudio({
+                id: 'studioId2',
+                displayName: 'studio 2',
+                ownerStudioComId: 'comId1',
+            });
+
+            await store.addStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+                ownerStudioComId: 'comId1',
+            });
+
+            await store.addStudio({
+                id: 'studioId4',
+                displayName: 'studio 4',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId2',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId3',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'member',
+            });
+        });
+
+        it('should list the studios that the user has access to', async () => {
+            const result = await manager.listStudiosByComId('userId', 'comId1');
+
+            expect(result).toEqual({
+                success: true,
+                studios: [
+                    {
+                        studioId: 'studioId2',
+                        displayName: 'studio 2',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        subscriptionTier: null,
+                        ownerStudioComId: 'comId1',
+                    },
+                    {
+                        studioId: 'studioId3',
+                        displayName: 'studio 3',
+                        isPrimaryContact: true,
+                        role: 'member',
+                        subscriptionTier: null,
+                        ownerStudioComId: 'comId1',
+                    },
+                ],
+            });
+        });
+
+        it('should include the subscription tier', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.updateStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                ownerStudioComId: 'comId1',
+            });
+
+            const result = await manager.listStudiosByComId('userId', 'comId1');
+
+            expect(result).toEqual({
+                success: true,
+                studios: [
+                    {
+                        studioId: 'studioId2',
+                        displayName: 'studio 2',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        subscriptionTier: null,
+                        ownerStudioComId: 'comId1',
+                    },
+                    {
+                        studioId: 'studioId3',
+                        displayName: 'studio 3',
+                        isPrimaryContact: true,
+                        role: 'member',
+                        subscriptionTier: 'tier1',
+                        ownerStudioComId: 'comId1',
+                    },
+                ],
+            });
+        });
+    });
+
     describe('listStudioMembers()', () => {
         let studioId: string;
         beforeEach(async () => {

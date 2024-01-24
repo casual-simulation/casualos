@@ -1,3 +1,6 @@
+import { WebConfig } from '@casual-simulation/aux-common';
+import { ComIdConfig } from './ComIdConfig';
+
 /**
  * Defines an interface for objects that can store records.
  */
@@ -96,6 +99,12 @@ export interface RecordsStore {
     getStudioById(id: string): Promise<Studio>;
 
     /**
+     * Gets the studio that has the given comId.
+     * @param comId The comId of the studio.
+     */
+    getStudioByComId(comId: string): Promise<Studio>;
+
+    /**
      * Gets the studio that has the given stripe customer ID.
      * @param customerId The stripe customer ID for the studio.
      */
@@ -106,6 +115,16 @@ export interface RecordsStore {
      * @param userId The ID of the user.
      */
     listStudiosForUser(userId: string): Promise<StoreListedStudio[]>;
+
+    /**
+     * Gets the list of studios that are owned by the given comId and that the user with the given ID has access to.
+     * @param userId The ID of the user.
+     * @param comId The comId of the studio that owns the studios.
+     */
+    listStudiosForUserAndComId(
+        userId: string,
+        comId: string
+    ): Promise<StoreListedStudio[]>;
 
     /**
      * Adds the given studio assignment to the store.
@@ -230,6 +249,11 @@ export interface Studio {
     displayName: string;
 
     /**
+     * The URL of the logo for the studio.
+     */
+    logoUrl?: string | null;
+
+    /**
      * The ID of the stripe customer for this studio.
      */
     stripeCustomerId?: string;
@@ -259,6 +283,26 @@ export interface Studio {
      * The unix time in miliseconds that the studio's current subscription period ends at.
      */
     subscriptionPeriodEndMs?: number | null;
+
+    /**
+     * The comId that this studio owns.
+     */
+    comId?: string | null;
+
+    /**
+     * The comId of the studio that owns this studio.
+     */
+    ownerStudioComId?: string | null;
+
+    /**
+     * The player web config for the studio.
+     */
+    playerConfig?: Partial<WebConfig>;
+
+    /**
+     * The config for comId features.
+     */
+    comIdConfig?: ComIdConfig;
 }
 
 /**
@@ -388,6 +432,11 @@ export interface StoreListedStudio {
     displayName: string;
 
     /**
+     * The URL of the logo for the studio.
+     */
+    logoUrl: string;
+
+    /**
      * The role that the user has in the studio.
      */
     role: StudioAssignmentRole;
@@ -406,6 +455,16 @@ export interface StoreListedStudio {
      * The current subscription status for this studio.
      */
     subscriptionStatus: string;
+
+    /**
+     * The comId of the studio.
+     */
+    comId: string | null;
+
+    /**
+     * The comId of the studio that owns this studio.
+     */
+    ownerStudioComId: string | null;
 }
 
 export interface ListStudioAssignmentFilters {

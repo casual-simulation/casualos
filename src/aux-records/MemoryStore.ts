@@ -290,6 +290,40 @@ export class MemoryStore
         this.roleAssignments = {};
     }
 
+    async getStudioByComId(comId: string): Promise<Studio> {
+        return this._studios.find((s) => s.comId === comId);
+    }
+
+    async listStudiosForUserAndComId(
+        userId: string,
+        comId: string
+    ): Promise<StoreListedStudio[]> {
+        const assignments = await this.listUserAssignments(userId);
+        const studios = await Promise.all(
+            assignments.map(async (a) => {
+                const s = await this.getStudioById(a.studioId);
+                return {
+                    ...s,
+                    ...a,
+                };
+            })
+        );
+
+        return studios
+            .filter((s) => s.ownerStudioComId === comId)
+            .map((s) => ({
+                studioId: s.id,
+                displayName: s.displayName,
+                role: s.role,
+                isPrimaryContact: s.isPrimaryContact,
+                subscriptionId: s.subscriptionId,
+                subscriptionStatus: s.subscriptionStatus,
+                comId: s.comId,
+                logoUrl: s.logoUrl,
+                ownerStudioComId: s.ownerStudioComId,
+            }));
+    }
+
     async sendRecordNotification(
         notification: RecordsNotification
     ): Promise<void> {
@@ -480,6 +514,9 @@ export class MemoryStore
             isPrimaryContact: s.isPrimaryContact,
             subscriptionId: s.subscriptionId,
             subscriptionStatus: s.subscriptionStatus,
+            comId: s.comId,
+            logoUrl: s.logoUrl,
+            ownerStudioComId: s.ownerStudioComId,
         }));
     }
 

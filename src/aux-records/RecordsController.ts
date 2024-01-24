@@ -914,6 +914,52 @@ export class RecordsController {
                             s.subscriptionStatus,
                             s.subscriptionId
                         ),
+                        ownerStudioComId: s.ownerStudioComId,
+                    };
+                }),
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [listStudios] An error occurred while listing studios:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of studios that the user with the given ID has access to and that are owned by the given comId.
+     * @param userId The ID of the user.
+     * @param comId The comId.
+     */
+    async listStudiosByComId(
+        userId: string,
+        comId: string
+    ): Promise<ListStudiosResult> {
+        try {
+            const studios = await this._store.listStudiosForUserAndComId(
+                userId,
+                comId
+            );
+            const config = await this._config.getSubscriptionConfiguration();
+            return {
+                success: true,
+                studios: studios.map((s) => {
+                    return {
+                        studioId: s.studioId,
+                        displayName: s.displayName,
+                        role: s.role,
+                        isPrimaryContact: s.isPrimaryContact,
+                        subscriptionTier: getSubscriptionTier(
+                            config,
+                            s.subscriptionStatus,
+                            s.subscriptionId
+                        ),
+                        ownerStudioComId: s.ownerStudioComId,
                     };
                 }),
             };
@@ -1488,6 +1534,11 @@ export interface ListedStudio {
      * The tier of the studio's subscription.
      */
     subscriptionTier: string;
+
+    /**
+     * The comId of the studio that owns this one.
+     */
+    ownerStudioComId: string | null;
 }
 
 export type ListStudioMembersResult =
