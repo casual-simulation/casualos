@@ -2537,6 +2537,42 @@ describe('RecordsController', () => {
         });
     });
 
+    describe('getPlayerConfig()', () => {
+        it('should return the player config for the given comId', async () => {
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+            });
+
+            const result = await manager.getPlayerConfig('comId1');
+
+            expect(result).toEqual({
+                success: true,
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+            });
+        });
+
+        it('should comId_not_found if the comId does not exist', async () => {
+            const result = await manager.getPlayerConfig('comId1');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'comId_not_found',
+                errorMessage: 'The given comId was not found.',
+            });
+        });
+    });
+
     describe('listStudios()', () => {
         beforeEach(async () => {
             await store.saveNewUser({

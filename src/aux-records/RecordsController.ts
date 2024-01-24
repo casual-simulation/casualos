@@ -1050,6 +1050,11 @@ export class RecordsController {
         }
     }
 
+    /**
+     * Attempts to get information about the given studio.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user that is making this request.
+     */
     async getStudio(
         studioId: string,
         userId: string
@@ -1096,6 +1101,42 @@ export class RecordsController {
         } catch (err) {
             console.error(
                 '[RecordsController] [getStudio] An error occurred while getting a studio:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to get the player config for the given comId.
+     * @param comId The comId.
+     */
+    async getPlayerConfig(comId: string): Promise<GetPlayerConfigResult> {
+        try {
+            const studio = await this._store.getStudioByComId(comId);
+
+            if (!studio) {
+                return {
+                    success: false,
+                    errorCode: 'comId_not_found',
+                    errorMessage: 'The given comId was not found.',
+                };
+            }
+
+            return {
+                success: true,
+                comId: studio.comId,
+                displayName: studio.displayName,
+                logoUrl: studio.logoUrl ?? null,
+                playerConfig: studio.playerConfig ?? null,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [getPlayerConfig] An error occurred while getting the player config:',
                 err
             );
             return {
@@ -1990,6 +2031,40 @@ export interface GetStudioFailure {
         | NotLoggedInError
         | NotAuthorizedError
         | ServerError;
+    errorMessage: string;
+}
+
+export type GetPlayerConfigResult =
+    | GetPlayerConfigSuccess
+    | GetPlayerConfigFailure;
+
+export interface GetPlayerConfigSuccess {
+    success: true;
+
+    /**
+     * The comId that the player config is for.
+     */
+    comId: string;
+
+    /**
+     * The display name of the comId.
+     */
+    displayName: string;
+
+    /**
+     * The URL that the comId logo is available at.
+     */
+    logoUrl: string;
+
+    /**
+     * The config that should be used for the player.
+     */
+    playerConfig: ComIdPlayerConfig;
+}
+
+export interface GetPlayerConfigFailure {
+    success: false;
+    errorCode: 'comId_not_found' | ServerError;
     errorMessage: string;
 }
 
