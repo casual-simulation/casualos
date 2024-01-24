@@ -3,6 +3,7 @@ import {
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
     RecordsStore,
+    Studio,
     StudioAssignmentRole,
 } from './RecordsStore';
 import {
@@ -34,6 +35,7 @@ import {
     getSubscriptionFeatures,
     getSubscriptionTier,
 } from './SubscriptionConfiguration';
+import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
@@ -989,6 +991,66 @@ export class RecordsController {
     }
 
     /**
+     * Attempts to update the given studio.
+     */
+    async updateStudio(
+        request: UpdateStudioRequest
+    ): Promise<UpdateStudioResult> {
+        try {
+            const { id, ...updates } = request.studio;
+            const existingStudio = await this._store.getStudioById(
+                request.studio.id
+            );
+
+            if (!existingStudio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._store.listStudioAssignments(
+                existingStudio.id,
+                {
+                    userId: request.userId,
+                    role: 'admin',
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to update this studio.',
+                };
+            }
+
+            const final: Studio = {
+                ...existingStudio,
+                ...updates,
+            };
+
+            await this._store.updateStudio(final);
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [updateStudio] An error occurred while updating a studio:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Gets the list of studios that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
@@ -1761,6 +1823,63 @@ export interface RemoveStudioMemberSuccess {
 export interface RemoveStudioMemberFailure {
     success: false;
     errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export interface UpdateStudioRequest {
+    /**
+     * The ID of the user that is logged in.
+     */
+    userId: string;
+
+    /**
+     * The studio that should be updated.
+     */
+    studio: {
+        /**
+         * The ID of the studio.
+         */
+        id: string;
+
+        /**
+         * The display name of the studio.
+         * If omitted, then the display name will not be updated.
+         */
+        displayName?: string;
+
+        /**
+         * The URL of the studio's logo.
+         * If omitted, then the logo will not be updated.
+         */
+        logoUrl?: string;
+
+        /**
+         * The player configuration for the studio.
+         * If omitted, then the player configuration will not be updated.
+         */
+        playerConfig?: ComIdPlayerConfig;
+
+        /**
+         * The configuration for the studio's comId.
+         * If omitted, then the comId configuration will not be updated.
+         */
+        comIdConfig?: ComIdConfig;
+    };
+}
+
+export type UpdateStudioResult = UpdateStudioSuccess | UpdateStudioFailure;
+
+export interface UpdateStudioSuccess {
+    success: true;
+}
+
+export interface UpdateStudioFailure {
+    success: false;
+    errorCode:
+        | 'studio_not_found'
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ServerError;
     errorMessage: string;
 }
 

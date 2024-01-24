@@ -2247,6 +2247,227 @@ describe('RecordsController', () => {
         });
     });
 
+    describe('updateStudio()', () => {
+        beforeEach(async () => {
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                'userId'
+            );
+        });
+
+        it('should be able to update the display name', async () => {
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    displayName: 'new name',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'new name',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should be able to update the logo URL', async () => {
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    logoUrl: 'https://example.com/logo.png',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should be able to update the player config', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    playerConfig: {
+                        automaticBiosOption: 'free',
+                    },
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerConfig: {
+                    automaticBiosOption: 'free',
+                },
+            });
+        });
+
+        it('should be able to update the comId config', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                comIdConfig: {
+                    allowAnyoneToCreateStudios: true,
+                },
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    comIdConfig: {
+                        allowAnyoneToCreateStudios: false,
+                    },
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                comIdConfig: {
+                    allowAnyoneToCreateStudios: false,
+                },
+            });
+        });
+
+        it('should do nothing if no updates are provided', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                comIdConfig: {
+                    allowAnyoneToCreateStudios: true,
+                },
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                comIdConfig: {
+                    allowAnyoneToCreateStudios: true,
+                },
+            });
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                role: 'member',
+                userId: 'otherUserId',
+                isPrimaryContact: false,
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'otherUserId',
+                studio: {
+                    id: 'studioId',
+                    displayName: 'new name',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to update this studio.',
+            });
+        });
+
+        it('should return studio_not_found if the given studio was not found', async () => {
+            const result = await manager.updateStudio({
+                userId: 'otherUserId',
+                studio: {
+                    id: 'missingStudio',
+                    displayName: 'new name',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        });
+    });
+
     describe('listStudios()', () => {
         beforeEach(async () => {
             await store.saveNewUser({

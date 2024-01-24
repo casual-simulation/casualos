@@ -1,5 +1,4 @@
-import { WebConfig } from '@casual-simulation/aux-common';
-import { ComIdConfig } from './ComIdConfig';
+import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 
 /**
  * Defines an interface for objects that can store records.
@@ -303,7 +302,7 @@ export interface Studio {
     /**
      * The player web config for the studio.
      */
-    playerConfig?: Partial<WebConfig>;
+    playerConfig?: ComIdPlayerConfig;
 
     /**
      * The config for comId features.

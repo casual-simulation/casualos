@@ -31,20 +31,24 @@ export interface ComIdWebConfig {
     logoUrl: string | null;
 }
 
+export const COM_ID_PLAYER_CONFIG = WEB_CONFIG_SCHEMA.pick({
+    ab1BootstrapURL: true,
+    allowedBiosOptions: true,
+    arcGisApiKey: true,
+    automaticBiosOption: true,
+    defaultBiosOption: true,
+    jitsiAppName: true,
+    what3WordsApiKey: true,
+})
+    .describe(
+        'The configuration that the comId provides which overrides the default player configuration.'
+    )
+    .partial();
+
+export type ComIdPlayerConfig = z.infer<typeof COM_ID_PLAYER_CONFIG>;
+
 export const COM_ID_WEB_CONFIG_SCHEMA = z.object({
-    playerConfig: WEB_CONFIG_SCHEMA.pick({
-        ab1BootstrapURL: true,
-        allowedBiosOptions: true,
-        arcGisApiKey: true,
-        automaticBiosOption: true,
-        defaultBiosOption: true,
-        jitsiAppName: true,
-        what3WordsApiKey: true,
-    })
-        .describe(
-            'The configuration that the comId provides which overrides the default player configuration.'
-        )
-        .partial(),
+    playerConfig: COM_ID_PLAYER_CONFIG,
     name: z
         .string()
         .describe('The name of the studio that this comId represents.'),
