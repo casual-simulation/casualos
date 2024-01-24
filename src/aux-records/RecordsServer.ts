@@ -813,6 +813,15 @@ export class RecordsServer {
             );
         } else if (
             request.method === 'GET' &&
+            request.path === '/api/v2/player/config'
+        ) {
+            return formatResponse(
+                request,
+                await this._getPlayerConfig(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
             request.path === '/api/v2/subscriptions'
         ) {
             return formatResponse(
@@ -2692,6 +2701,29 @@ export class RecordsServer {
             userId: sessionKeyValidation.userId,
             removedUserId,
         });
+        return returnResult(result);
+    }
+
+    private async _getPlayerConfig(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            comId: z.string().nonempty(),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { comId } = parseResult.data;
+
+        const result = await this._records.getPlayerConfig(comId);
         return returnResult(result);
     }
 

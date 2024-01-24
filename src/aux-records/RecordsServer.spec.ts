@@ -11196,6 +11196,47 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/player/config', () => {
+        beforeEach(async () => {
+            await store.addStudio({
+                id: 'studioId1',
+                comId: 'comId',
+                displayName: 'studio 1',
+                logoUrl: 'http://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'ab1BootstrapURL',
+                },
+            });
+
+            delete apiHeaders['authorization'];
+        });
+
+        it('should return the player config', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/player/config?comId=${'comId'}`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    comId: 'comId',
+                    displayName: 'studio 1',
+                    logoUrl: 'http://example.com/logo.png',
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', `/api/v2/player/config?comId=${'comId'}`);
+        testRateLimit(() =>
+            httpGet(`/api/v2/player/config?comId=${'comId'}`, apiHeaders)
+        );
+    });
+
     describe('GET /api/v2/subscriptions', () => {
         describe('?userId', () => {
             let user: AuthUser;
