@@ -93,6 +93,49 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         this._studios = db.collection<MongoDBStudio>(STUDIOS_COLLECTION_NAME);
     }
 
+    async getStudioByComId(comId: string): Promise<Studio> {
+        return await this._studios.findOne({
+            comId: comId,
+        });
+    }
+
+    async listStudiosForUserAndComId(
+        userId: string,
+        comId: string
+    ): Promise<StoreListedStudio[]> {
+        const studios = await this._studios
+            .find({
+                assignments: {
+                    $elemMatch: {
+                        userId: userId,
+                    },
+                },
+                ownerStudioComId: comId,
+            })
+            .toArray();
+
+        return studios.map((s) => {
+            const assignment = s.assignments.find((a) => a.userId === userId);
+            return {
+                studioId: s._id,
+                displayName: s.displayName,
+                role: assignment.role,
+                isPrimaryContact: assignment.isPrimaryContact,
+                subscriptionId: s.subscriptionId,
+                subscriptionStatus: s.subscriptionStatus,
+                comId: s.comId,
+                logoUrl: s.logoUrl,
+                ownerStudioComId: s.ownerStudioComId,
+            };
+        });
+    }
+
+    countStudiosInComId(comId: string): Promise<number> {
+        return this._studios.count({
+            ownerStudioComId: comId,
+        });
+    }
+
     // TODO: Implement
     findOpenIDLoginRequest(requestId: string): Promise<AuthOpenIDLoginRequest> {
         throw new Error('Method not implemented.');
@@ -961,6 +1004,9 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                 isPrimaryContact: assignment.isPrimaryContact,
                 subscriptionId: s.subscriptionId,
                 subscriptionStatus: s.subscriptionStatus,
+                comId: s.comId,
+                logoUrl: s.logoUrl,
+                ownerStudioComId: s.ownerStudioComId,
             };
         });
     }

@@ -18,7 +18,7 @@ import {
     COM_ID_CONFIG_SCHEMA,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
-import { convertToMillis } from './Utils';
+import { convertToDate, convertToMillis } from './Utils';
 
 export class PrismaRecordsStore implements RecordsStore {
     private _client: PrismaClient;
@@ -139,6 +139,18 @@ export class PrismaRecordsStore implements RecordsStore {
                 stripeCustomerId: studio.stripeCustomerId,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                subscriptionPeriodStart: convertToDate(
+                    studio.subscriptionPeriodStartMs
+                ),
+                subscriptionPeriodEnd: convertToDate(
+                    studio.subscriptionPeriodEndMs
+                ),
+                subscriptionInfoId: studio.subscriptionInfoId,
+                comId: studio.comId,
+                comIdConfig: studio.comIdConfig,
+                logoUrl: studio.logoUrl,
+                ownerStudioComId: studio.ownerStudioComId,
+                playerConfig: studio.playerConfig,
             },
         });
     }
@@ -323,6 +335,18 @@ export class PrismaRecordsStore implements RecordsStore {
                 stripeCustomerId: studio.stripeCustomerId,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                subscriptionInfoId: studio.subscriptionInfoId,
+                subscriptionPeriodStart: convertToDate(
+                    studio.subscriptionPeriodStartMs
+                ),
+                subscriptionPeriodEnd: convertToDate(
+                    studio.subscriptionPeriodEndMs
+                ),
+                comIdConfig: studio.comIdConfig,
+                playerConfig: studio.playerConfig,
+                logoUrl: studio.logoUrl,
+                comId: studio.comId,
+                ownerStudioComId: studio.ownerStudioComId,
             },
         });
     }
