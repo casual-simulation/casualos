@@ -139,7 +139,8 @@ const ADDRESS_VALIDATION = z
         invalid_type_error: 'address must be a string.',
         required_error: 'address is required.',
     })
-    .nonempty('address must not be empty.');
+    .min(1)
+    .max(512);
 
 /**
  * The Zod validation for event names.
@@ -149,7 +150,18 @@ const EVENT_NAME_VALIDATION = z
         invalid_type_error: 'eventName must be a string.',
         required_error: 'eventName is required.',
     })
-    .nonempty('eventName must not be empty.');
+    .min(1)
+    .max(128);
+
+const STUDIO_ID_VALIDATION = z.string().min(1).max(128);
+
+const STUDIO_DISPLAY_NAME_VALIDATION = z
+    .string({
+        invalid_type_error: 'displayName must be a string.',
+        required_error: 'displayName is required.',
+    })
+    .min(1)
+    .max(128);
 
 /**
  * The Zod validation for markers.
@@ -161,13 +173,15 @@ const MARKERS_VALIDATION = z
                 invalid_type_error: 'individual markers must be strings.',
                 required_error: 'invidiaul markers must not be null or empty.',
             })
-            .nonempty('invidiaul markers must not be null or empty.'),
+            .min(1)
+            .max(128),
         {
             invalid_type_error: 'markers must be an array of strings.',
             required_error: 'markers is required.',
         }
     )
-    .nonempty('markers must not be empty.');
+    .nonempty('markers must not be empty.')
+    .max(10, 'markers must not contain more than 10 markers.');
 
 const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
 const NO_WHITESPACE_REGEX = /^\S*$/g;
@@ -180,6 +194,7 @@ const DISPLAY_NAME_VALIDATION = z
     .string()
     .trim()
     .min(1)
+    .max(128)
     .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
     .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
 
@@ -187,8 +202,21 @@ const NAME_VALIDATION = z
     .string()
     .trim()
     .min(1)
+    .max(128)
     .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
     .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
+
+const RECORD_NAME_VALIDATION = z.string().trim().min(1).max(128);
+
+const INSTANCE_VALIDATION = z.string().min(1).max(128);
+
+const INSTANCES_ARRAY_VALIDATION = z.array(INSTANCE_VALIDATION).min(1).max(3);
+
+const INSTANCES_QUERY_VALIDATION = z
+    .string()
+    .min(1)
+    .max(128 * 3)
+    .transform((value) => parseInstancesList(value));
 
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
@@ -1341,12 +1369,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty.'),
+            recordName: RECORD_NAME_VALIDATION,
             ownerId: z
                 .string({
                     invalid_type_error: 'ownerId must be a string.',
@@ -1415,10 +1438,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z.string({
-                invalid_type_error: 'recordName must be a string.',
-                required_error: 'recordName is required.',
-            }),
+            recordName: RECORD_NAME_VALIDATION,
             policy: z.string({
                 invalid_type_error: 'policy must be a string.',
                 required_error: 'policy is required.',
@@ -1476,12 +1496,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             marker: z
                 .string({
                     invalid_type_error: 'marker must be a string.',
@@ -1489,7 +1504,7 @@ export class RecordsServer {
                 })
                 .nonempty('marker must not be empty'),
             permission: AVAILABLE_PERMISSIONS_VALIDATION,
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1553,12 +1568,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             marker: z
                 .string({
                     invalid_type_error: 'marker must be a string.',
@@ -1566,7 +1576,7 @@ export class RecordsServer {
                 })
                 .nonempty('marker must not be empty'),
             permission: AVAILABLE_PERMISSIONS_VALIDATION,
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1604,12 +1614,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             marker: z
                 .string({
                     invalid_type_error: 'marker must be a string.',
@@ -1651,12 +1656,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             startingMarker: z
                 .string({
                     invalid_type_error: 'startingMarker must be a string.',
@@ -1699,26 +1699,14 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             userId: z
                 .string({
                     invalid_type_error: 'userId must be a string.',
                     required_error: 'userId is required.',
                 })
                 .nonempty('userId must not be empty'),
-            instances: z
-                .string({
-                    invalid_type_error: 'instances must be a string.',
-                    required_error: 'instances is required.',
-                })
-                .nonempty('instances must not be empty')
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -1755,26 +1743,14 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             inst: z
                 .string({
                     invalid_type_error: 'inst must be a string.',
                     required_error: 'inst is required.',
                 })
                 .nonempty('inst must not be empty'),
-            instances: z
-                .string({
-                    invalid_type_error: 'instances must be a string.',
-                    required_error: 'instances is required.',
-                })
-                .nonempty('instances must not be empty')
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -1811,12 +1787,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             startingRole: z
                 .string({
                     invalid_type_error: 'startingRole must be a string.',
@@ -1831,14 +1802,7 @@ export class RecordsServer {
                 })
                 .nonempty('role must not be empty')
                 .optional(),
-            instances: z
-                .string({
-                    invalid_type_error: 'instances must be a string.',
-                    required_error: 'instances is required.',
-                })
-                .nonempty('instances must not be empty')
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -1896,12 +1860,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             userId: z
                 .string({
                     invalid_type_error: 'userId must be a string.',
@@ -1929,7 +1888,7 @@ export class RecordsServer {
                 })
                 .positive('expireTimeMs must be positive')
                 .optional(),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1982,12 +1941,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             userId: z
                 .string({
                     invalid_type_error: 'userId must be a string.',
@@ -2008,7 +1962,7 @@ export class RecordsServer {
                     required_error: 'role is required.',
                 })
                 .nonempty('role must not be empty'),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -2065,7 +2019,7 @@ export class RecordsServer {
         const schema = z.object({
             model: z.string().nonempty().optional(),
             messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
             temperature: z.number().min(0).max(2).optional(),
             topP: z.number().optional(),
             presencePenalty: z.number().min(-2).max(2).optional(),
@@ -2131,7 +2085,7 @@ export class RecordsServer {
                     seed: z.number().optional(),
                 })
                 .optional(),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -2180,14 +2134,7 @@ export class RecordsServer {
                     required_error: 'skyboxId is required.',
                 })
                 .nonempty('skyboxId must not be empty'),
-            instances: z
-                .string({
-                    invalid_type_error: 'instances must be a string.',
-                    required_error: 'instances is required.',
-                })
-                .nonempty('instances must not be empty')
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -2260,7 +2207,7 @@ export class RecordsServer {
             cfgScale: z.number().min(0).int().optional(),
             clipGuidancePreset: z.string().nonempty().optional(),
             stylePreset: z.string().nonempty().optional(),
-            instances: z.array(z.string().nonempty()).optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -2322,13 +2269,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            studioId: z
-                .string({
-                    invalid_type_error: 'studioId must be a string.',
-                    required_error: 'studioId is required.',
-                })
-                .min(1)
-                .max(128),
+            studioId: STUDIO_ID_VALIDATION,
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -2372,12 +2313,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            displayName: z
-                .string({
-                    invalid_type_error: 'displayName must be a string.',
-                    required_error: 'displayName is required.',
-                })
-                .nonempty('displayName must not be empty'),
+            displayName: STUDIO_DISPLAY_NAME_VALIDATION,
             ownerStudioComId: z
                 .string({
                     invalid_type_error: 'ownerStudioComId must be a string.',
@@ -2437,25 +2373,16 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            id: z
-                .string({
-                    invalid_type_error: 'id must be a string.',
-                    required_error: 'id is required.',
-                })
-                .min(1)
-                .max(128),
-            displayName: z
-                .string({
-                    invalid_type_error: 'displayName must be a string.',
-                    required_error: 'displayName is required.',
-                })
-                .nonempty('displayName must not be empty'),
+            id: STUDIO_ID_VALIDATION,
+            displayName: STUDIO_DISPLAY_NAME_VALIDATION.optional(),
             logoUrl: z
                 .string({
                     invalid_type_error: 'logoUrl must be a string.',
                     required_error: 'logoUrl is required.',
                 })
                 .url()
+                .min(1)
+                .max(512)
                 .optional(),
             comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
             playerConfig: COM_ID_PLAYER_CONFIG.optional(),
@@ -2540,12 +2467,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            studioId: z
-                .string({
-                    invalid_type_error: 'studioId must be a string.',
-                    required_error: 'studioId is required.',
-                })
-                .nonempty('studioId must not be empty'),
+            studioId: STUDIO_ID_VALIDATION,
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -2589,12 +2511,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            studioId: z
-                .string({
-                    invalid_type_error: 'studioId must be a string.',
-                    required_error: 'studioId is required.',
-                })
-                .nonempty('studioId must not be empty'),
+            studioId: STUDIO_ID_VALIDATION,
             addedUserId: z
                 .string({
                     invalid_type_error: 'addedUserId must be a string.',
@@ -2665,12 +2582,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            studioId: z
-                .string({
-                    invalid_type_error: 'studioId must be a string.',
-                    required_error: 'studioId is required.',
-                })
-                .nonempty('studioId must not be empty'),
+            studioId: STUDIO_ID_VALIDATION,
             removedUserId: z
                 .string({
                     invalid_type_error: 'removedUserId must be a string.',
@@ -2731,21 +2643,9 @@ export class RecordsServer {
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         const schema = z.object({
-            recordName: z
-                .string({
-                    required_error: 'recordName is required.',
-                    invalid_type_error: 'recordName must be a string.',
-                })
-                .nonempty('recordName must not be empty'),
-            address: z.union([z.string(), z.null()]).optional(),
-            instances: z
-                .string({
-                    invalid_type_error: 'instances must be a string.',
-                    required_error: 'instances is required.',
-                })
-                .nonempty('instances must not be empty')
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            recordName: RECORD_NAME_VALIDATION,
+            address: ADDRESS_VALIDATION.nullable().optional(),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query || {});
@@ -2843,6 +2743,8 @@ export class RecordsServer {
                     invalid_type_error: 'fileSha256Hex must be a string.',
                     required_error: 'fileSha256Hex is required.',
                 })
+                .min(1)
+                .max(128)
                 .nonempty('fileSha256Hex must be non-empty.'),
             fileByteLength: z
                 .number({
@@ -2852,15 +2754,20 @@ export class RecordsServer {
                 })
                 .positive('fileByteLength must be a positive integer number.')
                 .int('fileByteLength must be a positive integer number.'),
-            fileMimeType: z.string({
-                invalid_type_error: 'fileMimeType must be a string.',
-                required_error: 'fileMimeType is required.',
-            }),
+            fileMimeType: z
+                .string({
+                    invalid_type_error: 'fileMimeType must be a string.',
+                    required_error: 'fileMimeType is required.',
+                })
+                .min(1)
+                .max(128),
             fileDescription: z
                 .string({
                     invalid_type_error: 'fileDescription must be a string.',
                     required_error: 'fileDescription is required.',
                 })
+                .min(1)
+                .max(128)
                 .optional(),
             markers: z
                 .array(z.string(), {
@@ -2869,7 +2776,7 @@ export class RecordsServer {
                 })
                 .nonempty('markers must be non-empty.')
                 .optional(),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -2978,7 +2885,7 @@ export class RecordsServer {
                     required_error: 'markers is required.',
                 })
                 .nonempty('markers must be non-empty.'),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -3018,13 +2925,7 @@ export class RecordsServer {
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must be non-empty.')
-                .optional(),
+            recordName: RECORD_NAME_VALIDATION.optional(),
             fileName: z
                 .string({
                     invalid_type_error: 'fileName must be a string.',
@@ -3039,11 +2940,7 @@ export class RecordsServer {
                 })
                 .nonempty('fileUrl must be non-empty.')
                 .optional(),
-            instances: z
-                .string()
-                .nonempty()
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query || {});
@@ -3128,12 +3025,7 @@ export class RecordsServer {
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must be non-empty.'),
+            recordName: RECORD_NAME_VALIDATION,
             fileName: z
                 .string({
                     invalid_type_error: 'fileName must be a string.',
@@ -3141,11 +3033,7 @@ export class RecordsServer {
                 })
                 .nonempty('fileName must be non-empty.')
                 .optional(),
-            instances: z
-                .string()
-                .nonempty()
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query || {});
@@ -3212,7 +3100,7 @@ export class RecordsServer {
                 invalid_type_error: 'fileUrl must be a string.',
                 required_error: 'fileUrl is required.',
             }),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -3298,7 +3186,7 @@ export class RecordsServer {
                 })
                 .optional(),
             markers: MARKERS_VALIDATION.optional(),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -3378,26 +3266,14 @@ export class RecordsServer {
         controller: DataRecordsController
     ): Promise<GenericHttpResponse> {
         const schema = z.object({
-            recordName: z
-                .string({
-                    required_error: 'recordName is required.',
-                    invalid_type_error: 'recordName must be a string.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             address: z
                 .string({
                     required_error: 'address is required.',
                     invalid_type_error: 'address must be a string.',
                 })
                 .nonempty('address must not be empty'),
-            instances: z
-                .string({
-                    invalid_type_error: 'instances must be a string.',
-                    required_error: 'instances is required.',
-                })
-                .nonempty('instances must not be empty')
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query || {});
@@ -3473,7 +3349,7 @@ export class RecordsServer {
         const schema = z.object({
             recordKey: RECORD_KEY_VALIDATION,
             address: ADDRESS_VALIDATION,
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -3537,23 +3413,14 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z
-                .string({
-                    required_error: 'recordName is required.',
-                    invalid_type_error: 'recordName must be a string.',
-                })
-                .nonempty('recordName must not be empty'),
+            recordName: RECORD_NAME_VALIDATION,
             eventName: z
                 .string({
                     required_error: 'eventName is required.',
                     invalid_type_error: 'eventName must be a string.',
                 })
                 .nonempty('eventName must not be empty'),
-            instances: z
-                .string()
-                .nonempty()
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query || {});
@@ -3622,7 +3489,7 @@ export class RecordsServer {
                 invalid_type_error: 'count must be a number.',
                 required_error: 'count is required.',
             }),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -3681,12 +3548,7 @@ export class RecordsServer {
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         const schema = z.object({
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must be non-empty.'),
+            recordName: RECORD_NAME_VALIDATION,
             eventName: z
                 .string({
                     invalid_type_error: 'eventName must be a string.',
@@ -3694,11 +3556,7 @@ export class RecordsServer {
                 })
                 .nonempty('eventName must be non-empty.')
                 .optional(),
-            instances: z
-                .string()
-                .nonempty()
-                .optional()
-                .transform((value) => parseInstancesList(value)),
+            instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(request.query || {});
@@ -3764,7 +3622,7 @@ export class RecordsServer {
             eventName: EVENT_NAME_VALIDATION,
             count: z.number().optional(),
             markers: MARKERS_VALIDATION.optional(),
-            instances: z.array(z.string()).nonempty().optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -4549,7 +4407,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z.string().nonempty().optional(),
+            recordName: RECORD_NAME_VALIDATION.optional(),
             inst: z.string().optional(),
         });
 
@@ -4595,8 +4453,8 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordKey: z.string().nonempty().optional(),
-            recordName: z.string().nonempty().optional(),
+            recordKey: RECORD_KEY_VALIDATION.optional(),
+            recordName: RECORD_NAME_VALIDATION.optional(),
             inst: z.string().optional(),
         });
 
@@ -4644,7 +4502,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z.string().nonempty().nullable(),
+            recordName: RECORD_NAME_VALIDATION.nullable(),
             inst: z.string().nonempty(),
             automaticReport: z.boolean(),
             reportReason: z.union([
@@ -4726,7 +4584,7 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: z.string().nonempty().nullable().optional(),
+            recordName: RECORD_NAME_VALIDATION.nullable().optional(),
             inst: z.string().nonempty(),
             branch: z.string().nonempty().default(DEFAULT_BRANCH_NAME),
         });
