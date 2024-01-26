@@ -68,7 +68,7 @@ export function getFormErrors(response: GenericResponse): FormError[] {
     if (response.issues) {
         for (let issue of response.issues) {
             errors.push({
-                for: issue.path[0].toString(),
+                for: issue.path.join('.'),
                 errorCode: issue.code,
                 errorMessage: issue.message,
             });

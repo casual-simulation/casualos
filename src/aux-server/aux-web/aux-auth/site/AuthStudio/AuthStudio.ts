@@ -6,6 +6,7 @@ import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
 import {
+    AllowedStudioCreators,
     FormError,
     ListedStudioMember,
     StudioAssignmentRole,
@@ -54,8 +55,8 @@ export default class AuthStudio extends Vue {
         allowed: false,
     };
 
-    originalAllowAnyoneToCreateStudios: boolean = false;
-    allowAnyoneToCreateStudios: boolean = false;
+    originalAllowedStudioCreators: AllowedStudioCreators = 'anyone';
+    allowedStudioCreators: AllowedStudioCreators = 'anyone';
 
     originalAb1BootstrapUrl: string = null;
     ab1BootstrapUrl: string = null;
@@ -89,13 +90,15 @@ export default class AuthStudio extends Vue {
     }
 
     get ab1BootstrapUrlFieldClass() {
-        return this.errors.some((e) => e.for === 'ab1BootstrapUrl')
+        return this.errors.some((e) => e.for === 'playerConfig.ab1BootstrapUrl')
             ? 'md-invalid'
             : '';
     }
 
-    get allowAnyoneToCreateStudiosFieldClass() {
-        return this.errors.some((e) => e.for === 'allowAnyoneToCreateStudios')
+    get allowedStudioCreatorsFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'comIdConfig.allowedStudioCreators'
+        )
             ? 'md-invalid'
             : '';
     }
@@ -108,8 +111,7 @@ export default class AuthStudio extends Vue {
         return (
             this.displayName !== this.originalDisplayName ||
             this.logoUrl !== this.originalLogoUrl ||
-            this.allowAnyoneToCreateStudios !==
-                this.originalAllowAnyoneToCreateStudios ||
+            this.allowedStudioCreators !== this.originalAllowedStudioCreators ||
             this.ab1BootstrapUrl !== this.originalAb1BootstrapUrl
         );
     }
@@ -154,11 +156,11 @@ export default class AuthStudio extends Vue {
             }
 
             if (
-                this.allowAnyoneToCreateStudios !==
-                this.originalAllowAnyoneToCreateStudios
+                this.allowedStudioCreators !==
+                this.originalAllowedStudioCreators
             ) {
                 update.comIdConfig = {
-                    allowAnyoneToCreateStudios: this.allowAnyoneToCreateStudios,
+                    allowedStudioCreators: this.allowedStudioCreators,
                 };
                 hasUpdate = true;
             }
@@ -182,8 +184,7 @@ export default class AuthStudio extends Vue {
             if (result.success) {
                 this.originalDisplayName = this.displayName;
                 this.originalLogoUrl = this.logoUrl;
-                this.originalAllowAnyoneToCreateStudios =
-                    this.allowAnyoneToCreateStudios;
+                this.originalAllowedStudioCreators = this.allowedStudioCreators;
                 this.originalAb1BootstrapUrl = this.ab1BootstrapUrl;
 
                 this.showUpdateComIdConfig = false;
@@ -198,8 +199,7 @@ export default class AuthStudio extends Vue {
     async cancelUpdateStudio() {
         this.displayName = this.originalDisplayName;
         this.logoUrl = this.originalLogoUrl;
-        this.allowAnyoneToCreateStudios =
-            this.originalAllowAnyoneToCreateStudios;
+        this.allowedStudioCreators = this.originalAllowedStudioCreators;
         this.ab1BootstrapUrl = this.originalAb1BootstrapUrl;
         this.showUpdateComIdConfig = false;
         this.showUpdatePlayerConfig = false;
@@ -223,9 +223,10 @@ export default class AuthStudio extends Vue {
                 this.requestedComId = this.comId = result.studio.comId;
                 this.ownerStudioComId = result.studio.ownerStudioComId;
                 this.comIdFeatures = result.studio.comIdFeatures;
-                this.originalAllowAnyoneToCreateStudios =
-                    this.allowAnyoneToCreateStudios =
-                        !!result.studio.comIdConfig?.allowAnyoneToCreateStudios;
+                this.originalAllowedStudioCreators =
+                    this.allowedStudioCreators =
+                        result.studio.comIdConfig?.allowedStudioCreators ??
+                        'anyone';
                 this.originalAb1BootstrapUrl = this.ab1BootstrapUrl =
                     result.studio.playerConfig?.ab1BootstrapURL ?? null;
             }

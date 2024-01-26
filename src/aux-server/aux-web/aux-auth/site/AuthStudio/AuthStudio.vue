@@ -1,6 +1,9 @@
 <template>
     <div class="studio-container">
-        <h2>{{ studioName }}</h2>
+        <h2>
+            <img v-if="logoUrl" :src="logoUrl" class="logo" :alt="studioName" />
+            <span v-else>{{ studioName }}</span>
+        </h2>
 
         <auth-subscription :studioId="studioId" />
 
@@ -102,8 +105,8 @@
                         >Whether anyone can create a studio in this comID. Click to
                         change.</md-tooltip
                     >
-                    <md-table-cell>comID.allowAnyoneToCreateStudios</md-table-cell>
-                    <md-table-cell>{{ originalAllowAnyoneToCreateStudios }}</md-table-cell>
+                    <md-table-cell>comID.allowedStudioCreators</md-table-cell>
+                    <md-table-cell>{{ originalAllowedStudioCreators }}</md-table-cell>
                 </md-table-row>
                 <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
                     <md-tooltip
@@ -181,7 +184,7 @@
                 <md-field :class="ab1BootstrapUrlFieldClass">
                     <label for="ab1BootstrapURL">comID.ab1BootstrapURL</label>
                     <md-input id="ab1BootstrapURL" v-model="ab1BootstrapUrl" type="text"></md-input>
-                    <field-errors field="ab1BootstrapURL" :errors="errors" />
+                    <field-errors field="playerConfig.ab1BootstrapUrl" :errors="errors" />
                 </md-field>
                 <field-errors :field="null" :errors="errors" />
             </md-dialog-content>
@@ -208,13 +211,15 @@
                     <md-input id="logoUrl" v-model="logoUrl" type="text"></md-input>
                     <field-errors field="logoUrl" :errors="errors" />
                 </md-field>
-                <md-field :class="allowAnyoneToCreateStudiosFieldClass">
+                <!-- TODO: Support uploading logos -->
+                <!-- <file-pond :allow-multiple="false" @addFile="onLogoFileAdded" @removeFile="onLogoFileRemoved" accepted-file-types="image/jpeg, image/png, image/gif, image/webp"/> -->
+                <md-field :class="allowedStudioCreatorsFieldClass">
                     <label for="logoUrl">Who can create studios?</label>
-                    <md-select v-model="allowAnyoneToCreateStudios">
-                        <md-option :value="true">Anyone</md-option>
-                        <md-option :value="false">Only Members</md-option>
+                    <md-select v-model="allowedStudioCreators">
+                        <md-option value="anyone">Anyone</md-option>
+                        <md-option value="only-members">Only Members</md-option>
                     </md-select>
-                    <field-errors field="allowAnyoneToCreateStudios" :errors="errors" />
+                    <field-errors field="comIdConfig.allowedStudioCreators" :errors="errors" />
                 </md-field>
                 <field-errors :field="null" :errors="errors" />
             </md-dialog-content>
