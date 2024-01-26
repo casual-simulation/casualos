@@ -10715,7 +10715,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('POST /api/v2/studios/requestComId', () => {
+    describe('POST /api/v2/studios/requestComId', () => {
         beforeEach(async () => {
             await store.createStudioForUser(
                 {
