@@ -31,6 +31,7 @@ import type {
     GetStudioResult,
     UpdateStudioRequest,
     UpdateStudioResult,
+    ComIdRequestResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -544,6 +545,27 @@ export class AuthManager {
 
         const result = response.data as RemoveStudioMemberResult;
         return result;
+    }
+
+    async requestComId(
+        studioId: string,
+        newComId: string
+    ): Promise<ComIdRequestResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios/requestComId`);
+
+        const response = await axios.post(
+            url.href,
+            {
+                studioId,
+                comId: newComId,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => true,
+            }
+        );
+
+        return response.data as ComIdRequestResult;
     }
 
     async listStudios(): Promise<ListedStudio[]> {

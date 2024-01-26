@@ -16,11 +16,17 @@ import {
 } from '@casual-simulation/aux-records';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 
+// TODO: Support uploading logos
+// import vueBotPond from 'vue-filepond';
+// import 'filepond/dist/filepond.min.css';
+// const FilePond = vueBotPond();
+
 @Component({
     components: {
         'svg-icon': SvgIcon,
         'auth-subscription': AuthSubscription,
         'field-errors': FieldErrors,
+        // 'file-pond': FilePond,
     },
 })
 export default class AuthStudio extends Vue {
@@ -70,6 +76,9 @@ export default class AuthStudio extends Vue {
     showRequestComId: boolean = false;
 
     errors: FormError[] = [];
+
+    // TODO: Support uploading logos
+    // logoFile: File = null;
 
     get addressFieldClass() {
         return this.addMemberErrorCode ? 'md-invalid' : '';
@@ -296,8 +305,20 @@ export default class AuthStudio extends Vue {
         this.showRequestComId = true;
     }
 
-    requestComId() {
-        this.showRequestComId = true;
+    async requestComId() {
+        try {
+            this.isSavingStudio = true;
+
+            const comId = this.requestedComId;
+            const result = await authManager.requestComId(this.studioId, comId);
+            this.errors = getFormErrors(result);
+            if (result.success === true) {
+                this.showRequestComId = false;
+                this.comId = this.requestedComId = comId;
+            }
+        } finally {
+            this.isSavingStudio = false;
+        }
     }
 
     updatePlayerConfig() {
@@ -311,4 +332,15 @@ export default class AuthStudio extends Vue {
     updateStudioInfo() {
         this.showUpdateStudioInfo = true;
     }
+
+    // TODO: Support uploading logos
+    // onLogoFileAdded(file: File) {
+    //     this.logoFile = file;
+    // }
+
+    // onLogoFileRemoved(file: File) {
+    //     if (this.logoFile === file) {
+    //         this.logoFile = null;
+    //     }
+    // }
 }
