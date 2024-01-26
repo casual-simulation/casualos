@@ -365,7 +365,8 @@ export type KnownErrorCodes =
     | 'invalid_policy'
     | 'not_completed'
     | 'invalid_display_name'
-    | 'comId_not_found';
+    | 'comId_not_found'
+    | 'comId_already_taken';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -459,6 +460,8 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'comId_not_found') {
             return 404;
+        } else if (response.errorCode === 'comId_already_taken') {
+            return 409;
         } else {
             return 400;
         }

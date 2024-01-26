@@ -10429,7 +10429,7 @@ describe('RecordsServer', () => {
                     comId: 'comId',
                     logoUrl: 'logoUrl',
                     comIdConfig: {
-                        allowAnyoneToCreateStudios: true,
+                        allowedStudioCreators: 'anyone',
                     },
                     playerConfig: {
                         ab1BootstrapURL: 'ab1BootstrapURL',
@@ -10460,7 +10460,7 @@ describe('RecordsServer', () => {
                         comId: 'comId',
                         logoUrl: 'logoUrl',
                         comIdConfig: {
-                            allowAnyoneToCreateStudios: true,
+                            allowedStudioCreators: 'anyone',
                         },
                         playerConfig: {
                             ab1BootstrapURL: 'ab1BootstrapURL',
@@ -10628,7 +10628,7 @@ describe('RecordsServer', () => {
                     comId: 'comId',
                     logoUrl: 'logoUrl',
                     comIdConfig: {
-                        allowAnyoneToCreateStudios: true,
+                        allowedStudioCreators: 'anyone',
                     },
                     playerConfig: {
                         ab1BootstrapURL: 'ab1BootstrapURL',
@@ -10709,6 +10709,108 @@ describe('RecordsServer', () => {
                 JSON.stringify({
                     id: 'studioId',
                     displayName: 'new name',
+                }),
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe.only('POST /api/v2/studios/requestComId', () => {
+        beforeEach(async () => {
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                },
+                userId
+            );
+        });
+
+        it('should create a studio_com_id_request request', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/requestComId',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                        comId: 'newComId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.comIdRequests).toEqual([
+                {
+                    id: expect.any(String),
+                    studioId: 'studioId',
+                    userId: userId,
+                    requestedComId: 'newComId',
+                    createdAtMs: expect.any(Number),
+                    updatedAtMs: expect.any(Number),
+                    requestingIpAddress: '123.456.789',
+                },
+            ]);
+            expect(store.recordsNotifications).toEqual([
+                {
+                    resource: 'studio_com_id_request',
+                    resourceId: 'studioId',
+                    action: 'created',
+                    recordName: null,
+                    request: {
+                        id: expect.any(String),
+                        studioId: 'studioId',
+                        userId: userId,
+                        requestedComId: 'newComId',
+                        requestingIpAddress: '123.456.789',
+                        createdAtMs: expect.any(Number),
+                        updatedAtMs: expect.any(Number),
+                    },
+
+                    timeMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/studios/requestComId',
+                JSON.stringify({
+                    studioId: 'studioId',
+                    comId: 'newComId',
+                }),
+                authenticatedHeaders
+            )
+        );
+        testOrigin('POST', '/api/v2/studios/requestComId', () =>
+            JSON.stringify({
+                studioId: 'studioId',
+                comId: 'newComId',
+            })
+        );
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/studios/requestComId',
+                JSON.stringify({
+                    studioId: 'studioId',
+                    comId: 'newComId',
                 }),
                 authenticatedHeaders
             )
