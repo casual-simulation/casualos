@@ -28,6 +28,7 @@ import {
     CountRecordsFilter,
     ListedRecord,
     StoreListedStudio,
+    StudioComIdRequest,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import {
@@ -182,6 +183,7 @@ export class MemoryStore
     private _privoConfiguration: PrivoConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
     private _recordNotifications: RecordsNotification[] = [];
+    private _comIdRequests: StudioComIdRequest[] = [];
 
     maxAllowedInstSize: number = Infinity;
 
@@ -281,6 +283,10 @@ export class MemoryStore
         return this._recordNotifications;
     }
 
+    get comIdRequests() {
+        return this._comIdRequests;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -288,6 +294,10 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
+        this._comIdRequests.push(request);
     }
 
     async getStudioByComId(comId: string): Promise<Studio> {

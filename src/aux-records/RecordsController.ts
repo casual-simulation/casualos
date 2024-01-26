@@ -5,6 +5,7 @@ import {
     RecordsStore,
     Studio,
     StudioAssignmentRole,
+    StudioComIdRequest,
 } from './RecordsStore';
 import {
     toBase64String,
@@ -38,12 +39,14 @@ import {
 } from './SubscriptionConfiguration';
 import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
+import { NotificationMessenger } from './NotificationMessenger';
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
     auth: AuthStore;
     metrics: MetricsStore;
     config: ConfigurationStore;
+    messenger: NotificationMessenger | null;
 }
 
 /**
@@ -54,12 +57,14 @@ export class RecordsController {
     private _auth: AuthStore;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _messenger: NotificationMessenger | null;
 
     constructor(config: RecordsControllerConfig) {
         this._store = config.store;
         this._auth = config.auth;
         this._metrics = config.metrics;
         this._config = config.config;
+        this._messenger = config.messenger;
     }
 
     /**
@@ -1457,6 +1462,89 @@ export class RecordsController {
         }
     }
 
+    async requestComId(request: ComIdRequest): Promise<ComIdRequestResult> {
+        try {
+            const existingStudio = await this._store.getStudioById(
+                request.studioId
+            );
+
+            if (!existingStudio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._store.listStudioAssignments(
+                request.studioId,
+                {
+                    role: 'admin',
+                    userId: request.userId,
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                };
+            }
+
+            const existingComIdStudio = await this._store.getStudioByComId(
+                request.requestedComId
+            );
+
+            if (existingComIdStudio) {
+                return {
+                    success: false,
+                    errorCode: 'comId_already_taken',
+                    errorMessage: 'The given comID is already taken.',
+                };
+            }
+
+            const id = uuid();
+            const now = Date.now();
+            const comIdRequest: StudioComIdRequest = {
+                id,
+                userId: request.userId,
+                studioId: request.studioId,
+                requestingIpAddress: request.ipAddress,
+                requestedComId: request.requestedComId,
+                createdAtMs: now,
+                updatedAtMs: now,
+            };
+
+            await this._store.saveComIdRequest(comIdRequest);
+            if (this._messenger) {
+                await this._messenger.sendRecordNotification({
+                    timeMs: now,
+                    resource: 'studio_com_id_request',
+                    action: 'created',
+                    recordName: null,
+                    resourceId: comIdRequest.studioId,
+                    request: comIdRequest,
+                });
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [requestComId] An error occurred while requesting a comId:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private _createSalt(): string {
         return fromByteArray(randomBytes(16));
     }
@@ -2090,6 +2178,44 @@ export interface GetPlayerConfigSuccess {
 export interface GetPlayerConfigFailure {
     success: false;
     errorCode: 'comId_not_found' | ServerError;
+    errorMessage: string;
+}
+
+export interface ComIdRequest {
+    /**
+     * The ID of the studio that the request is for.
+     */
+    studioId: string;
+
+    /**
+     * The user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The comID that is being requested.
+     */
+    requestedComId: string;
+
+    /**
+     * The IP Address that the request is coming from.
+     */
+    ipAddress: string;
+}
+
+export type ComIdRequestResult = ComIdRequestSuccess | ComIdRequestFailure;
+
+export interface ComIdRequestSuccess {
+    success: true;
+}
+
+export interface ComIdRequestFailure {
+    success: false;
+    errorCode:
+        | 'studio_not_found'
+        | 'comId_already_taken'
+        | 'not_authorized'
+        | ServerError;
     errorMessage: string;
 }
 

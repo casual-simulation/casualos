@@ -171,6 +171,12 @@ export interface RecordsStore {
      * @param filter The filter.
      */
     countRecords(filter: CountRecordsFilter): Promise<number>;
+
+    /**
+     * Saves the given comId request.
+     * @param request The request.
+     */
+    saveComIdRequest(request: StudioComIdRequest): Promise<void>;
 }
 
 export interface CountRecordsFilter {
@@ -520,4 +526,45 @@ export interface RecordKey {
      * The ID of the user that created this key.
      */
     creatorId: string;
+}
+
+/**
+ * Defines an interface that represents a request for a comId to be applied to a studio.
+ */
+export interface StudioComIdRequest {
+    /**
+     * The ID of the request.
+     */
+    id: string;
+
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that is making the request.
+     * Null if the user has been deleted.
+     */
+    userId: string;
+
+    /**
+     * The comId that is being requested.
+     */
+    requestedComId: string;
+
+    /**
+     * The IP Address that the request came from.
+     */
+    requestingIpAddress: string;
+
+    /**
+     * The unix timestamp in miliseconds when the request was created.
+     */
+    createdAtMs: number;
+
+    /**
+     * The unix timestamp in miliseconds when the request was last updated.
+     */
+    updatedAtMs: number;
 }

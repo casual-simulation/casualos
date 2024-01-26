@@ -52,6 +52,7 @@ describe('RecordsController', () => {
             auth: store,
             metrics: store,
             config: store,
+            messenger: store,
         });
     });
 
@@ -2356,7 +2357,7 @@ describe('RecordsController', () => {
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
                 comIdConfig: {
-                    allowAnyoneToCreateStudios: true,
+                    allowedStudioCreators: 'anyone',
                 },
             });
 
@@ -2365,7 +2366,7 @@ describe('RecordsController', () => {
                 studio: {
                     id: 'studioId',
                     comIdConfig: {
-                        allowAnyoneToCreateStudios: false,
+                        allowedStudioCreators: 'only-members',
                     },
                 },
             });
@@ -2381,7 +2382,7 @@ describe('RecordsController', () => {
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
                 comIdConfig: {
-                    allowAnyoneToCreateStudios: false,
+                    allowedStudioCreators: 'only-members',
                 },
             });
         });
@@ -2397,7 +2398,7 @@ describe('RecordsController', () => {
                     ab1BootstrapURL: 'https://example.com/ab1',
                 },
                 comIdConfig: {
-                    allowAnyoneToCreateStudios: true,
+                    allowedStudioCreators: 'anyone',
                 },
             });
 
@@ -2423,7 +2424,7 @@ describe('RecordsController', () => {
                     ab1BootstrapURL: 'https://example.com/ab1',
                 },
                 comIdConfig: {
-                    allowAnyoneToCreateStudios: true,
+                    allowedStudioCreators: 'anyone',
                 },
             });
         });
@@ -2484,7 +2485,7 @@ describe('RecordsController', () => {
                     logoUrl: 'https://example.com/logo.png',
                     comId: 'comId1',
                     comIdConfig: {
-                        allowAnyoneToCreateStudios: true,
+                        allowedStudioCreators: 'anyone',
                     },
                     playerConfig: {
                         ab1BootstrapURL: 'https://example.com/ab1',
@@ -2507,7 +2508,7 @@ describe('RecordsController', () => {
                     logoUrl: 'https://example.com/logo.png',
                     comId: 'comId1',
                     comIdConfig: {
-                        allowAnyoneToCreateStudios: true,
+                        allowedStudioCreators: 'anyone',
                     },
                     playerConfig: {
                         ab1BootstrapURL: 'https://example.com/ab1',
@@ -2555,7 +2556,7 @@ describe('RecordsController', () => {
                     logoUrl: 'https://example.com/logo.png',
                     comId: 'comId1',
                     comIdConfig: {
-                        allowAnyoneToCreateStudios: true,
+                        allowedStudioCreators: 'anyone',
                     },
                     playerConfig: {
                         ab1BootstrapURL: 'https://example.com/ab1',
@@ -2621,6 +2622,155 @@ describe('RecordsController', () => {
                 success: false,
                 errorCode: 'comId_not_found',
                 errorMessage: 'The given comId was not found.',
+            });
+        });
+    });
+
+    describe('requestComId()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowed: true,
+                                    maxStudios: 100,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should send a request_com_id notification for the studio', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const result = await manager.requestComId({
+                studioId: 'studioId',
+                userId: 'userId',
+                requestedComId: 'myComId',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(store.recordsNotifications).toEqual([
+                {
+                    resource: 'studio_com_id_request',
+                    action: 'created',
+                    resourceId: 'studioId',
+                    recordName: null,
+                    timeMs: expect.any(Number),
+                    request: {
+                        id: 'requestId',
+                        studioId: 'studioId',
+                        userId: 'userId',
+                        requestingIpAddress: '127.0.0.1',
+                        requestedComId: 'myComId',
+                        createdAtMs: expect.any(Number),
+                        updatedAtMs: expect.any(Number),
+                    },
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user is not a member of the studio', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const result = await manager.requestComId({
+                studioId: 'studioId',
+                userId: 'wrongUser',
+                requestedComId: 'myComId',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        });
+
+        it('should return studio_not_found if the studio doesnt exist', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const result = await manager.requestComId({
+                studioId: 'wrongStudio',
+                userId: 'userId',
+                requestedComId: 'myComId',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        });
+
+        it('should return comId_already_taken if the comId aready exists in another studio', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            await store.addStudio({
+                id: 'studioId2',
+                comId: 'comId2',
+                displayName: 'studio2',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+            const result = await manager.requestComId({
+                studioId: 'studioId',
+                userId: 'userId',
+                requestedComId: 'comId2',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'comId_already_taken',
+                errorMessage: 'The given comID is already taken.',
             });
         });
     });

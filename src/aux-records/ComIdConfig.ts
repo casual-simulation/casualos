@@ -1,12 +1,19 @@
 import { WEB_CONFIG_SCHEMA, WebConfig } from '@casual-simulation/aux-common';
 import { z } from 'zod';
 
+const ALLOWED_STUDIO_CREATORS_SCHEMA = z.union([
+    z.literal('anyone'),
+    z.literal('only-members'),
+]);
+
+export type AllowedStudioCreators = z.infer<
+    typeof ALLOWED_STUDIO_CREATORS_SCHEMA
+>;
+
 export const COM_ID_CONFIG_SCHEMA = z.object({
-    allowAnyoneToCreateStudios: z
-        .boolean()
-        .describe(
-            'Whether anyone should be allowed to create a studio in this comId.'
-        ),
+    allowedStudioCreators: ALLOWED_STUDIO_CREATORS_SCHEMA.describe(
+        'Who is allowed to create studios in this comId.'
+    ),
 });
 
 export type ComIdConfig = z.infer<typeof COM_ID_CONFIG_SCHEMA>;

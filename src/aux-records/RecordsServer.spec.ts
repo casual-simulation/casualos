@@ -281,6 +281,7 @@ describe('RecordsServer', () => {
             store,
             config: store,
             metrics: store,
+            messenger: store,
         });
 
         policyController = new PolicyController(
