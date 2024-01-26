@@ -10650,7 +10650,7 @@ describe('RecordsServer', () => {
                         displayName: 'new name',
                         logoUrl: 'http://example.com/new-url',
                         comIdConfig: {
-                            allowAnyoneToCreateStudios: false,
+                            allowedStudioCreators: 'only-members',
                         },
                         playerConfig: {
                             ab1BootstrapURL: 'new bootstrap',
@@ -10675,7 +10675,7 @@ describe('RecordsServer', () => {
                 displayName: 'new name',
                 logoUrl: 'http://example.com/new-url',
                 comIdConfig: {
-                    allowAnyoneToCreateStudios: false,
+                    allowedStudioCreators: 'only-members',
                 },
                 playerConfig: {
                     ab1BootstrapURL: 'new bootstrap',

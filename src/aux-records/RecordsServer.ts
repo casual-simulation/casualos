@@ -154,8 +154,21 @@ const EVENT_NAME_VALIDATION = z
     .min(1)
     .max(128);
 
-const STUDIO_ID_VALIDATION = z.string().min(1).max(128);
-const COM_ID_VALIDATION = z.string().min(1).max(128);
+const STUDIO_ID_VALIDATION = z
+    .string({
+        invalid_type_error: 'studioId must be a string.',
+        required_error: 'studioId is required.',
+    })
+    .min(1)
+    .max(128);
+
+const COM_ID_VALIDATION = z
+    .string({
+        invalid_type_error: 'comId must be a string.',
+        required_error: 'comId is required.',
+    })
+    .min(1)
+    .max(128);
 
 const STUDIO_DISPLAY_NAME_VALIDATION = z
     .string({
@@ -208,7 +221,14 @@ const NAME_VALIDATION = z
     .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
     .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
 
-const RECORD_NAME_VALIDATION = z.string().trim().min(1).max(128);
+const RECORD_NAME_VALIDATION = z
+    .string({
+        required_error: 'recordName is required.',
+        invalid_type_error: 'recordName must be a string.',
+    })
+    .trim()
+    .min(1)
+    .max(128);
 
 const INSTANCE_VALIDATION = z.string().min(1).max(128);
 
