@@ -9,6 +9,9 @@
             :errorTitle="loadingState.title || 'This inst is having trouble loading.'"
             :show="loadingState && !loadingState.done"
             :version="version"
+            :logoUrl="logoUrl"
+            :logoTitle="logoTitle"
+            :title="title"
             @dismiss="dismissLoading()"
         >
         </loading>

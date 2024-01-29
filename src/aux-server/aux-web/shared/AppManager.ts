@@ -43,6 +43,7 @@ import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import {
+    ComIdConfig,
     GetPlayerConfigSuccess,
     PrivacyFeatures,
 } from '@casual-simulation/aux-records';
@@ -121,6 +122,7 @@ export class AppManager {
     }
 
     private _initPromise: Promise<void>;
+    private _initIndexedDBPromise: Promise<void>;
     private _auth: AuthHelper;
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
@@ -465,6 +467,13 @@ export class AppManager {
     }
 
     private async _initIndexedDB() {
+        if (!this._initIndexedDBPromise) {
+            this._initIndexedDBPromise = this._initIndexedDBCore();
+        }
+        return this._initIndexedDBPromise;
+    }
+
+    private async _initIndexedDBCore() {
         this._db = await openIDB('Aux', 21, (db, oldVersion) => {
             if (oldVersion < 20) {
                 let keyval = db.createObjectStore('keyval', { keyPath: 'key' });
@@ -564,7 +573,7 @@ export class AppManager {
         if (this._comId) {
             console.log('[AppManager] Using comId:', this._comId);
             const config = await this._getComIdConfig();
-
+            this._saveComIdConfig(config.comId);
             if (config && config.playerConfig) {
                 console.log(
                     '[AppManager] Updating player config with comId config',
@@ -829,6 +838,62 @@ export class AppManager {
                 this._db,
                 'keyval',
                 'config'
+            );
+            if (val) {
+                return val.value;
+            } else {
+                return null;
+            }
+        } catch (err) {
+            console.error('Unable to fetch config from storage', err);
+            return null;
+        }
+    }
+
+    private async _saveComIdConfig(comId: string) {
+        try {
+            const completed = await Promise.race([
+                new Promise<void>((resolve) =>
+                    setTimeout(resolve, SAVE_CONFIG_TIMEOUT_MILISECONDS)
+                ).then(() => false),
+                this._saveComIdConfigCore(comId).then(() => true),
+            ]);
+
+            if (!completed) {
+                console.error(
+                    '[AppManager] Unable to save config due to timeout.'
+                );
+            }
+        } catch (err) {
+            console.error('[AppManager] Unable to save config: ', err);
+        }
+    }
+
+    private async _saveComIdConfigCore(comId: string) {
+        const key = `${comId ?? '(null)'}/config`;
+        if (this.config) {
+            await putItem(this._db, 'keyval', {
+                key: key,
+                value: this.comIdConfig,
+            });
+        } else {
+            await deleteItem(this._db, 'keyval', key);
+        }
+    }
+
+    async getStoredComId(comId: string) {
+        await this._initIndexedDB();
+        return await this._fetchComIdConfigFromLocalStorage(comId);
+    }
+
+    private async _fetchComIdConfigFromLocalStorage(
+        comId: string
+    ): Promise<GetPlayerConfigSuccess> {
+        try {
+            const val = await getItem<StoredValue<GetPlayerConfigSuccess>>(
+                this._db,
+                'keyval',
+                `${comId ?? '(null)'}/config`
             );
             if (val) {
                 return val.value;
