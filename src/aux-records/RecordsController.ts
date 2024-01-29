@@ -955,20 +955,26 @@ export class RecordsController {
                 }
             }
 
-            const assignments = await this._store.listStudioAssignments(
-                existingStudio.id,
-                {
-                    userId: userId,
-                }
-            );
+            const comIdConfig = existingStudio.comIdConfig ?? {
+                allowedStudioCreators: 'only-members',
+            };
 
-            if (assignments.length <= 0) {
-                return {
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to create a studio in this comId.',
-                };
+            if (comIdConfig.allowedStudioCreators === 'only-members') {
+                const assignments = await this._store.listStudioAssignments(
+                    existingStudio.id,
+                    {
+                        userId: userId,
+                    }
+                );
+
+                if (assignments.length <= 0) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to create a studio in this comId.',
+                    };
+                }
             }
 
             await this._store.createStudioForUser(

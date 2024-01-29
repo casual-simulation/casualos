@@ -2131,6 +2131,63 @@ describe('RecordsController', () => {
             expect(studio).toBeFalsy();
         });
 
+        it('should allow non-members to create studios in a comId if configured to allow anyone', async () => {
+            uuidMock.mockReturnValueOnce('studioId2');
+            await store.saveNewUser({
+                id: 'otherUser',
+                email: 'test2@example.com',
+                name: 'other user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.updateStudio({
+                id: 'studioId1',
+                displayName: 'studio 1',
+                comId: 'comId1',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+            });
+
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'otherUser',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                studioId: 'studioId2',
+            });
+
+            const studio = await store.getStudioById('studioId2');
+            expect(studio).toEqual({
+                id: 'studioId2',
+                displayName: 'my studio',
+                ownerStudioComId: 'comId1',
+            });
+
+            const members = await store.listStudioAssignments('studioId2');
+            expect(members).toEqual([
+                {
+                    studioId: 'studioId2',
+                    userId: 'otherUser',
+                    role: 'admin',
+                    isPrimaryContact: true,
+                    user: {
+                        id: 'otherUser',
+                        email: 'test2@example.com',
+                        name: 'other user',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
         it('should return not_authorized if the subscription does not allow comId', async () => {
             store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
