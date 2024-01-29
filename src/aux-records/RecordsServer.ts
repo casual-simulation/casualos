@@ -2414,6 +2414,7 @@ export class RecordsServer {
                 .url()
                 .min(1)
                 .max(512)
+                .nullable()
                 .optional(),
             comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
             playerConfig: COM_ID_PLAYER_CONFIG.optional(),

@@ -160,7 +160,7 @@ export default class AuthStudio extends Vue {
             }
 
             if (this.logoUrl !== this.originalLogoUrl) {
-                update.logoUrl = this.logoUrl;
+                update.logoUrl = this.logoUrl || null;
                 hasUpdate = true;
             }
 
@@ -176,7 +176,7 @@ export default class AuthStudio extends Vue {
 
             if (this.ab1BootstrapUrl !== this.originalAb1BootstrapUrl) {
                 update.playerConfig = {
-                    ab1BootstrapURL: this.ab1BootstrapUrl,
+                    ab1BootstrapURL: this.ab1BootstrapUrl || null,
                 };
                 hasUpdate = true;
             }
