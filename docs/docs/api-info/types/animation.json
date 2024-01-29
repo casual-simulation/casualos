@@ -98,7 +98,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 721,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L721"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L721"
                             }
                         ],
                         "type": {
@@ -118,7 +118,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The type of easing to use.\nIf not specified then \"linear\" \"inout\" will be used.\n\nCan also be a custom function that takes a single parameter and returns a number.\nThe paramater will be a number between 0 and 1 indicating the progress through the tween."
+                                    "text": "The type of easing to use.\r\nIf not specified then \"linear\" \"inout\" will be used.\r\n\r\nCan also be a custom function that takes a single parameter and returns a number.\r\nThe paramater will be a number between 0 and 1 indicating the progress through the tween."
                                 }
                             ],
                             "blockTags": []
@@ -128,7 +128,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 736,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L736"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L736"
                             }
                         ],
                         "type": {
@@ -136,19 +136,19 @@
                             "types": [
                                 {
                                     "type": "reference",
-                                    "target": 2620,
-                                    "name": "EaseType",
-                                    "package": "@casual-simulation/aux-common",
-                                    "id": 2620,
-                                    "qualifiedName": "EaseType"
-                                },
-                                {
-                                    "type": "reference",
                                     "target": 2622,
                                     "name": "Easing",
                                     "package": "@casual-simulation/aux-common",
                                     "id": 2622,
                                     "qualifiedName": "Easing"
+                                },
+                                {
+                                    "type": "reference",
+                                    "target": 2620,
+                                    "name": "EaseType",
+                                    "package": "@casual-simulation/aux-common",
+                                    "id": 2620,
+                                    "qualifiedName": "EaseType"
                                 },
                                 {
                                     "type": "reflection",
@@ -163,7 +163,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 736,
                                                 "character": 34,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L736"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L736"
                                             }
                                         ],
                                         "signatures": [
@@ -178,7 +178,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 736,
                                                         "character": 34,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L736"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L736"
                                                     }
                                                 ],
                                                 "parameters": [
@@ -217,7 +217,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The value that should be animated from.\nIf not specified then the current tag value will be used."
+                                    "text": "The value that should be animated from.\r\nIf not specified then the current tag value will be used."
                                 }
                             ],
                             "blockTags": []
@@ -227,7 +227,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 711,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L711"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L711"
                             }
                         ],
                         "type": {
@@ -247,7 +247,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The time that the animation should start.\nShould be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime)."
+                                    "text": "The time that the animation should start.\r\nShould be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime)."
                                 }
                             ],
                             "blockTags": []
@@ -257,7 +257,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 727,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L727"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L727"
                             }
                         ],
                         "type": {
@@ -277,7 +277,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The space that the tag should be animated in.\nIf not specified then \"tempLocal\" will be used.\nIf false, then the bot will be edited instead of using tag masks."
+                                    "text": "The space that the tag should be animated in.\r\nIf not specified then \"tempLocal\" will be used.\r\nIf false, then the bot will be edited instead of using tag masks."
                                 }
                             ],
                             "blockTags": []
@@ -287,7 +287,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 743,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L743"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L743"
                             }
                         ],
                         "type": {
@@ -328,7 +328,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 716,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L716"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L716"
                             }
                         ],
                         "type": {
@@ -355,7 +355,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 706,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L706"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L706"
                     }
                 ]
             },
@@ -429,7 +429,7 @@
                         "fileName": "src/aux-common/bots/BotEvents.ts",
                         "line": 1728,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L1728"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L1728"
                     }
                 ],
                 "type": {
@@ -508,7 +508,7 @@
                         "fileName": "src/aux-common/bots/BotEvents.ts",
                         "line": 1712,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L1712"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L1712"
                     }
                 ],
                 "type": {
@@ -636,7 +636,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 1751,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L1751"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L1751"
                             }
                         ],
                         "type": {
@@ -668,7 +668,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 1746,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L1746"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L1746"
                             }
                         ],
                         "type": {
@@ -695,7 +695,7 @@
                         "fileName": "src/aux-common/bots/BotEvents.ts",
                         "line": 1742,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L1742"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L1742"
                     }
                 ]
             },

@@ -384,15 +384,26 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string
     ): Promise<void> {
-        await this._prisma.instBranch.delete({
-            where: {
-                recordName_instName_name: {
-                    recordName: recordName,
-                    instName: inst,
-                    name: branch,
+        try {
+            await this._prisma.instBranch.delete({
+                where: {
+                    recordName_instName_name: {
+                        recordName: recordName,
+                        instName: inst,
+                        name: branch,
+                    },
                 },
-            },
-        });
+            });
+        } catch (err) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
+                if (err.code === 'P2025') {
+                    // Record not found
+                    return;
+                } else {
+                    throw err;
+                }
+            }
+        }
     }
 
     async replaceCurrentUpdates(

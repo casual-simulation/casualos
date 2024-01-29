@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data.\nOptionally accepts the format that the barcode should be displayed in."
+                            "text": "Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data.\r\nOptionally accepts the format that the barcode should be displayed in."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow a Barcode that contains the data \"hello\".\nos.showBarcode(\"hello\");\n```"
+                                    "text": "```ts\nShow a Barcode that contains the data \"hello\".\r\nos.showBarcode(\"hello\");\n```"
                                 }
                             ]
                         },
@@ -36,7 +36,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow a UPC Barcode that contains the data \"123456\".\nos.showBarcode(\"123456\", 'upc');\n```"
+                                    "text": "```ts\nShow a UPC Barcode that contains the data \"123456\".\r\nos.showBarcode(\"123456\", 'upc');\n```"
                                 }
                             ]
                         },
@@ -83,7 +83,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6293,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6293"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6293"
                     }
                 ],
                 "parameters": [
@@ -148,15 +148,15 @@
                 }
             },
             "comment": {
-                "text": "Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data.\nOptionally accepts the format that the barcode should be displayed in.",
+                "text": "Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data.\r\nOptionally accepts the format that the barcode should be displayed in.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow a Barcode that contains the data \"hello\".\nos.showBarcode(\"hello\");\n```"
+                        "text": "```ts\nShow a Barcode that contains the data \"hello\".\r\nos.showBarcode(\"hello\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow a UPC Barcode that contains the data \"123456\".\nos.showBarcode(\"123456\", 'upc');\n```"
+                        "text": "```ts\nShow a UPC Barcode that contains the data \"123456\".\r\nos.showBarcode(\"123456\", 'upc');\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -201,7 +201,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nHides the Barcode popup modal.\nos.hideBarcode();\n```"
+                                    "text": "```ts\nHides the Barcode popup modal.\r\nos.hideBarcode();\n```"
                                 }
                             ]
                         },
@@ -266,7 +266,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6314,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6314"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6314"
                     }
                 ],
                 "type": {
@@ -283,7 +283,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nHides the Barcode popup modal.\nos.hideBarcode();\n```"
+                        "text": "```ts\nHides the Barcode popup modal.\r\nos.hideBarcode();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -336,7 +336,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nClose the Barcode scanner.\nos.closeBarcodeScanner();\n```"
+                                    "text": "```ts\nClose the Barcode scanner.\r\nos.closeBarcodeScanner();\n```"
                                 }
                             ]
                         },
@@ -374,7 +374,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6270,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6270"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6270"
                     }
                 ],
                 "type": {
@@ -391,7 +391,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nClose the Barcode scanner.\nos.closeBarcodeScanner();\n```"
+                        "text": "```ts\nClose the Barcode scanner.\r\nos.closeBarcodeScanner();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -423,7 +423,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner.\nWhile open, each scanned Barcode will send a "
+                            "text": "Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner.\r\nWhile open, each scanned Barcode will send a "
                         },
                         {
                             "kind": "text",
@@ -440,7 +440,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the Barcode scanner.\nos.openBarcodeScanner();\n```"
+                                    "text": "```ts\nOpen the Barcode scanner.\r\nos.openBarcodeScanner();\n```"
                                 }
                             ]
                         },
@@ -449,7 +449,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the Barcode scanner for the front-facing camera.\nos.openBarcodeScanner(\"front\");\n```"
+                                    "text": "```ts\nOpen the Barcode scanner for the front-facing camera.\r\nos.openBarcodeScanner(\"front\");\n```"
                                 }
                             ]
                         },
@@ -487,7 +487,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6255,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6255"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6255"
                     }
                 ],
                 "parameters": [
@@ -544,15 +544,15 @@
                 }
             },
             "comment": {
-                "text": "Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner.\nWhile open, each scanned Barcode will send a @onBarcodeScanned shout. Optionally accepts which camera to use for scanning. (front/back)",
+                "text": "Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner.\r\nWhile open, each scanned Barcode will send a @onBarcodeScanned shout. Optionally accepts which camera to use for scanning. (front/back)",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the Barcode scanner.\nos.openBarcodeScanner();\n```"
+                        "text": "```ts\nOpen the Barcode scanner.\r\nos.openBarcodeScanner();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the Barcode scanner for the front-facing camera.\nos.openBarcodeScanner(\"front\");\n```"
+                        "text": "```ts\nOpen the Barcode scanner for the front-facing camera.\r\nos.openBarcodeScanner(\"front\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -593,7 +593,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nHides the QR Code popup modal.\nos.hideQRCode();\n```"
+                                    "text": "```ts\nHides the QR Code popup modal.\r\nos.hideQRCode();\n```"
                                 }
                             ]
                         },
@@ -631,7 +631,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6234,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6234"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6234"
                     }
                 ],
                 "type": {
@@ -648,7 +648,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nHides the QR Code popup modal.\nos.hideQRCode();\n```"
+                        "text": "```ts\nHides the QR Code popup modal.\r\nos.hideQRCode();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -680,7 +680,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given inst and dimension.\nIf the inst and dimension are omitted, then the current inst and dimension will be used."
+                            "text": "Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given inst and dimension.\r\nIf the inst and dimension are omitted, then the current inst and dimension will be used."
                         }
                     ],
                     "blockTags": [
@@ -689,7 +689,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow a join QR Code for the current inst.\nos.showJoinCode();\n```"
+                                    "text": "```ts\nShow a join QR Code for the current inst.\r\nos.showJoinCode();\n```"
                                 }
                             ]
                         },
@@ -698,7 +698,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow a join QR Code for a inst and dimension.\nos.showJoinCode(\"inst\", \"dimension\");\n```"
+                                    "text": "```ts\nShow a join QR Code for a inst and dimension.\r\nos.showJoinCode(\"inst\", \"dimension\");\n```"
                                 }
                             ]
                         },
@@ -736,7 +736,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5196,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5196"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5196"
                     }
                 ],
                 "parameters": [
@@ -795,15 +795,15 @@
                 }
             },
             "comment": {
-                "text": "Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given inst and dimension.\nIf the inst and dimension are omitted, then the current inst and dimension will be used.",
+                "text": "Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given inst and dimension.\r\nIf the inst and dimension are omitted, then the current inst and dimension will be used.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow a join QR Code for the current inst.\nos.showJoinCode();\n```"
+                        "text": "```ts\nShow a join QR Code for the current inst.\r\nos.showJoinCode();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow a join QR Code for a inst and dimension.\nos.showJoinCode(\"inst\", \"dimension\");\n```"
+                        "text": "```ts\nShow a join QR Code for a inst and dimension.\r\nos.showJoinCode(\"inst\", \"dimension\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -844,7 +844,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow a QR Code that contains the data \"hello\".\nos.showQRCode(\"hello\");\n```"
+                                    "text": "```ts\nShow a QR Code that contains the data \"hello\".\r\nos.showQRCode(\"hello\");\n```"
                                 }
                             ]
                         },
@@ -853,7 +853,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow a QR Code that links to https://example.com\nos.showQRCode(\"https://example.com\")\n```"
+                                    "text": "```ts\nShow a QR Code that links to https://example.com\r\nos.showQRCode(\"https://example.com\")\n```"
                                 }
                             ]
                         },
@@ -891,7 +891,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6219,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6219"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6219"
                     }
                 ],
                 "parameters": [
@@ -930,11 +930,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow a QR Code that contains the data \"hello\".\nos.showQRCode(\"hello\");\n```"
+                        "text": "```ts\nShow a QR Code that contains the data \"hello\".\r\nos.showQRCode(\"hello\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow a QR Code that links to https://example.com\nos.showQRCode(\"https://example.com\")\n```"
+                        "text": "```ts\nShow a QR Code that links to https://example.com\r\nos.showQRCode(\"https://example.com\")\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -975,7 +975,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nClose the QR Code scanner.\nos.closeQRCodeScanner();\n```"
+                                    "text": "```ts\nClose the QR Code scanner.\r\nos.closeQRCodeScanner();\n```"
                                 }
                             ]
                         },
@@ -1013,7 +1013,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6199,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6199"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6199"
                     }
                 ],
                 "type": {
@@ -1030,7 +1030,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nClose the QR Code scanner.\nos.closeQRCodeScanner();\n```"
+                        "text": "```ts\nClose the QR Code scanner.\r\nos.closeQRCodeScanner();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1062,7 +1062,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner.\nWhile open, each scanned QR Code will send a "
+                            "text": "Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner.\r\nWhile open, each scanned QR Code will send a "
                         },
                         {
                             "kind": "text",
@@ -1070,7 +1070,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " shout.\nOptionally accepts which camera to use for scanning. (front/back)"
+                            "text": " shout.\r\nOptionally accepts which camera to use for scanning. (front/back)"
                         }
                     ],
                     "blockTags": [
@@ -1079,7 +1079,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the QR Code scanner.\nos.openQRCodeScanner();\n```"
+                                    "text": "```ts\nOpen the QR Code scanner.\r\nos.openQRCodeScanner();\n```"
                                 }
                             ]
                         },
@@ -1088,7 +1088,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the QR Code scanner for the front-facing camera.\nos.openQRCodeScanner(\"front\");\n```"
+                                    "text": "```ts\nOpen the QR Code scanner for the front-facing camera.\r\nos.openQRCodeScanner(\"front\");\n```"
                                 }
                             ]
                         },
@@ -1126,7 +1126,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6184,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6184"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6184"
                     }
                 ],
                 "parameters": [
@@ -1183,15 +1183,15 @@
                 }
             },
             "comment": {
-                "text": "Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner.\nWhile open, each scanned QR Code will send a @onQRCodeScanned shout.\nOptionally accepts which camera to use for scanning. (front/back)",
+                "text": "Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner.\r\nWhile open, each scanned QR Code will send a @onQRCodeScanned shout.\r\nOptionally accepts which camera to use for scanning. (front/back)",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the QR Code scanner.\nos.openQRCodeScanner();\n```"
+                        "text": "```ts\nOpen the QR Code scanner.\r\nos.openQRCodeScanner();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the QR Code scanner for the front-facing camera.\nos.openQRCodeScanner(\"front\");\n```"
+                        "text": "```ts\nOpen the QR Code scanner for the front-facing camera.\r\nos.openQRCodeScanner(\"front\");\n```"
                     },
                     {
                         "tagName": "dochash",

@@ -90,7 +90,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 36,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L36"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L36"
                             }
                         ],
                         "signatures": [
@@ -113,7 +113,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a new Vector2 object with the position (2, 3).\nlet myVector = new Vector2(2, 3);\n\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}`);\n```"
+                                                    "text": "```ts\nCreate a new Vector2 object with the position (2, 3).\r\nlet myVector = new Vector2(2, 3);\r\n\r\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}`);\n```"
                                                 }
                                             ]
                                         },
@@ -122,7 +122,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nMove this bot to (10, 15) in the home dimension.\ntags.homePosition = new Vector2(10, 15);\n```"
+                                                    "text": "```ts\nMove this bot to (10, 15) in the home dimension.\r\ntags.homePosition = new Vector2(10, 15);\n```"
                                                 }
                                             ]
                                         }
@@ -133,7 +133,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 36,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L36"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L36"
                                     }
                                 ],
                                 "parameters": [
@@ -211,7 +211,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 16,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L16"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L16"
                             }
                         ],
                         "type": {
@@ -239,7 +239,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 21,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L21"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L21"
                             }
                         ],
                         "type": {
@@ -258,7 +258,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 169,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L169"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L169"
                             }
                         ],
                         "signatures": [
@@ -281,7 +281,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nAdd two vectors together.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst added = first.add(second);\n\nos.toast(added); // Prints (4, 6)\n```"
+                                                    "text": "```ts\nAdd two vectors together.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\nconst added = first.add(second);\r\n\r\nos.toast(added); // Prints (4, 6)\n```"
                                                 }
                                             ]
                                         }
@@ -292,7 +292,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 169,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L169"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L169"
                                     }
                                 ],
                                 "parameters": [
@@ -343,7 +343,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 244,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L244"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L244"
                             }
                         ],
                         "signatures": [
@@ -357,7 +357,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the dot product of this vector compared to the given other vector.\nReturns a number that is positive if the vectors point in the same direction,\nnegative if they point in opposite directions, and zero if they are perpendicular.\nFor normalized vectors, this value is clamped to 1 and -1."
+                                            "text": "Calculates the dot product of this vector compared to the given other vector.\r\nReturns a number that is positive if the vectors point in the same direction,\r\nnegative if they point in opposite directions, and zero if they are perpendicular.\r\nFor normalized vectors, this value is clamped to 1 and -1."
                                         }
                                     ],
                                     "blockTags": [
@@ -366,7 +366,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDetermine how two vectors are pointing towards/away from the same direction.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\n\nconst dot = first.dot(second);\nif (dot < 0) {\n    os.toast(\"Vectors are pointing away from each other!\");\n} else if (dot === 0) {\n    os.toast(\"Vectors 90 degrees away from each other!\");\n} else {\n    os.toast(\"Vectors are pointing towards from each other!\");\n}\n```"
+                                                    "text": "```ts\nDetermine how two vectors are pointing towards/away from the same direction.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\n\r\nconst dot = first.dot(second);\r\nif (dot < 0) {\r\n    os.toast(\"Vectors are pointing away from each other!\");\r\n} else if (dot === 0) {\r\n    os.toast(\"Vectors 90 degrees away from each other!\");\r\n} else {\r\n    os.toast(\"Vectors are pointing towards from each other!\");\r\n}\n```"
                                                 }
                                             ]
                                         }
@@ -377,7 +377,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 244,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L244"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L244"
                                     }
                                 ],
                                 "parameters": [
@@ -424,7 +424,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 330,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L330"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L330"
                             }
                         ],
                         "signatures": [
@@ -447,7 +447,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDetermine if two vectors represent the same value.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst third = new Vector2(1, 2);\n\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n```"
+                                                    "text": "```ts\nDetermine if two vectors represent the same value.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\nconst third = new Vector2(1, 2);\r\n\r\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n```"
                                                 }
                                             ]
                                         }
@@ -458,7 +458,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 330,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L330"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L330"
                                     }
                                 ],
                                 "parameters": [
@@ -505,7 +505,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 257,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L257"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L257"
                             }
                         ],
                         "signatures": [
@@ -528,7 +528,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the length of the vector.\nconst myVector = new Vector2(1, 2);\nconst length = myVector.length();\n\nos.toast(`Vector is ${length} units long`);\n```"
+                                                    "text": "```ts\nGet the length of the vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst length = myVector.length();\r\n\r\nos.toast(`Vector is ${length} units long`);\n```"
                                                 }
                                             ]
                                         }
@@ -539,7 +539,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 257,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L257"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L257"
                                     }
                                 ],
                                 "type": {
@@ -560,7 +560,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 220,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L220"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L220"
                             }
                         ],
                         "signatures": [
@@ -583,7 +583,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nMultiply two vectors together.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst multiplied = first.multiply(second);\n\nos.toast(multiplied); // Prints (3, 8)\n```"
+                                                    "text": "```ts\nMultiply two vectors together.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\nconst multiplied = first.multiply(second);\r\n\r\nos.toast(multiplied); // Prints (3, 8)\n```"
                                                 }
                                             ]
                                         }
@@ -594,7 +594,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 220,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L220"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L220"
                                     }
                                 ],
                                 "parameters": [
@@ -645,7 +645,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 205,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L205"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L205"
                             }
                         ],
                         "signatures": [
@@ -668,7 +668,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nScale a vector by 10.\nconst myVector = new Vector2(1, 1);\nconst scaled = myVector.multiplyScalar(10);\nos.toast(scaled); // Prints (10, 10)\n```"
+                                                    "text": "```ts\nScale a vector by 10.\r\nconst myVector = new Vector2(1, 1);\r\nconst scaled = myVector.multiplyScalar(10);\r\nos.toast(scaled); // Prints (10, 10)\n```"
                                                 }
                                             ]
                                         }
@@ -679,7 +679,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 205,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L205"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L205"
                                     }
                                 ],
                                 "parameters": [
@@ -726,7 +726,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 302,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L302"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L302"
                             }
                         ],
                         "signatures": [
@@ -749,7 +749,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nNegate a vector.\nconst myVector = new Vector2(1, 2);\nconst negated = myVector.negate();\n\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n```"
+                                                    "text": "```ts\nNegate a vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst negated = myVector.negate();\r\n\r\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n```"
                                                 }
                                             ]
                                         }
@@ -760,7 +760,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 302,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L302"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L302"
                                     }
                                 ],
                                 "type": {
@@ -785,7 +785,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 288,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L288"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L288"
                             }
                         ],
                         "signatures": [
@@ -799,7 +799,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the normalized version of this vector and returns it.\nA normalized vector is a vector whose length equals 1.\n\nNormalizing a vector preserves its directionality while making the length (i.e. scale) of it 1."
+                                            "text": "Calculates the normalized version of this vector and returns it.\r\nA normalized vector is a vector whose length equals 1.\r\n\r\nNormalizing a vector preserves its directionality while making the length (i.e. scale) of it 1."
                                         }
                                     ],
                                     "blockTags": [
@@ -808,7 +808,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nNormalize a vector.\nconst myVector = new Vector2(1, 2);\nconst normalized = myVector.normalize();\n\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n```"
+                                                    "text": "```ts\nNormalize a vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst normalized = myVector.normalize();\r\n\r\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n```"
                                                 }
                                             ]
                                         }
@@ -819,7 +819,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 288,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L288"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L288"
                                     }
                                 ],
                                 "type": {
@@ -844,7 +844,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 272,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L272"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L272"
                             }
                         ],
                         "signatures": [
@@ -858,7 +858,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the square length of this vector and returns the result.\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\ncalculating a square root."
+                                            "text": "Calculates the square length of this vector and returns the result.\r\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\r\ncalculating a square root."
                                         }
                                     ],
                                     "blockTags": [
@@ -867,7 +867,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the square length of the vector.\nconst myVector = new Vector2(1, 2);\nconst length = myVector.squareLength();\n\nos.toast(`Vector is ${length}^2 units long`);\n```"
+                                                    "text": "```ts\nGet the square length of the vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst length = myVector.squareLength();\r\n\r\nos.toast(`Vector is ${length}^2 units long`);\n```"
                                                 }
                                             ]
                                         }
@@ -878,7 +878,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 272,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L272"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L272"
                                     }
                                 ],
                                 "type": {
@@ -899,7 +899,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 192,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L192"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L192"
                             }
                         ],
                         "signatures": [
@@ -922,7 +922,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nSubtract two vectors.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst subtracted = first.subtract(second);\nos.toast(subtracted);\n```"
+                                                    "text": "```ts\nSubtract two vectors.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\nconst subtracted = first.subtract(second);\r\nos.toast(subtracted);\n```"
                                                 }
                                             ]
                                         },
@@ -931,7 +931,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the direction from one vector to another.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\n\nconst directionFromFirstToSecond = second.subtract(first);\nconst directionFromSecondToFirst = first.subtract(second);\n\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n```"
+                                                    "text": "```ts\nFind the direction from one vector to another.\r\nconst first = new Vector2(1, 2);\r\nconst second = new Vector2(3, 4);\r\n\r\nconst directionFromFirstToSecond = second.subtract(first);\r\nconst directionFromSecondToFirst = first.subtract(second);\r\n\r\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n```"
                                                 }
                                             ]
                                         }
@@ -942,7 +942,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 192,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L192"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L192"
                                     }
                                 ],
                                 "parameters": [
@@ -993,7 +993,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 315,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L315"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L315"
                             }
                         ],
                         "signatures": [
@@ -1016,7 +1016,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet a string of a vector.\nconst myVector = new Vector2(1, 2);\nconst vectorString = myVector.toString();\n\nos.toast('My Vector: ' + vectorString);\n```"
+                                                    "text": "```ts\nGet a string of a vector.\r\nconst myVector = new Vector2(1, 2);\r\nconst vectorString = myVector.toString();\r\n\r\nos.toast('My Vector: ' + vectorString);\n```"
                                                 }
                                             ]
                                         }
@@ -1027,7 +1027,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 315,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L315"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L315"
                                     }
                                 ],
                                 "type": {
@@ -1050,7 +1050,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 78,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L78"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L78"
                             }
                         ],
                         "signatures": [
@@ -1073,7 +1073,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the angle between two vectors.\nconst first = new Vector2(\n    Math.cos(Math.PI / 3),\n    Math.sin(Math.PI / 3)\n); // 60 degrees\nconst second = new Vector2(\n    Math.cos(Math.PI / 2),\n    Math.sin(Math.PI / 2)\n); // 90 degrees\n\nconst angle = Vector2.angleBetween(first, second);\nos.toast(angle);\n```"
+                                                    "text": "```ts\nFind the angle between two vectors.\r\nconst first = new Vector2(\r\n    Math.cos(Math.PI / 3),\r\n    Math.sin(Math.PI / 3)\r\n); // 60 degrees\r\nconst second = new Vector2(\r\n    Math.cos(Math.PI / 2),\r\n    Math.sin(Math.PI / 2)\r\n); // 90 degrees\r\n\r\nconst angle = Vector2.angleBetween(first, second);\r\nos.toast(angle);\n```"
                                                 }
                                             ]
                                         }
@@ -1084,7 +1084,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 78,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L78"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L78"
                                     }
                                 ],
                                 "parameters": [
@@ -1157,7 +1157,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 55,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L55"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L55"
                             }
                         ],
                         "signatures": [
@@ -1180,7 +1180,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a normalized vector\nconst vector = Vector2.createNormalized(1, 2);\n```"
+                                                    "text": "```ts\nCreate a normalized vector\r\nconst vector = Vector2.createNormalized(1, 2);\n```"
                                                 }
                                             ]
                                         }
@@ -1191,7 +1191,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 55,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L55"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L55"
                                     }
                                 ],
                                 "parameters": [
@@ -1260,7 +1260,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 97,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L97"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L97"
                             }
                         ],
                         "signatures": [
@@ -1283,7 +1283,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the distance between two vectors.\nconst first = new Vector2(5, 10);\nconst second = new Vector2(9, 2);\nconst distance = Vector2.distanceBetween(first, second);\n\nos.toast(`Distance: ${distance}`);\n```"
+                                                    "text": "```ts\nFind the distance between two vectors.\r\nconst first = new Vector2(5, 10);\r\nconst second = new Vector2(9, 2);\r\nconst distance = Vector2.distanceBetween(first, second);\r\n\r\nos.toast(`Distance: ${distance}`);\n```"
                                                 }
                                             ]
                                         }
@@ -1294,7 +1294,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 97,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L97"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L97"
                                     }
                                 ],
                                 "parameters": [
@@ -1367,7 +1367,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 150,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L150"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L150"
                             }
                         ],
                         "signatures": [
@@ -1381,7 +1381,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter.\n\nThis function works similarly to interpolatePosition(), except the result is always a normalized vector."
+                                            "text": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\r\nThe degree that the result is interpolated is determined by the given amount parameter.\r\n\r\nThis function works similarly to interpolatePosition(), except the result is always a normalized vector."
                                         }
                                     ],
                                     "blockTags": [
@@ -1390,7 +1390,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the direction that points halfway between the two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the direction that points halfway between the two vectors.\r\nconst start = new Vector2(5, 10);\r\nconst finish = new Vector2(9, 2);\r\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\r\n\r\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         }
@@ -1401,7 +1401,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 150,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L150"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L150"
                                     }
                                 ],
                                 "parameters": [
@@ -1498,7 +1498,7 @@
                                 "fileName": "src/aux-common/math/Vector2.ts",
                                 "line": 123,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L123"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L123"
                             }
                         ],
                         "signatures": [
@@ -1512,7 +1512,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new vector that is the linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter."
+                                            "text": "Constructs a new vector that is the linear interpolation between the given start and end positions.\r\nThe degree that the result is interpolated is determined by the given amount parameter."
                                         }
                                     ],
                                     "blockTags": [
@@ -1521,7 +1521,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the position that is halfway between two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the position that is halfway between two vectors.\r\nconst start = new Vector2(5, 10);\r\nconst finish = new Vector2(9, 2);\r\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\r\n\r\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         },
@@ -1530,7 +1530,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the position that is 1/4 between two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.25);\n\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the position that is 1/4 between two vectors.\r\nconst start = new Vector2(5, 10);\r\nconst finish = new Vector2(9, 2);\r\nconst halfway = Vector2.interpolatePosition(start, finish, 0.25);\r\n\r\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         }
@@ -1541,7 +1541,7 @@
                                         "fileName": "src/aux-common/math/Vector2.ts",
                                         "line": 123,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L123"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L123"
                                     }
                                 ],
                                 "parameters": [
@@ -1667,7 +1667,7 @@
                         "fileName": "src/aux-common/math/Vector2.ts",
                         "line": 12,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector2.ts#L12"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector2.ts#L12"
                     }
                 ]
             },
@@ -1788,7 +1788,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 65,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L65"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L65"
                             }
                         ],
                         "signatures": [
@@ -1811,7 +1811,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a new Vector3 object with the position (2, 3, 4).\nlet myVector = new Vector3(2, 3, 4);\n\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}, Z: ${myVector.z}`);\n```"
+                                                    "text": "```ts\nCreate a new Vector3 object with the position (2, 3, 4).\r\nlet myVector = new Vector3(2, 3, 4);\r\n\r\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}, Z: ${myVector.z}`);\n```"
                                                 }
                                             ]
                                         },
@@ -1820,7 +1820,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nMove this bot to (1, 2, 3) in the home dimension.\ntags.homePosition = new Vector3(1, 2, 3);\n```"
+                                                    "text": "```ts\nMove this bot to (1, 2, 3) in the home dimension.\r\ntags.homePosition = new Vector3(1, 2, 3);\n```"
                                                 }
                                             ]
                                         }
@@ -1831,7 +1831,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 65,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L65"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L65"
                                     }
                                 ],
                                 "parameters": [
@@ -1930,7 +1930,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 18,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L18"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L18"
                             }
                         ],
                         "type": {
@@ -1958,7 +1958,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 23,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L23"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L23"
                             }
                         ],
                         "type": {
@@ -1986,7 +1986,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 28,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L28"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L28"
                             }
                         ],
                         "type": {
@@ -2005,7 +2005,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 33,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L33"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L33"
                             }
                         ],
                         "getSignature": {
@@ -2028,7 +2028,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 33,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L33"
+                                    "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L33"
                                 }
                             ],
                             "type": {
@@ -2052,7 +2052,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 40,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L40"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L40"
                             }
                         ],
                         "getSignature": {
@@ -2075,7 +2075,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 40,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L40"
+                                    "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L40"
                                 }
                             ],
                             "type": {
@@ -2099,7 +2099,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 47,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L47"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L47"
                             }
                         ],
                         "getSignature": {
@@ -2122,7 +2122,7 @@
                                     "fileName": "src/aux-common/math/Vector3.ts",
                                     "line": 47,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L47"
+                                    "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L47"
                                 }
                             ],
                             "type": {
@@ -2146,7 +2146,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 208,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L208"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L208"
                             }
                         ],
                         "signatures": [
@@ -2169,7 +2169,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nAdd two vectors together.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst added = first.add(second);\n\nos.toast(added); // Prints (4, 6, 8)\n```"
+                                                    "text": "```ts\nAdd two vectors together.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\nconst added = first.add(second);\r\n\r\nos.toast(added); // Prints (4, 6, 8)\n```"
                                                 }
                                             ]
                                         }
@@ -2180,7 +2180,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 208,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L208"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L208"
                                     }
                                 ],
                                 "parameters": [
@@ -2231,7 +2231,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 312,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L312"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L312"
                             }
                         ],
                         "signatures": [
@@ -2245,7 +2245,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the cross product of this vector with the given other vector.\nReturns a new vector that is perpendicular to both vectors.\nNote that the order of the vectors greatly matters. For example, (1, 0, 0).cross(0, 1, 0) === (0, 0, 1) but (0, 1, 0).cross(1, 0, 0) === (0, 0, -1)."
+                                            "text": "Calculates the cross product of this vector with the given other vector.\r\nReturns a new vector that is perpendicular to both vectors.\r\nNote that the order of the vectors greatly matters. For example, (1, 0, 0).cross(0, 1, 0) === (0, 0, 1) but (0, 1, 0).cross(1, 0, 0) === (0, 0, -1)."
                                         }
                                     ],
                                     "blockTags": [
@@ -2254,7 +2254,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCalculate a vector that is perpendicular to two vectors.\nconst first = new Vector3(1, 0, 0);\nconst second = new Vector3(0, 1, 0);\n\nconst result = first.cross(second);\nos.toast(`Result: ${result}`); // Prints (0, 0, 1)\n```"
+                                                    "text": "```ts\nCalculate a vector that is perpendicular to two vectors.\r\nconst first = new Vector3(1, 0, 0);\r\nconst second = new Vector3(0, 1, 0);\r\n\r\nconst result = first.cross(second);\r\nos.toast(`Result: ${result}`); // Prints (0, 0, 1)\n```"
                                                 }
                                             ]
                                         }
@@ -2265,7 +2265,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 312,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L312"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L312"
                                     }
                                 ],
                                 "parameters": [
@@ -2316,7 +2316,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 295,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L295"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L295"
                             }
                         ],
                         "signatures": [
@@ -2330,7 +2330,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the dot product of this vector compared to the given other vector.\nReturns a number that is positive if the vectors point in the same direction,\nnegative if they point in opposite directions, and zero if they are perpendicular.\nFor normalized vectors, this value is clamped to 1 and -1."
+                                            "text": "Calculates the dot product of this vector compared to the given other vector.\r\nReturns a number that is positive if the vectors point in the same direction,\r\nnegative if they point in opposite directions, and zero if they are perpendicular.\r\nFor normalized vectors, this value is clamped to 1 and -1."
                                         }
                                     ],
                                     "blockTags": [
@@ -2339,7 +2339,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDetermine how two vectors are pointing towards/away from the same direction.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\n\nconst dot = first.dot(second);\nif (dot < 0) {\n    os.toast(\"Vectors are pointing away from each other!\");\n} else if (dot === 0) {\n    os.toast(\"Vectors 90 degrees away from each other!\");\n} else {\n    os.toast(\"Vectors are pointing towards from each other!\");\n}\n```"
+                                                    "text": "```ts\nDetermine how two vectors are pointing towards/away from the same direction.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\n\r\nconst dot = first.dot(second);\r\nif (dot < 0) {\r\n    os.toast(\"Vectors are pointing away from each other!\");\r\n} else if (dot === 0) {\r\n    os.toast(\"Vectors 90 degrees away from each other!\");\r\n} else {\r\n    os.toast(\"Vectors are pointing towards from each other!\");\r\n}\n```"
                                                 }
                                             ]
                                         }
@@ -2350,7 +2350,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 295,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L295"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L295"
                                     }
                                 ],
                                 "parameters": [
@@ -2397,7 +2397,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 405,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L405"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L405"
                             }
                         ],
                         "signatures": [
@@ -2420,7 +2420,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nDetermine if two vectors represent the same value.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst third = new Vector3(1, 2, 3);\n\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n```"
+                                                    "text": "```ts\nDetermine if two vectors represent the same value.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\nconst third = new Vector3(1, 2, 3);\r\n\r\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n```"
                                                 }
                                             ]
                                         }
@@ -2431,7 +2431,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 405,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L405"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L405"
                                     }
                                 ],
                                 "parameters": [
@@ -2478,7 +2478,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 329,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L329"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L329"
                             }
                         ],
                         "signatures": [
@@ -2501,7 +2501,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the length of the vector.\nconst myVector = new Vector3(1, 2, 3);\nconst length = myVector.length();\n\nos.toast(`Vector is ${length} units long`);\n```"
+                                                    "text": "```ts\nGet the length of the vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst length = myVector.length();\r\n\r\nos.toast(`Vector is ${length} units long`);\n```"
                                                 }
                                             ]
                                         }
@@ -2512,7 +2512,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 329,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L329"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L329"
                                     }
                                 ],
                                 "type": {
@@ -2533,7 +2533,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 267,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L267"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L267"
                             }
                         ],
                         "signatures": [
@@ -2556,7 +2556,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nMultiply two vectors together.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst multiplied = first.multiply(second);\n\nos.toast(multiplied); // Prints (3, 8, 15)\n```"
+                                                    "text": "```ts\nMultiply two vectors together.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\nconst multiplied = first.multiply(second);\r\n\r\nos.toast(multiplied); // Prints (3, 8, 15)\n```"
                                                 }
                                             ]
                                         }
@@ -2567,7 +2567,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 267,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L267"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L267"
                                     }
                                 ],
                                 "parameters": [
@@ -2618,7 +2618,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 252,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L252"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L252"
                             }
                         ],
                         "signatures": [
@@ -2641,7 +2641,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nScale a vector by 10.\nconst myVector = new Vector3(1, 1, 1);\nconst scaled = myVector.multiplyScalar(10);\nos.toast(scaled); // Prints (10, 10, 10)\n```"
+                                                    "text": "```ts\nScale a vector by 10.\r\nconst myVector = new Vector3(1, 1, 1);\r\nconst scaled = myVector.multiplyScalar(10);\r\nos.toast(scaled); // Prints (10, 10, 10)\n```"
                                                 }
                                             ]
                                         }
@@ -2652,7 +2652,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 252,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L252"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L252"
                                     }
                                 ],
                                 "parameters": [
@@ -2699,7 +2699,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 377,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L377"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L377"
                             }
                         ],
                         "signatures": [
@@ -2722,7 +2722,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nNegate a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst negated = myVector.negate();\n\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n```"
+                                                    "text": "```ts\nNegate a vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst negated = myVector.negate();\r\n\r\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n```"
                                                 }
                                             ]
                                         }
@@ -2733,7 +2733,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 377,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L377"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L377"
                                     }
                                 ],
                                 "type": {
@@ -2758,7 +2758,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 360,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L360"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L360"
                             }
                         ],
                         "signatures": [
@@ -2772,7 +2772,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the normalized version of this vector and returns it.\nA normalized vector is a vector whose length equals 1.\n\nNormalizing a vector preserves its directionality while making the length (i.e. scale) of it 1."
+                                            "text": "Calculates the normalized version of this vector and returns it.\r\nA normalized vector is a vector whose length equals 1.\r\n\r\nNormalizing a vector preserves its directionality while making the length (i.e. scale) of it 1."
                                         }
                                     ],
                                     "blockTags": [
@@ -2781,7 +2781,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nNormalize a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst normalized = myVector.normalize();\n\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n```"
+                                                    "text": "```ts\nNormalize a vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst normalized = myVector.normalize();\r\n\r\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n```"
                                                 }
                                             ]
                                         }
@@ -2792,7 +2792,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 360,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L360"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L360"
                                     }
                                 ],
                                 "type": {
@@ -2817,7 +2817,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 344,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L344"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L344"
                             }
                         ],
                         "signatures": [
@@ -2831,7 +2831,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the square length of this vector and returns the result.\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\ncalculating a square root."
+                                            "text": "Calculates the square length of this vector and returns the result.\r\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\r\ncalculating a square root."
                                         }
                                     ],
                                     "blockTags": [
@@ -2840,7 +2840,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet the square length of the vector.\nconst myVector = new Vector3(1, 2, 3);\nconst length = myVector.squareLength();\n\nos.toast(`Vector is ${length}^2 units long`);\n```"
+                                                    "text": "```ts\nGet the square length of the vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst length = myVector.squareLength();\r\n\r\nos.toast(`Vector is ${length}^2 units long`);\n```"
                                                 }
                                             ]
                                         }
@@ -2851,7 +2851,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 344,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L344"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L344"
                                     }
                                 ],
                                 "type": {
@@ -2872,7 +2872,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 235,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L235"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L235"
                             }
                         ],
                         "signatures": [
@@ -2895,7 +2895,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nSubtract two vectors.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst subtracted = first.subtract(second);\nos.toast(subtracted);\n```"
+                                                    "text": "```ts\nSubtract two vectors.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\nconst subtracted = first.subtract(second);\r\nos.toast(subtracted);\n```"
                                                 }
                                             ]
                                         },
@@ -2904,7 +2904,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the direction from one vector to another.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\n\nconst directionFromFirstToSecond = second.subtract(first);\nconst directionFromSecondToFirst = first.subtract(second);\n\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n```"
+                                                    "text": "```ts\nFind the direction from one vector to another.\r\nconst first = new Vector3(1, 2, 3);\r\nconst second = new Vector3(3, 4, 5);\r\n\r\nconst directionFromFirstToSecond = second.subtract(first);\r\nconst directionFromSecondToFirst = first.subtract(second);\r\n\r\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n```"
                                                 }
                                             ]
                                         }
@@ -2915,7 +2915,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 235,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L235"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L235"
                                     }
                                 ],
                                 "parameters": [
@@ -2966,7 +2966,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 390,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L390"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L390"
                             }
                         ],
                         "signatures": [
@@ -2989,7 +2989,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet a string of a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst vectorString = myVector.toString();\n\nos.toast('My Vector: ' + vectorString);\n```"
+                                                    "text": "```ts\nGet a string of a vector.\r\nconst myVector = new Vector3(1, 2, 3);\r\nconst vectorString = myVector.toString();\r\n\r\nos.toast('My Vector: ' + vectorString);\n```"
                                                 }
                                             ]
                                         }
@@ -3000,7 +3000,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 390,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L390"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L390"
                                     }
                                 ],
                                 "type": {
@@ -3023,7 +3023,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 111,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L111"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L111"
                             }
                         ],
                         "signatures": [
@@ -3046,7 +3046,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the angle between two vectors.\nconst first = new Vector3(\n    Math.cos(Math.PI / 3),\n    Math.sin(Math.PI / 3),\n    0,\n); // 60 degrees\nconst second = new Vector3(\n    Math.cos(Math.PI / 2),\n    Math.sin(Math.PI / 2),\n    0\n); // 90 degrees\n\nconst angle = Vector3.angleBetween(first, second);\nos.toast(angle);\n```"
+                                                    "text": "```ts\nFind the angle between two vectors.\r\nconst first = new Vector3(\r\n    Math.cos(Math.PI / 3),\r\n    Math.sin(Math.PI / 3),\r\n    0,\r\n); // 60 degrees\r\nconst second = new Vector3(\r\n    Math.cos(Math.PI / 2),\r\n    Math.sin(Math.PI / 2),\r\n    0\r\n); // 90 degrees\r\n\r\nconst angle = Vector3.angleBetween(first, second);\r\nos.toast(angle);\n```"
                                                 }
                                             ]
                                         }
@@ -3057,7 +3057,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 111,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L111"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L111"
                                     }
                                 ],
                                 "parameters": [
@@ -3130,7 +3130,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 86,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L86"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L86"
                             }
                         ],
                         "signatures": [
@@ -3153,7 +3153,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a normalized vector\nconst vector = Vector3.createNormalized(1, 2, 3);\n```"
+                                                    "text": "```ts\nCreate a normalized vector\r\nconst vector = Vector3.createNormalized(1, 2, 3);\n```"
                                                 }
                                             ]
                                         }
@@ -3164,7 +3164,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 86,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L86"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L86"
                                     }
                                 ],
                                 "parameters": [
@@ -3253,7 +3253,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 136,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L136"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L136"
                             }
                         ],
                         "signatures": [
@@ -3276,7 +3276,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the distance between two vectors.\nconst first = new Vector3(5, 10, 3);\nconst second = new Vector3(9, 2, 6);\nconst distance = Vector3.distanceBetween(first, second);\n\nos.toast(`Distance: ${distance}`);\n```"
+                                                    "text": "```ts\nFind the distance between two vectors.\r\nconst first = new Vector3(5, 10, 3);\r\nconst second = new Vector3(9, 2, 6);\r\nconst distance = Vector3.distanceBetween(first, second);\r\n\r\nos.toast(`Distance: ${distance}`);\n```"
                                                 }
                                             ]
                                         }
@@ -3287,7 +3287,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 136,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L136"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L136"
                                     }
                                 ],
                                 "parameters": [
@@ -3360,7 +3360,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 189,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L189"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L189"
                             }
                         ],
                         "signatures": [
@@ -3374,7 +3374,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter.\n\nThis function works similarly to interpolatePosition(), except the result is always a normalized vector."
+                                            "text": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\r\nThe degree that the result is interpolated is determined by the given amount parameter.\r\n\r\nThis function works similarly to interpolatePosition(), except the result is always a normalized vector."
                                         }
                                     ],
                                     "blockTags": [
@@ -3383,7 +3383,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the direction that points halfway between the two vectors.\nconst start = new Vector3(5, 10, 16);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the direction that points halfway between the two vectors.\r\nconst start = new Vector3(5, 10, 16);\r\nconst finish = new Vector3(9, 2, 6);\r\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\r\n\r\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         }
@@ -3394,7 +3394,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 189,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L189"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L189"
                                     }
                                 ],
                                 "parameters": [
@@ -3491,7 +3491,7 @@
                                 "fileName": "src/aux-common/math/Vector3.ts",
                                 "line": 162,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L162"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L162"
                             }
                         ],
                         "signatures": [
@@ -3505,7 +3505,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new vector that is the linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter."
+                                            "text": "Constructs a new vector that is the linear interpolation between the given start and end positions.\r\nThe degree that the result is interpolated is determined by the given amount parameter."
                                         }
                                     ],
                                     "blockTags": [
@@ -3514,7 +3514,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the position that is halfway between two vectors.\nconst start = new Vector3(5, 10, 15);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the position that is halfway between two vectors.\r\nconst start = new Vector3(5, 10, 15);\r\nconst finish = new Vector3(9, 2, 6);\r\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\r\n\r\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         },
@@ -3523,7 +3523,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nFind the position that is 1/4 between two vectors.\nconst start = new Vector3(5, 10, 15);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.25);\n\nos.toast(halfway);\n```"
+                                                    "text": "```ts\nFind the position that is 1/4 between two vectors.\r\nconst start = new Vector3(5, 10, 15);\r\nconst finish = new Vector3(9, 2, 6);\r\nconst halfway = Vector3.interpolatePosition(start, finish, 0.25);\r\n\r\nos.toast(halfway);\n```"
                                                 }
                                             ]
                                         }
@@ -3534,7 +3534,7 @@
                                         "fileName": "src/aux-common/math/Vector3.ts",
                                         "line": 162,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L162"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L162"
                                     }
                                 ],
                                 "parameters": [
@@ -3670,7 +3670,7 @@
                         "fileName": "src/aux-common/math/Vector3.ts",
                         "line": 14,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Vector3.ts#L14"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Vector3.ts#L14"
                     }
                 ]
             },

@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).\nThis is what your device's clock thinks the inst clock says.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
+                            "text": "Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).\r\nThis is what your device's clock thinks the inst clock says.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
                         },
                         {
                             "kind": "code",
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nToast the current shared time\nos.toast(os.agreedUponTime);\n```"
+                                    "text": "```ts\nToast the current shared time\r\nos.toast(os.agreedUponTime);\n```"
                                 }
                             ]
                         },
@@ -73,7 +73,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3110,
                         "character": 20,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3110"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3110"
                     }
                 ],
                 "type": {
@@ -82,11 +82,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).\nThis is what your device's clock thinks the inst clock says.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
+                "text": "Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).\r\nThis is what your device's clock thinks the inst clock says.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nToast the current shared time\nos.toast(os.agreedUponTime);\n```"
+                        "text": "```ts\nToast the current shared time\r\nos.toast(os.agreedUponTime);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -118,7 +118,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.\nThis offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
+                            "text": "Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.\r\nThis offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
                         },
                         {
                             "kind": "code",
@@ -164,7 +164,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3163,
                         "character": 20,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3163"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3163"
                     }
                 ],
                 "type": {
@@ -173,7 +173,7 @@
                 }
             },
             "comment": {
-                "text": "Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.\nThis offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
+                "text": "Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.\r\nThis offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -205,7 +205,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the average latency between this device's clock and the inst clock in miliseconds. Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
+                            "text": "Gets the average latency between this device's clock and the inst clock in miliseconds. Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
                         },
                         {
                             "kind": "code",
@@ -251,7 +251,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3123,
                         "character": 20,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3123"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3123"
                     }
                 ],
                 "type": {
@@ -260,7 +260,7 @@
                 }
             },
             "comment": {
-                "text": "Gets the average latency between this device's clock and the inst clock in miliseconds. Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
+                "text": "Gets the average latency between this device's clock and the inst clock in miliseconds. Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -300,7 +300,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
+                            "text": ".\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
                         },
                         {
                             "kind": "code",
@@ -346,7 +346,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3136,
                         "character": 20,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3136"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3136"
                     }
                 ],
                 "type": {
@@ -355,7 +355,7 @@
                 }
             },
             "comment": {
-                "text": "Gets the calculated time offset between the inst clock and the local clock. This value is equivalent to `os.agreedUponTime - os.localTime`.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
+                "text": "Gets the calculated time offset between the inst clock and the local clock. This value is equivalent to `os.agreedUponTime - os.localTime`.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -403,7 +403,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " is more accurate.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
+                            "text": " is more accurate.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be "
                         },
                         {
                             "kind": "code",
@@ -449,7 +449,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3149,
                         "character": 20,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3149"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3149"
                     }
                 ],
                 "type": {
@@ -458,7 +458,7 @@
                 }
             },
             "comment": {
-                "text": "Gets the spread between calculated time offsets. Higher values indicate that os.agreedUponTime is less accurate. Lower values indicate that os.agreedUponTime is more accurate.\n\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
+                "text": "Gets the spread between calculated time offsets. Higher values indicate that os.agreedUponTime is less accurate. Lower values indicate that os.agreedUponTime is more accurate.\r\n\r\nIf an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -499,7 +499,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nToast the number of miliseconds since the Unix Epoch\nos.toast(os.localTime);\n```"
+                                    "text": "```ts\nToast the number of miliseconds since the Unix Epoch\r\nos.toast(os.localTime);\n```"
                                 }
                             ]
                         },
@@ -564,7 +564,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3093,
                         "character": 20,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3093"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3093"
                     }
                 ],
                 "type": {
@@ -577,7 +577,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nToast the number of miliseconds since the Unix Epoch\nos.toast(os.localTime);\n```"
+                        "text": "```ts\nToast the number of miliseconds since the Unix Epoch\r\nos.toast(os.localTime);\n```"
                     },
                     {
                         "tagName": "dochash",

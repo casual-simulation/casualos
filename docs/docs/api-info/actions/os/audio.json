@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Loads the audio from the given URL without playing it. Returns a promise that resolves once the sound has been loaded.\n\nThis is useful for pre-loading a sound so that there will be no delay when playing it with "
+                            "text": "Loads the audio from the given URL without playing it. Returns a promise that resolves once the sound has been loaded.\r\n\r\nThis is useful for pre-loading a sound so that there will be no delay when playing it with "
                         },
                         {
                             "kind": "text",
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPre-load a MP3 file from another website.\nos.bufferSound(\"https://www.testsounds.com/track06.mp3\");\n```"
+                                    "text": "```ts\nPre-load a MP3 file from another website.\r\nos.bufferSound(\"https://www.testsounds.com/track06.mp3\");\n```"
                                 }
                             ]
                         },
@@ -73,7 +73,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7222,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7222"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7222"
                     }
                 ],
                 "parameters": [
@@ -115,11 +115,11 @@
                 }
             },
             "comment": {
-                "text": "Loads the audio from the given URL without playing it. Returns a promise that resolves once the sound has been loaded.\n\nThis is useful for pre-loading a sound so that there will be no delay when playing it with os.playSound.",
+                "text": "Loads the audio from the given URL without playing it. Returns a promise that resolves once the sound has been loaded.\r\n\r\nThis is useful for pre-loading a sound so that there will be no delay when playing it with os.playSound.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nPre-load a MP3 file from another website.\nos.bufferSound(\"https://www.testsounds.com/track06.mp3\");\n```"
+                        "text": "```ts\nPre-load a MP3 file from another website.\r\nos.bufferSound(\"https://www.testsounds.com/track06.mp3\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -160,7 +160,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCancel a sound that is playing.\nconst id = await os.playSound(\"https://www.testsounds.com/track06.mp3\");\nos.cancelSound(id);\n```"
+                                    "text": "```ts\nCancel a sound that is playing.\r\nconst id = await os.playSound(\"https://www.testsounds.com/track06.mp3\");\r\nos.cancelSound(id);\n```"
                                 }
                             ]
                         },
@@ -198,7 +198,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7241,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7241"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7241"
                     }
                 ],
                 "parameters": [
@@ -265,7 +265,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCancel a sound that is playing.\nconst id = await os.playSound(\"https://www.testsounds.com/track06.mp3\");\nos.cancelSound(id);\n```"
+                        "text": "```ts\nCancel a sound that is playing.\r\nconst id = await os.playSound(\"https://www.testsounds.com/track06.mp3\");\r\nos.cancelSound(id);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -297,7 +297,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Loads and plays the audio (MP3, WAV, etc.) from the given URL.\n\nReturns a promise that resolves with the ID of the sound when the sound starts playing. The sound ID can then be used with "
+                            "text": "Loads and plays the audio (MP3, WAV, etc.) from the given URL.\r\n\r\nReturns a promise that resolves with the ID of the sound when the sound starts playing. The sound ID can then be used with "
                         },
                         {
                             "kind": "text",
@@ -314,7 +314,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nPlay a MP3 file from another website.\nos.playSound(\"https://www.testsounds.com/track06.mp3\");\n```"
+                                    "text": "```ts\nPlay a MP3 file from another website.\r\nos.playSound(\"https://www.testsounds.com/track06.mp3\");\n```"
                                 }
                             ]
                         },
@@ -379,7 +379,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7202,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7202"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7202"
                     }
                 ],
                 "parameters": [
@@ -421,11 +421,11 @@
                 }
             },
             "comment": {
-                "text": "Loads and plays the audio (MP3, WAV, etc.) from the given URL.\n\nReturns a promise that resolves with the ID of the sound when the sound starts playing. The sound ID can then be used with os.cancelSound to stop the sound.",
+                "text": "Loads and plays the audio (MP3, WAV, etc.) from the given URL.\r\n\r\nReturns a promise that resolves with the ID of the sound when the sound starts playing. The sound ID can then be used with os.cancelSound to stop the sound.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nPlay a MP3 file from another website.\nos.playSound(\"https://www.testsounds.com/track06.mp3\");\n```"
+                        "text": "```ts\nPlay a MP3 file from another website.\r\nos.playSound(\"https://www.testsounds.com/track06.mp3\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -469,7 +469,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Starts a new audio recording.\nReturns a promise that resolves when recording has started.\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.\n\nTriggers "
+                            "text": "Starts a new audio recording.\r\nReturns a promise that resolves when recording has started.\r\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.\r\n\r\nTriggers "
                         },
                         {
                             "kind": "text",
@@ -494,7 +494,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRecord some audio for 10 seconds and download the file.\nawait os.beginAudioRecording();\nawait os.sleep(10000);\nconst data = await os.endAudioRecording();\n\nos.download(data);\n```"
+                                    "text": "```ts\nRecord some audio for 10 seconds and download the file.\r\nawait os.beginAudioRecording();\r\nawait os.sleep(10000);\r\nconst data = await os.endAudioRecording();\r\n\r\nos.download(data);\n```"
                                 }
                             ]
                         },
@@ -503,7 +503,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nStream some raw audio data for 10 seconds.\nawait os.beginAudioRecording({\n    stream: true,\n    mimeType: 'audio/x-raw'\n});\n//\n```"
+                                    "text": "```ts\nStream some raw audio data for 10 seconds.\r\nawait os.beginAudioRecording({\r\n    stream: true,\r\n    mimeType: 'audio/x-raw'\r\n});\r\n//\n```"
                                 }
                             ]
                         },
@@ -512,7 +512,7 @@
                             "content": [
                                 {
                                     "kind": "text",
-                                    "text": "will be called whenever a new sample is available.\nawait os.sleep(10000);\nawait os.endAudioRecording();"
+                                    "text": "will be called whenever a new sample is available.\r\nawait os.sleep(10000);\r\nawait os.endAudioRecording();"
                                 }
                             ]
                         },
@@ -550,7 +550,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11067,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11067"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11067"
                     }
                 ],
                 "parameters": [
@@ -623,19 +623,19 @@
                 }
             },
             "comment": {
-                "text": "Starts a new audio recording.\nReturns a promise that resolves when recording has started.\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.\n\nTriggers @onBeginAudioRecording once recording has started and continuously triggers @onAudioChunk if stream is set to true.",
+                "text": "Starts a new audio recording.\r\nReturns a promise that resolves when recording has started.\r\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.\r\n\r\nTriggers @onBeginAudioRecording once recording has started and continuously triggers @onAudioChunk if stream is set to true.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRecord some audio for 10 seconds and download the file.\nawait os.beginAudioRecording();\nawait os.sleep(10000);\nconst data = await os.endAudioRecording();\n\nos.download(data);\n```"
+                        "text": "```ts\nRecord some audio for 10 seconds and download the file.\r\nawait os.beginAudioRecording();\r\nawait os.sleep(10000);\r\nconst data = await os.endAudioRecording();\r\n\r\nos.download(data);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nStream some raw audio data for 10 seconds.\nawait os.beginAudioRecording({\n    stream: true,\n    mimeType: 'audio/x-raw'\n});\n//\n```"
+                        "text": "```ts\nStream some raw audio data for 10 seconds.\r\nawait os.beginAudioRecording({\r\n    stream: true,\r\n    mimeType: 'audio/x-raw'\r\n});\r\n//\n```"
                     },
                     {
                         "tagName": "onAudioChunk",
-                        "text": "will be called whenever a new sample is available.\nawait os.sleep(10000);\nawait os.endAudioRecording();"
+                        "text": "will be called whenever a new sample is available.\r\nawait os.sleep(10000);\r\nawait os.endAudioRecording();"
                     },
                     {
                         "tagName": "dochash",
@@ -667,7 +667,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Stops the audio recording that is in progress.\nReturns a promise that resolves with the recorded data.\nIf the recording was started with stream: true, then the recorded data will be null.\n\nTriggers "
+                            "text": "Stops the audio recording that is in progress.\r\nReturns a promise that resolves with the recorded data.\r\nIf the recording was started with stream: true, then the recorded data will be null.\r\n\r\nTriggers "
                         },
                         {
                             "kind": "text",
@@ -684,7 +684,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRecord some audio for 10 seconds and download the file.\nawait os.beginAudioRecording();\nawait os.sleep(10000);\nconst data = await os.endAudioRecording();\n\nos.download(data);\n```"
+                                    "text": "```ts\nRecord some audio for 10 seconds and download the file.\r\nawait os.beginAudioRecording();\r\nawait os.sleep(10000);\r\nconst data = await os.endAudioRecording();\r\n\r\nos.download(data);\n```"
                                 }
                             ]
                         },
@@ -722,7 +722,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11093,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11093"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11093"
                     }
                 ],
                 "type": {
@@ -747,11 +747,11 @@
                 }
             },
             "comment": {
-                "text": "Stops the audio recording that is in progress.\nReturns a promise that resolves with the recorded data.\nIf the recording was started with stream: true, then the recorded data will be null.\n\nTriggers @onEndAudioRecording once recording has finished.",
+                "text": "Stops the audio recording that is in progress.\r\nReturns a promise that resolves with the recorded data.\r\nIf the recording was started with stream: true, then the recorded data will be null.\r\n\r\nTriggers @onEndAudioRecording once recording has finished.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRecord some audio for 10 seconds and download the file.\nawait os.beginAudioRecording();\nawait os.sleep(10000);\nconst data = await os.endAudioRecording();\n\nos.download(data);\n```"
+                        "text": "```ts\nRecord some audio for 10 seconds and download the file.\r\nawait os.beginAudioRecording();\r\nawait os.sleep(10000);\r\nconst data = await os.endAudioRecording();\r\n\r\nos.download(data);\n```"
                     },
                     {
                         "tagName": "dochash",

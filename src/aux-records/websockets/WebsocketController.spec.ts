@@ -742,7 +742,7 @@ describe('WebsocketController', () => {
                         ]);
 
                         expect(
-                            await instStore.getBranchByName(
+                            await tempUpdatesStore.getBranchByName(
                                 null,
                                 inst,
                                 'testBranch'
@@ -753,6 +753,7 @@ describe('WebsocketController', () => {
                             branch: 'testBranch',
                             temporary: true,
                             linkedInst: null,
+                            branchSizeInBytes: 6,
                         });
                         // Should not create an inst when the record name is null.
                         expect(await instStore.getInstByName(null, inst)).toBe(
@@ -821,7 +822,7 @@ describe('WebsocketController', () => {
                         ]);
 
                         expect(
-                            await instStore.getBranchByName(
+                            await tempUpdatesStore.getBranchByName(
                                 null,
                                 inst,
                                 'testBranch'
@@ -832,6 +833,7 @@ describe('WebsocketController', () => {
                             branch: 'testBranch',
                             temporary: true,
                             linkedInst: null,
+                            branchSizeInBytes: 6,
                         });
 
                         // Should not create an inst when the record name is null.

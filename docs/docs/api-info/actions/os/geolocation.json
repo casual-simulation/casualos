@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the current geolocation as a 3 word address\nconst location = await os.getGeolocation();\n\nif (location.success) {\n    const address = await os.convertGeolocationToWhat3Words(location);\n    os.toast(address);\n} else {\n    os.tost(\"Could not get geolocation\");\n}\n```"
+                                    "text": "```ts\nGet the current geolocation as a 3 word address\r\nconst location = await os.getGeolocation();\r\n\r\nif (location.success) {\r\n    const address = await os.convertGeolocationToWhat3Words(location);\r\n    os.toast(address);\r\n} else {\r\n    os.tost(\"Could not get geolocation\");\r\n}\n```"
                                 }
                             ]
                         },
@@ -36,7 +36,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the location of the Amway Grand as a 3 word address\nconst address = await os.convertGeolocationToWhat3Words({\n    latitude: 42.966824756903755,\n    longitude: -85.67309821404483,\n});\nos.toast(address);\n```"
+                                    "text": "```ts\nGet the location of the Amway Grand as a 3 word address\r\nconst address = await os.convertGeolocationToWhat3Words({\r\n    latitude: 42.966824756903755,\r\n    longitude: -85.67309821404483,\r\n});\r\nos.toast(address);\n```"
                                 }
                             ]
                         },
@@ -74,7 +74,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9243,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9243"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9243"
                     }
                 ],
                 "parameters": [
@@ -124,11 +124,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the current geolocation as a 3 word address\nconst location = await os.getGeolocation();\n\nif (location.success) {\n    const address = await os.convertGeolocationToWhat3Words(location);\n    os.toast(address);\n} else {\n    os.tost(\"Could not get geolocation\");\n}\n```"
+                        "text": "```ts\nGet the current geolocation as a 3 word address\r\nconst location = await os.getGeolocation();\r\n\r\nif (location.success) {\r\n    const address = await os.convertGeolocationToWhat3Words(location);\r\n    os.toast(address);\r\n} else {\r\n    os.tost(\"Could not get geolocation\");\r\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the location of the Amway Grand as a 3 word address\nconst address = await os.convertGeolocationToWhat3Words({\n    latitude: 42.966824756903755,\n    longitude: -85.67309821404483,\n});\nos.toast(address);\n```"
+                        "text": "```ts\nGet the location of the Amway Grand as a 3 word address\r\nconst address = await os.convertGeolocationToWhat3Words({\r\n    latitude: 42.966824756903755,\r\n    longitude: -85.67309821404483,\r\n});\r\nos.toast(address);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -160,7 +160,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the geographic location that the current device is at in the world.\n\nReturns a promise that resolves with the location."
+                            "text": "Gets the geographic location that the current device is at in the world.\r\n\r\nReturns a promise that resolves with the location."
                         }
                     ],
                     "blockTags": [
@@ -169,7 +169,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the current geolocation.\nconst location = await os.getGeolocation();\n\nif (location.success) {\n    os.toast(`You are at (${location.latitude}, ${location.longitude})`);\n} else {\n    os.toast(location.errorMessage);\n}\n```"
+                                    "text": "```ts\nGet the current geolocation.\r\nconst location = await os.getGeolocation();\r\n\r\nif (location.success) {\r\n    os.toast(`You are at (${location.latitude}, ${location.longitude})`);\r\n} else {\r\n    os.toast(location.errorMessage);\r\n}\n```"
                                 }
                             ]
                         },
@@ -234,7 +234,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7689,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7689"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7689"
                     }
                 ],
                 "type": {
@@ -258,11 +258,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the geographic location that the current device is at in the world.\n\nReturns a promise that resolves with the location.",
+                "text": "Gets the geographic location that the current device is at in the world.\r\n\r\nReturns a promise that resolves with the location.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the current geolocation.\nconst location = await os.getGeolocation();\n\nif (location.success) {\n    os.toast(`You are at (${location.latitude}, ${location.longitude})`);\n} else {\n    os.toast(location.errorMessage);\n}\n```"
+                        "text": "```ts\nGet the current geolocation.\r\nconst location = await os.getGeolocation();\r\n\r\nif (location.success) {\r\n    os.toast(`You are at (${location.latitude}, ${location.longitude})`);\r\n} else {\r\n    os.toast(location.errorMessage);\r\n}\n```"
                     },
                     {
                         "tagName": "dochash",

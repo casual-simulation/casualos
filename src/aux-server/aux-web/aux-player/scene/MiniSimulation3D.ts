@@ -61,6 +61,10 @@ export class MiniSimulation3D extends PlayerSimulation3D {
         return this.miniConfig.backgroundAddress || super.backgroundAddress;
     }
 
+    get portalHDRAddress() {
+        return this.miniConfig.portalHDRAddress;
+    }
+
     /**
      * Gets the default lighting that the simulation defines.
      */

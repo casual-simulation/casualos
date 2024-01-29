@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a HTTP GET request for https://example.com and toast the result.\nconst response = await web.get('https://example.com');\nos.toast(response);\n```"
+                                    "text": "```ts\nSend a HTTP GET request for https://example.com and toast the result.\r\nconst response = await web.get('https://example.com');\r\nos.toast(response);\n```"
                                 }
                             ]
                         },
@@ -92,7 +92,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 9985,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L9985"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L9985"
                     }
                 ],
                 "parameters": [
@@ -168,7 +168,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a HTTP GET request for https://example.com and toast the result.\nconst response = await web.get('https://example.com');\nos.toast(response);\n```"
+                        "text": "```ts\nSend a HTTP GET request for https://example.com and toast the result.\r\nconst response = await web.get('https://example.com');\r\nos.toast(response);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -221,7 +221,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a HTTP GET request to https://example.com and toast the result.\nconst response = await web.hook({\n   method: 'GET',\n   url: 'https://example.com',\n});\nos.toast(response);\n```"
+                                    "text": "```ts\nSend a HTTP GET request to https://example.com and toast the result.\r\nconst response = await web.hook({\r\n   method: 'GET',\r\n   url: 'https://example.com',\r\n});\r\nos.toast(response);\n```"
                                 }
                             ]
                         },
@@ -230,7 +230,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a HTTP PUT request to https://example.com with some data.\nweb.hook({\n   method: 'PUT',\n   url: 'https://example.com',\n   data: {\n     some: 'data'\n   }\n});\n```"
+                                    "text": "```ts\nSend a HTTP PUT request to https://example.com with some data.\r\nweb.hook({\r\n   method: 'PUT',\r\n   url: 'https://example.com',\r\n   data: {\r\n     some: 'data'\r\n   }\r\n});\n```"
                                 }
                             ]
                         },
@@ -268,7 +268,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10103,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10103"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10103"
                     }
                 ],
                 "parameters": [
@@ -322,11 +322,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a HTTP GET request to https://example.com and toast the result.\nconst response = await web.hook({\n   method: 'GET',\n   url: 'https://example.com',\n});\nos.toast(response);\n```"
+                        "text": "```ts\nSend a HTTP GET request to https://example.com and toast the result.\r\nconst response = await web.hook({\r\n   method: 'GET',\r\n   url: 'https://example.com',\r\n});\r\nos.toast(response);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a HTTP PUT request to https://example.com with some data.\nweb.hook({\n   method: 'PUT',\n   url: 'https://example.com',\n   data: {\n     some: 'data'\n   }\n});\n```"
+                        "text": "```ts\nSend a HTTP PUT request to https://example.com with some data.\r\nweb.hook({\r\n   method: 'PUT',\r\n   url: 'https://example.com',\r\n   data: {\r\n     some: 'data'\r\n   }\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -367,7 +367,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSend a HTTP POST request to https://example.com and toast the result.\nconst response = await web.post('https://example.com', {\n     some: 'data'\n});\nos.toast(response);\n```"
+                                    "text": "```ts\nSend a HTTP POST request to https://example.com and toast the result.\r\nconst response = await web.post('https://example.com', {\r\n     some: 'data'\r\n});\r\nos.toast(response);\n```"
                                 }
                             ]
                         },
@@ -405,7 +405,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10025,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10025"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10025"
                     }
                 ],
                 "parameters": [
@@ -503,7 +503,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSend a HTTP POST request to https://example.com and toast the result.\nconst response = await web.post('https://example.com', {\n     some: 'data'\n});\nos.toast(response);\n```"
+                        "text": "```ts\nSend a HTTP POST request to https://example.com and toast the result.\r\nconst response = await web.post('https://example.com', {\r\n     some: 'data'\r\n});\r\nos.toast(response);\n```"
                     },
                     {
                         "tagName": "dochash",

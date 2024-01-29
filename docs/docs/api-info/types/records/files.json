@@ -65,7 +65,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 2088,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2088"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2088"
                     }
                 ],
                 "type": {
@@ -180,7 +180,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The SHA-256 hash of the file.\nWhen downloading the URL, the resulting data is guaranteed to have a SHA-256 hash that matches this value."
+                                    "text": "The SHA-256 hash of the file.\r\nWhen downloading the URL, the resulting data is guaranteed to have a SHA-256 hash that matches this value."
                                 }
                             ],
                             "blockTags": []
@@ -190,7 +190,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2110,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2110"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2110"
                             }
                         ],
                         "type": {
@@ -209,7 +209,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2099,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2099"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2099"
                             }
                         ],
                         "type": {
@@ -237,7 +237,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2104,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2104"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2104"
                             }
                         ],
                         "type": {
@@ -261,7 +261,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 2098,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2098"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2098"
                     }
                 ]
             },
@@ -392,7 +392,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2130,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2130"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2130"
                             }
                         ],
                         "type": {
@@ -465,7 +465,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2138,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2138"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2138"
                             }
                         ],
                         "type": {
@@ -495,7 +495,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2143,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2143"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2143"
                             }
                         ],
                         "type": {
@@ -514,7 +514,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2125,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2125"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2125"
                             }
                         ],
                         "type": {
@@ -539,7 +539,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 2124,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2124"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2124"
                     }
                 ]
             },
@@ -639,7 +639,7 @@
                         "fileName": "src/aux-records/FileRecordsController.ts",
                         "line": 821,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L821"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L821"
                     }
                 ],
                 "type": {
@@ -764,7 +764,7 @@
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 841,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L841"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L841"
                             }
                         ],
                         "type": {
@@ -792,7 +792,7 @@
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 836,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L836"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L836"
                             }
                         ],
                         "type": {
@@ -811,7 +811,7 @@
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 832,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L832"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L832"
                             }
                         ],
                         "type": {
@@ -835,7 +835,7 @@
                         "fileName": "src/aux-records/FileRecordsController.ts",
                         "line": 831,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L831"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L831"
                     }
                 ]
             },
@@ -939,7 +939,7 @@
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 857,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L857"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L857"
                             }
                         ],
                         "type": {
@@ -1004,7 +1004,7 @@
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 867,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L867"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L867"
                             }
                         ],
                         "type": {
@@ -1023,7 +1023,7 @@
                                 "fileName": "src/aux-records/FileRecordsController.ts",
                                 "line": 853,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L853"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L853"
                             }
                         ],
                         "type": {
@@ -1047,7 +1047,7 @@
                         "fileName": "src/aux-records/FileRecordsController.ts",
                         "line": 852,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-records/FileRecordsController.ts#L852"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-records/FileRecordsController.ts#L852"
                     }
                 ]
             },

@@ -1,5 +1,31 @@
 # CasualOS Changelog
 
+## V3.2.11
+
+#### Date: 1/29/2024
+
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `join inst,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
+### :rocket: Features
+
+-   Added `portalHDRAddress` tag.
+-   Added the `join inst` BIOS option as an alternative to `enter join code`.
+-   Added buttons for the `sign in`, `sign up`, and `sign out` BIOS options.
+-   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
+    -   Configurable by the `redis.tempInstRecordsLifetimeSeconds`, `redis.tempInstRecordsLifetimeExpireMode`, `redis.connectionExpireSeconds`, and `redis.connectionExpireMode` options in SERVER_CONFIG.
+    -   Defaults:
+        -   `redis.tempInstRecordsLifetimeSeconds` defaults to `60 * 60 * 24` (24 hours)
+        -   `redis.tempInstRecordsLifetimeExpireMode` defaults to `null`
+        -   `redis.connectionExpireSeconds` defaults to `60 * 60 * 3` (3 hours)
+        -   `redis.connectionExpireMode` defaults to `null`
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where branch info was being duplicated for temporary branches.
+-   Fixed an issue where 'onSpaceRateLimitExceeded' was missing from 'Add New Tag' autocomplete list.
+
 ## V3.2.10
 
 #### Date: 1/17/2024

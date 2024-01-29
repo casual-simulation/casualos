@@ -47,3 +47,24 @@
 .md-list-item.double-line .md-list-item-content {
     min-height: 54px;
 }
+
+.md-theme-dark .selection-bios-description {
+    color: var(--md-theme-dark-text-alternate-on-background, #ddd);
+}
+
+.md-theme-default .selection-bios-description {
+    color: var(--md-theme-default-text-alternate-on-background, #999);
+}
+
+.selection-bios-description {
+    display: inline-block;
+    max-width: 240px;
+}
+
+.bios-selection-field {
+    margin-bottom: 4px;
+}
+
+.spacer {
+    flex: 1 1 auto;
+}

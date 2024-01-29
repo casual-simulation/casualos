@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets permission from user to access audio and/or video streams from the device.\n\nReturns a promise that resolves if the user grants the specified media permission(s).\nIf the user blocks permission or has previously blocked permission or any other problem occurs, an error will be thrown."
+                            "text": "Gets permission from user to access audio and/or video streams from the device.\r\n\r\nReturns a promise that resolves if the user grants the specified media permission(s).\r\nIf the user blocks permission or has previously blocked permission or any other problem occurs, an error will be thrown."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet permission for the device's microphone.\ntry {\n    await os.getMediaPermission({ audio: true });\n} catch (e) {\n    console.error('Could not get permission for microphone:', e);\n}\n```"
+                                    "text": "```ts\nGet permission for the device's microphone.\r\ntry {\r\n    await os.getMediaPermission({ audio: true });\r\n} catch (e) {\r\n    console.error('Could not get permission for microphone:', e);\r\n}\n```"
                                 }
                             ]
                         },
@@ -36,7 +36,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet permission for the device's microphone and camera.\ntry {\n    await os.getMediaPermission({ audio: true, video: true });\n} catch (e) {\n    console.error('Could not get permission for microphone and/or camera:', e);\n}\n```"
+                                    "text": "```ts\nGet permission for the device's microphone and camera.\r\ntry {\r\n    await os.getMediaPermission({ audio: true, video: true });\r\n} catch (e) {\r\n    console.error('Could not get permission for microphone and/or camera:', e);\r\n}\n```"
                                 }
                             ]
                         },
@@ -92,7 +92,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 14404,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L14404"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L14404"
                     }
                 ],
                 "parameters": [
@@ -162,15 +162,15 @@
                 }
             },
             "comment": {
-                "text": "Gets permission from user to access audio and/or video streams from the device.\n\nReturns a promise that resolves if the user grants the specified media permission(s).\nIf the user blocks permission or has previously blocked permission or any other problem occurs, an error will be thrown.",
+                "text": "Gets permission from user to access audio and/or video streams from the device.\r\n\r\nReturns a promise that resolves if the user grants the specified media permission(s).\r\nIf the user blocks permission or has previously blocked permission or any other problem occurs, an error will be thrown.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet permission for the device's microphone.\ntry {\n    await os.getMediaPermission({ audio: true });\n} catch (e) {\n    console.error('Could not get permission for microphone:', e);\n}\n```"
+                        "text": "```ts\nGet permission for the device's microphone.\r\ntry {\r\n    await os.getMediaPermission({ audio: true });\r\n} catch (e) {\r\n    console.error('Could not get permission for microphone:', e);\r\n}\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet permission for the device's microphone and camera.\ntry {\n    await os.getMediaPermission({ audio: true, video: true });\n} catch (e) {\n    console.error('Could not get permission for microphone and/or camera:', e);\n}\n```"
+                        "text": "```ts\nGet permission for the device's microphone and camera.\r\ntry {\r\n    await os.getMediaPermission({ audio: true, video: true });\r\n} catch (e) {\r\n    console.error('Could not get permission for microphone and/or camera:', e);\r\n}\n```"
                     },
                     {
                         "tagName": "dochash",
