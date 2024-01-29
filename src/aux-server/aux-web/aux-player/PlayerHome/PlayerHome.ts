@@ -137,6 +137,8 @@ export default class PlayerHome extends Vue {
     joinCode: string = null;
     privacyPolicyUrl: string = null;
     termsOfServiceUrl: string = null;
+    logoUrl: string = null;
+    logoTitle: string = null;
 
     errors: FormError[] = [];
 
@@ -268,6 +270,11 @@ export default class PlayerHome extends Vue {
         this.biosOptions = [];
         this.errors = [];
         this._simulations = new Map();
+        this.logoUrl = appManager.comIdConfig?.logoUrl;
+        this.logoTitle =
+            appManager.comIdConfig?.displayName ??
+            appManager.comIdConfig?.comId ??
+            '';
 
         appManager.simulationManager.simulationAdded.subscribe((sim) => {
             const sub = this._setupSimulation(sim);

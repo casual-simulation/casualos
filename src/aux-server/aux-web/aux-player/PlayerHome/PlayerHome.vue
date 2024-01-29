@@ -13,7 +13,16 @@
             :md-close-on-esc="false"
             :md-click-outside-to-close="false"
         >
-            <md-dialog-title>BIOS</md-dialog-title>
+            <md-dialog-title :class="{ 'logo-title': !!logoUrl }">
+                <img
+                    v-if="logoUrl"
+                    :src="logoUrl"
+                    class="logo"
+                    :alt="logoTitle"
+                    :title="logoTitle"
+                />
+                <span v-else>BIOS</span>
+            </md-dialog-title>
             <md-dialog-content>
                 <md-field class="bios-selection-field">
                     <label for="biosOption">bios=</label>
