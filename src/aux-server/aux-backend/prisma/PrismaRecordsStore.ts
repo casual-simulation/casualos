@@ -16,6 +16,7 @@ import {
     ComIdPlayerConfig,
     COM_ID_PLAYER_CONFIG,
     COM_ID_CONFIG_SCHEMA,
+    StudioComIdRequest,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
@@ -349,6 +350,16 @@ export class PrismaRecordsStore implements RecordsStore {
                 ownerStudioComId: studio.ownerStudioComId,
             },
         });
+    }
+
+    async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
+        await this._client
+            .$executeRaw`UPSERT INTO public."StudioComIdRequest" ("id", "studioId", "userId", "requestedComId", "requestingIpAddress", "createdAt", "updatedAt")
+            VALUES (${request.id}, ${request.studioId}, ${request.userId}, ${
+            request.requestedComId
+        }, ${request.requestingIpAddress}, ${convertToDate(
+            request.createdAtMs
+        )}, NOW())`;
     }
 
     async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {

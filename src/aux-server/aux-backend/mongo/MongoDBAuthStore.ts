@@ -12,6 +12,7 @@ import {
     ListedStudioAssignment,
     ListedRecord,
     StoreListedStudio,
+    StudioComIdRequest,
 } from '@casual-simulation/aux-records';
 import {
     AddressType,
@@ -43,6 +44,7 @@ export const INVOICES_COLLECTION_NAME = 'invoices';
 export const RECORDS_COLLECTION_NAME = 'records';
 export const RECORD_KEYS_COLLECTION_NAME = 'recordKeys';
 export const STUDIOS_COLLECTION_NAME = 'studios';
+export const STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME = 'studioComIdRequests';
 
 export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _users: Collection<MongoDBAuthUser>;
@@ -56,6 +58,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _collection: Collection<Record>;
     private _keyCollection: Collection<RecordKey>;
     private _studios: Collection<MongoDBStudio>;
+    private _comIdRequests: Collection<MongoDBStudioComIdRequest>;
 
     private _db: Db;
 
@@ -91,6 +94,25 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             RECORD_KEYS_COLLECTION_NAME
         );
         this._studios = db.collection<MongoDBStudio>(STUDIOS_COLLECTION_NAME);
+        this._comIdRequests = db.collection<MongoDBStudioComIdRequest>(
+            STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME
+        );
+    }
+
+    async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
+        await this._comIdRequests.updateOne(
+            {
+                _id: request.id,
+            },
+            {
+                $set: {
+                    ...request,
+                },
+            },
+            {
+                upsert: true,
+            }
+        );
     }
 
     async getStudioByComId(comId: string): Promise<Studio> {
@@ -1317,4 +1339,8 @@ export interface MongoDBInvoice extends AuthInvoice {
 export interface MongoDBStudio extends Studio {
     _id: string;
     assignments: StudioAssignment[];
+}
+
+export interface MongoDBStudioComIdRequest extends StudioComIdRequest {
+    _id: string;
 }

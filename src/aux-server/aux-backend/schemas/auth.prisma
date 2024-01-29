@@ -66,6 +66,7 @@ model User {
     aiSkyboxMetrics AiSkyboxMetrics[]
 
     instReports UserInstReport[]
+    comIdRequests StudioComIdRequest[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -214,6 +215,7 @@ model Studio {
     aiSkyboxMetrics AiSkyboxMetrics[]
 
     childStudios Studio[] @relation("OwnerStudio")
+    comIdRequests StudioComIdRequest[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -620,4 +622,21 @@ model UserInstReport {
 
     @@index([automaticReport, createdAt(sort: Desc), recordName, inst])
     @@index([reportReason, createdAt(sort: Desc), recordName, inst])
+}
+
+model StudioComIdRequest {
+    id String @id @db.Uuid
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "StudioComIdRequest_studioId_fkey1")
+
+    requestedComId String @db.String(128)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "StudioComIdRequest_userId_fkey1")
+
+    requestingIpAddress String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
