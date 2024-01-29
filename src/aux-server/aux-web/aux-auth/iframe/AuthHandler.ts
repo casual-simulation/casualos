@@ -35,7 +35,7 @@ import {
     NAME_FIELD,
     PARENT_EMAIL_FIELD,
     ADDRESS_FIELD,
-    ComIdWebConfig,
+    GetPlayerConfigResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
@@ -127,7 +127,7 @@ export class AuthHandler implements AuxAuth {
         };
     }
 
-    async getComIdWebConfig(comId: string): Promise<ComIdWebConfig> {
+    async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
         return authManager.getComIdWebConfig(comId);
     }
 

@@ -27,11 +27,11 @@ import type {
     CreateRecordResult,
     ListInstsResult,
     EraseInstResult,
-    ComIdWebConfig,
     GetStudioResult,
     UpdateStudioRequest,
     UpdateStudioResult,
     ComIdRequestResult,
+    GetPlayerConfigResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -874,14 +874,14 @@ export class AuthManager {
         }
     }
 
-    async getComIdWebConfig(comId: string): Promise<ComIdWebConfig> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/comId/webConfig`);
+    async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/player/config`);
         url.searchParams.set('comId', comId);
         const response = await axios.get(url.href, {
             headers: this._authenticationHeaders(),
         });
 
-        const result = response.data as ComIdWebConfig;
+        const result = response.data as GetPlayerConfigResult;
         return result;
     }
 

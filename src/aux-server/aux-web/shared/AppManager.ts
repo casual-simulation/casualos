@@ -43,7 +43,7 @@ import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import {
-    ComIdWebConfig,
+    GetPlayerConfigSuccess,
     PrivacyFeatures,
 } from '@casual-simulation/aux-records';
 import { AuxDevice } from '@casual-simulation/aux-runtime';
@@ -102,7 +102,7 @@ export class AppManager {
     private _vrSupported: boolean;
     private _ab1BootstrapUrl: string;
     private _comId: string;
-    private _comIdConfig: ComIdWebConfig;
+    private _comIdConfig: GetPlayerConfigSuccess;
 
     get loadingProgress(): Observable<ProgressMessage> {
         return this._progress;
@@ -114,6 +114,10 @@ export class AppManager {
 
     get auth() {
         return this._auth;
+    }
+
+    get comIdConfig() {
+        return this._comIdConfig;
     }
 
     private _initPromise: Promise<void>;
@@ -747,11 +751,15 @@ export class AppManager {
         return insts.map((i) => i.origin.inst);
     }
 
-    private async _getComIdConfig(): Promise<ComIdWebConfig> {
+    private async _getComIdConfig(): Promise<GetPlayerConfigSuccess> {
         try {
-            this._comIdConfig = await this._auth.primary.getComIdWebConfig(
+            const config = await this._auth.primary.getComIdWebConfig(
                 this._comId
             );
+
+            if (config.success === true) {
+                this._comIdConfig = config;
+            }
             return this._comIdConfig;
         } catch (err) {
             console.error(

@@ -17,7 +17,7 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import {
-    ComIdWebConfig,
+    GetPlayerConfigResult,
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
@@ -588,7 +588,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.getPolicyUrls();
     }
 
-    async getComIdWebConfig(comId: string): Promise<ComIdWebConfig> {
+    async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
         if (!hasValue(this._origin)) {
             return null;
         }

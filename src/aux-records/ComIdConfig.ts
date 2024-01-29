@@ -18,26 +18,6 @@ export const COM_ID_CONFIG_SCHEMA = z.object({
 
 export type ComIdConfig = z.infer<typeof COM_ID_CONFIG_SCHEMA>;
 
-/**
- * Defines an interface that represents the comId configuration for a web client.
- */
-export interface ComIdWebConfig {
-    /**
-     * The player configuration that should be used.
-     */
-    playerConfig: Partial<WebConfig>;
-
-    /**
-     * The name of the comId.
-     */
-    name: string;
-
-    /**
-     * The URL of the logo that should be used for this comId.
-     */
-    logoUrl: string | null;
-}
-
 export const COM_ID_PLAYER_CONFIG = WEB_CONFIG_SCHEMA.pick({
     ab1BootstrapURL: true,
     allowedBiosOptions: true,
