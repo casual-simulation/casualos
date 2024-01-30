@@ -10187,6 +10187,48 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should return a unacceptable_request result if given a prompt over 600 characters long', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a'.repeat(601),
+                        negativePrompt: 'a red sky',
+                        blockadeLabs: {
+                            skyboxStyleId: 1,
+                            remixImagineId: 2,
+                            seed: 3,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'too_big',
+                            exact: false,
+                            inclusive: true,
+                            maximum: 600,
+                            message:
+                                'String must contain at most 600 character(s)',
+                            path: ['prompt'],
+                            type: 'string',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(skyboxInterface.generateSkybox).not.toHaveBeenCalled();
+        });
+
         testOrigin('POST', `/api/v2/ai/skybox`, () =>
             JSON.stringify({
                 prompt: 'test',
