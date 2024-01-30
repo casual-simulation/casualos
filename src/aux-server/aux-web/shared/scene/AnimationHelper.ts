@@ -203,9 +203,7 @@ export class AnimationHelper {
             clip.clampWhenFinished = !!options.clampWhenFinished;
             clip.timeScale = realNumberOrDefault(options.timeScale, 1);
             clip.weight = 1;
-            clip.time =
-                (realNumberOrDefault(options.initialTime, 0) / 1000) *
-                clip.timeScale;
+            clip.time = realNumberOrDefault(options.initialTime, 0) / 1000;
 
             const now = Date.now();
             let startTimeRelativeToNow =
