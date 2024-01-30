@@ -10,6 +10,7 @@
 
 ### :rocket: Features
 
+-   Added `POST /api/v2/ai/skybox` character limit prompt to match BlockadeLabs limit of 600 characters.
 -   Added `portalHDRAddress` tag.
 -   Added the `join inst` BIOS option as an alternative to `enter join code`.
 -   Added buttons for the `sign in`, `sign up`, and `sign out` BIOS options.
