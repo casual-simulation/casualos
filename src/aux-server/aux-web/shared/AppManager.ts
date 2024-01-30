@@ -564,12 +564,17 @@ export class AppManager {
         }
     }
 
-    private async _initComId() {
+    getComIdFromUrl(): string {
         const params = new URLSearchParams(location.search);
-        if (params.has('comId')) {
-            this._comId = params.get('comId');
+        if (params.has('comId') || params.has('comID')) {
+            return params.get('comId') ?? params.get('comID');
+        } else {
+            return null;
         }
+    }
 
+    private async _initComId() {
+        this._comId = this.getComIdFromUrl();
         if (this._comId) {
             console.log('[AppManager] Using comId:', this._comId);
             const config = await this._getComIdConfig();

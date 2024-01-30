@@ -79,19 +79,16 @@ export default class LoadApp extends Vue {
             }
         }, LOADING_TIMEOUT_MS);
 
-        const params = new URLSearchParams(location.search);
-        if (params.has('comId')) {
-            const comId = params.get('comId');
-            if (comId) {
-                appManager.getStoredComId(comId).then((config) => {
-                    console.log('has stored id', config);
-                    if (this.loading) {
-                        this.logoUrl = config?.logoUrl ?? null;
-                        this.title = this.logoTitle =
-                            config.displayName ?? config.comId ?? null;
-                    }
-                });
-            }
+        const comId = appManager.getComIdFromUrl();
+        if (comId) {
+            appManager.getStoredComId(comId).then((config) => {
+                console.log('has stored id', config);
+                if (this.loading) {
+                    this.logoUrl = config?.logoUrl ?? null;
+                    this.title = this.logoTitle =
+                        config.displayName ?? config.comId ?? null;
+                }
+            });
         }
     }
 
