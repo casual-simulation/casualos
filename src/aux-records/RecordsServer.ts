@@ -2107,8 +2107,8 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            prompt: z.string().nonempty(),
-            negativePrompt: z.string().nonempty().optional(),
+            prompt: z.string().nonempty().max(600),
+            negativePrompt: z.string().nonempty().max(600).optional(),
             blockadeLabs: z
                 .object({
                     skyboxStyleId: z.number().optional(),
