@@ -245,6 +245,7 @@ export class AppManager {
                 : null,
             playerMode: this._config.playerMode,
             requirePrivoLogin: this._config.requirePrivoLogin,
+            comId: this._comId,
         };
     }
 
