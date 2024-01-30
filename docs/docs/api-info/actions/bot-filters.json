@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates a bot filter that includes bots that are in the given dimension and at the given X and Y position.\n\nWhen this filter is used with "
+                            "text": "Creates a bot filter that includes bots that are in the given dimension and at the given X and Y position.\r\n\r\nWhen this filter is used with "
                         },
                         {
                             "kind": "text",
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all the bots at (1, 2) in the \"test\" dimension.\nlet bots = getBots(atPosition(\"test\", 1, 2));\n```"
+                                    "text": "```ts\nFind all the bots at (1, 2) in the \"test\" dimension.\r\nlet bots = getBots(atPosition(\"test\", 1, 2));\n```"
                                 }
                             ]
                         },
@@ -73,7 +73,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4183,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4183"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4183"
                     }
                 ],
                 "parameters": [
@@ -148,11 +148,11 @@
                 }
             },
             "comment": {
-                "text": "Creates a bot filter that includes bots that are in the given dimension and at the given X and Y position.\n\nWhen this filter is used with getbots-filters, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).",
+                "text": "Creates a bot filter that includes bots that are in the given dimension and at the given X and Y position.\r\n\r\nWhen this filter is used with getbots-filters, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all the bots at (1, 2) in the \"test\" dimension.\nlet bots = getBots(atPosition(\"test\", 1, 2));\n```"
+                        "text": "```ts\nFind all the bots at (1, 2) in the \"test\" dimension.\r\nlet bots = getBots(atPosition(\"test\", 1, 2));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -184,7 +184,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates a bot filter that includes bots created by the given bot.\nThat is, they have "
+                            "text": "Creates a bot filter that includes bots created by the given bot.\r\nThat is, they have "
                         },
                         {
                             "kind": "text",
@@ -200,7 +200,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " of the given bot.\n\n> This function behaves exactly like "
+                            "text": " of the given bot.\r\n\r\n> This function behaves exactly like "
                         },
                         {
                             "kind": "code",
@@ -217,7 +217,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all the bots created by this bot.\nlet bots = getBots(byCreator(thisBot));\n```"
+                                    "text": "```ts\nFind all the bots created by this bot.\r\nlet bots = getBots(byCreator(thisBot));\n```"
                                 }
                             ]
                         },
@@ -255,7 +255,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4307,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4307"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4307"
                     }
                 ],
                 "parameters": [
@@ -303,11 +303,11 @@
                 }
             },
             "comment": {
-                "text": "Creates a bot filter that includes bots created by the given bot.\nThat is, they have creator set to the id of the given bot.\n\n> This function behaves exactly like `byTag(\"creator\", getID(bot))`.",
+                "text": "Creates a bot filter that includes bots created by the given bot.\r\nThat is, they have creator set to the id of the given bot.\r\n\r\n> This function behaves exactly like `byTag(\"creator\", getID(bot))`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all the bots created by this bot.\nlet bots = getBots(byCreator(thisBot));\n```"
+                        "text": "```ts\nFind all the bots created by this bot.\r\nlet bots = getBots(byCreator(thisBot));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -348,7 +348,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind the bot with the ID '123'\nlet bot = getBot(byID(\"123\"));\n```"
+                                    "text": "```ts\nFind the bot with the ID '123'\r\nlet bot = getBot(byID(\"123\"));\n```"
                                 }
                             ]
                         },
@@ -386,7 +386,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4109,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4109"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4109"
                     }
                 ],
                 "parameters": [
@@ -425,7 +425,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind the bot with the ID '123'\nlet bot = getBot(byID(\"123\"));\n```"
+                        "text": "```ts\nFind the bot with the ID '123'\r\nlet bot = getBot(byID(\"123\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -466,7 +466,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all the bots with #height set to 1 and #color set to red.\nconst bots = getBots(byMod({\n    height: 1,\n    color: \"red\"\n}));\n```"
+                                    "text": "```ts\nFind all the bots with #height set to 1 and #color set to red.\r\nconst bots = getBots(byMod({\r\n    height: 1,\r\n    color: \"red\"\r\n}));\n```"
                                 }
                             ]
                         },
@@ -504,7 +504,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4142,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4142"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4142"
                     }
                 ],
                 "parameters": [
@@ -547,7 +547,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all the bots with #height set to 1 and #color set to red.\nconst bots = getBots(byMod({\n    height: 1,\n    color: \"red\"\n}));\n```"
+                        "text": "```ts\nFind all the bots with #height set to 1 and #color set to red.\r\nconst bots = getBots(byMod({\r\n    height: 1,\r\n    color: \"red\"\r\n}));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -587,7 +587,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " set to the given value.\n\n> This function behaves exactly like "
+                            "text": " set to the given value.\r\n\r\n> This function behaves exactly like "
                         },
                         {
                             "kind": "code",
@@ -604,7 +604,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots in the tempLocal space.\nlet bots = getBots(bySpace(\"tempLocal\"));\n```"
+                                    "text": "```ts\nFind all bots in the tempLocal space.\r\nlet bots = getBots(bySpace(\"tempLocal\"));\n```"
                                 }
                             ]
                         },
@@ -642,7 +642,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4278,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4278"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4278"
                     }
                 ],
                 "parameters": [
@@ -677,11 +677,11 @@
                 }
             },
             "comment": {
-                "text": "Creates a bot filter that includes bots in the given space. That is, they have space set to the given value.\n\n> This function behaves exactly like `byTag(\"space\", getID(bot))`.",
+                "text": "Creates a bot filter that includes bots in the given space. That is, they have space set to the given value.\r\n\r\n> This function behaves exactly like `byTag(\"space\", getID(bot))`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots in the tempLocal space.\nlet bots = getBots(bySpace(\"tempLocal\"));\n```"
+                        "text": "```ts\nFind all bots in the tempLocal space.\r\nlet bots = getBots(bySpace(\"tempLocal\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -722,7 +722,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all the bots with #name set to \"bob\".\nlet bots = getBots(byTag(\"#name\", \"bob\"));\n```"
+                                    "text": "```ts\nFind all the bots with #name set to \"bob\".\r\nlet bots = getBots(byTag(\"#name\", \"bob\"));\n```"
                                 }
                             ]
                         },
@@ -731,7 +731,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots with a height larger than 2.\nlet bots = getBots(byTag(\"#height\", height => height > 2));\n```"
+                                    "text": "```ts\nFind all bots with a height larger than 2.\r\nlet bots = getBots(byTag(\"#height\", height => height > 2));\n```"
                                 }
                             ]
                         },
@@ -740,7 +740,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots with the \"test\" tag.\nlet bots = getBots(byTag(\"#test\"));\n```"
+                                    "text": "```ts\nFind all bots with the \"test\" tag.\r\nlet bots = getBots(byTag(\"#test\"));\n```"
                                 }
                             ]
                         },
@@ -805,7 +805,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4043,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4043"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4043"
                     }
                 ],
                 "parameters": [
@@ -870,15 +870,15 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all the bots with #name set to \"bob\".\nlet bots = getBots(byTag(\"#name\", \"bob\"));\n```"
+                        "text": "```ts\nFind all the bots with #name set to \"bob\".\r\nlet bots = getBots(byTag(\"#name\", \"bob\"));\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots with a height larger than 2.\nlet bots = getBots(byTag(\"#height\", height => height > 2));\n```"
+                        "text": "```ts\nFind all bots with a height larger than 2.\r\nlet bots = getBots(byTag(\"#height\", height => height > 2));\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots with the \"test\" tag.\nlet bots = getBots(byTag(\"#test\"));\n```"
+                        "text": "```ts\nFind all bots with the \"test\" tag.\r\nlet bots = getBots(byTag(\"#test\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -931,7 +931,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots with the #name bob or a #height of 2\nconst bots = getBots(\n    either(\n        byTag(\"#name\", \"bob\"),\n        byTag(\"height\", 2)\n    )\n);\n```"
+                                    "text": "```ts\nFind all bots with the #name bob or a #height of 2\r\nconst bots = getBots(\r\n    either(\r\n        byTag(\"#name\", \"bob\"),\r\n        byTag(\"height\", 2)\r\n    )\r\n);\n```"
                                 }
                             ]
                         },
@@ -969,7 +969,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4329,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4329"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4329"
                     }
                 ],
                 "parameters": [
@@ -1005,7 +1005,7 @@
                                             "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                             "line": 755,
                                             "character": 25,
-                                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                         }
                                     ],
                                     "signatures": [
@@ -1020,7 +1020,7 @@
                                                     "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                     "line": 755,
                                                     "character": 25,
-                                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                                    "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                                 }
                                             ],
                                             "parameters": [
@@ -1065,7 +1065,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots with the #name bob or a #height of 2\nconst bots = getBots(\n    either(\n        byTag(\"#name\", \"bob\"),\n        byTag(\"height\", 2)\n    )\n);\n```"
+                        "text": "```ts\nFind all bots with the #name bob or a #height of 2\r\nconst bots = getBots(\r\n    either(\r\n        byTag(\"#name\", \"bob\"),\r\n        byTag(\"height\", 2)\r\n    )\r\n);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1097,7 +1097,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates a bot filter that includes bots that are in the given dimension. That is, they have the given tag set to true.\n\n> This function behaves exactly like "
+                            "text": "Creates a bot filter that includes bots that are in the given dimension. That is, they have the given tag set to true.\r\n\r\n> This function behaves exactly like "
                         },
                         {
                             "kind": "text",
@@ -1139,7 +1139,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all the bots in the \"test\" dimension.\nlet bots = getBots(inDimension(\"test\"));\n```"
+                                    "text": "```ts\nFind all the bots in the \"test\" dimension.\r\nlet bots = getBots(inDimension(\"test\"));\n```"
                                 }
                             ]
                         },
@@ -1177,7 +1177,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4163,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4163"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4163"
                     }
                 ],
                 "parameters": [
@@ -1212,7 +1212,7 @@
                 }
             },
             "comment": {
-                "text": "Creates a bot filter that includes bots that are in the given dimension. That is, they have the given tag set to true.\n\n> This function behaves exactly like byTag with the `value` parameter set to `true`.",
+                "text": "Creates a bot filter that includes bots that are in the given dimension. That is, they have the given tag set to true.\r\n\r\n> This function behaves exactly like byTag with the `value` parameter set to `true`.",
                 "tags": [
                     {
                         "tagName": "returns",
@@ -1220,7 +1220,7 @@
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all the bots in the \"test\" dimension.\nlet bots = getBots(inDimension(\"test\"));\n```"
+                        "text": "```ts\nFind all the bots in the \"test\" dimension.\r\nlet bots = getBots(inDimension(\"test\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1252,7 +1252,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given dimension.\n\nWhen this filter is used with "
+                            "text": "Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given dimension.\r\n\r\nWhen this filter is used with "
                         },
                         {
                             "kind": "text",
@@ -1269,7 +1269,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots in the same stack as thisBot in the \"test\" dimension.\nlet bots = getBots(inStack(this, \"test\"));\n```"
+                                    "text": "```ts\nFind all bots in the same stack as thisBot in the \"test\" dimension.\r\nlet bots = getBots(inStack(this, \"test\"));\n```"
                                 }
                             ]
                         },
@@ -1307,7 +1307,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4207,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4207"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4207"
                     }
                 ],
                 "parameters": [
@@ -1366,11 +1366,11 @@
                 }
             },
             "comment": {
-                "text": "Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given dimension.\n\nWhen this filter is used with getbots-filters, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).",
+                "text": "Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given dimension.\r\n\r\nWhen this filter is used with getbots-filters, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots in the same stack as thisBot in the \"test\" dimension.\nlet bots = getBots(inStack(this, \"test\"));\n```"
+                        "text": "```ts\nFind all bots in the same stack as thisBot in the \"test\" dimension.\r\nlet bots = getBots(inStack(this, \"test\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1411,7 +1411,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots in front of this bot in the test dimension.\nconst bots = getBots(neighboring(this, \"test\", \"front\"));\n```"
+                                    "text": "```ts\nFind all bots in front of this bot in the test dimension.\r\nconst bots = getBots(neighboring(this, \"test\", \"front\"));\n```"
                                 }
                             ]
                         },
@@ -1420,7 +1420,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots around this bot in the test dimension.\nconst bots = getBots(neighboring(this, \"test\"));\n```"
+                                    "text": "```ts\nFind all bots around this bot in the test dimension.\r\nconst bots = getBots(neighboring(this, \"test\"));\n```"
                                 }
                             ]
                         },
@@ -1458,7 +1458,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4232,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4232"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4232"
                     }
                 ],
                 "parameters": [
@@ -1560,11 +1560,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots in front of this bot in the test dimension.\nconst bots = getBots(neighboring(this, \"test\", \"front\"));\n```"
+                        "text": "```ts\nFind all bots in front of this bot in the test dimension.\r\nconst bots = getBots(neighboring(this, \"test\", \"front\"));\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots around this bot in the test dimension.\nconst bots = getBots(neighboring(this, \"test\"));\n```"
+                        "text": "```ts\nFind all bots around this bot in the test dimension.\r\nconst bots = getBots(neighboring(this, \"test\"));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1605,7 +1605,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nFind all bots that are not in the test dimension\nconst bots = getBots(not(inDimension(\"test\")));\n```"
+                                    "text": "```ts\nFind all bots that are not in the test dimension\r\nconst bots = getBots(not(inDimension(\"test\")));\n```"
                                 }
                             ]
                         },
@@ -1643,7 +1643,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 4345,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L4345"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L4345"
                     }
                 ],
                 "parameters": [
@@ -1675,7 +1675,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 755,
                                         "character": 25,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                     }
                                 ],
                                 "signatures": [
@@ -1690,7 +1690,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 755,
                                                 "character": 25,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                             }
                                         ],
                                         "parameters": [
@@ -1734,7 +1734,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nFind all bots that are not in the test dimension\nconst bots = getBots(not(inDimension(\"test\")));\n```"
+                        "text": "```ts\nFind all bots that are not in the test dimension\r\nconst bots = getBots(not(inDimension(\"test\")));\n```"
                     },
                     {
                         "tagName": "dochash",

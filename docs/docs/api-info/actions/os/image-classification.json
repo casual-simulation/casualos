@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.\n\nSends the "
+                            "text": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.\r\n\r\nSends the "
                         },
                         {
                             "kind": "text",
@@ -43,7 +43,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the image classifier.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL'\n});\n```"
+                                    "text": "```ts\nOpen the image classifier.\r\nawait os.openImageClassifier({\r\n    modelUrl: 'MY_MODEL_URL'\r\n});\n```"
                                 }
                             ]
                         },
@@ -52,7 +52,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the image classifier with a specific camera.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL',\n    cameraType: 'front'\n});\n```"
+                                    "text": "```ts\nOpen the image classifier with a specific camera.\r\nawait os.openImageClassifier({\r\n    modelUrl: 'MY_MODEL_URL',\r\n    cameraType: 'front'\r\n});\n```"
                                 }
                             ]
                         },
@@ -126,7 +126,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6345,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6345"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6345"
                     }
                 ],
                 "parameters": [
@@ -172,15 +172,15 @@
                 }
             },
             "comment": {
-                "text": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.\n\nSends the @onImageClassifierOpened shout once opened and the @onImageClassified shout every time an image has been classified.",
+                "text": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.\r\n\r\nSends the @onImageClassifierOpened shout once opened and the @onImageClassified shout every time an image has been classified.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the image classifier.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL'\n});\n```"
+                        "text": "```ts\nOpen the image classifier.\r\nawait os.openImageClassifier({\r\n    modelUrl: 'MY_MODEL_URL'\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the image classifier with a specific camera.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL',\n    cameraType: 'front'\n});\n```"
+                        "text": "```ts\nOpen the image classifier with a specific camera.\r\nawait os.openImageClassifier({\r\n    modelUrl: 'MY_MODEL_URL',\r\n    cameraType: 'front'\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -228,7 +228,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Closes the image classifier.\nReturns a promise that resolves once the image classifier has been closed.\n\nAlso sends the "
+                            "text": "Closes the image classifier.\r\nReturns a promise that resolves once the image classifier has been closed.\r\n\r\nAlso sends the "
                         },
                         {
                             "kind": "text",
@@ -245,7 +245,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nClose the image classifier.\nawait os.closeImageClassifier();\n```"
+                                    "text": "```ts\nClose the image classifier.\r\nawait os.closeImageClassifier();\n```"
                                 }
                             ]
                         },
@@ -283,7 +283,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 6366,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L6366"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L6366"
                     }
                 ],
                 "type": {
@@ -303,11 +303,11 @@
                 }
             },
             "comment": {
-                "text": "Closes the image classifier.\nReturns a promise that resolves once the image classifier has been closed.\n\nAlso sends the @onImageClassifierClosed shout once closed.",
+                "text": "Closes the image classifier.\r\nReturns a promise that resolves once the image classifier has been closed.\r\n\r\nAlso sends the @onImageClassifierClosed shout once closed.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nClose the image classifier.\nawait os.closeImageClassifier();\n```"
+                        "text": "```ts\nClose the image classifier.\r\nawait os.closeImageClassifier();\n```"
                     },
                     {
                         "tagName": "dochash",

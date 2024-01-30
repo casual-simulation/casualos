@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.\nIf the data was unable to be decrypted (e.g. if the secret was wrong or the data was tampered with), "
+                            "text": "[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.\r\nIf the data was unable to be decrypted (e.g. if the secret was wrong or the data was tampered with), "
                         },
                         {
                             "kind": "code",
@@ -26,7 +26,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " will be returned.\n\nUse the "
+                            "text": " will be returned.\r\n\r\nUse the "
                         },
                         {
                             "kind": "text",
@@ -43,7 +43,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDecrypt the given data and toast it.\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\nconst encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';\nconst decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);\nos.toast(decrypted);\n```"
+                                    "text": "```ts\nDecrypt the given data and toast it.\r\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\r\nconst encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';\r\nconst decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);\r\nos.toast(decrypted);\n```"
                                 }
                             ]
                         },
@@ -72,7 +72,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12917,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12917"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12917"
                     }
                 ],
                 "parameters": [
@@ -143,11 +143,11 @@
                 }
             },
             "comment": {
-                "text": "[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.\nIf the data was unable to be decrypted (e.g. if the secret was wrong or the data was tampered with), `null` will be returned.\n\nUse the crypto.asymmetric.encrypt function to encrypt the data.",
+                "text": "[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.\r\nIf the data was unable to be decrypted (e.g. if the secret was wrong or the data was tampered with), `null` will be returned.\r\n\r\nUse the crypto.asymmetric.encrypt function to encrypt the data.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDecrypt the given data and toast it.\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\nconst encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';\nconst decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);\nos.toast(decrypted);\n```"
+                        "text": "```ts\nDecrypt the given data and toast it.\r\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\r\nconst encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';\r\nconst decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);\r\nos.toast(decrypted);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -175,7 +175,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.\n\nUse the "
+                            "text": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.\r\n\r\nUse the "
                         },
                         {
                             "kind": "text",
@@ -183,7 +183,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " function to decrypt the data.\n\nThis method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).\n\nAs a consequence, encrypting the same data with the same keypair will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\n\nEncrypts the given data using an asymmetric authenticated encryption mechanism based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).\n\nYou may notice that this function does not need a secret to decrypt the keypair.\nThis is because the public key of the keypair is used to encrypt the data. Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.\n\nEncrypts the given data using an authenticated encryption mechanism based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code)."
+                            "text": " function to decrypt the data.\r\n\r\nThis method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).\r\n\r\nAs a consequence, encrypting the same data with the same keypair will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\r\n\r\nEncrypts the given data using an asymmetric authenticated encryption mechanism based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).\r\n\r\nYou may notice that this function does not need a secret to decrypt the keypair.\r\nThis is because the public key of the keypair is used to encrypt the data. Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.\r\n\r\nEncrypts the given data using an authenticated encryption mechanism based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code)."
                         }
                     ],
                     "blockTags": [
@@ -192,7 +192,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nEncrypt the given data and toast it.\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\nconst encrypted = crypto.asymmetric.encrypt(keypair, \"hello, world\");\nos.toast(encrypted);\n```"
+                                    "text": "```ts\nEncrypt the given data and toast it.\r\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\r\nconst encrypted = crypto.asymmetric.encrypt(keypair, \"hello, world\");\r\nos.toast(encrypted);\n```"
                                 }
                             ]
                         },
@@ -221,7 +221,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12888,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12888"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12888"
                     }
                 ],
                 "parameters": [
@@ -272,11 +272,11 @@
                 }
             },
             "comment": {
-                "text": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.\n\nUse the crypto.asymmetric.decrypt function to decrypt the data.\n\nThis method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).\n\nAs a consequence, encrypting the same data with the same keypair will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\n\nEncrypts the given data using an asymmetric authenticated encryption mechanism based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).\n\nYou may notice that this function does not need a secret to decrypt the keypair.\nThis is because the public key of the keypair is used to encrypt the data. Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.\n\nEncrypts the given data using an authenticated encryption mechanism based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).",
+                "text": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.\r\n\r\nUse the crypto.asymmetric.decrypt function to decrypt the data.\r\n\r\nThis method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).\r\n\r\nAs a consequence, encrypting the same data with the same keypair will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\r\n\r\nEncrypts the given data using an asymmetric authenticated encryption mechanism based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).\r\n\r\nYou may notice that this function does not need a secret to decrypt the keypair.\r\nThis is because the public key of the keypair is used to encrypt the data. Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.\r\n\r\nEncrypts the given data using an authenticated encryption mechanism based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nEncrypt the given data and toast it.\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\nconst encrypted = crypto.asymmetric.encrypt(keypair, \"hello, world\");\nos.toast(encrypted);\n```"
+                        "text": "```ts\nEncrypt the given data and toast it.\r\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\r\nconst encrypted = crypto.asymmetric.encrypt(keypair, \"hello, world\");\r\nos.toast(encrypted);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -312,7 +312,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\nReturns "
+                            "text": ".\r\nReturns "
                         },
                         {
                             "kind": "code",
@@ -337,7 +337,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDetermine if a value is encrypted with asymmetric encryption.\nconst encrypted = crypto.asymmetric.isEncrypted(\"hello, world\");\nos.toast('Is it encrypted? ' + encrypted);\n```"
+                                    "text": "```ts\nDetermine if a value is encrypted with asymmetric encryption.\r\nconst encrypted = crypto.asymmetric.isEncrypted(\"hello, world\");\r\nos.toast('Is it encrypted? ' + encrypted);\n```"
                                 }
                             ]
                         },
@@ -366,7 +366,7 @@
                         "fileName": "src/crypto/Encryption.ts",
                         "line": 413,
                         "character": 16,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/crypto/Encryption.ts#L413"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/crypto/Encryption.ts#L413"
                     }
                 ],
                 "parameters": [
@@ -397,11 +397,11 @@
                 }
             },
             "comment": {
-                "text": "Determines if the given value was encrypted using crypto.asymmetric.encrypt.\nReturns `true` if the data is a keypair and `false` otherwise.",
+                "text": "Determines if the given value was encrypted using crypto.asymmetric.encrypt.\r\nReturns `true` if the data is a keypair and `false` otherwise.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDetermine if a value is encrypted with asymmetric encryption.\nconst encrypted = crypto.asymmetric.isEncrypted(\"hello, world\");\nos.toast('Is it encrypted? ' + encrypted);\n```"
+                        "text": "```ts\nDetermine if a value is encrypted with asymmetric encryption.\r\nconst encrypted = crypto.asymmetric.isEncrypted(\"hello, world\");\r\nos.toast('Is it encrypted? ' + encrypted);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -437,7 +437,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\nReturns true if the data is a keypair and false otherwise."
+                            "text": ".\r\nReturns true if the data is a keypair and false otherwise."
                         }
                     ],
                     "blockTags": [
@@ -446,7 +446,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDetermine if a value is a keypair.\nconst encrypted = crypto.asymmetric.isKeypair(\"hello, world\");\nos.toast('Is it a keypair? ' + encrypted);\n```"
+                                    "text": "```ts\nDetermine if a value is a keypair.\r\nconst encrypted = crypto.asymmetric.isKeypair(\"hello, world\");\r\nos.toast('Is it a keypair? ' + encrypted);\n```"
                                 }
                             ]
                         },
@@ -475,7 +475,7 @@
                         "fileName": "src/crypto/Encryption.ts",
                         "line": 171,
                         "character": 16,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/crypto/Encryption.ts#L171"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/crypto/Encryption.ts#L171"
                     }
                 ],
                 "parameters": [
@@ -506,11 +506,11 @@
                 }
             },
             "comment": {
-                "text": "Determines if the given value is a keypair generated using crypto.asymmetric.keypair.\nReturns true if the data is a keypair and false otherwise.",
+                "text": "Determines if the given value is a keypair generated using crypto.asymmetric.keypair.\r\nReturns true if the data is a keypair and false otherwise.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDetermine if a value is a keypair.\nconst encrypted = crypto.asymmetric.isKeypair(\"hello, world\");\nos.toast('Is it a keypair? ' + encrypted);\n```"
+                        "text": "```ts\nDetermine if a value is a keypair.\r\nconst encrypted = crypto.asymmetric.isKeypair(\"hello, world\");\r\nos.toast('Is it a keypair? ' + encrypted);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -538,7 +538,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.\n\nUse "
+                            "text": "Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.\r\n\r\nUse "
                         },
                         {
                             "kind": "text",
@@ -554,7 +554,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " to encrypt and decrypt the data.\n\nAlways use a strong and unique secret key. Use a password manager such as LastPass or 1Password to help you create and keep track of them.\n\nKeypairs are made up of a private key and a public key The public key is a special value that can be used to encrypt data and the private key is a related value that can be used to decrypt data that was encrypted by the private key.\n\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\n\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it."
+                            "text": " to encrypt and decrypt the data.\r\n\r\nAlways use a strong and unique secret key. Use a password manager such as LastPass or 1Password to help you create and keep track of them.\r\n\r\nKeypairs are made up of a private key and a public key The public key is a special value that can be used to encrypt data and the private key is a related value that can be used to decrypt data that was encrypted by the private key.\r\n\r\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\r\n\r\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it."
                         }
                     ],
                     "blockTags": [
@@ -563,7 +563,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a keypair and toast it.\nconst keypair = crypto.asymmetric.keypair(\"my secret\");\nos.toast(keypair);\n```"
+                                    "text": "```ts\nCreate a keypair and toast it.\r\nconst keypair = crypto.asymmetric.keypair(\"my secret\");\r\nos.toast(keypair);\n```"
                                 }
                             ]
                         },
@@ -592,7 +592,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12857,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12857"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12857"
                     }
                 ],
                 "parameters": [
@@ -623,11 +623,11 @@
                 }
             },
             "comment": {
-                "text": "Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.\n\nUse crypto.asymmetric.encrypt and crypto.asymmetric.decrypt to encrypt and decrypt the data.\n\nAlways use a strong and unique secret key. Use a password manager such as LastPass or 1Password to help you create and keep track of them.\n\nKeypairs are made up of a private key and a public key The public key is a special value that can be used to encrypt data and the private key is a related value that can be used to decrypt data that was encrypted by the private key.\n\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\n\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.",
+                "text": "Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.\r\n\r\nUse crypto.asymmetric.encrypt and crypto.asymmetric.decrypt to encrypt and decrypt the data.\r\n\r\nAlways use a strong and unique secret key. Use a password manager such as LastPass or 1Password to help you create and keep track of them.\r\n\r\nKeypairs are made up of a private key and a public key The public key is a special value that can be used to encrypt data and the private key is a related value that can be used to decrypt data that was encrypted by the private key.\r\n\r\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\r\n\r\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a keypair and toast it.\nconst keypair = crypto.asymmetric.keypair(\"my secret\");\nos.toast(keypair);\n```"
+                        "text": "```ts\nCreate a keypair and toast it.\r\nconst keypair = crypto.asymmetric.keypair(\"my secret\");\r\nos.toast(keypair);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -655,7 +655,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.\n\nUse the "
+                            "text": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.\r\n\r\nUse the "
                         },
                         {
                             "kind": "text",
@@ -663,7 +663,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " function to decrypt the data.\n\n_Always use a strong and unique secret key._\nUse a password manager such as LastPass or 1Password to help you create and keep track of them."
+                            "text": " function to decrypt the data.\r\n\r\n_Always use a strong and unique secret key._\r\nUse a password manager such as LastPass or 1Password to help you create and keep track of them."
                         }
                     ],
                     "blockTags": [
@@ -672,7 +672,7 @@
                             "content": [
                                 {
                                     "kind": "text",
-                                    "text": "Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to\nhelp you create and keep track of them.\n\nAssuming a strong secret, this method will return a string of encrypted data that is confidential (unreadable without the key), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that this specific key was used to encrypt the data).\n\nAs a consequence, encrypting the same data with the same key will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\n\nEncrypts the given data using an authenticated encryption mechanism based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher)\nand [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).\nAdditionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function)."
+                                    "text": "Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to\r\nhelp you create and keep track of them.\r\n\r\nAssuming a strong secret, this method will return a string of encrypted data that is confidential (unreadable without the key), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that this specific key was used to encrypt the data).\r\n\r\nAs a consequence, encrypting the same data with the same key will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\r\n\r\nEncrypts the given data using an authenticated encryption mechanism based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher)\r\nand [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).\r\nAdditionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function)."
                                 }
                             ]
                         },
@@ -681,7 +681,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nEncrypt the given data and toast it.\nconst encrypted = crypto.encrypt(\"key\", \"hello, world\");\nos.toast(encrypted);\n```"
+                                    "text": "```ts\nEncrypt the given data and toast it.\r\nconst encrypted = crypto.encrypt(\"key\", \"hello, world\");\r\nos.toast(encrypted);\n```"
                                 }
                             ]
                         },
@@ -710,7 +710,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12800,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12800"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12800"
                     }
                 ],
                 "parameters": [
@@ -761,15 +761,15 @@
                 }
             },
             "comment": {
-                "text": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.\n\nUse the crypto.decrypt function to decrypt the data.\n\n_Always use a strong and unique secret key._\nUse a password manager such as LastPass or 1Password to help you create and keep track of them.",
+                "text": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.\r\n\r\nUse the crypto.decrypt function to decrypt the data.\r\n\r\n_Always use a strong and unique secret key._\r\nUse a password manager such as LastPass or 1Password to help you create and keep track of them.",
                 "tags": [
                     {
                         "tagName": "description",
-                        "text": "Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to\nhelp you create and keep track of them.\n\nAssuming a strong secret, this method will return a string of encrypted data that is confidential (unreadable without the key), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that this specific key was used to encrypt the data).\n\nAs a consequence, encrypting the same data with the same key will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\n\nEncrypts the given data using an authenticated encryption mechanism based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher)\nand [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).\nAdditionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function)."
+                        "text": "Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to\r\nhelp you create and keep track of them.\r\n\r\nAssuming a strong secret, this method will return a string of encrypted data that is confidential (unreadable without the key), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that this specific key was used to encrypt the data).\r\n\r\nAs a consequence, encrypting the same data with the same key will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\r\n\r\nEncrypts the given data using an authenticated encryption mechanism based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher)\r\nand [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).\r\nAdditionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function)."
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nEncrypt the given data and toast it.\nconst encrypted = crypto.encrypt(\"key\", \"hello, world\");\nos.toast(encrypted);\n```"
+                        "text": "```ts\nEncrypt the given data and toast it.\r\nconst encrypted = crypto.encrypt(\"key\", \"hello, world\");\r\nos.toast(encrypted);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -797,7 +797,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result as a raw array of bytes.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\n\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
+                            "text": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result as a raw array of bytes.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\r\n\r\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
                         }
                     ],
                     "blockTags": [
@@ -806,7 +806,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the SHA-256 raw hash of a string\nconst hash = crypto.hash(\"sha256\", \"raw\", \"hello, world\");\nconsole.log(hash);\n```"
+                                    "text": "```ts\nCalculate the SHA-256 raw hash of a string\r\nconst hash = crypto.hash(\"sha256\", \"raw\", \"hello, world\");\r\nconsole.log(hash);\n```"
                                 }
                             ]
                         },
@@ -871,7 +871,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12403,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12403"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12403"
                     }
                 ],
                 "parameters": [
@@ -885,7 +885,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "a string indicating which algorithm should be used for calculating the hash.\nThe following algorithms are supported:\n\n-    "
+                                    "text": "a string indicating which algorithm should be used for calculating the hash.\r\nThe following algorithms are supported:\r\n\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -901,7 +901,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ")\n-    "
+                                    "text": ")\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -917,7 +917,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ")\n-    "
+                                    "text": ")\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -958,7 +958,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "a string indicating which format the hash should be output as.\nThe following formats are supported:\n\n-    "
+                                    "text": "a string indicating which format the hash should be output as.\r\nThe following formats are supported:\r\n\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1013,11 +1013,11 @@
                 }
             },
             "comment": {
-                "text": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result as a raw array of bytes.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\n\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
+                "text": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result as a raw array of bytes.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\r\n\r\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the SHA-256 raw hash of a string\nconst hash = crypto.hash(\"sha256\", \"raw\", \"hello, world\");\nconsole.log(hash);\n```"
+                        "text": "```ts\nCalculate the SHA-256 raw hash of a string\r\nconst hash = crypto.hash(\"sha256\", \"raw\", \"hello, world\");\r\nconsole.log(hash);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1061,7 +1061,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\n\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
+                            "text": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\r\n\r\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
                         }
                     ],
                     "blockTags": [
@@ -1070,7 +1070,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the SHA-256 hex hash of a string\nconst hash = crypto.hash(\"sha256\", \"hex\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the SHA-256 hex hash of a string\r\nconst hash = crypto.hash(\"sha256\", \"hex\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1079,7 +1079,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the SHA-256 base64 hash of a string\nconst hash = crypto.hash(\"sha256\", \"base64\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the SHA-256 base64 hash of a string\r\nconst hash = crypto.hash(\"sha256\", \"base64\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1088,7 +1088,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the SHA-512 hex hash of a string\nconst hash = crypto.hash(\"sha512\", \"hex\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the SHA-512 hex hash of a string\r\nconst hash = crypto.hash(\"sha512\", \"hex\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1097,7 +1097,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the SHA-1 hex hash of a string\nconst hash = crypto.hash(\"sha1\", \"hex\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the SHA-1 hex hash of a string\r\nconst hash = crypto.hash(\"sha1\", \"hex\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1162,7 +1162,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12362,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12362"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12362"
                     }
                 ],
                 "parameters": [
@@ -1176,7 +1176,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "a string indicating which algorithm should be used for calculating the hash.\nThe following algorithms are supported:\n\n-    "
+                                    "text": "a string indicating which algorithm should be used for calculating the hash.\r\nThe following algorithms are supported:\r\n\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1192,7 +1192,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ")\n-    "
+                                    "text": ")\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1208,7 +1208,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ")\n-    "
+                                    "text": ")\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1249,7 +1249,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "a string indicating which format the hash should be output as.\nThe following formats are supported:\n\n-    "
+                                    "text": "a string indicating which format the hash should be output as.\r\nThe following formats are supported:\r\n\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1257,7 +1257,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": "  - The output should be a hexadecimal string.\n-    "
+                                    "text": "  - The output should be a hexadecimal string.\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1316,23 +1316,23 @@
                 }
             },
             "comment": {
-                "text": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\n\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
+                "text": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\r\n\r\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the SHA-256 hex hash of a string\nconst hash = crypto.hash(\"sha256\", \"hex\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the SHA-256 hex hash of a string\r\nconst hash = crypto.hash(\"sha256\", \"hex\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the SHA-256 base64 hash of a string\nconst hash = crypto.hash(\"sha256\", \"base64\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the SHA-256 base64 hash of a string\r\nconst hash = crypto.hash(\"sha256\", \"base64\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the SHA-512 hex hash of a string\nconst hash = crypto.hash(\"sha512\", \"hex\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the SHA-512 hex hash of a string\r\nconst hash = crypto.hash(\"sha512\", \"hex\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the SHA-1 hex hash of a string\nconst hash = crypto.hash(\"sha1\", \"hex\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the SHA-1 hex hash of a string\r\nconst hash = crypto.hash(\"sha1\", \"hex\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1376,7 +1376,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\n\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
+                            "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\r\n\r\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
                         }
                     ],
                     "blockTags": [
@@ -1385,7 +1385,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the raw HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"raw\", \"key\", \"hello, world\");\nconsole.log(hash);\n```"
+                                    "text": "```ts\nCalculate the raw HMAC-SHA256 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha256\", \"raw\", \"key\", \"hello, world\");\r\nconsole.log(hash);\n```"
                                 }
                             ]
                         },
@@ -1423,7 +1423,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12558,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12558"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12558"
                     }
                 ],
                 "parameters": [
@@ -1437,7 +1437,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "a string indicating which algorithm should be used for calculating the hash.\nThe following algorithms are supported:\n\n-    "
+                                    "text": "a string indicating which algorithm should be used for calculating the hash.\r\nThe following algorithms are supported:\r\n\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1453,7 +1453,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ")\n-    "
+                                    "text": ")\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1469,7 +1469,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ")\n-    "
+                                    "text": ")\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1510,7 +1510,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "a string indicating which format the hash should be output as.\nThe following formats are supported:\n\n-    "
+                                    "text": "a string indicating which format the hash should be output as.\r\nThe following formats are supported:\r\n\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1518,7 +1518,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": "  - The output should be a hexadecimal string.\n-    "
+                                    "text": "  - The output should be a hexadecimal string.\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1593,11 +1593,11 @@
                 }
             },
             "comment": {
-                "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\n\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
+                "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\r\n\r\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the raw HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"raw\", \"key\", \"hello, world\");\nconsole.log(hash);\n```"
+                        "text": "```ts\nCalculate the raw HMAC-SHA256 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha256\", \"raw\", \"key\", \"hello, world\");\r\nconsole.log(hash);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1629,7 +1629,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\n\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
+                            "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\r\n\r\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
                         }
                     ],
                     "blockTags": [
@@ -1638,7 +1638,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the hexadecimal HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the hexadecimal HMAC-SHA256 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha256\", \"hex\", \"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1647,7 +1647,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the Base64 HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"base64\", \"key\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the Base64 HMAC-SHA256 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha256\", \"base64\", \"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1656,7 +1656,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the hexadecimal HMAC-SHA512 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha512\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the hexadecimal HMAC-SHA512 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha512\", \"hex\", \"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1665,7 +1665,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the hexadecimal HMAC-SHA1 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha1\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the hexadecimal HMAC-SHA1 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha1\", \"hex\", \"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1703,7 +1703,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12516,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12516"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12516"
                     }
                 ],
                 "parameters": [
@@ -1717,7 +1717,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "a string indicating which algorithm should be used for calculating the hash.\nThe following algorithms are supported:\n\n-    "
+                                    "text": "a string indicating which algorithm should be used for calculating the hash.\r\nThe following algorithms are supported:\r\n\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1733,7 +1733,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ")\n-    "
+                                    "text": ")\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1749,7 +1749,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ")\n-    "
+                                    "text": ")\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1790,7 +1790,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "a string indicating which format the hash should be output as.\nThe following formats are supported:\n\n-    "
+                                    "text": "a string indicating which format the hash should be output as.\r\nThe following formats are supported:\r\n\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1798,7 +1798,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": "  - The output should be a hexadecimal string.\n-    "
+                                    "text": "  - The output should be a hexadecimal string.\r\n-    "
                                 },
                                 {
                                     "kind": "code",
@@ -1877,23 +1877,23 @@
                 }
             },
             "comment": {
-                "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\n\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
+                "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.\r\n\r\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the hexadecimal HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the hexadecimal HMAC-SHA256 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha256\", \"hex\", \"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the Base64 HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"base64\", \"key\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the Base64 HMAC-SHA256 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha256\", \"base64\", \"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the hexadecimal HMAC-SHA512 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha512\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the hexadecimal HMAC-SHA512 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha512\", \"hex\", \"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the hexadecimal HMAC-SHA1 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha1\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the hexadecimal HMAC-SHA1 of a string with a key\r\nconst hash = crypto.hmac(\"hmac-sha1\", \"hex\", \"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1925,7 +1925,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\n\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
+                            "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\r\n\r\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
                         }
                     ],
                     "blockTags": [
@@ -1934,7 +1934,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the HMAC of a string with a key.\nconst hash = crypto.hmacSha256(\"key\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the HMAC of a string with a key.\r\nconst hash = crypto.hmacSha256(\"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1943,7 +1943,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the HMAC of an object.\nconst hash = crypto.hmacSha256(\"key\", {\n    abc: \"def\"\n});\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the HMAC of an object.\r\nconst hash = crypto.hmacSha256(\"key\", {\r\n    abc: \"def\"\r\n});\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -1972,7 +1972,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12725,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12725"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12725"
                     }
                 ],
                 "parameters": [
@@ -2028,15 +2028,15 @@
                 }
             },
             "comment": {
-                "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\n\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
+                "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\r\n\r\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the HMAC of a string with a key.\nconst hash = crypto.hmacSha256(\"key\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the HMAC of a string with a key.\r\nconst hash = crypto.hmacSha256(\"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the HMAC of an object.\nconst hash = crypto.hmacSha256(\"key\", {\n    abc: \"def\"\n});\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the HMAC of an object.\r\nconst hash = crypto.hmacSha256(\"key\", {\r\n    abc: \"def\"\r\n});\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2064,7 +2064,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-215](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\n\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
+                            "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-215](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\r\n\r\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
                         }
                     ],
                     "blockTags": [
@@ -2073,7 +2073,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the HMAC of a string with a key.\nconst hash = crypto.hmacSha512(\"key\", \"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the HMAC of a string with a key.\r\nconst hash = crypto.hmacSha512(\"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -2082,7 +2082,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the HMAC of an object.\nconst hash = crypto.hmacSha512(\"key\", {\n    abc: \"def\"\n});\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the HMAC of an object.\r\nconst hash = crypto.hmacSha512(\"key\", {\r\n    abc: \"def\"\r\n});\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -2111,7 +2111,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12760,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12760"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12760"
                     }
                 ],
                 "parameters": [
@@ -2167,15 +2167,15 @@
                 }
             },
             "comment": {
-                "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-215](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\n\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
+                "text": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-215](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\r\n\r\nHMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the HMAC of a string with a key.\nconst hash = crypto.hmacSha512(\"key\", \"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the HMAC of a string with a key.\r\nconst hash = crypto.hmacSha512(\"key\", \"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the HMAC of an object.\nconst hash = crypto.hmacSha512(\"key\", {\n    abc: \"def\"\n});\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the HMAC of an object.\r\nconst hash = crypto.hmacSha512(\"key\", {\r\n    abc: \"def\"\r\n});\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2211,7 +2211,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\nReturns true if the data is encrypted and false otherwise."
+                            "text": ".\r\nReturns true if the data is encrypted and false otherwise."
                         }
                     ],
                     "blockTags": [
@@ -2220,7 +2220,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDetermine if a value is encrypted.\nconst encrypted = crypto.isEncrypted(\"hello, world\");\nos.toast('Is it encrypted? ' + encrypted);\n```"
+                                    "text": "```ts\nDetermine if a value is encrypted.\r\nconst encrypted = crypto.isEncrypted(\"hello, world\");\r\nos.toast('Is it encrypted? ' + encrypted);\n```"
                                 }
                             ]
                         },
@@ -2249,7 +2249,7 @@
                         "fileName": "src/crypto/Encryption.ts",
                         "line": 434,
                         "character": 16,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/crypto/Encryption.ts#L434"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/crypto/Encryption.ts#L434"
                     }
                 ],
                 "parameters": [
@@ -2280,11 +2280,11 @@
                 }
             },
             "comment": {
-                "text": "Determines if the given value has been encrypted using crypto.encrypt.\nReturns true if the data is encrypted and false otherwise.",
+                "text": "Determines if the given value has been encrypted using crypto.encrypt.\r\nReturns true if the data is encrypted and false otherwise.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDetermine if a value is encrypted.\nconst encrypted = crypto.isEncrypted(\"hello, world\");\nos.toast('Is it encrypted? ' + encrypted);\n```"
+                        "text": "```ts\nDetermine if a value is encrypted.\r\nconst encrypted = crypto.isEncrypted(\"hello, world\");\r\nos.toast('Is it encrypted? ' + encrypted);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2312,7 +2312,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.\n\nDigital signatures are generally useful for verifying that a piece of data was sent from someone who had access to the keypair.\n\nUse "
+                            "text": "Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.\r\n\r\nDigital signatures are generally useful for verifying that a piece of data was sent from someone who had access to the keypair.\r\n\r\nUse "
                         },
                         {
                             "kind": "text",
@@ -2328,7 +2328,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " to sign and verify the data.\n\nKeypairs are made up of a private key and a public key. The private key is a special value that can be used to create digital signatures and the public key is a related value that can be used to verify that a digitital signature was created by the private key.\n\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\n\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it."
+                            "text": " to sign and verify the data.\r\n\r\nKeypairs are made up of a private key and a public key. The private key is a special value that can be used to create digital signatures and the public key is a related value that can be used to verify that a digitital signature was created by the private key.\r\n\r\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\r\n\r\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it."
                         }
                     ],
                     "blockTags": [
@@ -2337,7 +2337,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a keypair and toast it.\nconst keypair = crypto.keypair(\"my secret\");\nos.toast(keypair);\n```"
+                                    "text": "```ts\nCreate a keypair and toast it.\r\nconst keypair = crypto.keypair(\"my secret\");\r\nos.toast(keypair);\n```"
                                 }
                             ]
                         },
@@ -2366,7 +2366,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12956,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12956"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12956"
                     }
                 ],
                 "parameters": [
@@ -2397,11 +2397,11 @@
                 }
             },
             "comment": {
-                "text": "Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.\n\nDigital signatures are generally useful for verifying that a piece of data was sent from someone who had access to the keypair.\n\nUse crypto.sign and crypto.verify to sign and verify the data.\n\nKeypairs are made up of a private key and a public key. The private key is a special value that can be used to create digital signatures and the public key is a related value that can be used to verify that a digitital signature was created by the private key.\n\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\n\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.",
+                "text": "Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.\r\n\r\nDigital signatures are generally useful for verifying that a piece of data was sent from someone who had access to the keypair.\r\n\r\nUse crypto.sign and crypto.verify to sign and verify the data.\r\n\r\nKeypairs are made up of a private key and a public key. The private key is a special value that can be used to create digital signatures and the public key is a related value that can be used to verify that a digitital signature was created by the private key.\r\n\r\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\r\n\r\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a keypair and toast it.\nconst keypair = crypto.keypair(\"my secret\");\nos.toast(keypair);\n```"
+                        "text": "```ts\nCreate a keypair and toast it.\r\nconst keypair = crypto.keypair(\"my secret\");\r\nos.toast(keypair);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2429,7 +2429,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\n\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
+                            "text": "Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\r\n\r\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
                         }
                     ],
                     "blockTags": [
@@ -2438,7 +2438,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the hash of a string.\nconst hash = crypto.sha256(\"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the hash of a string.\r\nconst hash = crypto.sha256(\"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -2447,7 +2447,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the hash of an object.\nconst hash = crypto.sha256({\n    abc: \"def\"\n});\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the hash of an object.\r\nconst hash = crypto.sha256({\r\n    abc: \"def\"\r\n});\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -2476,7 +2476,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12668,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12668"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12668"
                     }
                 ],
                 "parameters": [
@@ -2512,15 +2512,15 @@
                 }
             },
             "comment": {
-                "text": "Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\n\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
+                "text": "Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\r\n\r\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the hash of a string.\nconst hash = crypto.sha256(\"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the hash of a string.\r\nconst hash = crypto.sha256(\"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the hash of an object.\nconst hash = crypto.sha256({\n    abc: \"def\"\n});\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the hash of an object.\r\nconst hash = crypto.sha256({\r\n    abc: \"def\"\r\n});\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2548,7 +2548,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\n\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
+                            "text": "Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\r\n\r\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots."
                         }
                     ],
                     "blockTags": [
@@ -2557,7 +2557,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the hash of a string.\nconst hash = crypto.sha512(\"hello, world\");\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the hash of a string.\r\nconst hash = crypto.sha512(\"hello, world\");\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -2566,7 +2566,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the hash of an object.\nconst hash = crypto.sha512({\n    abc: \"def\"\n});\nos.toast(hash);\n```"
+                                    "text": "```ts\nCalculate the hash of an object.\r\nconst hash = crypto.sha512({\r\n    abc: \"def\"\r\n});\r\nos.toast(hash);\n```"
                                 }
                             ]
                         },
@@ -2595,7 +2595,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12696,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12696"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12696"
                     }
                 ],
                 "parameters": [
@@ -2631,15 +2631,15 @@
                 }
             },
             "comment": {
-                "text": "Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\n\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
+                "text": "Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\r\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.\r\n\r\nHashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\r\n\r\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the hash of a string.\nconst hash = crypto.sha512(\"hello, world\");\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the hash of a string.\r\nconst hash = crypto.sha512(\"hello, world\");\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the hash of an object.\nconst hash = crypto.sha512({\n    abc: \"def\"\n});\nos.toast(hash);\n```"
+                        "text": "```ts\nCalculate the hash of an object.\r\nconst hash = crypto.sha512({\r\n    abc: \"def\"\r\n});\r\nos.toast(hash);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2667,7 +2667,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).\n\nUse "
+                            "text": "Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).\r\n\r\nUse "
                         },
                         {
                             "kind": "text",
@@ -2675,7 +2675,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " to create a keypair that can be used to create signatures.\n\nUse "
+                            "text": " to create a keypair that can be used to create signatures.\r\n\r\nUse "
                         },
                         {
                             "kind": "text",
@@ -2683,7 +2683,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " to validate signatures.\n\nDigital signatures are used to verify the authenticity and integrity of data.\n\nThis works by leveraging asymmetric encryption but in reverse.\n\nIf we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that the data was encrypted (i.e. signed) by the corresponding private key.\n\nAnd since the public key is available to everyone but the private key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.\n\nNote that because of how digital signatures work, signing the same data with the same keypair will produce the same signature."
+                            "text": " to validate signatures.\r\n\r\nDigital signatures are used to verify the authenticity and integrity of data.\r\n\r\nThis works by leveraging asymmetric encryption but in reverse.\r\n\r\nIf we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that the data was encrypted (i.e. signed) by the corresponding private key.\r\n\r\nAnd since the public key is available to everyone but the private key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.\r\n\r\nNote that because of how digital signatures work, signing the same data with the same keypair will produce the same signature."
                         }
                     ],
                     "blockTags": [
@@ -2692,7 +2692,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a signature for the string \"hello\".\n// Returned from crypto.keypair()\nconst keypair = \"vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09\";\n\nconst signature = crypto.sign(keypair, \"my secret\", \"hello\");\nos.toast(signature);\n```"
+                                    "text": "```ts\nCreate a signature for the string \"hello\".\r\n// Returned from crypto.keypair()\r\nconst keypair = \"vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09\";\r\n\r\nconst signature = crypto.sign(keypair, \"my secret\", \"hello\");\r\nos.toast(signature);\n```"
                                 }
                             ]
                         },
@@ -2721,7 +2721,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12991,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12991"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12991"
                     }
                 ],
                 "parameters": [
@@ -2792,11 +2792,11 @@
                 }
             },
             "comment": {
-                "text": "Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).\n\nUse crypto.keypair to create a keypair that can be used to create signatures.\n\nUse crypto.verify to validate signatures.\n\nDigital signatures are used to verify the authenticity and integrity of data.\n\nThis works by leveraging asymmetric encryption but in reverse.\n\nIf we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that the data was encrypted (i.e. signed) by the corresponding private key.\n\nAnd since the public key is available to everyone but the private key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.\n\nNote that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.",
+                "text": "Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).\r\n\r\nUse crypto.keypair to create a keypair that can be used to create signatures.\r\n\r\nUse crypto.verify to validate signatures.\r\n\r\nDigital signatures are used to verify the authenticity and integrity of data.\r\n\r\nThis works by leveraging asymmetric encryption but in reverse.\r\n\r\nIf we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that the data was encrypted (i.e. signed) by the corresponding private key.\r\n\r\nAnd since the public key is available to everyone but the private key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.\r\n\r\nNote that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a signature for the string \"hello\".\n// Returned from crypto.keypair()\nconst keypair = \"vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09\";\n\nconst signature = crypto.sign(keypair, \"my secret\", \"hello\");\nos.toast(signature);\n```"
+                        "text": "```ts\nCreate a signature for the string \"hello\".\r\n// Returned from crypto.keypair()\r\nconst keypair = \"vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09\";\r\n\r\nconst signature = crypto.sign(keypair, \"my secret\", \"hello\");\r\nos.toast(signature);\n```"
                     },
                     {
                         "tagName": "dochash",

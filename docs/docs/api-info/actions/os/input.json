@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nHide the chat bar.\nos.hideChat();\n```"
+                                    "text": "```ts\nHide the chat bar.\r\nos.hideChat();\n```"
                                 }
                             ]
                         },
@@ -65,7 +65,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5584,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5584"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5584"
                     }
                 ],
                 "type": {
@@ -82,7 +82,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nHide the chat bar.\nos.hideChat();\n```"
+                        "text": "```ts\nHide the chat bar.\r\nos.hideChat();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -114,7 +114,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Shows the \"chat bar\" at the top of the screen in CasualOS, optionally using the given text as the placeholder.\nTyping in the chat bar will send "
+                            "text": "Shows the \"chat bar\" at the top of the screen in CasualOS, optionally using the given text as the placeholder.\r\nTyping in the chat bar will send "
                         },
                         {
                             "kind": "text",
@@ -139,7 +139,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the chat bar with a placeholder.\nos.showChat({\n    placeholder: \"hello\"\n});\n```"
+                                    "text": "```ts\nShow the chat bar with a placeholder.\r\nos.showChat({\r\n    placeholder: \"hello\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -148,7 +148,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the chat bar with some prefilled text.\nos.showChat({\n    prefill: \"this is prefilled\"\n});\n```"
+                                    "text": "```ts\nShow the chat bar with some prefilled text.\r\nos.showChat({\r\n    prefill: \"this is prefilled\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -157,7 +157,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the chat bar with some prefilled text and a placeholder.\nos.showChat({\n    prefill: \"this is prefilled\",\n    placeholder: \"hello\"\n});\n```"
+                                    "text": "```ts\nShow the chat bar with some prefilled text and a placeholder.\r\nos.showChat({\r\n    prefill: \"this is prefilled\",\r\n    placeholder: \"hello\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -166,7 +166,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the chat bar with a custom placeholder color.\nos.showChat({\n    placeholder: \"hello\",\n    placeholderColor: '#44a471'\n});\n```"
+                                    "text": "```ts\nShow the chat bar with a custom placeholder color.\r\nos.showChat({\r\n    placeholder: \"hello\",\r\n    placeholderColor: '#44a471'\r\n});\n```"
                                 }
                             ]
                         },
@@ -175,7 +175,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the chat bar with a custom background color.\nos.showChat({\n    placeholder: \"hello\",\n    backgroundColor: '#f1abe2'\n});\n```"
+                                    "text": "```ts\nShow the chat bar with a custom background color.\r\nos.showChat({\r\n    placeholder: \"hello\",\r\n    backgroundColor: '#f1abe2'\r\n});\n```"
                                 }
                             ]
                         },
@@ -184,7 +184,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the chat bar with a custom foreground color.\nos.showChat({\n    placeholder: \"hello\",\n    foregroundColor: '#531234'\n});\n```"
+                                    "text": "```ts\nShow the chat bar with a custom foreground color.\r\nos.showChat({\r\n    placeholder: \"hello\",\r\n    foregroundColor: '#531234'\r\n});\n```"
                                 }
                             ]
                         },
@@ -231,7 +231,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5548,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5548"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5548"
                     }
                 ],
                 "parameters": [
@@ -268,31 +268,31 @@
                 }
             },
             "comment": {
-                "text": "Shows the \"chat bar\" at the top of the screen in CasualOS, optionally using the given text as the placeholder.\nTyping in the chat bar will send @onChatTyping shouts and pressing Enter will send a @onChat shout and clear the chat bar.",
+                "text": "Shows the \"chat bar\" at the top of the screen in CasualOS, optionally using the given text as the placeholder.\r\nTyping in the chat bar will send @onChatTyping shouts and pressing Enter will send a @onChat shout and clear the chat bar.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the chat bar with a placeholder.\nos.showChat({\n    placeholder: \"hello\"\n});\n```"
+                        "text": "```ts\nShow the chat bar with a placeholder.\r\nos.showChat({\r\n    placeholder: \"hello\"\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the chat bar with some prefilled text.\nos.showChat({\n    prefill: \"this is prefilled\"\n});\n```"
+                        "text": "```ts\nShow the chat bar with some prefilled text.\r\nos.showChat({\r\n    prefill: \"this is prefilled\"\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the chat bar with some prefilled text and a placeholder.\nos.showChat({\n    prefill: \"this is prefilled\",\n    placeholder: \"hello\"\n});\n```"
+                        "text": "```ts\nShow the chat bar with some prefilled text and a placeholder.\r\nos.showChat({\r\n    prefill: \"this is prefilled\",\r\n    placeholder: \"hello\"\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the chat bar with a custom placeholder color.\nos.showChat({\n    placeholder: \"hello\",\n    placeholderColor: '#44a471'\n});\n```"
+                        "text": "```ts\nShow the chat bar with a custom placeholder color.\r\nos.showChat({\r\n    placeholder: \"hello\",\r\n    placeholderColor: '#44a471'\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the chat bar with a custom background color.\nos.showChat({\n    placeholder: \"hello\",\n    backgroundColor: '#f1abe2'\n});\n```"
+                        "text": "```ts\nShow the chat bar with a custom background color.\r\nos.showChat({\r\n    placeholder: \"hello\",\r\n    backgroundColor: '#f1abe2'\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the chat bar with a custom foreground color.\nos.showChat({\n    placeholder: \"hello\",\n    foregroundColor: '#531234'\n});\n```"
+                        "text": "```ts\nShow the chat bar with a custom foreground color.\r\nos.showChat({\r\n    placeholder: \"hello\",\r\n    foregroundColor: '#531234'\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -328,7 +328,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Shows the \"chat bar\" at the top of the screen in CasualOS, optionally using the given text as the placeholder.\nTyping in the chat bar will send "
+                            "text": "Shows the \"chat bar\" at the top of the screen in CasualOS, optionally using the given text as the placeholder.\r\nTyping in the chat bar will send "
                         },
                         {
                             "kind": "text",
@@ -353,7 +353,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the chat bar.\nos.showChat();\n```"
+                                    "text": "```ts\nShow the chat bar.\r\nos.showChat();\n```"
                                 }
                             ]
                         },
@@ -362,7 +362,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the chat bar with some placeholder text.\nos.showChat(\"hello\");\n```"
+                                    "text": "```ts\nShow the chat bar with some placeholder text.\r\nos.showChat(\"hello\");\n```"
                                 }
                             ]
                         },
@@ -436,7 +436,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5501,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5501"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5501"
                     }
                 ],
                 "parameters": [
@@ -469,15 +469,15 @@
                 }
             },
             "comment": {
-                "text": "Shows the \"chat bar\" at the top of the screen in CasualOS, optionally using the given text as the placeholder.\nTyping in the chat bar will send @onChatTyping shouts and pressing Enter will send a @onChat shout and clear the chat bar.",
+                "text": "Shows the \"chat bar\" at the top of the screen in CasualOS, optionally using the given text as the placeholder.\r\nTyping in the chat bar will send @onChatTyping shouts and pressing Enter will send a @onChat shout and clear the chat bar.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the chat bar.\nos.showChat();\n```"
+                        "text": "```ts\nShow the chat bar.\r\nos.showChat();\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the chat bar with some placeholder text.\nos.showChat(\"hello\");\n```"
+                        "text": "```ts\nShow the chat bar with some placeholder text.\r\nos.showChat(\"hello\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -534,7 +534,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShare a URL.\nos.share({\n    url: 'https://example.com'\n});\n```"
+                                    "text": "```ts\nShare a URL.\r\nos.share({\r\n    url: 'https://example.com'\r\n});\n```"
                                 }
                             ]
                         },
@@ -543,7 +543,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShare some text.\nos.share({\n    text: 'abcdefghijklmnopqrstuvwxyz'\n});\n```"
+                                    "text": "```ts\nShare some text.\r\nos.share({\r\n    text: 'abcdefghijklmnopqrstuvwxyz'\r\n});\n```"
                                 }
                             ]
                         },
@@ -572,7 +572,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7295,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7295"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7295"
                     }
                 ],
                 "parameters": [
@@ -622,11 +622,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShare a URL.\nos.share({\n    url: 'https://example.com'\n});\n```"
+                        "text": "```ts\nShare a URL.\r\nos.share({\r\n    url: 'https://example.com'\r\n});\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nShare some text.\nos.share({\n    text: 'abcdefghijklmnopqrstuvwxyz'\n});\n```"
+                        "text": "```ts\nShare some text.\r\nos.share({\r\n    text: 'abcdefghijklmnopqrstuvwxyz'\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",

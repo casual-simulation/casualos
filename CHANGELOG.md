@@ -2,7 +2,7 @@
 
 ## V3.2.11
 
-#### Date: TBD
+#### Date: 1/29/2024
 
 ### :boom: Breaking Changes
 
@@ -10,6 +10,7 @@
 
 ### :rocket: Features
 
+-   Added `portalHDRAddress` tag.
 -   Added the `join inst` BIOS option as an alternative to `enter join code`.
 -   Added buttons for the `sign in`, `sign up`, and `sign out` BIOS options.
 -   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
@@ -23,6 +24,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where branch info was being duplicated for temporary branches.
+-   Fixed an issue where 'onSpaceRateLimitExceeded' was missing from 'Add New Tag' autocomplete list.
 
 ## V3.2.10
 

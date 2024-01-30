@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Shows the \"report inst\" dialog to the user.\n\nReturns a promise that resolves once the dialog has been closed."
+                            "text": "Shows the \"report inst\" dialog to the user.\r\n\r\nReturns a promise that resolves once the dialog has been closed."
                         }
                     ],
                     "blockTags": [
@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nShow the \"report inst\" dialog.\nawait os.reportInst();\n```"
+                                    "text": "```ts\nShow the \"report inst\" dialog.\r\nawait os.reportInst();\n```"
                                 }
                             ]
                         },
@@ -83,7 +83,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7893,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7893"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7893"
                     }
                 ],
                 "type": {
@@ -103,11 +103,11 @@
                 }
             },
             "comment": {
-                "text": "Shows the \"report inst\" dialog to the user.\n\nReturns a promise that resolves once the dialog has been closed.",
+                "text": "Shows the \"report inst\" dialog to the user.\r\n\r\nReturns a promise that resolves once the dialog has been closed.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nShow the \"report inst\" dialog.\nawait os.reportInst();\n```"
+                        "text": "```ts\nShow the \"report inst\" dialog.\r\nawait os.reportInst();\n```"
                     },
                     {
                         "tagName": "dochash",

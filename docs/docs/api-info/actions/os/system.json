@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the config bot (formerly known as the player bot).\nThis is the bot that represents the player's browser tab.\n\nIt is "
+                            "text": "Gets the config bot (formerly known as the player bot).\r\nThis is the bot that represents the player's browser tab.\r\n\r\nIt is "
                         },
                         {
                             "kind": "code",
@@ -35,7 +35,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the config bot and set a username on it.\nconfigBot.tags.username = \"bob\";\n```"
+                                    "text": "```ts\nGet the config bot and set a username on it.\r\nconfigBot.tags.username = \"bob\";\n```"
                                 }
                             ]
                         },
@@ -44,7 +44,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the sheetPortal to \"testDimension\".\nconfigBot.tags.sheetPortal = \"testDimension\";\n```"
+                                    "text": "```ts\nOpen the sheetPortal to \"testDimension\".\r\nconfigBot.tags.sheetPortal = \"testDimension\";\n```"
                                 }
                             ]
                         },
@@ -109,7 +109,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3006,
                         "character": 16,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3006"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3006"
                     }
                 ],
                 "type": {
@@ -122,15 +122,15 @@
                 }
             },
             "comment": {
-                "text": "Gets the config bot (formerly known as the player bot).\nThis is the bot that represents the player's browser tab.\n\nIt is `tempLocal` and is used to configure various portals.",
+                "text": "Gets the config bot (formerly known as the player bot).\r\nThis is the bot that represents the player's browser tab.\r\n\r\nIt is `tempLocal` and is used to configure various portals.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the config bot and set a username on it.\nconfigBot.tags.username = \"bob\";\n```"
+                        "text": "```ts\nGet the config bot and set a username on it.\r\nconfigBot.tags.username = \"bob\";\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the sheetPortal to \"testDimension\".\nconfigBot.tags.sheetPortal = \"testDimension\";\n```"
+                        "text": "```ts\nOpen the sheetPortal to \"testDimension\".\r\nconfigBot.tags.sheetPortal = \"testDimension\";\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -183,7 +183,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the device info and popup a message with it.\nconst info = os.device();\nos.toast(info);\n```"
+                                    "text": "```ts\nGet the device info and popup a message with it.\r\nconst info = os.device();\r\nos.toast(info);\n```"
                                 }
                             ]
                         },
@@ -221,7 +221,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5647,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5647"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5647"
                     }
                 ],
                 "type": {
@@ -238,7 +238,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the device info and popup a message with it.\nconst info = os.device();\nos.toast(info);\n```"
+                        "text": "```ts\nGet the device info and popup a message with it.\r\nconst info = os.device();\r\nos.toast(info);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -279,7 +279,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the current version and popup a message with it.\nconst info = os.version();\nos.toast(info.version);\n```"
+                                    "text": "```ts\nGet the current version and popup a message with it.\r\nconst info = os.version();\r\nos.toast(info.version);\n```"
                                 }
                             ]
                         },
@@ -288,7 +288,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCheck whether the current inst is for playing AUXes.\nconst info = os.version();\nconst isPlayer = info.playerMode === \"player\";\nos.toast('Is Player: ' + isPlayer);\n```"
+                                    "text": "```ts\nCheck whether the current inst is for playing AUXes.\r\nconst info = os.version();\r\nconst isPlayer = info.playerMode === \"player\";\r\nos.toast('Is Player: ' + isPlayer);\n```"
                                 }
                             ]
                         },
@@ -326,7 +326,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5632,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5632"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5632"
                     }
                 ],
                 "type": {
@@ -343,11 +343,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the current version and popup a message with it.\nconst info = os.version();\nos.toast(info.version);\n```"
+                        "text": "```ts\nGet the current version and popup a message with it.\r\nconst info = os.version();\r\nos.toast(info.version);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCheck whether the current inst is for playing AUXes.\nconst info = os.version();\nconst isPlayer = info.playerMode === \"player\";\nos.toast('Is Player: ' + isPlayer);\n```"
+                        "text": "```ts\nCheck whether the current inst is for playing AUXes.\r\nconst info = os.version();\r\nconst isPlayer = info.playerMode === \"player\";\r\nos.toast('Is Player: ' + isPlayer);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -379,7 +379,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Instructs CasualOS to open the built-in developer console.\nThe dev console provides easy access to error messages and debug logs for formulas and actions."
+                            "text": "Instructs CasualOS to open the built-in developer console.\r\nThe dev console provides easy access to error messages and debug logs for formulas and actions."
                         }
                     ],
                     "blockTags": [
@@ -388,7 +388,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nOpen the developer console.\nos.openDevConsole();\n```"
+                                    "text": "```ts\nOpen the developer console.\r\nos.openDevConsole();\n```"
                                 }
                             ]
                         },
@@ -426,7 +426,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7180,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7180"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7180"
                     }
                 ],
                 "type": {
@@ -439,11 +439,11 @@
                 }
             },
             "comment": {
-                "text": "Instructs CasualOS to open the built-in developer console.\nThe dev console provides easy access to error messages and debug logs for formulas and actions.",
+                "text": "Instructs CasualOS to open the built-in developer console.\r\nThe dev console provides easy access to error messages and debug logs for formulas and actions.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nOpen the developer console.\nos.openDevConsole();\n```"
+                        "text": "```ts\nOpen the developer console.\r\nos.openDevConsole();\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -484,7 +484,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nLog \"Hello, World!\" to the browser developer console.\nos.log(\"Hello, World!\");\n```"
+                                    "text": "```ts\nLog \"Hello, World!\" to the browser developer console.\r\nos.log(\"Hello, World!\");\n```"
                                 }
                             ]
                         },
@@ -513,7 +513,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 7664,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L7664"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L7664"
                     }
                 ],
                 "parameters": [
@@ -553,7 +553,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nLog \"Hello, World!\" to the browser developer console.\nos.log(\"Hello, World!\");\n```"
+                        "text": "```ts\nLog \"Hello, World!\" to the browser developer console.\r\nos.log(\"Hello, World!\");\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -581,7 +581,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Runs the given script.\nThe script will be executed in a separate environment with no "
+                            "text": "Runs the given script.\r\nThe script will be executed in a separate environment with no "
                         },
                         {
                             "kind": "code",
@@ -629,7 +629,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " variables.\nThis means that you need to use the "
+                            "text": " variables.\r\nThis means that you need to use the "
                         },
                         {
                             "kind": "text",
@@ -645,7 +645,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " functions to read bot data.\n\nReturns a promise that resolves with the returned script value after it has been executed."
+                            "text": " functions to read bot data.\r\n\r\nReturns a promise that resolves with the returned script value after it has been executed."
                         }
                     ],
                     "blockTags": [
@@ -654,7 +654,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRun a script that says \"hello\".\nos.run(\"os.toast('hello');\");\n```"
+                                    "text": "```ts\nRun a script that says \"hello\".\r\nos.run(\"os.toast('hello');\");\n```"
                                 }
                             ]
                         },
@@ -663,7 +663,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRun a script from the #script tag on the current bot.\nos.run(tags.script);\n```"
+                                    "text": "```ts\nRun a script from the #script tag on the current bot.\r\nos.run(tags.script);\n```"
                                 }
                             ]
                         },
@@ -672,7 +672,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRun a script and toast the result.\nconst result = await os.run(\"return 594 + 391\");\nos.toast(result);\n```"
+                                    "text": "```ts\nRun a script and toast the result.\r\nconst result = await os.run(\"return 594 + 391\");\r\nos.toast(result);\n```"
                                 }
                             ]
                         },
@@ -701,7 +701,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 5610,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L5610"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L5610"
                     }
                 ],
                 "parameters": [
@@ -743,19 +743,19 @@
                 }
             },
             "comment": {
-                "text": "Runs the given script.\nThe script will be executed in a separate environment with no `bot`, `tags`, `this`, `thisBot`, `data`, and `that` variables.\nThis means that you need to use the getbot-filters or getbots-filters functions to read bot data.\n\nReturns a promise that resolves with the returned script value after it has been executed.",
+                "text": "Runs the given script.\r\nThe script will be executed in a separate environment with no `bot`, `tags`, `this`, `thisBot`, `data`, and `that` variables.\r\nThis means that you need to use the getbot-filters or getbots-filters functions to read bot data.\r\n\r\nReturns a promise that resolves with the returned script value after it has been executed.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRun a script that says \"hello\".\nos.run(\"os.toast('hello');\");\n```"
+                        "text": "```ts\nRun a script that says \"hello\".\r\nos.run(\"os.toast('hello');\");\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRun a script from the #script tag on the current bot.\nos.run(tags.script);\n```"
+                        "text": "```ts\nRun a script from the #script tag on the current bot.\r\nos.run(tags.script);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRun a script and toast the result.\nconst result = await os.run(\"return 594 + 391\");\nos.toast(result);\n```"
+                        "text": "```ts\nRun a script and toast the result.\r\nconst result = await os.run(\"return 594 + 391\");\r\nos.toast(result);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -783,7 +783,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).\n\nReturns a promise that resolves when the time has been waited."
+                            "text": "Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).\r\n\r\nReturns a promise that resolves when the time has been waited."
                         }
                     ],
                     "blockTags": [
@@ -792,7 +792,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nWait 2 seconds before proceeding.\nos.toast(\"Stop!\");\nawait os.sleep(2000);\nos.toast(\"Hammer Time!\");\n```"
+                                    "text": "```ts\nWait 2 seconds before proceeding.\r\nos.toast(\"Stop!\");\r\nawait os.sleep(2000);\r\nos.toast(\"Hammer Time!\");\n```"
                                 }
                             ]
                         },
@@ -821,7 +821,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 10192,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L10192"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L10192"
                     }
                 ],
                 "parameters": [
@@ -863,11 +863,11 @@
                 }
             },
             "comment": {
-                "text": "Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).\n\nReturns a promise that resolves when the time has been waited.",
+                "text": "Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).\r\n\r\nReturns a promise that resolves when the time has been waited.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nWait 2 seconds before proceeding.\nos.toast(\"Stop!\");\nawait os.sleep(2000);\nos.toast(\"Hammer Time!\");\n```"
+                        "text": "```ts\nWait 2 seconds before proceeding.\r\nos.toast(\"Stop!\");\r\nawait os.sleep(2000);\r\nos.toast(\"Hammer Time!\");\n```"
                     },
                     {
                         "tagName": "dochash",

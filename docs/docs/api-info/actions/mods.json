@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSet the \"test\" tag and \"name\" tag on a bot\napplyMod(bot, {\n   test: true,\n   name: \"bob\"\n});\n```"
+                                    "text": "```ts\nSet the \"test\" tag and \"name\" tag on a bot\r\napplyMod(bot, {\r\n   test: true,\r\n   name: \"bob\"\r\n});\n```"
                                 }
                             ]
                         },
@@ -83,7 +83,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13423,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13423"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13423"
                     }
                 ],
                 "parameters": [
@@ -147,7 +147,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSet the \"test\" tag and \"name\" tag on a bot\napplyMod(bot, {\n   test: true,\n   name: \"bob\"\n});\n```"
+                        "text": "```ts\nSet the \"test\" tag and \"name\" tag on a bot\r\napplyMod(bot, {\r\n   test: true,\r\n   name: \"bob\"\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -234,7 +234,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 3916,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L3916"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L3916"
                     }
                 ],
                 "parameters": [
@@ -353,7 +353,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRemove a mod from this bot\nconst mod = {\n    color: 'red',\n    name: 'bob'\n};\nsubtractMods(this, mod);\n```"
+                                    "text": "```ts\nRemove a mod from this bot\r\nconst mod = {\r\n    color: 'red',\r\n    name: 'bob'\r\n};\r\nsubtractMods(this, mod);\n```"
                                 }
                             ]
                         },
@@ -362,7 +362,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nRemove multiple mods from this bot\nsubtractMods(this, {\n    color: 'red'\n}, {\n    name: 'bob'\n});\n```"
+                                    "text": "```ts\nRemove multiple mods from this bot\r\nsubtractMods(this, {\r\n    color: 'red'\r\n}, {\r\n    name: 'bob'\r\n});\n```"
                                 }
                             ]
                         },
@@ -400,7 +400,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 13468,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L13468"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L13468"
                     }
                 ],
                 "parameters": [
@@ -464,11 +464,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nRemove a mod from this bot\nconst mod = {\n    color: 'red',\n    name: 'bob'\n};\nsubtractMods(this, mod);\n```"
+                        "text": "```ts\nRemove a mod from this bot\r\nconst mod = {\r\n    color: 'red',\r\n    name: 'bob'\r\n};\r\nsubtractMods(this, mod);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nRemove multiple mods from this bot\nsubtractMods(this, {\n    color: 'red'\n}, {\n    name: 'bob'\n});\n```"
+                        "text": "```ts\nRemove multiple mods from this bot\r\nsubtractMods(this, {\r\n    color: 'red'\r\n}, {\r\n    name: 'bob'\r\n});\n```"
                     },
                     {
                         "tagName": "dochash",

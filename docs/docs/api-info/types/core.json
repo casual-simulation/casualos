@@ -18,7 +18,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines a bot filter function.\n\nCommon bot filters are "
+                            "text": "Defines a bot filter function.\r\n\r\nCommon bot filters are "
                         },
                         {
                             "kind": "text",
@@ -60,7 +60,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 755,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                     }
                 ],
                 "type": {
@@ -79,7 +79,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 755,
                                         "character": 25,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L755"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L755"
                                     }
                                 ],
                                 "signatures": [
@@ -122,7 +122,7 @@
                 }
             },
             "comment": {
-                "text": "Defines a bot filter function.\n\nCommon bot filters are byTag",
+                "text": "Defines a bot filter function.\r\n\r\nCommon bot filters are byTag",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -154,7 +154,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "The possible bot spaces.\n\n- "
+                            "text": "The possible bot spaces.\r\n\r\n- "
                         },
                         {
                             "kind": "code",
@@ -162,7 +162,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " means that the bot is a normal bot.\n- "
+                            "text": " means that the bot is a normal bot.\r\n- "
                         },
                         {
                             "kind": "code",
@@ -170,7 +170,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " means that the bot is stored in the [local storage](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage) partition.\n- "
+                            "text": " means that the bot is stored in the [local storage](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage) partition.\r\n- "
                         },
                         {
                             "kind": "code",
@@ -178,7 +178,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " means that the bot is stored in the [temporary](https://en.wikipedia.org/wiki/In-memory_database) partition.\n- "
+                            "text": " means that the bot is stored in the [temporary](https://en.wikipedia.org/wiki/In-memory_database) partition.\r\n- "
                         },
                         {
                             "kind": "code",
@@ -186,7 +186,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " means that the bot is temporary and shared with other devices.\n- "
+                            "text": " means that the bot is temporary and shared with other devices.\r\n- "
                         },
                         {
                             "kind": "code",
@@ -241,7 +241,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 443,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L443"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L443"
                     }
                 ],
                 "type": {
@@ -283,7 +283,7 @@
                 }
             },
             "comment": {
-                "text": "The possible bot spaces.\n\n- `\"shared\"` means that the bot is a normal bot.\n- `\"local\"` means that the bot is stored in the [local storage](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage) partition.\n- `\"tempLocal\"` means that the bot is stored in the [temporary](https://en.wikipedia.org/wiki/In-memory_database) partition.\n- `\"tempShared\"` means that the bot is temporary and shared with other devices.\n- `\"remoteTempShared\"` means that the bot is temporary and shared with this device from a remote device.",
+                "text": "The possible bot spaces.\r\n\r\n- `\"shared\"` means that the bot is a normal bot.\r\n- `\"local\"` means that the bot is stored in the [local storage](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage) partition.\r\n- `\"tempLocal\"` means that the bot is stored in the [temporary](https://en.wikipedia.org/wiki/In-memory_database) partition.\r\n- `\"tempShared\"` means that the bot is temporary and shared with other devices.\r\n- `\"remoteTempShared\"` means that the bot is temporary and shared with this device from a remote device.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -319,7 +319,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface that contains a set of bots that have been indexed by their IDs.\n\nGenerally, this is only used when working with groups of bots.\nFor example, the "
+                            "text": "Defines an interface that contains a set of bots that have been indexed by their IDs.\r\n\r\nGenerally, this is only used when working with groups of bots.\r\nFor example, the "
                         },
                         {
                             "kind": "text",
@@ -363,7 +363,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a bot state with two bots\nlet state = {\n   [bot1.id]: bot1,\n   [bot2.id]: bot2\n};\n```"
+                                    "text": "```ts\nCreate a bot state with two bots\r\nlet state = {\r\n   [bot1.id]: bot1,\r\n   [bot2.id]: bot2\r\n};\n```"
                                 }
                             ]
                         },
@@ -372,7 +372,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet a bot by its ID from a bot state\nlet bot = state[botId];\n```"
+                                    "text": "```ts\nGet a bot by its ID from a bot state\r\nlet bot = state[botId];\n```"
                                 }
                             ]
                         }
@@ -383,7 +383,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 883,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L883"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L883"
                     }
                 ],
                 "indexSignature": {
@@ -406,7 +406,7 @@
                             "fileName": "src/aux-common/bots/Bot.ts",
                             "line": 887,
                             "character": 4,
-                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L887"
+                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L887"
                         }
                     ],
                     "parameters": [
@@ -433,7 +433,7 @@
                 }
             },
             "comment": {
-                "text": "Defines an interface that contains a set of bots that have been indexed by their IDs.\n\nGenerally, this is only used when working with groups of bots.\nFor example, the diffSnapshots function takes two bot states and produces the difference between them.",
+                "text": "Defines an interface that contains a set of bots that have been indexed by their IDs.\r\n\r\nGenerally, this is only used when working with groups of bots.\r\nFor example, the diffSnapshots function takes two bot states and produces the difference between them.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -449,11 +449,11 @@
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a bot state with two bots\nlet state = {\n   [bot1.id]: bot1,\n   [bot2.id]: bot2\n};\n```"
+                        "text": "```ts\nCreate a bot state with two bots\r\nlet state = {\r\n   [bot1.id]: bot1,\r\n   [bot2.id]: bot2\r\n};\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet a bot by its ID from a bot state\nlet bot = state[botId];\n```"
+                        "text": "```ts\nGet a bot by its ID from a bot state\r\nlet bot = state[botId];\n```"
                     }
                 ]
             },
@@ -473,11 +473,11 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface for a map of tag masks to tag names.\n\nTag masks are special tags that can exist in a different space from the bot they are applied to.\nThis makes it possible to have some local-only data applied to a shared bot for example.\n\nThe actual data structure is similar to the bot tags structure except that tags are additionally\nsplit by the space that they originated from. This makes it possible to identify which space a tag came from and also\nprevents cross-space conflicts.\n\n"
+                            "text": "Defines an interface for a map of tag masks to tag names.\r\n\r\nTag masks are special tags that can exist in a different space from the bot they are applied to.\r\nThis makes it possible to have some local-only data applied to a shared bot for example.\r\n\r\nThe actual data structure is similar to the bot tags structure except that tags are additionally\r\nsplit by the space that they originated from. This makes it possible to identify which space a tag came from and also\r\nprevents cross-space conflicts.\r\n\r\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\ninterface TagMasks {\n     [space: string]: Tags;\n}\n```"
+                            "text": "```typescript\r\ninterface TagMasks {\r\n     [space: string]: Tags;\r\n}\r\n```"
                         }
                     ],
                     "blockTags": [
@@ -524,7 +524,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 529,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L529"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L529"
                     }
                 ],
                 "indexSignature": {
@@ -547,7 +547,7 @@
                             "fileName": "src/aux-common/bots/Bot.ts",
                             "line": 533,
                             "character": 4,
-                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L533"
+                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L533"
                         }
                     ],
                     "parameters": [
@@ -574,7 +574,7 @@
                 }
             },
             "comment": {
-                "text": "Defines an interface for a map of tag masks to tag names.\n\nTag masks are special tags that can exist in a different space from the bot they are applied to.\nThis makes it possible to have some local-only data applied to a shared bot for example.\n\nThe actual data structure is similar to the bot tags structure except that tags are additionally\nsplit by the space that they originated from. This makes it possible to identify which space a tag came from and also\nprevents cross-space conflicts.\n\n```typescript\ninterface TagMasks {\n     [space: string]: Tags;\n}\n```",
+                "text": "Defines an interface for a map of tag masks to tag names.\r\n\r\nTag masks are special tags that can exist in a different space from the bot they are applied to.\r\nThis makes it possible to have some local-only data applied to a shared bot for example.\r\n\r\nThe actual data structure is similar to the bot tags structure except that tags are additionally\r\nsplit by the space that they originated from. This makes it possible to identify which space a tag came from and also\r\nprevents cross-space conflicts.\r\n\r\n```typescript\r\ninterface TagMasks {\r\n     [space: string]: Tags;\r\n}\r\n```",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -610,11 +610,11 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface that represents a set of tags and their related values.\n\n"
+                            "text": "Defines an interface that represents a set of tags and their related values.\r\n\r\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\ninterface Tags {\n     [tag: string]: any\n}\n```"
+                            "text": "```typescript\r\ninterface Tags {\r\n     [tag: string]: any\r\n}\r\n```"
                         }
                     ],
                     "blockTags": [
@@ -661,7 +661,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 550,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L550"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L550"
                     }
                 ],
                 "indexSignature": {
@@ -683,7 +683,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nGet the #color on this bot\nlet color = thisBot.tags.color;\n```"
+                                        "text": "```ts\nGet the #color on this bot\r\nlet color = thisBot.tags.color;\n```"
                                     }
                                 ]
                             },
@@ -692,7 +692,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nGet a raw tag on this bot\nlet rawTag = thisBot.raw.tag;\n```"
+                                        "text": "```ts\nGet a raw tag on this bot\r\nlet rawTag = thisBot.raw.tag;\n```"
                                     }
                                 ]
                             },
@@ -701,7 +701,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nSet the #color tag to \"red\" on this bot\nthisBot.tags.color = \"red\";\n```"
+                                        "text": "```ts\nSet the #color tag to \"red\" on this bot\r\nthisBot.tags.color = \"red\";\n```"
                                     }
                                 ]
                             },
@@ -710,7 +710,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nSet a tempLocal tag mask for #color on this bot\nthisBot.masks.color = \"red\";\n```"
+                                        "text": "```ts\nSet a tempLocal tag mask for #color on this bot\r\nthisBot.masks.color = \"red\";\n```"
                                     }
                                 ]
                             }
@@ -721,7 +721,7 @@
                             "fileName": "src/aux-common/bots/Bot.ts",
                             "line": 861,
                             "character": 4,
-                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L861"
+                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L861"
                         }
                     ],
                     "parameters": [
@@ -744,7 +744,7 @@
                 }
             },
             "comment": {
-                "text": "Defines an interface that represents a set of tags and their related values.\n\n```typescript\ninterface Tags {\n     [tag: string]: any\n}\n```",
+                "text": "Defines an interface that represents a set of tags and their related values.\r\n\r\n```typescript\r\ninterface Tags {\r\n     [tag: string]: any\r\n}\r\n```",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -780,11 +780,11 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "An interface that maps tag names to compiled listener functions.\n\n"
+                            "text": "An interface that maps tag names to compiled listener functions.\r\n\r\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\ninterface Listeners {\n     [tag: string]: (arg?: any) => any;\n}\n```"
+                            "text": "```typescript\r\ninterface Listeners {\r\n     [tag: string]: (arg?: any) => any;\r\n}\r\n```"
                         }
                     ],
                     "blockTags": [
@@ -831,7 +831,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 296,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L296"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L296"
                     }
                 ],
                 "indexSignature": {
@@ -854,7 +854,7 @@
                             "fileName": "src/aux-common/bots/Bot.ts",
                             "line": 300,
                             "character": 4,
-                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L300"
+                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L300"
                         }
                     ],
                     "parameters": [
@@ -883,7 +883,7 @@
                                     "fileName": "src/aux-common/bots/Bot.ts",
                                     "line": 300,
                                     "character": 19,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L300"
+                                    "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L300"
                                 }
                             ],
                             "signatures": [
@@ -919,7 +919,7 @@
                 }
             },
             "comment": {
-                "text": "An interface that maps tag names to compiled listener functions.\n\n```typescript\ninterface Listeners {\n     [tag: string]: (arg?: any) => any;\n}\n```",
+                "text": "An interface that maps tag names to compiled listener functions.\r\n\r\n```typescript\r\ninterface Listeners {\r\n     [tag: string]: (arg?: any) => any;\r\n}\r\n```",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -955,7 +955,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines a type that represents a mod.\nThat is, a set of tags that can be applied to another bot."
+                            "text": "Defines a type that represents a mod.\r\nThat is, a set of tags that can be applied to another bot."
                         }
                     ],
                     "blockTags": [
@@ -993,7 +993,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 514,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L514"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L514"
                     }
                 ],
                 "type": {
@@ -1019,7 +1019,7 @@
                 }
             },
             "comment": {
-                "text": "Defines a type that represents a mod.\nThat is, a set of tags that can be applied to another bot.",
+                "text": "Defines a type that represents a mod.\r\nThat is, a set of tags that can be applied to another bot.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1105,7 +1105,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 224,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L224"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L224"
                             }
                         ],
                         "type": {
@@ -1136,7 +1136,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 219,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L219"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L219"
                             }
                         ],
                         "type": {
@@ -1159,7 +1159,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 215,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L215"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L215"
                     }
                 ]
             },
@@ -1196,7 +1196,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface that contains a set of partial bots that have been indexed by their IDs.\n\nGenerally, this is only used when working with differences between groups of bots.\nFor example, the "
+                            "text": "Defines an interface that contains a set of partial bots that have been indexed by their IDs.\r\n\r\nGenerally, this is only used when working with differences between groups of bots.\r\nFor example, the "
                         },
                         {
                             "kind": "text",
@@ -1242,7 +1242,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 900,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L900"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L900"
                     }
                 ],
                 "indexSignature": {
@@ -1256,7 +1256,7 @@
                             "fileName": "src/aux-common/bots/Bot.ts",
                             "line": 901,
                             "character": 4,
-                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L901"
+                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L901"
                         }
                     ],
                     "parameters": [
@@ -1294,7 +1294,7 @@
                 }
             },
             "comment": {
-                "text": "Defines an interface that contains a set of partial bots that have been indexed by their IDs.\n\nGenerally, this is only used when working with differences between groups of bots.\nFor example, the applyDiffToSnapshot function takes a bot state and a partial bot state and produces a final state that contains the combined result.",
+                "text": "Defines an interface that contains a set of partial bots that have been indexed by their IDs.\r\n\r\nGenerally, this is only used when working with differences between groups of bots.\r\nFor example, the applyDiffToSnapshot function takes a bot state and a partial bot state and produces a final state that contains the combined result.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1326,7 +1326,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface for a bot in a script/formula.\n\nThe difference between this and Bot is that the tags\nare calculated values and raw is the original tag values.\n\ni.e. tags will evaluate formulas while raw will return the formula scripts themselves."
+                            "text": "Defines an interface for a bot in a script/formula.\r\n\r\nThe difference between this and Bot is that the tags\r\nare calculated values and raw is the original tag values.\r\n\r\ni.e. tags will evaluate formulas while raw will return the formula scripts themselves."
                         }
                     ],
                     "blockTags": [
@@ -1416,7 +1416,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 112,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L112"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L112"
                             }
                         ],
                         "type": {
@@ -1448,7 +1448,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 70,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L70"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L70"
                             }
                         ],
                         "type": {
@@ -1476,7 +1476,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 75,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L75"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L75"
                             }
                         ],
                         "type": {
@@ -1504,7 +1504,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 102,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L102"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L102"
                             }
                         ],
                         "type": {
@@ -1526,7 +1526,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The calculated listener functions.\nThis lets you get the compiled listener functions."
+                                    "text": "The calculated listener functions.\r\nThis lets you get the compiled listener functions."
                                 }
                             ],
                             "blockTags": []
@@ -1536,7 +1536,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 130,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L130"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L130"
                             }
                         ],
                         "type": {
@@ -1568,7 +1568,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 117,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L117"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L117"
                             }
                         ],
                         "type": {
@@ -1600,7 +1600,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 97,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L97"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L97"
                             }
                         ],
                         "type": {
@@ -1632,7 +1632,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 92,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L92"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L92"
                             }
                         ],
                         "type": {
@@ -1656,7 +1656,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The space that the bot is in.\nDefaults to "
+                                    "text": "The space that the bot is in.\r\nDefaults to "
                                 },
                                 {
                                     "kind": "code",
@@ -1670,7 +1670,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 81,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L81"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L81"
                             }
                         ],
                         "type": {
@@ -1692,7 +1692,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The calculated tag values.\nThis lets you get the calculated values from formulas."
+                                    "text": "The calculated tag values.\r\nThis lets you get the calculated values from formulas."
                                 }
                             ],
                             "blockTags": []
@@ -1702,7 +1702,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 87,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L87"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L87"
                             }
                         ],
                         "type": {
@@ -1734,7 +1734,7 @@
                                 "fileName": "src/aux-common/bots/Bot.ts",
                                 "line": 107,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L107"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L107"
                             }
                         ],
                         "type": {
@@ -1770,7 +1770,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 66,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L66"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L66"
                     }
                 ],
                 "indexSignature": {
@@ -1783,7 +1783,7 @@
                         "summary": [
                             {
                                 "kind": "text",
-                                "text": "Gets the listener or bot property with the given name.\n\nIf given a property name, like "
+                                "text": "Gets the listener or bot property with the given name.\r\n\r\nIf given a property name, like "
                             },
                             {
                                 "kind": "code",
@@ -1799,7 +1799,7 @@
                             },
                             {
                                 "kind": "text",
-                                "text": ", then it will return the value of that property.\nAlternatively, if the name does not match an existing property on the bot, then it will return the listener with the given name."
+                                "text": ", then it will return the value of that property.\r\nAlternatively, if the name does not match an existing property on the bot, then it will return the listener with the given name."
                             }
                         ],
                         "blockTags": [
@@ -1808,7 +1808,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nGet the tags of a bot\nlet tags = bot.tags;\n```"
+                                        "text": "```ts\nGet the tags of a bot\r\nlet tags = bot.tags;\n```"
                                     }
                                 ]
                             },
@@ -1817,7 +1817,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nGet the links of a bot\nlet links = bot.links;\n```"
+                                        "text": "```ts\nGet the links of a bot\r\nlet links = bot.links;\n```"
                                     }
                                 ]
                             },
@@ -1826,7 +1826,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nGet the @onClick listener of a bot\nlet onClick = bot.onClick;\n```"
+                                        "text": "```ts\nGet the @onClick listener of a bot\r\nlet onClick = bot.onClick;\n```"
                                     }
                                 ]
                             },
@@ -1835,7 +1835,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nGet a property on a bot by a variable\nlet propertyToGet = 'tags';\nlet tags = bot[propertyToGet];\n```"
+                                        "text": "```ts\nGet a property on a bot by a variable\r\nlet propertyToGet = 'tags';\r\nlet tags = bot[propertyToGet];\n```"
                                     }
                                 ]
                             }
@@ -1846,7 +1846,7 @@
                             "fileName": "src/aux-common/bots/Bot.ts",
                             "line": 205,
                             "character": 4,
-                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L205"
+                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L205"
                         }
                     ],
                     "parameters": [
@@ -1878,7 +1878,7 @@
                                             "fileName": "src/aux-common/bots/Bot.ts",
                                             "line": 205,
                                             "character": 35,
-                                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L205"
+                                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L205"
                                         }
                                     ],
                                     "signatures": [
@@ -1920,7 +1920,7 @@
                 }
             },
             "comment": {
-                "text": "Defines an interface for a bot in a script/formula.\n\nThe difference between this and Bot is that the tags\nare calculated values and raw is the original tag values.\n\ni.e. tags will evaluate formulas while raw will return the formula scripts themselves.",
+                "text": "Defines an interface for a bot in a script/formula.\r\n\r\nThe difference between this and Bot is that the tags\r\nare calculated values and raw is the original tag values.\r\n\r\ni.e. tags will evaluate formulas while raw will return the formula scripts themselves.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -1968,11 +1968,11 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface that represents the bot links a bot can have.\n\n"
+                            "text": "Defines an interface that represents the bot links a bot can have.\r\n\r\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\ninterface Links {\n     [link: string]: Bot | Bot[];\n}\n```"
+                            "text": "```typescript\r\ninterface Links {\r\n     [link: string]: Bot | Bot[];\r\n}\r\n```"
                         }
                     ],
                     "blockTags": [
@@ -2019,7 +2019,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 241,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L241"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L241"
                     }
                 ],
                 "indexSignature": {
@@ -2041,7 +2041,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nGet a bot that is linked in the #manager tag\nlet managerBot = thisBot.links.manager;\n```"
+                                        "text": "```ts\nGet a bot that is linked in the #manager tag\r\nlet managerBot = thisBot.links.manager;\n```"
                                     }
                                 ]
                             },
@@ -2050,7 +2050,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nLink a bot to another bot in the #manager tag\nthisBot.links.manager = managerBot;\n```"
+                                        "text": "```ts\nLink a bot to another bot in the #manager tag\r\nthisBot.links.manager = managerBot;\n```"
                                     }
                                 ]
                             }
@@ -2061,7 +2061,7 @@
                             "fileName": "src/aux-common/bots/Bot.ts",
                             "line": 251,
                             "character": 4,
-                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L251"
+                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L251"
                         }
                     ],
                     "parameters": [
@@ -2104,7 +2104,7 @@
                 }
             },
             "comment": {
-                "text": "Defines an interface that represents the bot links a bot can have.\n\n```typescript\ninterface Links {\n     [link: string]: Bot | Bot[];\n}\n```",
+                "text": "Defines an interface that represents the bot links a bot can have.\r\n\r\n```typescript\r\ninterface Links {\r\n     [link: string]: Bot | Bot[];\r\n}\r\n```",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -2140,11 +2140,11 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface that represents the variables a bot can have.\nVariables are useful for storing data that is not able to be saved to a tag.\n\n"
+                            "text": "Defines an interface that represents the variables a bot can have.\r\nVariables are useful for storing data that is not able to be saved to a tag.\r\n\r\n"
                         },
                         {
                             "kind": "code",
-                            "text": "```typescript\ninterface Variables {\n     [variable: string]: any;\n}\n```"
+                            "text": "```typescript\r\ninterface Variables {\r\n     [variable: string]: any;\r\n}\r\n```"
                         }
                     ],
                     "blockTags": [
@@ -2191,7 +2191,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 269,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L269"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L269"
                     }
                 ],
                 "indexSignature": {
@@ -2213,7 +2213,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nGet a variable on thisBot\nlet variable = thisBot.vars.variable;\n```"
+                                        "text": "```ts\nGet a variable on thisBot\r\nlet variable = thisBot.vars.variable;\n```"
                                     }
                                 ]
                             },
@@ -2222,7 +2222,7 @@
                                 "content": [
                                     {
                                         "kind": "code",
-                                        "text": "```ts\nSave a variable on thisBot\nthisBot.vars.variable = variable;\n```"
+                                        "text": "```ts\nSave a variable on thisBot\r\nthisBot.vars.variable = variable;\n```"
                                     }
                                 ]
                             }
@@ -2233,7 +2233,7 @@
                             "fileName": "src/aux-common/bots/Bot.ts",
                             "line": 279,
                             "character": 4,
-                            "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L279"
+                            "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L279"
                         }
                     ],
                     "parameters": [
@@ -2256,7 +2256,7 @@
                 }
             },
             "comment": {
-                "text": "Defines an interface that represents the variables a bot can have.\nVariables are useful for storing data that is not able to be saved to a tag.\n\n```typescript\ninterface Variables {\n     [variable: string]: any;\n}\n```",
+                "text": "Defines an interface that represents the variables a bot can have.\r\nVariables are useful for storing data that is not able to be saved to a tag.\r\n\r\n```typescript\r\ninterface Variables {\r\n     [variable: string]: any;\r\n}\r\n```",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -2330,7 +2330,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 498,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L498"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L498"
                     }
                 ],
                 "type": {
@@ -2349,7 +2349,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 499,
                                         "character": 7,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L499"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L499"
                                     }
                                 ],
                                 "signatures": [
@@ -2465,7 +2465,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 1054,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L1054"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L1054"
                     }
                 ],
                 "type": {
@@ -2581,7 +2581,7 @@
                         "fileName": "src/aux-common/bots/Bot.ts",
                         "line": 478,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/Bot.ts#L478"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/Bot.ts#L478"
                     }
                 ],
                 "type": {
@@ -2682,7 +2682,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The seed used for this random number generator.\nIf null then an unpredictable seed was used."
+                                    "text": "The seed used for this random number generator.\r\nIf null then an unpredictable seed was used."
                                 }
                             ],
                             "blockTags": []
@@ -2692,7 +2692,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2011,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2011"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2011"
                             }
                         ],
                         "type": {
@@ -2720,13 +2720,13 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2016,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2016"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2016"
                             },
                             {
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2023,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2023"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2023"
                             }
                         ],
                         "signatures": [
@@ -2750,7 +2750,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 2016,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2016"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2016"
                                     }
                                 ],
                                 "type": {
@@ -2778,7 +2778,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 2023,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2023"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2023"
                                     }
                                 ],
                                 "parameters": [
@@ -2845,7 +2845,7 @@
                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                 "line": 2030,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2030"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2030"
                             }
                         ],
                         "signatures": [
@@ -2869,7 +2869,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 2030,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2030"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2030"
                                     }
                                 ],
                                 "parameters": [
@@ -2942,7 +2942,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 2006,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L2006"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L2006"
                     }
                 ]
             },
@@ -3022,7 +3022,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 2249,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L2249"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L2249"
                             }
                         ],
                         "type": {
@@ -3077,7 +3077,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 2254,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L2254"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L2254"
                             }
                         ],
                         "type": {
@@ -3100,7 +3100,7 @@
                         "fileName": "src/aux-common/bots/BotEvents.ts",
                         "line": 2245,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L2245"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L2245"
                     }
                 ]
             },
