@@ -3,8 +3,8 @@
         <md-app class="app">
             <md-app-toolbar>
                 <a class="title-link md-title" href="/" style="flex: 1">
-                    <svg-icon name="PersonPinCircle" class="title-img"></svg-icon>
-                    <strong>{{ title }}</strong>
+                    <img v-if="logoUrl" :src="logoUrl" class="title-img" />
+                    <strong v-else>{{ displayName || title }}</strong>
                 </a>
                 <md-button v-if="showLogout" @click="logout">Sign Out</md-button>
             </md-app-toolbar>

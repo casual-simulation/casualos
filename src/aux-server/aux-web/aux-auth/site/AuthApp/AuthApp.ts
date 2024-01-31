@@ -33,6 +33,8 @@ export default class AuthApp extends Vue {
     createRecordStudioId: string = null;
 
     allowCreateStudio: boolean = false;
+    logoUrl: string = null;
+    displayName: string = null;
 
     get title() {
         return location.hostname;
@@ -73,6 +75,8 @@ export default class AuthApp extends Vue {
         this.recordName = '';
         this.userId = '';
         this.createRecordStudioId = null;
+        this.logoUrl = null;
+        this.displayName = null;
         this.allowCreateStudio = authManager.studiosSupported;
         authManager.loginState.subscribe((state) => {
             this.userId = authManager.userId;
@@ -82,6 +86,16 @@ export default class AuthApp extends Vue {
                 this.loadStudios();
             }
         });
+
+        const comId = authManager.getComIdFromUrl();
+        if (comId) {
+            authManager.getComIdWebConfig(comId).then((config) => {
+                if (config.success === true) {
+                    this.logoUrl = config.logoUrl;
+                    this.displayName = config.displayName ?? comId;
+                }
+            });
+        }
     }
 
     startCreateStudio() {
@@ -151,7 +165,8 @@ export default class AuthApp extends Vue {
         console.log('[AuthApp] Loading studios...');
         this.loadingStudios = true;
         try {
-            const studios = (await authManager.listStudios()) ?? [];
+            const comId = authManager.getComIdFromUrl();
+            const studios = (await authManager.listStudios(comId)) ?? [];
             this.studios = studios.map((s) => ({
                 ...s,
                 records: [],

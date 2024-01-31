@@ -568,8 +568,12 @@ export class AuthManager {
         return response.data as ComIdRequestResult;
     }
 
-    async listStudios(): Promise<ListedStudio[]> {
+    async listStudios(comId?: string): Promise<ListedStudio[]> {
         const url = new URL(`${this.apiEndpoint}/api/v2/studios/list`);
+
+        if (comId) {
+            url.searchParams.set('comId', comId);
+        }
 
         const response = await axios.get(url.href, {
             headers: this._authenticationHeaders(),
@@ -871,6 +875,15 @@ export class AuthManager {
                 '[AuthManager] Unable to manage subscriptions!',
                 result
             );
+        }
+    }
+
+    getComIdFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('comId') || params.has('comID')) {
+            return params.get('comId') ?? params.get('comID');
+        } else {
+            return null;
         }
     }
 
