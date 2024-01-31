@@ -588,13 +588,17 @@ export class AuthManager {
         return null;
     }
 
-    async createStudio(displayName: string): Promise<string> {
+    async createStudio(
+        displayName: string,
+        ownerStudioComId?: string
+    ): Promise<string> {
         const url = new URL(`${this.apiEndpoint}/api/v2/studios`);
 
         const response = await axios.post(
             url.href,
             {
                 displayName,
+                ownerStudioComId,
             },
             {
                 headers: this._authenticationHeaders(),

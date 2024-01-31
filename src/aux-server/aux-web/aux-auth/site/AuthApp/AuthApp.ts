@@ -114,7 +114,8 @@ export default class AuthApp extends Vue {
 
     async createStudio() {
         this.showCreateStudio = false;
-        const studioId = await authManager.createStudio(this.studioName);
+        const comId = authManager.getComIdFromUrl();
+        const studioId = await authManager.createStudio(this.studioName, comId);
         await this.loadStudios();
     }
 
