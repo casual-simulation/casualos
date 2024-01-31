@@ -167,6 +167,18 @@ export class PrismaRecordsStore implements RecordsStore {
                 stripeCustomerId: studio.stripeCustomerId,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                subscriptionPeriodStart: convertToDate(
+                    studio.subscriptionPeriodStartMs
+                ),
+                subscriptionPeriodEnd: convertToDate(
+                    studio.subscriptionPeriodEndMs
+                ),
+                subscriptionInfoId: studio.subscriptionInfoId,
+                comId: studio.comId,
+                comIdConfig: studio.comIdConfig,
+                logoUrl: studio.logoUrl,
+                ownerStudioComId: studio.ownerStudioComId,
+                playerConfig: studio.playerConfig,
                 assignments: {
                     create: {
                         userId: adminId,
@@ -407,7 +419,7 @@ export class PrismaRecordsStore implements RecordsStore {
             where: {
                 userId: userId,
                 studio: {
-                    comId: comId,
+                    ownerStudioComId: comId,
                 },
             },
             select: {
