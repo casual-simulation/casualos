@@ -111,6 +111,7 @@ export interface RecordsStore {
 
     /**
      * Gets the list of studios that the user with the given ID has access to.
+     * Returns only studios that are not owned by any comId.
      * @param userId The ID of the user.
      */
     listStudiosForUser(userId: string): Promise<StoreListedStudio[]>;

@@ -378,6 +378,9 @@ export class PrismaRecordsStore implements RecordsStore {
         const assignments = await this._client.studioAssignment.findMany({
             where: {
                 userId: userId,
+                studio: {
+                    ownerStudioComId: null,
+                },
             },
             select: {
                 studioId: true,

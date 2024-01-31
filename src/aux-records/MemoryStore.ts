@@ -517,17 +517,19 @@ export class MemoryStore
                 };
             })
         );
-        return studios.map((s) => ({
-            studioId: s.id,
-            displayName: s.displayName,
-            role: s.role,
-            isPrimaryContact: s.isPrimaryContact,
-            subscriptionId: s.subscriptionId,
-            subscriptionStatus: s.subscriptionStatus,
-            comId: s.comId,
-            logoUrl: s.logoUrl,
-            ownerStudioComId: s.ownerStudioComId,
-        }));
+        return studios
+            .filter((s) => !s.ownerStudioComId)
+            .map((s) => ({
+                studioId: s.id,
+                displayName: s.displayName,
+                role: s.role,
+                isPrimaryContact: s.isPrimaryContact,
+                subscriptionId: s.subscriptionId,
+                subscriptionStatus: s.subscriptionStatus,
+                comId: s.comId,
+                logoUrl: s.logoUrl,
+                ownerStudioComId: s.ownerStudioComId,
+            }));
     }
 
     async countStudiosInComId(comId: string): Promise<number> {

@@ -1014,6 +1014,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                         userId: userId,
                     },
                 },
+                ownerStudioComId: null,
             })
             .toArray();
 
