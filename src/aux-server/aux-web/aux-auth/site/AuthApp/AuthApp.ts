@@ -8,6 +8,7 @@ import {
     CreateRecordRequest,
     ListedStudio,
 } from '@casual-simulation/aux-records';
+import { distinctUntilChanged } from 'rxjs';
 
 const comId = authManager.getComIdFromUrl();
 document.title = comId ?? location.hostname;
@@ -84,14 +85,16 @@ export default class AuthApp extends Vue {
         this.logoUrl = null;
         this.displayName = null;
         this.allowCreateStudio = authManager.studiosSupported;
-        authManager.loginState.subscribe((state) => {
-            this.userId = authManager.userId;
-            this.showLogout = authManager.isLoggedIn();
+        authManager.loginState
+            .pipe(distinctUntilChanged())
+            .subscribe((state) => {
+                this.userId = authManager.userId;
+                this.showLogout = authManager.isLoggedIn();
 
-            if (authManager.isLoggedIn()) {
-                this.loadStudios();
-            }
-        });
+                if (state) {
+                    this.loadStudios();
+                }
+            });
 
         this.comId = authManager.getComIdFromUrl();
         if (this.comId) {
