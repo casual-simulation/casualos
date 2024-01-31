@@ -42,6 +42,10 @@ export default class AuthApp extends Vue {
         return comId ?? location.hostname;
     }
 
+    get hostname() {
+        return location.hostname;
+    }
+
     onExpandRecords() {
         if (!this.showRecords) {
             this.loadRecords();

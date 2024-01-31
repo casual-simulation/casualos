@@ -2,7 +2,7 @@
     <div id="app" class="app-container">
         <md-app class="app">
             <md-app-toolbar>
-                <a class="title-link md-title" href="/" style="flex: 1">
+                <router-link :to="{ name: 'home' }" class="title-link md-title" style="flex: 1">
                     <img
                         v-if="logoUrl"
                         :src="logoUrl"
@@ -11,7 +11,7 @@
                         class="title-img"
                     />
                     <strong v-else>{{ displayName || title }}</strong>
-                </a>
+                </router-link>
                 <md-button v-if="showLogout" @click="logout">Sign Out</md-button>
             </md-app-toolbar>
             <md-app-drawer v-if="showLogout" md-permanent="clipped">
@@ -69,6 +69,15 @@
                         <span class="md-list-item-text">{{ studio.displayName }}</span>
 
                         <md-list slot="md-expand">
+                            <md-list-item
+                                class="md-inset"
+                                v-if="studio.comId"
+                                :to="{ name: 'home', query: { comId: studio.comId } }"
+                                target="_blank"
+                            >
+                                <md-icon>open_in_new</md-icon>
+                                <span class="md-list-item-text">Go to site</span>
+                            </md-list-item>
                             <md-list-item
                                 class="md-inset"
                                 v-if="studio.role === 'admin'"
@@ -182,7 +191,7 @@
                 <li><a href="/privacy-policy">Privacy Policy</a></li>
                 <li><a href="/terms">Terms of Service</a></li>
                 <li v-if="comId">
-                    <a href="/">Back to {{ title }}</a>
+                    <a href="/">Back to {{ hostname }}</a>
                 </li>
             </ul>
         </footer>
