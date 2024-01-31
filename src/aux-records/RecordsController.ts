@@ -1200,6 +1200,7 @@ export class RecordsController {
                             s.subscriptionId
                         ),
                         ownerStudioComId: s.ownerStudioComId,
+                        comId: s.comId,
                     };
                 }),
             };
@@ -1245,6 +1246,7 @@ export class RecordsController {
                             s.subscriptionId
                         ),
                         ownerStudioComId: s.ownerStudioComId,
+                        comId: s.comId,
                     };
                 }),
             };
@@ -1922,6 +1924,11 @@ export interface ListedStudio {
      * The comId of the studio that owns this one.
      */
     ownerStudioComId: string | null;
+
+    /**
+     * The comId of this studio.
+     */
+    comId: string | null;
 }
 
 export type ListStudioMembersResult =
