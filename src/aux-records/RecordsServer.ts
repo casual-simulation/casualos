@@ -2351,6 +2351,7 @@ export class RecordsServer {
                     required_error: 'ownerStudioComId is required.',
                 })
                 .nonempty('ownerStudioComId must not be empty')
+                .nullable()
                 .optional(),
         });
 
