@@ -116,6 +116,39 @@
                     <md-table-cell>comID.ab1BootstrapURL</md-table-cell>
                     <md-table-cell>{{ originalAb1BootstrapUrl || '(default)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
+                    <md-tooltip>The list of options that can be selected from the BIOS.</md-tooltip>
+                    <md-table-cell>comID.allowedBiosOptions</md-table-cell>
+                    <md-table-cell>{{ originalAllowedBiosOptions || '(default)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
+                    <md-tooltip>The option that is selected in the BIOS by default.</md-tooltip>
+                    <md-table-cell>comID.defaultBiosOption</md-table-cell>
+                    <md-table-cell>{{ originalDefaultBiosOption || '(default)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
+                    <md-tooltip
+                        >The option that is automatically executed when no BIOS option is specified
+                        in the URL.</md-tooltip
+                    >
+                    <md-table-cell>comID.automaticBiosOption</md-table-cell>
+                    <md-table-cell>{{ originalAutomaticBiosOption || '(default)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
+                    <md-tooltip
+                        >The name of the Jitsi App that should be used for the
+                        meetPortal.</md-tooltip
+                    >
+                    <md-table-cell>comID.jitsiAppName</md-table-cell>
+                    <md-table-cell>{{ originalJitsiAppName || '(default)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
+                    <md-tooltip
+                        >The API Key that should be used for what3words integration.</md-tooltip
+                    >
+                    <md-table-cell>comID.what3WordsApiKey</md-table-cell>
+                    <md-table-cell>{{ originalWhat3WordsApiKey || '(default)' }}</md-table-cell>
+                </md-table-row>
             </md-table>
         </div>
 
@@ -180,11 +213,100 @@
 
         <md-dialog :md-active.sync="showUpdatePlayerConfig" @md-closed="cancelUpdateStudio()">
             <md-dialog-title> Update Player Config </md-dialog-title>
-            <md-dialog-content>
+            <md-dialog-content class="player-config-dialog">
                 <md-field :class="ab1BootstrapUrlFieldClass">
                     <label for="ab1BootstrapURL">comID.ab1BootstrapURL</label>
                     <md-input id="ab1BootstrapURL" v-model="ab1BootstrapUrl" type="text"></md-input>
+                    <span class="md-helper-text">The URL of the bootstrapper.</span>
                     <field-errors field="playerConfig.ab1BootstrapUrl" :errors="errors" />
+                </md-field>
+                <md-field :class="allowedBiosOptionsFieldClass">
+                    <label for="allowedBiosOptions">comID.allowedBiosOptions</label>
+                    <md-select
+                        name="allowedBiosOptions"
+                        id="allowedBiosOptions"
+                        v-model="allowedBiosOptions"
+                        multiple
+                    >
+                        <md-option value="join inst">join inst</md-option>
+                        <md-option value="local inst">local inst</md-option>
+                        <md-option value="free inst">free inst</md-option>
+                        <md-option value="studio inst">studio inst</md-option>
+                        <md-option value="sign in">sign in</md-option>
+                        <md-option value="sign up">sign up</md-option>
+                        <md-option value="sign out">sign out</md-option>
+                    </md-select>
+                    <span class="md-helper-text">The allowed BIOS options.</span>
+                    <field-errors field="playerConfig.allowedBiosOptions" :errors="errors" />
+                </md-field>
+                <md-field :class="defaultBiosOptionFieldClass">
+                    <label for="defaultBiosOption">comID.defaultBiosOption</label>
+                    <md-select
+                        name="defaultBiosOption"
+                        id="defaultBiosOption"
+                        v-model="defaultBiosOption"
+                    >
+                        <md-option :value="0">(default)</md-option>
+                        <md-option value="join inst">join inst</md-option>
+                        <md-option value="local inst">local inst</md-option>
+                        <md-option value="free inst">free inst</md-option>
+                        <md-option value="studio inst">studio inst</md-option>
+                        <md-option value="sign in">sign in</md-option>
+                        <md-option value="sign up">sign up</md-option>
+                        <md-option value="sign out">sign out</md-option>
+                    </md-select>
+                    <span class="md-helper-text">The default BIOS option.</span>
+                    <field-errors field="playerConfig.defaultBiosOption" :errors="errors" />
+                </md-field>
+                <md-field :class="automaticBiosOptionFieldClass">
+                    <label for="automaticBiosOption">comID.automaticBiosOption</label>
+                    <md-select
+                        name="automaticBiosOption"
+                        id="automaticBiosOption"
+                        v-model="automaticBiosOption"
+                    >
+                        <md-option :value="0">(default)</md-option>
+                        <md-option value="join inst">join inst</md-option>
+                        <md-option value="local inst">local inst</md-option>
+                        <md-option value="free inst">free inst</md-option>
+                        <md-option value="studio inst">studio inst</md-option>
+                        <md-option value="sign in">sign in</md-option>
+                        <md-option value="sign up">sign up</md-option>
+                        <md-option value="sign out">sign out</md-option>
+                    </md-select>
+                    <span class="md-helper-text">The automatic BIOS option.</span>
+                    <field-errors field="playerConfig.automaticBiosOption" :errors="errors" />
+                </md-field>
+                <md-field :class="jitsiAppNameFieldClass">
+                    <label for="jistiAppName">comID.jistiAppName</label>
+                    <md-input id="jistiAppName" v-model="jitsiAppName" type="text"></md-input>
+                    <span class="md-helper-text"
+                        >The name of the
+                        <a href="https://jaas.8x8.vc/#/" target="_blank">Jitsi App</a> that the
+                        meetPortal uses.</span
+                    >
+                    <field-errors field="playerConfig.jistiAppName" :errors="errors" />
+                </md-field>
+                <md-field :class="what3WordsApiKeyFieldClass">
+                    <label for="what3WordsApiKey">comID.what3WordsApiKey</label>
+                    <md-input
+                        id="what3WordsApiKey"
+                        v-model="what3WordsApiKey"
+                        type="text"
+                    ></md-input>
+                    <span class="md-helper-text"
+                        >The <a href="https://what3words.com/">what3words</a> API Key.</span
+                    >
+                    <field-errors field="playerConfig.what3WordsApiKey" :errors="errors" />
+                </md-field>
+                <md-field :class="arcGisApiKeyFieldClass">
+                    <label for="arcGisApiKey">comID.ArcGISApiKey</label>
+                    <md-input id="arcGisApiKey" v-model="arcGisApiKey" type="text"></md-input>
+                    <span class="md-helper-text"
+                        >The <a href="https://www.arcgis.com/index.html">ArcGIS</a> API Key that the
+                        mapPortal uses.</span
+                    >
+                    <field-errors field="playerConfig.arcGisApiKey" :errors="errors" />
                 </md-field>
                 <field-errors :field="null" :errors="errors" />
             </md-dialog-content>

@@ -25,3 +25,7 @@ h2 {
 .comId-configuration-table .md-table-row:hover {
     cursor: pointer;
 }
+
+.player-config-dialog {
+    min-width: 350px;
+}

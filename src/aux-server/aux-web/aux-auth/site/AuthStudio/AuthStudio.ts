@@ -15,6 +15,8 @@ import {
     getFormErrors,
 } from '@casual-simulation/aux-records';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
+import { BiosOption } from '@casual-simulation/aux-common';
+import { isEqual } from 'lodash';
 
 // TODO: Support uploading logos
 // import vueBotPond from 'vue-filepond';
@@ -67,6 +69,24 @@ export default class AuthStudio extends Vue {
     originalAb1BootstrapUrl: string = null;
     ab1BootstrapUrl: string = null;
 
+    originalArcGisApiKey: string = null;
+    arcGisApiKey: string = null;
+
+    originalAllowedBiosOptions: BiosOption[] = null;
+    allowedBiosOptions: BiosOption[] = null;
+
+    originalDefaultBiosOption: BiosOption | 0 = null;
+    defaultBiosOption: BiosOption = null;
+
+    originalAutomaticBiosOption: BiosOption | 0 = null;
+    automaticBiosOption: BiosOption = null;
+
+    originalJitsiAppName: string = null;
+    jitsiAppName: string = null;
+
+    originalWhat3WordsApiKey: string = null;
+    what3WordsApiKey: string = null;
+
     isLoadingInfo: boolean = false;
     isSavingStudio: boolean = false;
 
@@ -100,6 +120,50 @@ export default class AuthStudio extends Vue {
 
     get ab1BootstrapUrlFieldClass() {
         return this.errors.some((e) => e.for === 'playerConfig.ab1BootstrapUrl')
+            ? 'md-invalid'
+            : '';
+    }
+
+    get arcGisApiKeyFieldClass() {
+        return this.errors.some((e) => e.for === 'playerConfig.arcGisApiKey')
+            ? 'md-invalid'
+            : '';
+    }
+
+    get allowedBiosOptionsFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.allowedBiosOptions'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get defaultBiosOptionFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.defaultBiosOption'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get automaticBiosOptionFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.automaticBiosOption'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get jitsiAppNameFieldClass() {
+        return this.errors.some((e) => e.for === 'playerConfig.jitsiAppName')
+            ? 'md-invalid'
+            : '';
+    }
+
+    get what3WordsApiKeyFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.what3WordsApiKey'
+        )
             ? 'md-invalid'
             : '';
     }
@@ -176,7 +240,59 @@ export default class AuthStudio extends Vue {
 
             if (this.ab1BootstrapUrl !== this.originalAb1BootstrapUrl) {
                 update.playerConfig = {
+                    ...(update.playerConfig || {}),
                     ab1BootstrapURL: this.ab1BootstrapUrl || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.arcGisApiKey !== this.originalArcGisApiKey) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    arcGisApiKey: this.arcGisApiKey || null,
+                };
+                hasUpdate = true;
+            }
+            let allowedBiosOptions = this.allowedBiosOptions;
+            if (allowedBiosOptions?.length <= 0) {
+                allowedBiosOptions = null;
+            }
+            if (!isEqual(allowedBiosOptions, this.originalAllowedBiosOptions)) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    allowedBiosOptions: allowedBiosOptions || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.defaultBiosOption !== this.originalDefaultBiosOption) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    defaultBiosOption: this.defaultBiosOption || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.automaticBiosOption !== this.originalAutomaticBiosOption) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    automaticBiosOption: this.automaticBiosOption || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.jitsiAppName !== this.originalJitsiAppName) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    jitsiAppName: this.jitsiAppName || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.what3WordsApiKey !== this.originalWhat3WordsApiKey) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    what3WordsApiKey: this.what3WordsApiKey || null,
                 };
                 hasUpdate = true;
             }
@@ -195,6 +311,20 @@ export default class AuthStudio extends Vue {
                 this.originalLogoUrl = this.logoUrl;
                 this.originalAllowedStudioCreators = this.allowedStudioCreators;
                 this.originalAb1BootstrapUrl = this.ab1BootstrapUrl;
+                this.originalArcGisApiKey = this.arcGisApiKey;
+                if (allowedBiosOptions) {
+                    this.originalAllowedBiosOptions =
+                        this.allowedBiosOptions.slice();
+                } else {
+                    this.originalAllowedBiosOptions = this.allowedBiosOptions =
+                        null;
+                }
+                this.originalDefaultBiosOption = this.defaultBiosOption =
+                    this.defaultBiosOption || null;
+                this.originalAutomaticBiosOption = this.automaticBiosOption =
+                    this.automaticBiosOption || null;
+                this.originalJitsiAppName = this.jitsiAppName;
+                this.originalWhat3WordsApiKey = this.what3WordsApiKey;
 
                 this.showUpdateComIdConfig = false;
                 this.showUpdatePlayerConfig = false;
@@ -238,6 +368,18 @@ export default class AuthStudio extends Vue {
                         'anyone';
                 this.originalAb1BootstrapUrl = this.ab1BootstrapUrl =
                     result.studio.playerConfig?.ab1BootstrapURL ?? null;
+                this.originalArcGisApiKey = this.arcGisApiKey =
+                    result.studio.playerConfig?.arcGisApiKey ?? null;
+                this.originalAllowedBiosOptions = this.allowedBiosOptions =
+                    result.studio.playerConfig?.allowedBiosOptions ?? null;
+                this.originalDefaultBiosOption = this.defaultBiosOption =
+                    result.studio.playerConfig?.defaultBiosOption ?? null;
+                this.originalAutomaticBiosOption = this.automaticBiosOption =
+                    result.studio.playerConfig?.automaticBiosOption ?? null;
+                this.originalJitsiAppName = this.jitsiAppName =
+                    result.studio.playerConfig?.jitsiAppName ?? null;
+                this.originalWhat3WordsApiKey = this.what3WordsApiKey =
+                    result.studio.playerConfig?.what3WordsApiKey ?? null;
             }
         } finally {
             this.isLoadingInfo = false;
