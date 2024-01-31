@@ -9,7 +9,8 @@ import {
     ListedStudio,
 } from '@casual-simulation/aux-records';
 
-document.title = location.hostname;
+const comId = authManager.getComIdFromUrl();
+document.title = comId ?? location.hostname;
 
 @Component({
     components: {
@@ -38,7 +39,7 @@ export default class AuthApp extends Vue {
     comId: string = null;
 
     get title() {
-        return location.hostname;
+        return comId ?? location.hostname;
     }
 
     onExpandRecords() {
@@ -94,6 +95,7 @@ export default class AuthApp extends Vue {
                 if (config.success === true) {
                     this.logoUrl = config.logoUrl;
                     this.displayName = config.displayName ?? this.comId;
+                    document.title = this.displayName;
                 }
             });
         }
