@@ -35,6 +35,7 @@ export default class AuthApp extends Vue {
     allowCreateStudio: boolean = false;
     logoUrl: string = null;
     displayName: string = null;
+    comId: string = null;
 
     get title() {
         return location.hostname;
@@ -87,12 +88,12 @@ export default class AuthApp extends Vue {
             }
         });
 
-        const comId = authManager.getComIdFromUrl();
-        if (comId) {
-            authManager.getComIdWebConfig(comId).then((config) => {
+        this.comId = authManager.getComIdFromUrl();
+        if (this.comId) {
+            authManager.getComIdWebConfig(this.comId).then((config) => {
                 if (config.success === true) {
                     this.logoUrl = config.logoUrl;
-                    this.displayName = config.displayName ?? comId;
+                    this.displayName = config.displayName ?? this.comId;
                 }
             });
         }

@@ -3,7 +3,13 @@
         <md-app class="app">
             <md-app-toolbar>
                 <a class="title-link md-title" href="/" style="flex: 1">
-                    <img v-if="logoUrl" :src="logoUrl" class="title-img" />
+                    <img
+                        v-if="logoUrl"
+                        :src="logoUrl"
+                        :title="displayName || title"
+                        :alt="displayName || title"
+                        class="title-img"
+                    />
                     <strong v-else>{{ displayName || title }}</strong>
                 </a>
                 <md-button v-if="showLogout" @click="logout">Sign Out</md-button>
@@ -175,6 +181,9 @@
             <ul class="footer-links">
                 <li><a href="/privacy-policy">Privacy Policy</a></li>
                 <li><a href="/terms">Terms of Service</a></li>
+                <li v-if="comId">
+                    <a href="/">Back to {{ title }}</a>
+                </li>
             </ul>
         </footer>
     </div>
