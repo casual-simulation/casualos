@@ -19,6 +19,10 @@ export default class LoadApp extends Vue {
     loading: boolean;
     loadingState: ProgressMessage = null;
 
+    logoUrl: string = null;
+    logoTitle: string = null;
+    title: string = null;
+
     get version() {
         return appManager.version.latestTaggedVersion;
     }
@@ -51,6 +55,11 @@ export default class LoadApp extends Vue {
         appManager.init().then(
             () => {
                 this.loading = false;
+                this.logoUrl = appManager.comIdConfig?.logoUrl ?? null;
+                this.title = this.logoTitle =
+                    appManager.comIdConfig?.displayName ??
+                    appManager.comIdConfig?.comId ??
+                    null;
             },
             (err) => {
                 console.error('[LoadApp] Loading errored:', err);
@@ -69,6 +78,18 @@ export default class LoadApp extends Vue {
                 };
             }
         }, LOADING_TIMEOUT_MS);
+
+        const comId = appManager.getComIdFromUrl();
+        if (comId) {
+            appManager.getStoredComId(comId).then((config) => {
+                console.log('has stored id', config);
+                if (this.loading) {
+                    this.logoUrl = config?.logoUrl ?? null;
+                    this.title = this.logoTitle =
+                        config.displayName ?? config.comId ?? null;
+                }
+            });
+        }
     }
 
     dismissLoading() {

@@ -11,6 +11,7 @@ export const ADDRESS_FIELD = 'address';
 export const CODE_FIELD = 'code';
 export const REPORT_REASON_FIELD = 'reportReason';
 export const REPORT_REASON_TEXT_FIELD = 'reportReasonText';
+export const COM_ID_FIELD = 'comId';
 
 /**
  * Defines a basic interface for a form error.
@@ -52,6 +53,7 @@ const fieldMap: Map<KnownErrorCodes, string | null> = new Map([
     ['unacceptable_code', CODE_FIELD],
     ['invalid_display_name', DISPLAY_NAME_FIELD],
     ['user_is_banned', null],
+    ['comId_already_taken', COM_ID_FIELD],
 ]);
 
 /**
@@ -68,7 +70,7 @@ export function getFormErrors(response: GenericResponse): FormError[] {
     if (response.issues) {
         for (let issue of response.issues) {
             errors.push({
-                for: issue.path[0].toString(),
+                for: issue.path.join('.'),
                 errorCode: issue.code,
                 errorMessage: issue.message,
             });

@@ -125,6 +125,7 @@ describe('RecordsManager', () => {
                 .fn()
                 .mockResolvedValue('http://localhost:2998'),
             getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
+            getComIdWebConfig: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -169,6 +170,7 @@ describe('RecordsManager', () => {
             provideHasAccount: jest.fn(),
             providePrivoSignUpInfo: jest.fn(),
             getPolicyUrls: jest.fn(),
+            getComIdWebConfig: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -6587,6 +6589,69 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/studios/list',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
+                            } as ListedStudio,
+                        ],
+                    }),
+                ]);
+            });
+
+            it('should include the comId from the config if specified', async () => {
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                        comId: 'comId1',
+                    },
+                    helper,
+                    authFactory,
+                    true
+                );
+
+                setResponse({
+                    data: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                                subscriptionTier: 'tier1',
+                            } as ListedStudio,
+                        ],
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([listUserStudios({}, 1)]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/studios/list?comId=comId1',
                     {
                         validateStatus: expect.any(Function),
                         headers: {

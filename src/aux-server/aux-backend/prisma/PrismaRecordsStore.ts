@@ -13,8 +13,13 @@ import {
     ListStudioAssignmentFilters,
     StudioAssignmentRole,
     CountRecordsFilter,
+    ComIdPlayerConfig,
+    COM_ID_PLAYER_CONFIG,
+    COM_ID_CONFIG_SCHEMA,
+    StudioComIdRequest,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
+import { convertToDate, convertToMillis } from './Utils';
 
 export class PrismaRecordsStore implements RecordsStore {
     private _client: PrismaClient;
@@ -135,6 +140,18 @@ export class PrismaRecordsStore implements RecordsStore {
                 stripeCustomerId: studio.stripeCustomerId,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                subscriptionPeriodStart: convertToDate(
+                    studio.subscriptionPeriodStartMs
+                ),
+                subscriptionPeriodEnd: convertToDate(
+                    studio.subscriptionPeriodEndMs
+                ),
+                subscriptionInfoId: studio.subscriptionInfoId,
+                comId: studio.comId,
+                comIdConfig: studio.comIdConfig,
+                logoUrl: studio.logoUrl,
+                ownerStudioComId: studio.ownerStudioComId,
+                playerConfig: studio.playerConfig,
             },
         });
     }
@@ -150,6 +167,18 @@ export class PrismaRecordsStore implements RecordsStore {
                 stripeCustomerId: studio.stripeCustomerId,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                subscriptionPeriodStart: convertToDate(
+                    studio.subscriptionPeriodStartMs
+                ),
+                subscriptionPeriodEnd: convertToDate(
+                    studio.subscriptionPeriodEndMs
+                ),
+                subscriptionInfoId: studio.subscriptionInfoId,
+                comId: studio.comId,
+                comIdConfig: studio.comIdConfig,
+                logoUrl: studio.logoUrl,
+                ownerStudioComId: studio.ownerStudioComId,
+                playerConfig: studio.playerConfig,
                 assignments: {
                     create: {
                         userId: adminId,
@@ -161,7 +190,31 @@ export class PrismaRecordsStore implements RecordsStore {
         });
 
         return {
-            studio: result,
+            studio: {
+                id: result.id,
+                displayName: result.displayName,
+                stripeCustomerId: result.stripeCustomerId,
+                subscriptionId: result.subscriptionId,
+                subscriptionStatus: result.subscriptionStatus,
+                comId: result.comId,
+                logoUrl: result.logoUrl,
+                subscriptionInfoId: result.subscriptionInfoId,
+                subscriptionPeriodEndMs: convertToMillis(
+                    result.subscriptionPeriodEnd
+                ),
+                subscriptionPeriodStartMs: convertToMillis(
+                    result.subscriptionPeriodStart
+                ),
+                comIdConfig: zodParseConfig(
+                    result.comIdConfig,
+                    COM_ID_CONFIG_SCHEMA
+                ),
+                ownerStudioComId: result.ownerStudioComId,
+                playerConfig: zodParseConfig(
+                    result.playerConfig,
+                    COM_ID_PLAYER_CONFIG
+                ),
+            },
             assignment: {
                 studioId: result.id,
                 userId: adminId,
@@ -172,19 +225,117 @@ export class PrismaRecordsStore implements RecordsStore {
     }
 
     async getStudioById(id: string): Promise<Studio> {
-        return await this._client.studio.findUnique({
+        const studio = await this._client.studio.findUnique({
             where: {
                 id: id,
             },
         });
+
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: studio.id,
+            displayName: studio.displayName,
+            stripeCustomerId: studio.stripeCustomerId,
+            subscriptionId: studio.subscriptionId,
+            subscriptionStatus: studio.subscriptionStatus,
+            comId: studio.comId,
+            logoUrl: studio.logoUrl,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodEndMs: convertToMillis(
+                studio.subscriptionPeriodEnd
+            ),
+            subscriptionPeriodStartMs: convertToMillis(
+                studio.subscriptionPeriodStart
+            ),
+            comIdConfig: zodParseConfig(
+                studio.comIdConfig,
+                COM_ID_CONFIG_SCHEMA
+            ),
+            ownerStudioComId: studio.ownerStudioComId,
+            playerConfig: zodParseConfig(
+                studio.playerConfig,
+                COM_ID_PLAYER_CONFIG
+            ),
+        };
+    }
+
+    async getStudioByComId(comId: string): Promise<Studio> {
+        const studio = await this._client.studio.findUnique({
+            where: {
+                comId: comId,
+            },
+        });
+
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: studio.id,
+            displayName: studio.displayName,
+            stripeCustomerId: studio.stripeCustomerId,
+            subscriptionId: studio.subscriptionId,
+            subscriptionStatus: studio.subscriptionStatus,
+            comId: studio.comId,
+            logoUrl: studio.logoUrl,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodEndMs: convertToMillis(
+                studio.subscriptionPeriodEnd
+            ),
+            subscriptionPeriodStartMs: convertToMillis(
+                studio.subscriptionPeriodStart
+            ),
+            comIdConfig: zodParseConfig(
+                studio.comIdConfig,
+                COM_ID_CONFIG_SCHEMA
+            ),
+            ownerStudioComId: studio.ownerStudioComId,
+            playerConfig: zodParseConfig(
+                studio.playerConfig,
+                COM_ID_PLAYER_CONFIG
+            ),
+        };
     }
 
     async getStudioByStripeCustomerId(customerId: string): Promise<Studio> {
-        return await this._client.studio.findUnique({
+        const studio = await this._client.studio.findUnique({
             where: {
                 stripeCustomerId: customerId,
             },
         });
+
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: studio.id,
+            displayName: studio.displayName,
+            stripeCustomerId: studio.stripeCustomerId,
+            subscriptionId: studio.subscriptionId,
+            subscriptionStatus: studio.subscriptionStatus,
+            comId: studio.comId,
+            logoUrl: studio.logoUrl,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodEndMs: convertToMillis(
+                studio.subscriptionPeriodEnd
+            ),
+            subscriptionPeriodStartMs: convertToMillis(
+                studio.subscriptionPeriodStart
+            ),
+            comIdConfig: zodParseConfig(
+                studio.comIdConfig,
+                COM_ID_CONFIG_SCHEMA
+            ),
+            ownerStudioComId: studio.ownerStudioComId,
+            playerConfig: zodParseConfig(
+                studio.playerConfig,
+                COM_ID_PLAYER_CONFIG
+            ),
+        };
     }
 
     async updateStudio(studio: Studio): Promise<void> {
@@ -197,14 +348,39 @@ export class PrismaRecordsStore implements RecordsStore {
                 stripeCustomerId: studio.stripeCustomerId,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                subscriptionInfoId: studio.subscriptionInfoId,
+                subscriptionPeriodStart: convertToDate(
+                    studio.subscriptionPeriodStartMs
+                ),
+                subscriptionPeriodEnd: convertToDate(
+                    studio.subscriptionPeriodEndMs
+                ),
+                comIdConfig: studio.comIdConfig,
+                playerConfig: studio.playerConfig,
+                logoUrl: studio.logoUrl,
+                comId: studio.comId,
+                ownerStudioComId: studio.ownerStudioComId,
             },
         });
+    }
+
+    async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
+        await this._client
+            .$executeRaw`UPSERT INTO public."StudioComIdRequest" ("id", "studioId", "userId", "requestedComId", "requestingIpAddress", "createdAt", "updatedAt")
+            VALUES (${request.id}, ${request.studioId}, ${request.userId}, ${
+            request.requestedComId
+        }, ${request.requestingIpAddress}, ${convertToDate(
+            request.createdAtMs
+        )}, NOW())`;
     }
 
     async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
         const assignments = await this._client.studioAssignment.findMany({
             where: {
                 userId: userId,
+                studio: {
+                    ownerStudioComId: null,
+                },
             },
             select: {
                 studioId: true,
@@ -216,6 +392,9 @@ export class PrismaRecordsStore implements RecordsStore {
                         displayName: true,
                         subscriptionId: true,
                         subscriptionStatus: true,
+                        comId: true,
+                        logoUrl: true,
+                        ownerStudioComId: true,
                     },
                 },
             },
@@ -229,7 +408,61 @@ export class PrismaRecordsStore implements RecordsStore {
             displayName: a.studio.displayName,
             subscriptionId: a.studio.subscriptionId,
             subscriptionStatus: a.studio.subscriptionStatus,
+            comId: a.studio.comId,
+            logoUrl: a.studio.logoUrl,
+            ownerStudioComId: a.studio.ownerStudioComId,
         }));
+    }
+
+    async listStudiosForUserAndComId(
+        userId: string,
+        comId: string
+    ): Promise<StoreListedStudio[]> {
+        const assignments = await this._client.studioAssignment.findMany({
+            where: {
+                userId: userId,
+                studio: {
+                    ownerStudioComId: comId,
+                },
+            },
+            select: {
+                studioId: true,
+                userId: true,
+                role: true,
+                isPrimaryContact: true,
+                studio: {
+                    select: {
+                        displayName: true,
+                        subscriptionId: true,
+                        subscriptionStatus: true,
+                        comId: true,
+                        logoUrl: true,
+                        ownerStudioComId: true,
+                    },
+                },
+            },
+        });
+
+        return assignments.map((a) => ({
+            studioId: a.studioId,
+            userId: a.userId,
+            role: a.role as StudioAssignmentRole,
+            isPrimaryContact: a.isPrimaryContact,
+            displayName: a.studio.displayName,
+            subscriptionId: a.studio.subscriptionId,
+            subscriptionStatus: a.studio.subscriptionStatus,
+            comId: a.studio.comId,
+            logoUrl: a.studio.logoUrl,
+            ownerStudioComId: a.studio.ownerStudioComId,
+        }));
+    }
+
+    async countStudiosInComId(comId: string): Promise<number> {
+        return this._client.studio.count({
+            where: {
+                ownerStudioComId: comId,
+            },
+        });
     }
 
     async addStudioAssignment(assignment: StudioAssignment): Promise<void> {
@@ -382,5 +615,20 @@ export class PrismaRecordsStore implements RecordsStore {
         return await this._client.record.count({
             where,
         });
+    }
+}
+
+function zodParseConfig<T extends Zod.Schema>(
+    value: Prisma.JsonValue,
+    schema: T
+): ReturnType<T['parse']> {
+    if (!value) {
+        return undefined;
+    }
+    const result = schema.safeParse(value);
+    if (result.success) {
+        return result.data;
+    } else {
+        return undefined;
     }
 }

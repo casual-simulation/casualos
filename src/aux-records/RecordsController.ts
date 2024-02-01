@@ -3,7 +3,9 @@ import {
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
     RecordsStore,
+    Studio,
     StudioAssignmentRole,
+    StudioComIdRequest,
 } from './RecordsStore';
 import {
     toBase64String,
@@ -30,15 +32,21 @@ import { v4 as uuid } from 'uuid';
 import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
+    StudioComIdFeaturesConfiguration,
+    getComIdFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
 } from './SubscriptionConfiguration';
+import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
+import { isActiveSubscription } from './Utils';
+import { NotificationMessenger } from './NotificationMessenger';
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
     auth: AuthStore;
     metrics: MetricsStore;
     config: ConfigurationStore;
+    messenger: NotificationMessenger | null;
 }
 
 /**
@@ -49,12 +57,14 @@ export class RecordsController {
     private _auth: AuthStore;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _messenger: NotificationMessenger | null;
 
     constructor(config: RecordsControllerConfig) {
         this._store = config.store;
         this._auth = config.auth;
         this._metrics = config.metrics;
         this._config = config.config;
+        this._messenger = config.messenger;
     }
 
     /**
@@ -894,6 +904,281 @@ export class RecordsController {
     }
 
     /**
+     * Attempts to create a new studio in the given comId. That is, an entity that can be used to group records.
+     * @param studioName The name of the studio.
+     * @param userId The ID of the user that is creating the studio.
+     * @param comId The comId of the studio that this studio should belong to.
+     */
+    async createStudioInComId(
+        studioName: string,
+        userId: string,
+        comId: string
+    ): Promise<CreateStudioInComIdResult> {
+        try {
+            const studioId = uuid();
+
+            const existingStudio = await this._store.getStudioByComId(comId);
+
+            if (!existingStudio) {
+                return {
+                    success: false,
+                    errorCode: 'comId_not_found',
+                    errorMessage: 'The given comId was not found.',
+                };
+            }
+
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getComIdFeatures(
+                config,
+                existingStudio.subscriptionStatus,
+                existingStudio.subscriptionId
+            );
+
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'comId features are not allowed for this comId. Make sure you have an active subscription that provides comId features.',
+                };
+            }
+
+            if (typeof features.maxStudios === 'number') {
+                const count = await this._store.countStudiosInComId(comId);
+                if (count >= features.maxStudios) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The maximum number of studios allowed for your comId subscription has been reached.',
+                    };
+                }
+            }
+
+            const comIdConfig = existingStudio.comIdConfig ?? {
+                allowedStudioCreators: 'only-members',
+            };
+
+            if (comIdConfig.allowedStudioCreators === 'only-members') {
+                const assignments = await this._store.listStudioAssignments(
+                    existingStudio.id,
+                    {
+                        userId: userId,
+                    }
+                );
+
+                if (assignments.length <= 0) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to create a studio in this comId.',
+                    };
+                }
+            }
+
+            await this._store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: studioName,
+                    ownerStudioComId: comId,
+                },
+                userId
+            );
+
+            return {
+                success: true,
+                studioId: studioId,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [createStudio] An error occurred while creating a studio in a comId:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to update the given studio.
+     */
+    async updateStudio(
+        request: UpdateStudioRequest
+    ): Promise<UpdateStudioResult> {
+        try {
+            const { id, ...updates } = request.studio;
+            const existingStudio = await this._store.getStudioById(
+                request.studio.id
+            );
+
+            if (!existingStudio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._store.listStudioAssignments(
+                existingStudio.id,
+                {
+                    userId: request.userId,
+                    role: 'admin',
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to update this studio.',
+                };
+            }
+
+            const final: Studio = {
+                ...existingStudio,
+                ...updates,
+            };
+
+            await this._store.updateStudio(final);
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [updateStudio] An error occurred while updating a studio:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to get information about the given studio.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user that is making this request.
+     */
+    async getStudio(
+        studioId: string,
+        userId: string
+    ): Promise<GetStudioResult> {
+        try {
+            const studio = await this._store.getStudioById(studioId);
+
+            if (!studio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._store.listStudioAssignments(
+                studio.id,
+                {
+                    userId: userId,
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to access this studio.',
+                };
+            }
+
+            let features: StudioComIdFeaturesConfiguration = {
+                allowed: false,
+            };
+
+            if (
+                studio.subscriptionId &&
+                isActiveSubscription(studio.subscriptionStatus)
+            ) {
+                const config =
+                    await this._config.getSubscriptionConfiguration();
+                features = getComIdFeatures(
+                    config,
+                    studio.subscriptionStatus,
+                    studio.subscriptionId
+                );
+            }
+
+            return {
+                success: true,
+                studio: {
+                    id: studio.id,
+                    displayName: studio.displayName,
+                    logoUrl: studio.logoUrl,
+                    comId: studio.comId,
+                    ownerStudioComId: studio.ownerStudioComId,
+                    comIdConfig: studio.comIdConfig,
+                    playerConfig: studio.playerConfig,
+                    comIdFeatures: features,
+                },
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [getStudio] An error occurred while getting a studio:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to get the player config for the given comId.
+     * @param comId The comId.
+     */
+    async getPlayerConfig(comId: string): Promise<GetPlayerConfigResult> {
+        try {
+            const studio = await this._store.getStudioByComId(comId);
+
+            if (!studio) {
+                return {
+                    success: false,
+                    errorCode: 'comId_not_found',
+                    errorMessage: 'The given comId was not found.',
+                };
+            }
+
+            return {
+                success: true,
+                comId: studio.comId,
+                displayName: studio.displayName,
+                logoUrl: studio.logoUrl ?? null,
+                playerConfig: studio.playerConfig ?? null,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [getPlayerConfig] An error occurred while getting the player config:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Gets the list of studios that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
@@ -914,6 +1199,54 @@ export class RecordsController {
                             s.subscriptionStatus,
                             s.subscriptionId
                         ),
+                        ownerStudioComId: s.ownerStudioComId,
+                        comId: s.comId,
+                    };
+                }),
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [listStudios] An error occurred while listing studios:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of studios that the user with the given ID has access to and that are owned by the given comId.
+     * @param userId The ID of the user.
+     * @param comId The comId.
+     */
+    async listStudiosByComId(
+        userId: string,
+        comId: string
+    ): Promise<ListStudiosResult> {
+        try {
+            const studios = await this._store.listStudiosForUserAndComId(
+                userId,
+                comId
+            );
+            const config = await this._config.getSubscriptionConfiguration();
+            return {
+                success: true,
+                studios: studios.map((s) => {
+                    return {
+                        studioId: s.studioId,
+                        displayName: s.displayName,
+                        role: s.role,
+                        isPrimaryContact: s.isPrimaryContact,
+                        subscriptionTier: getSubscriptionTier(
+                            config,
+                            s.subscriptionStatus,
+                            s.subscriptionId
+                        ),
+                        ownerStudioComId: s.ownerStudioComId,
+                        comId: s.comId,
                     };
                 }),
             };
@@ -1127,6 +1460,89 @@ export class RecordsController {
         } catch (err) {
             console.error(
                 '[RecordsController] [removeStudioMember] An error occurred while removing a studio member:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async requestComId(request: ComIdRequest): Promise<ComIdRequestResult> {
+        try {
+            const existingStudio = await this._store.getStudioById(
+                request.studioId
+            );
+
+            if (!existingStudio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._store.listStudioAssignments(
+                request.studioId,
+                {
+                    role: 'admin',
+                    userId: request.userId,
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                };
+            }
+
+            const existingComIdStudio = await this._store.getStudioByComId(
+                request.requestedComId
+            );
+
+            if (existingComIdStudio) {
+                return {
+                    success: false,
+                    errorCode: 'comId_already_taken',
+                    errorMessage: 'The given comID is already taken.',
+                };
+            }
+
+            const id = uuid();
+            const now = Date.now();
+            const comIdRequest: StudioComIdRequest = {
+                id,
+                userId: request.userId,
+                studioId: request.studioId,
+                requestingIpAddress: request.ipAddress,
+                requestedComId: request.requestedComId,
+                createdAtMs: now,
+                updatedAtMs: now,
+            };
+
+            await this._store.saveComIdRequest(comIdRequest);
+            if (this._messenger) {
+                await this._messenger.sendRecordNotification({
+                    timeMs: now,
+                    resource: 'studio_com_id_request',
+                    action: 'created',
+                    recordName: null,
+                    resourceId: comIdRequest.studioId,
+                    request: comIdRequest,
+                });
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [requestComId] An error occurred while requesting a comId:',
                 err
             );
             return {
@@ -1411,6 +1827,21 @@ export interface CreateStudioFailure {
     errorMessage: string;
 }
 
+export type CreateStudioInComIdResult =
+    | CreateStudioSuccess
+    | CreateStudioInComIdFailure;
+
+export interface CreateStudioInComIdFailure {
+    success: false;
+    errorCode:
+        | 'comId_not_found'
+        | 'subscription_limit_reached'
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ServerError;
+    errorMessage: string;
+}
+
 /**
  * Defines the list of possible results for the {@link os.listUserStudios} function.
  *
@@ -1488,6 +1919,16 @@ export interface ListedStudio {
      * The tier of the studio's subscription.
      */
     subscriptionTier: string;
+
+    /**
+     * The comId of the studio that owns this one.
+     */
+    ownerStudioComId: string | null;
+
+    /**
+     * The comId of this studio.
+     */
+    comId: string | null;
 }
 
 export type ListStudioMembersResult =
@@ -1600,6 +2041,194 @@ export interface RemoveStudioMemberSuccess {
 export interface RemoveStudioMemberFailure {
     success: false;
     errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export interface UpdateStudioRequest {
+    /**
+     * The ID of the user that is logged in.
+     */
+    userId: string;
+
+    /**
+     * The studio that should be updated.
+     */
+    studio: {
+        /**
+         * The ID of the studio.
+         */
+        id: string;
+
+        /**
+         * The display name of the studio.
+         * If omitted, then the display name will not be updated.
+         */
+        displayName?: string;
+
+        /**
+         * The URL of the studio's logo.
+         * If omitted, then the logo will not be updated.
+         */
+        logoUrl?: string;
+
+        /**
+         * The player configuration for the studio.
+         * If omitted, then the player configuration will not be updated.
+         */
+        playerConfig?: ComIdPlayerConfig;
+
+        /**
+         * The configuration for the studio's comId.
+         * If omitted, then the comId configuration will not be updated.
+         */
+        comIdConfig?: ComIdConfig;
+    };
+}
+
+export type UpdateStudioResult = UpdateStudioSuccess | UpdateStudioFailure;
+
+export interface UpdateStudioSuccess {
+    success: true;
+}
+
+export interface UpdateStudioFailure {
+    success: false;
+    errorCode:
+        | 'studio_not_found'
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ServerError;
+    errorMessage: string;
+}
+
+export type GetStudioResult = GetStudioSuccess | GetStudioFailure;
+
+export interface GetStudioSuccess {
+    success: true;
+    studio: StudioData;
+}
+
+export interface StudioData {
+    /**
+     * The ID of the studio.
+     */
+    id: string;
+
+    /**
+     * The display name of the studio.
+     */
+    displayName: string;
+
+    /**
+     * The URL of the logo for the studio.
+     */
+    logoUrl?: string;
+
+    /**
+     * The comId of the studio.
+     */
+    comId?: string;
+
+    /**
+     * The comId of the studio that owns this studio.
+     */
+    ownerStudioComId?: string;
+
+    /**
+     * The player configuration for the studio.
+     */
+    playerConfig?: ComIdPlayerConfig;
+
+    /**
+     * The configuration for the studio's comId.
+     */
+    comIdConfig?: ComIdConfig;
+
+    /**
+     * The comId features that this studio has access to.
+     */
+    comIdFeatures: StudioComIdFeaturesConfiguration;
+}
+
+export interface GetStudioFailure {
+    success: false;
+    errorCode:
+        | 'studio_not_found'
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ServerError;
+    errorMessage: string;
+}
+
+export type GetPlayerConfigResult =
+    | GetPlayerConfigSuccess
+    | GetPlayerConfigFailure;
+
+export interface GetPlayerConfigSuccess {
+    success: true;
+
+    /**
+     * The comId that the player config is for.
+     */
+    comId: string;
+
+    /**
+     * The display name of the comId.
+     */
+    displayName: string;
+
+    /**
+     * The URL that the comId logo is available at.
+     */
+    logoUrl: string;
+
+    /**
+     * The config that should be used for the player.
+     */
+    playerConfig: ComIdPlayerConfig;
+}
+
+export interface GetPlayerConfigFailure {
+    success: false;
+    errorCode: 'comId_not_found' | ServerError;
+    errorMessage: string;
+}
+
+export interface ComIdRequest {
+    /**
+     * The ID of the studio that the request is for.
+     */
+    studioId: string;
+
+    /**
+     * The user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The comID that is being requested.
+     */
+    requestedComId: string;
+
+    /**
+     * The IP Address that the request is coming from.
+     */
+    ipAddress: string;
+}
+
+export type ComIdRequestResult = ComIdRequestSuccess | ComIdRequestFailure;
+
+export interface ComIdRequestSuccess {
+    success: true;
+}
+
+export interface ComIdRequestFailure {
+    success: false;
+    errorCode:
+        | 'studio_not_found'
+        | 'comId_already_taken'
+        | 'not_authorized'
+        | ServerError;
     errorMessage: string;
 }
 

@@ -17,6 +17,7 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import {
+    GetPlayerConfigResult,
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
@@ -585,6 +586,16 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             };
         }
         return await this._proxy.getPolicyUrls();
+    }
+
+    async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.getComIdWebConfig(comId);
     }
 
     private _createNewTab() {
