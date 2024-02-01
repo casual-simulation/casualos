@@ -1506,7 +1506,10 @@ export class PolicyController {
                 success: true,
             };
         } catch (err) {
-            console.error('[PolicyController] A server error occurred.', err);
+            console.error(
+                '[PolicyController] A server error occurred while granting a marker permission.',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -1583,6 +1586,102 @@ export class PolicyController {
                 success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to grant a permission to a resource.
+     * @param request The request.
+     */
+    async grantResourcePermission(
+        request: GrantResourcePermissionRequest
+    ): Promise<GrantResourcePermissionResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordKeyOrRecordName,
+                userId: request.userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            if (!request.permission.resourceId) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide a resourceId for the permission.',
+                };
+            } else if (!request.permission.resourceKind) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide a resourceKind for the permission.',
+                };
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    action: 'grantPermission',
+
+                    // Resource permissions require access to the "account" marker
+                    // because there is currently no other marker that would make sense
+                    // for per-resource permissions.
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    markers: [ACCOUNT_MARKER],
+                    userId: request.userId,
+                    instances: request.instances,
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const recordName = context.context.recordName;
+
+            const assignmentResult =
+                await this._policies.assignPermissionToSubjectAndResource(
+                    recordName,
+                    request.permission.subjectType,
+                    request.permission.subjectId,
+                    request.permission.resourceKind,
+                    request.permission.resourceId,
+                    request.permission.action,
+                    request.permission.options,
+                    request.permission.expireTimeMs
+                );
+
+            if (assignmentResult.success === false) {
+                return assignmentResult;
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while granting a resource permission.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
             };
         }
     }
@@ -2180,7 +2279,7 @@ export interface GrantMarkerPermissionRequest {
 }
 
 /**
- * Defines the possible results of revoking a marker permission from a policy.
+ * Defines the possible results of granting a permission to a marker.
  *
  * @dochash types/records/policies
  * @doctitle Policy Types
@@ -2225,8 +2324,6 @@ export interface GrantMarkerPermissionFailure {
         | ConstructAuthorizationContextFailure['errorCode']
         | AuthorizeSubjectFailure['errorCode']
         | AssignPermissionToSubjectAndMarkerFailure['errorCode'];
-    // | AuthorizeDenied['errorCode']
-    // | UpdateUserPolicyFailure['errorCode'];
 
     /**
      * The error message that indicates why the request failed.
@@ -2282,6 +2379,63 @@ export interface RevokeMarkerPermissionFailure {
         | ServerError
         | ConstructAuthorizationContextFailure['errorCode']
         | AuthorizeSubjectFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+
+export interface GrantResourcePermissionRequest {
+    recordKeyOrRecordName: string;
+    userId: string;
+    permission: AvailablePermissions;
+    instances?: string[] | null;
+}
+
+/**
+ * Defines the possible results of granting a permission to a resource.
+ *
+ * @dochash types/records/policies
+ * @docname GrantResourcePermissionResult
+ */
+export type GrantResourcePermissionResult =
+    | GrantResourcePermissionSuccess
+    | GrantResourcePermissionFailure;
+
+
+/**
+ * Defines an interface that represents a successful request to grant a marker permission to a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 1
+ * @docname GrantResourcePermissionSuccess
+ */
+export interface GrantResourcePermissionSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to grant a marker permission to a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 2
+ * @docname GrantResourcePermissionFailure
+ */
+export interface GrantResourcePermissionFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | AssignPermissionToSubjectAndMarkerFailure['errorCode'];
 
     /**
      * The error message that indicates why the request failed.

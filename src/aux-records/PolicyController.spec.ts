@@ -872,6 +872,309 @@ describe('PolicyController', () => {
         });
     });
 
+    describe('grantResourcePermission()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should grant a permission to a resource', async () => {
+            const result = await controller.grantResourcePermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                permission: {
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permissions = await store.listPermissionsForResource(
+                recordName,
+                'data',
+                'test'
+            );
+
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    action: 'read',
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
+        });
+
+        it('should do nothing if the user already has the permission', async () => {
+            await store.assignPermissionToSubjectAndResource(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'read',
+                {},
+                null
+            );
+
+            expect(
+                await store.listPermissionsForResource(
+                    recordName,
+                    'data',
+                    'test'
+                )
+            ).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    action: 'read',
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
+
+            const result = await controller.grantResourcePermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                permission: {
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permissions = await store.listPermissionsForResource(
+                recordName,
+                'data',
+                'test'
+            );
+
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    action: 'read',
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
+        });
+
+        it('should update the permission if it has different options from the existing one', async () => {
+            await store.assignPermissionToSubjectAndResource(
+                recordName,
+                'role',
+                'developer',
+                'file',
+                'test',
+                'read',
+                { maxFileSizeInBytes: 100 },
+                null
+            );
+
+            const result = await controller.grantResourcePermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                permission: {
+                    resourceKind: 'file',
+                    resourceId: 'test',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {
+                        maxFileSizeInBytes: 200,
+                    },
+                    expireTimeMs: null,
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permissions = await store.listPermissionsForResource(
+                recordName,
+                'file',
+                'test'
+            );
+
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    action: 'read',
+                    resourceKind: 'file',
+                    resourceId: 'test',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {
+                        maxFileSizeInBytes: 200,
+                    },
+                },
+            ]);
+        });
+
+        it('should do nothing if the user is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await controller.grantResourcePermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                permission: {
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    action: 'grantPermission',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
+
+            const permissions = await store.listPermissionsForResource(
+                recordName,
+                'data',
+                'test'
+            );
+            expect(permissions).toEqual([]);
+        });
+
+        it('should do nothing if the inst is not authorized', async () => {
+            const result = await controller.grantResourcePermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                permission: {
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    action: 'grantPermission',
+                    subjectId: '/inst',
+                    subjectType: 'inst',
+                },
+            });
+
+            const permissions = await store.listPermissionsForResource(
+                recordName,
+                'data',
+                'test'
+            );
+            expect(permissions).toEqual([]);
+        });
+
+        it('should work if both the user and the instance have the admin role', async () => {
+            store.roles[recordName]['/inst'] = new Set([ADMIN_ROLE_NAME]);
+
+            const result = await controller.grantResourcePermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                permission: {
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    expireTimeMs: null,
+                },
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permissions = await store.listPermissionsForResource(
+                recordName,
+                'data',
+                'test'
+            );
+
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    action: 'read',
+                    resourceKind: 'data',
+                    resourceId: 'test',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
+        });
+    });
+
     describe('listUserRoles()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
