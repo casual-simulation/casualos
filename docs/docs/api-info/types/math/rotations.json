@@ -90,7 +90,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 54,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L54"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L54"
                             }
                         ],
                         "signatures": [
@@ -113,7 +113,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a rotation from an axis and angle.\nconst rotation = new Rotation({\n    axis: new Vector3(0, 0, 1),\n    angle: Math.PI / 2\n}); // 90 degree rotation around Z axis\n```"
+                                                    "text": "```ts\nCreate a rotation from an axis and angle.\r\nconst rotation = new Rotation({\r\n    axis: new Vector3(0, 0, 1),\r\n    angle: Math.PI / 2\r\n}); // 90 degree rotation around Z axis\n```"
                                                 }
                                             ]
                                         },
@@ -122,7 +122,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a rotation from two vectors.\nconst rotation = new Rotation({\n    from: new Vector3(1, 0, 0),\n    to: new Vector3(0, 1, 0)\n}); // Rotation that rotates (1, 0, 0) to (0, 1, 0)\n```"
+                                                    "text": "```ts\nCreate a rotation from two vectors.\r\nconst rotation = new Rotation({\r\n    from: new Vector3(1, 0, 0),\r\n    to: new Vector3(0, 1, 0)\r\n}); // Rotation that rotates (1, 0, 0) to (0, 1, 0)\n```"
                                                 }
                                             ]
                                         },
@@ -131,7 +131,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCreate a rotation that looks along the X axis.\nconst rotation = new Rotation({\n    direction: new Vector3(1, 0, 0),\n    upwards: new Vector3(0, 0, 1),\n    errorHandling: 'nudge'\n});\n```"
+                                                    "text": "```ts\nCreate a rotation that looks along the X axis.\r\nconst rotation = new Rotation({\r\n    direction: new Vector3(1, 0, 0),\r\n    upwards: new Vector3(0, 0, 1),\r\n    errorHandling: 'nudge'\r\n});\n```"
                                                 }
                                             ]
                                         },
@@ -140,7 +140,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nTilt this bot forwards in the home dimension.\ntags.homeRotation = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 6 // 30 degrees\n});\n```"
+                                                    "text": "```ts\nTilt this bot forwards in the home dimension.\r\ntags.homeRotation = new Rotation({\r\n    axis: new Vector3(1, 0, 0),\r\n    angle: Math.PI / 6 // 30 degrees\r\n});\n```"
                                                 }
                                             ]
                                         }
@@ -151,7 +151,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 54,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L54"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L54"
                                     }
                                 ],
                                 "parameters": [
@@ -259,7 +259,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 16,
                                 "character": 12,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L16"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L16"
                             }
                         ],
                         "type": {
@@ -282,7 +282,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 21,
                                 "character": 8,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L21"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L21"
                             }
                         ],
                         "getSignature": {
@@ -305,7 +305,7 @@
                                     "fileName": "src/aux-common/math/Rotation.ts",
                                     "line": 21,
                                     "character": 8,
-                                    "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L21"
+                                    "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L21"
                                 }
                             ],
                             "type": {
@@ -329,7 +329,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 410,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L410"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L410"
                             }
                         ],
                         "signatures": [
@@ -353,7 +353,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 410,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L410"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L410"
                                     }
                                 ],
                                 "type": {
@@ -378,7 +378,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 385,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L385"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L385"
                             }
                         ],
                         "signatures": [
@@ -401,7 +401,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCombine two rotations together.\nconst first = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\nconst second = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\n\nconst third = first.combineWith(second); // 90 degree rotation around X\n\nos.toast(third);\n```"
+                                                    "text": "```ts\nCombine two rotations together.\r\nconst first = new Rotation({\r\n    axis: new Vector3(1, 0, 0),\r\n    angle: Math.PI / 4\r\n}); // 45 degree rotation around X axis\r\nconst second = new Rotation({\r\n    axis: new Vector3(1, 0, 0),\r\n    angle: Math.PI / 4\r\n}); // 45 degree rotation around X axis\r\n\r\nconst third = first.combineWith(second); // 90 degree rotation around X\r\n\r\nos.toast(third);\n```"
                                                 }
                                             ]
                                         }
@@ -412,7 +412,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 385,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L385"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L385"
                                     }
                                 ],
                                 "parameters": [
@@ -463,7 +463,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 428,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L428"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L428"
                             }
                         ],
                         "signatures": [
@@ -487,7 +487,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 428,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L428"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L428"
                                     }
                                 ],
                                 "parameters": [
@@ -534,7 +534,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 403,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L403"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L403"
                             }
                         ],
                         "signatures": [
@@ -557,7 +557,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nCalculate the inverse of a rotation.\nconst first = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\nconst inverse = first.inverse();\n\nconst result = first.combineWith(inverse);\n\nos.toast(result);\n```"
+                                                    "text": "```ts\nCalculate the inverse of a rotation.\r\nconst first = new Rotation({\r\n    axis: new Vector3(1, 0, 0),\r\n    angle: Math.PI / 4\r\n}); // 45 degree rotation around X axis\r\nconst inverse = first.inverse();\r\n\r\nconst result = first.combineWith(inverse);\r\n\r\nos.toast(result);\n```"
                                                 }
                                             ]
                                         }
@@ -568,7 +568,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 403,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L403"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L403"
                                     }
                                 ],
                                 "type": {
@@ -593,7 +593,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 363,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L363"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L363"
                             }
                         ],
                         "signatures": [
@@ -615,7 +615,7 @@
                                         },
                                         {
                                             "kind": "text",
-                                            "text": " by this quaternion and returns a new vector containing the result.\nNote that rotations around any other axis than (0, 0, 1) or (0, 0, -1) can produce results that contain a Z component."
+                                            "text": " by this quaternion and returns a new vector containing the result.\r\nNote that rotations around any other axis than (0, 0, 1) or (0, 0, -1) can produce results that contain a Z component."
                                         }
                                     ],
                                     "blockTags": [
@@ -624,7 +624,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nApply a rotation to a Vector2 object.\nconst rotation = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\n\nconst point = new Vector2(1, 2);\nconst rotated = rotation.rotateVector2(point);\nos.toast(rotated);\n```"
+                                                    "text": "```ts\nApply a rotation to a Vector2 object.\r\nconst rotation = new Rotation({\r\n    axis: new Vector3(1, 0, 0),\r\n    angle: Math.PI / 4\r\n}); // 45 degree rotation around X axis\r\n\r\nconst point = new Vector2(1, 2);\r\nconst rotated = rotation.rotateVector2(point);\r\nos.toast(rotated);\n```"
                                                 }
                                             ]
                                         }
@@ -635,7 +635,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 363,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L363"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L363"
                                     }
                                 ],
                                 "parameters": [
@@ -686,7 +686,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 317,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L317"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L317"
                             }
                         ],
                         "signatures": [
@@ -717,7 +717,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nApply a rotation to a Vector3 object.\nconst rotation = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\n\nconst point = new Vector3(1, 2, 0);\nconst rotated = rotation.rotateVector3(point);\nos.toast(rotated);\n```"
+                                                    "text": "```ts\nApply a rotation to a Vector3 object.\r\nconst rotation = new Rotation({\r\n    axis: new Vector3(1, 0, 0),\r\n    angle: Math.PI / 4\r\n}); // 45 degree rotation around X axis\r\n\r\nconst point = new Vector3(1, 2, 0);\r\nconst rotated = rotation.rotateVector3(point);\r\nos.toast(rotated);\n```"
                                                 }
                                             ]
                                         }
@@ -728,7 +728,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 317,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L317"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L317"
                                     }
                                 ],
                                 "parameters": [
@@ -779,7 +779,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 444,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L444"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L444"
                             }
                         ],
                         "signatures": [
@@ -802,7 +802,7 @@
                                             "content": [
                                                 {
                                                     "kind": "code",
-                                                    "text": "```ts\nGet a string of a rotation.\nconst myRotation = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\nconst rotationString = myRotation.toString();\n\nos.toast('My Rotation: ' + rotationString);\n```"
+                                                    "text": "```ts\nGet a string of a rotation.\r\nconst myRotation = new Rotation({\r\n    axis: new Vector3(1, 0, 0),\r\n    angle: Math.PI / 4\r\n}); // 45 degree rotation around X axis\r\nconst rotationString = myRotation.toString();\r\n\r\nos.toast('My Rotation: ' + rotationString);\n```"
                                                 }
                                             ]
                                         }
@@ -813,7 +813,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 444,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L444"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L444"
                                     }
                                 ],
                                 "type": {
@@ -836,7 +836,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 248,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L248"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L248"
                             }
                         ],
                         "signatures": [
@@ -860,7 +860,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 248,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L248"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L248"
                                     }
                                 ],
                                 "parameters": [
@@ -933,7 +933,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 260,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L260"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L260"
                             }
                         ],
                         "signatures": [
@@ -947,7 +947,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new rotation that is the spherical linear interpolation between the given first and second rotations.\nThe degree that the result is interpolated is determined by the given amount parameter."
+                                            "text": "Constructs a new rotation that is the spherical linear interpolation between the given first and second rotations.\r\nThe degree that the result is interpolated is determined by the given amount parameter."
                                         }
                                     ],
                                     "blockTags": []
@@ -957,7 +957,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 260,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L260"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L260"
                                     }
                                 ],
                                 "parameters": [
@@ -1054,7 +1054,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 133,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L133"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L133"
                             }
                         ],
                         "signatures": [
@@ -1078,7 +1078,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 133,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L133"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L133"
                                     }
                                 ],
                                 "parameters": [
@@ -1131,7 +1131,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 150,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L150"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L150"
                             }
                         ],
                         "signatures": [
@@ -1145,7 +1145,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Constructs a new Quaternion from the given from/to rotation.\nThis is equivalent to calculating the cross product and angle between the two vectors and constructing an axis/angle quaternion."
+                                            "text": "Constructs a new Quaternion from the given from/to rotation.\r\nThis is equivalent to calculating the cross product and angle between the two vectors and constructing an axis/angle quaternion."
                                         }
                                     ],
                                     "blockTags": []
@@ -1155,7 +1155,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 150,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L150"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L150"
                                     }
                                 ],
                                 "parameters": [
@@ -1208,7 +1208,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 167,
                                 "character": 11,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L167"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L167"
                             }
                         ],
                         "signatures": [
@@ -1232,7 +1232,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 167,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L167"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L167"
                                     }
                                 ],
                                 "parameters": [
@@ -1315,7 +1315,7 @@
                         "fileName": "src/aux-common/math/Rotation.ts",
                         "line": 15,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L15"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L15"
                     }
                 ]
             },
@@ -1364,7 +1364,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines a class that represents a Quaternion. That is, a representation of a 3D rotation.\n\nQuaternions are a mathematical representation of 3D transformations and are commonly used to calculate and apply rotations to 3D points.\nThey work by defining a quaterion such that "
+                            "text": "Defines a class that represents a Quaternion. That is, a representation of a 3D rotation.\r\n\r\nQuaternions are a mathematical representation of 3D transformations and are commonly used to calculate and apply rotations to 3D points.\r\nThey work by defining a quaterion such that "
                         },
                         {
                             "kind": "code",
@@ -1388,7 +1388,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " are imaginary numbers.\nThe basics of this is that "
+                            "text": " are imaginary numbers.\r\nThe basics of this is that "
                         },
                         {
                             "kind": "code",
@@ -1420,7 +1420,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " defines an angle around which the rotation occurs.\nHowever, because "
+                            "text": " defines an angle around which the rotation occurs.\r\nHowever, because "
                         },
                         {
                             "kind": "code",
@@ -1468,7 +1468,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " from incorrectly interacting with each other and so avoid common pitfalls like Gimbal lock.\n\nOne little known feature of quaternions is that they can also represent reflections and also scale.\nThis is because there are two different ways to apply a quaternion to a 3D point:\n\n- "
+                            "text": " from incorrectly interacting with each other and so avoid common pitfalls like Gimbal lock.\r\n\r\nOne little known feature of quaternions is that they can also represent reflections and also scale.\r\nThis is because there are two different ways to apply a quaternion to a 3D point:\r\n\r\n- "
                         },
                         {
                             "kind": "code",
@@ -1476,7 +1476,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\n\nThis formula rotates and scales the point quaternion. The rotation occurs around the axis specified by the quaternion X, Y, and Z values.\nAdditionally, the point will be scaled by the length of the quaternion. (i.e. "
+                            "text": "\r\n\r\nThis formula rotates and scales the point quaternion. The rotation occurs around the axis specified by the quaternion X, Y, and Z values.\r\nAdditionally, the point will be scaled by the length of the quaternion. (i.e. "
                         },
                         {
                             "kind": "code",
@@ -1484,7 +1484,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ")\nThis is why quaternions that are used to represent only rotations must be normalized.\n\n- "
+                            "text": ")\r\nThis is why quaternions that are used to represent only rotations must be normalized.\r\n\r\n- "
                         },
                         {
                             "kind": "code",
@@ -1492,7 +1492,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": "\n\nThis formula reflects scales the point by the quaternion. The reflection occurs across the axis specified by the quaternion X, Y, and Z values.\nAdditionally, the point will be scaled by the length of the quaternion. (i.e. "
+                            "text": "\r\n\r\nThis formula reflects scales the point by the quaternion. The reflection occurs across the axis specified by the quaternion X, Y, and Z values.\r\nAdditionally, the point will be scaled by the length of the quaternion. (i.e. "
                         },
                         {
                             "kind": "code",
@@ -1572,7 +1572,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 58,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L58"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L58"
                             }
                         ],
                         "signatures": [
@@ -1596,7 +1596,7 @@
                                         "fileName": "src/aux-common/math/Quaternion.ts",
                                         "line": 58,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L58"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L58"
                                     }
                                 ],
                                 "parameters": [
@@ -1716,7 +1716,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 49,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L49"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L49"
                             }
                         ],
                         "type": {
@@ -1744,7 +1744,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 34,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L34"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L34"
                             }
                         ],
                         "type": {
@@ -1772,7 +1772,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 39,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L39"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L39"
                             }
                         ],
                         "type": {
@@ -1800,7 +1800,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 44,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L44"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L44"
                             }
                         ],
                         "type": {
@@ -1819,7 +1819,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 161,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L161"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L161"
                             }
                         ],
                         "signatures": [
@@ -1843,7 +1843,7 @@
                                         "fileName": "src/aux-common/math/Quaternion.ts",
                                         "line": 161,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L161"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L161"
                                     }
                                 ],
                                 "parameters": [
@@ -1890,7 +1890,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 107,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L107"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L107"
                             }
                         ],
                         "signatures": [
@@ -1904,7 +1904,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the conjugate of this quaternion and returns the result.\nThe conjugate (or inverse) of a quaternion is similar to negating a number.\nWhen you multiply a quaternion by its conjugate, the result is the identity quaternion."
+                                            "text": "Calculates the conjugate of this quaternion and returns the result.\r\nThe conjugate (or inverse) of a quaternion is similar to negating a number.\r\nWhen you multiply a quaternion by its conjugate, the result is the identity quaternion."
                                         }
                                     ],
                                     "blockTags": []
@@ -1914,7 +1914,7 @@
                                         "fileName": "src/aux-common/math/Quaternion.ts",
                                         "line": 107,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L107"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L107"
                                     }
                                 ],
                                 "type": {
@@ -1939,7 +1939,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 114,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L114"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L114"
                             }
                         ],
                         "signatures": [
@@ -1963,7 +1963,7 @@
                                         "fileName": "src/aux-common/math/Quaternion.ts",
                                         "line": 114,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L114"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L114"
                                     }
                                 ],
                                 "type": {
@@ -1984,7 +1984,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 77,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L77"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L77"
                             }
                         ],
                         "signatures": [
@@ -1998,7 +1998,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Multiplies this quaternion by the other quaternion and returns the result.\nIn quaternion math, multiplication can be used to combine quaternions together,\nhowever unlike regular multiplication quaternion multiplication is order dependent.\n\nWhich frame of reference you want to use depends on which order you use.\nFor example, q2.multiply(q1) starts with the identity, applies q1 to it, and then applies q2 to that.\nWhereas, q1.multiply(q2) starts with the identity, applies q2 to it, and then applies q1 to that."
+                                            "text": "Multiplies this quaternion by the other quaternion and returns the result.\r\nIn quaternion math, multiplication can be used to combine quaternions together,\r\nhowever unlike regular multiplication quaternion multiplication is order dependent.\r\n\r\nWhich frame of reference you want to use depends on which order you use.\r\nFor example, q2.multiply(q1) starts with the identity, applies q1 to it, and then applies q2 to that.\r\nWhereas, q1.multiply(q2) starts with the identity, applies q2 to it, and then applies q1 to that."
                                         }
                                     ],
                                     "blockTags": []
@@ -2008,7 +2008,7 @@
                                         "fileName": "src/aux-common/math/Quaternion.ts",
                                         "line": 77,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L77"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L77"
                                     }
                                 ],
                                 "parameters": [
@@ -2059,7 +2059,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 143,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L143"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L143"
                             }
                         ],
                         "signatures": [
@@ -2073,7 +2073,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the normalized version of this quaternion and returns it.\nA normalized quaternion is a quaternion whose length equals 1.\n\nNormalizing a quaternion preserves its rotation/reflection while making the length (i.e. scale) of it 1."
+                                            "text": "Calculates the normalized version of this quaternion and returns it.\r\nA normalized quaternion is a quaternion whose length equals 1.\r\n\r\nNormalizing a quaternion preserves its rotation/reflection while making the length (i.e. scale) of it 1."
                                         }
                                     ],
                                     "blockTags": []
@@ -2083,7 +2083,7 @@
                                         "fileName": "src/aux-common/math/Quaternion.ts",
                                         "line": 143,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L143"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L143"
                                     }
                                 ],
                                 "type": {
@@ -2108,7 +2108,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 128,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L128"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L128"
                             }
                         ],
                         "signatures": [
@@ -2122,7 +2122,7 @@
                                     "summary": [
                                         {
                                             "kind": "text",
-                                            "text": "Calculates the square length of this quaternion and returns the result.\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\ncalculating a square root."
+                                            "text": "Calculates the square length of this quaternion and returns the result.\r\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\r\ncalculating a square root."
                                         }
                                     ],
                                     "blockTags": []
@@ -2132,7 +2132,7 @@
                                         "fileName": "src/aux-common/math/Quaternion.ts",
                                         "line": 128,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L128"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L128"
                                     }
                                 ],
                                 "type": {
@@ -2153,7 +2153,7 @@
                                 "fileName": "src/aux-common/math/Quaternion.ts",
                                 "line": 153,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L153"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L153"
                             }
                         ],
                         "signatures": [
@@ -2168,7 +2168,7 @@
                                         "fileName": "src/aux-common/math/Quaternion.ts",
                                         "line": 153,
                                         "character": 4,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L153"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L153"
                                     }
                                 ],
                                 "type": {
@@ -2213,12 +2213,12 @@
                         "fileName": "src/aux-common/math/Quaternion.ts",
                         "line": 30,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Quaternion.ts#L30"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Quaternion.ts#L30"
                     }
                 ]
             },
             "comment": {
-                "text": "Defines a class that represents a Quaternion. That is, a representation of a 3D rotation.\n\nQuaternions are a mathematical representation of 3D transformations and are commonly used to calculate and apply rotations to 3D points.\nThey work by defining a quaterion such that `q = w + x*i + y*j + z*k`, where `w, x, y, and z` are real numbers and `i, j, and k` are imaginary numbers.\nThe basics of this is that `x`, `y`, and `z` define a vector that represents the rotation axis, and `w` defines an angle around which the rotation occurs.\nHowever, because `i`, `j`, and `k` are included we can keep `x`, `y`, and `z` from incorrectly interacting with each other and so avoid common pitfalls like Gimbal lock.\n\nOne little known feature of quaternions is that they can also represent reflections and also scale.\nThis is because there are two different ways to apply a quaternion to a 3D point:\n\n- `quaterion * point * inverse(quaterion)`\n\nThis formula rotates and scales the point quaternion. The rotation occurs around the axis specified by the quaternion X, Y, and Z values.\nAdditionally, the point will be scaled by the length of the quaternion. (i.e. `sqrt( x^2 + y^2 + z^2 + w^2 )`)\nThis is why quaternions that are used to represent only rotations must be normalized.\n\n- `quaternion * point * quaternion`\n\nThis formula reflects scales the point by the quaternion. The reflection occurs across the axis specified by the quaternion X, Y, and Z values.\nAdditionally, the point will be scaled by the length of the quaternion. (i.e. `sqrt( x^2 + y^2 + z^2 + w^2 )`)",
+                "text": "Defines a class that represents a Quaternion. That is, a representation of a 3D rotation.\r\n\r\nQuaternions are a mathematical representation of 3D transformations and are commonly used to calculate and apply rotations to 3D points.\r\nThey work by defining a quaterion such that `q = w + x*i + y*j + z*k`, where `w, x, y, and z` are real numbers and `i, j, and k` are imaginary numbers.\r\nThe basics of this is that `x`, `y`, and `z` define a vector that represents the rotation axis, and `w` defines an angle around which the rotation occurs.\r\nHowever, because `i`, `j`, and `k` are included we can keep `x`, `y`, and `z` from incorrectly interacting with each other and so avoid common pitfalls like Gimbal lock.\r\n\r\nOne little known feature of quaternions is that they can also represent reflections and also scale.\r\nThis is because there are two different ways to apply a quaternion to a 3D point:\r\n\r\n- `quaterion * point * inverse(quaterion)`\r\n\r\nThis formula rotates and scales the point quaternion. The rotation occurs around the axis specified by the quaternion X, Y, and Z values.\r\nAdditionally, the point will be scaled by the length of the quaternion. (i.e. `sqrt( x^2 + y^2 + z^2 + w^2 )`)\r\nThis is why quaternions that are used to represent only rotations must be normalized.\r\n\r\n- `quaternion * point * quaternion`\r\n\r\nThis formula reflects scales the point by the quaternion. The reflection occurs across the axis specified by the quaternion X, Y, and Z values.\r\nAdditionally, the point will be scaled by the length of the quaternion. (i.e. `sqrt( x^2 + y^2 + z^2 + w^2 )`)",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -2343,7 +2343,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 496,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L496"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L496"
                             }
                         ],
                         "type": {
@@ -2371,7 +2371,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 491,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L491"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L491"
                             }
                         ],
                         "type": {
@@ -2398,7 +2398,7 @@
                         "fileName": "src/aux-common/math/Rotation.ts",
                         "line": 487,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L487"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L487"
                     }
                 ]
             },
@@ -2447,7 +2447,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Defines an interface that represents a from/to rotation.\nThat is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction."
+                            "text": "Defines an interface that represents a from/to rotation.\r\nThat is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction."
                         }
                     ],
                     "blockTags": [
@@ -2528,7 +2528,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 469,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L469"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L469"
                             }
                         ],
                         "type": {
@@ -2560,7 +2560,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 474,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L474"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L474"
                             }
                         ],
                         "type": {
@@ -2587,12 +2587,12 @@
                         "fileName": "src/aux-common/math/Rotation.ts",
                         "line": 465,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L465"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L465"
                     }
                 ]
             },
             "comment": {
-                "text": "Defines an interface that represents a from/to rotation.\nThat is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction.",
+                "text": "Defines an interface that represents a from/to rotation.\r\nThat is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction.",
                 "tags": [
                     {
                         "tagName": "dochash",
@@ -2708,7 +2708,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 510,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L510"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L510"
                             }
                         ],
                         "type": {
@@ -2732,7 +2732,7 @@
                                             "summary": [
                                                 {
                                                     "kind": "text",
-                                                    "text": "Whether the euler angles are extrinsic.\nDefaults to false."
+                                                    "text": "Whether the euler angles are extrinsic.\r\nDefaults to false."
                                                 }
                                             ],
                                             "blockTags": []
@@ -2742,7 +2742,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 536,
                                                 "character": 8,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L536"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L536"
                                             }
                                         ],
                                         "type": {
@@ -2762,7 +2762,7 @@
                                             "summary": [
                                                 {
                                                     "kind": "text",
-                                                    "text": "The order that the rotations should be applied in.\nDefaults to XYZ."
+                                                    "text": "The order that the rotations should be applied in.\r\nDefaults to XYZ."
                                                 }
                                             ],
                                             "blockTags": []
@@ -2772,7 +2772,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 530,
                                                 "character": 8,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L530"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L530"
                                             }
                                         ],
                                         "type": {
@@ -2800,7 +2800,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 514,
                                                 "character": 8,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L514"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L514"
                                             }
                                         ],
                                         "type": {
@@ -2828,7 +2828,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 519,
                                                 "character": 8,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L519"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L519"
                                             }
                                         ],
                                         "type": {
@@ -2856,7 +2856,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 524,
                                                 "character": 8,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L524"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L524"
                                             }
                                         ],
                                         "type": {
@@ -2882,7 +2882,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 510,
                                         "character": 11,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L510"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L510"
                                     }
                                 ]
                             }
@@ -2902,7 +2902,7 @@
                         "fileName": "src/aux-common/math/Rotation.ts",
                         "line": 509,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L509"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L509"
                     }
                 ]
             },
@@ -3032,7 +3032,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 554,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L554"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L554"
                             }
                         ],
                         "type": {
@@ -3061,7 +3061,7 @@
                         "fileName": "src/aux-common/math/Rotation.ts",
                         "line": 550,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L550"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L550"
                     }
                 ]
             },
@@ -3182,7 +3182,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 568,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L568"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L568"
                             }
                         ],
                         "type": {
@@ -3205,7 +3205,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 568,
                                                 "character": 51,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L568"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L568"
                                             }
                                         ],
                                         "type": {
@@ -3224,7 +3224,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 568,
                                                 "character": 18,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L568"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L568"
                                             }
                                         ],
                                         "type": {
@@ -3243,7 +3243,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 568,
                                                 "character": 29,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L568"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L568"
                                             }
                                         ],
                                         "type": {
@@ -3262,7 +3262,7 @@
                                                 "fileName": "src/aux-common/math/Rotation.ts",
                                                 "line": 568,
                                                 "character": 40,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L568"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L568"
                                             }
                                         ],
                                         "type": {
@@ -3287,7 +3287,7 @@
                                         "fileName": "src/aux-common/math/Rotation.ts",
                                         "line": 568,
                                         "character": 16,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L568"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L568"
                                     }
                                 ]
                             }
@@ -3307,7 +3307,7 @@
                         "fileName": "src/aux-common/math/Rotation.ts",
                         "line": 567,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L567"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L567"
                     }
                 ]
             },
@@ -3437,7 +3437,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 585,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L585"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L585"
                             }
                         ],
                         "type": {
@@ -3459,7 +3459,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "How errors with the direction and upwards vectors should be handled.\nIf the direction and upwards vectors are parallel or perpendicular, then it is not possible to create a rotation\nthat looks along the direction and uses the upwards vector. The upwards vector is essentially useless in this scenario\nand as a result there are an infinite number of possible valid rotations that look along direction vector.\n\nThis parameter provides two ways to handle this situation:\n\n- \"error\" indicates that an error should be thrown when this situation arises.\n- \"nudge\" indicates that the direction vector should be nudged by a miniscule amount in an arbitrary direction.\n          This causes the upwards and direction vectors to no longer be parallel, but it can also cause rotation bugs when the direction and upwards are the same."
+                                    "text": "How errors with the direction and upwards vectors should be handled.\r\nIf the direction and upwards vectors are parallel or perpendicular, then it is not possible to create a rotation\r\nthat looks along the direction and uses the upwards vector. The upwards vector is essentially useless in this scenario\r\nand as a result there are an infinite number of possible valid rotations that look along direction vector.\r\n\r\nThis parameter provides two ways to handle this situation:\r\n\r\n- \"error\" indicates that an error should be thrown when this situation arises.\r\n- \"nudge\" indicates that the direction vector should be nudged by a miniscule amount in an arbitrary direction.\r\n          This causes the upwards and direction vectors to no longer be parallel, but it can also cause rotation bugs when the direction and upwards are the same."
                                 }
                             ],
                             "blockTags": []
@@ -3469,7 +3469,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 608,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L608"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L608"
                             }
                         ],
                         "type": {
@@ -3496,7 +3496,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The direction that the upward axis should be pointing along after the rotation is applied.\nIf the direction and upwards vectors are not perpendicular, then the direction will be prioritized and the angle between\nupwards and the resulting upwards vector will be minimized.\n\nIf direction and upwards are perpendicular, then applying the rotation to (0, 0, 1) will give the upwards vector."
+                                    "text": "The direction that the upward axis should be pointing along after the rotation is applied.\r\nIf the direction and upwards vectors are not perpendicular, then the direction will be prioritized and the angle between\r\nupwards and the resulting upwards vector will be minimized.\r\n\r\nIf direction and upwards are perpendicular, then applying the rotation to (0, 0, 1) will give the upwards vector."
                                 }
                             ],
                             "blockTags": []
@@ -3506,7 +3506,7 @@
                                 "fileName": "src/aux-common/math/Rotation.ts",
                                 "line": 594,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L594"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L594"
                             }
                         ],
                         "type": {
@@ -3534,7 +3534,7 @@
                         "fileName": "src/aux-common/math/Rotation.ts",
                         "line": 581,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/math/Rotation.ts#L581"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/math/Rotation.ts#L581"
                     }
                 ]
             },

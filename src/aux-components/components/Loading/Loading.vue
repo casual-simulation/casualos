@@ -9,6 +9,17 @@
         >
             <div v-if="!hasError" class="loading-dialog">
                 <div class="loading-text-content">
+                    <img
+                        v-if="logoUrl"
+                        :src="logoUrl"
+                        class="logo"
+                        :alt="logoTitle"
+                        :title="logoTitle"
+                    />
+                    <h2 v-else-if="title">{{ title }}</h2>
+                </div>
+                <md-progress-bar md-mode="determinate" :md-value="progress"></md-progress-bar>
+                <div class="loading-text-content bottom">
                     <div class="loading-progress">
                         <md-progress-spinner
                             v-if="showSpinner"
@@ -18,7 +29,6 @@
                         ></md-progress-spinner>
                     </div>
                 </div>
-                <md-progress-bar md-mode="determinate" :md-value="progress"></md-progress-bar>
                 <div class="version">{{ version }}</div>
             </div>
             <div v-else class="loading-error">

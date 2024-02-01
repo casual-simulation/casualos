@@ -52,6 +52,7 @@ describe('RecordsController', () => {
             auth: store,
             metrics: store,
             config: store,
+            messenger: store,
         });
     });
 
@@ -2022,6 +2023,815 @@ describe('RecordsController', () => {
         });
     });
 
+    describe('createStudioInComId()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowCustomComId: true,
+                                    allowed: true,
+                                    maxStudios: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                name: 'test user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: 'studioId1',
+                    displayName: 'studio 1',
+                    comId: 'comId1',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                'userId'
+            );
+        });
+
+        it('should be able to create a studio in a comId', async () => {
+            uuidMock.mockReturnValueOnce('studioId2');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'userId',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                studioId: 'studioId2',
+            });
+
+            const studio = await store.getStudioById('studioId2');
+
+            expect(studio).toEqual({
+                id: 'studioId2',
+                displayName: 'my studio',
+                ownerStudioComId: 'comId1',
+            });
+        });
+
+        it('should return comId_not_found if the a studio does not exist for the given comId', async () => {
+            uuidMock.mockReturnValueOnce('studioId2');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'userId',
+                'missingComId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'comId_not_found',
+                errorMessage: 'The given comId was not found.',
+            });
+
+            const studio = await store.getStudioById('studioId2');
+            expect(studio).toBeFalsy();
+        });
+
+        it('should return not_authorized if the user is not a member of the comId studio', async () => {
+            uuidMock.mockReturnValueOnce('studioId2');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'otherUserId',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to create a studio in this comId.',
+            });
+
+            const studio = await store.getStudioById('studioId2');
+            expect(studio).toBeFalsy();
+        });
+
+        it('should allow non-members to create studios in a comId if configured to allow anyone', async () => {
+            uuidMock.mockReturnValueOnce('studioId2');
+            await store.saveNewUser({
+                id: 'otherUser',
+                email: 'test2@example.com',
+                name: 'other user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.updateStudio({
+                id: 'studioId1',
+                displayName: 'studio 1',
+                comId: 'comId1',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+            });
+
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'otherUser',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                studioId: 'studioId2',
+            });
+
+            const studio = await store.getStudioById('studioId2');
+            expect(studio).toEqual({
+                id: 'studioId2',
+                displayName: 'my studio',
+                ownerStudioComId: 'comId1',
+            });
+
+            const members = await store.listStudioAssignments('studioId2');
+            expect(members).toEqual([
+                {
+                    studioId: 'studioId2',
+                    userId: 'otherUser',
+                    role: 'admin',
+                    isPrimaryContact: true,
+                    user: {
+                        id: 'otherUser',
+                        email: 'test2@example.com',
+                        name: 'other user',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the subscription does not allow comId', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowCustomComId: true,
+                                    allowed: false,
+                                    maxStudios: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            uuidMock.mockReturnValueOnce('studioId3');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'userId',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'comId features are not allowed for this comId. Make sure you have an active subscription that provides comId features.',
+            });
+
+            const studio = await store.getStudioById('studioId3');
+            expect(studio).toBeFalsy();
+        });
+
+        it('should return subscription_limit_reached if creating the studio would exceed the maximum number of allowed studios', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowCustomComId: true,
+                                    allowed: true,
+                                    maxStudios: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                name: 'test user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: 'studioId1',
+                    displayName: 'studio 1',
+                    comId: 'comId1',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                'userId'
+            );
+
+            await store.addStudio({
+                id: 'studioId2',
+                displayName: 'studio 2',
+                ownerStudioComId: 'comId1',
+            });
+
+            uuidMock.mockReturnValueOnce('studioId3');
+            const result = await manager.createStudioInComId(
+                'my studio',
+                'userId',
+                'comId1'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The maximum number of studios allowed for your comId subscription has been reached.',
+            });
+
+            const studio = await store.getStudioById('studioId3');
+            expect(studio).toBeFalsy();
+        });
+    });
+
+    describe('updateStudio()', () => {
+        beforeEach(async () => {
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                'userId'
+            );
+        });
+
+        it('should be able to update the display name', async () => {
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    displayName: 'new name',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'new name',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should be able to update the logo URL', async () => {
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    logoUrl: 'https://example.com/logo.png',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should be able to update the player config', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    playerConfig: {
+                        automaticBiosOption: 'free',
+                    },
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerConfig: {
+                    automaticBiosOption: 'free',
+                },
+            });
+        });
+
+        it('should be able to update the comId config', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    comIdConfig: {
+                        allowedStudioCreators: 'only-members',
+                    },
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                comIdConfig: {
+                    allowedStudioCreators: 'only-members',
+                },
+            });
+        });
+
+        it('should do nothing if no updates are provided', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+            });
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                role: 'member',
+                userId: 'otherUserId',
+                isPrimaryContact: false,
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'otherUserId',
+                studio: {
+                    id: 'studioId',
+                    displayName: 'new name',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to update this studio.',
+            });
+        });
+
+        it('should return studio_not_found if the given studio was not found', async () => {
+            const result = await manager.updateStudio({
+                userId: 'otherUserId',
+                studio: {
+                    id: 'missingStudio',
+                    displayName: 'new name',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        });
+    });
+
+    describe('getStudio()', () => {
+        beforeEach(async () => {
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                'userId'
+            );
+        });
+
+        it('should return the studio', async () => {
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                },
+            });
+        });
+
+        it('should include the configured comId features', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowed: true,
+                                    maxStudios: 100,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: true,
+                        maxStudios: 100,
+                    },
+                },
+            });
+        });
+
+        it('should return studio_not_found if the studio was not found', async () => {
+            const result = await manager.getStudio('missingStudio', 'userId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        });
+
+        it('should return not_authorized if the user is not a member of the studio', async () => {
+            const result = await manager.getStudio('studioId', 'otherUserId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to access this studio.',
+            });
+        });
+    });
+
+    describe('getPlayerConfig()', () => {
+        it('should return the player config for the given comId', async () => {
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+            });
+
+            const result = await manager.getPlayerConfig('comId1');
+
+            expect(result).toEqual({
+                success: true,
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+            });
+        });
+
+        it('should comId_not_found if the comId does not exist', async () => {
+            const result = await manager.getPlayerConfig('comId1');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'comId_not_found',
+                errorMessage: 'The given comId was not found.',
+            });
+        });
+    });
+
+    describe('requestComId()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                comId: {
+                                    allowed: true,
+                                    maxStudios: 100,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should send a request_com_id notification for the studio', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const result = await manager.requestComId({
+                studioId: 'studioId',
+                userId: 'userId',
+                requestedComId: 'myComId',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(store.recordsNotifications).toEqual([
+                {
+                    resource: 'studio_com_id_request',
+                    action: 'created',
+                    resourceId: 'studioId',
+                    recordName: null,
+                    timeMs: expect.any(Number),
+                    request: {
+                        id: 'requestId',
+                        studioId: 'studioId',
+                        userId: 'userId',
+                        requestingIpAddress: '127.0.0.1',
+                        requestedComId: 'myComId',
+                        createdAtMs: expect.any(Number),
+                        updatedAtMs: expect.any(Number),
+                    },
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user is not a member of the studio', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const result = await manager.requestComId({
+                studioId: 'studioId',
+                userId: 'wrongUser',
+                requestedComId: 'myComId',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        });
+
+        it('should return studio_not_found if the studio doesnt exist', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const result = await manager.requestComId({
+                studioId: 'wrongStudio',
+                userId: 'userId',
+                requestedComId: 'myComId',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        });
+
+        it('should return comId_already_taken if the comId aready exists in another studio', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            await store.addStudio({
+                id: 'studioId2',
+                comId: 'comId2',
+                displayName: 'studio2',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+            const result = await manager.requestComId({
+                studioId: 'studioId',
+                userId: 'userId',
+                requestedComId: 'comId2',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'comId_already_taken',
+                errorMessage: 'The given comID is already taken.',
+            });
+        });
+    });
+
     describe('listStudios()', () => {
         beforeEach(async () => {
             await store.saveNewUser({
@@ -2127,6 +2937,130 @@ describe('RecordsController', () => {
                         isPrimaryContact: true,
                         role: 'member',
                         subscriptionTier: 'tier1',
+                    },
+                ],
+            });
+        });
+    });
+
+    describe('listStudiosByComId()', () => {
+        beforeEach(async () => {
+            await store.saveNewUser({
+                id: 'userId',
+                name: 'test user',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: 'studioId1',
+                displayName: 'studio 1',
+                comId: 'comId1',
+            });
+
+            await store.addStudio({
+                id: 'studioId2',
+                displayName: 'studio 2',
+                ownerStudioComId: 'comId1',
+            });
+
+            await store.addStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+                ownerStudioComId: 'comId1',
+            });
+
+            await store.addStudio({
+                id: 'studioId4',
+                displayName: 'studio 4',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId2',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId3',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'member',
+            });
+        });
+
+        it('should list the studios that the user has access to', async () => {
+            const result = await manager.listStudiosByComId('userId', 'comId1');
+
+            expect(result).toEqual({
+                success: true,
+                studios: [
+                    {
+                        studioId: 'studioId2',
+                        displayName: 'studio 2',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        subscriptionTier: null,
+                        ownerStudioComId: 'comId1',
+                    },
+                    {
+                        studioId: 'studioId3',
+                        displayName: 'studio 3',
+                        isPrimaryContact: true,
+                        role: 'member',
+                        subscriptionTier: null,
+                        ownerStudioComId: 'comId1',
+                    },
+                ],
+            });
+        });
+
+        it('should include the subscription tier', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.updateStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                ownerStudioComId: 'comId1',
+            });
+
+            const result = await manager.listStudiosByComId('userId', 'comId1');
+
+            expect(result).toEqual({
+                success: true,
+                studios: [
+                    {
+                        studioId: 'studioId2',
+                        displayName: 'studio 2',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        subscriptionTier: null,
+                        ownerStudioComId: 'comId1',
+                    },
+                    {
+                        studioId: 'studioId3',
+                        displayName: 'studio 3',
+                        isPrimaryContact: true,
+                        role: 'member',
+                        subscriptionTier: 'tier1',
+                        ownerStudioComId: 'comId1',
                     },
                 ],
             });

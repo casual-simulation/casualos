@@ -18,6 +18,10 @@ export default class Loading extends Vue {
     @Prop({ default: 'Dismiss' }) errorAction: string;
     @Prop({ default: 'An error has occured.' }) errorTitle: string;
 
+    @Prop({ default: null }) logoUrl: string;
+    @Prop({ default: null }) logoTitle: string;
+    @Prop({ default: null }) title: string;
+
     showSpinner: boolean;
 
     get hasError(): boolean {

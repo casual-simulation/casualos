@@ -111,6 +111,11 @@ export interface AuxConfigParameters {
      * Whether privo login is required.
      */
     requirePrivoLogin?: boolean;
+
+    /**
+     * The comId that was specified when this config was created.
+     */
+    comId?: string;
 }
 
 export interface AuxTimeSyncConfiguration {

@@ -1,11 +1,46 @@
 # CasualOS Changelog
 
-## V3.2.11
+## V3.2.12
 
-#### Date: 1/18/2024
+#### Date: 2/1/2024
 
 ### :rocket: Features
 
+-   Added `POST /api/v2/ai/skybox` character limit prompt to match BlockadeLabs limit of 600 characters.
+-   Added comID
+    -   comID is a set of features that allows studios to customize CasualOS based on their comID.
+    -   Studios can get a comID by obtaining a subscription that grants the comId feature to them.
+    -   Once a Studio has the feature, they can request the comID that they want from the Studio settings page.
+    -   They can also provide the following additional settings:
+        -   `studio.name` - The name of the Studio.
+        -   `comID` - The comID for the Studio. Studio admins can request a new comID for their studio.
+        -   `comID.logoURL` - The URL of the logo that should be displayed for the Studio and comID.
+        -   `comID.allowedStudioCreators` - The kinds of users that are allowed to create Studios within the comID. Possible options are "anyone" and "only-members".
+        -   `comID.ab1BootstrapURL` - The URL that specifies where the custom ab1 bootstrapper should be loaded from. If none is specified, then the default ab1 is loaded.
+        -   `comID.allowedBiosOptions` - The list of allowed BIOS options that can be presented to users. If none are specified, then the default list is used.
+        -   `comID.defaultBiosOption` - The BIOS option that is selected in the BIOS by default. If none is specified, then the default is used.
+        -   `comID.automaticBiosOption` - The BIOS option that will be automatically executed instead of displaying the BIOS. If none is specified, then the default is used.
+        -   `comID.jitsiAppName` - The name of the Jitsi App that should be used for the meetPortal. If none is specified, then the default is used.
+        -   `comID.what3WordsApiKey` - The API Key that should be used for `os.convertGeolocationToWhat3Words()`. If none is specified, then the default is used.
+    -   Setting `comId` or `comID` in the query tells CasualOS to use the settings that were configured on the related Studio settings page. Additionally, the logo of the studio will be displayed on the loading screens and BIOS.
+
+### :bug: Bug Fixes
+
+-   Fixed an issuse where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
+
+## V3.2.11
+
+#### Date: 1/29/2024
+
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `join inst,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
+### :rocket: Features
+
+-   Added `portalHDRAddress` tag.
+-   Added the `join inst` BIOS option as an alternative to `enter join code`.
+-   Added buttons for the `sign in`, `sign up`, and `sign out` BIOS options.
 -   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
     -   Configurable by the `redis.tempInstRecordsLifetimeSeconds`, `redis.tempInstRecordsLifetimeExpireMode`, `redis.connectionExpireSeconds`, and `redis.connectionExpireMode` options in SERVER_CONFIG.
     -   Defaults:
@@ -17,6 +52,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where branch info was being duplicated for temporary branches.
+-   Fixed an issue where `onSpaceRateLimitExceeded` was missing from 'Add New Tag' autocomplete list.
 
 ## V3.2.10
 

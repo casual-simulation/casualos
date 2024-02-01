@@ -1,3 +1,4 @@
+import { StudioComIdRequest } from './RecordsStore';
 import { UserInstReport } from './ModerationStore';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
@@ -55,7 +56,9 @@ export class MultiNotificationMessenger implements NotificationMessenger {
     }
 }
 
-export type RecordsNotification = UserInstReportNotification;
+export type RecordsNotification =
+    | UserInstReportNotification
+    | StudioComIdRequestNotification;
 
 /**
  * Defines a base interface for a notification that is related to a record.
@@ -95,6 +98,15 @@ export interface UserInstReportNotification extends ResourceNotification {
      * The report that was created.
      */
     report: UserInstReport;
+}
+
+export interface StudioComIdRequestNotification extends ResourceNotification {
+    resource: 'studio_com_id_request';
+
+    /**
+     * The request that this notification is for.
+     */
+    request: StudioComIdRequest;
 }
 
 export type NotificationResourceActions = 'created' | 'updated' | 'deleted';
@@ -167,6 +179,8 @@ export function formatNotificationAsString(
     switch (notification.resource) {
         case 'user_inst_report':
             return formatUserInstReportNotificationAsString(notification);
+        case 'studio_com_id_request':
+            return formatStudioComIdRequestNotificationAsString(notification);
     }
 }
 
@@ -191,4 +205,21 @@ Reason: ${notification.report.reportReason}
 
 Text:
 ${notification.report.reportReasonText}`;
+}
+
+export function formatStudioComIdRequestNotificationAsString(
+    notification: StudioComIdRequestNotification
+): string {
+    const time = DateTime.fromMillis(notification.timeMs, {
+        zone: 'utc',
+    }).toISO();
+    return `A comId request was ${notification.action} for ${
+        notification.resourceId
+    }:
+Request ID: ${notification.request.id}
+Studio ID: ${notification.request.studioId}
+Requested comID: ${notification.request.requestedComId}
+Time: ${time}
+Reporting User: ${notification.request.userId ?? '(null)'}
+Requesting IP: ${notification.request.requestingIpAddress ?? '(null)'}`;
 }

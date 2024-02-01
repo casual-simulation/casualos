@@ -195,7 +195,7 @@ export interface RuntimeBot {
      * @example Get the links of a bot
      * let links = bot.links;
      *
-     * @example Get the \@onClick listener of a bot
+     * @example Get the @onClick listener of a bot
      * let onClick = bot.onClick;
      *
      * @example Get a property on a bot by a variable
@@ -2604,6 +2604,7 @@ export const KNOWN_TAGS: string[] = [
     'rightPointer_primary',
     'rightPointer_squeeze',
     'forceSignedScripts',
+    'onSpaceRateLimitExceeded',
 
     EDITING_BOT,
     EDITING_TAG,
@@ -2617,6 +2618,7 @@ export const KNOWN_TAGS: string[] = [
     'portalCursorHotspotY',
     'portalCursorHotspot',
     'portalBackgroundAddress',
+    'portalHDRAddress',
     'portalLocked',
     'portalPannable',
     `portalPannableMinX`,

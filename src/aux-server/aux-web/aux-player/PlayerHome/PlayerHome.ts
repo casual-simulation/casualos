@@ -18,6 +18,7 @@ import {
     QUERY_FULL_HISTORY_TAGS,
     QUERY_PARTIAL_HISTORY_TAGS,
     getBotTheme,
+    BiosOption,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import {
@@ -43,7 +44,6 @@ import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
 import { getInstParameters, getPermalink } from '../UrlUtils';
-import { BiosOption } from 'shared/WebConfig';
 import { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
@@ -83,6 +83,12 @@ function isStaticInst(
         biosOption === 'local inst' ||
         biosOption === 'local'
     );
+}
+
+function isJoinCode(
+    biosOption: BiosOption
+): biosOption is 'enter join code' | 'join inst' {
+    return biosOption === 'enter join code' || biosOption === 'join inst';
 }
 
 const MdOption = Vue.component('MdOption');
@@ -131,6 +137,8 @@ export default class PlayerHome extends Vue {
     joinCode: string = null;
     privacyPolicyUrl: string = null;
     termsOfServiceUrl: string = null;
+    logoUrl: string = null;
+    logoTitle: string = null;
 
     errors: FormError[] = [];
 
@@ -151,7 +159,8 @@ export default class PlayerHome extends Vue {
         if (
             isPublicInst(this.biosSelection) ||
             isPrivateInst(this.biosSelection) ||
-            isStaticInst(this.biosSelection)
+            isStaticInst(this.biosSelection) ||
+            isJoinCode(this.biosSelection)
         ) {
             return 'Load';
         } else if (
@@ -169,7 +178,8 @@ export default class PlayerHome extends Vue {
         if (
             isPrivateInst(option) ||
             isPublicInst(option) ||
-            isStaticInst(option)
+            isStaticInst(option) ||
+            isJoinCode(option)
         ) {
             return true;
         }
@@ -184,8 +194,22 @@ export default class PlayerHome extends Vue {
             return 'bots are stored in the cloud and shared with studio members';
         } else if (isPublicInst(option)) {
             return 'bots are stored in the cloud and shared publicly, expires in 24h';
+        } else if (isJoinCode(option)) {
+            return 'enter a join code to load an existing inst';
         }
         return '';
+    }
+
+    canSignOut(): boolean {
+        return this.biosOptions.some((option) => option === 'sign out');
+    }
+
+    canSignIn(): boolean {
+        return this.biosOptions.some((option) => option === 'sign in');
+    }
+
+    canSignUp(): boolean {
+        return this.biosOptions.some((option) => option === 'sign up');
     }
 
     @Watch('query')
@@ -246,6 +270,11 @@ export default class PlayerHome extends Vue {
         this.biosOptions = [];
         this.errors = [];
         this._simulations = new Map();
+        this.logoUrl = appManager.comIdConfig?.logoUrl;
+        this.logoTitle =
+            appManager.comIdConfig?.displayName ??
+            appManager.comIdConfig?.comId ??
+            '';
 
         appManager.simulationManager.simulationAdded.subscribe((sim) => {
             const sub = this._setupSimulation(sim);
@@ -302,7 +331,7 @@ export default class PlayerHome extends Vue {
                         ) {
                             this.biosSelection = bios;
                             if (
-                                bios !== 'enter join code' &&
+                                !isJoinCode(bios) &&
                                 bios !== 'sign up' &&
                                 bios !== 'sign in' &&
                                 bios !== 'sign out'
@@ -334,6 +363,22 @@ export default class PlayerHome extends Vue {
         this.showBios = true;
         const options = await this._getBiosOptions();
         this.biosOptions = options;
+    }
+
+    async signIn() {
+        await this.executeBiosOption('sign in', null, null, null);
+    }
+
+    async signOut() {
+        await this.executeBiosOption('sign out', null, null, null);
+    }
+
+    async signUp() {
+        await this.executeBiosOption('sign up', null, null, null);
+    }
+
+    isJoinCode(option: BiosOption) {
+        return isJoinCode(option);
     }
 
     async executeBiosOption(
@@ -479,7 +524,7 @@ export default class PlayerHome extends Vue {
         const authenticated = await appManager.auth.primary.isAuthenticated();
         return (
             appManager.config.allowedBiosOptions ?? [
-                'enter join code',
+                'join inst',
                 'local inst',
                 'studio inst',
                 'free inst',
@@ -515,10 +560,7 @@ export default class PlayerHome extends Vue {
                 }
             } else if (option === 'sign out' && authenticated) {
                 return true;
-            } else if (
-                option === 'enter join code' &&
-                privacyFeatures.allowPublicInsts
-            ) {
+            } else if (isJoinCode(option) && privacyFeatures.allowPublicInsts) {
                 return true;
             } else {
                 return false;

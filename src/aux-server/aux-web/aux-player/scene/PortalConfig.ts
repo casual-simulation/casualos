@@ -61,6 +61,7 @@ export class PortalConfig implements SubscriptionLike {
     private _defaultGrid3D: BoundedGrid3D;
     private _cameraType: PortalCameraType;
     private _cursor: BotCursorType;
+    private _portalHDRAddress: string = null;
 
     private _onGridScaleUpdated: Subject<void>;
 
@@ -283,6 +284,14 @@ export class PortalConfig implements SubscriptionLike {
         return this._cursor;
     }
 
+    get portalHDRAddress() {
+        if (this._portalHDRAddress) {
+            return this._portalHDRAddress;
+        } else {
+            return null;
+        }
+    }
+
     unsubscribe(): void {
         this._sub.unsubscribe();
     }
@@ -377,6 +386,12 @@ export class PortalConfig implements SubscriptionLike {
             bot,
             `auxPortalPannable`,
             DEFAULT_PORTAL_PANNABLE
+        );
+        this._portalHDRAddress = calculateStringTagValue(
+            calc,
+            bot,
+            'portalHDRAddress',
+            null
         );
         const panMin = getTagPosition(bot, 'auxPortalPannableMin', null);
         const panMax = getTagPosition(bot, 'auxPortalPannableMax', null);

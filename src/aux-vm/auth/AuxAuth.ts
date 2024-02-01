@@ -5,6 +5,7 @@ import type {
 import {
     CreatePublicRecordKeyResult,
     FormError,
+    GetPlayerConfigResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
@@ -399,4 +400,10 @@ export interface AuxAuth {
      * Only supported on protocol version 9 or more.
      */
     getPolicyUrls(): Promise<PolicyUrls>;
+
+    /**
+     * Gets the comId web config for the given comId.
+     * @param comId The comId.
+     */
+    getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult>;
 }

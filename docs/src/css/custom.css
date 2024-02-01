@@ -250,3 +250,7 @@ html[data-theme="dark"] .rc-tooltip {
   .api a:visited {
     color: var(--type-link-color-hover);
   }
+
+  .examples-heading {
+    font-size: var(--ifm-h4-font-size);
+  }

@@ -4,6 +4,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
+    GetPlayerConfigResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
@@ -190,4 +191,10 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Gets the URLs for the different policies (privacy policy, terms of service, etc.).
      */
     getPolicyUrls(): Promise<PolicyUrls>;
+
+    /**
+     * Gets the config that should be used for web clients for the given comId.
+     * @param comId The comId.
+     */
+    getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult>;
 }

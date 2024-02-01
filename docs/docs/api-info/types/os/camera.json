@@ -47,7 +47,7 @@
                         "fileName": "src/aux-common/bots/BotEvents.ts",
                         "line": 584,
                         "character": 12,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L584"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L584"
                     }
                 ],
                 "type": {
@@ -183,7 +183,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 500,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L500"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L500"
                             }
                         ],
                         "type": {
@@ -213,7 +213,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 468,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L468"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L468"
                             }
                         ],
                         "type": {
@@ -243,7 +243,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 476,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L476"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L476"
                             }
                         ],
                         "type": {
@@ -251,19 +251,19 @@
                             "types": [
                                 {
                                     "type": "reference",
-                                    "target": 2620,
-                                    "name": "EaseType",
-                                    "package": "@casual-simulation/aux-common",
-                                    "id": 2620,
-                                    "qualifiedName": "EaseType"
-                                },
-                                {
-                                    "type": "reference",
                                     "target": 2622,
                                     "name": "Easing",
                                     "package": "@casual-simulation/aux-common",
                                     "id": 2622,
                                     "qualifiedName": "Easing"
+                                },
+                                {
+                                    "type": "reference",
+                                    "target": 2620,
+                                    "name": "EaseType",
+                                    "package": "@casual-simulation/aux-common",
+                                    "id": 2620,
+                                    "qualifiedName": "EaseType"
                                 }
                             ]
                         }
@@ -290,7 +290,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 512,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L512"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L512"
                             }
                         ],
                         "type": {
@@ -320,7 +320,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 494,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L494"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L494"
                             }
                         ],
                         "type": {
@@ -350,7 +350,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 519,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L519"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L519"
                             }
                         ],
                         "type": {
@@ -371,7 +371,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 462,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L462"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L462"
                             }
                         ],
                         "type": {
@@ -405,7 +405,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 488,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L488"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L488"
                             }
                         ],
                         "type": {
@@ -435,7 +435,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 506,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L506"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L506"
                             }
                         ],
                         "type": {
@@ -465,7 +465,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 482,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L482"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L482"
                             }
                         ],
                         "type": {
@@ -486,7 +486,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 455,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L455"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L455"
                             }
                         ],
                         "type": {
@@ -518,7 +518,7 @@
                         "fileName": "src/aux-common/bots/BotEvents.ts",
                         "line": 447,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L447"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L447"
                     }
                 ],
                 "extendedBy": [
@@ -634,7 +634,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 537,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L537"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L537"
                             }
                         ],
                         "type": {
@@ -653,7 +653,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 529,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L529"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L529"
                             }
                         ],
                         "type": {
@@ -672,7 +672,7 @@
                                 "fileName": "src/aux-common/bots/BotEvents.ts",
                                 "line": 530,
                                 "character": 4,
-                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L530"
+                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L530"
                             }
                         ],
                         "type": {
@@ -696,7 +696,7 @@
                         "fileName": "src/aux-common/bots/BotEvents.ts",
                         "line": 528,
                         "character": 17,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-common/bots/BotEvents.ts#L528"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-common/bots/BotEvents.ts#L528"
                     }
                 ]
             },

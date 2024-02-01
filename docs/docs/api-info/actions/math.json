@@ -27,7 +27,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the absolute value for the number -42.\nconst _42 = math.abs(-42);\n```"
+                                    "text": "```ts\nCalculate the absolute value for the number -42.\r\nconst _42 = math.abs(-42);\n```"
                                 }
                             ]
                         },
@@ -56,7 +56,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11618,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11618"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11618"
                     }
                 ],
                 "parameters": [
@@ -91,7 +91,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the absolute value for the number -42.\nconst _42 = math.abs(-42);\n```"
+                        "text": "```ts\nCalculate the absolute value for the number -42.\r\nconst _42 = math.abs(-42);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -119,7 +119,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Mathematically adds the given vectors to each other and returns the sum result.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector "
+                            "text": "Mathematically adds the given vectors to each other and returns the sum result.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector "
                         },
                         {
                             "kind": "code",
@@ -168,7 +168,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAdd two 3D points together.\nconst result = math.addVectors(\n    { x: 1, y: 2, z: 3 },\n    { x: 5, y: 6, z: 7 }\n);\n\nos.toast(result); // { x: 6, y: 8, z: 10 }\n```"
+                                    "text": "```ts\nAdd two 3D points together.\r\nconst result = math.addVectors(\r\n    { x: 1, y: 2, z: 3 },\r\n    { x: 5, y: 6, z: 7 }\r\n);\r\n\r\nos.toast(result); // { x: 6, y: 8, z: 10 }\n```"
                                 }
                             ]
                         },
@@ -177,7 +177,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nAdd arbitrary numbers together.\nconst result = math.addVectors(\n    { salary: 1000, tax: 50 },\n    { salary: 5000, tax: 250 },\n    { salary: 750, tax: 37.5 },\n);\n\nos.toast(result); // { salary: 6750, tax: 337.5 }\n```"
+                                    "text": "```ts\nAdd arbitrary numbers together.\r\nconst result = math.addVectors(\r\n    { salary: 1000, tax: 50 },\r\n    { salary: 5000, tax: 250 },\r\n    { salary: 750, tax: 37.5 },\r\n);\r\n\r\nos.toast(result); // { salary: 6750, tax: 337.5 }\n```"
                                 }
                             ]
                         },
@@ -206,7 +206,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11977,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11977"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11977"
                     }
                 ],
                 "typeParameter": [
@@ -255,15 +255,15 @@
                 }
             },
             "comment": {
-                "text": "Mathematically adds the given vectors to each other and returns the sum result.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
+                "text": "Mathematically adds the given vectors to each other and returns the sum result.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nAdd two 3D points together.\nconst result = math.addVectors(\n    { x: 1, y: 2, z: 3 },\n    { x: 5, y: 6, z: 7 }\n);\n\nos.toast(result); // { x: 6, y: 8, z: 10 }\n```"
+                        "text": "```ts\nAdd two 3D points together.\r\nconst result = math.addVectors(\r\n    { x: 1, y: 2, z: 3 },\r\n    { x: 5, y: 6, z: 7 }\r\n);\r\n\r\nos.toast(result); // { x: 6, y: 8, z: 10 }\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nAdd arbitrary numbers together.\nconst result = math.addVectors(\n    { salary: 1000, tax: 50 },\n    { salary: 5000, tax: 250 },\n    { salary: 750, tax: 37.5 },\n);\n\nos.toast(result); // { salary: 6750, tax: 337.5 }\n```"
+                        "text": "```ts\nAdd arbitrary numbers together.\r\nconst result = math.addVectors(\r\n    { salary: 1000, tax: 50 },\r\n    { salary: 5000, tax: 250 },\r\n    { salary: 750, tax: 37.5 },\r\n);\r\n\r\nos.toast(result); // { salary: 6750, tax: 337.5 }\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -291,7 +291,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Determines if the given numbers are within 2 decimal places of each other.\n\nBecause [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented like they can in normal math.\nFor example, "
+                            "text": "Determines if the given numbers are within 2 decimal places of each other.\r\n\r\nBecause [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented like they can in normal math.\r\nFor example, "
                         },
                         {
                             "kind": "code",
@@ -323,7 +323,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ".\nThis inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.\n\nThe solution is to check the difference between two numbers to see if it is below some arbitrary threshold.\nIn this case, the threshold is "
+                            "text": ".\r\nThis inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.\r\n\r\nThe solution is to check the difference between two numbers to see if it is below some arbitrary threshold.\r\nIn this case, the threshold is "
                         },
                         {
                             "kind": "code",
@@ -340,7 +340,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nDetermine 0.1 + 0.2 is close to 0.3.\nconst first = 0.1 + 0.2;\nconst second = 0.3;\nconst result = math.areClose(first, second);\nconst areEqual = first === second;\nos.toast(\"Equal: \" + areEqual + \", Close: \" + result); // Equal: false, Close: true\n```"
+                                    "text": "```ts\nDetermine 0.1 + 0.2 is close to 0.3.\r\nconst first = 0.1 + 0.2;\r\nconst second = 0.3;\r\nconst result = math.areClose(first, second);\r\nconst areEqual = first === second;\r\nos.toast(\"Equal: \" + areEqual + \", Close: \" + result); // Equal: false, Close: true\n```"
                                 }
                             ]
                         },
@@ -369,7 +369,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12264,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12264"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12264"
                     }
                 ],
                 "parameters": [
@@ -420,11 +420,11 @@
                 }
             },
             "comment": {
-                "text": "Determines if the given numbers are within 2 decimal places of each other.\n\nBecause [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented like they can in normal math.\nFor example, `1/3` is `0.3333...` but in JavaScript `1/3` gives `0.33333333333333331483`.\nThis inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.\n\nThe solution is to check the difference between two numbers to see if it is below some arbitrary threshold.\nIn this case, the threshold is `0.005`.",
+                "text": "Determines if the given numbers are within 2 decimal places of each other.\r\n\r\nBecause [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented like they can in normal math.\r\nFor example, `1/3` is `0.3333...` but in JavaScript `1/3` gives `0.33333333333333331483`.\r\nThis inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.\r\n\r\nThe solution is to check the difference between two numbers to see if it is below some arbitrary threshold.\r\nIn this case, the threshold is `0.005`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nDetermine 0.1 + 0.2 is close to 0.3.\nconst first = 0.1 + 0.2;\nconst second = 0.3;\nconst result = math.areClose(first, second);\nconst areEqual = first === second;\nos.toast(\"Equal: \" + areEqual + \", Close: \" + result); // Equal: false, Close: true\n```"
+                        "text": "```ts\nDetermine 0.1 + 0.2 is close to 0.3.\r\nconst first = 0.1 + 0.2;\r\nconst second = 0.3;\r\nconst result = math.areClose(first, second);\r\nconst areEqual = first === second;\r\nos.toast(\"Equal: \" + areEqual + \", Close: \" + result); // Equal: false, Close: true\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -452,7 +452,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the arithmetic mean of the given list of values.\nThat is, the sum of the values divided by the number of values."
+                            "text": "Calculates the arithmetic mean of the given list of values.\r\nThat is, the sum of the values divided by the number of values."
                         }
                     ],
                     "blockTags": [
@@ -461,7 +461,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the average of a list of numbers.\nconst average = math.avg([4, 54.2, 31]);\n```"
+                                    "text": "```ts\nCalculate the average of a list of numbers.\r\nconst average = math.avg([4, 54.2, 31]);\n```"
                                 }
                             ]
                         },
@@ -470,7 +470,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the average #age of all the bots.\nconst averageAge = math.avg(getBotTagValues('#age'));\n```"
+                                    "text": "```ts\nCalculate the average #age of all the bots.\r\nconst averageAge = math.avg(getBotTagValues('#age'));\n```"
                                 }
                             ]
                         },
@@ -499,7 +499,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11584,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11584"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11584"
                     }
                 ],
                 "parameters": [
@@ -513,7 +513,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "The value that should be averaged.\n            If it is a list, then the result will be sum(list)/list.length.\n            If it is not a list, then the result will be the value converted to a number."
+                                    "text": "The value that should be averaged.\r\n            If it is a list, then the result will be sum(list)/list.length.\r\n            If it is not a list, then the result will be the value converted to a number."
                                 }
                             ],
                             "blockTags": []
@@ -530,15 +530,15 @@
                 }
             },
             "comment": {
-                "text": "Calculates the arithmetic mean of the given list of values.\nThat is, the sum of the values divided by the number of values.",
+                "text": "Calculates the arithmetic mean of the given list of values.\r\nThat is, the sum of the values divided by the number of values.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the average of a list of numbers.\nconst average = math.avg([4, 54.2, 31]);\n```"
+                        "text": "```ts\nCalculate the average of a list of numbers.\r\nconst average = math.avg([4, 54.2, 31]);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the average #age of all the bots.\nconst averageAge = math.avg(getBotTagValues('#age'));\n```"
+                        "text": "```ts\nCalculate the average #age of all the bots.\r\nconst averageAge = math.avg(getBotTagValues('#age'));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -566,7 +566,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.\n\nThis operation is equivalent to "
+                            "text": "Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.\r\n\r\nThis operation is equivalent to "
                         },
                         {
                             "kind": "code",
@@ -583,7 +583,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the number of radians for a 90 degree angle\nconst radians = math.degreesToRadians(90);\n```"
+                                    "text": "```ts\nGet the number of radians for a 90 degree angle\r\nconst radians = math.degreesToRadians(90);\n```"
                                 }
                             ]
                         },
@@ -612,7 +612,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11804,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11804"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11804"
                     }
                 ],
                 "parameters": [
@@ -643,11 +643,11 @@
                 }
             },
             "comment": {
-                "text": "Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.\n\nThis operation is equivalent to `radians = degrees * (Math.PI / 180)`.",
+                "text": "Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.\r\n\r\nThis operation is equivalent to `radians = degrees * (Math.PI / 180)`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the number of radians for a 90 degree angle\nconst radians = math.degreesToRadians(90);\n```"
+                        "text": "```ts\nGet the number of radians for a 90 degree angle\r\nconst radians = math.degreesToRadians(90);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -675,7 +675,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the 3D position offset for the given anchor point and returns it.\nThis is essentially "
+                            "text": "Calculates the 3D position offset for the given anchor point and returns it.\r\nThis is essentially "
                         },
                         {
                             "kind": "text",
@@ -692,7 +692,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the anchor point offset for \"bottom\".\nconst offset = math.getAnchorPointOffset(\"bottom\");\nos.toast(offset);\n```"
+                                    "text": "```ts\nCalculate the anchor point offset for \"bottom\".\r\nconst offset = math.getAnchorPointOffset(\"bottom\");\r\nos.toast(offset);\n```"
                                 }
                             ]
                         },
@@ -721,7 +721,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11943,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11943"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11943"
                     }
                 ],
                 "parameters": [
@@ -768,11 +768,11 @@
                 }
             },
             "comment": {
-                "text": "Calculates the 3D position offset for the given anchor point and returns it.\nThis is essentially experiment.getAnchorPointPosition but without the bot's position/scale applied.",
+                "text": "Calculates the 3D position offset for the given anchor point and returns it.\r\nThis is essentially experiment.getAnchorPointPosition but without the bot's position/scale applied.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the anchor point offset for \"bottom\".\nconst offset = math.getAnchorPointOffset(\"bottom\");\nos.toast(offset);\n```"
+                        "text": "```ts\nCalculate the anchor point offset for \"bottom\".\r\nconst offset = math.getAnchorPointOffset(\"bottom\");\r\nos.toast(offset);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -800,7 +800,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Gets the forward direction for the given rotation.\n\nUseful for finding where a bot would be pointing if it has a custom rotation."
+                            "text": "Gets the forward direction for the given rotation.\r\n\r\nUseful for finding where a bot would be pointing if it has a custom rotation."
                         }
                     ],
                     "blockTags": [
@@ -809,7 +809,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the direction that a pointer is pointing.\nconst pointerRotation = os.getPointerRotation('mouse');\nconst pointerDirection = math.getForwardDirection(pointerRotation);\nos.toast(pointerDirection);\n```"
+                                    "text": "```ts\nGet the direction that a pointer is pointing.\r\nconst pointerRotation = os.getPointerRotation('mouse');\r\nconst pointerDirection = math.getForwardDirection(pointerRotation);\r\nos.toast(pointerDirection);\n```"
                                 }
                             ]
                         },
@@ -838,7 +838,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11840,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11840"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11840"
                     }
                 ],
                 "parameters": [
@@ -890,7 +890,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 11846,
                                                         "character": 18,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11846"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11846"
                                                     }
                                                 ],
                                                 "type": {
@@ -909,7 +909,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 11843,
                                                         "character": 18,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11843"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11843"
                                                     }
                                                 ],
                                                 "type": {
@@ -928,7 +928,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 11844,
                                                         "character": 18,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11844"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11844"
                                                     }
                                                 ],
                                                 "type": {
@@ -947,7 +947,7 @@
                                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                         "line": 11845,
                                                         "character": 18,
-                                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11845"
+                                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11845"
                                                     }
                                                 ],
                                                 "type": {
@@ -972,7 +972,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11842,
                                                 "character": 14,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11842"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11842"
                                             }
                                         ]
                                     }
@@ -991,11 +991,11 @@
                 }
             },
             "comment": {
-                "text": "Gets the forward direction for the given rotation.\n\nUseful for finding where a bot would be pointing if it has a custom rotation.",
+                "text": "Gets the forward direction for the given rotation.\r\n\r\nUseful for finding where a bot would be pointing if it has a custom rotation.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the direction that a pointer is pointing.\nconst pointerRotation = os.getPointerRotation('mouse');\nconst pointerDirection = math.getForwardDirection(pointerRotation);\nos.toast(pointerDirection);\n```"
+                        "text": "```ts\nGet the direction that a pointer is pointing.\r\nconst pointerRotation = os.getPointerRotation('mouse');\r\nconst pointerDirection = math.getForwardDirection(pointerRotation);\r\nos.toast(pointerDirection);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1023,7 +1023,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Creates a new random number generator from the given seed and returns it.\nBecause of how random number generators work, generators created with the same seed will return the same sequence of random numbers."
+                            "text": "Creates a new random number generator from the given seed and returns it.\r\nBecause of how random number generators work, generators created with the same seed will return the same sequence of random numbers."
                         }
                     ],
                     "blockTags": [
@@ -1032,7 +1032,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate two random number generators with the same seed.\nlet random1 = math.getSeededRandomNumberGenerator(123);\nlet random2 = math.getSeededRandomNumberGenerator(123);\n\nos.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');\n```"
+                                    "text": "```ts\nCreate two random number generators with the same seed.\r\nlet random1 = math.getSeededRandomNumberGenerator(123);\r\nlet random2 = math.getSeededRandomNumberGenerator(123);\r\n\r\nos.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');\n```"
                                 }
                             ]
                         },
@@ -1041,7 +1041,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCreate a random number generator and store it for later\nlet randomNumberGenerator = math.getSeededRandomNumberGenerator(123);\n\n// Store it in the bot variables so it can be used in other scripts.\nbot.vars.randomNumberGenerator = randomNumberGenerator;\n```"
+                                    "text": "```ts\nCreate a random number generator and store it for later\r\nlet randomNumberGenerator = math.getSeededRandomNumberGenerator(123);\r\n\r\n// Store it in the bot variables so it can be used in other scripts.\r\nbot.vars.randomNumberGenerator = randomNumberGenerator;\n```"
                                 }
                             ]
                         },
@@ -1070,7 +1070,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11670,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11670"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11670"
                     }
                 ],
                 "parameters": [
@@ -1086,7 +1086,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the number or string that should be used as the seed value for the random number generator.\nIf omitted, then a seed will be chosen in a somewhat unpredictable manner."
+                                    "text": "the number or string that should be used as the seed value for the random number generator.\r\nIf omitted, then a seed will be chosen in a somewhat unpredictable manner."
                                 }
                             ],
                             "blockTags": []
@@ -1116,15 +1116,15 @@
                 }
             },
             "comment": {
-                "text": "Creates a new random number generator from the given seed and returns it.\nBecause of how random number generators work, generators created with the same seed will return the same sequence of random numbers.",
+                "text": "Creates a new random number generator from the given seed and returns it.\r\nBecause of how random number generators work, generators created with the same seed will return the same sequence of random numbers.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate two random number generators with the same seed.\nlet random1 = math.getSeededRandomNumberGenerator(123);\nlet random2 = math.getSeededRandomNumberGenerator(123);\n\nos.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');\n```"
+                        "text": "```ts\nCreate two random number generators with the same seed.\r\nlet random1 = math.getSeededRandomNumberGenerator(123);\r\nlet random2 = math.getSeededRandomNumberGenerator(123);\r\n\r\nos.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCreate a random number generator and store it for later\nlet randomNumberGenerator = math.getSeededRandomNumberGenerator(123);\n\n// Store it in the bot variables so it can be used in other scripts.\nbot.vars.randomNumberGenerator = randomNumberGenerator;\n```"
+                        "text": "```ts\nCreate a random number generator and store it for later\r\nlet randomNumberGenerator = math.getSeededRandomNumberGenerator(123);\r\n\r\n// Store it in the bot variables so it can be used in other scripts.\r\nbot.vars.randomNumberGenerator = randomNumberGenerator;\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1152,7 +1152,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.\nReturns null if the ray does not intersect the ground plane.\n\nUseful for calculating where on the ground something is pointing."
+                            "text": "Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.\r\nReturns null if the ray does not intersect the ground plane.\r\n\r\nUseful for calculating where on the ground something is pointing."
                         }
                     ],
                     "blockTags": [
@@ -1161,7 +1161,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the spot on the ground that a pointer is pointing at.\nconst pointerPosition = os.getPointerPosition('mouse');\nconst pointerRotation = os.getPointerRotation('mouse');\nconst pointerDirection = math.getForwardDirection(pointerRotation);\nconst groundPoint = math.intersectPlane(pointerPosition, pointerDirection);\nos.toast(groundPoint);\n```"
+                                    "text": "```ts\nGet the spot on the ground that a pointer is pointing at.\r\nconst pointerPosition = os.getPointerPosition('mouse');\r\nconst pointerRotation = os.getPointerRotation('mouse');\r\nconst pointerDirection = math.getForwardDirection(pointerRotation);\r\nconst groundPoint = math.intersectPlane(pointerPosition, pointerDirection);\r\nos.toast(groundPoint);\n```"
                                 }
                             ]
                         },
@@ -1190,7 +1190,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11897,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11897"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11897"
                     }
                 ],
                 "parameters": [
@@ -1229,7 +1229,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11898,
                                                 "character": 18,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11898"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11898"
                                             }
                                         ],
                                         "type": {
@@ -1248,7 +1248,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11898,
                                                 "character": 29,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11898"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11898"
                                             }
                                         ],
                                         "type": {
@@ -1267,7 +1267,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11898,
                                                 "character": 40,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11898"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11898"
                                             }
                                         ],
                                         "type": {
@@ -1291,7 +1291,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 11898,
                                         "character": 16,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11898"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11898"
                                     }
                                 ]
                             }
@@ -1332,7 +1332,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11899,
                                                 "character": 21,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11899"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11899"
                                             }
                                         ],
                                         "type": {
@@ -1351,7 +1351,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11899,
                                                 "character": 32,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11899"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11899"
                                             }
                                         ],
                                         "type": {
@@ -1370,7 +1370,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11899,
                                                 "character": 43,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11899"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11899"
                                             }
                                         ],
                                         "type": {
@@ -1394,7 +1394,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 11899,
                                         "character": 19,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11899"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11899"
                                     }
                                 ]
                             }
@@ -1412,7 +1412,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the normal vector that the plane should use.\nFor 2D planes, the normal vector is the 3D direction that is perpendicular to the the surface of the plane.\nFor example, a plane that covers the entire XY surface has a normal vector equal to "
+                                    "text": "the normal vector that the plane should use.\r\nFor 2D planes, the normal vector is the 3D direction that is perpendicular to the the surface of the plane.\r\nFor example, a plane that covers the entire XY surface has a normal vector equal to "
                                 },
                                 {
                                     "kind": "code",
@@ -1428,7 +1428,7 @@
                                 },
                                 {
                                     "kind": "text",
-                                    "text": ".\nThis parameter defaults to "
+                                    "text": ".\r\nThis parameter defaults to "
                                 },
                                 {
                                     "kind": "code",
@@ -1461,7 +1461,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11900,
                                                 "character": 24,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11900"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11900"
                                             }
                                         ],
                                         "type": {
@@ -1480,7 +1480,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11900,
                                                 "character": 35,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11900"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11900"
                                             }
                                         ],
                                         "type": {
@@ -1499,7 +1499,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11900,
                                                 "character": 46,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11900"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11900"
                                             }
                                         ],
                                         "type": {
@@ -1523,7 +1523,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 11900,
                                         "character": 22,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11900"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11900"
                                     }
                                 ]
                             }
@@ -1574,7 +1574,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11901,
                                                 "character": 24,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11901"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11901"
                                             }
                                         ],
                                         "type": {
@@ -1593,7 +1593,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11901,
                                                 "character": 35,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11901"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11901"
                                             }
                                         ],
                                         "type": {
@@ -1612,7 +1612,7 @@
                                                 "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                                 "line": 11901,
                                                 "character": 46,
-                                                "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11901"
+                                                "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11901"
                                             }
                                         ],
                                         "type": {
@@ -1636,7 +1636,7 @@
                                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                                         "line": 11901,
                                         "character": 22,
-                                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11901"
+                                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11901"
                                     }
                                 ]
                             }
@@ -1653,11 +1653,11 @@
                 }
             },
             "comment": {
-                "text": "Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.\nReturns null if the ray does not intersect the ground plane.\n\nUseful for calculating where on the ground something is pointing.",
+                "text": "Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.\r\nReturns null if the ray does not intersect the ground plane.\r\n\r\nUseful for calculating where on the ground something is pointing.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the spot on the ground that a pointer is pointing at.\nconst pointerPosition = os.getPointerPosition('mouse');\nconst pointerRotation = os.getPointerRotation('mouse');\nconst pointerDirection = math.getForwardDirection(pointerRotation);\nconst groundPoint = math.intersectPlane(pointerPosition, pointerDirection);\nos.toast(groundPoint);\n```"
+                        "text": "```ts\nGet the spot on the ground that a pointer is pointing at.\r\nconst pointerPosition = os.getPointerPosition('mouse');\r\nconst pointerRotation = os.getPointerRotation('mouse');\r\nconst pointerDirection = math.getForwardDirection(pointerRotation);\r\nconst groundPoint = math.intersectPlane(pointerPosition, pointerDirection);\r\nos.toast(groundPoint);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1685,7 +1685,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Mathematically negates the given vector and returns the result.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector "
+                            "text": "Mathematically negates the given vector and returns the result.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector "
                         },
                         {
                             "kind": "code",
@@ -1734,7 +1734,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nNegate a 3D point.\nconst result = math.negateVector(\n    { x: 5, y: 6, z: 7 }\n);\n\nos.toast(result); // { x: -5, y: -6, z: -7 }\n```"
+                                    "text": "```ts\nNegate a 3D point.\r\nconst result = math.negateVector(\r\n    { x: 5, y: 6, z: 7 }\r\n);\r\n\r\nos.toast(result); // { x: -5, y: -6, z: -7 }\n```"
                                 }
                             ]
                         },
@@ -1763,7 +1763,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12100,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12100"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12100"
                     }
                 ],
                 "typeParameter": [
@@ -1807,11 +1807,11 @@
                 }
             },
             "comment": {
-                "text": "Mathematically negates the given vector and returns the result.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
+                "text": "Mathematically negates the given vector and returns the result.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nNegate a 3D point.\nconst result = math.negateVector(\n    { x: 5, y: 6, z: 7 }\n);\n\nos.toast(result); // { x: -5, y: -6, z: -7 }\n```"
+                        "text": "```ts\nNegate a 3D point.\r\nconst result = math.negateVector(\r\n    { x: 5, y: 6, z: 7 }\r\n);\r\n\r\nos.toast(result); // { x: -5, y: -6, z: -7 }\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -1839,7 +1839,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Normalizes the given vector. The result is a vector that has the same direction as the given vector but has a length/magnitude of 1.\n\nMathemematically, this is the same as finding the "
+                            "text": "Normalizes the given vector. The result is a vector that has the same direction as the given vector but has a length/magnitude of 1.\r\n\r\nMathemematically, this is the same as finding the "
                         },
                         {
                             "kind": "text",
@@ -1847,7 +1847,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": " and dividing each component in the vector by it.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector "
+                            "text": " and dividing each component in the vector by it.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector "
                         },
                         {
                             "kind": "code",
@@ -1896,7 +1896,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nNormalize a 3D point.\nconst result = math.normalizeVector(\n    { x: 1, y: 2, z: 3 }\n);\n\nos.toast(result);\n// x: 0.2672612419124244\n// y: 0.5345224838248488\n// z: 0.8017837257372732\n```"
+                                    "text": "```ts\nNormalize a 3D point.\r\nconst result = math.normalizeVector(\r\n    { x: 1, y: 2, z: 3 }\r\n);\r\n\r\nos.toast(result);\r\n// x: 0.2672612419124244\r\n// y: 0.5345224838248488\r\n// z: 0.8017837257372732\n```"
                                 }
                             ]
                         },
@@ -1925,7 +1925,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12142,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12142"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12142"
                     }
                 ],
                 "typeParameter": [
@@ -1969,11 +1969,11 @@
                 }
             },
             "comment": {
-                "text": "Normalizes the given vector. The result is a vector that has the same direction as the given vector but has a length/magnitude of 1.\n\nMathemematically, this is the same as finding the math.vectorLength and dividing each component in the vector by it.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
+                "text": "Normalizes the given vector. The result is a vector that has the same direction as the given vector but has a length/magnitude of 1.\r\n\r\nMathemematically, this is the same as finding the math.vectorLength and dividing each component in the vector by it.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nNormalize a 3D point.\nconst result = math.normalizeVector(\n    { x: 1, y: 2, z: 3 }\n);\n\nos.toast(result);\n// x: 0.2672612419124244\n// y: 0.5345224838248488\n// z: 0.8017837257372732\n```"
+                        "text": "```ts\nNormalize a 3D point.\r\nconst result = math.normalizeVector(\r\n    { x: 1, y: 2, z: 3 }\r\n);\r\n\r\nos.toast(result);\r\n// x: 0.2672612419124244\r\n// y: 0.5345224838248488\r\n// z: 0.8017837257372732\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2001,7 +2001,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.\n\nThis operation is equivalent to "
+                            "text": "Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.\r\n\r\nThis operation is equivalent to "
                         },
                         {
                             "kind": "code",
@@ -2018,7 +2018,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGet the number of degrees for a Math.PI / 2 angle\nconst degrees = math.radiansToDegrees(Math.PI / 2);\n```"
+                                    "text": "```ts\nGet the number of degrees for a Math.PI / 2 angle\r\nconst degrees = math.radiansToDegrees(Math.PI / 2);\n```"
                                 }
                             ]
                         },
@@ -2047,7 +2047,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11821,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11821"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11821"
                     }
                 ],
                 "parameters": [
@@ -2078,11 +2078,11 @@
                 }
             },
             "comment": {
-                "text": "Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.\n\nThis operation is equivalent to `degrees = radians * (180 / Math.PI)`.",
+                "text": "Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.\r\n\r\nThis operation is equivalent to `degrees = radians * (180 / Math.PI)`.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGet the number of degrees for a Math.PI / 2 angle\nconst degrees = math.radiansToDegrees(Math.PI / 2);\n```"
+                        "text": "```ts\nGet the number of degrees for a Math.PI / 2 angle\r\nconst degrees = math.radiansToDegrees(Math.PI / 2);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2119,7 +2119,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a random number between 0 and Math.PI.\nconst number = math.random(0, Math.PI);\n```"
+                                    "text": "```ts\nGenerate a random number between 0 and Math.PI.\r\nconst number = math.random(0, Math.PI);\n```"
                                 }
                             ]
                         },
@@ -2148,7 +2148,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11752,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11752"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11752"
                     }
                 ],
                 "parameters": [
@@ -2206,7 +2206,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a random number between 0 and Math.PI.\nconst number = math.random(0, Math.PI);\n```"
+                        "text": "```ts\nGenerate a random number between 0 and Math.PI.\r\nconst number = math.random(0, Math.PI);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2243,7 +2243,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nGenerate a random number between 5 and 10.\nconst number = math.randomInt(5, 10);\n```"
+                                    "text": "```ts\nGenerate a random number between 5 and 10.\r\nconst number = math.randomInt(5, 10);\n```"
                                 }
                             ]
                         },
@@ -2272,7 +2272,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11736,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11736"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11736"
                     }
                 ],
                 "parameters": [
@@ -2330,7 +2330,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nGenerate a random number between 5 and 10.\nconst number = math.randomInt(5, 10);\n```"
+                        "text": "```ts\nGenerate a random number between 5 and 10.\r\nconst number = math.randomInt(5, 10);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2358,7 +2358,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Multiplies each property of the given vector by the given scale and returns the result.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector "
+                            "text": "Multiplies each property of the given vector by the given scale and returns the result.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector "
                         },
                         {
                             "kind": "code",
@@ -2407,7 +2407,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nScale a 3D point by 5.\nconst result = math.scaleVector(\n    { x: 5, y: 6, z: 7 },\n    5\n);\n\nos.toast(result); // { x: 25, y: 30, z: 35 }\n```"
+                                    "text": "```ts\nScale a 3D point by 5.\r\nconst result = math.scaleVector(\r\n    { x: 5, y: 6, z: 7 },\r\n    5\r\n);\r\n\r\nos.toast(result); // { x: 25, y: 30, z: 35 }\n```"
                                 }
                             ]
                         },
@@ -2436,7 +2436,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12222,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12222"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12222"
                     }
                 ],
                 "typeParameter": [
@@ -2500,11 +2500,11 @@
                 }
             },
             "comment": {
-                "text": "Multiplies each property of the given vector by the given scale and returns the result.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
+                "text": "Multiplies each property of the given vector by the given scale and returns the result.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nScale a 3D point by 5.\nconst result = math.scaleVector(\n    { x: 5, y: 6, z: 7 },\n    5\n);\n\nos.toast(result); // { x: 25, y: 30, z: 35 }\n```"
+                        "text": "```ts\nScale a 3D point by 5.\r\nconst result = math.scaleVector(\r\n    { x: 5, y: 6, z: 7 },\r\n    5\r\n);\r\n\r\nos.toast(result); // { x: 25, y: 30, z: 35 }\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2557,7 +2557,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSet the random seed for math.random() and math.randomInt().\nmath.setRandomSeed(123);\n\nexpect(math.randomInt(0, 10)).toBe(9);\nexpect(math.random()).toBe(0.36078753814001446);\n```"
+                                    "text": "```ts\nSet the random seed for math.random() and math.randomInt().\r\nmath.setRandomSeed(123);\r\n\r\nexpect(math.randomInt(0, 10)).toBe(9);\r\nexpect(math.random()).toBe(0.36078753814001446);\n```"
                                 }
                             ]
                         },
@@ -2566,7 +2566,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nClear the random seed.\nmath.setRandomSeed(null);\n```"
+                                    "text": "```ts\nClear the random seed.\r\nmath.setRandomSeed(null);\n```"
                                 }
                             ]
                         },
@@ -2595,7 +2595,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11713,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11713"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11713"
                     }
                 ],
                 "parameters": [
@@ -2609,7 +2609,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the number or string that should be used as the seed value for the internal random number generator.\nIf null is provided, then a seed will be chosen in a somewhat unpredictable manner."
+                                    "text": "the number or string that should be used as the seed value for the internal random number generator.\r\nIf null is provided, then a seed will be chosen in a somewhat unpredictable manner."
                                 }
                             ],
                             "blockTags": []
@@ -2639,11 +2639,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSet the random seed for math.random() and math.randomInt().\nmath.setRandomSeed(123);\n\nexpect(math.randomInt(0, 10)).toBe(9);\nexpect(math.random()).toBe(0.36078753814001446);\n```"
+                        "text": "```ts\nSet the random seed for math.random() and math.randomInt().\r\nmath.setRandomSeed(123);\r\n\r\nexpect(math.randomInt(0, 10)).toBe(9);\r\nexpect(math.random()).toBe(0.36078753814001446);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nClear the random seed.\nmath.setRandomSeed(null);\n```"
+                        "text": "```ts\nClear the random seed.\r\nmath.setRandomSeed(null);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2680,7 +2680,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the square root of 4.\nconst rootOf4 = math.sqrt(4);\n```"
+                                    "text": "```ts\nCalculate the square root of 4.\r\nconst rootOf4 = math.sqrt(4);\n```"
                                 }
                             ]
                         },
@@ -2709,7 +2709,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11604,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11604"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11604"
                     }
                 ],
                 "parameters": [
@@ -2744,7 +2744,7 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the square root of 4.\nconst rootOf4 = math.sqrt(4);\n```"
+                        "text": "```ts\nCalculate the square root of 4.\r\nconst rootOf4 = math.sqrt(4);\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2781,7 +2781,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the standard deviation of a list of numbers.\nconst standardDeviation = math.stdDev([2, 97, 745]);\n```"
+                                    "text": "```ts\nCalculate the standard deviation of a list of numbers.\r\nconst standardDeviation = math.stdDev([2, 97, 745]);\n```"
                                 }
                             ]
                         },
@@ -2790,7 +2790,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the standard deviation of the #age of all the bots.\nconst ageDeviation = math.stdDev(getBotTagValues('#age'));\n```"
+                                    "text": "```ts\nCalculate the standard deviation of the #age of all the bots.\r\nconst ageDeviation = math.stdDev(getBotTagValues('#age'));\n```"
                                 }
                             ]
                         },
@@ -2819,7 +2819,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11636,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11636"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11636"
                     }
                 ],
                 "parameters": [
@@ -2854,11 +2854,11 @@
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the standard deviation of a list of numbers.\nconst standardDeviation = math.stdDev([2, 97, 745]);\n```"
+                        "text": "```ts\nCalculate the standard deviation of a list of numbers.\r\nconst standardDeviation = math.stdDev([2, 97, 745]);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the standard deviation of the #age of all the bots.\nconst ageDeviation = math.stdDev(getBotTagValues('#age'));\n```"
+                        "text": "```ts\nCalculate the standard deviation of the #age of all the bots.\r\nconst ageDeviation = math.stdDev(getBotTagValues('#age'));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -2886,7 +2886,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Mathematically subtracts the given vectors from each other and returns the result.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector "
+                            "text": "Mathematically subtracts the given vectors from each other and returns the result.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector "
                         },
                         {
                             "kind": "code",
@@ -2935,7 +2935,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nSubtract two 3D points from each other.\nconst result = math.addVectors(\n    { x: 5, y: 6, z: 7 },\n    { x: 1, y: 2, z: 3 },\n);\n\nos.toast(result); // { x: 4, y: 4, z: 4 }\n```"
+                                    "text": "```ts\nSubtract two 3D points from each other.\r\nconst result = math.addVectors(\r\n    { x: 5, y: 6, z: 7 },\r\n    { x: 1, y: 2, z: 3 },\r\n);\r\n\r\nos.toast(result); // { x: 4, y: 4, z: 4 }\n```"
                                 }
                             ]
                         },
@@ -2964,7 +2964,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12039,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12039"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12039"
                     }
                 ],
                 "typeParameter": [
@@ -3013,11 +3013,11 @@
                 }
             },
             "comment": {
-                "text": "Mathematically subtracts the given vectors from each other and returns the result.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
+                "text": "Mathematically subtracts the given vectors from each other and returns the result.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nSubtract two 3D points from each other.\nconst result = math.addVectors(\n    { x: 5, y: 6, z: 7 },\n    { x: 1, y: 2, z: 3 },\n);\n\nos.toast(result); // { x: 4, y: 4, z: 4 }\n```"
+                        "text": "```ts\nSubtract two 3D points from each other.\r\nconst result = math.addVectors(\r\n    { x: 5, y: 6, z: 7 },\r\n    { x: 1, y: 2, z: 3 },\r\n);\r\n\r\nos.toast(result); // { x: 4, y: 4, z: 4 }\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3045,7 +3045,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the numerical sum of the given values.\n\nIf any value in the list is not a number, it will be converted to one.\nIf the given value is not an array, then it will be converted to a number and returned."
+                            "text": "Calculates the numerical sum of the given values.\r\n\r\nIf any value in the list is not a number, it will be converted to one.\r\nIf the given value is not an array, then it will be converted to a number and returned."
                         }
                     ],
                     "blockTags": [
@@ -3054,7 +3054,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the sum of a list of numbers.\nconst total = math.sum([92, 123, 21]);\n```"
+                                    "text": "```ts\nCalculate the sum of a list of numbers.\r\nconst total = math.sum([92, 123, 21]);\n```"
                                 }
                             ]
                         },
@@ -3063,7 +3063,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the total #age of all the bots.\nconst totalAge = math.sum(getBotTagValues('#age'));\n```"
+                                    "text": "```ts\nCalculate the total #age of all the bots.\r\nconst totalAge = math.sum(getBotTagValues('#age'));\n```"
                                 }
                             ]
                         },
@@ -3119,7 +3119,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 11550,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L11550"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L11550"
                     }
                 ],
                 "parameters": [
@@ -3133,7 +3133,7 @@
                             "summary": [
                                 {
                                     "kind": "text",
-                                    "text": "the list of values that should be summed up. If any value in the list is not a number, it will be converted to one.\nIf the list is not actually a list, then it will be converted to a number and returned."
+                                    "text": "the list of values that should be summed up. If any value in the list is not a number, it will be converted to one.\r\nIf the list is not actually a list, then it will be converted to a number and returned."
                                 }
                             ],
                             "blockTags": []
@@ -3150,15 +3150,15 @@
                 }
             },
             "comment": {
-                "text": "Calculates the numerical sum of the given values.\n\nIf any value in the list is not a number, it will be converted to one.\nIf the given value is not an array, then it will be converted to a number and returned.",
+                "text": "Calculates the numerical sum of the given values.\r\n\r\nIf any value in the list is not a number, it will be converted to one.\r\nIf the given value is not an array, then it will be converted to a number and returned.",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the sum of a list of numbers.\nconst total = math.sum([92, 123, 21]);\n```"
+                        "text": "```ts\nCalculate the sum of a list of numbers.\r\nconst total = math.sum([92, 123, 21]);\n```"
                     },
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the total #age of all the bots.\nconst totalAge = math.sum(getBotTagValues('#age'));\n```"
+                        "text": "```ts\nCalculate the total #age of all the bots.\r\nconst totalAge = math.sum(getBotTagValues('#age'));\n```"
                     },
                     {
                         "tagName": "dochash",
@@ -3198,7 +3198,7 @@
                     "summary": [
                         {
                             "kind": "text",
-                            "text": "Calculates the length (i.e. magnitude) of the given vector.\n\nMathemematically, this is equivalent to "
+                            "text": "Calculates the length (i.e. magnitude) of the given vector.\r\n\r\nMathemematically, this is equivalent to "
                         },
                         {
                             "kind": "code",
@@ -3206,7 +3206,7 @@
                         },
                         {
                             "kind": "text",
-                            "text": ". As a consequence, vectors that are normalized always have a length of 1.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector "
+                            "text": ". As a consequence, vectors that are normalized always have a length of 1.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector "
                         },
                         {
                             "kind": "code",
@@ -3255,7 +3255,7 @@
                             "content": [
                                 {
                                     "kind": "code",
-                                    "text": "```ts\nCalculate the length of a 3D point\nconst result = math.vectorLength(\n    { x: 1, y: 2, z: 3 }\n);\n\nos.toast(result); // 3.7416573867739413\n```"
+                                    "text": "```ts\nCalculate the length of a 3D point\r\nconst result = math.vectorLength(\r\n    { x: 1, y: 2, z: 3 }\r\n);\r\n\r\nos.toast(result); // 3.7416573867739413\n```"
                                 }
                             ]
                         },
@@ -3284,7 +3284,7 @@
                         "fileName": "src/aux-runtime/runtime/AuxLibrary.ts",
                         "line": 12187,
                         "character": 13,
-                        "url": "https://github.com/KallynGowdy/casualos/blob/b90532ee4/src/aux-runtime/runtime/AuxLibrary.ts#L12187"
+                        "url": "https://github.com/casual-simulation/casualos/blob/97a47831f/src/aux-runtime/runtime/AuxLibrary.ts#L12187"
                     }
                 ],
                 "typeParameter": [
@@ -3326,11 +3326,11 @@
                 }
             },
             "comment": {
-                "text": "Calculates the length (i.e. magnitude) of the given vector.\n\nMathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`. As a consequence, vectors that are normalized always have a length of 1.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
+                "text": "Calculates the length (i.e. magnitude) of the given vector.\r\n\r\nMathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`. As a consequence, vectors that are normalized always have a length of 1.\r\n\r\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\r\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).",
                 "tags": [
                     {
                         "tagName": "example",
-                        "text": "```ts\nCalculate the length of a 3D point\nconst result = math.vectorLength(\n    { x: 1, y: 2, z: 3 }\n);\n\nos.toast(result); // 3.7416573867739413\n```"
+                        "text": "```ts\nCalculate the length of a 3D point\r\nconst result = math.vectorLength(\r\n    { x: 1, y: 2, z: 3 }\r\n);\r\n\r\nos.toast(result); // 3.7416573867739413\n```"
                     },
                     {
                         "tagName": "dochash",

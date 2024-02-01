@@ -255,11 +255,11 @@ export class BotShapeDecorator
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
             const scale = calculateScale(calc, this.bot3D.bot, gridScale);
-            if (scale.x > scale.z) {
-                const widthToHeightRatio = scale.z / scale.x;
+            if (scale.x > scale.y) {
+                const widthToHeightRatio = scale.y / scale.x;
                 this._iframe.setPlaneSize(1, widthToHeightRatio);
             } else {
-                const heightToWidthRatio = scale.x / scale.z;
+                const heightToWidthRatio = scale.x / scale.y;
                 this._iframe.setPlaneSize(heightToWidthRatio, 1);
             }
 

@@ -50,3 +50,5 @@ export * from './NotificationMessenger';
 
 export * from './websockets';
 export * from './forms';
+
+export * from './ComIdConfig';
