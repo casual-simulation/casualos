@@ -84,6 +84,13 @@ describe('getFormErrors()', () => {
                     expected: 'string',
                     received: 'array',
                 },
+                {
+                    path: ['subObject.displayName'],
+                    message: 'displayName is required',
+                    code: 'invalid_type',
+                    expected: 'string',
+                    received: 'array',
+                },
             ],
         });
 
@@ -95,6 +102,11 @@ describe('getFormErrors()', () => {
             },
             {
                 for: 'displayName',
+                errorCode: 'invalid_type',
+                errorMessage: 'displayName is required',
+            },
+            {
+                for: 'subObject.displayName',
                 errorCode: 'invalid_type',
                 errorMessage: 'displayName is required',
             },

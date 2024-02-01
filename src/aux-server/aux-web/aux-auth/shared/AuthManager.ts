@@ -27,6 +27,11 @@ import type {
     CreateRecordResult,
     ListInstsResult,
     EraseInstResult,
+    GetStudioResult,
+    UpdateStudioRequest,
+    UpdateStudioResult,
+    ComIdRequestResult,
+    GetPlayerConfigResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -464,6 +469,33 @@ export class AuthManager {
         return null;
     }
 
+    async getStudio(studioId: string): Promise<GetStudioResult> {
+        const url = new URL(
+            `${this.apiEndpoint}/api/v2/studios?studioId=${encodeURIComponent(
+                studioId
+            )}`
+        );
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+        });
+
+        return response.data as GetStudioResult;
+    }
+
+    async updateStudio(
+        studio: UpdateStudioRequest['studio']
+    ): Promise<UpdateStudioResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios`);
+
+        const response = await axios.put(url.href, studio, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => true,
+        });
+
+        return response.data as UpdateStudioResult;
+    }
+
     async listStudioMembers(studioId: string): Promise<ListedStudioMember[]> {
         const url = new URL(
             `${
@@ -515,8 +547,33 @@ export class AuthManager {
         return result;
     }
 
-    async listStudios(): Promise<ListedStudio[]> {
+    async requestComId(
+        studioId: string,
+        newComId: string
+    ): Promise<ComIdRequestResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios/requestComId`);
+
+        const response = await axios.post(
+            url.href,
+            {
+                studioId,
+                comId: newComId,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => true,
+            }
+        );
+
+        return response.data as ComIdRequestResult;
+    }
+
+    async listStudios(comId?: string): Promise<ListedStudio[]> {
         const url = new URL(`${this.apiEndpoint}/api/v2/studios/list`);
+
+        if (comId) {
+            url.searchParams.set('comId', comId);
+        }
 
         const response = await axios.get(url.href, {
             headers: this._authenticationHeaders(),
@@ -531,13 +588,17 @@ export class AuthManager {
         return null;
     }
 
-    async createStudio(displayName: string): Promise<string> {
+    async createStudio(
+        displayName: string,
+        ownerStudioComId?: string
+    ): Promise<string> {
         const url = new URL(`${this.apiEndpoint}/api/v2/studios`);
 
         const response = await axios.post(
             url.href,
             {
                 displayName,
+                ownerStudioComId,
             },
             {
                 headers: this._authenticationHeaders(),
@@ -819,6 +880,26 @@ export class AuthManager {
                 result
             );
         }
+    }
+
+    getComIdFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('comId') || params.has('comID')) {
+            return params.get('comId') ?? params.get('comID');
+        } else {
+            return null;
+        }
+    }
+
+    async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/player/config`);
+        url.searchParams.set('comId', comId);
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+        });
+
+        const result = response.data as GetPlayerConfigResult;
+        return result;
     }
 
     private async _revokeSessionKey(sessionKey: string): Promise<void> {

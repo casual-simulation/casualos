@@ -156,6 +156,7 @@ export class PlayerGame extends Game {
     private miniMapScene: Scene;
     private _miniAmbientLight: AmbientLight;
     private _miniDirectionalLight: DirectionalLight;
+    private _miniHDRAddress: string;
 
     // /**
     //  * A scene that is used to allow the main scene to render
@@ -182,6 +183,7 @@ export class PlayerGame extends Game {
     private _startResizeClientPos: Vector2 = null;
     private _currentResizeClientPos: Vector2 = null;
     private _startMiniPortalHeight: number;
+    private _currentMiniHDRAddress: string;
 
     private get slider() {
         if (!this._slider) {
@@ -263,6 +265,13 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.playerSimulations,
             'defaultLighting'
+        );
+    }
+
+    getPortalHDRAddress() {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'portalHDRAddress'
         );
     }
 
@@ -435,6 +444,13 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.miniSimulations,
             'defaultLighting'
+        );
+    }
+
+    getMiniPortalHDRAddress() {
+        return this._getSimulationValue(
+            this.miniSimulations,
+            'portalHDRAddress'
         );
     }
 
@@ -1251,9 +1267,9 @@ export class PlayerGame extends Game {
         this.renderer.clearDepth(); // Clear depth buffer so that miniGridPortal scene always appears above the main scene.
         // }
         this.miniSceneBackgroundUpdate();
+        this.miniSceneHDRBackgroundUpdate();
 
         const defaultLighting = this.getMiniDefaultLighting();
-
         this._miniAmbientLight.visible = defaultLighting;
         this._miniDirectionalLight.visible = defaultLighting;
 
@@ -1361,6 +1377,20 @@ export class PlayerGame extends Game {
             let invColor: Color | Texture = currentColor.clone();
             invColor.offsetHSL(0, -0.02, -0.04);
             this.miniScene.background = invColor;
+        }
+    }
+
+    private miniSceneHDRBackgroundUpdate() {
+        const miniAddress = this.getMiniPortalHDRAddress();
+        if (this._currentMiniHDRAddress === miniAddress) {
+            return;
+        }
+        this._currentMiniHDRAddress = miniAddress;
+        //this._miniHDRAddress = address;
+        if (miniAddress) {
+            this.loadEXRTextureIntoScene(miniAddress, this.miniScene);
+        } else {
+            this.miniScene.environment = null;
         }
     }
 

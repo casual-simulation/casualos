@@ -1659,9 +1659,18 @@ export class RecordsManager {
                 return;
             }
 
+            const query: any = {};
+            if (this._config.comId) {
+                query['comId'] = this._config.comId;
+            }
+
             const result: AxiosResponse<ListUserStudiosAction> =
                 await axios.get(
-                    await this._publishUrl(info.auth, '/api/v2/studios/list'),
+                    await this._publishUrl(
+                        info.auth,
+                        '/api/v2/studios/list',
+                        query
+                    ),
                     {
                         ...this._axiosOptions,
                         headers: info.headers,

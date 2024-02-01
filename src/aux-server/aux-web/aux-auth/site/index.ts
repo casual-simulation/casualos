@@ -239,6 +239,22 @@ const router = new VueRouter({
     routes,
 });
 
+router.beforeEach((to, from, next) => {
+    const fromComId = from.query?.comId ?? from.query?.comID;
+    const toComId = to.query?.comId ?? to.query?.comID;
+    if (!toComId && fromComId) {
+        next({
+            ...to,
+            query: {
+                ...(to.query ?? {}),
+                comId: fromComId,
+            },
+        });
+    } else {
+        next();
+    }
+});
+
 const manager = authManager;
 let messagePort: MessagePort;
 

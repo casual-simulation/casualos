@@ -360,6 +360,10 @@ export class AuthController {
                 return true;
             }
         } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while validating address`,
+                err
+            );
             return false;
         }
     }

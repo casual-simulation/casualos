@@ -8,8 +8,10 @@ import {
     CreateRecordRequest,
     ListedStudio,
 } from '@casual-simulation/aux-records';
+import { distinctUntilChanged } from 'rxjs';
 
-document.title = location.hostname;
+const comId = authManager.getComIdFromUrl();
+document.title = comId ?? location.hostname;
 
 @Component({
     components: {
@@ -33,8 +35,15 @@ export default class AuthApp extends Vue {
     createRecordStudioId: string = null;
 
     allowCreateStudio: boolean = false;
+    logoUrl: string = null;
+    displayName: string = null;
+    comId: string = null;
 
     get title() {
+        return comId ?? location.hostname;
+    }
+
+    get hostname() {
         return location.hostname;
     }
 
@@ -73,15 +82,30 @@ export default class AuthApp extends Vue {
         this.recordName = '';
         this.userId = '';
         this.createRecordStudioId = null;
+        this.logoUrl = null;
+        this.displayName = null;
         this.allowCreateStudio = authManager.studiosSupported;
-        authManager.loginState.subscribe((state) => {
-            this.userId = authManager.userId;
-            this.showLogout = authManager.isLoggedIn();
+        authManager.loginState
+            .pipe(distinctUntilChanged())
+            .subscribe((state) => {
+                this.userId = authManager.userId;
+                this.showLogout = authManager.isLoggedIn();
 
-            if (authManager.isLoggedIn()) {
-                this.loadStudios();
-            }
-        });
+                if (state) {
+                    this.loadStudios();
+                }
+            });
+
+        this.comId = authManager.getComIdFromUrl();
+        if (this.comId) {
+            authManager.getComIdWebConfig(this.comId).then((config) => {
+                if (config.success === true) {
+                    this.logoUrl = config.logoUrl;
+                    this.displayName = config.displayName ?? this.comId;
+                    document.title = this.displayName;
+                }
+            });
+        }
     }
 
     startCreateStudio() {
@@ -97,7 +121,8 @@ export default class AuthApp extends Vue {
 
     async createStudio() {
         this.showCreateStudio = false;
-        const studioId = await authManager.createStudio(this.studioName);
+        const comId = authManager.getComIdFromUrl();
+        const studioId = await authManager.createStudio(this.studioName, comId);
         await this.loadStudios();
     }
 
@@ -151,7 +176,8 @@ export default class AuthApp extends Vue {
         console.log('[AuthApp] Loading studios...');
         this.loadingStudios = true;
         try {
-            const studios = (await authManager.listStudios()) ?? [];
+            const comId = authManager.getComIdFromUrl();
+            const studios = (await authManager.listStudios(comId)) ?? [];
             this.studios = studios.map((s) => ({
                 ...s,
                 records: [],

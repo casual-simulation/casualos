@@ -1,4 +1,4 @@
-import { WebConfig } from '../../shared/WebConfig';
+import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
 import redis from 'redis';
 import type WebSocket from 'ws';
 import { BuilderOptions } from '../shared/ServerBuilder';

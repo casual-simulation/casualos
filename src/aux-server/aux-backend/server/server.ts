@@ -12,7 +12,7 @@ import {
     GenericHttpHeaders,
     GenericHttpRequest,
 } from '@casual-simulation/aux-common';
-import { WebConfig } from '../../shared/WebConfig';
+import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
 import compression from 'compression';
 import { ServerBuilder } from '../shared/ServerBuilder';
 import { getStatusCode } from '@casual-simulation/aux-records';

@@ -498,7 +498,9 @@ export class ServerBuilder implements SubscriptionLike {
         this._websocketConnectionStore = new RedisWebsocketConnectionStore(
             options.redis.websocketConnectionNamespace,
             redis,
-            options.redis.connectionAuthorizationCacheSeconds
+            options.redis.connectionAuthorizationCacheSeconds,
+            options.redis.connectionExpireSeconds,
+            options.redis.connectionExpireMode
         );
 
         return this;
@@ -594,14 +596,18 @@ export class ServerBuilder implements SubscriptionLike {
 
         this._tempInstRecordsStore = new RedisTempInstRecordsStore(
             options.redis.tempInstRecordsStoreNamespace,
-            redis
+            redis,
+            options.redis.tempInstRecordsLifetimeSeconds,
+            options.redis.tempInstRecordsLifetimeExpireMode,
+            false
         );
         this._instRecordsStore = new SplitInstRecordsStore(
             new RedisTempInstRecordsStore(
                 options.redis.instRecordsStoreNamespace,
                 redis,
                 options.redis.publicInstRecordsLifetimeSeconds,
-                options.redis.publicInstRecordsLifetimeExpireMode
+                options.redis.publicInstRecordsLifetimeExpireMode,
+                true
             ),
             new PrismaInstRecordsStore(prisma)
         );
@@ -1016,6 +1022,7 @@ export class ServerBuilder implements SubscriptionLike {
             auth: this._authStore,
             config: this._configStore,
             metrics: this._metricsStore,
+            messenger: this._notificationMessenger,
         });
         this._policyController = new PolicyController(
             this._authController,
@@ -1397,6 +1404,14 @@ const sesSchema = z.object({
     ),
 });
 
+const expireModeSchema = z.union([
+    z.literal('NX').describe('The Redis NX expire mode.'),
+    z.literal('XX').describe('The Redis XX expire mode.'),
+    z.literal('GT').describe('The Redis GT expire mode.'),
+    z.literal('LT').describe('The Redis LT expire mode.'),
+    z.null().describe('The expiration will be updated every time.'),
+]);
+
 const redisSchema = z.object({
     url: z
         .string()
@@ -1461,14 +1476,7 @@ const redisSchema = z.object({
         .nullable()
         .optional()
         .default(60 * 60 * 24),
-    publicInstRecordsLifetimeExpireMode: z
-        .union([
-            z.literal('NX').describe('The Redis NX expire mode.'),
-            z.literal('XX').describe('The Redis XX expire mode.'),
-            z.literal('GT').describe('The Redis GT expire mode.'),
-            z.literal('LT').describe('The Redis LT expire mode.'),
-            z.null().describe('The expiration will be updated every time.'),
-        ])
+    publicInstRecordsLifetimeExpireMode: expireModeSchema
         .describe(
             'The Redis expire mode that should be used for public inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
         )
@@ -1478,9 +1486,24 @@ const redisSchema = z.object({
     tempInstRecordsStoreNamespace: z
         .string()
         .describe(
-            'The namespace that temporary inst records are stored under. If omitted, then redis inst records are not possible.'
+            'The namespace that temporary inst records are stored under (e.g. tempShared space). If omitted, then redis inst records are not possible.'
         )
         .optional(),
+    tempInstRecordsLifetimeSeconds: z
+        .number()
+        .describe(
+            'The lifetime of temporary inst records data in seconds (e.g. tempShared space). Intended to clean up temporary branches that have not been changed for some amount of time. If null, then temporary inst branches never expire. Defaults to 24 hours.'
+        )
+        .positive()
+        .nullable()
+        .optional()
+        .default(60 * 60 * 24),
+    tempInstRecordsLifetimeExpireMode: expireModeSchema
+        .describe(
+            'The Redis expire mode that should be used for temporary inst branches (e.g. tempShared space). Defaults to null. If null, then the expiration will not have a mode. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
+        )
+        .optional()
+        .default(null),
 
     // The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
     // Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often.
@@ -1503,6 +1526,22 @@ Because repo/add_updates is a very common permission, we periodically cache perm
         .nullable()
         .optional()
         .default('/cache'),
+
+    connectionExpireSeconds: z
+        .number()
+        .describe(
+            'The maximum lifetime of websocket connections in seconds. Intended to clean up any keys under websocketConnectionNamespace that have not been changed after an amount of time. It is recomended to set this longer than the maximum websocket connection length. Defaults to 3 hours. Set to null to disable.'
+        )
+        .positive()
+        .optional()
+        .nullable()
+        .default(60 * 60 * 3),
+    connectionExpireMode: expireModeSchema
+        .describe(
+            'The Redis expire mode that should be used for connections. Defaults to null. If null, then the expiration will not have a mode. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
+        )
+        .optional()
+        .default(null),
 });
 
 const rateLimitSchema = z.object({

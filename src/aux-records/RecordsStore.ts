@@ -1,3 +1,5 @@
+import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
+
 /**
  * Defines an interface for objects that can store records.
  */
@@ -96,6 +98,12 @@ export interface RecordsStore {
     getStudioById(id: string): Promise<Studio>;
 
     /**
+     * Gets the studio that has the given comId.
+     * @param comId The comId of the studio.
+     */
+    getStudioByComId(comId: string): Promise<Studio>;
+
+    /**
      * Gets the studio that has the given stripe customer ID.
      * @param customerId The stripe customer ID for the studio.
      */
@@ -103,9 +111,26 @@ export interface RecordsStore {
 
     /**
      * Gets the list of studios that the user with the given ID has access to.
+     * Returns only studios that are not owned by any comId.
      * @param userId The ID of the user.
      */
     listStudiosForUser(userId: string): Promise<StoreListedStudio[]>;
+
+    /**
+     * Gets the list of studios that are owned by the given comId and that the user with the given ID has access to.
+     * @param userId The ID of the user.
+     * @param comId The comId of the studio that owns the studios.
+     */
+    listStudiosForUserAndComId(
+        userId: string,
+        comId: string
+    ): Promise<StoreListedStudio[]>;
+
+    /**
+     * Gets the number of studios that are owned by the given comId.
+     * @param comId The comId.
+     */
+    countStudiosInComId(comId: string): Promise<number>;
 
     /**
      * Adds the given studio assignment to the store.
@@ -147,6 +172,12 @@ export interface RecordsStore {
      * @param filter The filter.
      */
     countRecords(filter: CountRecordsFilter): Promise<number>;
+
+    /**
+     * Saves the given comId request.
+     * @param request The request.
+     */
+    saveComIdRequest(request: StudioComIdRequest): Promise<void>;
 }
 
 export interface CountRecordsFilter {
@@ -230,6 +261,11 @@ export interface Studio {
     displayName: string;
 
     /**
+     * The URL of the logo for the studio.
+     */
+    logoUrl?: string | null;
+
+    /**
      * The ID of the stripe customer for this studio.
      */
     stripeCustomerId?: string;
@@ -259,6 +295,26 @@ export interface Studio {
      * The unix time in miliseconds that the studio's current subscription period ends at.
      */
     subscriptionPeriodEndMs?: number | null;
+
+    /**
+     * The comId that this studio owns.
+     */
+    comId?: string | null;
+
+    /**
+     * The comId of the studio that owns this studio.
+     */
+    ownerStudioComId?: string | null;
+
+    /**
+     * The player web config for the studio.
+     */
+    playerConfig?: ComIdPlayerConfig;
+
+    /**
+     * The config for comId features.
+     */
+    comIdConfig?: ComIdConfig;
 }
 
 /**
@@ -388,6 +444,11 @@ export interface StoreListedStudio {
     displayName: string;
 
     /**
+     * The URL of the logo for the studio.
+     */
+    logoUrl: string;
+
+    /**
      * The role that the user has in the studio.
      */
     role: StudioAssignmentRole;
@@ -406,6 +467,16 @@ export interface StoreListedStudio {
      * The current subscription status for this studio.
      */
     subscriptionStatus: string;
+
+    /**
+     * The comId of the studio.
+     */
+    comId: string | null;
+
+    /**
+     * The comId of the studio that owns this studio.
+     */
+    ownerStudioComId: string | null;
 }
 
 export interface ListStudioAssignmentFilters {
@@ -459,4 +530,45 @@ export interface RecordKey {
      * The ID of the user that created this key.
      */
     creatorId: string;
+}
+
+/**
+ * Defines an interface that represents a request for a comId to be applied to a studio.
+ */
+export interface StudioComIdRequest {
+    /**
+     * The ID of the request.
+     */
+    id: string;
+
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that is making the request.
+     * Null if the user has been deleted.
+     */
+    userId: string;
+
+    /**
+     * The comId that is being requested.
+     */
+    requestedComId: string;
+
+    /**
+     * The IP Address that the request came from.
+     */
+    requestingIpAddress: string;
+
+    /**
+     * The unix timestamp in miliseconds when the request was created.
+     */
+    createdAtMs: number;
+
+    /**
+     * The unix timestamp in miliseconds when the request was last updated.
+     */
+    updatedAtMs: number;
 }

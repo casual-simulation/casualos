@@ -15,16 +15,16 @@ datasource db {
 // Auth
 model User {
     id String @id
-    name String?
-    email String? @unique
-    phoneNumber String? @unique
+    name String? @db.String(128)
+    email String? @unique @db.String(128)
+    phoneNumber String? @unique @db.String(64)
     avatarPortraitUrl String?
     avatarUrl String?
     allSessionRevokeTime DateTime?
     currentLoginRequestId String? @unique
     currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
     banTime DateTime?
-    banReason String?
+    banReason String? @db.String(128)
 
     privoServiceId String? @unique
     privoParentServiceId String?
@@ -70,6 +70,7 @@ model User {
     aiSkyboxMetrics AiSkyboxMetrics[]
 
     instReports UserInstReport[]
+    comIdRequests StudioComIdRequest[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -184,7 +185,22 @@ model SmsRule {
 // Records
 model Studio {
     id String @id
-    displayName String
+    displayName String @db.String(128)
+
+    // The comId for this studio. (i.e. a name/uuid that can be used to access this studio as a comId)
+    comId String? @unique
+
+    logoUrl String? @db.String(512)
+
+    // The comId that this studio belongs to. (i.e. The comId of the studio that this studio belongs to)
+    ownerStudioComId String?
+    ownerStudio Studio? @relation(fields: [ownerStudioComId], references: [comId], onUpdate: Cascade, onDelete: SetNull, map: "Studio_ownerStudioComId_fkey1", name: "OwnerStudio")
+
+    // The player web config for this studio.
+    playerConfig Json?
+
+    // The comId config for this studio.
+    comIdConfig Json?
 
     records Record[]
     assignments StudioAssignment[]
@@ -201,6 +217,9 @@ model Studio {
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
+
+    childStudios Studio[] @relation("OwnerStudio")
+    comIdRequests StudioComIdRequest[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -223,7 +242,7 @@ model StudioAssignment {
 }
 
 model Record {
-    name String @id
+    name String @id @db.String(128)
     ownerId String?
     owner User? @relation(fields: [ownerId], references: [id], map: "Record_ownerId_fkey1")
 
@@ -258,7 +277,7 @@ model Record {
 model RecordKey {
     @@id([recordName, secretHash])
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "RecordKey_recordName_fkey1")
 
     secretHash String
@@ -274,9 +293,9 @@ model RecordKey {
 model Policy {
     @@id([recordName, marker])
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "Policy_recordName_fkey1")
-    marker String
+    marker String @db.String(128)
     document Json
     markers String[]
 
@@ -286,10 +305,10 @@ model Policy {
 
 model Role {
     @@id([recordName, name])
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "Role_recordName_fkey1")
 
-    name String
+    name String @db.String(128)
     markers String[]
 
     createdAt DateTime @default(now())
@@ -299,9 +318,9 @@ model Role {
 model RoleAssignment {
     @@id([recordName, roleId, subjectId])
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "RoleAssignment_recordName_fkey1")
-    roleId String
+    roleId String @db.String(128)
 
     subjectId String
     type String
@@ -470,10 +489,10 @@ model MarkerPermissionAssignment {
 model DataRecord {
     @@id([recordName, address])
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "DataRecord_recordName_fkey1")
     
-    address String
+    address String @db.String(512)
     data Json
     
     publisherId String
@@ -495,10 +514,10 @@ model DataRecord {
 model ManualDataRecord {
     @@id([recordName, address])
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "ManualDataRecord_recordName_fkey1")
     
-    address String
+    address String @db.String(512)
     data Json
     
     publisherId String
@@ -519,11 +538,11 @@ model ManualDataRecord {
 model FileRecord {
     @@id([recordName, fileName])
 
-    recordName String
+    recordName String @db.String(128)
 
     // Don't cascade FileRecord deletes because they have storage in other places besides the database
     record Record @relation(fields: [recordName], references: [name])
-    fileName String
+    fileName String @db.String(512)
 
     publisherId String
     publisher User @relation("PublishedFileRecords", fields: [publisherId], references: [id])
@@ -532,7 +551,7 @@ model FileRecord {
     subject User? @relation("SubjectFileRecords", fields: [subjectId], references: [id])
 
     sizeInBytes BigInt
-    description String?
+    description String? @db.String(128)
 
     uploadedAt DateTime?
 
@@ -545,9 +564,9 @@ model FileRecord {
 model EventRecord {
     @@id([recordName, name])
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "EventRecord_recordName_fkey1")
-    name String
+    name String @db.String(128)
 
     count BigInt
     markers String[]
@@ -559,10 +578,10 @@ model EventRecord {
 model InstRecord {
     @@id([recordName, name])
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "InstRecord_recordName_fkey1")
 
-    name String
+    name String @db.String(128)
 
     markers String[]
 
@@ -577,13 +596,13 @@ model InstRecord {
 model InstBranch {
     @@id([recordName, instName, name])
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "InstBranch_recordName_fkey1")
 
-    instName String
+    instName String @db.String(128)
     inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade, map: "InstBranch_instName_fkey1")
 
-    name String
+    name String @db.String(512)
     temporary Boolean
 
     updates BranchUpdate[]
@@ -595,13 +614,13 @@ model InstBranch {
 model BranchUpdate {
     id String @id @db.Uuid()
 
-    recordName String
+    recordName String @db.String(128)
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "BranchUpdate_recordName_fkey1")
 
-    instName String
+    instName String @db.String(128)
     inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade, map: "BranchUpdate_instName_fkey1")
 
-    branchName String
+    branchName String @db.String(512)
     branch InstBranch @relation(fields: [recordName, instName, branchName], references: [recordName, instName, name], onDelete: Cascade, map: "BranchUpdate_branchName_fkey1")
 
     sizeInBytes Int
@@ -738,10 +757,10 @@ model PrivoClientCredentials {
 model UserInstReport {
     id String @id @db.Uuid
 
-    recordName String?
+    recordName String? @db.String(128)
     record Record? @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "UserInstReport_recordName_fkey1")
 
-    inst String
+    inst String @db.String(128)
     instRecord InstRecord? @relation(fields: [recordName, inst], references: [recordName, name], onDelete: Cascade, map: "UserInstReport_inst_fkey1")
     
     reportingUserId String?
@@ -749,14 +768,31 @@ model UserInstReport {
 
     reportingIpAddress String?
     automaticReport Boolean
-    reportReasonText String
-    reportReason String
-    reportedUrl String
-    reportedPermalink String
+    reportReasonText String @db.String(2048)
+    reportReason String @db.String(128)
+    reportedUrl String @db.String(4096)
+    reportedPermalink String @db.String(4096)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     @@index([automaticReport, createdAt(sort: Desc), recordName, inst])
     @@index([reportReason, createdAt(sort: Desc), recordName, inst])
+}
+
+model StudioComIdRequest {
+    id String @id @db.Uuid
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "StudioComIdRequest_studioId_fkey1")
+
+    requestedComId String @db.String(128)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "StudioComIdRequest_userId_fkey1")
+
+    requestingIpAddress String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }

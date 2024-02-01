@@ -26,7 +26,12 @@ import {
 } from './AuthUtils';
 import { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
-import { isRecordKey, RecordsController } from './RecordsController';
+import {
+    CreateStudioInComIdResult,
+    CreateStudioSuccess,
+    isRecordKey,
+    RecordsController,
+} from './RecordsController';
 import { RecordsStore, Studio } from './RecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
@@ -38,6 +43,7 @@ import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
 import { StripeInterface, StripeProduct } from './StripeInterface';
 import {
+    FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
@@ -51,7 +57,7 @@ import {
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
-import { createTestUser } from './TestUtils';
+import { createTestSubConfiguration, createTestUser } from './TestUtils';
 import { AIController } from './AIController';
 import {
     AIChatInterfaceRequest,
@@ -66,7 +72,7 @@ import {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
-import { sortBy } from 'lodash';
+import { merge, sortBy } from 'lodash';
 import { MemoryStore } from './MemoryStore';
 import { WebsocketController } from './websockets/WebsocketController';
 import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
@@ -275,6 +281,7 @@ describe('RecordsServer', () => {
             store,
             config: store,
             metrics: store,
+            messenger: store,
         });
 
         policyController = new PolicyController(
@@ -10652,6 +10659,48 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should return a unacceptable_request result if given a prompt over 600 characters long', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a'.repeat(601),
+                        negativePrompt: 'a red sky',
+                        blockadeLabs: {
+                            skyboxStyleId: 1,
+                            remixImagineId: 2,
+                            seed: 3,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'too_big',
+                            exact: false,
+                            inclusive: true,
+                            maximum: 600,
+                            message:
+                                'String must contain at most 600 character(s)',
+                            path: ['prompt'],
+                            type: 'string',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(skyboxInterface.generateSkybox).not.toHaveBeenCalled();
+        });
+
         testOrigin('POST', `/api/v2/ai/skybox`, () =>
             JSON.stringify({
                 prompt: 'test',
@@ -10878,6 +10927,75 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/studios', () => {
+        beforeEach(async () => {
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                },
+                userId
+            );
+        });
+
+        it('should get the data for the studio', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/studios?studioId=${'studioId'}`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    studio: {
+                        id: 'studioId',
+                        displayName: 'my studio',
+                        comId: 'comId',
+                        logoUrl: 'logoUrl',
+                        comIdConfig: {
+                            allowedStudioCreators: 'anyone',
+                        },
+                        playerConfig: {
+                            ab1BootstrapURL: 'ab1BootstrapURL',
+                        },
+                        comIdFeatures: {
+                            allowed: false,
+                        },
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/studios?studioId=${'studioId'}`,
+                authenticatedHeaders
+            )
+        );
+        testOrigin('GET', '/api/v2/studios');
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/studios?studioId=${'studioId'}`,
+                authenticatedHeaders
+            )
+        );
+    });
+
     describe('POST /api/v2/studios', () => {
         it('should create a studio and return the ID', async () => {
             const result = await server.handleHttpRequest(
@@ -10900,6 +11018,89 @@ describe('RecordsServer', () => {
             });
         });
 
+        describe('comId', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    comId: {
+                                        allowCustomComId: true,
+                                        allowed: true,
+                                        maxStudios: 1,
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                // await store.saveNewUser({
+                //     id: 'userId',
+                //     email: 'test@example.com',
+                //     name: 'test user',
+                //     phoneNumber: null,
+                //     allSessionRevokeTimeMs: null,
+                //     currentLoginRequestId: null,
+                // });
+
+                await store.createStudioForUser(
+                    {
+                        id: 'studioId1',
+                        displayName: 'studio 1',
+                        comId: 'comId1',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+            });
+
+            it('should be able to create a studio in the given comId', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios',
+                        JSON.stringify({
+                            displayName: 'my studio',
+                            ownerStudioComId: 'comId1',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        studioId: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const resultBody = JSON.parse(
+                    result.body
+                ) as CreateStudioSuccess;
+                const studio = await store.getStudioById(resultBody.studioId);
+
+                expect(studio).toEqual({
+                    id: resultBody.studioId,
+                    displayName: 'my studio',
+                    ownerStudioComId: 'comId1',
+                });
+            });
+        });
+
         testAuthorization(() =>
             httpPost(
                 '/api/v2/studios',
@@ -10919,6 +11120,204 @@ describe('RecordsServer', () => {
                 '/api/v2/studios',
                 JSON.stringify({
                     displayName: 'my studio',
+                }),
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe('PUT /api/v2/studios', () => {
+        beforeEach(async () => {
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                },
+                userId
+            );
+        });
+
+        it('should update the given studio', async () => {
+            const result = await server.handleHttpRequest(
+                httpPut(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        id: 'studioId',
+                        displayName: 'new name',
+                        logoUrl: 'http://example.com/new-url',
+                        comIdConfig: {
+                            allowedStudioCreators: 'only-members',
+                        },
+                        playerConfig: {
+                            ab1BootstrapURL: 'new bootstrap',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const studio = await store.getStudioById('studioId');
+
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'new name',
+                logoUrl: 'http://example.com/new-url',
+                comIdConfig: {
+                    allowedStudioCreators: 'only-members',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'new bootstrap',
+                },
+                comId: 'comId',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeCustomerId: 'customerId',
+            });
+        });
+
+        testAuthorization(() =>
+            httpPut(
+                '/api/v2/studios',
+                JSON.stringify({
+                    id: 'studioId',
+                    displayName: 'new name',
+                }),
+                authenticatedHeaders
+            )
+        );
+        testOrigin('PUT', '/api/v2/studios', () =>
+            JSON.stringify({
+                id: 'studioId',
+                displayName: 'new name',
+            })
+        );
+        testRateLimit(() =>
+            httpPut(
+                '/api/v2/studios',
+                JSON.stringify({
+                    id: 'studioId',
+                    displayName: 'new name',
+                }),
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/studios/requestComId', () => {
+        beforeEach(async () => {
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                },
+                userId
+            );
+        });
+
+        it('should create a studio_com_id_request request', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/requestComId',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                        comId: 'newComId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.comIdRequests).toEqual([
+                {
+                    id: expect.any(String),
+                    studioId: 'studioId',
+                    userId: userId,
+                    requestedComId: 'newComId',
+                    createdAtMs: expect.any(Number),
+                    updatedAtMs: expect.any(Number),
+                    requestingIpAddress: '123.456.789',
+                },
+            ]);
+            expect(store.recordsNotifications).toEqual([
+                {
+                    resource: 'studio_com_id_request',
+                    resourceId: 'studioId',
+                    action: 'created',
+                    recordName: null,
+                    request: {
+                        id: expect.any(String),
+                        studioId: 'studioId',
+                        userId: userId,
+                        requestedComId: 'newComId',
+                        requestingIpAddress: '123.456.789',
+                        createdAtMs: expect.any(Number),
+                        updatedAtMs: expect.any(Number),
+                    },
+
+                    timeMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/studios/requestComId',
+                JSON.stringify({
+                    studioId: 'studioId',
+                    comId: 'newComId',
+                }),
+                authenticatedHeaders
+            )
+        );
+        testOrigin('POST', '/api/v2/studios/requestComId', () =>
+            JSON.stringify({
+                studioId: 'studioId',
+                comId: 'newComId',
+            })
+        );
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/studios/requestComId',
+                JSON.stringify({
+                    studioId: 'studioId',
+                    comId: 'newComId',
                 }),
                 authenticatedHeaders
             )
@@ -10983,6 +11382,98 @@ describe('RecordsServer', () => {
                     ],
                 },
                 headers: apiCorsHeaders,
+            });
+        });
+
+        describe('?comId', () => {
+            beforeEach(async () => {
+                await store.updateStudio({
+                    id: 'studioId1',
+                    displayName: 'studio 1',
+                    comId: 'comId1',
+                });
+
+                await store.updateStudio({
+                    id: 'studioId2',
+                    displayName: 'studio 2',
+                    ownerStudioComId: 'comId1',
+                });
+
+                await store.updateStudio({
+                    id: 'studioId3',
+                    displayName: 'studio 3',
+                    ownerStudioComId: 'comId1',
+                });
+
+                await store.addStudio({
+                    id: 'studioId4',
+                    displayName: 'studio 4',
+                });
+
+                await store.addStudio({
+                    id: 'studioId5',
+                    displayName: 'studio 5',
+                });
+
+                await store.addStudioAssignment({
+                    studioId: 'studioId2',
+                    userId: userId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+                await store.addStudioAssignment({
+                    studioId: 'studioId3',
+                    userId: userId,
+                    isPrimaryContact: true,
+                    role: 'member',
+                });
+                await store.addStudioAssignment({
+                    studioId: 'studioId4',
+                    userId: userId,
+                    isPrimaryContact: true,
+                    role: 'member',
+                });
+                await store.addStudioAssignment({
+                    studioId: 'studioId5',
+                    userId: userId,
+                    isPrimaryContact: true,
+                    role: 'member',
+                });
+            });
+
+            it('should list the studios that the user has access to', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/studios/list?comId=${'comId1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studioId2',
+                                displayName: 'studio 2',
+                                role: 'admin',
+                                isPrimaryContact: true,
+                                subscriptionTier: null,
+                                ownerStudioComId: 'comId1',
+                            },
+                            {
+                                studioId: 'studioId3',
+                                displayName: 'studio 3',
+                                role: 'member',
+                                isPrimaryContact: true,
+                                subscriptionTier: null,
+                                ownerStudioComId: 'comId1',
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
             });
         });
 
@@ -11315,6 +11806,47 @@ describe('RecordsServer', () => {
                 studioId,
                 removedUserId: 'userId2',
             })
+        );
+    });
+
+    describe('GET /api/v2/player/config', () => {
+        beforeEach(async () => {
+            await store.addStudio({
+                id: 'studioId1',
+                comId: 'comId',
+                displayName: 'studio 1',
+                logoUrl: 'http://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'ab1BootstrapURL',
+                },
+            });
+
+            delete apiHeaders['authorization'];
+        });
+
+        it('should return the player config', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/player/config?comId=${'comId'}`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    comId: 'comId',
+                    displayName: 'studio 1',
+                    logoUrl: 'http://example.com/logo.png',
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', `/api/v2/player/config?comId=${'comId'}`);
+        testRateLimit(() =>
+            httpGet(`/api/v2/player/config?comId=${'comId'}`, apiHeaders)
         );
     });
 

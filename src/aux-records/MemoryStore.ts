@@ -27,6 +27,7 @@ import {
     CountRecordsFilter,
     ListedRecord,
     StoreListedStudio,
+    StudioComIdRequest,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import {
@@ -188,6 +189,7 @@ export class MemoryStore
     private _privoConfiguration: PrivoConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
     private _recordNotifications: RecordsNotification[] = [];
+    private _comIdRequests: StudioComIdRequest[] = [];
 
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
@@ -293,6 +295,10 @@ export class MemoryStore
         return this._recordNotifications;
     }
 
+    get comIdRequests() {
+        return this._comIdRequests;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -300,6 +306,44 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
+        this._comIdRequests.push(request);
+    }
+
+    async getStudioByComId(comId: string): Promise<Studio> {
+        return this._studios.find((s) => s.comId === comId);
+    }
+
+    async listStudiosForUserAndComId(
+        userId: string,
+        comId: string
+    ): Promise<StoreListedStudio[]> {
+        const assignments = await this.listUserAssignments(userId);
+        const studios = await Promise.all(
+            assignments.map(async (a) => {
+                const s = await this.getStudioById(a.studioId);
+                return {
+                    ...s,
+                    ...a,
+                };
+            })
+        );
+
+        return studios
+            .filter((s) => s.ownerStudioComId === comId)
+            .map((s) => ({
+                studioId: s.id,
+                displayName: s.displayName,
+                role: s.role,
+                isPrimaryContact: s.isPrimaryContact,
+                subscriptionId: s.subscriptionId,
+                subscriptionStatus: s.subscriptionStatus,
+                comId: s.comId,
+                logoUrl: s.logoUrl,
+                ownerStudioComId: s.ownerStudioComId,
+            }));
     }
 
     async sendRecordNotification(
@@ -485,14 +529,26 @@ export class MemoryStore
                 };
             })
         );
-        return studios.map((s) => ({
-            studioId: s.id,
-            displayName: s.displayName,
-            role: s.role,
-            isPrimaryContact: s.isPrimaryContact,
-            subscriptionId: s.subscriptionId,
-            subscriptionStatus: s.subscriptionStatus,
-        }));
+        return studios
+            .filter((s) => !s.ownerStudioComId)
+            .map((s) => ({
+                studioId: s.id,
+                displayName: s.displayName,
+                role: s.role,
+                isPrimaryContact: s.isPrimaryContact,
+                subscriptionId: s.subscriptionId,
+                subscriptionStatus: s.subscriptionStatus,
+                comId: s.comId,
+                logoUrl: s.logoUrl,
+                ownerStudioComId: s.ownerStudioComId,
+            }));
+    }
+
+    async countStudiosInComId(comId: string): Promise<number> {
+        const studios = this._studios.filter(
+            (s) => s.ownerStudioComId === comId
+        );
+        return studios.length;
     }
 
     async addStudioAssignment(assignment: StudioAssignment): Promise<void> {

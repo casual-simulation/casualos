@@ -684,7 +684,7 @@ export function MemberExamples({ member }) {
     if (examples.length > 0) {
         return (
             <div>
-                <h4>Examples</h4>
+                <h5 className="examples-heading">Examples</h5>
                 {examples.map((e, i) => <CodeExample key={i} example={e} />)}
             </div>
         );

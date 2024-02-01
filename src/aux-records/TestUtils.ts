@@ -73,6 +73,7 @@ export function createTestControllers(
         auth: store,
         config: store,
         metrics: store,
+        messenger: store,
     });
     const policies = new PolicyController(auth, records, store);
 

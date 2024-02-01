@@ -4,7 +4,7 @@ import {
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
 } from '@casual-simulation/aux-common';
-import { BiosOption } from '../../shared/WebConfig';
+import { BiosOption } from '@casual-simulation/aux-common/common/WebConfig';
 
 declare var DEVELOPMENT: boolean;
 

@@ -14,21 +14,29 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     private _globalNamespace: string;
     private _redis: RedisClientType;
     private _expireAuthorizationSeconds: number;
+    private _connectionExpireSeconds: number | null;
+    private _connectionExpireMode: 'NX' | 'XX' | 'LT' | 'GT' | null;
 
     /**
      * Creates a new RedisWebsocketConnectionStore.
      * @param globalNamespace The global namespace that the store should use.
      * @param client The Redis Client.
      * @param expireAuthorizationSeconds The number of seconds that "updateData" authorizations should expire after. This essentially functions as a cache for "inst.read" and "inst.updateData" permissions for repo/add_updates websocket messages.
+     * @param connectionExpireSeconds The number of seconds that branch connections should expire after. If null, connections will not expire.
+     * @param connectionExpireMode The mode that should be used to expire connections. If null, connections will not expire.
      */
     constructor(
         globalNamespace: string,
         client: RedisClientType,
-        expireAuthorizationSeconds: number
+        expireAuthorizationSeconds: number,
+        connectionExpireSeconds: number | null = null,
+        connectionExpireMode: 'NX' | 'XX' | 'LT' | 'GT' | null = null
     ) {
         this._globalNamespace = globalNamespace;
         this._redis = client;
         this._expireAuthorizationSeconds = expireAuthorizationSeconds;
+        this._connectionExpireSeconds = connectionExpireSeconds;
+        this._connectionExpireMode = connectionExpireMode;
     }
 
     // /{global}/connections
@@ -72,33 +80,39 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     }
 
     async saveConnection(connection: DeviceConnection): Promise<void> {
+        const connections = connectionsKey(this._globalNamespace);
         await this._redis.hSet(
-            connectionsKey(this._globalNamespace),
+            connections,
             connection.serverConnectionId,
             JSON.stringify(connection)
         );
+
+        // Update the expirations
+        await this._expire(connections);
     }
 
     async saveBranchConnection(
         connection: DeviceBranchConnection
     ): Promise<void> {
         const connectionJson = JSON.stringify(connection);
+        const branchKey = branchConnectionsKey(
+            this._globalNamespace,
+            connection.mode,
+            connection.recordName,
+            connection.inst,
+            connection.branch
+        );
         await this._redis.hSet(
-            branchConnectionsKey(
-                this._globalNamespace,
-                connection.mode,
-                connection.recordName,
-                connection.inst,
-                connection.branch
-            ),
+            branchKey,
             connection.serverConnectionId,
             connectionJson
         );
+        const connectionKey = connectionIdKey(
+            this._globalNamespace,
+            connection.serverConnectionId
+        );
         await this._redis.hSet(
-            connectionIdKey(
-                this._globalNamespace,
-                connection.serverConnectionId
-            ),
+            connectionKey,
             connectionField(
                 connection.mode,
                 connection.recordName,
@@ -107,6 +121,25 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
             ),
             connectionJson
         );
+
+        await Promise.all([
+            this._expire(branchKey),
+            this._expire(connectionKey),
+        ]);
+    }
+
+    private async _expire(key: string): Promise<void> {
+        if (typeof this._connectionExpireSeconds === 'number') {
+            if (this._connectionExpireMode) {
+                await this._redis.expire(
+                    key,
+                    this._connectionExpireSeconds,
+                    this._connectionExpireMode
+                );
+            } else {
+                await this._redis.expire(key, this._connectionExpireSeconds);
+            }
+        }
     }
 
     async deleteBranchConnection(
@@ -116,26 +149,36 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         inst: string,
         branch: string
     ): Promise<void> {
-        await this._redis.hDel(
-            branchConnectionsKey(
-                this._globalNamespace,
-                mode,
-                recordName,
-                inst,
-                branch
-            ),
+        const branchKey = branchConnectionsKey(
+            this._globalNamespace,
+            mode,
+            recordName,
+            inst,
+            branch
+        );
+        await this._redis.hDel(branchKey, connectionId);
+        const connectionKey = connectionIdKey(
+            this._globalNamespace,
             connectionId
         );
         await this._redis.hDel(
-            connectionIdKey(this._globalNamespace, connectionId),
+            connectionKey,
             connectionField(mode, recordName, inst, branch)
         );
+
+        // Update the expirations
+        await Promise.all([
+            this._expire(branchKey),
+            this._expire(connectionKey),
+        ]);
     }
 
     async clearConnection(connectionId: string): Promise<void> {
-        const namespaces = await this._redis.hKeys(
-            connectionIdKey(this._globalNamespace, connectionId)
+        const connectionKey = connectionIdKey(
+            this._globalNamespace,
+            connectionId
         );
+        const namespaces = await this._redis.hKeys(connectionKey);
         await Promise.all(
             namespaces.map((n) => {
                 const key = `/${this._globalNamespace}//namespace_connections/${n}`;
@@ -147,19 +190,37 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
                 return this._redis.hDel(key, connectionId);
             })
         );
-        await this._redis.hDel(
-            connectionsKey(this._globalNamespace),
-            connectionId
+        const connections = connectionsKey(this._globalNamespace);
+        await this._redis.hDel(connections, connectionId);
+
+        const authorizedInstsToken = authorizedInstsKey(
+            this._globalNamespace,
+            connectionId,
+            'token'
+        );
+        const authorizedInstsUpdateData = authorizedInstsKey(
+            this._globalNamespace,
+            connectionId,
+            'updateData'
+        );
+
+        console.log('[RedisWebsocketConnectionStore] Deleting', connectionKey);
+        console.log(
+            '[RedisWebsocketConnectionStore] Deleting',
+            authorizedInstsToken
+        );
+        console.log(
+            '[RedisWebsocketConnectionStore] Deleting',
+            authorizedInstsUpdateData
         );
         await this._redis.del([
-            connectionIdKey(this._globalNamespace, connectionId),
-            authorizedInstsKey(this._globalNamespace, connectionId, 'token'),
-            authorizedInstsKey(
-                this._globalNamespace,
-                connectionId,
-                'updateData'
-            ),
+            connectionKey,
+            authorizedInstsToken,
+            authorizedInstsUpdateData,
         ]);
+
+        // Update the expirations for the connections key (because it has been altered)
+        await this._expire(connections);
     }
 
     async expireConnection(connectionId: string): Promise<void> {

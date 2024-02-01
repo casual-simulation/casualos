@@ -199,6 +199,10 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.defaultLighting;
     }
 
+    get portalHDRAddress() {
+        return this.pageConfig.portalHDRAddress;
+    }
+
     /**
      * Gets if zooming is allowed in the miniGridPortal that the simulation defines.
      */
