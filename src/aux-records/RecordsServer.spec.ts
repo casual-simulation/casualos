@@ -32,7 +32,7 @@ import {
     isRecordKey,
     RecordsController,
 } from './RecordsController';
-import { RecordsStore, Studio } from './RecordsStore';
+import { RecordKey, RecordsStore, Studio } from './RecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
 import { DataRecordsController } from './DataRecordsController';
@@ -57,7 +57,12 @@ import {
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
-import { createTestSubConfiguration, createTestUser } from './TestUtils';
+import {
+    createTestControllers,
+    createTestRecordKey,
+    createTestSubConfiguration,
+    createTestUser,
+} from './TestUtils';
 import { AIController } from './AIController';
 import {
     AIChatInterfaceRequest,
@@ -107,6 +112,87 @@ import { ModerationController } from './ModerationController';
 console.log = jest.fn();
 
 describe('RecordsServer', () => {
+    let savedMemoryStore: MemoryStore;
+    let savedSessionKey: string;
+    let savedConnectionKey: string;
+    let savedUserId: string;
+    let savedSessionId: string;
+    let savedOwnerId: string;
+    let savedOwnerSessionId: string;
+    let savedOwnerConnectionKey: string;
+    let savedExpireTimeMs: number;
+    let savedSessionSecret: string;
+    let savedRecordKey: string;
+
+    beforeAll(async () => {
+        const services = createTestControllers();
+        let requestResult = await services.auth.requestLogin({
+            address: 'test@example.com',
+            addressType: 'email',
+            ipAddress: '123.456.789',
+        });
+
+        if (!requestResult.success) {
+            throw new Error('Unable to request a login!');
+        }
+
+        const message = services.authMessenger.messages.find(
+            (m) => m.address === 'test@example.com'
+        );
+
+        if (!message) {
+            throw new Error('Message not found!');
+        }
+
+        const loginResult = await services.auth.completeLogin({
+            code: message.code,
+            ipAddress: '123.456.789',
+            requestId: requestResult.requestId,
+            userId: requestResult.userId,
+        });
+
+        if (!loginResult.success) {
+            throw new Error('Unable to login!');
+        }
+
+        savedSessionKey = loginResult.sessionKey;
+        savedConnectionKey = loginResult.connectionKey;
+        savedUserId = loginResult.userId;
+
+        const owner = await createTestUser(services, 'owner@example.com');
+
+        savedOwnerId = owner.userId;
+        savedOwnerConnectionKey = owner.connectionKey;
+        savedOwnerSessionId = owner.sessionId;
+
+        let [uid, sid, secret, expire] = parseSessionKey(savedSessionKey);
+        savedSessionId = sid;
+        savedSessionSecret = secret;
+        savedExpireTimeMs = expire;
+
+        const recordKeyResult = await services.records.createPublicRecordKey(
+            recordName,
+            'subjectfull',
+            savedUserId
+        );
+        if (!recordKeyResult.success) {
+            throw new Error('Unable to create record key!');
+        }
+
+        savedRecordKey = recordKeyResult.recordKey;
+
+        const record = await services.store.getRecordByName(recordName);
+        await services.store.updateRecord({
+            name: recordName,
+            ownerId: savedOwnerId,
+            studioId: null,
+            secretHashes: record.secretHashes,
+            secretSalt: record.secretSalt,
+        });
+
+        savedMemoryStore = services.store;
+    });
+
     let store: MemoryStore;
     let authMessenger: MemoryAuthMessenger;
     let authController: AuthController;
@@ -225,27 +311,38 @@ describe('RecordsServer', () => {
 
         allowedApiOrigins = new Set([apiOrigin]);
 
-        store = new MemoryStore({
-            subscriptions: {
-                subscriptions: [
-                    {
-                        id: 'sub_id',
-                        eligibleProducts: ['product_id'],
-                        featureList: ['Feature 1', 'Feature 2'],
-                        product: 'product_id',
-                    },
-                ],
-                webhookSecret: 'webhook_secret',
-                cancelUrl: 'http://cancel_url',
-                successUrl: 'http://success_url',
-                returnUrl: 'http://return_url',
-                tiers: {},
-                defaultFeatures: {
-                    user: allowAllFeatures(),
-                    studio: allowAllFeatures(),
+        store = savedMemoryStore.clone();
+        store.subscriptionConfiguration = {
+            subscriptions: [
+                {
+                    id: 'sub_id',
+                    eligibleProducts: ['product_id'],
+                    featureList: ['Feature 1', 'Feature 2'],
+                    product: 'product_id',
                 },
+            ],
+            webhookSecret: 'webhook_secret',
+            cancelUrl: 'http://cancel_url',
+            successUrl: 'http://success_url',
+            returnUrl: 'http://return_url',
+            tiers: {},
+            defaultFeatures: {
+                user: allowAllFeatures(),
+                studio: allowAllFeatures(),
             },
-        });
+        };
+
+        sessionKey = savedSessionKey;
+        connectionKey = savedConnectionKey;
+        userId = savedUserId;
+        sessionId = savedSessionId;
+        ownerId = savedOwnerId;
+        ownerSessionId = savedOwnerSessionId;
+        ownerConnectionKey = savedOwnerConnectionKey;
+        expireTimeMs = savedExpireTimeMs;
+        sessionSecret = savedSessionSecret;
+        recordKey = savedRecordKey;
+
         manualDataStore = new MemoryStore({
             subscriptions: null as any,
         });
@@ -461,84 +558,9 @@ describe('RecordsServer', () => {
 
         authenticatedHeaders['origin'] = accountOrigin;
         apiHeaders['origin'] = apiOrigin;
-        let requestResult = await authController.requestLogin({
-            address: 'test@example.com',
-            addressType: 'email',
-            ipAddress: '123.456.789',
-        });
-
-        if (!requestResult.success) {
-            throw new Error('Unable to request a login!');
-        }
-
-        const message = authMessenger.messages.find(
-            (m) => m.address === 'test@example.com'
-        );
-
-        if (!message) {
-            throw new Error('Message not found!');
-        }
-
-        const loginResult = await authController.completeLogin({
-            code: message.code,
-            ipAddress: '123.456.789',
-            requestId: requestResult.requestId,
-            userId: requestResult.userId,
-        });
-
-        if (!loginResult.success) {
-            throw new Error('Unable to login!');
-        }
-
-        sessionKey = loginResult.sessionKey;
-        connectionKey = loginResult.connectionKey;
-        userId = loginResult.userId;
-
-        const services = {
-            authStore: store,
-            auth: authController,
-            authMessenger: authMessenger,
-            policies: policyController,
-            records: recordsController,
-            store,
-            recordsStore: store,
-            policyStore: store,
-            configStore: store,
-        };
-        const owner = await createTestUser(services, 'owner@example.com');
-
-        ownerId = owner.userId;
-        ownerConnectionKey = owner.connectionKey;
-        ownerSessionId = owner.sessionId;
-
-        let [uid, sid, secret, expire] = parseSessionKey(sessionKey);
-        sessionId = sid;
-        sessionSecret = secret;
-        expireTimeMs = expire;
-
         apiHeaders['authorization'] = authenticatedHeaders[
             'authorization'
         ] = `Bearer ${sessionKey}`;
-
-        const recordKeyResult = await recordsController.createPublicRecordKey(
-            recordName,
-            'subjectfull',
-            userId
-        );
-        if (!recordKeyResult.success) {
-            throw new Error('Unable to create record key!');
-        }
-
-        recordKey = recordKeyResult.recordKey;
-
-        const record = await services.store.getRecordByName(recordName);
-        await services.store.updateRecord({
-            name: recordName,
-            ownerId: ownerId,
-            studioId: null,
-            secretHashes: record.secretHashes,
-            secretSalt: record.secretSalt,
-        });
     });
 
     afterEach(() => {

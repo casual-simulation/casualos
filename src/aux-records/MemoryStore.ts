@@ -1,4 +1,4 @@
-import { orderBy, sortBy } from 'lodash';
+import { cloneDeep, orderBy, sortBy } from 'lodash';
 import { RegexRule, getMarkersOrDefault } from './Utils';
 import {
     AddressType,
@@ -306,6 +306,61 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    /**
+     * Constructs a deep clone of this memory store.
+     * Effectively copies all the data in the store into a new one.
+     */
+    clone(): MemoryStore {
+        const newStore = new MemoryStore({
+            subscriptions: cloneDeep(this._subscriptionConfiguration),
+            privo: cloneDeep(this._privoConfiguration),
+            moderation: cloneDeep(this._moderationConfiguration),
+        });
+
+        newStore._users = cloneDeep(this._users);
+        newStore._loginRequests = cloneDeep(this._loginRequests);
+        newStore._oidLoginRequests = cloneDeep(this._oidLoginRequests);
+        newStore._sessions = cloneDeep(this._sessions);
+        newStore._subscriptions = cloneDeep(this._subscriptions);
+        newStore._periods = cloneDeep(this._periods);
+        newStore._invoices = cloneDeep(this._invoices);
+        newStore._records = cloneDeep(this._records);
+        newStore._recordKeys = cloneDeep(this._recordKeys);
+        newStore._studios = cloneDeep(this._studios);
+        newStore._studioAssignments = cloneDeep(this._studioAssignments);
+        newStore._aiChatMetrics = cloneDeep(this._aiChatMetrics);
+        newStore._aiImageMetrics = cloneDeep(this._aiImageMetrics);
+        newStore._aiSkyboxMetrics = cloneDeep(this._aiSkyboxMetrics);
+        newStore._dataBuckets = cloneDeep(this._dataBuckets);
+        newStore._eventBuckets = cloneDeep(this._eventBuckets);
+        newStore._files = cloneDeep(this._files);
+        newStore._fileUploadUrl = cloneDeep(this._fileUploadUrl);
+        newStore._emailRules = cloneDeep(this._emailRules);
+        newStore._smsRules = cloneDeep(this._smsRules);
+        newStore._userInstReports = cloneDeep(this._userInstReports);
+        newStore._instRecords = cloneDeep(this._instRecords);
+        newStore._subscriptionConfiguration = cloneDeep(
+            this._subscriptionConfiguration
+        );
+        newStore._privoConfiguration = cloneDeep(this._privoConfiguration);
+        newStore._moderationConfiguration = cloneDeep(
+            this._moderationConfiguration
+        );
+        newStore._recordNotifications = cloneDeep(this._recordNotifications);
+        newStore._comIdRequests = cloneDeep(this._comIdRequests);
+        newStore._resourcePermissionAssignments = cloneDeep(
+            this._resourcePermissionAssignments
+        );
+        newStore._markerPermissionAssignments = cloneDeep(
+            this._markerPermissionAssignments
+        );
+        newStore.maxAllowedInstSize = this.maxAllowedInstSize;
+        newStore.roles = cloneDeep(this.roles);
+        newStore.roleAssignments = cloneDeep(this.roleAssignments);
+
+        return newStore;
     }
 
     async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
