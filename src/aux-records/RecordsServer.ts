@@ -1639,12 +1639,6 @@ export class RecordsServer {
 
         const schema = z.object({
             recordName: RECORD_NAME_VALIDATION,
-            recordName: z
-                .string({
-                    invalid_type_error: 'recordName must be a string.',
-                    required_error: 'recordName is required.',
-                })
-                .nonempty('recordName must not be empty'),
             marker: MARKER_VALIDATION.optional(),
             resourceKind: RESOURCE_KIND_VALIDATION.optional(),
             resourceId: z
