@@ -697,8 +697,8 @@ export class RecordsServer {
                 this._allowedApiOrigins
             );
         } else if (
-            request.method === 'DELETE' &&
-            request.path === '/api/v2/records/permissions'
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/permissions/revoke'
         ) {
             return formatResponse(
                 request,

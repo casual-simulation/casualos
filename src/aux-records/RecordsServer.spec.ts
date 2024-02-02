@@ -7947,7 +7947,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe('DELETE /api/v2/records/permissions', () => {
+    describe('POST /api/v2/records/permissions/revoke', () => {
         let markerPermissionId: string;
         let resourcePermissionId: string;
 
@@ -7985,8 +7985,8 @@ describe('RecordsServer', () => {
 
         it('should revoke the given permission for the marker', async () => {
             const result = await server.handleHttpRequest(
-                httpDelete(
-                    `/api/v2/records/permissions`,
+                httpPost(
+                    `/api/v2/records/permissions/revoke`,
                     JSON.stringify({
                         permissionId: markerPermissionId,
                     }),
@@ -8011,8 +8011,8 @@ describe('RecordsServer', () => {
 
         it('should revoke the given permission for the resource', async () => {
             const result = await server.handleHttpRequest(
-                httpDelete(
-                    `/api/v2/records/permissions`,
+                httpPost(
+                    `/api/v2/records/permissions/revoke`,
                     JSON.stringify({
                         permissionId: resourcePermissionId,
                     }),
@@ -8040,8 +8040,8 @@ describe('RecordsServer', () => {
             delete store.roles[recordName][userId];
 
             const result = await server.handleHttpRequest(
-                httpDelete(
-                    `/api/v2/records/permissions`,
+                httpPost(
+                    `/api/v2/records/permissions/revoke`,
                     JSON.stringify({
                         permissionId: markerPermissionId,
                     }),
@@ -8077,8 +8077,8 @@ describe('RecordsServer', () => {
         });
 
         testUrl(
-            'DELETE',
-            `/api/v2/records/permissions`,
+            'POST',
+            `/api/v2/records/permissions/revoke`,
             () =>
                 JSON.stringify({
                     permissionId: markerPermissionId,
