@@ -257,6 +257,7 @@ export const PERMISSION_VALIDATION = z.object({
     subjectId: z.string().min(1),
     resourceId: z.string().min(1).nullable().optional(),
     expireTimeMs: z.number().nullable(),
+    marker: z.string().min(1).max(100).optional(),
 });
 
 type ZodPermission = z.infer<typeof PERMISSION_VALIDATION>;
