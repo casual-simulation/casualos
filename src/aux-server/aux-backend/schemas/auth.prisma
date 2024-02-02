@@ -441,7 +441,7 @@ model MarkerPermissionAssignment {
 
     // The marker of the resources that the assignment grants.
     // If null, then the assignment grants permission for a resource instead.
-    marker String
+    marker String @db.String(128)
 
     // The resource kind that this assignment is for.
     // If null, then the assignment is for all resource kinds.
