@@ -697,12 +697,12 @@ export class RecordsServer {
                 this._allowedApiOrigins
             );
         } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/policy/revokePermission'
+            request.method === 'DELETE' &&
+            request.path === '/api/v2/records/permissions'
         ) {
             return formatResponse(
                 request,
-                await this._policyRevokePermission(request),
+                await this._revokePermission(request),
                 this._allowedApiOrigins
             );
         } else if (
@@ -1596,7 +1596,7 @@ export class RecordsServer {
         });
     }
 
-    private async _policyRevokePermission(
+    private async _revokePermission(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         if (!validateOrigin(request, this._allowedApiOrigins)) {
@@ -1639,7 +1639,7 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._policyController.revokeMarkerPermission({
+        const result = await this._policyController.revokePermission({
             permissionId,
             userId: sessionKeyValidation.userId,
             instances,

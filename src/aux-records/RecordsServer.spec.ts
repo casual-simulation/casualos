@@ -108,6 +108,10 @@ import {
 import { PrivoClientInterface } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { ModerationController } from './ModerationController';
+import {
+    AssignPermissionToSubjectAndMarkerSuccess,
+    AssignPermissionToSubjectAndResourceSuccess,
+} from './PolicyStore';
 
 console.log = jest.fn();
 
@@ -8577,6 +8581,146 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('DELETE /api/v2/records/permissions', () => {
+        let markerPermissionId: string;
+        let resourcePermissionId: string;
+
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const markerResult =
+                (await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'user',
+                    userId,
+                    'data',
+                    'test',
+                    'read',
+                    {},
+                    null
+                )) as AssignPermissionToSubjectAndMarkerSuccess;
+            markerPermissionId = markerResult.permissionAssignment.id;
+
+            const resourceResult =
+                (await store.assignPermissionToSubjectAndResource(
+                    recordName,
+                    'user',
+                    userId,
+                    'data',
+                    'test',
+                    'read',
+                    {},
+                    null
+                )) as AssignPermissionToSubjectAndResourceSuccess;
+            resourcePermissionId = resourceResult.permissionAssignment.id;
+        });
+
+        it('should revoke the given permission for the marker', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/permissions`,
+                    JSON.stringify({
+                        permissionId: markerPermissionId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
+            expect(data).toEqual([]);
+        });
+
+        it('should revoke the given permission for the resource', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/permissions`,
+                    JSON.stringify({
+                        permissionId: resourcePermissionId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await store.listPermissionsForResource(
+                recordName,
+                'data',
+                'test'
+            );
+            expect(data).toEqual([]);
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/permissions`,
+                    JSON.stringify({
+                        permissionId: markerPermissionId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'marker',
+                        resourceId: 'test',
+                        action: 'revokePermission',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
+            expect(data).toHaveLength(1);
+        });
+
+        testUrl(
+            'DELETE',
+            `/api/v2/records/permissions`,
+            () =>
+                JSON.stringify({
+                    permissionId: markerPermissionId,
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('GET /api/v2/records/permissions/list', () => {
         beforeEach(async () => {
             store.roles[recordName] = {
@@ -14513,15 +14657,14 @@ describe('RecordsServer', () => {
     function testUrl(
         method: GenericHttpRequest['method'],
         url: string,
-        createBody: () => string
+        createBody: () => string,
+        getHeaders: () => GenericHttpHeaders = () => authenticatedHeaders
     ) {
         testOrigin(method, url, createBody);
         testAuthorization(() =>
-            httpRequest(method, url, createBody(), authenticatedHeaders)
+            httpRequest(method, url, createBody(), getHeaders())
         );
-        testBodyIsJson((body) =>
-            httpRequest(method, url, body, authenticatedHeaders)
-        );
+        testBodyIsJson((body) => httpRequest(method, url, body, getHeaders()));
         testRateLimit(method, url, createBody);
     }
 
