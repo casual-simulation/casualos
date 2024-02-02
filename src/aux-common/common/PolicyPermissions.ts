@@ -221,6 +221,12 @@ export const RESOURCE_KIND_VALIDATION = z.union([
  */
 export interface Permission {
     /**
+     * The marker that the permission is for.
+     * If null or undefined, then the permission is for a specific resource instead of a marker.
+     */
+    marker?: string;
+
+    /**
      * The type of the subject that the permission is for.
      *
      * "user" - The permission is for a user.

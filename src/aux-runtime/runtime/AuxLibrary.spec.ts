@@ -159,8 +159,8 @@ import {
     getRoomTrackOptions,
     setRoomTrackOptions,
     getRoomRemoteOptions,
-    grantRecordMarkerPermission,
-    revokeRecordMarkerPermission,
+    grantRecordPermission,
+    revokeRecordPermission,
     grantInstAdminPermission,
     grantUserRole,
     revokeUserRole,
@@ -5853,59 +5853,52 @@ describe('AuxLibrary', () => {
             });
         });
 
-        // describe('os.grantRecordMarkerPermission()', () => {
-        //     it('should emit a GrantRecordMarkerPermissionAction', async () => {
-        //         const action: any = library.api.os.grantRecordMarkerPermission(
-        //             'record',
-        //             'marker',
-        //             {
-        //                 type: 'data.create',
-        //                 role: 'developer',
-        //                 addresses: true,
-        //             }
-        //         );
-        //         const expected = grantRecordMarkerPermission(
-        //             'record',
-        //             'marker',
-        //             {
-        //                 type: 'data.create',
-        //                 role: 'developer',
-        //                 addresses: true,
-        //             },
-        //             {},
-        //             context.tasks.size
-        //         );
-        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-        //         expect(context.actions).toEqual([expected]);
-        //     });
-        // });
+        describe('os.grantPermission()', () => {
+            it('should emit a GrantRecordPermissionAction', async () => {
+                const action: any = library.api.os.grantPermission('record', {
+                    marker: 'marker',
+                    resourceKind: 'data',
+                    action: 'create',
+                    expireTimeMs: null,
+                    options: {},
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                });
+                const expected = grantRecordPermission(
+                    'record',
+                    {
+                        marker: 'marker',
+                        resourceKind: 'data',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'role',
+                        subjectId: 'developer',
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
 
-        // describe('os.revokeRecordMarkerPermission()', () => {
-        //     it('should emit a RevokeRecordMarkerPermissionAction', async () => {
-        //         const action: any = library.api.os.revokeRecordMarkerPermission(
-        //             'record',
-        //             'marker',
-        //             {
-        //                 type: 'data.create',
-        //                 role: 'developer',
-        //                 addresses: true,
-        //             }
-        //         );
-        //         const expected = revokeRecordMarkerPermission(
-        //             'record',
-        //             'marker',
-        //             {
-        //                 type: 'data.create',
-        //                 role: 'developer',
-        //                 addresses: true,
-        //             },
-        //             {},
-        //             context.tasks.size
-        //         );
-        //         expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-        //         expect(context.actions).toEqual([expected]);
-        //     });
-        // });
+        describe('os.revokePermission()', () => {
+            it('should emit a RevokeRecordPermissionAction', async () => {
+                const action: any = library.api.os.revokePermission(
+                    'record',
+                    'permissionId'
+                );
+                const expected = revokeRecordPermission(
+                    'record',
+                    'permissionId',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
 
         describe('os.grantInstAdminPermission()', () => {
             it('should emit a GrantInstAdminPermissionAction', async () => {

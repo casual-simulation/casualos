@@ -243,8 +243,8 @@ import {
     AIGenerateImageAction,
     aiGenerateImage,
     RecordFileActionOptions,
-    grantRecordMarkerPermission as calcGrantRecordMarkerPermission,
-    revokeRecordMarkerPermission as calcRevokeRecordMarkerPermission,
+    grantRecordPermission as calcGrantRecordPermission,
+    revokeRecordPermission as calcRevokeRecordPermission,
     grantInstAdminPermission as calcGrantInstAdminPermission,
     grantUserRole as calcGrantUserRole,
     revokeUserRole as calcRevokeUserRole,
@@ -375,8 +375,10 @@ import {
 } from '@casual-simulation/aux-records';
 import type {
     AIChatMessage,
+    GrantResourcePermissionResult,
     ListStudiosResult,
     ReportInstResult,
+    RevokePermissionResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3191,8 +3193,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
-                // grantRecordMarkerPermission,
-                // revokeRecordMarkerPermission,
+                grantPermission,
+                revokePermission,
                 grantInstAdminPermission,
                 grantUserRole,
                 revokeUserRole,
@@ -8000,67 +8002,61 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
-    // /**
-    //  * Grants the given marker the given permission in the given record.
-    //  *
-    //  * See [Record Security](page:learn/records/security) for more information.
-    //  *
-    //  * @param recordName the name of the record.
-    //  * @param marker the marker that the permission should be added to.
-    //  * @param permission the permission that should be added.
-    //  * @param options the options for the operation.
-    //  *
-    //  * @dochash actions/os/records
-    //  * @docgroup 01-records
-    //  * @docname os.grantRecordMarkerPermission
-    //  */
-    // function grantRecordMarkerPermission(
-    //     recordName: string,
-    //     marker: string,
-    //     permission: AvailablePermissions,
-    //     options?: RecordActionOptions
-    // ): Promise<GrantMarkerPermissionResult> {
-    //     const task = context.createTask();
-    //     const event = calcGrantRecordMarkerPermission(
-    //         recordName,
-    //         marker,
-    //         permission,
-    //         options ?? {},
-    //         task.taskId
-    //     );
-    //     return addAsyncAction(task, event);
-    // }
+    /**
+     * Grants the given permission in the given record.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param permission the permission that should be added.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.grantPermission
+     */
+    function grantPermission(
+        recordName: string,
+        permission: AvailablePermissions,
+        options?: RecordActionOptions
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+        const task = context.createTask();
+        const event = calcGrantRecordPermission(
+            recordName,
+            permission,
+            options ?? {},
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
 
-    // /**
-    //  * Revokes the given permission from the given marker in the given record.
-    //  *
-    //  * See [Record Security](page:learn/records/security) for more information.
-    //  *
-    //  * @param recordName the name of the record.
-    //  * @param marker the name of the marker that the permission should be removed from.
-    //  * @param permission the permission that should be removed.
-    //  * @param options the options for the operation.
-    //  *
-    //  * @dochash actions/os/records
-    //  * @docgroup 01-records
-    //  * @docname os.revokeRecordMarkerPermission
-    //  */
-    // function revokeRecordMarkerPermission(
-    //     recordName: string,
-    //     marker: string,
-    //     permission: AvailablePermissions,
-    //     options?: RecordActionOptions
-    // ): Promise<RevokeMarkerPermissionResult> {
-    //     const task = context.createTask();
-    //     const event = calcRevokeRecordMarkerPermission(
-    //         recordName,
-    //         marker,
-    //         permission,
-    //         options ?? {},
-    //         task.taskId
-    //     );
-    //     return addAsyncAction(task, event);
-    // }
+    /**
+     * Revokes the permission with the given ID from the the given record.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param permissionId the ID of the permission that should be removed.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.revokePermission
+     */
+    function revokePermission(
+        recordName: string,
+        permissionId: string,
+        options?: RecordActionOptions
+    ): Promise<RevokePermissionResult> {
+        const task = context.createTask();
+        const event = calcRevokeRecordPermission(
+            recordName,
+            permissionId,
+            options ?? {},
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
 
     /**
      * Attempts to grant the current inst admin permissions in the given record for the rest of the day.

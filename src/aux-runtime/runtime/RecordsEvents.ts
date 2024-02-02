@@ -23,8 +23,8 @@ export type RecordsAsyncActions =
     | AIGenerateSkyboxAction
     | ListUserStudiosAction
     | GetPublicRecordKeyAction
-    | GrantRecordMarkerPermissionAction
-    | RevokeRecordMarkerPermissionAction
+    | GrantRecordPermissionAction
+    | RevokeRecordPermissionAction
     | GrantInstAdminPermissionAction
     | GrantRoleAction
     | RevokeRoleAction
@@ -583,18 +583,13 @@ export interface GetPublicRecordKeyAction extends AsyncAction {
 /**
  * Defines an interface that represents an action that grants a permission to a record marker.
  */
-export interface GrantRecordMarkerPermissionAction extends RecordsAction {
-    type: 'grant_record_marker_permission';
+export interface GrantRecordPermissionAction extends RecordsAction {
+    type: 'grant_record_permission';
 
     /**
      * The name of the record.
      */
     recordName: string;
-
-    /**
-     * The marker that should be granted permission.
-     */
-    marker: string;
 
     /**
      * The permission that should be granted.
@@ -605,8 +600,8 @@ export interface GrantRecordMarkerPermissionAction extends RecordsAction {
 /**
  * Defines an interface that represents an action that revokes a permission from a record marker.
  */
-export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
-    type: 'revoke_record_marker_permission';
+export interface RevokeRecordPermissionAction extends RecordsAction {
+    type: 'revoke_record_permission';
 
     /**
      * The name of the record.
@@ -614,14 +609,9 @@ export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
     recordName: string;
 
     /**
-     * The marker that should be revoked permission.
+     * The ID of the permission that should be revoked.
      */
-    marker: string;
-
-    /**
-     * The permission that should be revoked.
-     */
-    permission: object;
+    permissionId: string;
 }
 
 /**
@@ -1094,24 +1084,21 @@ export function getPublicRecordKey(
 }
 
 /**
- * Creates a GrantRecordMarkerPermissionAction.
+ * Creates a GrantRecordPermissionAction.
  * @param recordName The name of the record.
- * @param marker The marker.
  * @param permission The permission that should be granted.
  * @param options The options for the action.
  * @param taskId The ID of the task.
  */
-export function grantRecordMarkerPermission(
+export function grantRecordPermission(
     recordName: string,
-    marker: string,
     permission: object,
     options: RecordActionOptions,
     taskId: number | string
-): GrantRecordMarkerPermissionAction {
+): GrantRecordPermissionAction {
     return {
-        type: 'grant_record_marker_permission',
+        type: 'grant_record_permission',
         recordName,
-        marker,
         permission,
         options,
         taskId,
@@ -1119,25 +1106,23 @@ export function grantRecordMarkerPermission(
 }
 
 /**
- * Creates a RevokeRecordMarkerPermissionAction.
+ * Creates a RevokeRecordPermissionAction.
  * @param recordName The name of the record.
  * @param marker The marker.
- * @param permission The permission that should be granted.
+ * @param permissionId The ID of the permission that should be revoked.
  * @param options The options for the action.
  * @param taskId The ID of the task.
  */
-export function revokeRecordMarkerPermission(
+export function revokeRecordPermission(
     recordName: string,
-    marker: string,
-    permission: object,
+    permissionId: string,
     options: RecordActionOptions,
     taskId: number | string
-): RevokeRecordMarkerPermissionAction {
+): RevokeRecordPermissionAction {
     return {
-        type: 'revoke_record_marker_permission',
+        type: 'revoke_record_permission',
         recordName,
-        marker,
-        permission,
+        permissionId,
         options,
         taskId,
     };
