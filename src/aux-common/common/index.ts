@@ -10,3 +10,4 @@ export * from './ConnectionToken';
 export * from './Iterators';
 export * from './PolicyPermissions';
 export * from './DenialReason';
+export * from './WebConfig';

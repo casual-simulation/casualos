@@ -18,6 +18,7 @@ import {
     QUERY_FULL_HISTORY_TAGS,
     QUERY_PARTIAL_HISTORY_TAGS,
     getBotTheme,
+    BiosOption,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import {
@@ -43,7 +44,6 @@ import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
 import { getInstParameters, getPermalink } from '../UrlUtils';
-import { BiosOption } from 'shared/WebConfig';
 import { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
@@ -137,6 +137,8 @@ export default class PlayerHome extends Vue {
     joinCode: string = null;
     privacyPolicyUrl: string = null;
     termsOfServiceUrl: string = null;
+    logoUrl: string = null;
+    logoTitle: string = null;
 
     errors: FormError[] = [];
 
@@ -268,6 +270,11 @@ export default class PlayerHome extends Vue {
         this.biosOptions = [];
         this.errors = [];
         this._simulations = new Map();
+        this.logoUrl = appManager.comIdConfig?.logoUrl;
+        this.logoTitle =
+            appManager.comIdConfig?.displayName ??
+            appManager.comIdConfig?.comId ??
+            '';
 
         appManager.simulationManager.simulationAdded.subscribe((sim) => {
             const sub = this._setupSimulation(sim);
