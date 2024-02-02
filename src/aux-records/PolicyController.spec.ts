@@ -787,7 +787,9 @@ describe('PolicyController', () => {
             });
 
             expect(result).toEqual({
-                success: true,
+                success: false,
+                errorCode: 'permission_not_found',
+                errorMessage: 'The permission was not found.',
             });
         });
 
@@ -1222,7 +1224,9 @@ describe('PolicyController', () => {
             });
 
             expect(result).toEqual({
-                success: true,
+                success: false,
+                errorCode: 'permission_not_found',
+                errorMessage: 'The permission was not found.',
             });
         });
 
@@ -1304,6 +1308,248 @@ describe('PolicyController', () => {
                 permissionId
             );
             expect(permission).toBe(null);
+        });
+    });
+
+    describe('revokePermission()', () => {
+        let markerPermissionId: string;
+        let resourcePermissionId: string;
+
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const markerResult =
+                (await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'role',
+                    'developer',
+                    'data',
+                    'test',
+                    'read',
+                    {},
+                    null
+                )) as AssignPermissionToSubjectAndMarkerSuccess;
+
+            markerPermissionId = markerResult.permissionAssignment.id;
+
+            const resourceResult =
+                (await store.assignPermissionToSubjectAndResource(
+                    recordName,
+                    'role',
+                    'developer',
+                    'data',
+                    'test',
+                    'read',
+                    {},
+                    null
+                )) as AssignPermissionToSubjectAndResourceSuccess;
+
+            resourcePermissionId = resourceResult.permissionAssignment.id;
+        });
+
+        it('should be able to revoke a marker permission', async () => {
+            const result = await controller.revokePermission({
+                userId: userId,
+                permissionId: markerPermissionId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permission = await store.getMarkerPermissionAssignmentById(
+                markerPermissionId
+            );
+            expect(permission).toBe(null);
+        });
+
+        it('should be able to revoke a resource permission', async () => {
+            const result = await controller.revokePermission({
+                userId: userId,
+                permissionId: resourcePermissionId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permission = await store.getResourcePermissionAssignmentById(
+                resourcePermissionId
+            );
+            expect(permission).toBe(null);
+        });
+
+        it('should do nothing if the permission was not found', async () => {
+            const result = await controller.revokePermission({
+                userId: userId,
+                permissionId: 'missingPermissionId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'permission_not_found',
+                errorMessage: 'The permission was not found.',
+            });
+
+            const markerPermission =
+                await store.getMarkerPermissionAssignmentById(
+                    markerPermissionId
+                );
+            expect(markerPermission).not.toBe(null);
+
+            const resourcePermission =
+                await store.getResourcePermissionAssignmentById(
+                    resourcePermissionId
+                );
+            expect(resourcePermission).not.toBe(null);
+        });
+
+        it('should do nothing if the user is not authorized to revoke a marker permission', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await controller.revokePermission({
+                userId: userId,
+                permissionId: markerPermissionId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: 'test',
+                    action: 'revokePermission',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
+
+            const markerPermission =
+                await store.getMarkerPermissionAssignmentById(
+                    markerPermissionId
+                );
+            expect(markerPermission).not.toBe(null);
+
+            const resourcePermission =
+                await store.getResourcePermissionAssignmentById(
+                    resourcePermissionId
+                );
+            expect(resourcePermission).not.toBe(null);
+        });
+
+        it('should do nothing if the inst is not authorized to revoke a marker permission', async () => {
+            const result = await controller.revokePermission({
+                userId: userId,
+                permissionId: markerPermissionId,
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: 'test',
+                    action: 'revokePermission',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+
+            const markerPermission =
+                await store.getMarkerPermissionAssignmentById(
+                    markerPermissionId
+                );
+            expect(markerPermission).not.toBe(null);
+
+            const resourcePermission =
+                await store.getResourcePermissionAssignmentById(
+                    resourcePermissionId
+                );
+            expect(resourcePermission).not.toBe(null);
+        });
+
+        it('should do nothing if the user is not authorized to revoke a resource permission', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await controller.revokePermission({
+                userId: userId,
+                permissionId: resourcePermissionId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    action: 'revokePermission',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
+
+            const markerPermission =
+                await store.getMarkerPermissionAssignmentById(
+                    markerPermissionId
+                );
+            expect(markerPermission).not.toBe(null);
+
+            const resourcePermission =
+                await store.getResourcePermissionAssignmentById(
+                    resourcePermissionId
+                );
+            expect(resourcePermission).not.toBe(null);
+        });
+
+        it('should do nothing if the inst is not authorized to revoke a resource permission', async () => {
+            const result = await controller.revokePermission({
+                userId: userId,
+                permissionId: resourcePermissionId,
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    action: 'revokePermission',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+
+            const markerPermission =
+                await store.getMarkerPermissionAssignmentById(
+                    markerPermissionId
+                );
+            expect(markerPermission).not.toBe(null);
+
+            const resourcePermission =
+                await store.getResourcePermissionAssignmentById(
+                    resourcePermissionId
+                );
+            expect(resourcePermission).not.toBe(null);
         });
     });
 

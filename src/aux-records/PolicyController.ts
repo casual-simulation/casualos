@@ -1533,7 +1533,9 @@ export class PolicyController {
 
             if (!permission) {
                 return {
-                    success: true,
+                    success: false,
+                    errorCode: 'permission_not_found',
+                    errorMessage: 'The permission was not found.',
                 };
             }
 
@@ -1701,7 +1703,9 @@ export class PolicyController {
 
             if (!permission) {
                 return {
-                    success: true,
+                    success: false,
+                    errorCode: 'permission_not_found',
+                    errorMessage: 'The permission was not found.',
                 };
             }
 
@@ -1751,6 +1755,37 @@ export class PolicyController {
         } catch (err) {
             console.error(
                 '[PolicyController] A server error occurred while revoking a resource permission.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to revoke the permission with the given ID.
+     * @param request The request for the operation.
+     */
+    async revokePermission(
+        request: RevokePermissionRequest
+    ): Promise<RevokePermissionResult> {
+        try {
+            const markerResult = await this.revokeMarkerPermission(request);
+
+            if (
+                markerResult.success === false &&
+                markerResult.errorCode === 'permission_not_found'
+            ) {
+                return await this.revokeResourcePermission(request);
+            }
+
+            return markerResult;
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while revoking a permission.',
                 err
             );
             return {
@@ -2452,6 +2487,7 @@ export interface RevokeMarkerPermissionFailure {
      */
     errorCode:
         | ServerError
+        | 'permission_not_found'
         | ConstructAuthorizationContextFailure['errorCode']
         | AuthorizeSubjectFailure['errorCode'];
 
@@ -2523,12 +2559,12 @@ export interface RevokeResourcePermissionRequest {
 }
 
 /**
- * Defines the possible results of revoking a marker permission from a policy.
+ * Defines the possible results of revoking a resource permission.
  *
  * @dochash types/records/policies
  * @docgroup 02-revoke
  * @docorder 0
- * @docname RevokeMarkerPermissionResult
+ * @docname RevokeResourcePermissionResult
  */
 export type RevokeResourcePermissionResult =
     | RevokeResourcePermissionSuccess
@@ -2562,6 +2598,63 @@ export interface RevokeResourcePermissionFailure {
      */
     errorCode:
         | ServerError
+        | 'permission_not_found'
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+export interface RevokePermissionRequest {
+    permissionId: string;
+    userId: string;
+    instances?: string[] | null;
+}
+
+/**
+ * Defines the possible results of revoking a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 0
+ * @docname RevokeMarkerPermissionResult
+ */
+export type RevokePermissionResult =
+    | RevokePermissionSuccess
+    | RevokePermissionFailure;
+
+/**
+ * Defines an interface that represents a successful request to revoke a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 1
+ * @docname RevokePermissionSuccess
+ */
+export interface RevokePermissionSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to revoke a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 2
+ * @docname RevokePermissionFailure
+ */
+export interface RevokePermissionFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | 'permission_not_found'
         | ConstructAuthorizationContextFailure['errorCode']
         | AuthorizeSubjectFailure['errorCode'];
 
