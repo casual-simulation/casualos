@@ -8,7 +8,6 @@ import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { Subscription } from 'rxjs';
 import { debounce } from 'lodash';
-import Avatar from '../AuthAvatar/AuthAvatar';
 import Security from '../AuthSecurity/AuthSecurity';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
 import {
@@ -20,7 +19,6 @@ import PrivacyItem from '../PrivacyItem/PrivacyItem';
 
 @Component({
     components: {
-        avatar: Avatar,
         security: Security,
         subscription: AuthSubscription,
         'privacy-item': PrivacyItem,
