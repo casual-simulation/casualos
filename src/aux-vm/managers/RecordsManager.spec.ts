@@ -21,8 +21,6 @@ import {
     leaveRoom,
     setRoomOptions,
     getRoomOptions,
-    grantRecordMarkerPermission,
-    revokeRecordMarkerPermission,
     grantInstAdminPermission,
     grantUserRole,
     grantInstRole,
@@ -36,6 +34,8 @@ import {
     getRecordData,
     AuxRuntime,
     listDataRecordByMarker,
+    grantRecordPermission,
+    revokeRecordPermission,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -224,6 +224,10 @@ describe('RecordsManager', () => {
 
     function getLastGet() {
         return require('axios').__getLastGet();
+    }
+
+    function getLastDelete() {
+        return require('axios').__getLastDelete();
     }
 
     function getRequests() {
@@ -5313,14 +5317,14 @@ describe('RecordsManager', () => {
             });
         });
 
-        describe('grant_record_marker_permission', () => {
+        describe('grant_record_permission', () => {
             beforeEach(() => {
                 require('axios').__reset();
 
                 vm.id = 'instId';
             });
 
-            it('should make a POST request to /api/v2/records/policy/grantPermission', async () => {
+            it('should make a POST request to /api/v2/records/permissions', async () => {
                 setResponse({
                     data: {
                         success: true,
@@ -5331,13 +5335,16 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    grantRecordMarkerPermission(
+                    grantRecordPermission(
                         'recordName',
-                        'marker',
                         {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
+                            marker: 'marker',
+                            resourceKind: 'data',
+                            action: 'read',
+                            subjectType: 'role',
+                            subjectId: 'developer',
+                            expireTimeMs: null,
+                            options: {},
                         },
                         {},
                         1
@@ -5347,14 +5354,17 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v2/records/policy/grantPermission',
+                    'http://localhost:3002/api/v2/records/permissions',
                     {
                         recordName: 'recordName',
-                        marker: 'marker',
                         permission: {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
+                            marker: 'marker',
+                            resourceKind: 'data',
+                            action: 'read',
+                            subjectType: 'role',
+                            subjectId: 'developer',
+                            expireTimeMs: null,
+                            options: {},
                         },
                         instances: ['instId'],
                     },
@@ -5379,14 +5389,14 @@ describe('RecordsManager', () => {
             });
         });
 
-        describe('revoke_record_marker_permission', () => {
+        describe('revoke_record_permission', () => {
             beforeEach(() => {
                 require('axios').__reset();
 
                 vm.id = 'instId';
             });
 
-            it('should make a POST request to /api/v2/records/policy/revokePermission', async () => {
+            it('should make a POST request to /api/v2/records/permissions/revoke', async () => {
                 setResponse({
                     data: {
                         success: true,
@@ -5397,31 +5407,16 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    revokeRecordMarkerPermission(
-                        'recordName',
-                        'marker',
-                        {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
-                        },
-                        {},
-                        1
-                    ),
+                    revokeRecordPermission('recordName', 'permissionId', {}, 1),
                 ]);
 
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v2/records/policy/revokePermission',
+                    'http://localhost:3002/api/v2/records/permissions/revoke',
                     {
                         recordName: 'recordName',
-                        marker: 'marker',
-                        permission: {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
-                        },
+                        permissionId: 'permissionId',
                         instances: ['instId'],
                     },
                     {

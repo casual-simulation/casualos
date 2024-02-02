@@ -19,8 +19,6 @@ import {
     SetRoomOptionsAction,
     GetRoomOptionsAction,
     RoomJoinOptions,
-    GrantRecordMarkerPermissionAction,
-    RevokeRecordMarkerPermissionAction,
     GrantInstAdminPermissionAction,
     GrantRoleAction,
     RevokeRoleAction,
@@ -36,6 +34,8 @@ import {
     EraseRecordDataAction,
     EraseFileAction,
     ListRecordDataByMarkerAction,
+    GrantRecordPermissionAction,
+    RevokeRecordPermissionAction,
 } from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -59,6 +59,8 @@ import {
     ReadFileFailure,
     ReportInstRequest,
     ReportInstResult,
+    GrantResourcePermissionResult,
+    RevokePermissionResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -202,10 +204,10 @@ export class RecordsManager {
                 this._setRoomOptions(event);
             } else if (event.type === 'get_room_options') {
                 this._getRoomOptions(event);
-            } else if (event.type === 'grant_record_marker_permission') {
-                this._grantRecordMarkerPermission(event);
-            } else if (event.type === 'revoke_record_marker_permission') {
-                this._revokeRecordMarkerPermission(event);
+            } else if (event.type === 'grant_record_permission') {
+                this._grantRecordPermission(event);
+            } else if (event.type === 'revoke_record_permission') {
+                this._revokeRecordPermission(event);
             } else if (event.type === 'grant_inst_admin_permission') {
                 this._grantInstAdminPermission(event);
             } else if (event.type === 'grant_role') {
@@ -1069,9 +1071,7 @@ export class RecordsManager {
         }
     }
 
-    private async _grantRecordMarkerPermission(
-        event: GrantRecordMarkerPermissionAction
-    ) {
+    private async _grantRecordPermission(event: GrantRecordPermissionAction) {
         try {
             const info = await this._resolveInfoForEvent(event);
 
@@ -1085,23 +1085,23 @@ export class RecordsManager {
             );
             let requestData: any = {
                 recordName: event.recordName,
-                marker: event.marker,
                 permission: event.permission,
                 instances: [this._helper.inst],
             };
 
-            const result: AxiosResponse<RevokeMarkerPermissionResult> =
-                await axios.post(
-                    await this._publishUrl(
-                        info.auth,
-                        '/api/v2/records/policy/grantPermission'
-                    ),
-                    requestData,
-                    {
-                        ...this._axiosOptions,
-                        headers: info.headers,
-                    }
-                );
+            const result: AxiosResponse<
+                GrantMarkerPermissionResult | GrantResourcePermissionResult
+            > = await axios.post(
+                await this._publishUrl(
+                    info.auth,
+                    '/api/v2/records/permissions'
+                ),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
 
             if (result.data.success) {
                 console.log('[RecordsManager] Permission granted!');
@@ -1113,7 +1113,7 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error(
-                '[RecordsManager] Error granting policy permission:',
+                '[RecordsManager] Error granting record permission:',
                 e
             );
             if (hasValue(event.taskId)) {
@@ -1124,9 +1124,7 @@ export class RecordsManager {
         }
     }
 
-    private async _revokeRecordMarkerPermission(
-        event: RevokeRecordMarkerPermissionAction
-    ) {
+    private async _revokeRecordPermission(event: RevokeRecordPermissionAction) {
         try {
             const info = await this._resolveInfoForEvent(event);
 
@@ -1140,16 +1138,15 @@ export class RecordsManager {
             );
             let requestData: any = {
                 recordName: event.recordName,
-                marker: event.marker,
-                permission: event.permission,
+                permissionId: event.permissionId,
                 instances: [this._helper.inst],
             };
 
-            const result: AxiosResponse<RevokeMarkerPermissionResult> =
+            const result: AxiosResponse<RevokePermissionResult> =
                 await axios.post(
                     await this._publishUrl(
                         info.auth,
-                        '/api/v2/records/policy/revokePermission'
+                        '/api/v2/records/permissions/revoke'
                     ),
                     requestData,
                     {
@@ -1704,8 +1701,8 @@ export class RecordsManager {
             | EraseRecordDataAction
             | RecordEventAction
             | GetEventCountAction
-            | GrantRecordMarkerPermissionAction
-            | RevokeRecordMarkerPermissionAction
+            | GrantRecordPermissionAction
+            | RevokeRecordPermissionAction
             | GrantInstAdminPermissionAction
             | GrantRoleAction
             | RevokeRoleAction

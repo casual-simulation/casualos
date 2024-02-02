@@ -3,7 +3,11 @@ import type {
     PublicRecordKeyPolicy,
     RecordFileFailure,
 } from '@casual-simulation/aux-records';
-import { APPROVED_SYMBOL, AsyncAction } from '@casual-simulation/aux-common';
+import {
+    APPROVED_SYMBOL,
+    AsyncAction,
+    AvailablePermissions,
+} from '@casual-simulation/aux-common';
 
 export type RecordsActions = RecordsAsyncActions;
 
@@ -594,7 +598,7 @@ export interface GrantRecordPermissionAction extends RecordsAction {
     /**
      * The permission that should be granted.
      */
-    permission: object;
+    permission: AvailablePermissions;
 }
 
 /**
@@ -1092,7 +1096,7 @@ export function getPublicRecordKey(
  */
 export function grantRecordPermission(
     recordName: string,
-    permission: object,
+    permission: AvailablePermissions,
     options: RecordActionOptions,
     taskId: number | string
 ): GrantRecordPermissionAction {
