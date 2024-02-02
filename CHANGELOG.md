@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Removed the ability to create avatars with ReadyPlayerMe.
+
 ### :rocket: Features
 
 -   Added `POST /api/v2/ai/skybox` character limit prompt to match BlockadeLabs limit of 600 characters.
@@ -23,6 +27,7 @@
         -   `comID.jitsiAppName` - The name of the Jitsi App that should be used for the meetPortal. If none is specified, then the default is used.
         -   `comID.what3WordsApiKey` - The API Key that should be used for `os.convertGeolocationToWhat3Words()`. If none is specified, then the default is used.
     -   Setting `comId` or `comID` in the query tells CasualOS to use the settings that were configured on the related Studio settings page. Additionally, the logo of the studio will be displayed on the loading screens and BIOS.
+-   Added some messaging to the sign up pages to inform users that valid emails are required in order to completely setup their accounts.
 
 ### :bug: Bug Fixes
 
