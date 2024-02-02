@@ -7428,305 +7428,6 @@ describe('RecordsServer', () => {
         });
     });
 
-    // describe('POST /api/v2/records/policy/grantPermission', () => {
-    //     beforeEach(() => {
-    //         store.roles[recordName] = {
-    //             [userId]: new Set([ADMIN_ROLE_NAME]),
-    //         };
-    //     });
-
-    //     it('should grant the given permission to the policy', async () => {
-    //         const result = await server.handleHttpRequest(
-    //             httpPost(
-    //                 `/api/v2/records/policy/grantPermission`,
-    //                 JSON.stringify({
-    //                     recordName,
-    //                     marker: 'test',
-    //                     permission: {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 }),
-    //                 apiHeaders
-    //             )
-    //         );
-
-    //         expectResponseBodyToEqual(result, {
-    //             statusCode: 200,
-    //             body: {
-    //                 success: true,
-    //             },
-    //             headers: apiCorsHeaders,
-    //         });
-
-    //         const data = await store.getUserPolicy(recordName, 'test');
-    //         expect(data).toEqual({
-    //             success: true,
-    //             document: {
-    //                 permissions: [
-    //                     {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 ],
-    //             },
-    //             markers: [ACCOUNT_MARKER],
-    //         });
-    //     });
-
-    //     it('should deny the request if the user is not authorized', async () => {
-    //         delete store.roles[recordName][userId];
-
-    //         const result = await server.handleHttpRequest(
-    //             httpPost(
-    //                 `/api/v2/records/policy/grantPermission`,
-    //                 JSON.stringify({
-    //                     recordName,
-    //                     marker: 'test',
-    //                     permission: {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 }),
-    //                 apiHeaders
-    //             )
-    //         );
-
-    //         expectResponseBodyToEqual(result, {
-    //             statusCode: 403,
-    //             body: {
-    //                 success: false,
-    //                 errorCode: 'not_authorized',
-    //                 errorMessage:
-    //                     'You are not authorized to perform this action.',
-    //                 reason: {
-    //                     id: userId,
-    //                     kind: 'user',
-    //                     marker: 'account',
-    //                     permission: 'policy.grantPermission',
-    //                     role: null,
-    //                     type: 'missing_permission',
-    //                 },
-    //             },
-    //             headers: apiCorsHeaders,
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: false,
-    //             errorCode: 'policy_not_found',
-    //             errorMessage: expect.any(String),
-    //         });
-    //     });
-
-    //     it('should deny the request if the inst is not authorized', async () => {
-    //         const result = await server.handleHttpRequest(
-    //             httpPost(
-    //                 `/api/v2/records/policy/grantPermission`,
-    //                 JSON.stringify({
-    //                     recordName,
-    //                     marker: 'test',
-    //                     permission: {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                     instances: ['inst'],
-    //                 }),
-    //                 apiHeaders
-    //             )
-    //         );
-
-    //         expectResponseBodyToEqual(result, {
-    //             statusCode: 403,
-    //             body: {
-    //                 success: false,
-    //                 errorCode: 'not_authorized',
-    //                 errorMessage:
-    //                     'You are not authorized to perform this action.',
-    //                 reason: {
-    //                     id: 'inst',
-    //                     kind: 'inst',
-    //                     marker: 'account',
-    //                     permission: 'policy.grantPermission',
-    //                     role: null,
-    //                     type: 'missing_permission',
-    //                 },
-    //             },
-    //             headers: apiCorsHeaders,
-    //         });
-
-    //         const policy = await store.getUserPolicy(recordName, 'test');
-
-    //         expect(policy).toEqual({
-    //             success: false,
-    //             errorCode: 'policy_not_found',
-    //             errorMessage: expect.any(String),
-    //         });
-    //     });
-
-    //     it('should return an unacceptable_request result when given a non-string marker', async () => {
-    //         const result = await server.handleHttpRequest(
-    //             httpPost(
-    //                 `/api/v2/records/policy/grantPermission`,
-    //                 JSON.stringify({
-    //                     recordName,
-    //                     marker: 123,
-    //                     permission: {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 }),
-    //                 apiHeaders
-    //             )
-    //         );
-
-    //         expectResponseBodyToEqual(result, {
-    //             statusCode: 400,
-    //             body: {
-    //                 success: false,
-    //                 errorCode: 'unacceptable_request',
-    //                 errorMessage:
-    //                     'The request was invalid. One or more fields were invalid.',
-    //                 issues: [
-    //                     {
-    //                         code: 'invalid_type',
-    //                         expected: 'string',
-    //                         message: 'marker must be a string.',
-    //                         path: ['marker'],
-    //                         received: 'number',
-    //                     },
-    //                 ],
-    //             },
-    //             headers: apiCorsHeaders,
-    //         });
-    //     });
-
-    //     it('should return an unacceptable_request result when given a non-string recordName', async () => {
-    //         const result = await server.handleHttpRequest(
-    //             httpPost(
-    //                 `/api/v2/records/policy/grantPermission`,
-    //                 JSON.stringify({
-    //                     recordName: 123,
-    //                     marker: 'test',
-    //                     permission: {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 }),
-    //                 apiHeaders
-    //             )
-    //         );
-
-    //         expectResponseBodyToEqual(result, {
-    //             statusCode: 400,
-    //             body: {
-    //                 success: false,
-    //                 errorCode: 'unacceptable_request',
-    //                 errorMessage:
-    //                     'The request was invalid. One or more fields were invalid.',
-    //                 issues: [
-    //                     {
-    //                         code: 'invalid_type',
-    //                         expected: 'string',
-    //                         message: 'recordName must be a string.',
-    //                         path: ['recordName'],
-    //                         received: 'number',
-    //                     },
-    //                 ],
-    //             },
-    //             headers: apiCorsHeaders,
-    //         });
-    //     });
-
-    //     it('should return an unacceptable_request result when given undefined data', async () => {
-    //         const result = await server.handleHttpRequest(
-    //             httpPost(
-    //                 `/api/v2/records/policy/grantPermission`,
-    //                 JSON.stringify({
-    //                     recordName,
-    //                     marker: 'test',
-    //                     permission: null,
-    //                 }),
-    //                 apiHeaders
-    //             )
-    //         );
-
-    //         expectResponseBodyToEqual(result, {
-    //             statusCode: 400,
-    //             body: {
-    //                 success: false,
-    //                 errorCode: 'unacceptable_request',
-    //                 errorMessage:
-    //                     'The request was invalid. One or more fields were invalid.',
-    //                 issues: [
-    //                     {
-    //                         code: 'invalid_type',
-    //                         expected: 'object',
-    //                         message: 'Expected object, received null',
-    //                         path: ['permission'],
-    //                         received: 'null',
-    //                     },
-    //                 ],
-    //             },
-    //             headers: apiCorsHeaders,
-    //         });
-    //     });
-
-    //     testOrigin('POST', `/api/v2/records/policy/grantPermission`, () =>
-    //         JSON.stringify({
-    //             recordName,
-    //             marker: 'test',
-    //             permission: {
-    //                 type: 'data.read',
-    //                 role: 'developer',
-    //                 addresses: true,
-    //             },
-    //         })
-    //     );
-    //     testAuthorization(
-    //         () =>
-    //             httpPost(
-    //                 '/api/v2/records/policy/grantPermission',
-    //                 JSON.stringify({
-    //                     recordName,
-    //                     marker: 'test',
-    //                     permission: {
-    //                         type: 'data.read',
-    //                         role: 'developer',
-    //                         addresses: true,
-    //                     },
-    //                 }),
-    //                 apiHeaders
-    //             ),
-    //         'The user is not logged in. A session key must be provided for this operation.'
-    //     );
-    //     testBodyIsJson((body) =>
-    //         httpPost(`/api/v2/records/policy/grantPermission`, body, apiHeaders)
-    //     );
-    //     testRateLimit(() =>
-    //         httpPost(
-    //             `/api/v2/records/policy/grantPermission`,
-    //             JSON.stringify({
-    //                 recordName,
-    //                 marker: 'test',
-    //                 permission: {
-    //                     type: 'data.read',
-    //                     role: 'developer',
-    //                     addresses: true,
-    //                 },
-    //             }),
-    //             defaultHeaders
-    //         )
-    //     );
-    // });
-
     // describe('POST /api/v2/records/policy/revokePermission', () => {
     //     beforeEach(() => {
     //         store.roles[recordName] = {
@@ -8356,6 +8057,521 @@ describe('RecordsServer', () => {
         testRateLimit(() =>
             httpGet(
                 `/api/v2/records/policy/list?recordName=${recordName}`,
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/records/permissions', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        describe('marker', () => {
+            it('should grant the given permission to the marker', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/permissions`,
+                        JSON.stringify({
+                            recordName,
+                            permission: {
+                                marker: 'test',
+                                resourceKind: 'data',
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: 'otherUserId',
+                                userId: 'otherUserId',
+                                expireTimeMs: null,
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: apiCorsHeaders,
+                });
+
+                const data = await store.listPermissionsForMarker(
+                    recordName,
+                    'test'
+                );
+                expect(data).toEqual([
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        marker: 'test',
+                        resourceKind: 'data',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: 'otherUserId',
+                        userId: 'otherUserId',
+                        expireTimeMs: null,
+                    },
+                ]);
+            });
+
+            it('should deny the request if the user is not authorized', async () => {
+                delete store.roles[recordName][userId];
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/permissions`,
+                        JSON.stringify({
+                            recordName,
+                            permission: {
+                                marker: 'test',
+                                resourceKind: 'data',
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: 'otherUserId',
+                                userId: 'otherUserId',
+                                expireTimeMs: null,
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            resourceKind: 'marker',
+                            resourceId: 'test',
+                            action: 'grantPermission',
+                            subjectType: 'user',
+                            subjectId: userId,
+                            recordName: recordName,
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+
+                const data = await store.listPermissionsForMarker(
+                    recordName,
+                    'test'
+                );
+                expect(data).toEqual([]);
+            });
+
+            it('should deny the request if the inst is not authorized', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/permissions`,
+                        JSON.stringify({
+                            recordName,
+                            permission: {
+                                marker: 'test',
+                                resourceKind: 'data',
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: 'otherUserId',
+                                userId: 'otherUserId',
+                                expireTimeMs: null,
+                            },
+                            instances: ['inst'],
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            resourceKind: 'marker',
+                            resourceId: 'test',
+                            action: 'grantPermission',
+                            subjectType: 'inst',
+                            subjectId: '/inst',
+                            recordName: recordName,
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+
+                const data = await store.listPermissionsForMarker(
+                    recordName,
+                    'test'
+                );
+                expect(data).toEqual([]);
+            });
+
+            it('should return an unacceptable_request result when given a non-string marker', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/permissions`,
+                        JSON.stringify({
+                            recordName,
+                            permission: {
+                                marker: 123,
+                                resourceKind: 'data',
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: 'otherUserId',
+                                userId: 'otherUserId',
+                                expireTimeMs: null,
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                message: 'Expected string, received number',
+                                path: ['permission', 'marker'],
+                                received: 'number',
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
+        describe('resourceId', () => {
+            it('should grant the given permission to the resourceId', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/permissions`,
+                        JSON.stringify({
+                            recordName,
+                            permission: {
+                                resourceKind: 'data',
+                                resourceId: 'test',
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: 'otherUserId',
+                                userId: 'otherUserId',
+                                expireTimeMs: null,
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: apiCorsHeaders,
+                });
+
+                const data = await store.listPermissionsForResource(
+                    recordName,
+                    'data',
+                    'test'
+                );
+                expect(data).toEqual([
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        resourceId: 'test',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: 'otherUserId',
+                        userId: 'otherUserId',
+                        expireTimeMs: null,
+                    },
+                ]);
+            });
+
+            it('should deny the request if the user is not authorized', async () => {
+                delete store.roles[recordName][userId];
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/permissions`,
+                        JSON.stringify({
+                            recordName,
+                            permission: {
+                                resourceKind: 'data',
+                                resourceId: 'test',
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: 'otherUserId',
+                                userId: 'otherUserId',
+                                expireTimeMs: null,
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            resourceKind: 'marker',
+                            resourceId: ACCOUNT_MARKER,
+                            action: 'grantPermission',
+                            subjectType: 'user',
+                            subjectId: userId,
+                            recordName: recordName,
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+
+                const data = await store.listPermissionsForResource(
+                    recordName,
+                    'data',
+                    'test'
+                );
+                expect(data).toEqual([]);
+            });
+
+            it('should deny the request if the inst is not authorized', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/permissions`,
+                        JSON.stringify({
+                            recordName,
+                            permission: {
+                                resourceKind: 'data',
+                                resourceId: 'test',
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: 'otherUserId',
+                                userId: 'otherUserId',
+                                expireTimeMs: null,
+                            },
+                            instances: ['inst'],
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            resourceKind: 'marker',
+                            resourceId: ACCOUNT_MARKER,
+                            action: 'grantPermission',
+                            subjectType: 'inst',
+                            subjectId: '/inst',
+                            recordName: recordName,
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+
+                const data = await store.listPermissionsForResource(
+                    recordName,
+                    'data',
+                    'test'
+                );
+                expect(data).toEqual([]);
+            });
+
+            it('should return an unacceptable_request result when given a non-string resourceId', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/permissions`,
+                        JSON.stringify({
+                            recordName,
+                            permission: {
+                                resourceKind: 'data',
+                                resourceId: 123,
+                                action: 'read',
+                                subjectType: 'user',
+                                subjectId: 'otherUserId',
+                                userId: 'otherUserId',
+                                expireTimeMs: null,
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                message: 'Expected string, received number',
+                                path: ['permission', 'resourceId'],
+                                received: 'number',
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string recordName', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/permissions`,
+                    JSON.stringify({
+                        recordName: 123,
+                        permission: {
+                            marker: 'test',
+                            resourceKind: 'data',
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: 'otherUserId',
+                            userId: 'otherUserId',
+                            expireTimeMs: null,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName must be a string.',
+                            path: ['recordName'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given undefined data', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/permissions`,
+                    JSON.stringify({
+                        recordName,
+                        permission: null,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'object',
+                            message: 'Expected object, received null',
+                            path: ['permission'],
+                            received: 'null',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/permissions`, () =>
+            JSON.stringify({
+                recordName,
+                permission: {
+                    marker: 'test',
+                    resourceKind: 'data',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'otherUserId',
+                    userId: 'otherUserId',
+                    expireTimeMs: null,
+                },
+            })
+        );
+        testAuthorization(
+            () =>
+                httpPost(
+                    '/api/v2/records/permissions',
+                    JSON.stringify({
+                        recordName,
+                        permission: {
+                            marker: 'test',
+                            resourceKind: 'data',
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: 'otherUserId',
+                            userId: 'otherUserId',
+                            expireTimeMs: null,
+                        },
+                    }),
+                    apiHeaders
+                ),
+            'The user is not logged in. A session key must be provided for this operation.'
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/records/permissions`, body, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/permissions`,
+                JSON.stringify({
+                    recordName,
+                    permission: {
+                        marker: 'test',
+                        resourceKind: 'data',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: 'otherUserId',
+                        userId: 'otherUserId',
+                        expireTimeMs: null,
+                    },
+                }),
                 defaultHeaders
             )
         );

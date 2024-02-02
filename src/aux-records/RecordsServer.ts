@@ -31,8 +31,12 @@ import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
     RESOURCE_KIND_VALIDATION,
+    ResourceKinds,
 } from '@casual-simulation/aux-common';
-import { PolicyController } from './PolicyController';
+import {
+    GrantResourcePermissionRequest,
+    PolicyController,
+} from './PolicyController';
 import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 import { WebsocketController } from './websockets/WebsocketController';
@@ -685,11 +689,11 @@ export class RecordsServer {
             );
         } else if (
             request.method === 'POST' &&
-            request.path === '/api/v2/records/policy/grantPermission'
+            request.path === '/api/v2/records/permissions'
         ) {
             return formatResponse(
                 request,
-                await this._policyGrantPermission(request),
+                await this._grantPermission(request),
                 this._allowedApiOrigins
             );
         } else if (
@@ -1522,7 +1526,7 @@ export class RecordsServer {
         return returnResult(result);
     }
 
-    private async _policyGrantPermission(
+    private async _grantPermission(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         if (!validateOrigin(request, this._allowedApiOrigins)) {
@@ -1541,12 +1545,6 @@ export class RecordsServer {
 
         const schema = z.object({
             recordName: RECORD_NAME_VALIDATION,
-            marker: z
-                .string({
-                    invalid_type_error: 'marker must be a string.',
-                    required_error: 'marker is required.',
-                })
-                .nonempty('marker must not be empty'),
             permission: AVAILABLE_PERMISSIONS_VALIDATION,
             instances: INSTANCES_ARRAY_VALIDATION.nonempty().optional(),
         });
@@ -1557,7 +1555,7 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, marker, permission, instances } = parseResult.data;
+        const { recordName, permission, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1567,15 +1565,35 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._policyController.grantMarkerPermission({
-            recordKeyOrRecordName: recordName,
-            marker: marker,
-            userId: sessionKeyValidation.userId,
-            permission: permission as any,
-            instances,
-        });
+        if (permission.marker) {
+            const result = await this._policyController.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                marker: permission.marker,
+                userId: sessionKeyValidation.userId,
+                permission: permission as any,
+                instances,
+            });
 
-        return returnResult(result);
+            return returnResult(result);
+        } else if (permission.resourceKind && permission.resourceId) {
+            const result = await this._policyController.grantResourcePermission(
+                {
+                    recordKeyOrRecordName: recordName,
+                    permission: permission as any,
+                    userId: sessionKeyValidation.userId,
+                    instances,
+                }
+            );
+
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: false,
+            errorCode: 'unacceptable_request',
+            errorMessage:
+                'The given permission must have either a marker or a resourceId.',
+        });
     }
 
     private async _policyRevokePermission(
