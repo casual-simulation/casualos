@@ -825,6 +825,30 @@ export class MemoryStore
         options: PermissionOptions,
         expireTimeMs: number | null
     ): Promise<AssignPermissionToSubjectAndResourceResult> {
+        const assignmentIndex = this._resourcePermissionAssignments.findIndex(
+            (a) =>
+                a.recordName === recordName &&
+                a.subjectType === subjectType &&
+                a.subjectId === subjectId &&
+                a.resourceKind === resourceKind &&
+                a.resourceId === resourceId &&
+                a.action === action
+        );
+
+        if (assignmentIndex >= 0) {
+            const assignment =
+                this._resourcePermissionAssignments[assignmentIndex];
+            this._resourcePermissionAssignments[assignmentIndex] = {
+                ...assignment,
+                options,
+                expireTimeMs,
+            };
+            return {
+                success: true,
+                permissionAssignment: assignment,
+            };
+        }
+
         const userId = getSubjectUserId(subjectType, subjectId);
         const assignment: ResourcePermissionAssignment = {
             id: uuid(),

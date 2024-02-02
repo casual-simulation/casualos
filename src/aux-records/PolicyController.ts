@@ -1581,7 +1581,10 @@ export class PolicyController {
                 success: true,
             };
         } catch (err) {
-            console.error('[PolicyController] A server error occurred.', err);
+            console.error(
+                '[PolicyController] A server error occurred while revoking a marker permission.',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -1682,6 +1685,78 @@ export class PolicyController {
             };
         }
     }
+
+    /**
+     * Attempts to revoke a permission from a resource.
+     * @param request The request for the operation.
+     */
+    async revokeResourcePermission(
+        request: RevokeResourcePermissionRequest
+    ): Promise<RevokeResourcePermissionResult> {
+        try {
+            const permission =
+                await this._policies.getResourcePermissionAssignmentById(
+                    request.permissionId
+                );
+
+            if (!permission) {
+                return {
+                    success: true,
+                };
+            }
+
+            const baseRequest = {
+                recordKeyOrRecordName: permission.recordName,
+                userId: request.userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    action: 'revokePermission',
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    markers: [ACCOUNT_MARKER],
+                    userId: request.userId,
+                    instances: request.instances,
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const deleteResult =
+                await this._policies.deleteResourcePermissionAssignmentById(
+                    permission.id
+                );
+
+            if (!deleteResult.success) {
+                return deleteResult;
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while revoking a resource permission.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -2338,7 +2413,7 @@ export interface RevokeMarkerPermissionRequest {
 }
 
 /**
- * Defines the possible results of revoking a marker permission from a policy.
+ * Defines the possible results of revoking a permission from a marker.
  *
  * @dochash types/records/policies
  * @docgroup 02-revoke
@@ -2350,7 +2425,7 @@ export type RevokeMarkerPermissionResult =
     | RevokeMarkerPermissionFailure;
 
 /**
- * Defines an interface that represents a successful request to revoke a marker permission from a policy.
+ * Defines an interface that represents a successful request to revoke a permission from a marker.
  *
  * @dochash types/records/policies
  * @docgroup 02-revoke
@@ -2362,7 +2437,7 @@ export interface RevokeMarkerPermissionSuccess {
 }
 
 /**
- * Defines an interface that represents a failed request to revoke a marker permission from a policy.
+ * Defines an interface that represents a failed request to revoke a permission from a marker.
  *
  * @dochash types/records/policies
  * @docgroup 02-revoke
@@ -2386,7 +2461,6 @@ export interface RevokeMarkerPermissionFailure {
     errorMessage: string;
 }
 
-
 export interface GrantResourcePermissionRequest {
     recordKeyOrRecordName: string;
     userId: string;
@@ -2404,9 +2478,8 @@ export type GrantResourcePermissionResult =
     | GrantResourcePermissionSuccess
     | GrantResourcePermissionFailure;
 
-
 /**
- * Defines an interface that represents a successful request to grant a marker permission to a policy.
+ * Defines an interface that represents a successful request to grant a permission to a resource.
  *
  * @dochash types/records/policies
  * @docgroup 01-grant
@@ -2418,7 +2491,7 @@ export interface GrantResourcePermissionSuccess {
 }
 
 /**
- * Defines an interface that represents a failed request to grant a marker permission to a policy.
+ * Defines an interface that represents a failed request to grant a permission to a resource.
  *
  * @dochash types/records/policies
  * @docgroup 01-grant
@@ -2436,6 +2509,61 @@ export interface GrantResourcePermissionFailure {
         | ConstructAuthorizationContextFailure['errorCode']
         | AuthorizeSubjectFailure['errorCode']
         | AssignPermissionToSubjectAndMarkerFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+export interface RevokeResourcePermissionRequest {
+    permissionId: string;
+    userId: string;
+    instances?: string[] | null;
+}
+
+/**
+ * Defines the possible results of revoking a marker permission from a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 0
+ * @docname RevokeMarkerPermissionResult
+ */
+export type RevokeResourcePermissionResult =
+    | RevokeResourcePermissionSuccess
+    | RevokeResourcePermissionFailure;
+
+/**
+ * Defines an interface that represents a successful request to revoke a permission from a resource.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 1
+ * @docname RevokeResourcePermissionSuccess
+ */
+export interface RevokeResourcePermissionSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to revoke a permission from a resource.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 2
+ * @docname RevokeResourcePermissionFailure
+ */
+export interface RevokeResourcePermissionFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
 
     /**
      * The error message that indicates why the request failed.

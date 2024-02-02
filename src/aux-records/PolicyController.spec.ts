@@ -1175,6 +1175,138 @@ describe('PolicyController', () => {
         });
     });
 
+    describe('revokeResourcePermission()', () => {
+        let permissionId: string;
+
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = (await store.assignPermissionToSubjectAndResource(
+                recordName,
+                'role',
+                'developer',
+                'data',
+                'test',
+                'read',
+                {},
+                null
+            )) as AssignPermissionToSubjectAndResourceSuccess;
+
+            permissionId = result.permissionAssignment.id;
+        });
+
+        it('should remove a permission from a policy', async () => {
+            const result = await controller.revokeResourcePermission({
+                userId: userId,
+                permissionId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permission = await store.getResourcePermissionAssignmentById(
+                permissionId
+            );
+            expect(permission).toBe(null);
+        });
+
+        it('should do nothing if the permission was not found', async () => {
+            await store.deleteResourcePermissionAssignmentById(permissionId);
+
+            const result = await controller.revokeResourcePermission({
+                userId: userId,
+                permissionId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+        });
+
+        it('should do nothing if the user is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await controller.revokeResourcePermission({
+                userId: userId,
+                permissionId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    action: 'revokePermission',
+                    subjectId: userId,
+                    subjectType: 'user',
+                },
+            });
+
+            const permission = await store.getResourcePermissionAssignmentById(
+                permissionId
+            );
+
+            expect(permission).not.toBe(null);
+        });
+
+        it('should do nothing if the inst is not authorized', async () => {
+            const result = await controller.revokeResourcePermission({
+                userId: userId,
+                permissionId,
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    action: 'revokePermission',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
+            });
+
+            const permission = await store.getResourcePermissionAssignmentById(
+                permissionId
+            );
+
+            expect(permission).not.toBe(null);
+        });
+
+        it('should work if both the user and the inst have admin permissions', async () => {
+            store.roles[recordName]['/inst'] = new Set([ADMIN_ROLE_NAME]);
+
+            const result = await controller.revokeResourcePermission({
+                userId: userId,
+                permissionId,
+                instances: ['/inst'],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permission = await store.getResourcePermissionAssignmentById(
+                permissionId
+            );
+            expect(permission).toBe(null);
+        });
+    });
+
     describe('listUserRoles()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
