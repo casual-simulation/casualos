@@ -367,7 +367,8 @@ export type KnownErrorCodes =
     | 'invalid_display_name'
     | 'permission_already_exists'
     | 'comId_not_found'
-    | 'comId_already_taken';
+    | 'comId_already_taken'
+    | 'permission_not_found';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -463,6 +464,8 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'comId_already_taken') {
             return 409;
+        } else if (response.errorCode === 'permission_not_found') {
+            return 404;
         } else {
             return 400;
         }

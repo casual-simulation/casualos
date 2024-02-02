@@ -511,6 +511,7 @@ describe('getStatusCode()', () => {
         ['permission_already_exists', 400] as const,
         ['comId_not_found', 404] as const,
         ['comId_already_taken', 409] as const,
+        ['permission_not_found', 404] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
