@@ -2,7 +2,7 @@
 
 ## V3.2.13
 
-#### Date: TBD
+#### Date: 2/5/2024
 
 ### :boom: Breaking Changes
 
@@ -21,6 +21,10 @@
     -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
     -   `os.revokePermission()` deletes the permission with the given ID.
 -   Improved diagnostics for VR and AR features.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `ai.generateSkybox()` would fail if an instances array was provided.
 
 ## V3.2.12
 
@@ -53,7 +57,7 @@
 
 ### :bug: Bug Fixes
 
--   Fixed an issuse where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
+-   Fixed an issue where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
 
 ## V3.2.11
 
