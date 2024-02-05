@@ -86,6 +86,9 @@
                                     :disabled="processing"
                                     @blur="checkEmail()"
                                 />
+                                <span v-if="!requireParentEmail" class="md-helper-text"
+                                    >We require a valid email to set up your account.</span
+                                >
                                 <field-errors field="email" :errors="errors" />
                             </md-field>
 
@@ -98,6 +101,9 @@
                                     v-model="parentEmail"
                                     :disabled="processing"
                                 />
+                                <span class="md-helper-text"
+                                    >We require a valid parent email to set up your account.</span
+                                >
                                 <field-errors field="parentEmail" :errors="errors" />
                             </md-field>
                         </div>

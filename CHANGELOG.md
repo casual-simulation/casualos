@@ -20,10 +20,15 @@
 -   Added `os.grantPermission(recordName, permission, options?)` and `os.revokePermission(recordName, permissionId, options?)`.
     -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
     -   `os.revokePermission()` deletes the permission with the given ID.
+-   Improved diagnostics for VR and AR features.
 
 ## V3.2.12
 
-#### Date: TBD
+#### Date: 2/2/2024
+
+### :boom: Breaking Changes
+
+-   Removed the ability to create avatars with ReadyPlayerMe.
 
 ### :rocket: Features
 
@@ -44,6 +49,7 @@
         -   `comID.jitsiAppName` - The name of the Jitsi App that should be used for the meetPortal. If none is specified, then the default is used.
         -   `comID.what3WordsApiKey` - The API Key that should be used for `os.convertGeolocationToWhat3Words()`. If none is specified, then the default is used.
     -   Setting `comId` or `comID` in the query tells CasualOS to use the settings that were configured on the related Studio settings page. Additionally, the logo of the studio will be displayed on the loading screens and BIOS.
+-   Added some messaging to the sign up pages to inform users that valid emails are required in order to completely setup their accounts.
 
 ### :bug: Bug Fixes
 

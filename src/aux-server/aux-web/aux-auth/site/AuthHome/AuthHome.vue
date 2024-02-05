@@ -40,13 +40,6 @@
                         ></md-input>
                     </md-field>
                 </div>
-                <div>
-                    <avatar
-                        :avatarUrl="metadata.avatarUrl"
-                        :render="metadata.avatarPortraitUrl"
-                        @updateAvatar="updateAvatar"
-                    ></avatar>
-                </div>
 
                 <p v-show="updating">Updating...</p>
                 <p v-show="updated">Updated!</p>
