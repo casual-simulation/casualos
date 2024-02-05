@@ -1,6 +1,6 @@
 # CasualOS Changelog
 
-## V3.2.12
+## V3.2.13
 
 #### Date: TBD
 
@@ -12,6 +12,18 @@
     -   The reason for this change is to make the API more predictable. Previously, it was possible for `os.listData()` to return no results even if there were items after the given address. This is because a fixed number of items would be retrieved from the database and then checked to see if the user has access to it. If the user did not have access to any items, then an empty list would be returned, even if there are items that the user _does_ have access to later in the database.
 -   Changed `os.listData()` to throw a `CausualOSError` if the user is not authorized to list items.
     -   Previously, an empty list would be returned. Now, an empty list is only returned if there are no items.
+-   Removed `os.grantRecordMarkerPermission()` and `os.revokeRecordMarkerPermission()`.
+    -   These functions have been replaced by `os.grantPermission()` and `os.revokePermission()`.
+
+### :rocket: Features
+
+-   Added `os.grantPermission(recordName, permission, options?)` and `os.revokePermission(recordName, permissionId, options?)`.
+    -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
+    -   `os.revokePermission()` deletes the permission with the given ID.
+
+## V3.2.12
+
+#### Date: TBD
 
 ### :rocket: Features
 
