@@ -1165,7 +1165,7 @@ export abstract class Game {
             return;
         }
 
-        console.log('[Game] Start XR');
+        console.log(`[Game] Start XR: ${mode}`);
         this.xrState = 'starting';
         this.renderer.xr.enabled = true;
 
@@ -1175,7 +1175,14 @@ export abstract class Game {
                 requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
                 optionalFeatures: ['hand-tracking'],
             })
-            .catch(() => {
+            .catch((err: any) => {
+                console.error(
+                    '[Game] Failed to start XR session with preferred reference space.',
+                    err
+                );
+                console.log(
+                    '[Game] Starting XR session without preferred reference space.'
+                );
                 supportsPreferredReferenceSpace = false;
                 return (navigator as any).xr.requestSession(mode);
             });
