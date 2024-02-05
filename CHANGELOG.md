@@ -1,8 +1,8 @@
 # CasualOS Changelog
 
-## V3.2.13
+## V3.2.14
 
-#### Date: 2/5/2024
+#### Date: TBD
 
 ### :boom: Breaking Changes
 
@@ -20,6 +20,13 @@
 -   Added `os.grantPermission(recordName, permission, options?)` and `os.revokePermission(recordName, permissionId, options?)`.
     -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
     -   `os.revokePermission()` deletes the permission with the given ID.
+
+## V3.2.13
+
+#### Date: 2/5/2024
+
+### :rocket: Features
+
 -   Improved diagnostics for VR and AR features.
 
 ### :bug: Bug Fixes
