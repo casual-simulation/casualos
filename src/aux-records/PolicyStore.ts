@@ -96,12 +96,14 @@ export interface PolicyStore {
 
     /**
      * Gets the privacy features that are enabled for the given user.
+     * Returns null if the given user does not exist.
      * @param userId The ID of the user.
      */
     getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures>;
 
     /**
      * Gets the privacy features for the owner of the given record.
+     * Returns null if the record does not exist or if the record does not have an owner.
      * @param recordName The name of the record.
      */
     getRecordOwnerPrivacyFeatures(recordName: string): Promise<PrivacyFeatures>;
