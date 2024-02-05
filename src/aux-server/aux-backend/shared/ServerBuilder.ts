@@ -321,7 +321,11 @@ export class ServerBuilder implements SubscriptionLike {
                     db.collection<any>('recordsEvents');
                 const configuration = db.collection<any>('configuration');
 
-                const policies = db.collection<any>('policies');
+                const resourcePermissions = db.collection<any>(
+                    'resourcePermissions'
+                );
+                const markerPermissions =
+                    db.collection<any>('markerPermissions');
                 const roles = db.collection<any>('roles');
 
                 this._configStore = new MongoDBConfigurationStore(
@@ -347,9 +351,10 @@ export class ServerBuilder implements SubscriptionLike {
                 this._authStore = authStore;
                 this._recordsStore = authStore;
                 this._policyStore = new MongoDBPolicyStore(
-                    policies,
                     roles,
-                    users
+                    users,
+                    resourcePermissions,
+                    markerPermissions
                 );
                 this._dataStore = new MongoDBDataRecordsStore(
                     recordsDataCollection
