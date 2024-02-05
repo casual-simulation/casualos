@@ -27,6 +27,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issuse where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
+-   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
 
 ## V3.2.11
 
