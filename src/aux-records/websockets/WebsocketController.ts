@@ -2404,7 +2404,7 @@ export type ListInstsResult = ListInstsSuccess | ListInstsFailure;
 
 export interface ListInstsSuccess {
     success: true;
-    insts: any[]; //ListedInstItem[];
+    insts: InstRecord[];
     totalCount: number;
 }
 

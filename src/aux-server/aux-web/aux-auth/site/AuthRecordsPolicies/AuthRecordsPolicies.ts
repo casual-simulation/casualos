@@ -4,13 +4,8 @@ import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import {
-    ListUserPoliciesSuccess,
-    ListedUserPolicy,
-} from '@casual-simulation/aux-records';
 import { LoadingHelper } from '../LoadingHelper';
 import AuthMarker from '../AuthMarker/AuthMarker';
-import PermissionScope from '../PermissionScope/PermissionScope';
 
 const PAGE_SIZE = 10;
 
@@ -18,11 +13,10 @@ const PAGE_SIZE = 10;
     components: {
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
-        'permission-scope': PermissionScope,
     },
 })
 export default class AuthRecordsPolicies extends Vue {
-    private _helper: LoadingHelper<ListedUserPolicy>;
+    private _helper: LoadingHelper<any>;
 
     @Prop({ required: true })
     recordName: string;
@@ -33,7 +27,7 @@ export default class AuthRecordsPolicies extends Vue {
         mdPage: number;
         startIndex: number;
         endIndex: number;
-        mdData: ListedUserPolicy[];
+        mdData: any[];
     } = {
         mdCount: 100,
         mdPage: 0,
@@ -42,7 +36,7 @@ export default class AuthRecordsPolicies extends Vue {
         endIndex: 0,
     };
 
-    selectedItem: ListedUserPolicy = null;
+    selectedItem: any = null;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -57,22 +51,22 @@ export default class AuthRecordsPolicies extends Vue {
 
     private _reset() {
         this._helper = new LoadingHelper(async (lastItem) => {
-            let result = await authManager.listPolicies(
-                this.recordName,
-                lastItem?.marker
-            );
+            // let result = await authManager.listPolicies(
+            //     this.recordName,
+            //     lastItem?.marker
+            // );
 
-            if (result) {
-                return {
-                    items: result.policies,
-                    totalCount: result.totalCount,
-                };
-            } else {
-                return {
-                    items: [],
-                    totalCount: 0,
-                };
-            }
+            // if (result) {
+            //     return {
+            //         items: result.policies,
+            //         totalCount: result.totalCount,
+            //     };
+            // } else {
+            return {
+                items: [],
+                totalCount: 0,
+            };
+            // }
         });
         this.items = {
             mdCount: 0,
@@ -98,7 +92,7 @@ export default class AuthRecordsPolicies extends Vue {
         return true;
     }
 
-    onSelect(item: ListedUserPolicy) {
+    onSelect(item: any) {
         this.selectedItem = item;
     }
 }

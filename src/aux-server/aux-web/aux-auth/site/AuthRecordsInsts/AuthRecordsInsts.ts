@@ -5,10 +5,8 @@ import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import type {
-    ListDataResult,
-    ListDataSuccess,
+    InstRecord,
     ListInstsSuccess,
-    ListedInstItem,
 } from '@casual-simulation/aux-records';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import { LoadingHelper } from '../LoadingHelper';
@@ -89,7 +87,7 @@ export default class AuthRecordsInsts extends Vue {
         this.updatePagination(this.items.mdPage + change, PAGE_SIZE);
     }
 
-    getInstUrl(inst: ListedInstItem): string {
+    getInstUrl(inst: InstRecord): string {
         const origin = FRONTEND_ORIGIN ?? window.location.origin;
         let url = new URL(origin);
         url.searchParams.set('record', this.recordName);
@@ -106,7 +104,7 @@ export default class AuthRecordsInsts extends Vue {
         return true;
     }
 
-    async deleteInst(item: ListedInstItem) {
+    async deleteInst(item: InstRecord) {
         const result = await authManager.deleteInst(this.recordName, item.inst);
         if (result.success === true) {
             this.items.mdData = this.items.mdData.filter(

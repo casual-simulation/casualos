@@ -17,6 +17,7 @@ import {
     getBotsStateFromStoredAux,
     applyUpdatesToInst,
     isStoredVersion2,
+    PrivacyFeatures,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
@@ -45,7 +46,6 @@ import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUt
 import {
     ComIdConfig,
     GetPlayerConfigSuccess,
-    PrivacyFeatures,
 } from '@casual-simulation/aux-records';
 import { AuxDevice } from '@casual-simulation/aux-runtime';
 

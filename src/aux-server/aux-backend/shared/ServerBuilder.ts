@@ -911,6 +911,7 @@ export class ServerBuilder implements SubscriptionLike {
             images: null,
             config: this._configStore,
             metrics: this._metricsStore,
+            policies: this._policyStore,
         };
 
         if (this._chatInterface && options.ai.chat) {

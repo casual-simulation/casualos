@@ -66,9 +66,7 @@
                 >
                     <md-table-cell>{{ permission.type }}</md-table-cell>
                     <md-table-cell>{{ permission.role }}</md-table-cell>
-                    <md-table-cell>
-                        <permission-scope :permission="permission" />
-                    </md-table-cell>
+                    <md-table-cell></md-table-cell>
                     <!-- <md-table-cell></md-table-cell> -->
                 </md-table-row>
             </md-table>

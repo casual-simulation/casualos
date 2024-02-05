@@ -2664,44 +2664,6 @@ export interface RevokePermissionFailure {
     errorMessage: string;
 }
 
-export type ReadUserPolicyResult =
-    | ReadUserPolicySuccess
-    | ReadUserPolicyFailure;
-
-export interface ReadUserPolicySuccess {
-    success: true;
-    // document: PolicyDocument;
-    markers: string[];
-}
-
-export interface ReadUserPolicyFailure {
-    success: false;
-    errorCode:
-        | ServerError
-        | ConstructAuthorizationContextFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode'];
-    errorMessage: string;
-}
-
-export type ListUserPoliciesResult =
-    | ListUserPoliciesSuccess
-    | ListUserPoliciesFailure;
-
-export interface ListUserPoliciesSuccess {
-    success: true;
-    // policies: ListedUserPolicy[];
-    totalCount: number;
-}
-
-export interface ListUserPoliciesFailure {
-    success: false;
-    errorCode:
-        | ServerError
-        | ConstructAuthorizationContextFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode'];
-    errorMessage: string;
-}
-
 export type ListAssignedUserRolesResult =
     | ListAssignedUserRolesSuccess
     | ListAssignedUserRolesFailure;
