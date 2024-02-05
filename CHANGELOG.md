@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.2.13
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Improved diagnostics for VR and AR features.
+
 ## V3.2.12
 
 #### Date: 2/2/2024
