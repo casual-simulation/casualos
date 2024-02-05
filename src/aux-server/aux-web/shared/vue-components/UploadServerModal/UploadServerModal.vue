@@ -1,7 +1,7 @@
 <template>
     <md-dialog :md-active.sync="isOpen" class="bot-upload-dialog">
         <md-dialog-title>Upload Files</md-dialog-title>
-        <div class="bot-upload-container">
+        <div class="bot-upload-container" style="max-height: 400px; overflow-y: auto">
             <bot-pond allow-multiple="false" @addfile="fileAdded" @removefile="fileRemoved" />
         </div>
         <md-dialog-actions>
