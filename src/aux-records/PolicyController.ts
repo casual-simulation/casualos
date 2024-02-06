@@ -1406,18 +1406,16 @@ export class PolicyController {
 
             const recordName = context.context.recordName;
 
-            const result = await this._policies.listPermissionsInRecord(
-                recordName
+            const result = await this._policies.listPermissionsForResource(
+                recordName,
+                resourceKind,
+                resourceId
             );
-
-            if (result.success === false) {
-                return result;
-            }
 
             return {
                 success: true,
                 recordName,
-                resourcePermissions: result.resourceAssignments.map(
+                resourcePermissions: result.map(
                     (r) =>
                         ({
                             id: r.id,
