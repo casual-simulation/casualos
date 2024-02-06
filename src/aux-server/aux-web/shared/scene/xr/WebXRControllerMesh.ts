@@ -88,12 +88,18 @@ export class WebXRControllerMesh implements SubscriptionLike {
 
     update(frame: XRFrame, referenceSpace: XRSpace) {
         const inputSource = this.inputSource;
-        const gripPose = frame.getPose(
-            inputSource.targetRayMode === 'tracked-pointer'
-                ? inputSource.gripSpace
-                : inputSource.targetRaySpace,
-            referenceSpace
-        );
+
+        let space: XRSpace;
+        if (
+            inputSource.targetRayMode === 'tracked-pointer' &&
+            inputSource.gripSpace
+        ) {
+            space = inputSource.gripSpace;
+        } else {
+            space = inputSource.targetRaySpace;
+        }
+
+        const gripPose = frame.getPose(space, referenceSpace);
         const rayPose = frame.getPose(
             inputSource.targetRaySpace,
             referenceSpace
@@ -164,7 +170,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
                 ) {
                     const minNode = this._nodes.get(minNodeName);
                     const maxNode = this._nodes.get(maxNodeName);
-                    
+
                     valueNode.quaternion.slerpQuaternions(
                         minNode.quaternion,
                         maxNode.quaternion,
