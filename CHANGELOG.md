@@ -1,8 +1,32 @@
 # CasualOS Changelog
 
-## V3.2.12
+## V3.2.14
 
 #### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
+
+## V3.2.13
+
+#### Date: 2/5/2024
+
+### :rocket: Features
+
+-   Improved diagnostics for VR and AR features.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `ai.generateSkybox()` would fail if an instances array was provided.
+
+## V3.2.12
+
+#### Date: 2/2/2024
+
+### :boom: Breaking Changes
+
+-   Removed the ability to create avatars with ReadyPlayerMe.
 
 ### :rocket: Features
 
@@ -23,11 +47,11 @@
         -   `comID.jitsiAppName` - The name of the Jitsi App that should be used for the meetPortal. If none is specified, then the default is used.
         -   `comID.what3WordsApiKey` - The API Key that should be used for `os.convertGeolocationToWhat3Words()`. If none is specified, then the default is used.
     -   Setting `comId` or `comID` in the query tells CasualOS to use the settings that were configured on the related Studio settings page. Additionally, the logo of the studio will be displayed on the loading screens and BIOS.
+-   Added some messaging to the sign up pages to inform users that valid emails are required in order to completely setup their accounts.
 
 ### :bug: Bug Fixes
 
--   Fixed an issuse where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
--   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
+-   Fixed an issue where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
 
 ## V3.2.11
 

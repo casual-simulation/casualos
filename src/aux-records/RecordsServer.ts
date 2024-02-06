@@ -2116,7 +2116,7 @@ export class RecordsServer {
                     seed: z.number().optional(),
                 })
                 .optional(),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
