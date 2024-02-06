@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.2.14
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
+
 ## V3.2.13
 
 #### Date: 2/5/2024
