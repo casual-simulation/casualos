@@ -3452,6 +3452,16 @@ export interface GrantRoleFailure {
      * The policy that should be used for deleting the record.
      */
     deletePolicy?: RecordUserPolicyType;
+
+    /**
+     * The markers that should be applied to the record.
+     */
+    markers?: string[];
+
+    /**
+     * The marker that should be applied to the record.
+     */
+    marker?: string;
 }
 
 /**
