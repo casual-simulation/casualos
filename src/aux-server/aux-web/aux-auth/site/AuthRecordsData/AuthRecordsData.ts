@@ -10,6 +10,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import { LoadingHelper } from '../LoadingHelper';
+import AuthPermissions from '../AuthPermissions/AuthPermissions';
 
 const PAGE_SIZE = 10;
 
@@ -17,6 +18,7 @@ const PAGE_SIZE = 10;
     components: {
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
+        'auth-permissions': AuthPermissions,
     },
 })
 export default class AuthRecordsData extends Vue {
@@ -39,6 +41,10 @@ export default class AuthRecordsData extends Vue {
         startIndex: 0,
         endIndex: 0,
     };
+
+    permissionsMarker: string = null;
+    permissionsResourceKind: string = null;
+    permissionsResourceId: string = null;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -99,5 +105,14 @@ export default class AuthRecordsData extends Vue {
                 (i) => i.address !== item.address
             );
         }
+    }
+
+    onMarkerClick(marker: string) {
+        this.permissionsMarker = marker;
+    }
+
+    onItemClick(item: ListDataSuccess['items'][0]) {
+        this.permissionsResourceKind = 'data';
+        this.permissionsResourceId = item.address;
     }
 }

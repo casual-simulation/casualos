@@ -10,6 +10,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import { LoadingHelper } from '../LoadingHelper';
+import AuthPermissions from '../AuthPermissions/AuthPermissions';
 
 const PAGE_SIZE = 10;
 
@@ -19,6 +20,7 @@ declare const FRONTEND_ORIGIN: string;
     components: {
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
+        'auth-permissions': AuthPermissions,
     },
 })
 export default class AuthRecordsInsts extends Vue {
@@ -41,6 +43,10 @@ export default class AuthRecordsInsts extends Vue {
         startIndex: 0,
         endIndex: 0,
     };
+
+    permissionsMarker: string = null;
+    permissionsResourceKind: string = null;
+    permissionsResourceId: string = null;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -90,7 +96,7 @@ export default class AuthRecordsInsts extends Vue {
     getInstUrl(inst: InstRecord): string {
         const origin = FRONTEND_ORIGIN ?? window.location.origin;
         let url = new URL(origin);
-        url.searchParams.set('record', this.recordName);
+        url.searchParams.set('owner', this.recordName);
         url.searchParams.set('inst', inst.inst);
         url.searchParams.set('gridPortal', 'home');
         return url.href;
@@ -111,5 +117,14 @@ export default class AuthRecordsInsts extends Vue {
                 (i) => i.inst !== item.inst
             );
         }
+    }
+
+    onMarkerClick(marker: string) {
+        this.permissionsMarker = marker;
+    }
+
+    onItemClick(item: ListInstsSuccess['insts'][0]) {
+        this.permissionsResourceKind = 'inst';
+        this.permissionsResourceId = item.inst;
     }
 }

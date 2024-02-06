@@ -31,6 +31,7 @@ import type {
     UpdateStudioResult,
     ComIdRequestResult,
     GetPlayerConfigResult,
+    ListPermissionsResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -60,7 +61,10 @@ import type {
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
-import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
+import type {
+    RemoteCausalRepoProtocol,
+    ResourceKinds,
+} from '@casual-simulation/aux-common';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -585,6 +589,37 @@ export class AuthManager {
         }
 
         return null;
+    }
+
+    async listPermissions(
+        recordName: string,
+        options: {
+            marker?: string;
+            resourceKind?: ResourceKinds;
+            resourceId?: string;
+        }
+    ): Promise<ListPermissionsResult> {
+        const url = new URL(
+            `${this.apiEndpoint}/api/v2/records/permissions/list`
+        );
+
+        url.searchParams.set('recordName', recordName);
+        if (options.marker) {
+            url.searchParams.set('marker', options.marker);
+        }
+        if (options.resourceKind) {
+            url.searchParams.set('resourceKind', options.resourceKind);
+        }
+        if (options.resourceId) {
+            url.searchParams.set('resourceId', options.resourceId);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        return response.data as ListPermissionsResult;
     }
 
     async createStudio(

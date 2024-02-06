@@ -11,6 +11,7 @@ import type {
     ListFilesSuccess,
     ListedFile,
 } from '@casual-simulation/aux-records';
+import AuthPermissions from '../AuthPermissions/AuthPermissions';
 
 const PAGE_SIZE = 10;
 
@@ -19,6 +20,7 @@ const PAGE_SIZE = 10;
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
         'data-size': DataSize,
+        'auth-permissions': AuthPermissions,
     },
 })
 export default class AuthRecordsFiles extends Vue {
@@ -41,6 +43,10 @@ export default class AuthRecordsFiles extends Vue {
         startIndex: 0,
         endIndex: 0,
     };
+
+    permissionsMarker: string = null;
+    permissionsResourceKind: string = null;
+    permissionsResourceId: string = null;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -101,5 +107,14 @@ export default class AuthRecordsFiles extends Vue {
                 (i) => i.url !== item.url
             );
         }
+    }
+
+    onMarkerClick(marker: string) {
+        this.permissionsMarker = marker;
+    }
+
+    onItemClick(item: ListFilesSuccess['files'][0]) {
+        this.permissionsResourceKind = 'file';
+        this.permissionsResourceId = item.fileName;
     }
 }
