@@ -1,5 +1,5 @@
 import { cloneDeep, orderBy, sortBy } from 'lodash';
-import { RegexRule, getMarkersOrDefault } from './Utils';
+import { RegexRule } from './Utils';
 import {
     AddressType,
     AuthInvoice,

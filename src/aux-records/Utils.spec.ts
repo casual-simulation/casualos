@@ -12,9 +12,11 @@ import {
     tryParseJson,
     isStringValid,
     isActiveSubscription,
-    getMarkersOrDefault,
+    getRootMarkersOrDefault,
     parseInstancesList,
     byteLengthOfString,
+    getRootMarker,
+    getPathMarker,
 } from './Utils';
 
 describe('signRequest()', () => {
@@ -647,17 +649,68 @@ describe('isActiveSubscription()', () => {
     });
 });
 
-describe('getMarkersOrDefault()', () => {
+describe('getRootMarkersOrDefault()', () => {
     it('should return the given list of markers', () => {
-        expect(getMarkersOrDefault(['abc', 'def'])).toEqual(['abc', 'def']);
+        expect(getRootMarkersOrDefault(['abc', 'def'])).toEqual(['abc', 'def']);
     });
 
     it('should return the default markers if the given list is empty', () => {
-        expect(getMarkersOrDefault([])).toEqual([PUBLIC_READ_MARKER]);
+        expect(getRootMarkersOrDefault([])).toEqual([PUBLIC_READ_MARKER]);
     });
 
     it('should return the default markers if the given list is null', () => {
-        expect(getMarkersOrDefault(null)).toEqual([PUBLIC_READ_MARKER]);
+        expect(getRootMarkersOrDefault(null)).toEqual([PUBLIC_READ_MARKER]);
+    });
+
+    it('should get the root markers from the list', () => {
+        expect(
+            getRootMarkersOrDefault([PUBLIC_READ_MARKER, 'marker:tag'])
+        ).toEqual([PUBLIC_READ_MARKER, 'marker']);
+    });
+});
+
+describe('getRootMarker()', () => {
+    it('should return the marker if it is a root marker', () => {
+        expect(getRootMarker('marker')).toBe('marker');
+    });
+
+    it('should return the root marker if it has a colon', () => {
+        expect(getRootMarker('marker:tag')).toBe('marker');
+    });
+
+    it('should do nothing if given null', () => {
+        expect(getRootMarker(null)).toBe(null);
+    });
+
+    it('should do nothing if given an empty string', () => {
+        expect(getRootMarker('')).toBe('');
+    });
+
+    it('should return the root if given a string with no path', () => {
+        expect(getRootMarker('marker:')).toBe('marker');
+    });
+});
+
+describe('getPathMarker()', () => {
+    it('should return an empty string if given a marker without a path', () => {
+        expect(getPathMarker('marker')).toBe('');
+        expect(getPathMarker('marker:')).toBe('');
+    });
+
+    it('should return the path marker if it has a colon', () => {
+        expect(getPathMarker('marker:tag')).toBe('tag');
+    });
+
+    it('should return an empty string if given null', () => {
+        expect(getPathMarker(null)).toBe('');
+    });
+
+    it('should do nothing if given an empty string', () => {
+        expect(getPathMarker('')).toBe('');
+    });
+
+    it('should return the full path if given a marker with multiple colons', () => {
+        expect(getPathMarker('marker:tag:abc')).toBe('tag:abc');
     });
 });
 

@@ -29,7 +29,7 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { getMarkersOrDefault } from './Utils';
+import { getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
@@ -71,7 +71,7 @@ export class FileRecordsController {
         request: RecordFileRequest
     ): Promise<RecordFileResult> {
         try {
-            const markers = getMarkersOrDefault(request.markers);
+            const markers = getRootMarkersOrDefault(request.markers);
 
             const contextResult =
                 await this._policies.constructAuthorizationContext({
@@ -353,7 +353,7 @@ export class FileRecordsController {
                 return fileResult;
             }
 
-            const markers = getMarkersOrDefault(fileResult.markers);
+            const markers = getRootMarkersOrDefault(fileResult.markers);
 
             const authorization =
                 await this._policies.authorizeUserAndInstances(
@@ -464,7 +464,7 @@ export class FileRecordsController {
                 return fileResult;
             }
 
-            const markers = getMarkersOrDefault(fileResult.markers);
+            const markers = getRootMarkersOrDefault(fileResult.markers);
 
             const result = await this._policies.authorizeUserAndInstances(
                 context.context,
@@ -653,7 +653,7 @@ export class FileRecordsController {
                 return fileResult;
             }
 
-            const existingMarkers = getMarkersOrDefault(fileResult.markers);
+            const existingMarkers = getRootMarkersOrDefault(fileResult.markers);
             const resourceMarkers = markers ?? existingMarkers;
 
             const result =

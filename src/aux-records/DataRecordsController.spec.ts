@@ -1523,6 +1523,56 @@ describe('DataRecordsController', () => {
             });
         });
 
+        it('should be able to list by markers with paths', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    [i % 2 === 0 ? 'secret:path' : PUBLIC_READ_MARKER]
+                );
+            }
+
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listDataByMarker({
+                recordKeyOrName: 'testRecord',
+                startingAddress: null,
+                userId,
+                marker: 'secret:path',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/0',
+                        data: 'data0',
+                        markers: ['secret:path'],
+                    },
+                    {
+                        address: 'address/2',
+                        data: 'data2',
+                        markers: ['secret:path'],
+                    },
+                    {
+                        address: 'address/4',
+                        data: 'data4',
+                        markers: ['secret:path'],
+                    },
+                ],
+                totalCount: 3,
+                marker: 'secret:path',
+            });
+        });
+
         it('should be able to use a record key to retrieve secret markers', async () => {
             for (let i = 0; i < 5; i++) {
                 await store.setData(

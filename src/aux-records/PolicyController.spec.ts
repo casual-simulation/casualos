@@ -328,6 +328,43 @@ describe('PolicyController', () => {
             });
         });
 
+        it('should return the list for the root marker only', async () => {
+            const result = await controller.listPermissionsForMarker(
+                recordName,
+                'test:tag',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName,
+                markerPermissions: [
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        marker: 'test',
+                        action: 'read',
+                        subjectType: 'role',
+                        subjectId: 'developer',
+                        expireTimeMs: null,
+                        options: {},
+                    },
+                    {
+                        id: expect.any(String),
+                        recordName: recordName,
+                        resourceKind: 'data',
+                        marker: 'test',
+                        action: 'create',
+                        subjectType: 'role',
+                        subjectId: 'developer',
+                        expireTimeMs: null,
+                        options: {},
+                    },
+                ],
+            });
+        });
+
         it('should return a not_authorized result if the user does not have access to the account marker', async () => {
             delete store.roles[recordName][userId];
 
@@ -458,6 +495,47 @@ describe('PolicyController', () => {
                 recordKeyOrRecordName: recordName,
                 userId: userId,
                 marker: 'test',
+                permission: {
+                    resourceKind: 'data',
+                    action: 'read',
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                    options: {},
+                    resourceId: null,
+                    expireTimeMs: null,
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const permissions = await store.listPermissionsForMarker(
+                recordName,
+                'test'
+            );
+
+            expect(permissions).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: recordName,
+                    marker: 'test',
+                    action: 'read',
+                    resourceKind: 'data',
+                    subjectId: 'developer',
+                    subjectType: 'role',
+                    userId: null,
+                    expireTimeMs: null,
+                    options: {},
+                },
+            ]);
+        });
+
+        it('should simplify the marker to a root marker', async () => {
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test:tag',
                 permission: {
                     resourceKind: 'data',
                     action: 'read',
@@ -2857,6 +2935,45 @@ describe('PolicyController', () => {
                                 action: action,
                                 resourceId: resourceId,
                                 markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: permission.permissionAssignment,
+                            explanation: `User was granted access to marker "${marker}" by "${permission.permissionAssignment.id}"`,
+                        });
+                    });
+
+                    it('should support markers with paths', async () => {
+                        const permission =
+                            (await store.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'user',
+                                userId,
+                                resourceKind,
+                                marker,
+                                action,
+                                {},
+                                null
+                            )) as AssignPermissionToSubjectAndMarkerSuccess;
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: userId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: ['secret:tag'],
                             }
                         );
 

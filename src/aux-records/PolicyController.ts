@@ -35,7 +35,7 @@ import {
     UpdateUserRolesFailure,
 } from './PolicyStore';
 import { sortBy, without } from 'lodash';
-import { getMarkersOrDefault } from './Utils';
+import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import { normalizeInstId, parseInstId } from './websockets';
 
 /**
@@ -664,7 +664,7 @@ export class PolicyController {
         request: AuthorizeSubjectRequest
     ): Promise<AuthorizeSubjectResult> {
         try {
-            const markers = getMarkersOrDefault(request.markers);
+            const markers = getRootMarkersOrDefault(request.markers);
             if (request.action === 'list' && markers.length > 1) {
                 return {
                     success: false,
@@ -1303,6 +1303,8 @@ export class PolicyController {
         instances?: string[] | null
     ): Promise<ListPermissionsForMarkerResult> {
         try {
+            marker = getRootMarker(marker);
+
             const context = await this.constructAuthorizationContext({
                 recordKeyOrRecordName,
                 userId,
@@ -1466,12 +1468,14 @@ export class PolicyController {
                 };
             }
 
+            const marker = getRootMarker(request.marker);
+
             const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
                     action: 'grantPermission',
                     resourceKind: 'marker',
-                    resourceId: request.marker,
+                    resourceId: marker,
                     markers: [ACCOUNT_MARKER],
                     userId: request.userId,
                     instances: request.instances,
@@ -1490,7 +1494,7 @@ export class PolicyController {
                     request.permission.subjectType,
                     request.permission.subjectId,
                     request.permission.resourceKind,
-                    request.marker,
+                    marker,
                     request.permission.action,
                     request.permission.options,
                     request.permission.expireTimeMs

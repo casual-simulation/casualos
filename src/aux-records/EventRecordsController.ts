@@ -19,7 +19,7 @@ import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
-import { cleanupObject, getMarkersOrDefault } from './Utils';
+import { cleanupObject, getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
 import {
     ACCOUNT_MARKER,
@@ -98,7 +98,7 @@ export class EventRecordsController {
                 return event;
             }
 
-            const markers = getMarkersOrDefault(event.markers);
+            const markers = getRootMarkersOrDefault(event.markers);
 
             const authorizeResult =
                 await this._policies.authorizeUserAndInstances(
@@ -220,7 +220,7 @@ export class EventRecordsController {
                 return result;
             }
 
-            const markers = getMarkersOrDefault(result.markers);
+            const markers = getRootMarkersOrDefault(result.markers);
 
             const authorizeResult =
                 await this._policies.authorizeUserAndInstances(
@@ -293,7 +293,7 @@ export class EventRecordsController {
             }
 
             const markers = request.markers;
-            const existingMarkers = getMarkersOrDefault(result.markers);
+            const existingMarkers = getRootMarkersOrDefault(result.markers);
             const resourceMarkers = markers ?? existingMarkers;
 
             const authorizeResult =
@@ -428,7 +428,7 @@ export class EventRecordsController {
                 totalCount: result.totalCount,
                 events: result.events.map((e) => ({
                     ...e,
-                    markers: getMarkersOrDefault(e.markers),
+                    markers: getRootMarkersOrDefault(e.markers),
                 })),
             };
         } catch (err) {
