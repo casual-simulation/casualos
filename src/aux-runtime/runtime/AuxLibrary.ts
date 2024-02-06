@@ -8260,6 +8260,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     os.toast("Failed " + result.errorMessage);
      * }
      *
+     * @example Record data to the user's personal record
+     * const result = await os.recordData(authBot.id, 'myAddress', 'myData');
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example Record data with a custom marker
+     * const result = await os.recordData(authBot.id, 'myAddress', 'myData', {
+     *     marker: 'myMarker'
+     * });
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.recordData
@@ -8521,7 +8541,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options for the operation.
      *
      * @example Get a list of publicRead data items in a record
-     * const result = await os.listData('myRecord', 'publicRead');
+     * const result = await os.listDataByMarker('myRecord', 'publicRead');
      * if (result.success) {
      *     os.toast(result.items);
      * } else {
@@ -8532,7 +8552,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * let lastAddress;
      * let items = [];
      * while(true) {
-     *     const result = await os.listData('myRecord', 'publicRead', lastAddress);
+     *     const result = await os.listDataByMarker('myRecord', 'publicRead', lastAddress);
      *     if (result.success) {
      *         console.log(result.items);
      *         items.push(...result.items);
@@ -8549,7 +8569,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * }
      *
      * @example List publicRead items in descending order
-     * const result = await os.listData('myRecord', 'publicRead', null, { sort: 'descending' });
+     * const result = await os.listDataByMarker('myRecord', 'publicRead', null, { sort: 'descending' });
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example List publicRead items stored at "myContainer" in descending order
+     * const result = await os.listDataByMarker('myRecord', 'publicRead:myContainer', null, { sort: 'descending' });
      * if (result.success) {
      *     os.toast(result.items);
      * } else {
