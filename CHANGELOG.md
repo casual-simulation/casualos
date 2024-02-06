@@ -21,6 +21,10 @@
     -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
     -   `os.revokePermission()` deletes the permission with the given ID.
 
+### :bug: Bug Fixes
+
+-   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
+
 ## V3.2.13
 
 #### Date: 2/5/2024
