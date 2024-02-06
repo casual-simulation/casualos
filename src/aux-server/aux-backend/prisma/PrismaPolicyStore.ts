@@ -117,7 +117,10 @@ export class PrismaPolicyStore implements PolicyStore {
             LIMIT 1;`;
 
         if (result.length <= 0) {
-            return null;
+            return {
+                success: true,
+                permissionAssignment: null,
+            };
         }
 
         const first = result[0];
@@ -148,10 +151,10 @@ export class PrismaPolicyStore implements PolicyStore {
         currentTimeMs: number
     ): Promise<GetMarkerPermissionResult> {
         // prettier-ignore
-        const result = await this._client.$queryRaw<MarkerPermission[]>`SELECT "id", "recordName", "resourceKind", "marker", "action", "options", "subjectId", "subjectType", "userId", "expireTime" FROM public."ResourcePermissionAssignment"
+        const result = await this._client.$queryRaw<MarkerPermission[]>`SELECT "id", "recordName", "resourceKind", "marker", "action", "options", "subjectId", "subjectType", "userId", "expireTime" FROM public."MarkerPermissionAssignment"
             WHERE "recordName" = ${recordName}
             AND ("resourceKind" IS NULL OR "resourceKind" = ${resourceKind})
-            AND "marker" IN ${markers} 
+            AND "marker" IN (${Prisma.join(markers)})
             AND ("action" IS NULL OR "action" = ${action})
             AND ("expireTime" IS NULL OR "expireTime" > ${convertToDate(
                 currentTimeMs
@@ -162,7 +165,10 @@ export class PrismaPolicyStore implements PolicyStore {
             LIMIT 1;`;
 
         if (result.length <= 0) {
-            return null;
+            return {
+                success: true,
+                permissionAssignment: null,
+            };
         }
 
         const first = result[0];
