@@ -17,9 +17,24 @@
 
 ### :rocket: Features
 
+-   Added the ability to organize records within a given marker.
+    -   Markers can be formatted as `root:path`.
+        -   `root` is known as the "root marker" and is what determines the security of a resource.
+        -   `path` is known as the "path marker" and is used to organize the resource.
+    -   It is still possible to format markers regularly. In this case, the marker doesn't have a path and is just a root.
+        -   All existing markers are treated this way.
+    -   For example, the markers `secret` and `secret:documents` both have the same root marker: `secret`.
+        -   This means that users need access to the `secret` root marker in order to access resources with either of these markers.
+        -   `secret:documents` has a path marker of `documents`, which means that it is organized separately from other markers.
+    -   The `os.listDataByMarker()` function is able to take advantage of this feature.
+        -   Calling `os.listDataByMarker(recordName, "secret:photos")` will only return data records with `secret:photos`, while calling `os.listDataByMarker(recordName, "secret:documents")` will only return data records with `secret:documents`.
 -   Added `os.grantPermission(recordName, permission, options?)` and `os.revokePermission(recordName, permissionId, options?)`.
     -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
     -   `os.revokePermission()` deletes the permission with the given ID.
+-   Added the `os.listDataByMarker(recordName, marker, startingAddress?, options?)` function.
+    -   Useful for only listing data that has the given marker. Returns a promise that resolves with the total number of items that match the marker and up to 10 items.
+    -   Items are listed based on whether they exactly match one of the markers that are applied to the data items.
+        -   This means that `secret:documents` will match `secret:documents`, but listing by `secret` will not list `secret:documents`.
 
 ### :bug: Bug Fixes
 
