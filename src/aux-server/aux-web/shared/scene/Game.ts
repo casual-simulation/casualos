@@ -84,6 +84,8 @@ import { appManager } from '../AppManager';
 import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
 import { update as updateMeshUI } from 'three-mesh-ui';
 import { EXRLoader } from '@casual-simulation/three/examples/jsm/loaders/EXRLoader';
+import Bowser from 'bowser';
+import { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/EnableXRModal';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -1104,11 +1106,32 @@ export abstract class Game {
         mode: 'immersive-ar' | 'immersive-vr'
     ): Promise<boolean> {
         try {
-            return await (navigator as any).xr.isSessionSupported(mode);
+            const nav = navigator as any;
+            if (nav.xr) {
+                return await nav.xr.isSessionSupported(mode);
+            } else {
+                return false;
+            }
         } catch (e) {
             console.error(`[Game] Failed to check for XR Mode Support.`, e);
             return false;
         }
+    }
+
+    protected async requestXR(mode: 'immersive-ar' | 'immersive-vr') {
+        return new Promise<void>((resolve, reject) => {
+            const parameters: EnableXRModalRequestParameters = {
+                mode,
+                onConfirm: () => {
+                    resolve();
+                },
+                onCancel: () => {
+                    reject('User cancelled');
+                },
+            };
+
+            EventBus.$emit('requestXR', parameters);
+        });
     }
 
     protected async stopXR() {
@@ -1163,6 +1186,25 @@ export abstract class Game {
         if (this.xrState === 'starting' || this.xrState === 'running') {
             console.log('[Game] XR already started!');
             return;
+        }
+
+        const bowserParser = Bowser.getParser(navigator.userAgent);
+        const browserName = bowserParser.getBrowserName();
+
+        // Safari is much stricter on validating user permission.
+        // Must present the user an HTML dialog that they can confirm in order for Safari's security check to pass.
+        if (browserName === 'Safari') {
+            try {
+                await this.requestXR(mode);
+            } catch (e) {
+                if (e === 'User cancelled') {
+                    console.log('[Game] User cancelled XR request.');
+                } else {
+                    console.error('[Game] Failed to request XR:', e);
+                }
+
+                return;
+            }
         }
 
         console.log(`[Game] Start XR: ${mode}`);
