@@ -1,108 +1,511 @@
 import {
-    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
+    ActionKinds,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-    PolicyDocument,
+    PermissionOptions,
+    PrivacyFeatures,
+    ResourceKinds,
+    SubjectType,
 } from '@casual-simulation/aux-common';
 import {
     AssignedRole,
-    GetUserPolicyResult,
-    ListUserPoliciesStoreResult,
     ListedRoleAssignments,
-    ListedUserPolicy,
     PolicyStore,
     RoleAssignment,
-    UpdateRolesUpdate,
-    UpdateUserPolicyResult,
     UpdateUserRolesResult,
-    UserPolicyRecord,
     getExpireTime,
-    ListMarkerPoliciesResult,
+    AssignPermissionToSubjectAndMarkerResult,
+    AssignPermissionToSubjectAndResourceResult,
+    DeletePermissionAssignmentResult,
+    GetMarkerPermissionResult,
+    GetResourcePermissionResult,
+    ListPermissionsInRecordResult,
+    MarkerPermissionAssignment,
+    ResourcePermissionAssignment,
 } from '@casual-simulation/aux-records';
 import { Collection, FilterQuery } from 'mongodb';
 import { MongoDBAuthUser } from './MongoDBAuthStore';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Implements PolicyStore for MongoDB.
  */
 export class MongoDBPolicyStore implements PolicyStore {
-    private _policies: Collection<MongoDBPolicy>;
     private _roles: Collection<MongoDBRole>;
     private _users: Collection<MongoDBAuthUser>;
+    private _resourcePermissions: Collection<MongoDBResourcePermission>;
+    private _markerPermissions: Collection<MongoDBMarkerPermission>;
 
     constructor(
-        policies: Collection<MongoDBPolicy>,
         roles: Collection<MongoDBRole>,
-        users: Collection<MongoDBAuthUser>
+        users: Collection<MongoDBAuthUser>,
+        resourcePermissions: Collection<MongoDBResourcePermission>,
+        markerPermissions: Collection<MongoDBMarkerPermission>
     ) {
-        this._policies = policies;
         this._roles = roles;
         this._users = users;
+        this._resourcePermissions = resourcePermissions;
+        this._markerPermissions = markerPermissions;
     }
 
-    async listPoliciesForMarkerAndUser(
-        recordName: string,
-        userId: string,
-        marker: string
-    ): Promise<ListMarkerPoliciesResult> {
-        const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
-        if (marker === PUBLIC_READ_MARKER) {
-            policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
-        } else if (marker === PUBLIC_WRITE_MARKER) {
-            policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
-        }
-        const id = policyId(recordName, marker);
-        const policy = await this._policies.findOne({ _id: id });
-        if (policy) {
-            policies.push(policy.document);
-        }
-
-        if (policy) {
-            policies.push(policy.document as unknown as PolicyDocument);
-        }
-        const userResult = await this._users.findOne({
+    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+        const user = await this._users.findOne({
             where: {
                 id: userId,
             },
         });
 
-        return {
-            policies,
-            // TODO: Support record owner privacy features.
-            recordOwnerPrivacyFeatures: {
-                publishData: true,
-                allowPublicData: true,
-                allowAI: true,
-                allowPublicInsts: true,
-            },
-            userPrivacyFeatures: userResult?.privacyFeatures,
-        };
+        return user?.privacyFeatures;
     }
 
-    async listUserPolicies(
-        recordName: string,
-        startingMarker: string
-    ): Promise<ListUserPoliciesStoreResult> {
-        let query = {
-            recordName: { $eq: recordName },
-        } as FilterQuery<MongoDBPolicy>;
+    async getRecordOwnerPrivacyFeatures(
+        recordName: string
+    ): Promise<PrivacyFeatures> {
+        return null;
+    }
 
-        if (!!startingMarker) {
-            query.marker = { $gt: startingMarker };
+    async getPermissionForSubjectAndResource(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetResourcePermissionResult> {
+        const result = await this._resourcePermissions.findOne({
+            recordName: { $eq: recordName },
+            resourceKind: { $eq: resourceKind },
+            resourceId: { $eq: resourceId },
+            subjectType: { $eq: subjectType },
+            subjectId: { $eq: subjectId },
+
+            $and: [
+                {
+                    $or: [
+                        { action: { $eq: action } },
+                        { action: { $eq: null } },
+                    ],
+                },
+                {
+                    $or: [
+                        { expireTimeMs: { $eq: null } },
+                        { expireTimeMs: { $gt: currentTimeMs } },
+                    ],
+                },
+            ],
+        });
+
+        if (result) {
+            return {
+                success: true,
+                permissionAssignment: {
+                    id: result._id,
+                    recordName: result.recordName,
+                    resourceKind: result.resourceKind,
+                    resourceId: result.resourceId,
+                    action: result.action,
+                    options: result.options,
+                    subjectId: result.subjectId,
+                    subjectType: result.subjectType,
+                    userId: result.userId,
+                    expireTimeMs: result.expireTimeMs,
+                },
+            };
+        } else {
+            return {
+                success: true,
+                permissionAssignment: null,
+            };
         }
-        const policies = await this._policies.find(query).toArray();
+    }
+
+    async getPermissionForSubjectAndMarkers(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        markers: string[],
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetMarkerPermissionResult> {
+        const result = await this._markerPermissions.findOne({
+            recordName: { $eq: recordName },
+            marker: { $in: markers },
+            subjectType: { $eq: subjectType },
+            subjectId: { $eq: subjectId },
+
+            $and: [
+                {
+                    $or: [
+                        { resourceKind: { $eq: resourceKind } },
+                        { resourceKind: { $eq: null } },
+                    ],
+                },
+                {
+                    $or: [
+                        { action: { $eq: action } },
+                        { action: { $eq: null } },
+                    ],
+                },
+                {
+                    $or: [
+                        { expireTimeMs: { $eq: null } },
+                        { expireTimeMs: { $gt: currentTimeMs } },
+                    ],
+                },
+            ],
+        });
+
+        if (result) {
+            return {
+                success: true,
+                permissionAssignment: {
+                    id: result._id,
+                    recordName: result.recordName,
+                    resourceKind: result.resourceKind,
+                    marker: result.marker,
+                    action: result.action,
+                    options: result.options,
+                    subjectId: result.subjectId,
+                    subjectType: result.subjectType,
+                    userId: result.userId,
+                    expireTimeMs: result.expireTimeMs,
+                },
+            };
+        } else {
+            return {
+                success: true,
+                permissionAssignment: null,
+            };
+        }
+    }
+
+    async assignPermissionToSubjectAndResource(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number
+    ): Promise<AssignPermissionToSubjectAndResourceResult> {
+        const assignment = await this._resourcePermissions.findOne({
+            recordName: { $eq: recordName },
+            resourceKind: { $eq: resourceKind },
+            resourceId: { $eq: resourceId },
+            subjectType: { $eq: subjectType },
+            subjectId: { $eq: subjectId },
+            action: { $eq: action },
+        });
+
+        if (assignment) {
+            return {
+                success: false,
+                errorCode: 'permission_already_exists',
+                errorMessage: `A permission already exists for the subject and resource.`,
+            };
+        }
+
+        const resource: MongoDBResourcePermission = {
+            _id: uuid(),
+            recordName: recordName,
+            resourceKind: resourceKind,
+            resourceId: resourceId,
+            subjectType: subjectType,
+            subjectId: subjectId,
+            action: action,
+            options: options,
+            userId: null,
+            expireTimeMs: expireTimeMs,
+        };
+        await this._resourcePermissions.insertOne(resource);
 
         return {
             success: true,
-            policies: policies.map((p) => {
-                return {
-                    marker: p.marker,
-                    document: p.document,
-                } as ListedUserPolicy;
-            }),
-            totalCount: policies.length,
+            permissionAssignment: {
+                id: resource._id,
+                recordName: resource.recordName,
+                resourceKind: resource.resourceKind,
+                resourceId: resource.resourceId,
+                action: resource.action,
+                options: resource.options,
+                subjectId: resource.subjectId,
+                subjectType: resource.subjectType,
+                userId: resource.userId,
+                expireTimeMs: resource.expireTimeMs,
+            },
+        };
+    }
+
+    async assignPermissionToSubjectAndMarker(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        marker: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number
+    ): Promise<AssignPermissionToSubjectAndMarkerResult> {
+        const assignment = await this._markerPermissions.findOne({
+            recordName: { $eq: recordName },
+            resourceKind: { $eq: resourceKind },
+            marker: { $eq: marker },
+            subjectType: { $eq: subjectType },
+            subjectId: { $eq: subjectId },
+            action: { $eq: action },
+        });
+
+        if (assignment) {
+            return {
+                success: false,
+                errorCode: 'permission_already_exists',
+                errorMessage: `A permission already exists for the subject and marker.`,
+            };
+        }
+
+        const resource: MongoDBMarkerPermission = {
+            _id: uuid(),
+            recordName: recordName,
+            resourceKind: resourceKind,
+            marker,
+            subjectType: subjectType,
+            subjectId: subjectId,
+            action: action,
+            options: options,
+            userId: null,
+            expireTimeMs: expireTimeMs,
+        };
+        await this._markerPermissions.insertOne(resource);
+
+        return {
+            success: true,
+            permissionAssignment: {
+                id: resource._id,
+                recordName: resource.recordName,
+                resourceKind: resource.resourceKind,
+                marker: resource.marker,
+                action: resource.action,
+                options: resource.options,
+                subjectId: resource.subjectId,
+                subjectType: resource.subjectType,
+                userId: resource.userId,
+                expireTimeMs: resource.expireTimeMs,
+            },
+        };
+    }
+
+    async deleteResourcePermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        const result = await this._resourcePermissions.deleteOne({
+            _id: id,
+        });
+
+        return {
+            success: true,
+        };
+    }
+
+    async deleteMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        const result = await this._markerPermissions.deleteOne({
+            _id: id,
+        });
+
+        return {
+            success: true,
+        };
+    }
+
+    async listPermissionsInRecord(
+        recordName: string
+    ): Promise<ListPermissionsInRecordResult> {
+        const markerPermissions = await this._markerPermissions
+            .find({
+                recordName: { $eq: recordName },
+            })
+            .toArray();
+
+        const resourcePermissions = await this._resourcePermissions
+            .find({
+                recordName: { $eq: recordName },
+            })
+            .toArray();
+
+        return {
+            success: true,
+            markerAssignments: markerPermissions.map((p) => ({
+                id: p._id,
+                recordName: p.recordName,
+                resourceKind: p.resourceKind,
+                marker: p.marker,
+                action: p.action,
+                options: p.options,
+                subjectId: p.subjectId,
+                subjectType: p.subjectType,
+                userId: p.userId,
+                expireTimeMs: p.expireTimeMs,
+            })),
+            resourceAssignments: resourcePermissions.map((p) => ({
+                id: p._id,
+                recordName: p.recordName,
+                resourceKind: p.resourceKind,
+                resourceId: p.resourceId,
+                action: p.action,
+                options: p.options,
+                subjectId: p.subjectId,
+                subjectType: p.subjectType,
+                userId: p.userId,
+                expireTimeMs: p.expireTimeMs,
+            })),
+        };
+    }
+
+    async listPermissionsForResource(
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string
+    ): Promise<ResourcePermissionAssignment[]> {
+        const resourcePermissions = await this._resourcePermissions
+            .find({
+                recordName: { $eq: recordName },
+                resourceKind: { $eq: resourceKind },
+                resourceId: { $eq: resourceId },
+            })
+            .toArray();
+
+        return resourcePermissions.map((p) => ({
+            id: p._id,
+            recordName: p.recordName,
+            resourceKind: p.resourceKind,
+            resourceId: p.resourceId,
+            action: p.action,
+            options: p.options,
+            subjectId: p.subjectId,
+            subjectType: p.subjectType,
+            userId: p.userId,
+            expireTimeMs: p.expireTimeMs,
+        }));
+    }
+
+    async listPermissionsForMarker(
+        recordName: string,
+        marker: string
+    ): Promise<MarkerPermissionAssignment[]> {
+        const markerPermissions = await this._markerPermissions
+            .find({
+                recordName: { $eq: recordName },
+                marker: { $eq: marker },
+            })
+            .toArray();
+
+        return markerPermissions.map((p) => ({
+            id: p._id,
+            recordName: p.recordName,
+            resourceKind: p.resourceKind,
+            marker: p.marker,
+            action: p.action,
+            options: p.options,
+            subjectId: p.subjectId,
+            subjectType: p.subjectType,
+            userId: p.userId,
+            expireTimeMs: p.expireTimeMs,
+        }));
+    }
+
+    async listPermissionsForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordResult> {
+        const markerPermissions = await this._markerPermissions
+            .find({
+                recordName: { $eq: recordName },
+                subjectType: { $eq: subjectType },
+                subjectId: { $eq: subjectId },
+            })
+            .toArray();
+
+        const resourcePermissions = await this._resourcePermissions
+            .find({
+                recordName: { $eq: recordName },
+                subjectType: { $eq: subjectType },
+                subjectId: { $eq: subjectId },
+            })
+            .toArray();
+
+        return {
+            success: true,
+            markerAssignments: markerPermissions.map((p) => ({
+                id: p._id,
+                recordName: p.recordName,
+                resourceKind: p.resourceKind,
+                marker: p.marker,
+                action: p.action,
+                options: p.options,
+                subjectId: p.subjectId,
+                subjectType: p.subjectType,
+                userId: p.userId,
+                expireTimeMs: p.expireTimeMs,
+            })),
+            resourceAssignments: resourcePermissions.map((p) => ({
+                id: p._id,
+                recordName: p.recordName,
+                resourceKind: p.resourceKind,
+                resourceId: p.resourceId,
+                action: p.action,
+                options: p.options,
+                subjectId: p.subjectId,
+                subjectType: p.subjectType,
+                userId: p.userId,
+                expireTimeMs: p.expireTimeMs,
+            })),
+        };
+    }
+
+    async getMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<MarkerPermissionAssignment> {
+        const result = await this._markerPermissions.findOne({
+            _id: id,
+        });
+
+        return {
+            id: result._id,
+            recordName: result.recordName,
+            resourceKind: result.resourceKind,
+            marker: result.marker,
+            action: result.action,
+            options: result.options,
+            subjectId: result.subjectId,
+            subjectType: result.subjectType,
+            userId: result.userId,
+            expireTimeMs: result.expireTimeMs,
+        };
+    }
+
+    async getResourcePermissionAssignmentById(
+        id: string
+    ): Promise<ResourcePermissionAssignment> {
+        const result = await this._resourcePermissions.findOne({
+            _id: id,
+        });
+
+        return {
+            id: result._id,
+            recordName: result.recordName,
+            resourceKind: result.resourceKind,
+            resourceId: result.resourceId,
+            action: result.action,
+            options: result.options,
+            subjectId: result.subjectId,
+            subjectType: result.subjectType,
+            userId: result.userId,
+            expireTimeMs: result.expireTimeMs,
         };
     }
 
@@ -241,54 +644,6 @@ export class MongoDBPolicyStore implements PolicyStore {
         };
     }
 
-    async getUserPolicy(
-        recordName: string,
-        marker: string
-    ): Promise<GetUserPolicyResult> {
-        const id = policyId(recordName, marker);
-        const policy = await this._policies.findOne({ _id: id });
-        if (policy) {
-            return {
-                success: true,
-                markers: policy.markers,
-                document: policy.document,
-            };
-        } else {
-            return {
-                success: false,
-                errorCode: 'policy_not_found',
-                errorMessage: `Could not find a user policy for marker ${marker}.`,
-            };
-        }
-    }
-
-    async updateUserPolicy(
-        recordName: string,
-        marker: string,
-        policy: UserPolicyRecord
-    ): Promise<UpdateUserPolicyResult> {
-        const id = policyId(recordName, marker);
-
-        await this._policies.updateOne(
-            {
-                _id: { $eq: id },
-            },
-            {
-                $set: {
-                    recordName: recordName,
-                    marker: marker,
-                    markers: policy.markers,
-                    document: policy.document,
-                },
-            },
-            { upsert: true }
-        );
-
-        return {
-            success: true,
-        };
-    }
-
     async assignSubjectRole(
         recordName: string,
         subjectId: string,
@@ -307,11 +662,11 @@ export class MongoDBPolicyStore implements PolicyStore {
         );
 
         if (type === 'user') {
-            return await this.updateUserRoles(recordName, subjectId, {
+            return await this._updateUserRoles(recordName, subjectId, {
                 roles: [...filtered, role],
             });
         } else {
-            return await this.updateInstRoles(recordName, subjectId, {
+            return await this._updateInstRoles(recordName, subjectId, {
                 roles: [...filtered, role],
             });
         }
@@ -328,17 +683,17 @@ export class MongoDBPolicyStore implements PolicyStore {
         const filtered = roles.filter((r) => r.role !== role);
 
         if (type === 'user') {
-            return await this.updateUserRoles(recordName, subjectId, {
+            return await this._updateUserRoles(recordName, subjectId, {
                 roles: [...filtered],
             });
         } else {
-            return await this.updateInstRoles(recordName, subjectId, {
+            return await this._updateInstRoles(recordName, subjectId, {
                 roles: [...filtered],
             });
         }
     }
 
-    async updateUserRoles(
+    private async _updateUserRoles(
         recordName: string,
         userId: string,
         update: UpdateRolesUpdate
@@ -375,7 +730,7 @@ export class MongoDBPolicyStore implements PolicyStore {
         };
     }
 
-    async updateInstRoles(
+    private async _updateInstRoles(
         recordName: string,
         inst: string,
         update: UpdateRolesUpdate
@@ -413,12 +768,8 @@ export class MongoDBPolicyStore implements PolicyStore {
     }
 }
 
-export interface MongoDBPolicy {
-    _id: string;
-    recordName: string;
-    marker: string;
-    document: PolicyDocument;
-    markers: string[];
+interface UpdateRolesUpdate {
+    roles: AssignedRole[];
 }
 
 export interface MongoDBRole {
@@ -426,6 +777,32 @@ export interface MongoDBRole {
     type: 'user' | 'inst';
     id: string;
     assignments: AssignedRole[];
+}
+
+interface MongoDBResourcePermission {
+    _id: string;
+    recordName: string;
+    resourceKind: ResourceKinds;
+    resourceId: string;
+    action: ActionKinds;
+    options: PermissionOptions;
+    subjectId: string;
+    subjectType: SubjectType;
+    userId: string;
+    expireTimeMs: number;
+}
+
+interface MongoDBMarkerPermission {
+    _id: string;
+    recordName: string;
+    resourceKind: ResourceKinds;
+    marker: string;
+    action: ActionKinds;
+    options: PermissionOptions;
+    subjectId: string;
+    subjectType: SubjectType;
+    userId: string;
+    expireTimeMs: number;
 }
 
 function policyId(recordName: string, marker: string) {

@@ -31,7 +31,10 @@ export const UNMAPPABLE = Symbol('UNMAPPABLE');
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
- * Defines a union type for all the possible events that can be emitted from a bots channel.
+ * Defines a union type for all the possible common events.
+ *
+ * @dochash types/os/event
+ * @docname BotAction
  */
 export type BotAction =
     | BotActions
@@ -114,7 +117,6 @@ export type AsyncActions =
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
     | RunScriptAction
-    | LoadBotsAction
     | ClearSpaceAction
     | SendWebhookAction
     | AnimateTagAction
@@ -943,13 +945,13 @@ export interface SendWebhookAction extends AsyncAction {
     /**
      * The options for the webhook.
      */
-    options: WebhookOptions;
+    options: WebhookActionOptions;
 }
 
 /**
  * Defines a set of options for a webhook.
  */
-export interface WebhookOptions {
+export interface WebhookActionOptions {
     /**
      * The HTTP Method that the request should use.
      */
@@ -1393,6 +1395,12 @@ export interface ShowInputOptions {
     items?: ShowInputItem[];
 }
 
+/**
+ * Defines an interface that represents an item that can be displayed in a {@link os.showInput} list.
+ *
+ * @dochash types/os/input
+ * @docname ShowInputItem
+ */
 export interface ShowInputItem {
     label: string;
     value: any;
@@ -1628,39 +1636,6 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
  */
 export interface EnableCollaborationAction extends AsyncAction {
     type: 'enable_collaboration';
-}
-
-/**
- * Defines an event that loads bots from the given space that match the given tags and values.
- */
-export interface LoadBotsAction extends AsyncAction {
-    type: 'load_bots';
-
-    /**
-     * The space that should be searched.
-     */
-    space: string;
-
-    /**
-     * The tags that the loaded bots should have.
-     */
-    tags: TagFilter[];
-}
-
-/**
- * Defines an interface for objects that specify a tag and value
- * that a bot should have to be loaded.
- */
-export interface TagFilter {
-    /**
-     * The tag that the bot should have.
-     */
-    tag: string;
-
-    /**
-     * The value that the bot should have.
-     */
-    value?: any;
 }
 
 /**
@@ -2215,6 +2190,12 @@ export interface SerializableMutationRecord {
     listenerDelta?: number;
 }
 
+/**
+ * Defines a reference to a HTML node. Internal to CasualOS.
+ *
+ * @dochash types/os/portals
+ * @docname NodeReference
+ */
 export interface NodeReference {
     __id: string;
 }
@@ -3304,13 +3285,31 @@ export interface FormAnimationData {
     duration: number;
 }
 
+/**
+ * The portals that contain a camera that can be raycasted from.
+ *
+ * @dochash types/os/portals
+ * @docname CameraPortal
+ */
 export type CameraPortal = 'grid' | 'miniGrid' | 'map' | 'miniMap';
 
+/**
+ * Defines an event that represents a 2D point.
+ *
+ * @dochash types/os/portals
+ * @docname Point2D
+ */
 export interface Point2D {
     x: number;
     y: number;
 }
 
+/**
+ * Defines an interface that represents a 3D point.
+ *
+ * @dochash types/os/portals
+ * @docname Point3D
+ */
 export interface Point3D {
     x: number;
     y: number;
@@ -3997,7 +3996,7 @@ export function download(
  * @param taskId The ID of the task.
  */
 export function webhook(
-    options: WebhookOptions,
+    options: WebhookActionOptions,
     taskId?: number | string
 ): SendWebhookAction {
     return {
@@ -4338,25 +4337,6 @@ export function requestFullscreen(): RequestFullscreenAction {
 export function exitFullscreen(): ExitFullscreenAction {
     return {
         type: 'exit_fullscreen_mode',
-    };
-}
-
-/**
- * Requests that bots matching the given tags be loaded from the given space.
- * @param space The space that the bots should be loaded from.
- * @param tags The tags that should be on the loaded bots.
- * @param taskId The ID of the async task for this action.
- */
-export function loadBots(
-    space: string,
-    tags: TagFilter[],
-    taskId?: number | string
-): LoadBotsAction {
-    return {
-        type: 'load_bots',
-        space: space,
-        tags: tags,
-        taskId,
     };
 }
 

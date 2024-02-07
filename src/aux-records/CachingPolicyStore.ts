@@ -1,22 +1,23 @@
 import {
-    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
-    PolicyDocument,
+    ActionKinds,
+    PermissionOptions,
+    PrivacyFeatures,
+    ResourceKinds,
+    SubjectType,
 } from '@casual-simulation/aux-common';
 import {
+    AssignPermissionToSubjectAndMarkerResult,
+    AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
-    GetUserPolicyResult,
-    ListMarkerPoliciesResult,
-    ListUserPoliciesStoreResult,
-    ListUserPoliciesStoreSuccess,
+    DeletePermissionAssignmentResult,
+    GetMarkerPermissionResult,
+    GetResourcePermissionResult,
+    ListPermissionsInRecordResult,
     ListedRoleAssignments,
+    MarkerPermissionAssignment,
     PolicyStore,
-    UpdateUserPolicyResult,
+    ResourcePermissionAssignment,
     UpdateUserRolesResult,
-    UserPolicyRecord,
     getExpireTime,
 } from './PolicyStore';
 import { Cache } from './Cache';
@@ -41,61 +42,160 @@ export class CachingPolicyStore implements PolicyStore {
         this._cacheSeconds = cacheSeconds;
     }
 
-    async listPoliciesForMarkerAndUser(
-        recordName: string,
-        userId: string,
-        marker: string
-    ): Promise<ListMarkerPoliciesResult> {
-        const result = await this._cache.retrieve<ListMarkerPoliciesResult>(
-            `policies/${recordName}/${userId}/${marker}`
-        );
-
-        if (result) {
-            let list: PolicyDocument[] = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
-
-            if (marker === PUBLIC_READ_MARKER) {
-                list.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
-            } else if (marker === PUBLIC_WRITE_MARKER) {
-                list.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
-            }
-
-            return {
-                ...result,
-                policies: list.concat(result.policies),
-            };
-        }
-
-        const storeResult = await this._store.listPoliciesForMarkerAndUser(
-            recordName,
-            userId,
-            marker
-        );
-        if (storeResult) {
-            const cachablePolicies = storeResult.policies.filter(
-                (p) =>
-                    p !== DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT &&
-                    p !== DEFAULT_PUBLIC_READ_POLICY_DOCUMENT &&
-                    p !== DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT
-            );
-            const cachable: ListMarkerPoliciesResult = {
-                ...storeResult,
-                policies: cachablePolicies,
-            };
-            await this._cache.store(
-                `policies/${recordName}/${userId}/${marker}`,
-                cachable,
-                this._cacheSeconds
-            );
-        }
-
-        return storeResult;
+    // TODO: Add caching for these methods when needed.
+    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+        return await this._store.getUserPrivacyFeatures(userId);
     }
 
-    async listUserPolicies(
+    async getRecordOwnerPrivacyFeatures(
+        recordName: string
+    ): Promise<PrivacyFeatures> {
+        return await this._store.getRecordOwnerPrivacyFeatures(recordName);
+    }
+
+    async getPermissionForSubjectAndResource(
+        subjectType: SubjectType,
+        subjectId: string,
         recordName: string,
-        startingMarker: string
-    ): Promise<ListUserPoliciesStoreResult> {
-        return this._store.listUserPolicies(recordName, startingMarker);
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetResourcePermissionResult> {
+        return await this._store.getPermissionForSubjectAndResource(
+            subjectType,
+            subjectId,
+            recordName,
+            resourceKind,
+            resourceId,
+            action,
+            currentTimeMs
+        );
+    }
+
+    async getPermissionForSubjectAndMarkers(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        markers: string[],
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetMarkerPermissionResult> {
+        return await this._store.getPermissionForSubjectAndMarkers(
+            subjectType,
+            subjectId,
+            recordName,
+            resourceKind,
+            markers,
+            action,
+            currentTimeMs
+        );
+    }
+
+    async assignPermissionToSubjectAndResource(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number
+    ): Promise<AssignPermissionToSubjectAndResourceResult> {
+        return await this._store.assignPermissionToSubjectAndResource(
+            recordName,
+            subjectType,
+            subjectId,
+            resourceKind,
+            resourceId,
+            action,
+            options,
+            expireTimeMs
+        );
+    }
+
+    async assignPermissionToSubjectAndMarker(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        marker: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number
+    ): Promise<AssignPermissionToSubjectAndMarkerResult> {
+        return await this._store.assignPermissionToSubjectAndMarker(
+            recordName,
+            subjectType,
+            subjectId,
+            resourceKind,
+            marker,
+            action,
+            options,
+            expireTimeMs
+        );
+    }
+
+    async deleteResourcePermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        return await this._store.deleteResourcePermissionAssignmentById(id);
+    }
+
+    async deleteMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        return await this._store.deleteMarkerPermissionAssignmentById(id);
+    }
+
+    async listPermissionsInRecord(
+        recordName: string
+    ): Promise<ListPermissionsInRecordResult> {
+        return await this._store.listPermissionsInRecord(recordName);
+    }
+
+    async listPermissionsForResource(
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string
+    ): Promise<ResourcePermissionAssignment[]> {
+        return await this._store.listPermissionsForResource(
+            recordName,
+            resourceKind,
+            resourceId
+        );
+    }
+
+    async listPermissionsForMarker(
+        recordName: string,
+        marker: string
+    ): Promise<MarkerPermissionAssignment[]> {
+        return await this._store.listPermissionsForMarker(recordName, marker);
+    }
+
+    async listPermissionsForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordResult> {
+        return await this._store.listPermissionsForSubject(
+            recordName,
+            subjectType,
+            subjectId
+        );
+    }
+
+    async getMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<MarkerPermissionAssignment> {
+        return await this._store.getMarkerPermissionAssignmentById(id);
+    }
+
+    async getResourcePermissionAssignmentById(
+        id: string
+    ): Promise<ResourcePermissionAssignment> {
+        return await this._store.getResourcePermissionAssignmentById(id);
     }
 
     async listRolesForUser(
@@ -166,34 +266,6 @@ export class CachingPolicyStore implements PolicyStore {
         startingRole: string
     ): Promise<ListedRoleAssignments> {
         return this._store.listAssignments(recordName, startingRole);
-    }
-
-    getUserPolicy(
-        recordName: string,
-        marker: string
-    ): Promise<GetUserPolicyResult> {
-        return this._store.getUserPolicy(recordName, marker);
-    }
-
-    async updateUserPolicy(
-        recordName: string,
-        marker: string,
-        policy: UserPolicyRecord
-    ): Promise<UpdateUserPolicyResult> {
-        const result = await this._store.updateUserPolicy(
-            recordName,
-            marker,
-            policy
-        );
-
-        if (result.success === false) {
-            return result;
-        }
-
-        // Update the cache.
-        await this._cache.remove(`policies/${recordName}/${marker}`);
-
-        return result;
     }
 
     async assignSubjectRole(

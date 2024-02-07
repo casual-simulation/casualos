@@ -569,10 +569,12 @@ describe('AuthCoordinator', () => {
                     errorMessage: 'Not authorized.',
                     reason: {
                         type: 'missing_permission',
-                        kind: 'user',
-                        id: 'userId',
-                        marker: 'marker',
-                        permission: 'inst.read',
+                        recordName: 'recordName',
+                        subjectType: 'user',
+                        subjectId: 'userId',
+                        resourceKind: 'inst',
+                        resourceId: 'instId',
+                        action: 'read',
                     },
                 });
 
@@ -587,10 +589,12 @@ describe('AuthCoordinator', () => {
                         origin: origin,
                         reason: {
                             type: 'missing_permission',
-                            kind: 'user',
-                            id: 'userId',
-                            marker: 'marker',
-                            permission: 'inst.read',
+                            recordName: 'recordName',
+                            subjectType: 'user',
+                            subjectId: 'userId',
+                            resourceKind: 'inst',
+                            resourceId: 'instId',
+                            action: 'read',
                         },
                     },
                 ]);

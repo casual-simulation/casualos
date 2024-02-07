@@ -3,19 +3,12 @@ import { Cache } from './Cache';
 import { MemoryStore } from './MemoryStore';
 import { MemoryCache } from './MemoryCache';
 import {
-    ACCOUNT_MARKER,
-    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
-    PolicyDocument,
-} from '@casual-simulation/aux-common';
-import {
     createTestPrivoConfiguration,
     createTestSubConfiguration,
 } from './TestUtils';
 import { ModerationConfiguration } from './ModerationConfiguration';
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { PrivoConfiguration } from './PrivoConfiguration';
 
 describe('CachingPolicyStore', () => {
     let inner: MemoryStore;
@@ -55,7 +48,7 @@ describe('CachingPolicyStore', () => {
 
             expect(result).toEqual(inner.subscriptionConfiguration);
 
-            const cached = await cache.retrieve<PolicyDocument[]>(
+            const cached = await cache.retrieve<SubscriptionConfiguration>(
                 `subscriptions`
             );
 
@@ -91,7 +84,7 @@ describe('CachingPolicyStore', () => {
 
             expect(result).toEqual(inner.privoConfiguration);
 
-            const cached = await cache.retrieve<PolicyDocument[]>(`privo`);
+            const cached = await cache.retrieve<PrivoConfiguration>(`privo`);
 
             expect(cached).toEqual(createTestPrivoConfiguration());
             expect(cache.items).toEqual(

@@ -36,11 +36,21 @@ export interface DataRecordsStore {
     /**
      * Lists data stored in the given record starting with the given address.
      * @param recordName The name of the record.
-     * @param address The address so start listing items at.
+     * @param address The address to start listing items at.
      */
     listData(
         recordName: string,
         address: string | null
+    ): Promise<ListDataStoreResult>;
+
+    /**
+     * Lists data stored in the given record that has the given marker, starting with the given address.
+     * @param recordName The name of the record.
+     * @param marker The name of the marker.
+     * @param address The address to start listing items at.
+     */
+    listDataByMarker(
+        request: ListDataStoreByMarkerRequest
     ): Promise<ListDataStoreResult>;
 
     /**
@@ -94,6 +104,7 @@ export interface ListDataStoreSuccess {
     success: true;
     items: ListedDataStoreItem[];
     totalCount: number;
+    marker: string;
 }
 
 export interface ListDataStoreFailure {
@@ -108,11 +119,41 @@ export interface ListedDataStoreItem {
     markers?: string[];
 }
 
+export interface ListDataStoreByMarkerRequest {
+    /**
+     * The name of the record that the data is in.
+     */
+    recordName: string;
+
+    /**
+     * The marker that each item should have.
+     */
+    marker: string;
+
+    /**
+     * The address to start listing items at.
+     * If null, then the first item in the record should be returned.
+     */
+    startingAddress: string | null;
+
+    /**
+     * How the items should be sorted by address.
+     * "ascending": The items should be sorted in ascending order.
+     * "descending": The items should be sorted in descending order.
+     *
+     * Defaults to "ascending".
+     */
+    sort?: 'ascending' | 'descending';
+}
+
 /**
  * Defines a type that represents a policy that indicates which users are allowed to affect a record.
  *
  * True indicates that any user can edit the record.
  * An array of strings indicates the list of users that are allowed to edit the record.
+ *
+ * @dochash types/records/data
+ * @docname UserPolicy
  */
 export type UserPolicy = true | string[] | null;
 

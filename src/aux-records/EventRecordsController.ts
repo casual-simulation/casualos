@@ -1,7 +1,7 @@
 import {
-    AuthorizeDenied,
+    AuthorizeSubjectFailure,
     PolicyController,
-    returnAuthorizationResult,
+    getMarkerResourcesForUpdate,
 } from './PolicyController';
 import {
     NotLoggedInError,
@@ -19,9 +19,13 @@ import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
-import { cleanupObject, getMarkersOrDefault } from './Utils';
+import { cleanupObject, getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    ACCOUNT_MARKER,
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
@@ -94,24 +98,26 @@ export class EventRecordsController {
                 return event;
             }
 
-            const markers = getMarkersOrDefault(event.markers);
+            const markers = getRootMarkersOrDefault(event.markers);
 
             const authorizeResult =
-                await this._policies.authorizeRequestUsingContext(
+                await this._policies.authorizeUserAndInstances(
                     context.context,
                     {
-                        action: 'event.increment',
-                        ...baseRequest,
-                        eventName: eventName,
-                        resourceMarkers: markers,
+                        resourceKind: 'event',
+                        resourceId: eventName,
+                        action: 'increment',
+                        userId: subjectId,
+                        instances: instances,
+                        markers: markers,
                     }
                 );
 
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
+            if (authorizeResult.success === false) {
+                return authorizeResult;
             }
 
-            const policy = authorizeResult.subject.subjectPolicy;
+            const policy = context.context.subjectPolicy;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -214,17 +220,23 @@ export class EventRecordsController {
                 return result;
             }
 
-            const markers = getMarkersOrDefault(result.markers);
+            const markers = getRootMarkersOrDefault(result.markers);
 
-            const authorizeResult = await this._policies.authorizeRequest({
-                action: 'event.count',
-                ...baseRequest,
-                eventName,
-                resourceMarkers: markers,
-            });
+            const authorizeResult =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        resourceKind: 'event',
+                        resourceId: eventName,
+                        action: 'count',
+                        userId: userId,
+                        instances: instances,
+                        markers: markers,
+                    }
+                );
 
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
+            if (authorizeResult.success === false) {
+                return authorizeResult;
             }
 
             return {
@@ -281,26 +293,32 @@ export class EventRecordsController {
             }
 
             const markers = request.markers;
-            const existingMarkers = getMarkersOrDefault(result.markers);
+            const existingMarkers = getRootMarkersOrDefault(result.markers);
+            const resourceMarkers = markers ?? existingMarkers;
 
-            const addedMarkers = markers
-                ? without(markers, ...existingMarkers)
-                : [];
-            const removedMarkers = markers
-                ? without(existingMarkers, ...markers)
-                : [];
+            const authorizeResult =
+                await this._policies.authorizeUserAndInstancesForResources(
+                    context.context,
+                    {
+                        resources: [
+                            {
+                                resourceKind: 'event',
+                                resourceId: eventName,
+                                action: 'update',
+                                markers: resourceMarkers,
+                            },
+                            ...getMarkerResourcesForUpdate(
+                                existingMarkers,
+                                markers
+                            ),
+                        ],
+                        userId: request.userId,
+                        instances: request.instances,
+                    }
+                );
 
-            const authorizeResult = await this._policies.authorizeRequest({
-                action: 'event.update',
-                ...baseRequest,
-                eventName,
-                existingMarkers: existingMarkers,
-                addedMarkers: addedMarkers,
-                removedMarkers: removedMarkers,
-            });
-
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
+            if (authorizeResult.success === false) {
+                return authorizeResult;
             }
 
             const metricsResult =
@@ -382,6 +400,22 @@ export class EventRecordsController {
                 return context;
             }
 
+            const authorizeResult =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        resourceKind: 'event',
+                        action: 'list',
+                        userId: userId,
+                        instances: instances,
+                        markers: [ACCOUNT_MARKER],
+                    }
+                );
+
+            if (authorizeResult.success === false) {
+                return authorizeResult;
+            }
+
             const recordName = context.context.recordName;
             const result = await this._store.listEvents(recordName, eventName);
 
@@ -389,24 +423,13 @@ export class EventRecordsController {
                 return result;
             }
 
-            const authorizeResult = await this._policies.authorizeRequest({
-                action: 'event.list',
-                ...baseRequest,
-                eventItems: result.events.map((e) => ({
-                    eventName: e.eventName,
-                    markers: e.markers ?? [PUBLIC_READ_MARKER],
-                    count: e.count,
-                })),
-            });
-
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
-            }
-
             return {
                 success: true,
                 totalCount: result.totalCount,
-                events: authorizeResult.allowedEventItems as ListedEvent[],
+                events: result.events.map((e) => ({
+                    ...e,
+                    markers: getRootMarkersOrDefault(e.markers),
+                })),
             };
         } catch (err) {
             console.error(
@@ -480,7 +503,7 @@ export interface AddCountFailure {
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddEventCountStoreFailure['errorCode']
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | 'not_supported';
 
     /**
@@ -548,7 +571,7 @@ export interface GetCountFailure {
     errorCode:
         | ServerError
         | GetEventCountStoreFailure['errorCode']
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | 'not_supported';
 
     /**
@@ -636,7 +659,7 @@ export interface UpdateEventRecordFailure {
     success: false;
     errorCode:
         | ServerError
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
 }
@@ -654,7 +677,7 @@ export interface ListEventsFailure {
     errorCode:
         | ServerError
         | NotSupportedError
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
 }
