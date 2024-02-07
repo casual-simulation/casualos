@@ -1189,11 +1189,11 @@ export abstract class Game {
         }
 
         const bowserParser = Bowser.getParser(navigator.userAgent);
-        const browserName = bowserParser.getBrowserName();
+        const browserName = bowserParser.getBrowserName(true);
 
         // Safari is much stricter on validating user permission.
         // Must present the user an HTML dialog that they can confirm in order for Safari's security check to pass.
-        if (browserName === 'Safari') {
+        if (browserName === 'safari') {
             try {
                 await this.requestXR(mode);
             } catch (e) {
