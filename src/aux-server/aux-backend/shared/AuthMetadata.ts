@@ -1,4 +1,4 @@
-import { PrivacyFeatures } from '@casual-simulation/aux-records';
+import { PrivacyFeatures } from '@casual-simulation/aux-common';
 
 export interface UserMetadata {
     email: string;

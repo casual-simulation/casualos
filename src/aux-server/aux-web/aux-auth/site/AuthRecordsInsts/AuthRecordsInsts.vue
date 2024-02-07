@@ -1,6 +1,6 @@
 <template>
     <div>
-        <md-table v-model="items.mdData" md-card md-fixed-header>
+        <md-table v-model="items.mdData" md-card md-fixed-header @md-selected="onItemClick">
             <md-table-toolbar>
                 <h1 class="md-title">Insts</h1>
             </md-table-toolbar>
@@ -11,7 +11,7 @@
             >
             </md-table-empty-state>
 
-            <md-table-row slot="md-table-row" slot-scope="{ item }">
+            <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="single">
                 <md-table-cell md-label="Name" md-sort-by="inst"
                     ><a target="_blank" :href="getInstUrl(item)">{{ item.inst }}</a></md-table-cell
                 >
@@ -20,6 +20,7 @@
                         v-for="marker in item.markers"
                         :key="marker"
                         :marker="marker"
+                        @click="onMarkerClick(marker)"
                     ></auth-marker>
                 </md-table-cell>
                 <md-table-cell md-label="Options">
@@ -58,6 +59,14 @@
                 </div>
             </template>
         </md-table>
+
+        <auth-permissions
+            :recordName="recordName"
+            :marker="permissionsMarker"
+            :resourceKind="permissionsResourceKind"
+            :resourceId="permissionsResourceId"
+        >
+        </auth-permissions>
     </div>
 </template>
 <script src="./AuthRecordsInsts.ts"></script>

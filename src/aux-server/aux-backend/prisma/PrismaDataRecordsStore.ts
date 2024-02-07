@@ -8,6 +8,7 @@ import {
     ListDataStoreResult,
     UserPolicy,
     cleanupObject,
+    ListDataStoreByMarkerRequest,
 } from '@casual-simulation/aux-records';
 import {
     PrismaClient,
@@ -121,27 +122,29 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         if (!!address) {
             query.address = { gt: address };
         }
-        const count = await (
-            this._collection.count as PrismaClient['dataRecord']['count']
-        )({
-            where: {
-                recordName: recordName,
-            },
-        });
-        const records = await (
-            this._collection.findMany as PrismaClient['dataRecord']['findMany']
-        )({
-            where: query,
-            orderBy: {
-                address: 'asc',
-            },
-            select: {
-                address: true,
-                data: true,
-                markers: true,
-            },
-            take: 10,
-        });
+
+        const [count, records] = await Promise.all([
+            (this._collection.count as PrismaClient['dataRecord']['count'])({
+                where: {
+                    recordName: recordName,
+                },
+            }),
+            (
+                this._collection
+                    .findMany as PrismaClient['dataRecord']['findMany']
+            )({
+                where: query,
+                orderBy: {
+                    address: 'asc',
+                },
+                select: {
+                    address: true,
+                    data: true,
+                    markers: true,
+                },
+                take: 10,
+            }),
+        ]);
 
         return {
             success: true,
@@ -151,6 +154,54 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
                 markers: convertMarkers(r.markers),
             })),
             totalCount: count,
+            marker: null,
+        };
+    }
+
+    async listDataByMarker(
+        request: ListDataStoreByMarkerRequest
+    ): Promise<ListDataStoreResult> {
+        let query: Prisma.DataRecordWhereInput = {
+            recordName: request.recordName,
+            markers: { has: request.marker },
+        };
+        if (!!request.startingAddress) {
+            query.address = { gt: request.startingAddress };
+        }
+
+        const [count, records] = await Promise.all([
+            (this._collection.count as PrismaClient['dataRecord']['count'])({
+                where: {
+                    recordName: request.recordName,
+                    markers: { has: request.marker },
+                },
+            }),
+            (
+                this._collection
+                    .findMany as PrismaClient['dataRecord']['findMany']
+            )({
+                where: query,
+                orderBy: {
+                    address: 'asc',
+                },
+                select: {
+                    address: true,
+                    data: true,
+                    markers: true,
+                },
+                take: 10,
+            }),
+        ]);
+
+        return {
+            success: true,
+            items: records.map((r) => ({
+                address: r.address,
+                data: r.data,
+                markers: convertMarkers(r.markers),
+            })),
+            totalCount: count,
+            marker: null,
         };
     }
 

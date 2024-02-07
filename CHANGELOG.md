@@ -4,6 +4,38 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Changed how `os.listData()` works to require `data.list` access for the `account` marker instead of for each item individually.
+    -   This means that `os.listData()` will continue to work for users that have a record key or are admins (record owner or member of a studio), but it will no longer be possible to list `publicRead` data items through this function.
+    -   Instead, use the new `os.listDataByMarker()` function to list data based on a marker.
+    -   The reason for this change is to make the API more predictable. Previously, it was possible for `os.listData()` to return no results even if there were items after the given address. This is because a fixed number of items would be retrieved from the database and then checked to see if the user has access to it. If the user did not have access to any items, then an empty list would be returned, even if there are items that the user _does_ have access to later in the database.
+-   Changed `os.listData()` to throw a `CausualOSError` if the user is not authorized to list items.
+    -   Previously, an empty list would be returned. Now, an empty list is only returned if there are no items.
+-   Removed `os.grantRecordMarkerPermission()` and `os.revokeRecordMarkerPermission()`.
+    -   These functions have been replaced by `os.grantPermission()` and `os.revokePermission()`.
+
+### :rocket: Features
+
+-   Added the ability to organize records within a given marker.
+    -   Markers can be formatted as `root:path`.
+        -   `root` is known as the "root marker" and is what determines the security of a resource.
+        -   `path` is known as the "path marker" and is used to organize the resource.
+    -   It is still possible to format markers regularly. In this case, the marker doesn't have a path and is just a root.
+        -   All existing markers are treated this way.
+    -   For example, the markers `secret` and `secret:documents` both have the same root marker: `secret`.
+        -   This means that users need access to the `secret` root marker in order to access resources with either of these markers.
+        -   `secret:documents` has a path marker of `documents`, which means that it is organized separately from other markers.
+    -   The `os.listDataByMarker()` function is able to take advantage of this feature.
+        -   Calling `os.listDataByMarker(recordName, "secret:photos")` will only return data records with `secret:photos`, while calling `os.listDataByMarker(recordName, "secret:documents")` will only return data records with `secret:documents`.
+-   Added `os.grantPermission(recordName, permission, options?)` and `os.revokePermission(recordName, permissionId, options?)`.
+    -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
+    -   `os.revokePermission()` deletes the permission with the given ID.
+-   Added the `os.listDataByMarker(recordName, marker, startingAddress?, options?)` function.
+    -   Useful for only listing data that has the given marker. Returns a promise that resolves with the total number of items that match the marker and up to 10 items.
+    -   Items are listed based on whether they exactly match one of the markers that are applied to the data items.
+        -   This means that `secret:documents` will match `secret:documents`, but listing by `secret` will not list `secret:documents`.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
@@ -78,6 +110,7 @@
 
 -   Fixed an issue where branch info was being duplicated for temporary branches.
 -   Fixed an issue where `onSpaceRateLimitExceeded` was missing from 'Add New Tag' autocomplete list.
+    > > > > > > > develop
 
 ## V3.2.10
 

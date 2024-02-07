@@ -7,6 +7,7 @@ import { SvgIcon } from '@casual-simulation/aux-components';
 import { ListedEvent } from '@casual-simulation/aux-records';
 import { LoadingHelper } from '../LoadingHelper';
 import AuthMarker from '../AuthMarker/AuthMarker';
+import AuthPermissions from '../AuthPermissions/AuthPermissions';
 
 const PAGE_SIZE = 10;
 
@@ -14,6 +15,7 @@ const PAGE_SIZE = 10;
     components: {
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
+        'auth-permissions': AuthPermissions,
     },
 })
 export default class AuthRecordsEvents extends Vue {
@@ -36,6 +38,10 @@ export default class AuthRecordsEvents extends Vue {
         startIndex: 0,
         endIndex: 0,
     };
+
+    permissionsMarker: string = null;
+    permissionsResourceKind: string = null;
+    permissionsResourceId: string = null;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -88,5 +94,14 @@ export default class AuthRecordsEvents extends Vue {
             this.items = nextPage;
         }
         return true;
+    }
+
+    onMarkerClick(marker: string) {
+        this.permissionsMarker = marker;
+    }
+
+    onItemClick(item: ListedEvent) {
+        this.permissionsResourceKind = 'event';
+        this.permissionsResourceId = item.eventName;
     }
 }

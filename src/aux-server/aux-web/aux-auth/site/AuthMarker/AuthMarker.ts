@@ -13,4 +13,8 @@ import { SvgIcon } from '@casual-simulation/aux-components';
 export default class AuthMarker extends Vue {
     @Prop({ required: true })
     marker: string;
+
+    onClick() {
+        this.$emit('click', this.marker);
+    }
 }

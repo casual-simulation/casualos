@@ -109,7 +109,7 @@ describe('EventRecordsController', () => {
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('not_logged_in');
             expect(result.errorMessage).toBe(
-                'The user must be logged in in order to record events.'
+                'You must be logged in in order to use this record key.'
             );
 
             await expect(
@@ -121,20 +121,16 @@ describe('EventRecordsController', () => {
         });
 
         it('should be able to add the given count if the user has the correct permissions', async () => {
-            store.policies[recordName] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'event.increment',
-                                role: 'developer',
-                                events: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'increment',
+                {},
+                null
+            );
 
             store.roles[recordName] = {
                 [userId]: new Set(['developer']),
@@ -178,11 +174,12 @@ describe('EventRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    kind: 'user',
-                    id: userId,
-                    permission: 'event.increment',
-                    marker: PUBLIC_READ_MARKER,
-                    role: null,
+                    recordName,
+                    resourceKind: 'event',
+                    resourceId: 'address',
+                    action: 'increment',
+                    subjectType: 'user',
+                    subjectId: userId,
                 },
             });
 
@@ -213,11 +210,12 @@ describe('EventRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    kind: 'inst',
-                    id: 'inst',
-                    permission: 'event.increment',
-                    marker: PUBLIC_READ_MARKER,
-                    role: null,
+                    recordName,
+                    resourceKind: 'event',
+                    resourceId: 'address',
+                    action: 'increment',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
                 },
             });
 
@@ -330,20 +328,16 @@ describe('EventRecordsController', () => {
         });
 
         it('should be able to get the event count if the user has permission', async () => {
-            store.policies[recordName] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'event.count',
-                                role: 'developer',
-                                events: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'count',
+                {},
+                null
+            );
 
             store.roles[recordName] = {
                 [userId]: new Set(['developer']),
@@ -389,11 +383,12 @@ describe('EventRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    kind: 'user',
-                    id: userId,
-                    permission: 'event.count',
-                    marker: 'secret',
-                    role: null,
+                    recordName,
+                    resourceKind: 'event',
+                    resourceId: 'address',
+                    action: 'count',
+                    subjectType: 'user',
+                    subjectId: userId,
                 },
             });
         });
@@ -421,11 +416,12 @@ describe('EventRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    kind: 'inst',
-                    id: 'inst',
-                    permission: 'event.count',
-                    marker: 'secret',
-                    role: null,
+                    recordName,
+                    resourceKind: 'event',
+                    resourceId: 'address',
+                    action: 'count',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
                 },
             });
         });
@@ -433,42 +429,16 @@ describe('EventRecordsController', () => {
 
     describe('updateEvent()', () => {
         it('should be able to update the count for an event', async () => {
-            store.policies[recordName] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'event.update',
-                                role: 'developer',
-                                events: true,
-                            },
-                            {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-                [PUBLIC_READ_MARKER]: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'event.update',
-                                role: 'developer',
-                                events: true,
-                            },
-                            {
-                                type: 'policy.unassign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                PUBLIC_READ_MARKER,
+                'update',
+                {},
+                null
+            );
 
             store.roles[recordName] = {
                 [userId]: new Set(['developer']),
@@ -496,42 +466,46 @@ describe('EventRecordsController', () => {
         });
 
         it('should be able to update the markers for an event', async () => {
-            store.policies[recordName] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'event.update',
-                                role: 'developer',
-                                events: true,
-                            },
-                            {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-                [PUBLIC_READ_MARKER]: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'event.update',
-                                role: 'developer',
-                                events: true,
-                            },
-                            {
-                                type: 'policy.unassign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'update',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'update',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'assign',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'unassign',
+                {},
+                null
+            );
 
             store.roles[recordName] = {
                 [userId]: new Set(['developer']),
@@ -560,7 +534,10 @@ describe('EventRecordsController', () => {
         });
 
         it('should be able to use a record key', async () => {
-            await store.addEventCount('testRecord', 'address', 10);
+            await store.updateEvent(recordName, 'address', {
+                count: 10,
+                markers: ['secret'],
+            });
 
             const result = (await manager.updateEvent({
                 recordKeyOrRecordName: key,
@@ -599,11 +576,19 @@ describe('EventRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    kind: 'user',
-                    id: userId,
-                    permission: 'event.update',
-                    marker: PUBLIC_READ_MARKER,
-                    role: null,
+                    recordName,
+                    resourceKind: 'event',
+                    resourceId: 'address',
+                    action: 'update',
+                    subjectType: 'user',
+                    subjectId: userId,
+
+                    // type: 'missing_permission',
+                    // kind: 'user',
+                    // id: userId,
+                    // permission: 'event.update',
+                    // marker: PUBLIC_READ_MARKER,
+                    // role: null,
                 },
             });
 
@@ -635,11 +620,18 @@ describe('EventRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    kind: 'inst',
-                    id: 'inst',
-                    permission: 'event.update',
-                    marker: PUBLIC_READ_MARKER,
-                    role: null,
+                    recordName,
+                    resourceKind: 'event',
+                    resourceId: 'address',
+                    action: 'update',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+
+                    // kind: 'inst',
+                    // id: 'inst',
+                    // permission: 'event.update',
+                    // marker: PUBLIC_READ_MARKER,
+                    // role: null,
                 },
             });
 
@@ -741,13 +733,21 @@ describe('EventRecordsController', () => {
             });
         });
 
-        it('should return an empty list if the user is not authorized', async () => {
+        it('should return not_authorized if the user is not authorized', async () => {
             const result = await manager.listEvents(recordName, null, userId);
 
             expect(result).toEqual({
-                success: true,
-                events: [],
-                totalCount: 20,
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'event',
+                    action: 'list',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
             });
         });
 
@@ -769,7 +769,7 @@ describe('EventRecordsController', () => {
             });
         });
 
-        it('should return an empty list if the inst is not authorized', async () => {
+        it('should return a not_authorized error if the inst is not allowed to access the account marker', async () => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
@@ -779,9 +779,17 @@ describe('EventRecordsController', () => {
             ]);
 
             expect(result).toEqual({
-                success: true,
-                events: [],
-                totalCount: 20,
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'event',
+                    action: 'list',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+                },
             });
         });
 

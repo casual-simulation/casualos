@@ -17,8 +17,7 @@ import {
 import { AuthHelper } from './AuthHelper';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import {
-    DenialReason,
-    MissingPermissionDenialReason,
+    AuthorizeActionMissingPermission,
     PartitionAuthRequest,
     reportInst,
 } from '@casual-simulation/aux-common';
@@ -338,10 +337,10 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private async _handleMissingPermission<TSim extends BrowserSimulation>(
         sim: TSim,
         request: PartitionAuthRequest,
-        reason: MissingPermissionDenialReason
+        reason: AuthorizeActionMissingPermission
     ) {
         console.log(
-            `[AuthCoordinator] [${sim.id}] Missing permission ${reason.permission}.`
+            `[AuthCoordinator] [${sim.id}] Missing permission ${reason.resourceKind}.${reason.action}.`
         );
         this._onMissingPermission.next({
             simulationId: sim.id,
@@ -380,7 +379,7 @@ export interface MissingPermissionEvent {
     simulationId: string;
     errorCode: string;
     errorMessage: string;
-    reason: MissingPermissionDenialReason;
+    reason: AuthorizeActionMissingPermission;
     origin: string;
 }
 
