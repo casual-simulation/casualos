@@ -44,6 +44,7 @@
 
 -   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
 -   Fixed an issue where fingers would trigger click interactions while dragging a bot with the same hand.
+-   Fixed an issue where `portalBackgroundAddress` would render over `miniMapPortalBot`.
 
 ## V3.2.13
 
@@ -115,7 +116,6 @@
 
 -   Fixed an issue where branch info was being duplicated for temporary branches.
 -   Fixed an issue where `onSpaceRateLimitExceeded` was missing from 'Add New Tag' autocomplete list.
-    > > > > > > > develop
 
 ## V3.2.10
 
