@@ -29,12 +29,22 @@ import Bowser from 'bowser';
 
 export const MIN_FINGER_TIP_RADIUS = 0.019;
 
+/**
+ * The distance that the index finger tip and thumb tip need to be in order to register as a pinch select gesture in the down state.
+ */
+const PINCH_SELECT_DOWN_DISTANCE = 0.015;
+
+/**
+ * The distance that the index finger tip and thumb tip need to be in order to register as a pinch select gesture in the up state.
+ */
+const PINCH_SELECT_UP_DISTANCE = 0.025;
+
 export const TRACKED_FINGER_JOINTS: XRHandJoint[] = [
     'index-finger-tip',
     // 'middle-finger-tip',
     // 'ring-finger-tip',
     // 'pinky-finger-tip',
-    // 'thumb-tip',
+    'thumb-tip',
 ];
 
 /**
@@ -92,6 +102,7 @@ export class Input {
     private _controllerAdded = new Subject<ControllerData>();
     private _controllerRemoved = new Subject<ControllerData>();
     private _usePointerEvents = false;
+    private _usePinchSelectGesture = false;
 
     /**
      * The events that have occurred during this frame.
@@ -101,6 +112,7 @@ export class Input {
     private _htmlElements: () => HTMLElement[];
     private _zoomElements: () => HTMLElement[];
     private _isOculusBrowser: boolean;
+    private _isSafariBrowser: boolean;
 
     get time() {
         return this._game.getTime();
@@ -368,11 +380,20 @@ export class Input {
         // See https://developer.oculus.com/documentation/web/browser-specs/#user-agent-string
         const isOculusBrowser = browser.test(/OculusBrowser\/[\d\.]+/);
         const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
+        const isSafariBrowser = browser.getBrowserName(true) === 'safari';
 
         this._isOculusBrowser = isOculusBrowser;
         this._usePointerEvents = isOculusBrowser && isOculusVR;
         if (this.debugLevel > 0) {
             console.log(`[input] usePointerEvents: ${this._usePointerEvents}`);
+        }
+
+        this._isSafariBrowser = isSafariBrowser;
+        this._usePinchSelectGesture = isSafariBrowser;
+        if (this.debugLevel > 0) {
+            console.log(
+                `[input] usePinchSelectGesture: ${this._usePinchSelectGesture}`
+            );
         }
 
         this._mouseData = {
@@ -1002,6 +1023,7 @@ export class Input {
             if (controller.mesh) {
                 controller.mesh.update(xrFrame, this._xrReferenceSpace);
             }
+            this._updateControllerGestures(xrFrame, controller);
         }
     }
 
@@ -2145,6 +2167,10 @@ export class Input {
             return;
         }
 
+        if (this._usePinchSelectGesture) {
+            return;
+        }
+
         const controller = this._controllerData.find(
             (c) => c.inputSource === event.inputSource
         );
@@ -2170,6 +2196,10 @@ export class Input {
 
     private _handleXRSelectEnd(event: XRInputSourceEvent) {
         if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
+        if (this._usePinchSelectGesture) {
             return;
         }
 
@@ -2308,6 +2338,69 @@ export class Input {
                     }
                 } else {
                     fingers.delete(finger);
+                }
+            }
+        }
+    }
+
+    private _updateControllerGestures(
+        frame: XRFrame,
+        controller: ControllerData
+    ) {
+        if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
+        if (this._usePinchSelectGesture) {
+            const indexFingerTip =
+                controller.fingerTips.get('index-finger-tip');
+            const thumbTip = controller.fingerTips.get('thumb-tip');
+            const distance = indexFingerTip.center.distanceTo(thumbTip.center);
+
+            if (controller.primaryInputState.isUp()) {
+                // Check pinch select down.
+                if (distance <= PINCH_SELECT_DOWN_DISTANCE) {
+                    controller.primaryInputState.setDownFrame(
+                        this.time.frameCount
+                    );
+
+                    if (
+                        this._lastPrimaryControllerData.primaryInputState.isUp()
+                    ) {
+                        this._copyToPrimaryControllerData(controller);
+                    }
+
+                    if (this.debugLevel >= 1) {
+                        console.log(
+                            'XR pinch select ' +
+                                controller.identifier +
+                                ' start. fireInputOnFrame: ' +
+                                this.time.frameCount
+                        );
+                    }
+                }
+            } else {
+                // Check pinch select up.
+                if (distance >= PINCH_SELECT_UP_DISTANCE) {
+                    controller.primaryInputState.setUpFrame(
+                        this.time.frameCount
+                    );
+
+                    if (
+                        controller.inputSource ===
+                        this._lastPrimaryControllerData.inputSource
+                    ) {
+                        this._copyToPrimaryControllerData(controller);
+                    }
+
+                    if (this.debugLevel >= 1) {
+                        console.log(
+                            'XR pinch select ' +
+                                controller.identifier +
+                                ' end. fireInputOnFrame: ' +
+                                this.time.frameCount
+                        );
+                    }
                 }
             }
         }

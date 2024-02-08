@@ -1,8 +1,9 @@
-import { ConnectionInfo } from './ConnectionInfo';
-
 /**
  * Defines an interface that represents an event.
  * That is, a time-ordered action in a channel.
+ *
+ * @dochash types/os/event
+ * @docname Action
  */
 export interface Action {
     /**

@@ -246,7 +246,6 @@ declare type ExtraActions =
     | ShowJoinCodeAction
     | RequestFullscreenAction
     | ExitFullscreenAction
-    | LoadBotsAction
     | ClearSpaceAction
     | LocalFormAnimationAction
     | AddDropSnapTargetsAction
@@ -1470,23 +1469,6 @@ declare interface LoadSpaceAction {
 }
 
 /**
- * Defines an event that loads bots from the given space that match the given tags and values.
- */
-declare interface LoadBotsAction {
-    type: 'load_bots';
-
-    /**
-     * The space that should be searched.
-     */
-    space: BotSpace;
-
-    /**
-     * The tags that the loaded bots should have.
-     */
-    tags: LoadBotsTagFilter[];
-}
-
-/**
  * Defines an interface for objects that specify a tag and value
  * that a bot should have to be loaded.
  */
@@ -2521,85 +2503,6 @@ export interface Bot {
 }
 
 /**
- * Defines an interface for a record.
- */
-export interface Record {
-    /**
-     * The address that the record was published at.
-     */
-    address: string;
-
-    /**
-     * The space that the record was published to.
-     */
-    space: RecordSpace;
-
-    /**
-     * The auth ID that published the record.
-     */
-    authID: string;
-
-    /**
-     * The data that was stored in the record.
-     * Null if dataURL is specified
-     */
-    data?: any;
-
-    /**
-     * The URL that the data can be retrieved from.
-     * Null if data is specified.
-     */
-    dataURL?: string;
-}
-
-/**
- * Defines an interface for an object that represents a reference to a specific record.
- */
-export interface RecordReference {
-    /**
-     * The ID of the user that published the record.
-     */
-    authID: string;
-
-    /**
-     * The space that the record lives in.
-     */
-    space: RecordSpace;
-
-    /**
-     * The address that the record was published to.
-     */
-    address: string;
-}
-
-
-/**
- * Defines an interface that represents a set of records that were retrieved.
- */
-export interface GetRecordsResult {
-
-    /**
-     * The set of records that were retrieved.
-     */
-    records: Record[];
-
-    /**
-     * The total number of records that the query would have returned.
-     */
-    totalCount: number;
-
-    /**
-     * Whether there are more records available to retrieve for the query.
-     */
-    hasMoreRecords: boolean;
-
-    /**
-     * Gets the set page of records.
-     */
-    getMoreRecords(): Promise<GetRecordsResult>;
-}
-
-/**
  * Defines the possible bot anchor points.
  */
 declare type BotAnchorPoint =
@@ -2699,36 +2602,6 @@ declare interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
 }
-
-export interface RecordFilter {
-    recordFilter: true;
-}
-
-export interface AuthIdRecordFilter extends RecordFilter {
-    authID: string;
-}
-
-export interface SpaceFilter extends BotFilterFunction, RecordFilter {
-    space: string;
-}
-
-export interface AddressRecordFilter extends RecordFilter {
-    address: string;
-}
-
-export interface AuthTokenRecordFilter extends RecordFilter {
-    authToken: string;
-}
-
-export interface PrefixRecordFilter extends RecordFilter {
-    prefix: string;
-}
-
-export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
-    id: string;
-}
-
-export type RecordFilters = AuthIdRecordFilter | SpaceFilter | AddressRecordFilter | AuthTokenRecordFilter | PrefixRecordFilter | IDRecordFilter;
 
 /**
  * Defines a result from a webhook.
@@ -3014,8 +2887,9 @@ export type AuthorizeDeniedError = ServerError
 | CreatePublicRecordKeyFailure['errorCode']
 | 'action_not_supported'
 | 'not_logged_in'
-| 'not_authorized'
-| 'unacceptable_request';
+| NotAuthorizedError
+| 'unacceptable_request'
+| 'subscription_limit_reached';
 
 export type UpdateUserPolicyError = 'policy_too_large';
 
@@ -3039,39 +2913,509 @@ export interface RecordActionOptions {
     endpoint?: string;
 }
 
+/**
+ * The possible types of subjects that can be affected by permissions.
+ *
+ * - "user" - The permission is for a user.
+ * - "inst" - The permission is for an inst.
+ * - "role" - The permission is for a role.
+ *
+ * @dochash types/permissions
+ * @doctitle Permissions Types
+ * @docsidebar Permissions
+ * @docdescription Types that represent permissions that control access to resources.
+ * @docname SubjectType
+ */
+export type SubjectType = 'user' | 'inst' | 'role';
+
+/**
+ * The possible types of permissions that can be added to policies.
+ *
+ * @dochash types/permissions
+ * @doctitle Permissions Types
+ * @docsidebar Permissions
+ * @docdescription Types that represent permissions that control access to resources.
+ * @docname AvailablePermissions
+ */
+export type AvailablePermissions =
+    | DataPermission
+    | FilePermission
+    | EventPermission
+    | MarkerPermission
+    | RolePermission
+    | InstPermission;
+
+/**
+ * Defines an interface that describes common options for all permissions.
+ */
+export interface Permission {
+    /**
+     * The marker that the permission is for.
+     * If null or undefined, then the permission is for a specific resource instead of a marker.
+     */
+    marker?: string;
+
+    /**
+     * The type of the subject that the permission is for.
+     *
+     * "user" - The permission is for a user.
+     * "inst" - The permission is for an inst.
+     * "role" - The permission is for a role.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the subject.
+     */
+    subjectId: string;
+
+    /**
+     * The ID of the resource that is allowed.
+     * If null, then all resources are allowed.
+     */
+    resourceId?: string | null;
+
+    /**
+     * The options for the permission.
+     */
+    options: {};
+
+    /**
+     * The unix time in miliseconds that the permission will expire at.
+     * If null, then the permission does not expire.
+     */
+    expireTimeMs: number | null;
+}
+
+
+/**
+ * Defines an interface that describes the common options for all permissions that affect data records.
+ *
+ * @dochash types/permissions
+ * @docname DataPermission
+ */
+export interface DataPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'data';
+
+    /**
+     * The action th at is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: DataActionKinds | null;
+}
+
+/**
+ * Options for file permissions.
+ *
+ * @dochash types/permissions
+ * @docname FilePermissionOptions
+ */
+export interface FilePermissionOptions {
+    /**
+     * The maximum allowed file size in bytes.
+     * Defaults to Infinity.
+     */
+    maxFileSizeInBytes?: number;
+
+    /**
+     * The list of allowed file MIME types.
+     * If true, then all file types are allowed.
+     * If an array of strings, then only MIME types that are specified are allowed.
+     */
+    allowedMimeTypes?: true | string[];
+}
+
+
+/**
+ * Defines an interface that describes the common options for all permissions that affect file records.
+ *
+ * @dochash types/permissions
+ * @docname FilePermission
+ */
+export interface FilePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'file';
+
+    /**
+     * The action th at is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: FileActionKinds | null;
+
+    /**
+     * The options for the permission.
+     */
+    options: FilePermissionOptions;
+}
+
+
+/**
+ * Defines an interface that describes the common options for all permissions that affect event records.
+ *
+ * @dochash types/permissions
+ * @docname EventPermission
+ */
+export interface EventPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'event';
+
+    /**
+     * The action th at is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: EventActionKinds | null;
+}
+
+
+/**
+ * Defines an interface that describes the common options for all permissions that affect markers.
+ *
+ * @dochash types/permissions
+ * @docname MarkerPermission
+ */
+export interface MarkerPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'marker';
+
+    /**
+     * The action th at is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: MarkerActionKinds | null;
+}
+
+
+/**
+ * Options for role permissions.
+ *
+ * @dochash types/permissions
+ * @docname RolePermissionOptions
+ */
+export interface RolePermissionOptions {
+    /**
+     * The maximum lifetime that the role can be granted for in miliseconds.
+     * If not specified, then the role can be granted for an infinite amount of time.
+     */
+    maxDurationMs?: number;
+}
+
+
+/**
+ * Defines an interface that describes the common options for all permissions that affect roles.
+ *
+ * @dochash types/permissions
+ * @docname RolePermission
+ */
+export interface RolePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'role';
+
+    /**
+     * The ID of the resource that is allowed.
+     * If null, then all resources are allowed.
+     */
+    resourceId: string | null;
+
+    /**
+     * The action th at is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: RoleActionKinds | null;
+
+    /**
+     * The options for the permission.
+     */
+    options: RolePermissionOptions;
+}
+
+
+/**
+ * Defines an interface that describes common options for all permissions that affect insts.
+ *
+ * @dochash types/permissions
+ * @docname InstPermission
+ */
+export interface InstPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'inst';
+
+    /**
+     * The ID of the resource that is allowed.
+     * If null, then all resources are allowed.
+     */
+    resourceId: string | null;
+
+    /**
+     * The action th at is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: InstActionKinds | null;
+}
+
+/**
+ * The possible types of actions that can be performed on data resources.
+ *
+ * @dochash types/permissions
+ * @docname DataActionKinds
+ */
+export type DataActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list';
+
+/**
+ * The possible types of actions that can be performed on file resources.
+ *
+ * @dochash types/permissions
+ * @docname FileActionKinds
+ */
+export type FileActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list';
+
+/**
+ * The possible types of actions that can be performed on event resources.
+ *
+ * @dochash types/permissions
+ * @docname EventActionKinds
+ */
+export type EventActionKinds = 'increment' | 'count' | 'update' | 'list';
+
+/**
+ * The possible types of actions that can be performed on marker resources.
+ *
+ * @dochash types/permissions
+ * @docname MarkerActionKinds
+ */
+export type MarkerActionKinds =
+    | 'assign'
+    | 'unassign'
+    | 'grantPermission'
+    | 'revokePermission'
+    | 'read';
+
+/**
+ * The possible types of actions that can be performed on roles resources.
+ *
+ * @dochash types/permissions
+ * @docname RoleActionKinds
+ */
+export type RoleActionKinds = 'grant' | 'revoke' | 'read' | 'update' | 'list';
+
+/**
+ * The possible types of actions that can be performed on inst resources.
+ *
+ * @dochash types/permissions
+ * @docname InstActionKinds
+ */
+export type InstActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'updateData'
+    | 'delete'
+    | 'list'
+    | 'sendAction';
+
+
+/**
+ * Defines the possible results of granting a permission to a marker.
+ *
+ * @dochash types/records/policies
+ * @doctitle Policy Types
+ * @docsidebar Policies
+ * @docdescription Types for working with policies.
+ * @docgroup 01-grant
+ * @docorder 0
+ * @docname GrantMarkerPermissionResult
+ */
 export type GrantMarkerPermissionResult =
     | GrantMarkerPermissionSuccess
     | GrantMarkerPermissionFailure;
 
+/**
+ * Defines an interface that represents a successful request to grant a marker permission to a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 1
+ * @docname GrantMarkerPermissionSuccess
+ */
 export interface GrantMarkerPermissionSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to grant a marker permission to a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 2
+ * @docname GrantMarkerPermissionFailure
+ */
 export interface GrantMarkerPermissionFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
-        | AuthorizeDeniedError
-        | 'policy_too_large';
+        | AuthorizeDeniedError;
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
 
-export type RevokeMarkerPermissionResult =
-    | RevokeMarkerPermissionSuccess
-    | RevokeMarkerPermissionFailure;
+/**
+ * Defines the possible results of granting a permission to a resource.
+ *
+ * @dochash types/records/policies
+ * @docname GrantResourcePermissionResult
+ */
+export type GrantResourcePermissionResult =
+    | GrantResourcePermissionSuccess
+    | GrantResourcePermissionFailure;
 
-export interface RevokeMarkerPermissionSuccess {
+/**
+ * Defines an interface that represents a successful request to grant a permission to a resource.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 1
+ * @docname GrantResourcePermissionSuccess
+ */
+export interface GrantResourcePermissionSuccess {
     success: true;
 }
 
-export interface RevokeMarkerPermissionFailure {
+/**
+ * Defines an interface that represents a failed request to grant a permission to a resource.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 2
+ * @docname GrantResourcePermissionFailure
+ */
+export interface GrantResourcePermissionFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
-        | AuthorizeDeniedError
-        | GetPolicyError
-        | UpdateUserPolicyError;
+        | AuthorizeDeniedError;
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+/**
+ * Defines the possible results of revoking a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 0
+ * @docname RevokeMarkerPermissionResult
+ */
+export type RevokePermissionResult =
+    | RevokePermissionSuccess
+    | RevokePermissionFailure;
+
+/**
+ * Defines an interface that represents a successful request to revoke a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 1
+ * @docname RevokePermissionSuccess
+ */
+export interface RevokePermissionSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to revoke a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 2
+ * @docname RevokePermissionFailure
+ */
+export interface RevokePermissionFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | 'permission_not_found'
+        | AuthorizeDeniedError;
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+/**
+ * Defines the possible results of revoking a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 0
+ * @docname RevokeRoleResult
+ */
+export type RevokeRoleResult = RevokeRoleSuccess | RevokeRoleFailure;
+
+/**
+ * Defines an interface that represents a successful request to revoke a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 1
+ * @docname RevokeRoleSuccess
+ */
+export interface RevokeRoleSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to revoke a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 2
+ * @docname RevokeRoleFailure
+ */
+export interface RevokeRoleFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | AuthorizeDeniedError;
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
@@ -3082,22 +3426,6 @@ export interface GrantRoleSuccess {
 }
 
 export interface GrantRoleFailure {
-    success: false;
-    errorCode:
-        | ServerError
-        | AuthorizeDeniedError
-        | 'roles_too_large';
-    errorMessage: string;
-}
-
-
-export type RevokeRoleResult = RevokeRoleSuccess | RevokeRoleFailure;
-
-export interface RevokeRoleSuccess {
-    success: true;
-}
-
-export interface RevokeRoleFailure {
     success: false;
     errorCode:
         | ServerError
@@ -3124,6 +3452,32 @@ export interface RevokeRoleFailure {
      * The policy that should be used for deleting the record.
      */
     deletePolicy?: RecordUserPolicyType;
+
+    /**
+     * The markers that should be applied to the record.
+     */
+    markers?: string[];
+
+    /**
+     * The marker that should be applied to the record.
+     */
+    marker?: string;
+}
+
+/**
+ * Defines an interface that represents the options for a list data action.
+ *
+ * @dochash types/records/data
+ * @docName ListDataOptions
+ */
+export interface ListDataOptions extends RecordActionOptions {
+
+    /**
+     * The order that items should be sorted in.
+     * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
+     * - "descending" means that the items should be sorted in alphebatically descending order by address.
+     */
+    sort?: 'ascending' | 'descending';
 }
 
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
@@ -3587,8 +3941,19 @@ export interface RoomTrackOptions {
     aspectRatio?: number;
 }
 
+/**
+ * The possible kinds of tracks.
+ */
 export type TrackKind = 'video' | 'audio';
+
+/**
+ * The possible sources for a room track.
+ */
 export type TrackSource = 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio';
+
+/**
+ * The possible video qualities for a room track.
+ */
 export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
 
 export interface JoinRoomActionOptions extends Partial<RoomOptions> {
@@ -7996,7 +8361,7 @@ declare global {
      * // Find all the bots with the ID "bob".
      * let bobs = getBots(byId("bob"));
      */
-    function byID(id: string): IDRecordFilter;
+    function byID(id: string): BotFilterFunction;
 
     /**
      * Creates a filter function that checks whether bots match the given mod.
@@ -8826,7 +9191,7 @@ interface DebuggerBase {
      * // Find all the bots with the ID "bob".
      * let bobs = getBots(byId("bob"));
      */
-    byID(id: string): IDRecordFilter;
+    byID(id: string): BotFilterFunction;
 
     /**
      * Creates a filter function that checks whether bots match the given mod.
@@ -11124,32 +11489,42 @@ interface Os {
     ): Promise<CreatePublicRecordKeyResult>;
     
     /**
-     * Grants the given marker the given permission in the given record.
-     * @param recordName The name of the record.
-     * @param marker The marker.
-     * @param permission The permission to grant.
-     * @param options The options.
+     * Grants the given permission in the given record.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param permission the permission that should be added.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.grantPermission
      */
-    grantRecordMarkerPermission(
+    grantPermission(
         recordName: string,
-        marker: string,
-        permission: object,
+        permission: AvailablePermissions,
         options?: RecordActionOptions
-    ): Promise<GrantMarkerPermissionResult>;
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult>;
 
     /**
-     * Revokes the given permission from the given marker in the given record.
-     * @param recordName The name of the record.
-     * @param marker The name of the marker.
-     * @param permission The permission that should be revoked.
-     * @param options The options.
+     * Revokes the permission with the given ID from the the given record.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param permissionId the ID of the permission that should be removed.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.revokePermission
      */
-    revokeRecordMarkerPermission(
+    revokePermission(
         recordName: string,
-        marker: string,
-        permission: object,
+        permissionId: string,
         options?: RecordActionOptions
-    ): Promise<RevokeMarkerPermissionResult>;
+    ): Promise<RevokePermissionResult>;
 
     /**
      * Grants the current inst admin permissions in the given record for the rest of the day.
@@ -11160,7 +11535,6 @@ interface Os {
         recordName: string,
         options?: RecordActionOptions
     ): Promise<GrantRoleResult>;
-
 
     /**
      * Grants the given user the given role in the given record for the specified time.
@@ -11261,6 +11635,67 @@ interface Os {
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     listData(recordKeyOrName: string, startingAddress?: string, endpoint?: string): Promise<ListDataResult>;
+
+    /**
+     * Gets a partial list of [data](glossary:data-record) with the given marker that is stored in the given record.
+     * Optionally accepts the address before the first item that should be included in the list.
+     * Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
+     *
+     * @param recordKeyOrName the record name or a record key. This indicates the record that the data should be retrieved from.
+     * Note that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.
+     * @param marker The marker that needs to be assigned to the data items that should be included in the list.
+     * e.g. Using "publicRead" will return all data items with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options The options for the operation.
+     * 
+     * @example Get a list of publicRead data items in a record
+     * const result = await os.listData('myRecord', 'publicRead');
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example List all the items that have the publicRead marker in a record
+     * let lastAddress;
+     * let items = [];
+     * while(true) {
+     *     const result = await os.listData('myRecord', 'publicRead', lastAddress);
+     *     if (result.success) {
+     *         console.log(result.items);
+     *         items.push(...result.items);
+     *         if (result.items.length > 0) {
+     *             lastAddress = result.items[result.items.length - 1].address;
+     *         } else {
+     *             // result.items is empty, so we can break out of the loop
+     *             break;
+     *         }
+     *     } else {
+     *         os.toast("Failed " + result.errorMessage);
+     *         break;
+     *     }
+     * }
+     * 
+     * @example List publicRead items in descending order
+     * const result = await os.listData('myRecord', 'publicRead', null, { sort: 'descending' });
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listDataByMarker
+     */
+    listDataByMarker(
+        recordKeyOrName: string,
+        marker: string,
+        startingAddress?: string,
+        options?: ListDataOptions
+    ): Promise<ListDataResult>;
 
     /**
      * Erases the data stored in the given record at the given address.

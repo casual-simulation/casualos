@@ -1,4 +1,4 @@
-import { sortBy } from 'lodash';
+import { cloneDeep, orderBy, sortBy } from 'lodash';
 import { RegexRule } from './Utils';
 import {
     AddressType,
@@ -11,7 +11,6 @@ import {
     AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
-    PrivacyFeatures,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
@@ -35,6 +34,7 @@ import {
     DataRecordsStore,
     EraseDataStoreResult,
     GetDataStoreResult,
+    ListDataStoreByMarkerRequest,
     ListDataStoreResult,
     ListedDataStoreItem,
     SetDataResult,
@@ -66,27 +66,32 @@ import {
     UpdateEventResult,
 } from './EventRecordsStore';
 import {
+    AssignPermissionToSubjectAndMarkerResult,
+    AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
-    GetUserPolicyResult,
-    ListMarkerPoliciesResult,
-    ListUserPoliciesStoreResult,
+    DeletePermissionAssignmentResult,
+    GetMarkerPermissionResult,
+    GetResourcePermissionResult,
+    ListPermissionsInRecordResult,
     ListedRoleAssignments,
-    ListedUserPolicy,
+    MarkerPermissionAssignment,
     PolicyStore,
+    ResourcePermissionAssignment,
     RoleAssignment,
-    UpdateRolesUpdate,
-    UpdateUserPolicyResult,
     UpdateUserRolesResult,
-    UserPolicyRecord,
     getExpireTime,
+    getSubjectUserId,
 } from './PolicyStore';
 import {
-    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
+    ADMIN_ROLE_NAME,
+    ActionKinds,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-    PolicyDocument,
+    PermissionOptions,
+    ResourceKinds,
+    SubjectType,
+    PrivacyFeatures,
+    ACCOUNT_MARKER,
 } from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
@@ -129,6 +134,7 @@ import {
     RecordsNotification,
 } from './NotificationMessenger';
 import { ModerationConfiguration } from './ModerationConfiguration';
+import { uniq } from 'lodash';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -185,16 +191,22 @@ export class MemoryStore
     private _recordNotifications: RecordsNotification[] = [];
     private _comIdRequests: StudioComIdRequest[] = [];
 
+    private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
+    private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
+    // TODO: Support global permissions
+    // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
+
     maxAllowedInstSize: number = Infinity;
 
-    policies: {
-        [recordName: string]: {
-            [marker: string]: {
-                document: PolicyDocument;
-                markers: string[];
-            };
-        };
-    };
+    policies: any;
+    //  {
+    //     [recordName: string]: {
+    //         [marker: string]: {
+    //             document: PolicyDocument;
+    //             markers: string[];
+    //         };
+    //     };
+    // };
 
     roles: {
         [recordName: string]: {
@@ -294,6 +306,61 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    /**
+     * Constructs a deep clone of this memory store.
+     * Effectively copies all the data in the store into a new one.
+     */
+    clone(): MemoryStore {
+        const newStore = new MemoryStore({
+            subscriptions: cloneDeep(this._subscriptionConfiguration),
+            privo: cloneDeep(this._privoConfiguration),
+            moderation: cloneDeep(this._moderationConfiguration),
+        });
+
+        newStore._users = cloneDeep(this._users);
+        newStore._loginRequests = cloneDeep(this._loginRequests);
+        newStore._oidLoginRequests = cloneDeep(this._oidLoginRequests);
+        newStore._sessions = cloneDeep(this._sessions);
+        newStore._subscriptions = cloneDeep(this._subscriptions);
+        newStore._periods = cloneDeep(this._periods);
+        newStore._invoices = cloneDeep(this._invoices);
+        newStore._records = cloneDeep(this._records);
+        newStore._recordKeys = cloneDeep(this._recordKeys);
+        newStore._studios = cloneDeep(this._studios);
+        newStore._studioAssignments = cloneDeep(this._studioAssignments);
+        newStore._aiChatMetrics = cloneDeep(this._aiChatMetrics);
+        newStore._aiImageMetrics = cloneDeep(this._aiImageMetrics);
+        newStore._aiSkyboxMetrics = cloneDeep(this._aiSkyboxMetrics);
+        newStore._dataBuckets = cloneDeep(this._dataBuckets);
+        newStore._eventBuckets = cloneDeep(this._eventBuckets);
+        newStore._files = cloneDeep(this._files);
+        newStore._fileUploadUrl = cloneDeep(this._fileUploadUrl);
+        newStore._emailRules = cloneDeep(this._emailRules);
+        newStore._smsRules = cloneDeep(this._smsRules);
+        newStore._userInstReports = cloneDeep(this._userInstReports);
+        newStore._instRecords = cloneDeep(this._instRecords);
+        newStore._subscriptionConfiguration = cloneDeep(
+            this._subscriptionConfiguration
+        );
+        newStore._privoConfiguration = cloneDeep(this._privoConfiguration);
+        newStore._moderationConfiguration = cloneDeep(
+            this._moderationConfiguration
+        );
+        newStore._recordNotifications = cloneDeep(this._recordNotifications);
+        newStore._comIdRequests = cloneDeep(this._comIdRequests);
+        newStore._resourcePermissionAssignments = cloneDeep(
+            this._resourcePermissionAssignments
+        );
+        newStore._markerPermissionAssignments = cloneDeep(
+            this._markerPermissionAssignments
+        );
+        newStore.maxAllowedInstSize = this.maxAllowedInstSize;
+        newStore.roles = cloneDeep(this.roles);
+        newStore.roleAssignments = cloneDeep(this.roleAssignments);
+
+        return newStore;
     }
 
     async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
@@ -630,6 +697,360 @@ export class MemoryStore
                 role: s.role,
             };
         });
+    }
+
+    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+        return await this._getUserPrivacyFeatures(userId);
+    }
+
+    async getRecordOwnerPrivacyFeatures(
+        recordName: string
+    ): Promise<PrivacyFeatures> {
+        const record = await this.getRecordByName(recordName);
+        if (!record || !record.ownerId) {
+            return null;
+        }
+        return await this._getUserPrivacyFeatures(record.ownerId);
+    }
+
+    async getPermissionForSubjectAndResource(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetResourcePermissionResult> {
+        const existingRoles =
+            subjectType === 'user'
+                ? await this.listRolesForUser(recordName, subjectId)
+                : subjectType === 'inst'
+                ? await this.listRolesForInst(recordName, subjectId)
+                : [];
+
+        const roles = existingRoles.map((r) => r.role);
+
+        const assignment = this._resourcePermissionAssignments.find(
+            (p) =>
+                p.recordName === recordName &&
+                ((p.subjectType === 'role' &&
+                    roles.indexOf(p.subjectId) >= 0) ||
+                    (p.subjectType === subjectType &&
+                        p.subjectId === subjectId)) &&
+                p.resourceKind === resourceKind &&
+                p.resourceId === resourceId &&
+                (p.action === null || p.action === action) &&
+                (!p.expireTimeMs || p.expireTimeMs > currentTimeMs)
+        );
+
+        return {
+            success: true,
+            permissionAssignment: assignment,
+        };
+    }
+
+    async getPermissionForSubjectAndMarkers(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        markers: string[],
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetMarkerPermissionResult> {
+        const existingRoles =
+            subjectType === 'user'
+                ? await this.listRolesForUser(recordName, subjectId)
+                : subjectType === 'inst'
+                ? await this.listRolesForInst(recordName, subjectId)
+                : [];
+        const roles = existingRoles.map((r) => r.role);
+
+        const assignment = this._markerPermissionAssignments.find(
+            (p) =>
+                p.recordName === recordName &&
+                markers.indexOf(p.marker) >= 0 &&
+                ((p.subjectType === 'role' &&
+                    roles.indexOf(p.subjectId) >= 0) ||
+                    (p.subjectType === subjectType &&
+                        p.subjectId === subjectId)) &&
+                p.resourceKind === resourceKind &&
+                (p.action === null || p.action === action) &&
+                (!p.expireTimeMs || p.expireTimeMs > currentTimeMs)
+        );
+
+        return {
+            success: true,
+            permissionAssignment: assignment,
+        };
+    }
+
+    // TODO: Support global permissions
+    // async assignGlobalPermissionToSubject(
+    //     subjectType: SubjectType,
+    //     subjectId: string,
+    //     resourceKind: ResourceKinds,
+    //     action: ActionKinds,
+    //     options: PermissionOptions,
+    //     expireTimeMs: number
+    // ): Promise<AssignGlobalPermissionToSubjectResult> {
+    //     const userId = getSubjectUserId(subjectType, subjectId);
+    //     const assignment: GlobalPermissionAssignment = {
+    //         id: uuid(),
+    //         userId,
+    //         subjectType,
+    //         subjectId,
+    //         resourceKind,
+    //         action,
+    //         options,
+    //         expireTimeMs
+    //     };
+
+    //     this._globalPermissionAssignments.push(assignment);
+
+    //     return {
+    //         success: true,
+    //         permissionAssignment: assignment,
+    //     };
+    // }
+
+    async assignPermissionToSubjectAndResource(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds | null,
+        options: PermissionOptions,
+        expireTimeMs: number | null
+    ): Promise<AssignPermissionToSubjectAndResourceResult> {
+        const assignmentIndex = this._resourcePermissionAssignments.findIndex(
+            (a) =>
+                a.recordName === recordName &&
+                a.subjectType === subjectType &&
+                a.subjectId === subjectId &&
+                a.resourceKind === resourceKind &&
+                a.resourceId === resourceId &&
+                a.action === action
+        );
+
+        if (assignmentIndex >= 0) {
+            const assignment =
+                this._resourcePermissionAssignments[assignmentIndex];
+            this._resourcePermissionAssignments[assignmentIndex] = {
+                ...assignment,
+                options,
+                expireTimeMs,
+            };
+            return {
+                success: true,
+                permissionAssignment: assignment,
+            };
+        }
+
+        const userId = getSubjectUserId(subjectType, subjectId);
+        const assignment: ResourcePermissionAssignment = {
+            id: uuid(),
+            recordName,
+            userId,
+            subjectType,
+            subjectId,
+            resourceKind,
+            resourceId,
+            action,
+            options,
+            expireTimeMs,
+        };
+
+        this._resourcePermissionAssignments.push(assignment);
+
+        return {
+            success: true,
+            permissionAssignment: assignment,
+        };
+    }
+
+    async assignPermissionToSubjectAndMarker(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        marker: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number | null
+    ): Promise<AssignPermissionToSubjectAndMarkerResult> {
+        const assignmentIndex = this._markerPermissionAssignments.findIndex(
+            (a) =>
+                a.recordName === recordName &&
+                a.subjectType === subjectType &&
+                a.subjectId === subjectId &&
+                a.marker === marker &&
+                a.resourceKind === resourceKind &&
+                a.action === action
+        );
+
+        if (assignmentIndex >= 0) {
+            const assignment =
+                this._markerPermissionAssignments[assignmentIndex];
+            this._markerPermissionAssignments[assignmentIndex] = {
+                ...assignment,
+                options,
+                expireTimeMs,
+            };
+            return {
+                success: true,
+                permissionAssignment: assignment,
+            };
+        }
+
+        const userId = getSubjectUserId(subjectType, subjectId);
+        const assignment: MarkerPermissionAssignment = {
+            id: uuid(),
+            recordName,
+            userId,
+            subjectType,
+            subjectId,
+            resourceKind,
+            marker,
+            action,
+            options,
+            expireTimeMs,
+        };
+
+        this._markerPermissionAssignments.push(assignment);
+
+        return {
+            success: true,
+            permissionAssignment: assignment,
+        };
+    }
+
+    async getMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<MarkerPermissionAssignment> {
+        return (
+            this._markerPermissionAssignments.find((a) => a.id === id) ?? null
+        );
+    }
+
+    async getResourcePermissionAssignmentById(
+        id: string
+    ): Promise<ResourcePermissionAssignment> {
+        return (
+            this._resourcePermissionAssignments.find((a) => a.id === id) ?? null
+        );
+    }
+
+    async deleteResourcePermissionAssignment(
+        assigment: ResourcePermissionAssignment
+    ): Promise<DeletePermissionAssignmentResult> {
+        this._resourcePermissionAssignments =
+            this._resourcePermissionAssignments.filter(
+                (p) => p.id !== assigment.id
+            );
+        return {
+            success: true,
+        };
+    }
+
+    async deleteResourcePermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        this._resourcePermissionAssignments =
+            this._resourcePermissionAssignments.filter((p) => p.id !== id);
+        return {
+            success: true,
+        };
+    }
+
+    async deleteMarkerPermissionAssignment(
+        assigment: MarkerPermissionAssignment
+    ): Promise<DeletePermissionAssignmentResult> {
+        this._markerPermissionAssignments =
+            this._markerPermissionAssignments.filter(
+                (p) => p.id !== assigment.id
+            );
+        return {
+            success: true,
+        };
+    }
+
+    async deleteMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        this._markerPermissionAssignments =
+            this._markerPermissionAssignments.filter((p) => p.id !== id);
+        return {
+            success: true,
+        };
+    }
+
+    async listPermissionsInRecord(
+        recordName: string
+    ): Promise<ListPermissionsInRecordResult> {
+        const resourceAssignments = this._resourcePermissionAssignments.filter(
+            (p) => p.recordName === recordName
+        );
+
+        const markerAssignments = this._markerPermissionAssignments.filter(
+            (p) => p.recordName === recordName
+        );
+
+        return {
+            success: true,
+            resourceAssignments,
+            markerAssignments,
+        };
+    }
+
+    async listPermissionsForResource(
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string
+    ): Promise<ResourcePermissionAssignment[]> {
+        return this._resourcePermissionAssignments.filter(
+            (p) =>
+                p.recordName === recordName &&
+                p.resourceKind === resourceKind &&
+                p.resourceId === resourceId
+        );
+    }
+
+    async listPermissionsForMarker(
+        recordName: string,
+        marker: string
+    ): Promise<MarkerPermissionAssignment[]> {
+        return this._markerPermissionAssignments.filter(
+            (p) => p.recordName === recordName && p.marker === marker
+        );
+    }
+
+    async listPermissionsForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordResult> {
+        const resourceAssignments = this._resourcePermissionAssignments.filter(
+            (p) =>
+                p.recordName === recordName &&
+                p.subjectType === subjectType &&
+                p.subjectId === subjectId
+        );
+
+        const markerAssignments = this._markerPermissionAssignments.filter(
+            (p) =>
+                p.recordName === recordName &&
+                p.subjectType === subjectType &&
+                p.subjectId === subjectId
+        );
+
+        return {
+            success: true,
+            resourceAssignments,
+            markerAssignments,
+        };
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {
@@ -1249,6 +1670,50 @@ export class MemoryStore
             success: true,
             items,
             totalCount: count,
+            marker: null,
+        };
+    }
+
+    async listDataByMarker(
+        request: ListDataStoreByMarkerRequest
+    ): Promise<ListDataStoreResult> {
+        const marker = request.marker;
+        let record = this._getDataRecord(request.recordName);
+        let items = [] as ListedDataStoreItem[];
+        const address = request.startingAddress;
+        const sortAscending = (request.sort ?? 'ascending') === 'ascending';
+
+        let count = 0;
+        for (let [key, item] of record.entries()) {
+            if (item.markers.includes(marker)) {
+                count += 1;
+                if (
+                    !address ||
+                    (sortAscending && key > address) ||
+                    (!sortAscending && key < address)
+                ) {
+                    items.push({
+                        address: key,
+                        data: item.data,
+                        markers: item.markers,
+                    });
+                }
+            }
+        }
+
+        if (request.sort) {
+            if (request.sort === 'ascending') {
+                items = sortBy(items, (i) => i.address);
+            } else if (request.sort === 'descending') {
+                items = orderBy(items, (i) => i.address, 'desc');
+            }
+        }
+
+        return {
+            success: true,
+            items,
+            totalCount: count,
+            marker: marker,
         };
     }
 
@@ -1585,98 +2050,98 @@ export class MemoryStore
         return record;
     }
 
-    async listUserPolicies(
-        recordName: string,
-        startingMarker: string
-    ): Promise<ListUserPoliciesStoreResult> {
-        const recordPolicies = this.policies[recordName] ?? {};
+    // async listUserPolicies(
+    //     recordName: string,
+    //     startingMarker: string
+    // ): Promise<ListUserPoliciesStoreResult> {
+    //     const recordPolicies = this.policies[recordName] ?? {};
 
-        const keys = sortBy(Object.keys(recordPolicies));
+    //     const keys = sortBy(Object.keys(recordPolicies));
 
-        let results: ListedUserPolicy[] = [];
-        let start = !startingMarker;
-        for (let key of keys) {
-            if (start) {
-                results.push({
-                    marker: key,
-                    document: recordPolicies[key].document,
-                    markers: recordPolicies[key].markers,
-                });
-            } else if (key === startingMarker || key > startingMarker) {
-                start = true;
-            }
-        }
+    //     let results: ListedUserPolicy[] = [];
+    //     let start = !startingMarker;
+    //     for (let key of keys) {
+    //         if (start) {
+    //             results.push({
+    //                 marker: key,
+    //                 document: recordPolicies[key].document,
+    //                 markers: recordPolicies[key].markers,
+    //             });
+    //         } else if (key === startingMarker || key > startingMarker) {
+    //             start = true;
+    //         }
+    //     }
 
-        return {
-            success: true,
-            policies: results,
-            totalCount: results.length,
-        };
-    }
+    //     return {
+    //         success: true,
+    //         policies: results,
+    //         totalCount: results.length,
+    //     };
+    // }
 
-    async getUserPolicy(
-        recordName: string,
-        marker: string
-    ): Promise<GetUserPolicyResult> {
-        const policy = this.policies[recordName]?.[marker];
+    // async getUserPolicy(
+    //     recordName: string,
+    //     marker: string
+    // ): Promise<GetUserPolicyResult> {
+    //     const policy = this.policies[recordName]?.[marker];
 
-        if (!policy) {
-            return {
-                success: false,
-                errorCode: 'policy_not_found',
-                errorMessage: 'The policy was not found.',
-            };
-        }
+    //     if (!policy) {
+    //         return {
+    //             success: false,
+    //             errorCode: 'policy_not_found',
+    //             errorMessage: 'The policy was not found.',
+    //         };
+    //     }
 
-        return {
-            success: true,
-            document: policy.document,
-            markers: policy.markers,
-        };
-    }
+    //     return {
+    //         success: true,
+    //         document: policy.document,
+    //         markers: policy.markers,
+    //     };
+    // }
 
-    async updateUserPolicy(
-        recordName: string,
-        marker: string,
-        policy: UserPolicyRecord
-    ): Promise<UpdateUserPolicyResult> {
-        if (!this.policies[recordName]) {
-            this.policies[recordName] = {};
-        }
+    // async updateUserPolicy(
+    //     recordName: string,
+    //     marker: string,
+    //     policy: UserPolicyRecord
+    // ): Promise<UpdateUserPolicyResult> {
+    //     if (!this.policies[recordName]) {
+    //         this.policies[recordName] = {};
+    //     }
 
-        this.policies[recordName][marker] = {
-            document: policy.document,
-            markers: policy.markers,
-        };
+    //     this.policies[recordName][marker] = {
+    //         document: policy.document,
+    //         markers: policy.markers,
+    //     };
 
-        return {
-            success: true,
-        };
-    }
+    //     return {
+    //         success: true,
+    //     };
+    // }
 
-    async listPoliciesForMarkerAndUser(
-        recordName: string,
-        userId: string,
-        marker: string
-    ): Promise<ListMarkerPoliciesResult> {
-        const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
-        if (marker === PUBLIC_READ_MARKER) {
-            policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
-        } else if (marker === PUBLIC_WRITE_MARKER) {
-            policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
-        }
-        const policy = this.policies[recordName]?.[marker];
-        if (policy) {
-            policies.push(policy.document);
-        }
+    // async listPoliciesForMarkerAndUser(
+    //     recordName: string,
+    //     userId: string,
+    //     marker: string
+    // ): Promise<ListMarkerPoliciesResult> {
+    //     const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
+    //     if (marker === PUBLIC_READ_MARKER) {
+    //         policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
+    //     } else if (marker === PUBLIC_WRITE_MARKER) {
+    //         policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
+    //     }
+    //     const policy = this.policies[recordName]?.[marker];
+    //     if (policy) {
+    //         policies.push(policy.document);
+    //     }
 
-        return {
-            policies,
-            recordOwnerPrivacyFeatures:
-                await this._getRecordOwnerPrivacyFeatures(recordName),
-            userPrivacyFeatures: await this._getUserPrivacyFeatures(userId),
-        };
-    }
+    //     return {
+    //         policies,
+    //         recordOwnerPrivacyFeatures:
+    //             await this._getRecordOwnerPrivacyFeatures(recordName),
+    //         userPrivacyFeatures: await this._getUserPrivacyFeatures(userId),
+    //     };
+    // }
 
     private async _getRecordOwnerPrivacyFeatures(
         recordName: string
@@ -1873,50 +2338,50 @@ export class MemoryStore
         };
     }
 
-    async updateUserRoles(
-        recordName: string,
-        userId: string,
-        update: UpdateRolesUpdate
-    ): Promise<UpdateUserRolesResult> {
-        if (!this.roleAssignments[recordName]) {
-            this.roleAssignments[recordName] = {};
-        }
+    // async updateUserRoles(
+    //     recordName: string,
+    //     userId: string,
+    //     update: UpdateRolesUpdate
+    // ): Promise<UpdateUserRolesResult> {
+    //     if (!this.roleAssignments[recordName]) {
+    //         this.roleAssignments[recordName] = {};
+    //     }
 
-        const assignments = update.roles
-            .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
-            .map((r) => ({
-                ...r,
-                expireTimeMs:
-                    r.expireTimeMs === Infinity ? null : r.expireTimeMs,
-            }));
-        this.roleAssignments[recordName][userId] = assignments;
+    //     const assignments = update.roles
+    //         .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
+    //         .map((r) => ({
+    //             ...r,
+    //             expireTimeMs:
+    //                 r.expireTimeMs === Infinity ? null : r.expireTimeMs,
+    //         }));
+    //     this.roleAssignments[recordName][userId] = assignments;
 
-        return {
-            success: true,
-        };
-    }
+    //     return {
+    //         success: true,
+    //     };
+    // }
 
-    async updateInstRoles(
-        recordName: string,
-        inst: string,
-        update: UpdateRolesUpdate
-    ): Promise<UpdateUserRolesResult> {
-        if (!this.roleAssignments[recordName]) {
-            this.roleAssignments[recordName] = {};
-        }
-        const assignments = update.roles
-            .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
-            .map((r) => ({
-                ...r,
-                expireTimeMs:
-                    r.expireTimeMs === Infinity ? null : r.expireTimeMs,
-            }));
-        this.roleAssignments[recordName][inst] = assignments;
+    // async updateInstRoles(
+    //     recordName: string,
+    //     inst: string,
+    //     update: UpdateRolesUpdate
+    // ): Promise<UpdateUserRolesResult> {
+    //     if (!this.roleAssignments[recordName]) {
+    //         this.roleAssignments[recordName] = {};
+    //     }
+    //     const assignments = update.roles
+    //         .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
+    //         .map((r) => ({
+    //             ...r,
+    //             expireTimeMs:
+    //                 r.expireTimeMs === Infinity ? null : r.expireTimeMs,
+    //         }));
+    //     this.roleAssignments[recordName][inst] = assignments;
 
-        return {
-            success: true,
-        };
-    }
+    //     return {
+    //         success: true,
+    //     };
+    // }
 
     private _getRolesForEntity(recordName: string, id: string): AssignedRole[] {
         const roles = this.roles[recordName]?.[id] ?? new Set<string>();

@@ -1,32 +1,39 @@
 import { ServerError } from '@casual-simulation/aux-common/Errors';
-import { PolicyDocument } from '@casual-simulation/aux-common';
-import { PrivacyFeatures } from './AuthStore';
+import {
+    ActionKinds,
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+    PermissionOptions,
+    ResourceKinds,
+    SubjectType,
+    PrivacyFeatures,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.
  */
 export interface PolicyStore {
-    /**
-     * Gets the list of policy documents that apply to the given marker and user.
-     * @param recordName The name of the record that the policies belong to.
-     * @param userId The ID of the user that is attempting to utilize the markers. Null if the user is not logged in.
-     * @param marker The marker.
-     */
-    listPoliciesForMarkerAndUser(
-        recordName: string,
-        userId: string,
-        marker: string
-    ): Promise<ListMarkerPoliciesResult>;
+    // /**
+    //  * Gets the list of policy documents that apply to the given marker and user.
+    //  * @param recordName The name of the record that the policies belong to.
+    //  * @param userId The ID of the user that is attempting to utilize the markers. Null if the user is not logged in.
+    //  * @param marker The marker.
+    //  */
+    // listPoliciesForMarkerAndUser(
+    //     recordName: string,
+    //     userId: string,
+    //     marker: string
+    // ): Promise<ListMarkerPoliciesResult>;
 
-    /**
-     * Lists the user-created policices for the given record.
-     * @param recordName The name of the record.
-     * @param startingMarker The marker that policies should be listed after. If null, then the list starts with the first policy.
-     */
-    listUserPolicies(
-        recordName: string,
-        startingMarker: string | null
-    ): Promise<ListUserPoliciesStoreResult>;
+    // /**
+    //  * Lists the user-created policices for the given record.
+    //  * @param recordName The name of the record.
+    //  * @param startingMarker The marker that policies should be listed after. If null, then the list starts with the first policy.
+    //  */
+    // listUserPolicies(
+    //     recordName: string,
+    //     startingMarker: string | null
+    // ): Promise<ListUserPoliciesStoreResult>;
 
     /**
      * Lists the roles that are assigned to the user.
@@ -65,27 +72,220 @@ export interface PolicyStore {
         startingRole: string | null
     ): Promise<ListedRoleAssignments>;
 
-    /**
-     * Gets the user-created policy for the given marker.
-     * @param recordName The name of the record.
-     * @param marker The name of the marker.
-     */
-    getUserPolicy(
-        recordName: string,
-        marker: string
-    ): Promise<GetUserPolicyResult>;
+    // /**
+    //  * Gets the user-created policy for the given marker.
+    //  * @param recordName The name of the record.
+    //  * @param marker The name of the marker.
+    //  */
+    // getUserPolicy(
+    //     recordName: string,
+    //     marker: string
+    // ): Promise<GetUserPolicyResult>;
+
+    // /**
+    //  * Updates the policy for the given marker.
+    //  * @param recordName The name of the record.
+    //  * @param marker The name of the marker.
+    //  * @param document The new policy document.
+    //  */
+    // updateUserPolicy(
+    //     recordName: string,
+    //     marker: string,
+    //     policy: UserPolicyRecord
+    // ): Promise<UpdateUserPolicyResult>;
 
     /**
-     * Updates the policy for the given marker.
-     * @param recordName The name of the record.
-     * @param marker The name of the marker.
-     * @param document The new policy document.
+     * Gets the privacy features that are enabled for the given user.
+     * Returns null if the given user does not exist.
+     * @param userId The ID of the user.
      */
-    updateUserPolicy(
+    getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures>;
+
+    /**
+     * Gets the privacy features for the owner of the given record.
+     * Returns null if the record does not exist or if the record does not have an owner.
+     * @param recordName The name of the record.
+     */
+    getRecordOwnerPrivacyFeatures(recordName: string): Promise<PrivacyFeatures>;
+
+    /**
+     * Gets the permission for the given subject, resource, and action.
+     * @param subjectType The type of the subject. Must be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param recordName The name of the record that the resource belongs to.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     * @param action The action that the subject is attempting to perform on the resource.
+     * @param currentTimeMs The current unix time in milliseconds.
+     */
+    getPermissionForSubjectAndResource(
+        subjectType: SubjectType,
+        subjectId: string,
         recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetResourcePermissionResult>;
+
+    /**
+     * Gets the permission for the given subject, markers, and action.
+     * @param subjectType The type of the subject. Must be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param recordName The name of the record that the resource belongs to.
+     * @param resourceKind The kind of the resource.
+     * @param markers The markers that are applied to the resource.
+     * @param action The action that the subject is attempting to perform on the resource.
+     * @param currentTimeMs The current unix time in milliseconds.
+     */
+    getPermissionForSubjectAndMarkers(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        markers: string[],
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetMarkerPermissionResult>;
+
+    // TODO: Support global permissions
+    // /**
+    //  * Assigns the given permission to the given subject for all resources in all records.
+    //  * @param subjectType The type of the subject. If "role", then all users/insts that have the given role in the related record are granted permission.
+    //  * @param subjectId The ID of the subject.
+    //  * @param resourceKind The kind of the resource. If null, then the permission applies to all resources.
+    //  * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
+    //  * @param options The options for the permission.
+    //  * @param expireTimeMs The time that the permission expires. If null, then the permission never expires.
+    //  */
+    // assignGlobalPermissionToSubject(
+    //     subjectType: SubjectType,
+    //     subjectId: string,
+    //     resourceKind: ResourceKinds,
+    //     action: ActionKinds,
+    //     options: PermissionOptions,
+    //     expireTimeMs: number | null
+    // ): Promise<AssignGlobalPermissionToSubjectResult>;
+
+    /**
+     * Assigns the given permission to the given subject for the given resource.
+     * @param recordName The name of the record that the resource exists in.
+     * @param subjectType The type of the subject. This can be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
+     * @param options The options for the permission.
+     * @param expireTimeMs The time that the permission expires. If null, then the permission never expires.
+     */
+    assignPermissionToSubjectAndResource(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number | null
+    ): Promise<AssignPermissionToSubjectAndResourceResult>;
+
+    /**
+     * Assigns the given permission to the given subject for the given resource.
+     * @param recordName The name of the record that the resource exists in.
+     * @param subjectType The type of the subject. This can be either a user, inst, or role.
+     * @param subjectId The ID of the subject.
+     * @param resourceKind The kind of the resource.
+     * @param marker The ID of the marker.
+     * @param action The action that the subject is allowed to perform on the resource. If null, then all actions are allowed.
+     * @param options The options for the permission.
+     * @param expireTimeMs The time that the permission expires. If null, then the permission never expires.
+     */
+    assignPermissionToSubjectAndMarker(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
         marker: string,
-        policy: UserPolicyRecord
-    ): Promise<UpdateUserPolicyResult>;
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number | null
+    ): Promise<AssignPermissionToSubjectAndMarkerResult>;
+
+    /**
+     * Deletes the given resource permission assignment from the store.
+     * @param id The ID of the resource permission assignment.
+     */
+    deleteResourcePermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult>;
+
+    /**
+     * Deletes the given marker permission assignment from the store.
+     * @param id The ID of the permission assignment.
+     */
+    deleteMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult>;
+
+    /**
+     * Lists the resource permission assignments for the given record.
+     * @param recordName The name of the record.
+     */
+    listPermissionsInRecord(
+        recordName: string
+    ): Promise<ListPermissionsInRecordResult>;
+
+    /**
+     * Lists the resource permission assignments for the given record and resource.
+     * @param recordName The name of the record.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     */
+    listPermissionsForResource(
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string
+    ): Promise<ResourcePermissionAssignment[]>;
+
+    /**
+     * Lists the marker permission assignments for the given record and marker.
+     * @param recordName The record that the permission assignments should be listed for.
+     * @param marker The marker that the permission assignments should be listed for.
+     */
+    listPermissionsForMarker(
+        recordName: string,
+        marker: string
+    ): Promise<MarkerPermissionAssignment[]>;
+
+    /**
+     * Lists the resource permission assignments for the given subject in the given record.
+     * @param recordName The name of the record.
+     * @param subjectType The type of the subject.
+     * @param subjectId The ID of the subject.
+     */
+    listPermissionsForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordResult>;
+
+    /**
+     * Gets the marker permission assignment with the given ID.
+     * Returns null if no assignment was found.
+     * @param id The ID of the assignment.
+     */
+    getMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<MarkerPermissionAssignment>;
+
+    /**
+     * Gets the resource permission assignment with the given ID.
+     * Returns null if no assignment was found.
+     * @param id The ID of the assignment.
+     */
+    getResourcePermissionAssignmentById(
+        id: string
+    ): Promise<ResourcePermissionAssignment>;
 
     /**
      * Assigns the given role to the given subject.
@@ -120,62 +320,62 @@ export interface PolicyStore {
     ): Promise<UpdateUserRolesResult>;
 }
 
-/**
- * Defines an interface that represents a user-created policy.
- */
-export interface UserPolicyRecord {
-    /**
-     * The policy document.
-     */
-    document: PolicyDocument;
+// /**
+//  * Defines an interface that represents a user-created policy.
+//  */
+// export interface UserPolicyRecord {
+//     /**
+//      * The policy document.
+//      */
+//     document: PolicyDocument;
 
-    /**
-     * The list of markers that are applied to the policy.
-     */
-    markers: string[];
-}
+//     /**
+//      * The list of markers that are applied to the policy.
+//      */
+//     markers: string[];
+// }
 
-export interface ListedUserPolicy extends UserPolicyRecord {
-    /**
-     * The marker that this policy is for.
-     */
-    marker: string;
-}
+// export interface ListedUserPolicy extends UserPolicyRecord {
+//     /**
+//      * The marker that this policy is for.
+//      */
+//     marker: string;
+// }
 
-export type GetUserPolicyResult = GetUserPolicySuccess | GetUserPolicyFailure;
+// export type GetUserPolicyResult = GetUserPolicySuccess | GetUserPolicyFailure;
 
-export interface GetUserPolicySuccess {
-    success: true;
-    document: PolicyDocument;
-    markers: string[];
-}
+// export interface GetUserPolicySuccess {
+//     success: true;
+//     document: PolicyDocument;
+//     markers: string[];
+// }
 
-export interface GetUserPolicyFailure {
-    success: false;
-    errorCode: ServerError | 'policy_not_found';
-    errorMessage: string;
-}
+// export interface GetUserPolicyFailure {
+//     success: false;
+//     errorCode: ServerError | 'policy_not_found';
+//     errorMessage: string;
+// }
 
-export type UpdateUserPolicyResult =
-    | UpdateUserPolicySuccess
-    | UpdateUserPolicyFailure;
+// export type UpdateUserPolicyResult =
+//     | UpdateUserPolicySuccess
+//     | UpdateUserPolicyFailure;
 
-export interface UpdateUserPolicySuccess {
-    success: true;
-}
+// export interface UpdateUserPolicySuccess {
+//     success: true;
+// }
 
-export interface UpdateUserPolicyFailure {
-    success: false;
-    errorCode: ServerError | 'policy_too_large';
-    errorMessage: string;
-}
+// export interface UpdateUserPolicyFailure {
+//     success: false;
+//     errorCode: ServerError | 'policy_too_large';
+//     errorMessage: string;
+// }
 
-export interface UpdateRolesUpdate {
-    /**
-     * The roles that should be assigned.
-     */
-    roles: AssignedRole[];
-}
+// export interface UpdateRolesUpdate {
+//     /**
+//      * The roles that should be assigned.
+//      */
+//     roles: AssignedRole[];
+// }
 
 export interface AssignedRole {
     /**
@@ -204,21 +404,21 @@ export interface UpdateUserRolesFailure {
     errorMessage: string;
 }
 
-export type ListUserPoliciesStoreResult =
-    | ListUserPoliciesStoreSuccess
-    | ListUserPoliciesStoreFailure;
+// export type ListUserPoliciesStoreResult =
+//     | ListUserPoliciesStoreSuccess
+//     | ListUserPoliciesStoreFailure;
 
-export interface ListUserPoliciesStoreSuccess {
-    success: true;
-    policies: ListedUserPolicy[];
-    totalCount: number;
-}
+// export interface ListUserPoliciesStoreSuccess {
+//     success: true;
+//     policies: ListedUserPolicy[];
+//     totalCount: number;
+// }
 
-export interface ListUserPoliciesStoreFailure {
-    success: false;
-    errorCode: ServerError;
-    errorMessage: string;
-}
+// export interface ListUserPoliciesStoreFailure {
+//     success: false;
+//     errorCode: ServerError;
+//     errorMessage: string;
+// }
 
 export interface ListedRoleAssignments {
     assignments: RoleAssignment[];
@@ -239,22 +439,22 @@ export interface InstRoleAssignment {
     role: AssignedRole;
 }
 
-export interface ListMarkerPoliciesResult {
-    /**
-     * The policies that were returned.
-     */
-    policies: PolicyDocument[];
+// export interface ListMarkerPoliciesResult {
+//     /**
+//      * The policies that were returned.
+//      */
+//     policies: PolicyDocument[];
 
-    /**
-     * The privacy features that are enabled for the record owner.
-     */
-    recordOwnerPrivacyFeatures: PrivacyFeatures;
+//     /**
+//      * The privacy features that are enabled for the record owner.
+//      */
+//     recordOwnerPrivacyFeatures: PrivacyFeatures;
 
-    /**
-     * The privacy features that are enabled for the user.
-     */
-    userPrivacyFeatures: PrivacyFeatures;
-}
+//     /**
+//      * The privacy features that are enabled for the user.
+//      */
+//     userPrivacyFeatures: PrivacyFeatures;
+// }
 
 /**
  * Gets the expiration time that can be used for comparision.
@@ -264,4 +464,416 @@ export interface ListMarkerPoliciesResult {
  */
 export function getExpireTime(expireTimeMs: number | null): number {
     return expireTimeMs ?? Infinity;
+}
+
+export type GetResourcePermissionResult =
+    | GetResourcePermissionSuccess
+    | GetResourcePermissionFailure;
+
+export interface GetResourcePermissionSuccess {
+    success: true;
+
+    /**
+     * The permission that was assigned to the subject.
+     * Null if no permission was found.
+     */
+    permissionAssignment: ResourcePermissionAssignment | null;
+}
+
+export interface GetResourcePermissionFailure {
+    success: false;
+
+    /**
+     * The error code.
+     */
+    errorCode: ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+export interface PermissionAssignment {
+    /**
+     * The ID of the permission assignment.
+     */
+    id: string;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The kind of the actions that the subject is allowed to perform.
+     * Null if the subject is allowed to perform any action.
+     */
+    action: ActionKinds | null;
+
+    /**
+     * The options for the permission assignment.
+     */
+    options: PermissionOptions;
+
+    /**
+     * The ID of the subject.
+     */
+    subjectId: string;
+
+    /**
+     * The type of the subject.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the user that the assignment grants permission to.
+     * Null if the subject type is not "user".
+     */
+    userId: string | null;
+
+    /**
+     * The time that the permission expires.
+     * Null if the permission never expires.
+     */
+    expireTimeMs: number | null;
+}
+
+// TODO: Support global permissions
+// /**
+//  * Defines an interface that represents a global permission assignment.
+//  * That is, a permission assignment that applies to all resources in all records.
+//  */
+// export interface GlobalPermissionAssignment {
+//     /**
+//      * The ID of the permission assignment.
+//      */
+//     id: string;
+
+//     /**
+//      * The kind of the resources that the subject is allowed to perform actions on.
+//      * Null if the subject is allowed to perform actions on all kinds of resources.
+//      */
+//     resourceKind: ResourceKinds | null;
+
+//     /**
+//      * The kind of the actions that the subject is allowed to perform.
+//      * Null if the subject is allowed to perform any action.
+//      */
+//     action: ActionKinds | null;
+
+//     /**
+//      * The options for the permission assignment.
+//      */
+//     options: PermissionOptions;
+
+//     /**
+//      * The ID of the subject.
+//      */
+//     subjectId: string;
+
+//     /**
+//      * The type of the subject.
+//      * If set to "role", then all users/insts that have the given role in the record are granted permission.
+//      * If set to "user" or "inst", then only the given user/inst is granted permission.
+//      */
+//     subjectType: SubjectType;
+
+//     /**
+//      * The ID of the user that the assignment grants permission to.
+//      * Null if the subject type is not "user".
+//      */
+//     userId: string | null;
+
+//     /**
+//      * The time that the permission expires.
+//      * Null if the permission never expires.
+//      */
+//     expireTimeMs: number | null;
+// }
+
+/**
+ * Defines an interface that represents a resource permission assignment.
+ */
+export interface ResourcePermissionAssignment extends PermissionAssignment {
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The ID of the resource.
+     */
+    resourceId: string;
+}
+
+/**
+ * Defines an interface that represents a marker permission assignment.
+ */
+export interface MarkerPermissionAssignment extends PermissionAssignment {
+    /**
+     * The marker that the permission applies to.
+     */
+    marker: string;
+
+    /**
+     * The kind of the resource.
+     * Null if the permission applies to all resources.
+     */
+    resourceKind: ResourceKinds | null;
+}
+
+export type GetMarkerPermissionResult =
+    | GetMarkerPermissionSuccess
+    | GetMarkerPermissionFailure;
+
+export interface GetMarkerPermissionSuccess {
+    success: true;
+
+    /**
+     * The permission that was assigned to the subject.
+     * Null if no permission was found.
+     */
+    permissionAssignment: MarkerPermissionAssignment | null;
+}
+
+export interface GetMarkerPermissionFailure {
+    success: false;
+
+    /**
+     * The error code.
+     */
+    errorCode: ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+// TODO: Support global permissions
+// export type AssignGlobalPermissionToSubjectResult =
+//     | AssignGlobalPermissionToSubjectSuccess
+//     | AssignGlobalPermissionToSubjectFailure;
+
+// export interface AssignGlobalPermissionToSubjectSuccess {
+//     success: true;
+
+//     /**
+//      * The assignment that was created or updated.
+//      */
+//     permissionAssignment: GlobalPermissionAssignment;
+// }
+
+// export interface AssignGlobalPermissionToSubjectFailure {
+//     success: false;
+//     errorCode: ServerError;
+//     errorMessage: string;
+// }
+
+export type AssignPermissionToSubjectAndResourceResult =
+    | AssignPermissionToSubjectAndResourceSuccess
+    | AssignPermissionToSubjectAndResourceFailure;
+
+export interface AssignPermissionToSubjectAndResourceSuccess {
+    success: true;
+
+    /**
+     * The assignment that was created or updated.
+     */
+    permissionAssignment: ResourcePermissionAssignment;
+}
+
+export interface AssignPermissionToSubjectAndResourceFailure {
+    success: false;
+    errorCode: ServerError | 'permission_already_exists';
+    errorMessage: string;
+}
+
+export type AssignPermissionToSubjectAndMarkerResult =
+    | AssignPermissionToSubjectAndMarkerSuccess
+    | AssignPermissionToSubjectAndMarkerFailure;
+
+export interface AssignPermissionToSubjectAndMarkerSuccess {
+    success: true;
+
+    /**
+     * The assignment that was created or updated.
+     */
+    permissionAssignment: MarkerPermissionAssignment;
+}
+
+export interface AssignPermissionToSubjectAndMarkerFailure {
+    success: false;
+    errorCode: ServerError | 'permission_already_exists';
+    errorMessage: string;
+}
+
+export type DeletePermissionAssignmentResult =
+    | DeletePermissionAssignmentSuccess
+    | DeletePermissionAssignmentFailure;
+
+export interface DeletePermissionAssignmentSuccess {
+    success: true;
+}
+
+export interface DeletePermissionAssignmentFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type ListPermissionsInRecordResult =
+    | ListPermissionsInRecordSuccess
+    | ListPermissionsInRecordFailure;
+
+export interface ListPermissionsInRecordSuccess {
+    success: true;
+
+    resourceAssignments: ResourcePermissionAssignment[];
+    markerAssignments: MarkerPermissionAssignment[];
+}
+
+export interface ListPermissionsInRecordFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+/**
+ * Gets the publicRead permission for the given resource kind and action.
+ * @param resourceKind The kind of the resource.
+ * @param action The kind of the action.
+ */
+export function getPublicReadPermission(
+    resourceKind: ResourceKinds,
+    action: ActionKinds
+) {
+    if (resourceKind === 'data') {
+        // data.read and data.list
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'file' || resourceKind === 'inst') {
+        // file.read, inst.read
+        if (action === 'read') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'event') {
+        // event.count
+        if (action === 'count') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    }
+
+    // All other actions are not allowed.
+    return null;
+}
+
+/**
+ * Gets the publicWrite permission for the given resource kind and action.
+ * @param resourceKind The kind of the resource.
+ * @param action The kind of the action.
+ */
+export function getPublicWritePermission(
+    resourceKind: ResourceKinds,
+    action: ActionKinds
+) {
+    if (resourceKind === 'data') {
+        if (
+            action === 'read' ||
+            action === 'create' ||
+            action === 'update' ||
+            action === 'delete' ||
+            action === 'list'
+        ) {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'file') {
+        if (action === 'read' || action === 'delete' || action === 'create') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'event') {
+        if (
+            action === 'increment' ||
+            action === 'count' ||
+            action === 'create'
+        ) {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'inst') {
+        if (
+            action === 'read' ||
+            action === 'updateData' ||
+            action === 'sendAction' ||
+            action === 'delete' ||
+            action === 'create'
+        ) {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    }
+
+    return null;
+}
+
+export function getPublicMarkerPermission(
+    marker: string,
+    resourceKind: ResourceKinds,
+    action: ActionKinds
+) {
+    if (marker === PUBLIC_READ_MARKER) {
+        return getPublicReadPermission(resourceKind, action);
+    } else if (marker === PUBLIC_WRITE_MARKER) {
+        return getPublicWritePermission(resourceKind, action);
+    }
+
+    return null;
+}
+
+export function getPublicMarkersPermission(
+    markers: string[],
+    resourceKind: ResourceKinds,
+    action: ActionKinds
+) {
+    for (let marker of markers) {
+        const result = getPublicMarkerPermission(marker, resourceKind, action);
+        if (result) {
+            return {
+                marker,
+                ...result,
+            };
+        }
+    }
+    return null;
+}
+
+export function getSubjectUserId(
+    subjectType: SubjectType,
+    subjectId: string
+): string | null {
+    if (subjectType === 'user') {
+        return subjectId;
+    }
+    return null;
 }

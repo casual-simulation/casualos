@@ -5,3 +5,5 @@ public
 dist
 test-report.html
 package-lock.json
+pnpm-lock.yaml
+lerna.json

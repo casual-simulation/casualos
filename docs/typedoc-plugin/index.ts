@@ -33,8 +33,6 @@ async function start() {
         const dirname = path.dirname(fullPath);
         const fileName = path.basename(fullPath);
 
-        
-        
         await mkdir(dirname, { recursive: true });
         await writeFile(fullPath, JSON.stringify(page, null, 4), {
             encoding: 'utf-8'

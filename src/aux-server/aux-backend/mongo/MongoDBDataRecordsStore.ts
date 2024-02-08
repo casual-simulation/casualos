@@ -7,6 +7,7 @@ import {
     EraseDataStoreResult,
     ListDataStoreResult,
     UserPolicy,
+    ListDataStoreByMarkerRequest,
 } from '@casual-simulation/aux-records';
 import { Collection, FilterQuery } from 'mongodb';
 
@@ -108,6 +109,36 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
             success: true,
             items: records,
             totalCount: count,
+            marker: null,
+        };
+    }
+
+    async listDataByMarker(
+        request: ListDataStoreByMarkerRequest
+    ): Promise<ListDataStoreResult> {
+        let query = {
+            recordName: { $eq: request.recordName },
+            markers: request.marker,
+        } as FilterQuery<DataRecord>;
+        if (!!request.startingAddress) {
+            query.address = { $gt: request.startingAddress };
+        }
+
+        const count = await this._collection.count(query);
+        const records = await this._collection
+            .find(query)
+            .map((r) => ({
+                address: r.address,
+                data: r.data,
+                markers: r.markers,
+            }))
+            .toArray();
+
+        return {
+            success: true,
+            items: records,
+            totalCount: count,
+            marker: request.marker,
         };
     }
 
