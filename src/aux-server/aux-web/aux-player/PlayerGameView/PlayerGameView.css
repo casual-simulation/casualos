@@ -54,6 +54,7 @@ html.ar-app .webxr-sessions canvas {
 .map-viewport {
     position: absolute;
     pointer-events: none;
+    z-index: 1;
 }
 
 .map-viewport > div {

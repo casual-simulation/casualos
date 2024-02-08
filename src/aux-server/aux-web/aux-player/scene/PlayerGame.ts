@@ -1386,7 +1386,6 @@ export class PlayerGame extends Game {
             return;
         }
         this._currentMiniHDRAddress = miniAddress;
-        //this._miniHDRAddress = address;
         if (miniAddress) {
             this.loadEXRTextureIntoScene(miniAddress, this.miniScene);
         } else {
