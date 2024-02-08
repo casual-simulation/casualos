@@ -12,6 +12,7 @@ export interface IGameView extends Vue {
     readonly gameView: HTMLElement;
     readonly container: HTMLElement;
     readonly dev: boolean;
+    readonly gameBackground: HTMLElement;
 
     calculateContainerSize(): { width: number; height: number };
     resize(): void;
