@@ -91,6 +91,7 @@ import WakeLock from '../../shared/vue-components/WakeLock/WakeLock';
 import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
 import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
 import ReportInstDialog from '../../shared/vue-components/ReportInstDialog/ReportInstDialog';
+import EnableXRModal from '../../shared/vue-components/EnableXRModal/EnableXRModal';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -147,6 +148,7 @@ declare function sa_event(name: string, callback: Function): void;
         'wake-lock': WakeLock,
         'photo-camera': PhotoCamera,
         'report-inst-dialog': ReportInstDialog,
+        'enable-xr-modal': EnableXRModal,
     },
 })
 export default class PlayerApp extends Vue {

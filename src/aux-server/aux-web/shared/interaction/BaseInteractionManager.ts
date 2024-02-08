@@ -513,17 +513,22 @@ export abstract class BaseInteractionManager {
                             finger,
                             position
                         );
-                        const key = getModalityKey(modality);
 
                         // Set bot as being hovered on.
                         this._setHoveredBot(gameObject, modality, block);
 
-                        const canStartClick = this._operations.every(
-                            (op) =>
-                                !(op instanceof BaseClickOperation) ||
-                                getModalityKey(op.modality) !== key
-                        );
-                        if (canStartClick) {
+                        const clickInProgress = this._operations.some((op) => {
+                            if (op instanceof BaseClickOperation) {
+                                if (
+                                    op.modality.type === 'controller' ||
+                                    op.modality.type === 'finger'
+                                ) {
+                                    return op.modality.hand === modality.hand;
+                                }
+                            }
+                        });
+
+                        if (!clickInProgress) {
                             this._startClickingGameObject(
                                 gameObject,
                                 hit,

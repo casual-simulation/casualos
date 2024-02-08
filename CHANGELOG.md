@@ -35,10 +35,15 @@
     -   Useful for only listing data that has the given marker. Returns a promise that resolves with the total number of items that match the marker and up to 10 items.
     -   Items are listed based on whether they exactly match one of the markers that are applied to the data items.
         -   This means that `secret:documents` will match `secret:documents`, but listing by `secret` will not list `secret:documents`.
+-   Added WebXR support for Apple Vision Pro.
+    -   A dialog will appear on Safari asking if you want to enter XR when trying to enable AR/VR through CasualOS. This is an extra security measure enforced by Safari.
+    -   visionOS currently only supports `immersive-vr` mode of WebXR sessions.
+    -   Added pinch select gesture detection for. This allows for pointer-based bot interaction on the Vision Pro since Safari does not implement select events while hand tracking in WebXR.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
+-   Fixed an issue where fingers would trigger click interactions while dragging a bot with the same hand.
 
 ## V3.2.13
 
