@@ -35,6 +35,7 @@ import {
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
+import { getVMOrigin } from './AuxVMUtils';
 
 export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
     'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
@@ -129,7 +130,11 @@ export class AuxVMImpl implements AuxVM {
     }
 
     private async _init(): Promise<void> {
-        const origin = this._config.config.vmOrigin || location.origin;
+        const origin = getVMOrigin(
+            this._config.config.vmOrigin,
+            location.origin,
+            this._id
+        );
         const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
 
         this._connectionStateChanged.next({
