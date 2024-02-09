@@ -80,6 +80,7 @@ interface StoredInst {
     origin: SimulationOrigin;
     isStatic: boolean;
     version?: VersionInfo;
+    vmOrigin: string;
 }
 
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
@@ -178,7 +179,11 @@ export class AppManager {
             );
 
             let relaxOrigin = false;
-            if (isStatic && storedInst && !storedInst.version) {
+            if (
+                isStatic &&
+                storedInst &&
+                config.vmOrigin !== storedInst.vmOrigin
+            ) {
                 console.log(
                     `[AppManager] old static inst already exists for "${id}". Relaxing origin.`
                 );
@@ -192,6 +197,9 @@ export class AppManager {
                     id: id,
                     origin,
                     isStatic: isStatic,
+                    vmOrigin: storedInst
+                        ? storedInst.vmOrigin
+                        : config.vmOrigin,
                     version: storedInst ? storedInst.version : this.version,
                 }
             );
