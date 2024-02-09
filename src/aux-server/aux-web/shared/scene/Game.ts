@@ -690,8 +690,8 @@ export abstract class Game {
             }
 
             const background = this.getBackground();
-            delete this.gameView.gameView.style.background;
-            delete this.gameView.gameView.style.backgroundSize;
+            delete this.gameView.gameBackground.style.background;
+            delete this.gameView.gameBackground.style.backgroundSize;
             this.renderer.autoClear = false;
             if (background) {
                 this.mainScene.background = background;
@@ -751,10 +751,10 @@ export abstract class Game {
         }
 
         if (isImage) {
-            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
-            this.gameView.gameView.style.backgroundSize = 'cover';
+            this.gameView.gameBackground.style.background = `url(${address}) no-repeat center center`;
+            this.gameView.gameBackground.style.backgroundSize = 'cover';
             if (this._backgroundVideoElement) {
-                this.gameView.gameView.removeChild(
+                this.gameView.gameBackground.removeChild(
                     this._backgroundVideoElement
                 );
                 this._backgroundVideoElement.pause();
@@ -762,8 +762,8 @@ export abstract class Game {
                 this._backgroundVideoElement.srcObject = null;
             }
         } else {
-            delete this.gameView.gameView.style.background;
-            delete this.gameView.gameView.style.backgroundSize;
+            delete this.gameView.gameBackground.style.background;
+            delete this.gameView.gameBackground.style.backgroundSize;
 
             if (!this._backgroundVideoElement) {
                 this._backgroundVideoElement = document.createElement('video');
@@ -795,7 +795,7 @@ export abstract class Game {
                 this.subs.push(sub);
             }
 
-            this.gameView.gameView.prepend(this._backgroundVideoElement);
+            this.gameView.gameBackground.prepend(this._backgroundVideoElement);
             const media = await this._getMediaForCasualOSUrl(casualOSUrl);
             if (media) {
                 this._backgroundVideoElement.srcObject = media;

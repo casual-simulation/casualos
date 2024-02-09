@@ -47,6 +47,10 @@ export default class BaseGameView extends Vue implements IGameView {
         return !PRODUCTION;
     }
 
+    get gameBackground(): HTMLElement {
+        return <HTMLElement>this.$refs.gameBackground;
+    }
+
     async created() {
         this._subscriptions = [];
         const resize = this.resize.bind(this);
@@ -155,8 +159,10 @@ export default class BaseGameView extends Vue implements IGameView {
     private _setWidthAndHeight(width: number, height: number) {
         this._game.onWindowResize(width, height);
 
-        this.container.style.height = this.gameView.style.height = this._game.getRenderer().domElement.style.height;
-        this.container.style.width = this.gameView.style.width = this._game.getRenderer().domElement.style.width;
+        this.container.style.height = this.gameView.style.height =
+            this._game.getRenderer().domElement.style.height;
+        this.container.style.width = this.gameView.style.width =
+            this._game.getRenderer().domElement.style.width;
         this.setWidthAndHeightCore(width, height);
     }
 }
