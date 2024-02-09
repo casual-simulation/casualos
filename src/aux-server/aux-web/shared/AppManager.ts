@@ -79,6 +79,7 @@ interface StoredInst {
     id: string;
     origin: SimulationOrigin;
     isStatic: boolean;
+    version?: VersionInfo;
 }
 
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
@@ -170,6 +171,20 @@ export class AppManager {
                       this._config.causalRepoConnectionUrl
                   );
 
+            const storedInst = await getItem<StoredInst>(
+                this._db,
+                isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
+                id
+            );
+
+            let relaxOrigin = false;
+            if (isStatic && storedInst && !storedInst.version) {
+                console.log(
+                    `[AppManager] old static inst already exists for "${id}". Relaxing origin.`
+                );
+                relaxOrigin = true;
+            }
+
             putItem<StoredInst>(
                 this._db,
                 isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
@@ -177,17 +192,22 @@ export class AppManager {
                     id: id,
                     origin,
                     isStatic: isStatic,
+                    version: storedInst ? storedInst.version : this.version,
                 }
             );
 
             return new BotManager(
                 origin,
                 config,
-                new AuxVMImpl(id, {
-                    configBotId: configBotId,
-                    config,
-                    partitions,
-                }),
+                new AuxVMImpl(
+                    id,
+                    {
+                        configBotId: configBotId,
+                        config,
+                        partitions,
+                    },
+                    relaxOrigin
+                ),
                 this._auth
             );
         };
@@ -635,7 +655,7 @@ export class AppManager {
         inst: string,
         isStatic: boolean
     ) {
-        const simulationId = getSimulationId(recordName, inst);
+        const simulationId = getSimulationId(recordName, inst, isStatic);
         if (
             (this.simulationManager.primary &&
                 this.simulationManager.primary.id === simulationId) ||
@@ -917,13 +937,15 @@ export class AppManager {
  * Gets the ID for a simulation with the given origin.
  * @param recordName The name of the record for the simulation.
  * @param inst The name of the inst for the simulation.
+ * @param isStatic whether the simulation is static.
  */
 export function getSimulationId(
     recordName: string | null,
-    inst: string
+    inst: string,
+    isStatic: boolean
 ): string {
-    if (recordName) {
-        return `${recordName ?? ''}/${inst}`;
+    if (!isStatic) {
+        return `${recordName ?? 'null'}/${inst}`;
     } else {
         return inst;
     }

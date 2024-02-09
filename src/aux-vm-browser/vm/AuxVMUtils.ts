@@ -32,3 +32,22 @@ export function getVMOrigin(
 
     return configuredOrigin;
 }
+
+/**
+ * Gets the base domain of the given origin. That is, the hostname but with all subdomains removed.
+ * @param origin The origin that should be used.
+ */
+export function getBaseOrigin(origin: string): string {
+    try {
+        let url = new URL(origin);
+        let parts = url.hostname.split('.');
+        if (parts.length < 3) {
+            return url.origin;
+        }
+        url.hostname = parts.slice(1).join('.');
+        return url.origin;
+    } catch (err) {
+        console.warn('[AuxVMUtils] Could not parse origin:', origin, err);
+        return origin;
+    }
+}

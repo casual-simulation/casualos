@@ -706,7 +706,7 @@ export default class PlayerHome extends Vue {
             }
             await appManager.simulationManager.updateSimulations(
                 newServer.map((s) => ({
-                    id: getSimulationId(record, s),
+                    id: getSimulationId(record, s, isStatic),
                     options: {
                         recordName: record,
                         inst: s,
