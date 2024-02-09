@@ -1,0 +1,1081 @@
+---
+id: visualization-tags
+title: Visualization Tags
+sidebar_label: Visualization Tags
+description: CasualOS has many tags.
+---
+
+## Visualization Tags
+
+These tags change how CasualOS displays bots.
+
+### `color`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/tV4xJJjxDkE' />
+</Badges>
+
+The color of the bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='#858585'>
+    (default for keyboards)
+  </PossibleValueCode>
+  <AnyColorValues/>
+  <PossibleValueCode value='clear'>
+    The bot's body will be invisible.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `cursor`
+
+The cursor that should be used when the mouse pointer is hovering over the bot in the bot and menu portals.
+
+Note that when using a custom cursor image, the image should be 32x32 pixels or smaller.
+This is because that is the largest cursor image size that some operating systems support.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <AnyCursorValues/>
+</PossibleValuesTable>
+
+### `cursorHotspot`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The X and Y position of the pixel in the cursor image that is the "hotspot".
+That is, the pixel which represents the point or tip of the cursor.
+
+The top left of the image is (0, 0).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='➡️0,0'>(default)</PossibleValueCode>
+  <PossibleValue value='Any Vector > ➡️0,0'>The position that the cursor hotspot should be at.</PossibleValue>
+</PossibleValuesTable>
+
+### `strokeColor`
+
+The color of the bot's outline.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='clear'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `strokeWidth`
+
+The width of the bot's outline.
+
+### `lineTo`
+
+The bot, bot ID, list of bots, or list of bot IDs that this bot should draw lines to.
+
+### `lineStyle`
+
+The style of the lines.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='line'>
+    Displays the line without additional decoration. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='arrow'>
+    Displays the line with an arrow at the tip pointing to the target bot.
+  </PossibleValueCode>
+  <PossibleValueCode value='wall'>
+    Displays the line as a vertical wall.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `lineWidth`
+
+The width of the lines from this bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    The width of the line is 1 unit. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The width of the line is the given size.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `lineColor`
+
+The color of the lines.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `label`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/rWyJ1A42BFA' />
+</Badges>
+
+The text that the bot should show in a label.
+
+### `labelColor`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/tNlH0gx7OBQ' />
+</Badges>
+
+The color of the text in the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='black'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `labelOpacity`
+
+The opacity of the text in the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number >= 0 and <= 1'>
+    The label will use the given opacity.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelFontSize`
+
+The font size of the text in the label.
+Changing this value scales the text characters in the label which changes the text layout.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='auto'>
+    The label font size is automatically scaled to fit the text in the bot. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label will use the given font size.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelPadding`
+
+The amount of space that should be between the edge of the bot and the edge of the label.
+Units are in grid spaces.
+
+When <TagLink tag='labelFontSize'/> is set to `auto`, this setting affects both the label height and width.
+Otherwise, it only affects the width.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    There is no space between the edge of the bot and the edge of the label. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label is sized so that it fits in the space provided by the bot minus the padding.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelPaddingX`
+
+The amount of space that should be between the side of the bot and the side of the label.
+Units are in grid spaces.
+
+This tag is similar to <TagLink tag='labelPadding'/> except that it only affects the width of the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    There is no space between the edge of the bot and the edge of the label. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label is sized so that it fits in the space provided by the bot minus the padding.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelPaddingY`
+
+The amount of space that should be between the top of the bot and the top of the label.
+Units are in grid spaces.
+
+This tag is similar to <TagLink tag='labelPadding'/> except that it only affects the height of the label.
+As such, this tag only has an effect when <TagLink tag='labelFontSize'/> is set to `auto`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    There is no space between the edge of the bot and the edge of the label. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The label is sized so that it fits in the space provided by the bot minus the padding.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelSize`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/ql5R8t6RP-c' />
+</Badges>
+
+The size of the label. Default is 1.
+Changing this value scales the label text in size without changing the text layout.
+This is useful for floating labels where you want the bubble to be larger without changing the size of the font.
+
+### `labelSizeMode`
+
+The sizing mode for the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='normal'>
+    Don't automatically scale the label size. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='auto'>
+    Automatically scale the label to keep the same size on the screen.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `labelPosition`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/0P87qsLexW0' />
+</Badges>
+
+The anchor position for the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <LabelAnchorValues/>
+</PossibleValuesTable>
+
+### `labelAlignment`
+
+The text alignment for the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='center'>
+    The text is aligned around the center of the face that the label is anchored to. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The text is aligned on the left side of the face that the label is anchored to.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The text is aligned on the right side of the face that the label is anchored to.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `labelFontAddress`
+
+The address of the font that the label should use.
+
+If the current font does not support a specific character, the character will be displayed as a crossed out box (i.e. `☒`).
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='roboto'>
+    Specifies that the <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> font should be used. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='noto-sans-kr'>
+    Specifies that the <a href="https://fonts.google.com/specimen/Noto+Sans+KR">Noto Sans KR</a> font should be used.
+    This is a font with support for the Korean language.
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Specifies that the font to be used should be downloaded from the given URL.
+    Currently supports <a href="https://en.wikipedia.org/wiki/Web_Open_Font_Format">WOFF</a> and <a href="https://en.wikipedia.org/wiki/OpenType">OTF</a> fonts.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `labelWordWrapMode`
+
+The word wrapping mode that the label should use. Useful for automatically fitting the text onto the bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='breakCharacters'>
+    Line breaks may be inserted inside a word to fit the label on the bot. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='breakWords'>
+    Line breaks may be inserted between words to fit the label on the bot.
+  </PossibleValueCode>
+  <PossibleValue value='none'>
+    Line breaks will not be inserted.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `scale`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
+The uniform scale of the bot.
+
+Defaults to 1.
+
+### `scaleX`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
+The X scale (width) of the bot. Combines with the <TagLink tag='scale'/> tag to determine the final width of the bot.
+
+Defaults to 1.
+
+### `scaleY`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
+The Y scale (length) of the bot. Combines with the <TagLink tag='scale'/> tag to determine the final length of the bot.
+For menu bots, you can use `auto`. This scales the bot's height to fit its label. 
+
+Defaults to 1.
+
+### `scaleZ`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
+The Z scale (height) of the bot. Combines with the <TagLink tag='scale'/> tag to determine the final height of the bot.
+
+Defaults to 1.
+
+### `scaleMode`
+
+How the form is scaled to fit inside the bot.
+
+Note that this setting does not affect <TagLink tag='scale'/>, <TagLink tag='scaleX'/>, <TagLink tag='scaleY'/> or <TagLink tag='scaleZ'/>.
+Instead, it changes how custom forms like meshes are scaled to fit inside the unit cube.
+
+Also note that this setting affects a bot's collision volume. The collision volume will always try to wrap the bot's form to the best of its ability.
+This means that if you have a really large mesh the collider will scale up to surround the mesh.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='fit'>
+    The form is scaled to fit inside the bot's unit cube. The aspect ratio will be preserved. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='absolute'>
+    The form is not scaled.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `form`
+
+The shape that the bot should be displayed as.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='cube'>
+    Cube mesh (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='skybox'>
+    A Sphere mesh optimal for "skybox" implementation.
+  </PossibleValueCode>
+  <PossibleValueCode value='sphere'>
+    Sphere mesh
+  </PossibleValueCode>
+  <PossibleValueCode value='sprite'>
+    Camera facing (billboarded) sprite/quad images.
+  </PossibleValueCode>
+  <PossibleValueCode value='mesh'>
+    A mesh loaded from the web. See <TagLink tag="formSubtype"/> for additional options.
+  </PossibleValueCode>
+  <PossibleValueCode value='frustum'>
+    A camera frustum mesh.
+  </PossibleValueCode>
+  <PossibleValueCode value='helix'>
+    A double helix mesh (like DNA).
+  </PossibleValueCode>
+  <PossibleValueCode value='egg'>
+    A egg mesh.
+  </PossibleValueCode>
+  <PossibleValueCode value='hex'>
+    A hexagon mesh.
+  </PossibleValueCode>
+  <PossibleValueCode value='circle'>
+    A circle mesh.
+  </PossibleValueCode>
+  <PossibleValueCode value='keyboard'>
+    An interactive keyboard. Clicking the keys will generate <TagLink tag='@onKeyClick'/> whispers that are sent to the bot.
+  </PossibleValueCode>
+  <PossibleValueCode id="iframe-form" value='iframe'>
+    A webpage loaded into a 3D iframe. See <TagLink tag="formSubtype"/> for additional options.
+  </PossibleValueCode>
+  <PossibleValueCode value='dimension'>
+    The bot will display the dimension specified by <TagLink tag='formAddress'/>.
+  </PossibleValueCode>
+  <PossibleValueCode value='portal'>
+    The bot will display the dimension specified by <TagLink tag='formAddress'/>.
+    This is an alias for "dimension".
+  </PossibleValueCode>
+  <PossibleValueCode value='spherePortal'>
+    The bot will display the dimension specified by <TagLink tag='formAddress'/> in a spherical manner, using the X and Y coordinates as latitude and longitude coordinates.
+  </PossibleValueCode>
+  <PossibleValueCode value='cursor'>
+    The bot will appear as a cursor in the multi-line editor.
+    You also need to place the bot in the same dimension that the tag portal uses
+    for the cursor to appear.
+  </PossibleValueCode>
+  <PossibleValueCode value='codeButton'>
+    <p>
+        The bot will appear as a clickable button in the multi-line editor when placed in the same the same dimension that the tag portal uses. The bot will also need a label in order to appear.
+    </p>
+    <p>
+        The Start position of the bot the line number that the button should appear above, and the End position specifies the priority of the button compared to other buttons on the same line (larger numbers indicate lower priorities).
+    </p>
+    <p>
+        Additionally, it is possible to display code buttons in the multi-line editor's context menu by setting the <NormalCode>#true</NormalCode> tag to <NormalCode>true</NormalCode>.
+        In this case, the <NormalCode>#true</NormalCode> tag represents putting the codeButton in the code editor for every tag.
+    </p>
+  </PossibleValueCode>
+  <PossibleValueCode value='codeHint'>
+    <p>
+        The bot will appear as a hint in the multi-line editor when placed in the same the same dimension that the <GlossaryRef term='tagPortal'/> uses.
+        If a <TagLink tag='color'/> is specified, then the code that the hint covers will use the specified background color.
+        If a <TagLink tag='strokeColor'/> is specified, then the code that the hint covers will use the stroke as a box border around the code.
+        If given a <TagLink tag='label'/>, it will be rendered before the start position.
+    </p>
+    <p>
+        Use the <TagLink tag='[dimension]Start'/> and <TagLink tag='[dimension]End'/> tags to position the hint.
+    </p>
+    <p>
+        Additionally, codeHint bots support the <TagLink tag='@onClick'/> listener for when their label text is clicked.
+    </p>
+  </PossibleValueCode>
+  <PossibleValueCode value='input'>
+    The bot will appear as an input box in the menu portal.
+    You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
+    You can change the type of input using the <TagLink tag='formSubtype'/> tag.
+  </PossibleValueCode>
+  <PossibleValueCode value='light'>
+    The bot will appear as a light.
+    You can change the type of light using the <TagLink tag='formSubtype'/> tag.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formSubtype`
+
+The subtype that the form should use. Useful for specifying how a mesh should be loaded.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No subtype (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='gltf'>
+    A <a href="https://en.wikipedia.org/wiki/GlTF">GLTF mesh</a> loaded from a URL.
+  </PossibleValueCode>
+  <PossibleValueCode value='html'>
+    The HTML code that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe. (Default when <TagLink tag="form"/> is set to iframe)
+  </PossibleValueCode>
+  <PossibleValueCode value='src'>
+    The URL that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe.
+  </PossibleValueCode>
+  <PossibleValueCode value='pointLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a pointlight.
+  </PossibleValueCode>
+  <PossibleValueCode value='ambientLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as an ambientLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='directionalLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a directionalLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='spotLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a spotLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='hemisphereLight'>
+    A bot with the <TagLink tag='form'/> set to `light` will appear as a hemisphereLight.
+  </PossibleValueCode>
+  <PossibleValueCode value='password'>
+    A bot with the <TagLink tag='form'/> set to `input` will function as a password input. (Characters are masked)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightIntensity`
+
+  The intensity of the light.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    Changes the intensity of the light.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formLightTarget`
+
+  The target of the light. Bot must have a <TagLink tag='formSubtype'/> of `directionalLight` or `spotLight`. Bot can not target self.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Light will target (0, 0, 0). (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Bot ID'>
+    The bot with the specified ID acts as the light's target. The light's direction is defined by the direction from the position of the light to the target.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formLightDistance`
+
+The maximum range of the light. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    No limit (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    When distance is non-zero, light will attenuate according to inverse-square law until near the distance cutoff, where it will then attenuate quickly and smoothly to 0.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightAngle`
+
+Represents the angle between edges of spotLight. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. Angle is in radians.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Math.PI / 3 (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    Changes the angle of the light in radians.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightPenumbra`
+
+Represents the percent of the spotlight cone that is attenuated due to penumbra. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. Takes values between 0 and 1.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number between 0 and 1'>
+    Percent of the spotlight cone that is attenuated due to penumbra.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightDecay`
+
+The amount the light dims along the distance of the light. Bot must have a <TagLink tag='formSubtype'/> of `spotLight`. In context of physically-correct rendering the default value should not be changed.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='2'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='Any Number'>
+    The amount the light dims along the distance of the light.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formLightGroundColor`
+
+The light's ground color. Bot must have a <TagLink tag='formSubtype'/> of `hemisphereLight`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `formAddress`
+
+The address that the bot should represent data from.
+
+When <TagLink tag='form'/> is set to `cube`, `skybox`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
+
+When <TagLink tag='form'/> is set to `mesh` and <TagLink tag='formSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
+
+When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `html`, the address should be the HTML that should be displayed.
+
+When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
+
+When the bot is in the menu portal, this is the URL of the image or video that should be shown on the menu item.
+It can also be `cube` to show an icon of a cube, `egg` to show an egg icon, and `helix` to show an icon of a DNA helix.
+If the given value is not a URL or one of the predefined icons, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
+
+### `formAddressAspectRatio`
+
+The aspect ratio that should be used to ensure that the image/video from <TagLink tag='formAddress'/> is displayed correctly.
+Aspect ratio is the numerical ratio representing the width of an image divided by the height. For example, a 1080p image has a resolution of 1920x1080 which means it has an aspect ratio of 1920/1080 = 16/9 = ~1.7777777.
+
+By default, CasualOS displays all images with an aspect ratio of 1. An aspect ratio of 1 ensures that the entire bot is covered, but if the original image has a different aspect ratio then it will appear distorted.
+To solve this, you can use the <TagLink tag='formAddressAspectRatio'/> tag to ensure that the aspect ratio that the image is displayed at matches the original aspect ratio.
+
+Also note that negative aspect ratios will mirror the image horizontally.
+
+Currently only supported by the `cube`, `circle`, and `sprite` forms.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    Square aspect ratio. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    Custom aspect ratio.
+  </PossibleValue>
+</PossibleValuesTable>
+
+
+### `formAnimation`
+
+The name of the animation that the mesh should play.
+Only works for mesh forms.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Play the first animation.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Stops animating the mesh.
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    Play the animation with the given name.
+  </PossibleValue>
+  <PossibleValue value='Any Integer >= 0'>
+    Play the animation at the given index.
+    Useful for exploring possible animations if you don't have the name.
+  </PossibleValue>
+  <PossibleValue value='An array of numbers or strings'>
+    Plays the given list of animations in sequence.
+    The last animation will loop forever.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formAnimationAddress`
+
+The URL that the animations for the mesh should be loaded from.
+For GLTF forms, this should be the URL of the GLTF file that contains the animations that should be used for the mesh.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Use the animations that were built into the mesh.
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Use the animations from the given GLTF file.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formOpacity`
+
+The opacity of the bot's form. Allows bots to be semi-transparent.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number >= 0 and <= 1'>
+    The bot's form will use the given opacity.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formRenderOrder`
+
+The render order that should be used for this bot in the grid portals.
+Setting this property to a value other than 0 overrides the automatically calculated render order which is based on the distance of each bot to the portal camera.
+
+It is not recommended to use this tag unless you are dealing with transparency issues caused by overlapping PNG <TagLink tag='formAddress'/> images.
+
+Higher values mean the bot will be rendered first, and lower values means the bot will be rendered last.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    Use the automatic render ordering. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    Use the given render ordering. Bots are rendered from the highest value to the lowest value.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formDepthTest`
+
+Whether depth testing is enabled for this bot in the grid portals.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disable depth testing.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formDepthWrite`
+
+Whether depth writing is enabled for this bot in the grid portals.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disable depth writing.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `gltfVersion`
+
+The GLTF specification version that should be used to load a GLTF model.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='2'>
+    Load the GLTF model with version 2 of the specification. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Numbers < 2'>
+    Load the GLTF Model with version 1 of the specification.
+    This is useful for loading meshes from <a href="https://poly.google.com">poly.google.com</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `progressBar`
+
+Causes a progress bar to be shown for the bot. Range is between 0 and 1.
+Needs both progressBarBackgroundColor and progressBarColor to visualize the progress
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 0 and <= 1'>
+    <ul>
+      <li>
+        0 means that you will only see <TagLink tag='progressBarBackgroundColor'/>.
+      </li>
+      <li>
+        0.5 means that you will see half of <TagLink tag='progressBarBackgroundColor'/> and half of <TagLink tag='progressBarColor'/>.
+      </li>
+      <li>
+        1 means that you will only see <TagLink tag='progressBarColor'/>.
+      </li>
+    </ul>
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `progressBarColor`
+
+The foreground color of the progress bar.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='black'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `progressBarBackgroundColor`
+
+The background color of the progress bar.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='white'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `progressBarPosition`
+
+The anchor position for the progress bar.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <LabelAnchorValues/>
+</PossibleValuesTable>
+
+### `anchorPoint`
+
+The position that the bot form should rotate and scale around.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='bottom'>
+    The bot rotates and scales around its bottom point. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='center'>
+    The bot rotates and scales around its center point.
+  </PossibleValueCode>
+  <PossibleValueCode value='front'>
+    The bot rotates and scales around the point at the center of the Bot's front face.
+  </PossibleValueCode>
+  <PossibleValueCode value='back'>
+    The bot rotates and scales around the point at the center of the Bot's back face.
+  </PossibleValueCode>
+  <PossibleValueCode value='top'>
+    The bot rotates and scales around its top point.
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The bot rotates and scales around the point at the center of the Bot's left face.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The bot rotates and scales around the point at the center of the Bot's right face.
+  </PossibleValueCode>
+  <PossibleValueCode value='[x,y,z]'>
+    The bot rotates and scales around the specified point.
+    Should be an array of 3 numbers representing X, Y, and Z respectively.
+    Numbers between 0.5 and -0.5 map to the edges of the bot.
+  </PossibleValueCode>
+  <PossibleValue value='Any 3D Vector'>
+    The bot rotates and scales around the specified point.
+    Should be a 3D bot vector representing X, Y, and Z respectively.
+    Numbers between 0.5 and -0.5 map to the edges of the bot.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `orientationMode`
+
+The mode that determines how the bot automatically rotates.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='absolute'>
+    The bot does not rotate automatically. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='billboard'>
+    The bot rotates left, right, up, and down automatically to point its top face towards the player.
+  </PossibleValueCode>
+  <PossibleValueCode value='billboardTop'>
+    The bot rotates left and right automatically to point its top face towards the player.
+  </PossibleValueCode>
+  <PossibleValueCode value='billboardFront'>
+    The bot rotates left and right automatically to point its front face towards the player.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `maxLODThreshold`
+
+The minimum percentage of the screen that the bot form should take up in order to enter the maximum Level-Of-Detail.
+When the maximum LOD is entered the <TagLink tag='@onMaxLODEnter'/> listener is triggered.
+When the maximum LOD is exited the <TagLink tag='@onMaxLODExit'/> listener is triggered.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0.03'>
+    The bot enters the maximum LOD when it takes up 3% of the screen space. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Numbers > 0 and < 1'>
+    The bot enters the maximum LOD when it takes up more screen space than the value.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `minLODThreshold`
+
+The maximum percentage of the screen that the bot form should take up in order to enter the minimum Level-Of-Detail.
+When the minimum LOD is entered the <TagLink tag='@onMinLODEnter'/> listener is triggered.
+When the minimum LOD is exited the <TagLink tag='@onMinLODExit'/> listener is triggered.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0.0005'>
+    The bot enters the minimum LOD when it takes up 0.05% of the screen space. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Numbers > 0 and < 1'>
+    The bot enters the minimum LOD when it takes up less screen space than the value.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `transformer`
+
+The ID of the bot that should transform this bot in the bot and miniGridPortals.
+When the transformer bot and this bot are in the same dimension, this bot will inherit the position and rotation of the transformer bot.
+
+When set on a portal bot (like `gridPortalBot`), this will transform the portal camera by the specified bot.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The bot is positioned on the grid. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The bot is positioned on the bot with the given ID.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `menuItemStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu item.
+Only applies to bots that are being shown in the menu portal.
+
+This is useful for positioning and styling the item in ways that are not possible using normal tags.
+Overridden by conflicting properties like <TagLink tag='color'/> or <TagLink tag='labelColor'/>.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu item.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Round the top corners of the menu bot.
+```typescript
+🧬{
+    "border-radius": "8px 8px 0 0",
+    "margin-top": "8px"
+}
+```
+
+### `menuItemLabelStyle`
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu item label.
+Only applies to bots that are being shown in the menu portal.
+
+This is useful for styling the label in ways that are not possible using normal tags.
+Overrides conflicting properties like <TagLink tag='color'/> or <TagLink tag='labelColor'/>.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+Note: when using a larger font size you may also need to increase the `line-height`. The default `line-height` is "24px". 
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu item.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+1. Use custom font settings on the menu bot label.
+```typescript
+🧬{
+    "font-size": "36px",
+    "line-height": "36px",
+    "font-weight": "bold"
+}
+```
+
+### `menuItemHoverMode`
+
+The mode that menu items should use when the cursor hovers over the bot when it is in the menu portal.
+Currently only affects menu bots that are buttons (input bots are not hoverable).
+
+Note that this only determines how the menu item looks when the mouse pointer hovers over the item.
+It does not affect the <TagLink tag='@onClick'/>, <TagLink tag='@onPointerEnter'/>, <TagLink tag='@onPointerExit'/>, etc. listeners.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='auto'>
+    The bot will appear hoverable if it has a <TagLink tag='@onClick'/> tag. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='hover'>
+    The bot will appear hoverable.
+  </PossibleValueCode>
+  <PossibleValueCode value='none'>
+    The bot will not appear hoverable.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `menuItemText`
+
+The text that has been entered in the menu item's input box. Only has an effect on menu items that have <TagLink tag='form'/> set to `input`.
+
+This tag will also be updated in the `tempLocal` space when the user types in the input box.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No text in the input box. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    No text in the input box.
+    CasualOS will use this when the user has deleted all the text from the input box and there is a non-null value
+    in the menuItemText tag.
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The text will appear in the input box.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `menuItemShowSubmitWhenEmpty`
+
+Whether to show the submit button on input menu items even if the input box is empty. Only has an effect on menu items that have <TagLink tag='form'/> set to `input`.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    The submit button will only show when the input box is not empty. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The submit button will always show.
+  </PossibleValueCode>
+</PossibleValuesTable>

@@ -1,0 +1,133 @@
+---
+id: behavior-tags
+title: Behavior Tags
+sidebar_label: Behavior Tags
+description: CasualOS has many tags.
+---
+
+## Behavior Tags
+
+These tags affect how CasualOS allows the users to interact with bots.
+
+### `draggable`
+
+Whether the bot is able to be moved by the built-in CasualOS system.
+
+Note that this value only controls whether CasualOS can move bots automatically as the result of user interaction.
+If set to `false`, then CasualOS will not change any tags, but it will still send events for the bot (e.g. <TagLink tag='@onDrag'/>, <TagLink tag='@onAnyBotDrag'/>, <TagLink tag='@onDrop'/>, <TagLink tag='@onAnyBotDrop'/>, etc.).
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot is able to be dragged. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot cannot be dragged.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `pointable`
+
+Whether the bot interacts with the pointer.
+
+Bots that are pointable can receive clicks, pointer enter/exit, and drop events.
+Note that the <TagLink tag='pointable'/> tag also affects whether the content inside an [iframe form](#iframe-form) is interactable.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot interacts with the pointer. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot does not interact with the pointer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `focusable`
+
+Whether the bot is able to be focused.
+
+Bots that are focusable can receive focus events like <TagLink tag='@onFocusEnter'/>.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot is focusable. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot is not focusable.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `destroyable`
+
+Whether the bot is able to be destroyed.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot will be able to be destroyed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot will not be able to be destroyed.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `editable`
+
+Whether the bot is able to be edited in the sheet in Channel Designer.
+
+<Alert type='warning'>
+  <strong>Use with caution.</strong> Once you set <TagLink tag='editable'/> to <NormalCode>false</NormalCode>, you can't edit the bot via the sheet.
+</Alert>
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot can be edited via the sheet. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot cannot be edited via the sheet. (including being able to set editable back to true)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `listening`
+
+Determines whether this bot responds to whispers or shouts. If this tag is set to `true` it will respond to them. If set to `false`, it will not.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot will respond to whispers and shouts. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot will not respond to whispers or shouts.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `system`
+
+The "system" that this bot represents. Bots with a `#system` tag will be able to appear in the <GlossaryRef term='systemPortal'>systemPortal</GlossaryRef>.
+The you can kinda think of the `#system` tag as the name that the systemPortal uses for bots.
+`#system` tag values should ideally be three sections separated by a `.`.
+
+Note that this tag can be changed by using the <TagLink tag='systemTagName'/> tag.
+
+For example, the first section might be the name of the app bundle, the second section would be the area that the bot belongs in, and the third section would be the name of the bot.
+e.g. `myAppBundle.managers.timeline` would specify that a bot belongs in `myAppBundle` and is one of the manager bots.
+The systemPortal would then show each bot organized by `#system` tag.
+
+![Image of bots in the systemPortal](../static/img/glossary/systemPortal_02.png)
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>(default)</PossibleValueCode>
+  <PossibleValue value='Any String'>The system that this bot belongs to.</PossibleValue>
+</PossibleValuesTable>
