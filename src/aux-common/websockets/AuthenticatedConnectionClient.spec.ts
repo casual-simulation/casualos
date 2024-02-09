@@ -364,4 +364,8 @@ describe('AuthenticatedConnectionClient', () => {
             ]);
         });
     });
+
+    describe('permission requests', () => {
+        // it('should send ')
+    });
 });

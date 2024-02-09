@@ -1,6 +1,13 @@
 import { WebsocketErrorCode } from '../websockets';
-import { ConnectionIndicator, DenialReason } from '../common';
+import {
+    AuthorizeActionMissingPermission,
+    ConnectionIndicator,
+    DenialReason,
+    ResourceKinds,
+    SubjectType,
+} from '../common';
 import { Observable, Subject, filter, first, merge } from 'rxjs';
+import { NotAuthorizedError, ServerError } from '../Errors';
 
 /**
  * Defines an interface that is able to provide events for when authentication information is requested or provided to partitions.
@@ -8,6 +15,14 @@ import { Observable, Subject, filter, first, merge } from 'rxjs';
 export class PartitionAuthSource {
     private _onAuthRequest: Subject<PartitionAuthRequest> = new Subject();
     private _onAuthResponse: Subject<PartitionAuthResponse> = new Subject();
+    private _onAuthPermissionRequest: Subject<PartitionAuthRequestPermission> =
+        new Subject();
+    private _onAuthPermissionResult: Subject<PartitionAuthPermissionResult> =
+        new Subject();
+    private _onAuthExternalPermissionRequest: Subject<PartitionAuthExternalRequestPermission> =
+        new Subject();
+    private _onAuthExternalPermissionResult: Subject<PartitionAuthExternalPermissionResult> =
+        new Subject();
     private _indicators: Map<string, ConnectionIndicator> = new Map();
     private _promises: Map<string, Promise<PartitionAuthResponse>> = new Map();
 
@@ -15,7 +30,42 @@ export class PartitionAuthSource {
      * Gets an observable for when a partition requests or provides authentication information.
      */
     get onAuthMessage(): Observable<PartitionAuthMessage> {
-        return merge(this._onAuthRequest, this._onAuthResponse);
+        return merge(
+            this._onAuthRequest,
+            this._onAuthResponse,
+            this._onAuthPermissionRequest,
+            this._onAuthPermissionResult,
+            this._onAuthExternalPermissionRequest,
+            this._onAuthExternalPermissionResult
+        );
+    }
+
+    /**
+     * Gets an observable for when a partition requests permission.
+     */
+    get onAuthPermissionRequest(): Observable<PartitionAuthRequestPermission> {
+        return this._onAuthPermissionRequest;
+    }
+
+    /**
+     * Gets an observable for when a partition provides permission result.
+     */
+    get onAuthPermissionResult(): Observable<PartitionAuthPermissionResult> {
+        return this._onAuthPermissionResult;
+    }
+
+    /**
+     * Gets an observable for when an external permissions request is recieved.
+     */
+    get onAuthExternalPermissionRequest(): Observable<PartitionAuthExternalRequestPermission> {
+        return this._onAuthExternalPermissionRequest;
+    }
+
+    /**
+     * Gets an observable for when an external permissions result is recieved.
+     */
+    get onAuthExternalPermissionResult(): Observable<PartitionAuthExternalPermissionResult> {
+        return this._onAuthExternalPermissionResult;
     }
 
     /**
@@ -105,9 +155,71 @@ export class PartitionAuthSource {
     sendAuthResponse(response: PartitionAuthResponse): void {
         this._onAuthResponse.next(response);
     }
+
+    /**
+     * Sends the given request for permission.
+     * @param request The request.
+     */
+    sendAuthPermissionRequest(request: PartitionAuthRequestPermission): void {
+        this._onAuthPermissionRequest.next(request);
+    }
+
+    /**
+     * Sends the given permission result.
+     * @param result The result.
+     */
+    sendAuthPermissionResult(result: PartitionAuthPermissionResult): void {
+        this._onAuthPermissionResult.next(result);
+    }
+
+    /**
+     * Sends the given request for permission.
+     * @param request The request.
+     */
+    sendAuthExternalPermissionRequest(
+        request: PartitionAuthExternalRequestPermission
+    ): void {
+        this._onAuthExternalPermissionRequest.next(request);
+    }
+
+    /**
+     * Sends the given permission result.
+     * @param result The result.
+     */
+    sendAuthExternalPermissionResult(
+        result: PartitionAuthExternalPermissionResult
+    ): void {
+        this._onAuthExternalPermissionResult.next(result);
+    }
+
+    /**
+     * Sends the given auth message.
+     * @param message The message that should be sent.
+     */
+    sendAuthMessage(message: PartitionAuthMessage): void {
+        if (message.type === 'response') {
+            this.sendAuthResponse(message);
+        } else if (message.type === 'request') {
+            this.sendAuthRequest(message);
+        } else if (message.type === 'permission_request') {
+            this.sendAuthPermissionRequest(message);
+        } else if (message.type === 'permission_result') {
+            this.sendAuthPermissionResult(message);
+        } else if (message.type === 'external_permission_request') {
+            this.sendAuthExternalPermissionRequest(message);
+        } else if (message.type === 'external_permission_result') {
+            this.sendAuthExternalPermissionResult(message);
+        }
+    }
 }
 
-export type PartitionAuthMessage = PartitionAuthRequest | PartitionAuthResponse;
+export type PartitionAuthMessage =
+    | PartitionAuthRequest
+    | PartitionAuthResponse
+    | PartitionAuthRequestPermission
+    | PartitionAuthPermissionResult
+    | PartitionAuthExternalRequestPermission
+    | PartitionAuthExternalPermissionResult;
 
 export interface PartitionAuthRequest {
     type: 'request';
@@ -188,4 +300,94 @@ export interface PartitionAuthResponseSuccess
 export interface PartitionAuthResponseFailure
     extends PartitionAuthResponseBase {
     success: false;
+}
+
+export interface PartitionAuthRequestPermission {
+    type: 'permission_request';
+
+    /**
+     * The origin for the partition.
+     */
+    origin: string;
+
+    /**
+     * The reason why permission is being requested.
+     */
+    reason: AuthorizeActionMissingPermission;
+}
+
+export type PartitionAuthPermissionResult =
+    | PartitionAuthPermissionResultSuccess
+    | PartitionAuthPermissionResultFailure;
+
+export interface PartitionAuthPermissionResultSuccess {
+    type: 'permission_result';
+    success: true;
+    origin: string;
+
+    recordName: string;
+    resourceKind: ResourceKinds;
+    resourceId: string;
+    subjectType: SubjectType;
+    subjectId: string;
+}
+
+export interface PartitionAuthPermissionResultFailure {
+    type: 'permission_result';
+    success: false;
+    origin: string;
+
+    recordName: string;
+    resourceKind: ResourceKinds;
+    resourceId: string;
+    subjectType: SubjectType;
+    subjectId: string;
+
+    errorCode: NotAuthorizedError | ServerError | WebsocketErrorCode;
+    errorMessage: string;
+}
+
+export interface PartitionAuthExternalRequestPermission {
+    type: 'external_permission_request';
+
+    /**
+     * The origin for the partition.
+     */
+    origin: string;
+
+    /**
+     * The reason why permission is being requested.
+     */
+    reason: AuthorizeActionMissingPermission;
+}
+
+export type PartitionAuthExternalPermissionResult =
+    | PartitionAuthExternalPermissionResultSuccess
+    | PartitionAuthExternalPermissionResultFailure;
+
+export interface PartitionAuthExternalPermissionResultSuccess {
+    type: 'external_permission_result';
+    success: true;
+    origin: string;
+
+    recordName: string;
+    resourceKind: ResourceKinds;
+    resourceId: string;
+    subjectType: SubjectType;
+    subjectId: string;
+}
+
+export interface PartitionAuthExternalPermissionResultFailure {
+    type: 'external_permission_result';
+    success: false;
+    origin: string;
+
+    recordName: string;
+    resourceKind: ResourceKinds;
+    resourceId: string;
+    subjectType: SubjectType;
+    subjectId: string;
+
+    errorCode: NotAuthorizedError | ServerError | WebsocketErrorCode;
+    errorMessage: string;
 }

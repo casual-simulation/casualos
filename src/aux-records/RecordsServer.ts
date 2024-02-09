@@ -43,6 +43,8 @@ import { WebsocketController } from './websockets/WebsocketController';
 import {
     AddUpdatesMessage,
     LoginMessage,
+    RequestMissingPermissionMessage,
+    RequestMissingPermissionResponseMessage,
     SendActionMessage,
     TimeSyncRequestMessage,
     UnwatchBranchMessage,
@@ -1138,6 +1140,16 @@ export class RecordsServer {
                 request.connectionId,
                 data as TimeSyncRequestMessage,
                 Date.now()
+            );
+        } else if (data.type === 'permission/request/missing') {
+            await this._websocketController.requestMissingPermission(
+                request.connectionId,
+                data as RequestMissingPermissionMessage
+            );
+        } else if (data.type === 'permission/request/missing/response') {
+            await this._websocketController.respondToPermissionRequest(
+                request.connectionId,
+                data as RequestMissingPermissionResponseMessage
             );
         } else if (data.type === 'http_request') {
             let headers: GenericHttpHeaders = {};

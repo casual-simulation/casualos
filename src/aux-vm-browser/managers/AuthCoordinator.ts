@@ -5,6 +5,8 @@ import {
     Subject,
     Subscription,
     SubscriptionLike,
+    filter,
+    firstValueFrom,
     startWith,
     switchMap,
 } from 'rxjs';
@@ -18,6 +20,7 @@ import { AuthHelper } from './AuthHelper';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import {
     AuthorizeActionMissingPermission,
+    PartitionAuthPermissionResult,
     PartitionAuthRequest,
     reportInst,
 } from '@casual-simulation/aux-common';
@@ -32,6 +35,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private _simulationManager: SimulationManager<TSim>;
     private _onMissingPermission: Subject<MissingPermissionEvent> =
         new Subject();
+    private _onRequestAccess: Subject<RequestAccessEvent> = new Subject();
     private _onNotAuthorized: Subject<NotAuthorizedEvent> = new Subject();
     private _onShowAccountInfo: Subject<ShowAccountInfoEvent> = new Subject();
     private _onAuthHelper: BehaviorSubject<AuthHelper> = new BehaviorSubject(
@@ -49,6 +53,10 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
 
     get onShowAccountInfo(): Observable<ShowAccountInfoEvent> {
         return this._onShowAccountInfo;
+    }
+
+    get onRequestAccess(): Observable<RequestAccessEvent> {
+        return this._onRequestAccess;
     }
 
     get authEndpoints(): Map<string, AuthHelperInterface> {
@@ -90,6 +98,12 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                     sim.onAuthMessage.subscribe(async (msg) => {
                         if (msg.type === 'request') {
                             this._handleAuthRequest(sim, msg);
+                        } else if (msg.type === 'external_permission_request') {
+                            this._onRequestAccess.next({
+                                simulationId: sim.id,
+                                origin: msg.origin,
+                                reason: msg.reason,
+                            });
                         }
                     })
                 );
@@ -169,6 +183,68 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                     },
                 });
             }
+        }
+    }
+
+    async requestAccessToMissingPermission(
+        simId: string,
+        origin: string,
+        reason: AuthorizeActionMissingPermission
+    ): Promise<PartitionAuthPermissionResult> {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            const promise = firstValueFrom(
+                sim.onAuthMessage.pipe(
+                    filter(
+                        (m) =>
+                            m.origin === origin &&
+                            m.type === 'permission_result'
+                    )
+                )
+            );
+
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Requesting permission`,
+                reason
+            );
+            sim.sendAuthMessage({
+                type: 'permission_request',
+                origin: origin,
+                reason,
+            });
+
+            const response = await promise;
+
+            if (response.type === 'permission_result') {
+                console.log(
+                    `[AuthCoordinator] [${sim.id}] Got permission result`,
+                    response
+                );
+                return response;
+            }
+        }
+        return {
+            type: 'permission_result',
+            origin,
+            success: false,
+            recordName: reason.recordName,
+            resourceKind: reason.resourceKind,
+            resourceId: reason.resourceKind,
+            subjectType: reason.subjectType,
+            subjectId: reason.subjectId,
+            errorCode: 'server_error',
+            errorMessage: 'A server error occurred.',
+        };
+    }
+
+    async respondToPermissionRequest(
+        simId: string,
+        origin: string,
+        result: PartitionAuthPermissionResult
+    ) {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            sim.sendAuthMessage(result);
         }
     }
 
@@ -393,4 +469,10 @@ export interface NotAuthorizedEvent {
     errorCode: string;
     errorMessage: string;
     origin: string;
+}
+
+export interface RequestAccessEvent {
+    simulationId: string;
+    origin: string;
+    reason: AuthorizeActionMissingPermission;
 }

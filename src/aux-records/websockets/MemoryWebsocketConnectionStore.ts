@@ -217,7 +217,7 @@ export class MemoryWebsocketConnectionStore
     ): Promise<DeviceBranchConnection[]> {
         return this._getNamespaceList(
             branchNamespace(mode, recordName, inst, branch)
-        );
+        ).slice();
     }
 
     async countConnectionsByBranch(

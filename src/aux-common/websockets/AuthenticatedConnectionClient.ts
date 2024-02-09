@@ -81,6 +81,42 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
                 )
             )
             .subscribe(this._connectionStateChanged);
+
+        this._authSource.onAuthPermissionRequest.subscribe((request) => {
+            if (request.origin === this.origin) {
+                this._inner.send({
+                    type: 'permission/request/missing',
+                    reason: request.reason,
+                });
+            }
+        });
+
+        this._authSource.onAuthPermissionResult.subscribe((result) => {
+            if (result.origin === this.origin) {
+                this._inner.send({
+                    ...result,
+                    type: 'permission/request/missing/response',
+                });
+            }
+        });
+
+        this._inner.event('permission/request/missing').subscribe((request) => {
+            this._authSource.sendAuthExternalPermissionRequest({
+                type: 'external_permission_request',
+                origin: this.origin,
+                reason: request.reason,
+            });
+        });
+
+        this._inner
+            .event('permission/request/missing/response')
+            .subscribe((response) => {
+                this._authSource.sendAuthExternalPermissionResult({
+                    ...response,
+                    type: 'external_permission_result',
+                    origin: this.origin,
+                });
+            });
     }
 
     get origin() {

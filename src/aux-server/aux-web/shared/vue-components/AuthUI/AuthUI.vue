@@ -12,6 +12,9 @@
                 <p>You are not authorized to view this inst.</p>
             </md-dialog-content>
             <md-dialog-actions>
+                <md-button v-if="allowRequestAccess" @click="requestAccess()"
+                    >Request Access</md-button
+                >
                 <md-button @click="changeLogin()">Change Login</md-button>
                 <md-button @click="newInst()">New Inst</md-button>
             </md-dialog-actions>
@@ -48,6 +51,21 @@
                     >Manage Account</md-button
                 >
                 <md-button @click="logout()">Logout</md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog
+            :md-active.sync="showGrantAccess"
+            class="account-info-dialog"
+            @md-closed="closeAccountInfo()"
+        >
+            <md-dialog-title>Grant Access?</md-dialog-title>
+            <md-dialog-content>
+                <div>Do you want to grant access?</div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="grantAccess()">Grant Access</md-button>
+                <md-button @click="denyAccess()">Deny Access</md-button>
             </md-dialog-actions>
         </md-dialog>
     </div>

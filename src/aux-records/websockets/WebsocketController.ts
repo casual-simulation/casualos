@@ -28,6 +28,8 @@ import {
 import {
     AddUpdatesMessage,
     LoginMessage,
+    RequestMissingPermissionMessage,
+    RequestMissingPermissionResponseMessage,
     SendActionMessage,
     TimeSyncRequestMessage,
     UploadHttpHeaders,
@@ -59,6 +61,7 @@ import {
     ServerError,
     NotSupportedError,
     ACCOUNT_MARKER,
+    DEFAULT_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
@@ -1674,6 +1677,147 @@ export class WebsocketController {
         });
 
         return 200;
+    }
+
+    /**
+     * Requests that the user be given permission to access the given resource.
+     * @param connectionId The ID of the connection that is making the request.
+     * @param event The request missing permission event.
+     */
+    async requestMissingPermission(
+        connectionId: string,
+        event: RequestMissingPermissionMessage
+    ) {
+        const connection = await this._connectionStore.getConnection(
+            connectionId
+        );
+        if (!connection) {
+            throw new Error('The connection was not found!');
+        }
+
+        if (event.reason.type !== 'missing_permission') {
+            await this._messenger.sendMessage([connectionId], {
+                type: 'permission/request/missing/response',
+                success: false,
+                recordName: event.reason.recordName,
+                resourceKind: event.reason.resourceKind,
+                resourceId: event.reason.resourceId,
+                subjectType: event.reason.subjectType,
+                subjectId: event.reason.subjectId,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'It is only possible to request missing permissions.',
+            });
+            return;
+        } else if (event.reason.resourceKind !== 'inst') {
+            await this._messenger.sendMessage([connectionId], {
+                type: 'permission/request/missing/response',
+                success: false,
+                recordName: event.reason.recordName,
+                resourceKind: event.reason.resourceKind,
+                resourceId: event.reason.resourceId,
+                subjectType: event.reason.subjectType,
+                subjectId: event.reason.subjectId,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'Permissions can only be requested to access insts.',
+            });
+            return;
+        } else if (
+            event.reason.subjectType !== 'user' ||
+            event.reason.subjectId !== connection.userId
+        ) {
+            await this._messenger.sendMessage([connectionId], {
+                type: 'permission/request/missing/response',
+                success: false,
+                recordName: event.reason.recordName,
+                resourceKind: event.reason.resourceKind,
+                resourceId: event.reason.resourceId,
+                subjectType: event.reason.subjectType,
+                subjectId: event.reason.subjectId,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'Permissions can only be requested for the current user.',
+            });
+            return;
+        }
+
+        const connections = await this._connectionStore.getConnectionsByBranch(
+            'branch',
+            event.reason.recordName,
+            event.reason.resourceId,
+            DEFAULT_BRANCH_NAME
+        );
+
+        if (connections.length > 0) {
+            const inst = `${event.reason.resourceKind}/${event.reason.resourceId}`;
+            const branch = `${event.reason.subjectType}/${event.reason.subjectId}`;
+            await this._connectionStore.saveBranchConnection({
+                ...connection,
+                serverConnectionId: connectionId,
+                mode: 'missing_permission',
+                recordName: event.reason.recordName,
+                inst: inst,
+                branch: branch,
+                temporary: true,
+            });
+
+            await this._messenger.sendMessage(
+                connections.map((c) => c.serverConnectionId),
+                {
+                    type: 'permission/request/missing',
+                    reason: event.reason,
+                    connection: connectionInfo(connection),
+                }
+            );
+        }
+    }
+
+    /**
+     * Responds to a missing permission request.
+     * @param connectionId The ID of the connection that is responding to the request.
+     * @param event The response to the missing permission request.
+     */
+    async respondToPermissionRequest(
+        connectionId: string,
+        event: RequestMissingPermissionResponseMessage
+    ) {
+        const connection = await this._connectionStore.getConnection(
+            connectionId
+        );
+        if (!connection) {
+            throw new Error('The connection was not found!');
+        }
+        const inst = `${event.resourceKind}/${event.resourceId}`;
+        const branch = `${event.subjectType}/${event.subjectId}`;
+        const otherConnections =
+            await this._connectionStore.getConnectionsByBranch(
+                'missing_permission',
+                event.recordName,
+                inst,
+                branch
+            );
+
+        if (otherConnections.length > 0) {
+            for (let c of otherConnections) {
+                await this._connectionStore.deleteBranchConnection(
+                    c.serverConnectionId,
+                    'missing_permission',
+                    event.recordName,
+                    inst,
+                    branch
+                );
+            }
+
+            await this._messenger.sendMessage(
+                otherConnections.map((c) => c.serverConnectionId),
+                {
+                    type: 'permission/request/missing/response',
+                    ...event,
+                    connection: connectionInfo(connection),
+                }
+            );
+        }
     }
 
     async syncTime(
