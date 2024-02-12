@@ -1166,6 +1166,9 @@ importers:
       '@vitejs/plugin-vue2':
         specifier: 2.3.1
         version: 2.3.1(vite@5.0.6)(vue@2.7.15)
+      fast-glob:
+        specifier: ^3.2.5
+        version: 3.3.2
       prompts:
         specifier: 2.4.2
         version: 2.4.2
@@ -1616,6 +1619,9 @@ importers:
       '@casual-simulation/aux-records':
         specifier: ^3.2.13
         version: link:../../src/aux-records
+      '@casual-simulation/aux-server':
+        specifier: ^3.2.13
+        version: link:../../src/aux-server
       '@casual-simulation/rate-limit-redis':
         specifier: 3.2.7
         version: link:../../src/rate-limit-redis

@@ -8,6 +8,7 @@ import {
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 import copy from 'esbuild-copy-static-files';
+import ImportGlobPlugin from './esbuild-plugin-import-glob.mjs';
 
 const src = path.resolve(paths.root, 'src');
 const auxServer = path.resolve(src, 'aux-server');
@@ -38,6 +39,8 @@ let SERVER_CONFIG = null;
 if (process.env.SERVER_CONFIG) {
     SERVER_CONFIG = JSON.parse(process.env.SERVER_CONFIG);
 }
+
+console.log('glob', ImportGlobPlugin);
 
 export function cleanDirectories() {
     cleanDirectory(serverDist);
@@ -79,7 +82,7 @@ export function createConfigs(dev, version) {
                     ...configVariables,
                 },
                 minify: !dev,
-                plugins: [replaceThreePlugin()],
+                plugins: [replaceThreePlugin(), ImportGlobPlugin()],
             },
         ],
         [
@@ -117,6 +120,7 @@ export function createConfigs(dev, version) {
                         ),
                         force: true,
                     }),
+                    ImportGlobPlugin(),
                 ],
                 minify: !dev,
             },
@@ -135,6 +139,7 @@ export function createConfigs(dev, version) {
                     ...extraVariables,
                 },
                 minify: !dev,
+                plugins: [ImportGlobPlugin()],
             },
         ],
         [

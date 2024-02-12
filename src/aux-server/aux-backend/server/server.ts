@@ -232,6 +232,8 @@ export class Server {
             builder.useNotifications();
         }
 
+        builder.useAutomaticPlugins();
+
         const {
             server,
             filesController,
