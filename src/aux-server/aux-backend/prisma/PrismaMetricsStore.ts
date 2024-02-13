@@ -16,6 +16,7 @@ import {
     SUBSCRIPTIONS_CONFIG_KEY,
     SubscriptionConfiguration,
     SubscriptionFilter,
+    isActiveSubscription,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
@@ -99,6 +100,8 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionType: result.owner ? 'user' : 'studio',
             totalInsts: totalInsts,
             ...(await this._getSubscriptionPeriod(
+                result.owner?.subscriptionStatus ||
+                    result.studio.subscriptionStatus,
                 convertToMillis(
                     result.owner?.subscriptionPeriodStart ||
                         result.studio?.subscriptionPeriodStart
@@ -279,6 +282,8 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionType: result.owner ? 'user' : 'studio',
             totalItems: totalItems,
             ...(await this._getSubscriptionPeriod(
+                result.owner?.subscriptionStatus ||
+                    result.studio.subscriptionStatus,
                 convertToMillis(
                     result.owner?.subscriptionPeriodStart ||
                         result.studio?.subscriptionPeriodStart
@@ -330,6 +335,8 @@ export class PrismaMetricsStore implements MetricsStore {
             totalFiles: stats._count._all,
             totalFileBytesReserved: Number(stats._sum.sizeInBytes),
             ...(await this._getSubscriptionPeriod(
+                result.owner?.subscriptionStatus ||
+                    result.studio.subscriptionStatus,
                 convertToMillis(
                     result.owner?.subscriptionPeriodStart ||
                         result.studio?.subscriptionPeriodStart
@@ -377,6 +384,8 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionType: result.owner ? 'user' : 'studio',
             totalEventNames: stats._count._all,
             ...(await this._getSubscriptionPeriod(
+                result.owner?.subscriptionStatus ||
+                    result.studio.subscriptionStatus,
                 convertToMillis(
                     result.owner?.subscriptionPeriodStart ||
                         result.studio?.subscriptionPeriodStart
@@ -419,6 +428,7 @@ export class PrismaMetricsStore implements MetricsStore {
                 subscriptionType: 'user',
                 totalRecords: user._count.records,
                 ...(await this._getSubscriptionPeriod(
+                    user.subscriptionStatus,
                     convertToMillis(user.subscriptionPeriodStart),
                     convertToMillis(user.subscriptionPeriodEnd)
                 )),
@@ -450,6 +460,7 @@ export class PrismaMetricsStore implements MetricsStore {
                 subscriptionType: 'studio',
                 totalRecords: studio._count.records,
                 ...(await this._getSubscriptionPeriod(
+                    studio.subscriptionStatus,
                     convertToMillis(studio.subscriptionPeriodStart),
                     convertToMillis(studio.subscriptionPeriodEnd)
                 )),
@@ -457,8 +468,12 @@ export class PrismaMetricsStore implements MetricsStore {
         }
     }
 
-    private async _getSubscriptionPeriod(startMs: number, endMs: number) {
-        if (!startMs || !endMs) {
+    private async _getSubscriptionPeriod(
+        status: string,
+        startMs: number,
+        endMs: number
+    ) {
+        if (!isActiveSubscription(status) || !startMs || !endMs) {
             return await this._getDefaultSubscriptionPeriod();
         }
 

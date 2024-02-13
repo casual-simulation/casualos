@@ -60,7 +60,7 @@ folders.forEach((f) => {
 
 globs = globs.map((g) => makeGlobbablePath(g));
 
-task('clean', [], async function () {
+task('clean', ['generate-stub-projects'], async function () {
     const { deleteAsync } = await import('del');
     const deleted = await deleteAsync(globs);
 });
@@ -70,4 +70,42 @@ task('clean-cache', [], async function () {
     await deleteAsync([
         makeGlobbablePath(`${__dirname}/src/aux-server/node_modules/.vite`),
     ]);
+});
+
+task('generate-stub-projects', [], async function () {
+    const { existsSync, writeFileSync, mkdirSync } = await import('fs');
+
+    const projects = [
+        path.resolve(__dirname, 'xpexchange', 'xp-api', 'tsconfig.json'),
+    ];
+
+    const defaultProjectJson = {
+        extends: '../../tsconfig.base.json',
+        compilerOptions: {
+            baseUrl: '.',
+            outDir: '../../temp/xp-api/',
+            composite: true,
+            incremental: true,
+        },
+        include: ['**/*.ts', '../../src/aux-server/typings/**/*'],
+        exclude: ['node_modules', 'lib', '**/*.spec.ts'],
+        references: [{ path: '../../src/aux-records' }],
+    };
+
+    for (let project of projects) {
+        const result = existsSync(project);
+        if (!result) {
+            console.log('Creating tsconfig.json stub for ' + project);
+            const dirname = path.dirname(project);
+            mkdirSync(dirname, { recursive: true });
+            writeFileSync(
+                project,
+                JSON.stringify(defaultProjectJson, null, 2),
+                {
+                    encoding: 'utf-8',
+                    flag: 'w',
+                }
+            );
+        }
+    }
 });

@@ -153,6 +153,10 @@ export class PrismaAuthStore implements AuthStore {
             stripeCustomerId: user.stripeCustomerId as string,
             subscriptionStatus: user.subscriptionStatus as string,
             subscriptionId: user.subscriptionId as string,
+            subscriptionPeriodStart: convertToDate(
+                user.subscriptionPeriodStartMs
+            ),
+            subscriptionPeriodEnd: convertToDate(user.subscriptionPeriodEndMs),
             banTime: convertToDate(user.banTimeMs),
             banReason: user.banReason as string,
             privoServiceId: user.privoServiceId as string,
@@ -187,6 +191,12 @@ export class PrismaAuthStore implements AuthStore {
                 stripeCustomerId: user.stripeCustomerId as string,
                 subscriptionStatus: user.subscriptionStatus as string,
                 subscriptionId: user.subscriptionId as string,
+                subscriptionPeriodStart: convertToDate(
+                    user.subscriptionPeriodStartMs
+                ),
+                subscriptionPeriodEnd: convertToDate(
+                    user.subscriptionPeriodEndMs
+                ),
                 banTime: convertToDate(user.banTimeMs),
                 banReason: user.banReason as string,
                 privoServiceId: user.privoServiceId as string,

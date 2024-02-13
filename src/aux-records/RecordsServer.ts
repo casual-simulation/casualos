@@ -63,67 +63,66 @@ import {
 } from '@casual-simulation/aux-common';
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
-import { valid } from '@hapi/joi';
 
-const NOT_LOGGED_IN_RESULT = {
+export const NOT_LOGGED_IN_RESULT = {
     success: false as const,
     errorCode: 'not_logged_in' as const,
     errorMessage:
         'The user is not logged in. A session key must be provided for this operation.' as const,
 };
 
-const UNACCEPTABLE_SESSION_KEY = {
+export const UNACCEPTABLE_SESSION_KEY = {
     success: false,
     errorCode: 'unacceptable_session_key' as const,
     errorMessage:
         'The given session key is invalid. It must be a correctly formatted string.',
 };
 
-const UNACCEPTABLE_USER_ID = {
+export const UNACCEPTABLE_USER_ID = {
     success: false,
     errorCode: 'unacceptable_user_id' as const,
     errorMessage:
         'The given user ID is invalid. It must be a correctly formatted string.',
 };
 
-const INVALID_ORIGIN_RESULT = {
+export const INVALID_ORIGIN_RESULT = {
     success: false,
     errorCode: 'invalid_origin' as const,
     errorMessage: 'The request must be made from an authorized origin.',
 };
 
-const OPERATION_NOT_FOUND_RESULT = {
+export const OPERATION_NOT_FOUND_RESULT = {
     success: false,
     errorCode: 'operation_not_found' as const,
     errorMessage: 'An operation could not be found for the given request.',
 };
 
-const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
+export const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
     success: false,
     errorCode: 'unacceptable_request' as const,
     errorMessage:
         'The request body was not properly formatted. It should be valid JSON.',
 };
 
-const SUBSCRIPTIONS_NOT_SUPPORTED_RESULT = {
+export const SUBSCRIPTIONS_NOT_SUPPORTED_RESULT = {
     success: false,
     errorCode: 'not_supported' as const,
     errorMessage: 'Subscriptions are not supported by this server.',
 };
 
-const AI_NOT_SUPPORTED_RESULT = {
+export const AI_NOT_SUPPORTED_RESULT = {
     success: false,
     errorCode: 'not_supported' as const,
     errorMessage: 'AI features are not supported by this server.',
 };
 
-const INSTS_NOT_SUPPORTED_RESULT = {
+export const INSTS_NOT_SUPPORTED_RESULT = {
     success: false,
     errorCode: 'not_supported' as const,
     errorMessage: 'Inst features are not supported by this server.',
 };
 
-const MODERATION_NOT_SUPPORTED_RESULT = {
+export const MODERATION_NOT_SUPPORTED_RESULT = {
     success: false,
     errorCode: 'not_supported' as const,
     errorMessage: 'Moderation features are not supported by this server.',
@@ -132,7 +131,7 @@ const MODERATION_NOT_SUPPORTED_RESULT = {
 /**
  * The Zod validation for record keys.
  */
-const RECORD_KEY_VALIDATION = z
+export const RECORD_KEY_VALIDATION = z
     .string({
         invalid_type_error: 'recordKey must be a string.',
         required_error: 'recordKey is required.',
@@ -142,7 +141,7 @@ const RECORD_KEY_VALIDATION = z
 /**
  * The Zod validation for addresses.
  */
-const ADDRESS_VALIDATION = z
+export const ADDRESS_VALIDATION = z
     .string({
         invalid_type_error: 'address must be a string.',
         required_error: 'address is required.',
@@ -153,7 +152,7 @@ const ADDRESS_VALIDATION = z
 /**
  * The Zod validation for event names.
  */
-const EVENT_NAME_VALIDATION = z
+export const EVENT_NAME_VALIDATION = z
     .string({
         invalid_type_error: 'eventName must be a string.',
         required_error: 'eventName is required.',
@@ -161,7 +160,7 @@ const EVENT_NAME_VALIDATION = z
     .min(1)
     .max(128);
 
-const STUDIO_ID_VALIDATION = z
+export const STUDIO_ID_VALIDATION = z
     .string({
         invalid_type_error: 'studioId must be a string.',
         required_error: 'studioId is required.',
@@ -169,7 +168,7 @@ const STUDIO_ID_VALIDATION = z
     .min(1)
     .max(128);
 
-const COM_ID_VALIDATION = z
+export const COM_ID_VALIDATION = z
     .string({
         invalid_type_error: 'comId must be a string.',
         required_error: 'comId is required.',
@@ -177,7 +176,7 @@ const COM_ID_VALIDATION = z
     .min(1)
     .max(128);
 
-const STUDIO_DISPLAY_NAME_VALIDATION = z
+export const STUDIO_DISPLAY_NAME_VALIDATION = z
     .string({
         invalid_type_error: 'displayName must be a string.',
         required_error: 'displayName is required.',
@@ -185,7 +184,7 @@ const STUDIO_DISPLAY_NAME_VALIDATION = z
     .min(1)
     .max(128);
 
-const MARKER_VALIDATION = z
+export const MARKER_VALIDATION = z
     .string({
         invalid_type_error: 'individual markers must be strings.',
         required_error: 'invidiaul markers must not be null or empty.',
@@ -196,7 +195,7 @@ const MARKER_VALIDATION = z
 /**
  * The Zod validation for markers.
  */
-const MARKERS_VALIDATION = z
+export const MARKERS_VALIDATION = z
     .array(MARKER_VALIDATION, {
         invalid_type_error: 'markers must be an array of strings.',
         required_error: 'markers is required.',
@@ -204,14 +203,14 @@ const MARKERS_VALIDATION = z
     .nonempty('markers must not be empty.')
     .max(10, 'markers lists must not contain more than 10 markers.');
 
-const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
-const NO_WHITESPACE_REGEX = /^\S*$/g;
-const NO_SPECIAL_CHARACTERS_MESSAGE =
+export const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
+export const NO_WHITESPACE_REGEX = /^\S*$/g;
+export const NO_SPECIAL_CHARACTERS_MESSAGE =
     'The value cannot not contain special characters.';
-const NO_SPECIAL_CHARACTERS_REGEX =
+export const NO_SPECIAL_CHARACTERS_REGEX =
     /^[^!@#$%\^&*()\[\]{}\-_=+`~,./?;:'"\\<>|]*$/g;
 
-const DISPLAY_NAME_VALIDATION = z
+export const DISPLAY_NAME_VALIDATION = z
     .string()
     .trim()
     .min(1)
@@ -219,7 +218,7 @@ const DISPLAY_NAME_VALIDATION = z
     .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
     .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
 
-const NAME_VALIDATION = z
+export const NAME_VALIDATION = z
     .string()
     .trim()
     .min(1)
@@ -227,7 +226,7 @@ const NAME_VALIDATION = z
     .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
     .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
 
-const RECORD_NAME_VALIDATION = z
+export const RECORD_NAME_VALIDATION = z
     .string({
         required_error: 'recordName is required.',
         invalid_type_error: 'recordName must be a string.',
@@ -236,15 +235,39 @@ const RECORD_NAME_VALIDATION = z
     .min(1)
     .max(128);
 
-const INSTANCE_VALIDATION = z.string().min(1).max(128);
+export const INSTANCE_VALIDATION = z.string().min(1).max(128);
 
-const INSTANCES_ARRAY_VALIDATION = z.array(INSTANCE_VALIDATION).min(1).max(3);
+export const INSTANCES_ARRAY_VALIDATION = z
+    .array(INSTANCE_VALIDATION)
+    .min(1)
+    .max(3);
 
-const INSTANCES_QUERY_VALIDATION = z
+export const INSTANCES_QUERY_VALIDATION = z
     .string()
     .min(1)
     .max(128 * 3)
     .transform((value) => parseInstancesList(value));
+
+/**
+ * Defines a basic interface for an HTTP route.
+ */
+export interface Route {
+    /**
+     * The path that the route must match.
+     */
+    path: string;
+
+    /**
+     * The method for the route.
+     */
+    method: GenericHttpRequest['method'];
+
+    /**
+     * The handler that should be called when the route is matched.
+     * @param request The request.
+     */
+    handler: (request: GenericHttpRequest) => Promise<GenericHttpResponse>;
+}
 
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
@@ -273,6 +296,25 @@ export class RecordsServer {
     private _allowedAccountOrigins: Set<string>;
     private _rateLimit: RateLimitController;
     private _policyController: PolicyController;
+
+    /**
+     * The map of paths to routes that they match.
+     */
+    private _routes: Map<string, Route> = new Map();
+
+    /**
+     * The set of origins that are allowed for account management requests.
+     */
+    get allowedAccountOrigins() {
+        return this._allowedAccountOrigins;
+    }
+
+    /**
+     * The set of origins that are allowed for API requests.
+     */
+    get allowedApiOrigins() {
+        return this._allowedApiOrigins;
+    }
 
     constructor(
         allowedAccountOrigins: Set<string>,
@@ -306,6 +348,13 @@ export class RecordsServer {
         this._aiController = aiController;
         this._websocketController = websocketController;
         this._moderationController = moderationController;
+    }
+
+    /**
+     * Adds the given route to the server.
+     */
+    addRoute(route: Route) {
+        this._routes.set(route.path, route);
     }
 
     /**
@@ -933,6 +982,11 @@ export class RecordsServer {
                 await this._handleOptions(request),
                 true
             );
+        }
+
+        const route = this._routes.get(request.path);
+        if (route) {
+            return route.handler(request);
         }
 
         return formatResponse(
