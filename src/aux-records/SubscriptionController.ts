@@ -822,6 +822,8 @@ export class SubscriptionController {
                 const tier = sub.tier ?? 'beta';
                 const customerId = subscription.customer;
                 const stripeSubscriptionId = subscription.id;
+                const periodStartMs = subscription.current_period_start * 1000;
+                const periodEndMs = subscription.current_period_end * 1000;
 
                 console.log(
                     `[SubscriptionController] [handleStripeWebhook] Customer ID: ${customerId}. Subscription status: ${status}. Tier: ${tier}. Is Active: ${active}.`
@@ -838,8 +840,8 @@ export class SubscriptionController {
                         subscriptionId: sub.id,
                         stripeSubscriptionId,
                         stripeCustomerId: customerId,
-                        currentPeriodEndMs: null,
-                        currentPeriodStartMs: null,
+                        currentPeriodEndMs: periodEndMs,
+                        currentPeriodStartMs: periodStartMs,
                     });
                 } else {
                     console.log(
@@ -858,8 +860,8 @@ export class SubscriptionController {
                             subscriptionId: sub.id,
                             stripeSubscriptionId,
                             stripeCustomerId: customerId,
-                            currentPeriodEndMs: null,
-                            currentPeriodStartMs: null,
+                            currentPeriodEndMs: periodEndMs,
+                            currentPeriodStartMs: periodStartMs,
                         });
                     } else {
                         console.log(

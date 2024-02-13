@@ -21,6 +21,7 @@ To deploy this project to AWS Lambda, follow these steps:
     - Configure the default cache behavior to "Redirect HTTP to HTTPS" and use the "CachingOptimized" policy.
     - Configure each distrubution to return `/index.html` when a HTTP `403` error code occurs.
     - Remember the IDs of the distributions.
+    - (Optional) Configure the player CloudFront distribution (the distribution for the player website files) to support a wildcard subdomains.
 3. Setup a CockroachDB database.
     - You can do this either through the [AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-3zbkzekdohwly?ref_=unifiedsearch) or the [Cockroach Labs website](https://www.cockroachlabs.com/).
     - We recommend starting with their free option.
@@ -44,6 +45,7 @@ To deploy this project to AWS Lambda, follow these steps:
         - `CAUSAL_REPO_CONNECTION_PROTOCOL` - Set this to `apiary-aws`.
         - `SHARED_PARTITIONS_VERSION` - Set this to `v2`.
         - `SES_IDENTITY_NAME` - The Simple Email Service identity that emails should be allowed to be sent from. Only used for granting permissions to send emails to the lambda function. Use `SERVER_CONFIG` to actually configure the server to use SES. (Optional)
+        - `VM_ORIGIN` - Set this to `https://{{inst}}.[playerWebsiteDomain]` where `[playerWebsiteDomain]` is the domain that is used for the player CloudFront distribution - Used to isolate insts from each other. See the below for more info on `VM_ORIGIN`.
         - Configure any other optional environment variables listed below.
 5. Run a build.
 6. After the build, go to CloudFormation and find the stack update.
@@ -94,6 +96,7 @@ Use the following environment variables to configure the inst collaboration feat
     -   The default options are: `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
 -   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default when the BIOS is shown.
 -   `AUTOMATIC_BIOS_OPTION`: The BIOS option that should be executed automatically by the BIOS. Setting this to a valid BIOS value will skip the BIOS screen.
+-   `VM_ORIGIN`: The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used. Recommended for high-security deployments.
 
 #### Privo Features
 

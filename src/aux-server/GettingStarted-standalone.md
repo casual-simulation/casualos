@@ -118,6 +118,7 @@ Use the following environment variables to configure the inst collaboration feat
     -   The default options are: `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
 -   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default when the BIOS is shown.
 -   `AUTOMATIC_BIOS_OPTION`: The BIOS option that should be executed automatically by the BIOS. Setting this to a valid BIOS value will skip the BIOS screen.
+-   `VM_ORIGIN`: The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used. Recommended for high-security deployments.
 
 #### Privo Features
 
