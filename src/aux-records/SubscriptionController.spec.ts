@@ -3757,8 +3757,10 @@ describe('SubscriptionController', () => {
                             expect(user?.subscriptionStatus).toBe(status);
                             expect(user?.subscriptionId).toBe('sub_1');
                             expect(user?.subscriptionInfoId).toBeTruthy();
-                            expect(user?.subscriptionPeriodStartMs).toBe(null);
-                            expect(user?.subscriptionPeriodEndMs).toBe(null);
+                            expect(user?.subscriptionPeriodStartMs).toBe(
+                                123000
+                            );
+                            expect(user?.subscriptionPeriodEndMs).toBe(456000);
 
                             // Should create/update subscription info
                             const sub = await store.getSubscriptionById(
@@ -3772,8 +3774,8 @@ describe('SubscriptionController', () => {
                                 subscriptionId: 'sub_1',
                                 userId: user?.id,
                                 studioId: null,
-                                currentPeriodStartMs: null,
-                                currentPeriodEndMs: null,
+                                currentPeriodStartMs: 123000,
+                                currentPeriodEndMs: 456000,
                             });
                         });
 
@@ -4071,8 +4073,8 @@ describe('SubscriptionController', () => {
                         expect(studio?.subscriptionStatus).toBe(status);
                         expect(studio?.subscriptionId).toBe('sub_1');
                         expect(studio?.subscriptionInfoId).toBeTruthy();
-                        expect(studio?.subscriptionPeriodStartMs).toBe(null);
-                        expect(studio?.subscriptionPeriodEndMs).toBe(null);
+                        expect(studio?.subscriptionPeriodStartMs).toBe(123000);
+                        expect(studio?.subscriptionPeriodEndMs).toBe(456000);
 
                         // Should create/update subscription info
                         const sub = await store.getSubscriptionById(
@@ -4086,8 +4088,8 @@ describe('SubscriptionController', () => {
                             subscriptionId: 'sub_1',
                             userId: null,
                             studioId: studio?.id,
-                            currentPeriodStartMs: null,
-                            currentPeriodEndMs: null,
+                            currentPeriodStartMs: 123000,
+                            currentPeriodEndMs: 456000,
                         });
                     });
 
