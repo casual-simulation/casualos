@@ -21,7 +21,14 @@ export default {
             type: 'category',
             label: 'Reference',
             items: [
-                'tags',
+                'info-tags',
+                'behavior-tags',
+                'visualization-tags',
+                'dimension-tags',
+                'portal-bot-tags',
+                'history-tags',
+                'config-bot-tags',
+                'auth-bot-tags',
                 'listen-tags',
                 {
                     type: 'category',

@@ -13,9 +13,10 @@
   },
   "dependencies": {
     "@algolia/client-search": "^4.20.0",
-    "@docusaurus/core": "3.0.1",
-    "@docusaurus/plugin-client-redirects": "3.0.1",
-    "@docusaurus/preset-classic": "3.0.1",
+    "@docusaurus/core": "^3.1.1",
+    "@docusaurus/plugin-client-redirects": "^3.1.1",
+    "@docusaurus/preset-classic": "^3.1.1",
+    "@mdx-js/react": "^3.0.0",
     "@types/react": "^18.2.39",
     "clsx": "^1.1.1",
     "mustache": "4.2.0",
@@ -31,8 +32,7 @@
     "typescript": "^5.3.2",
     "unist-util-visit": "4.1.2",
     "vue": "3.3.4",
-    "webpack-virtual-modules": "0.5.0",
-    "@mdx-js/react": "^3.0.0"
+    "webpack-virtual-modules": "0.5.0"
   },
   "devDependencies": {
     "cross-env": "7.0.3"
