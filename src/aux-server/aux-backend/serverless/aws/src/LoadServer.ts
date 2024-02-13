@@ -131,5 +131,7 @@ export function constructServerBuilder() {
         builder.useNotifications();
     }
 
+    builder.useAutomaticPlugins();
+
     return builder;
 }

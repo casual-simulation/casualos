@@ -134,6 +134,13 @@ import {
     moderationSchema,
 } from '@casual-simulation/aux-records/ModerationConfiguration';
 
+// @ts-ignore
+import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
+
+const automaticPlugins: ServerPlugin[] = [
+    ...xpApiPlugins.map((p: any) => p.default),
+];
+
 export interface BuildReturn {
     server: RecordsServer;
     authController: AuthController;
@@ -152,6 +159,24 @@ export interface BuildReturn {
     mongoDatabase: Db;
     websocketMessenger: WebsocketMessenger;
     redisClient: RedisClientType;
+}
+
+export interface ServerPlugin {
+    /**
+     * The name of the plugin.
+     * Useful for debugging.
+     */
+    name: string;
+
+    /**
+     * Configures the given RecordsServer.
+     * @param server The server that should be configured.
+     * @param buildResults The results of the build.
+     */
+    configureServer(
+        server: RecordsServer,
+        buildResults: BuildReturn
+    ): Subscription | null | void;
 }
 
 export class ServerBuilder implements SubscriptionLike {
@@ -234,6 +259,8 @@ export class ServerBuilder implements SubscriptionLike {
     private _generateSkyboxInterface: BlockadeLabsGenerateSkyboxInterface;
     private _imagesInterfaces: AIGenerateImageConfiguration['interfaces'];
 
+    private _plugins: ServerPlugin[] = [];
+
     private _subscription: Subscription;
 
     /**
@@ -260,6 +287,27 @@ export class ServerBuilder implements SubscriptionLike {
 
     get closed(): boolean {
         return this._subscription.closed;
+    }
+
+    /**
+     * Configures the server to use the given plugin.
+     * @param plugin The plugin that should be used.
+     */
+    usePlugin(plugin: ServerPlugin): this {
+        console.log(`[ServerBuilder] Using plugin: ${plugin.name}`);
+        this._plugins.push(plugin);
+        return this;
+    }
+
+    /**
+     * Configures the server to use all of the automatically imported plugins.
+     */
+    useAutomaticPlugins(): this {
+        console.log(`[ServerBuilder] Using automatic plugins.`);
+        for (let plugin of automaticPlugins) {
+            this.usePlugin(plugin);
+        }
+        return this;
     }
 
     useRedisCache(
@@ -1119,7 +1167,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._moderationController
         );
 
-        return {
+        const buildReturn: BuildReturn = {
             server,
             authController: this._authController,
             recordsController: this._recordsController,
@@ -1139,6 +1187,15 @@ export class ServerBuilder implements SubscriptionLike {
             websocketMessenger: this._websocketMessenger,
             redisClient: this._redis,
         };
+
+        for (let plugin of this._plugins) {
+            let pluginReturn = plugin.configureServer(server, buildReturn);
+            if (pluginReturn) {
+                this._subscription.add(pluginReturn);
+            }
+        }
+
+        return buildReturn;
     }
 
     /**

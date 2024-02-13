@@ -12874,6 +12874,40 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('addRoute()', () => {
+        it('should call the given handler when a request is matched to the route', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'GET',
+                path: '/api/custom-route',
+                handler,
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpGet('/api/custom-route', defaultHeaders);
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+            });
+
+            expect(handler).toHaveBeenCalledWith(request);
+        });
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleHttpRequest(
             httpRequest('GET', `/api/missing`, null)
