@@ -1,4 +1,6 @@
 .html-portals-container {
     background-color: initial;
     color: initial;
+    position: relative;
+    z-index: 1;
 }
