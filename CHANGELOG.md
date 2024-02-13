@@ -1,8 +1,73 @@
 # CasualOS Changelog
 
+## V3.2.14
+
+#### Date: 2/13/2024
+
+### :boom: Breaking Changes
+
+-   Changed how `os.listData()` works to require `data.list` access for the `account` marker instead of for each item individually.
+    -   This means that `os.listData()` will continue to work for users that have a record key or are admins (record owner or member of a studio), but it will no longer be possible to list `publicRead` data items through this function.
+    -   Instead, use the new `os.listDataByMarker()` function to list data based on a marker.
+    -   The reason for this change is to make the API more predictable. Previously, it was possible for `os.listData()` to return no results even if there were items after the given address. This is because a fixed number of items would be retrieved from the database and then checked to see if the user has access to it. If the user did not have access to any items, then an empty list would be returned, even if there are items that the user _does_ have access to later in the database.
+-   Changed `os.listData()` to throw a `CausualOSError` if the user is not authorized to list items.
+    -   Previously, an empty list would be returned. Now, an empty list is only returned if there are no items.
+-   Removed `os.grantRecordMarkerPermission()` and `os.revokeRecordMarkerPermission()`.
+    -   These functions have been replaced by `os.grantPermission()` and `os.revokePermission()`.
+
+### :rocket: Features
+
+-   Added the ability to organize records within a given marker.
+    -   Markers can be formatted as `root:path`.
+        -   `root` is known as the "root marker" and is what determines the security of a resource.
+        -   `path` is known as the "path marker" and is used to organize the resource.
+    -   It is still possible to format markers regularly. In this case, the marker doesn't have a path and is just a root.
+        -   All existing markers are treated this way.
+    -   For example, the markers `secret` and `secret:documents` both have the same root marker: `secret`.
+        -   This means that users need access to the `secret` root marker in order to access resources with either of these markers.
+        -   `secret:documents` has a path marker of `documents`, which means that it is organized separately from other markers.
+    -   The `os.listDataByMarker()` function is able to take advantage of this feature.
+        -   Calling `os.listDataByMarker(recordName, "secret:photos")` will only return data records with `secret:photos`, while calling `os.listDataByMarker(recordName, "secret:documents")` will only return data records with `secret:documents`.
+-   Added `os.grantPermission(recordName, permission, options?)` and `os.revokePermission(recordName, permissionId, options?)`.
+    -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
+    -   `os.revokePermission()` deletes the permission with the given ID.
+-   Added the `os.listDataByMarker(recordName, marker, startingAddress?, options?)` function.
+    -   Useful for only listing data that has the given marker. Returns a promise that resolves with the total number of items that match the marker and up to 10 items.
+    -   Items are listed based on whether they exactly match one of the markers that are applied to the data items.
+        -   This means that `secret:documents` will match `secret:documents`, but listing by `secret` will not list `secret:documents`.
+-   Added WebXR support for Apple Vision Pro.
+    -   A dialog will appear on Safari asking if you want to enter XR when trying to enable AR/VR through CasualOS. This is an extra security measure enforced by Safari.
+    -   visionOS currently only supports `immersive-vr` mode of WebXR sessions.
+    -   Added pinch select gesture detection for. This allows for pointer-based bot interaction on the Vision Pro since Safari does not implement select events while hand tracking in WebXR.
+-   Added the ability to support domain-level isolation for insts.
+    -   The `VM_ORIGIN` environment variable can now be configured to tell CasualOS to load insts into a unique HTTP Origin so that insts are isolated from each other.
+    -   `VM_ORIGIN` is The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used.
+
+### :bug: Bug Fixes
+
+-   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
+-   Fixed an issue where fingers would trigger click interactions while dragging a bot with the same hand.
+-   Fixed an issue where `portalBackgroundAddress` would render over `miniMapPortalBot`.
+
+## V3.2.13
+
+#### Date: 2/5/2024
+
+### :rocket: Features
+
+-   Improved diagnostics for VR and AR features.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `ai.generateSkybox()` would fail if an instances array was provided.
+
 ## V3.2.12
 
-#### Date: 2/1/2024
+#### Date: 2/2/2024
+
+### :boom: Breaking Changes
+
+-   Removed the ability to create avatars with ReadyPlayerMe.
 
 ### :rocket: Features
 
@@ -23,10 +88,11 @@
         -   `comID.jitsiAppName` - The name of the Jitsi App that should be used for the meetPortal. If none is specified, then the default is used.
         -   `comID.what3WordsApiKey` - The API Key that should be used for `os.convertGeolocationToWhat3Words()`. If none is specified, then the default is used.
     -   Setting `comId` or `comID` in the query tells CasualOS to use the settings that were configured on the related Studio settings page. Additionally, the logo of the studio will be displayed on the loading screens and BIOS.
+-   Added some messaging to the sign up pages to inform users that valid emails are required in order to completely setup their accounts.
 
 ### :bug: Bug Fixes
 
--   Fixed an issuse where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
+-   Fixed an issue where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
 
 ## V3.2.11
 

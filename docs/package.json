@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus start -p 3001",
-    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus build",
+    "build": "npm run typedoc && cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus build",
     "swizzle": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus swizzle",
-    "deploy": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus deploy",
+    "deploy": "npm run typedoc && cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus deploy",
     "serve": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus serve -p 3001",
     "typedoc": "npm run build:plugin && node ./typedoc-plugin/dist/index.js",
     "build:plugin": "node ./script/build-typedoc.mjs"

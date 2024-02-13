@@ -4,6 +4,7 @@
         <div class="map-viewport" :style="miniMapViewportStyle">
             <div ref="miniMapView" :id="miniMapViewId"></div>
         </div>
+        <div class="game-background" ref="gameBackground"></div>
         <div class="game-canvas" :style="{ cursor: cursor }" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">

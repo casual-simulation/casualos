@@ -28,8 +28,15 @@ import {
 import { ZodError, z } from 'zod';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
-import { AVAILABLE_PERMISSIONS_VALIDATION } from '@casual-simulation/aux-common';
-import { PolicyController } from './PolicyController';
+import {
+    AVAILABLE_PERMISSIONS_VALIDATION,
+    RESOURCE_KIND_VALIDATION,
+    ResourceKinds,
+} from '@casual-simulation/aux-common';
+import {
+    GrantResourcePermissionRequest,
+    PolicyController,
+} from './PolicyController';
 import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 import { WebsocketController } from './websockets/WebsocketController';
@@ -178,25 +185,24 @@ const STUDIO_DISPLAY_NAME_VALIDATION = z
     .min(1)
     .max(128);
 
+const MARKER_VALIDATION = z
+    .string({
+        invalid_type_error: 'individual markers must be strings.',
+        required_error: 'invidiaul markers must not be null or empty.',
+    })
+    .nonempty('individual markers must not be null or empty.')
+    .max(100, 'individual markers must not be longer than 100 characters.');
+
 /**
  * The Zod validation for markers.
  */
 const MARKERS_VALIDATION = z
-    .array(
-        z
-            .string({
-                invalid_type_error: 'individual markers must be strings.',
-                required_error: 'invidiaul markers must not be null or empty.',
-            })
-            .min(1)
-            .max(128),
-        {
-            invalid_type_error: 'markers must be an array of strings.',
-            required_error: 'markers is required.',
-        }
-    )
+    .array(MARKER_VALIDATION, {
+        invalid_type_error: 'markers must be an array of strings.',
+        required_error: 'markers is required.',
+    })
     .nonempty('markers must not be empty.')
-    .max(10, 'markers must not contain more than 10 markers.');
+    .max(10, 'markers lists must not contain more than 10 markers.');
 
 const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
 const NO_WHITESPACE_REGEX = /^\S*$/g;
@@ -683,38 +689,29 @@ export class RecordsServer {
             );
         } else if (
             request.method === 'POST' &&
-            request.path === '/api/v2/records/policy/grantPermission'
+            request.path === '/api/v2/records/permissions'
         ) {
             return formatResponse(
                 request,
-                await this._policyGrantPermission(request),
+                await this._grantPermission(request),
                 this._allowedApiOrigins
             );
         } else if (
             request.method === 'POST' &&
-            request.path === '/api/v2/records/policy/revokePermission'
+            request.path === '/api/v2/records/permissions/revoke'
         ) {
             return formatResponse(
                 request,
-                await this._policyRevokePermission(request),
+                await this._revokePermission(request),
                 this._allowedApiOrigins
             );
         } else if (
             request.method === 'GET' &&
-            request.path === '/api/v2/records/policy'
+            request.path === '/api/v2/records/permissions/list'
         ) {
             return formatResponse(
                 request,
-                await this._policyRead(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/policy/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._policyList(request),
+                await this._listPermissions(request),
                 this._allowedApiOrigins
             );
         } else if (
@@ -1509,7 +1506,7 @@ export class RecordsServer {
         return returnResult(result);
     }
 
-    private async _policyGrantPermission(
+    private async _grantPermission(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         if (!validateOrigin(request, this._allowedApiOrigins)) {
@@ -1528,12 +1525,6 @@ export class RecordsServer {
 
         const schema = z.object({
             recordName: RECORD_NAME_VALIDATION,
-            marker: z
-                .string({
-                    invalid_type_error: 'marker must be a string.',
-                    required_error: 'marker is required.',
-                })
-                .nonempty('marker must not be empty'),
             permission: AVAILABLE_PERMISSIONS_VALIDATION,
             instances: INSTANCES_ARRAY_VALIDATION.nonempty().optional(),
         });
@@ -1544,23 +1535,7 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, marker, permission, instances } = parseResult.data;
-
-        // const validation = ZOD_PERMISSION_MAP[permission.type as (keyof typeof ZOD_PERMISSION_MAP)];
-
-        // if (!validation) {
-        //     const validPermissionTypes = Object.keys(ZOD_PERMISSION_MAP).sort();
-        //     return returnResult({
-        //         success: false,
-        //         errorCode: 'unacceptable_request',
-        //         errorMessage: `Permission type not found. type must be one of: ${validPermissionTypes.join(', ')}`,
-        //     });
-        // }
-
-        // const validationParseResult = validation.safeParse(permission);
-        // if (validationParseResult.success === false) {
-        //     return returnZodError(validationParseResult.error);
-        // }
+        const { recordName, permission, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1570,18 +1545,38 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._policyController.grantMarkerPermission({
-            recordKeyOrRecordName: recordName,
-            marker: marker,
-            userId: sessionKeyValidation.userId,
-            permission: permission as any,
-            instances,
-        });
+        if (permission.marker) {
+            const result = await this._policyController.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                marker: permission.marker,
+                userId: sessionKeyValidation.userId,
+                permission: permission as any,
+                instances,
+            });
 
-        return returnResult(result);
+            return returnResult(result);
+        } else if (permission.resourceKind && permission.resourceId) {
+            const result = await this._policyController.grantResourcePermission(
+                {
+                    recordKeyOrRecordName: recordName,
+                    permission: permission as any,
+                    userId: sessionKeyValidation.userId,
+                    instances,
+                }
+            );
+
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: false,
+            errorCode: 'unacceptable_request',
+            errorMessage:
+                'The given permission must have either a marker or a resourceId.',
+        });
     }
 
-    private async _policyRevokePermission(
+    private async _revokePermission(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         if (!validateOrigin(request, this._allowedApiOrigins)) {
@@ -1599,14 +1594,12 @@ export class RecordsServer {
         }
 
         const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            marker: z
+            permissionId: z
                 .string({
-                    invalid_type_error: 'marker must be a string.',
-                    required_error: 'marker is required.',
+                    invalid_type_error: 'permissionId must be a string.',
+                    required_error: 'permissionId is required.',
                 })
-                .nonempty('marker must not be empty'),
-            permission: AVAILABLE_PERMISSIONS_VALIDATION,
+                .nonempty('permissionId must not be empty'),
             instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
@@ -1616,7 +1609,7 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, marker, permission, instances } = parseResult.data;
+        const { permissionId, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1626,18 +1619,16 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._policyController.revokeMarkerPermission({
-            recordKeyOrRecordName: recordName,
-            marker: marker,
+        const result = await this._policyController.revokePermission({
+            permissionId,
             userId: sessionKeyValidation.userId,
-            permission: permission as any,
             instances,
         });
 
         return returnResult(result);
     }
 
-    private async _policyRead(
+    private async _listPermissions(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         if (!validateOrigin(request, this._allowedApiOrigins)) {
@@ -1646,54 +1637,13 @@ export class RecordsServer {
 
         const schema = z.object({
             recordName: RECORD_NAME_VALIDATION,
-            marker: z
+            marker: MARKER_VALIDATION.optional(),
+            resourceKind: RESOURCE_KIND_VALIDATION.optional(),
+            resourceId: z
                 .string({
-                    invalid_type_error: 'marker must be a string.',
-                    required_error: 'marker is required.',
+                    invalid_type_error: 'resourceId must be a string.',
+                    required_error: 'resourceId is required.',
                 })
-                .nonempty('marker must not be empty'),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, marker } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._policyController.readUserPolicy(
-            recordName,
-            sessionKeyValidation.userId,
-            marker
-        );
-
-        return returnResult(result);
-    }
-
-    private async _policyList(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            startingMarker: z
-                .string({
-                    invalid_type_error: 'startingMarker must be a string.',
-                    required_error: 'startingMarker is required.',
-                })
-                .nonempty('startingMarker must not be empty')
                 .optional(),
         });
 
@@ -1703,7 +1653,8 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, startingMarker } = parseResult.data;
+        const { recordName, marker, resourceKind, resourceId } =
+            parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1713,13 +1664,30 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._policyController.listUserPolicies(
-            recordName,
-            sessionKeyValidation.userId,
-            startingMarker
-        );
-
-        return returnResult(result);
+        if (resourceKind && resourceId) {
+            const result =
+                await this._policyController.listPermissionsForResource(
+                    recordName,
+                    resourceKind,
+                    resourceId,
+                    sessionKeyValidation.userId
+                );
+            return returnResult(result);
+        } else if (marker) {
+            const result =
+                await this._policyController.listPermissionsForMarker(
+                    recordName,
+                    marker,
+                    sessionKeyValidation.userId
+                );
+            return returnResult(result);
+        } else {
+            const result = await this._policyController.listPermissions(
+                recordName,
+                sessionKeyValidation.userId
+            );
+            return returnResult(result);
+        }
     }
 
     private async _roleUserList(
@@ -2116,7 +2084,7 @@ export class RecordsServer {
                     seed: z.number().optional(),
                 })
                 .optional(),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
+            instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -2726,6 +2694,10 @@ export class RecordsServer {
         const schema = z.object({
             recordName: RECORD_NAME_VALIDATION,
             address: ADDRESS_VALIDATION.nullable().optional(),
+            marker: MARKER_VALIDATION.optional(),
+            sort: z
+                .union([z.literal('ascending'), z.literal('descending')])
+                .optional(),
             instances: INSTANCES_QUERY_VALIDATION.optional(),
         });
 
@@ -2735,7 +2707,8 @@ export class RecordsServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, address, instances } = parseResult.data;
+        const { recordName, address, instances, marker, sort } =
+            parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -2764,13 +2737,26 @@ export class RecordsServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._data.listData(
-            recordName,
-            address || null,
-            sessionKeyValidation.userId,
-            instances
-        );
-        return returnResult(result);
+        if (!marker) {
+            const result = await this._data.listData(
+                recordName,
+                address || null,
+                sessionKeyValidation.userId,
+                instances
+            );
+            return returnResult(result);
+        } else {
+            const result = await this._data.listDataByMarker({
+                recordKeyOrName: recordName,
+                marker: marker,
+                startingAddress: address,
+                sort: sort,
+                userId: sessionKeyValidation.userId,
+                instances,
+            });
+
+            return returnResult(result);
+        }
     }
 
     private async _handleRecordFileOptions(
@@ -2850,13 +2836,7 @@ export class RecordsServer {
                 .min(1)
                 .max(128)
                 .optional(),
-            markers: z
-                .array(z.string(), {
-                    invalid_type_error: 'markers must be an array of strings.',
-                    required_error: 'markers is required.',
-                })
-                .nonempty('markers must be non-empty.')
-                .optional(),
+            markers: MARKERS_VALIDATION.optional(),
             instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 
@@ -2960,12 +2940,7 @@ export class RecordsServer {
                     required_error: 'fileUrl is required.',
                 })
                 .nonempty('fileUrl must be non-empty.'),
-            markers: z
-                .array(z.string(), {
-                    invalid_type_error: 'markers must be an array of strings.',
-                    required_error: 'markers is required.',
-                })
-                .nonempty('markers must be non-empty.'),
+            markers: MARKERS_VALIDATION,
             instances: INSTANCES_ARRAY_VALIDATION.optional(),
         });
 

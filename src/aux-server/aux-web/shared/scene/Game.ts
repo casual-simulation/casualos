@@ -84,6 +84,8 @@ import { appManager } from '../AppManager';
 import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
 import { update as updateMeshUI } from 'three-mesh-ui';
 import { EXRLoader } from '@casual-simulation/three/examples/jsm/loaders/EXRLoader';
+import Bowser from 'bowser';
+import { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/EnableXRModal';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -688,8 +690,8 @@ export abstract class Game {
             }
 
             const background = this.getBackground();
-            delete this.gameView.gameView.style.background;
-            delete this.gameView.gameView.style.backgroundSize;
+            delete this.gameView.gameBackground.style.background;
+            delete this.gameView.gameBackground.style.backgroundSize;
             this.renderer.autoClear = false;
             if (background) {
                 this.mainScene.background = background;
@@ -749,10 +751,10 @@ export abstract class Game {
         }
 
         if (isImage) {
-            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
-            this.gameView.gameView.style.backgroundSize = 'cover';
+            this.gameView.gameBackground.style.background = `url(${address}) no-repeat center center`;
+            this.gameView.gameBackground.style.backgroundSize = 'cover';
             if (this._backgroundVideoElement) {
-                this.gameView.gameView.removeChild(
+                this.gameView.gameBackground.removeChild(
                     this._backgroundVideoElement
                 );
                 this._backgroundVideoElement.pause();
@@ -760,8 +762,8 @@ export abstract class Game {
                 this._backgroundVideoElement.srcObject = null;
             }
         } else {
-            delete this.gameView.gameView.style.background;
-            delete this.gameView.gameView.style.backgroundSize;
+            delete this.gameView.gameBackground.style.background;
+            delete this.gameView.gameBackground.style.backgroundSize;
 
             if (!this._backgroundVideoElement) {
                 this._backgroundVideoElement = document.createElement('video');
@@ -793,7 +795,7 @@ export abstract class Game {
                 this.subs.push(sub);
             }
 
-            this.gameView.gameView.prepend(this._backgroundVideoElement);
+            this.gameView.gameBackground.prepend(this._backgroundVideoElement);
             const media = await this._getMediaForCasualOSUrl(casualOSUrl);
             if (media) {
                 this._backgroundVideoElement.srcObject = media;
@@ -1104,11 +1106,32 @@ export abstract class Game {
         mode: 'immersive-ar' | 'immersive-vr'
     ): Promise<boolean> {
         try {
-            return await (navigator as any).xr.isSessionSupported(mode);
+            const nav = navigator as any;
+            if (nav.xr) {
+                return await nav.xr.isSessionSupported(mode);
+            } else {
+                return false;
+            }
         } catch (e) {
             console.error(`[Game] Failed to check for XR Mode Support.`, e);
             return false;
         }
+    }
+
+    protected async requestXR(mode: 'immersive-ar' | 'immersive-vr') {
+        return new Promise<void>((resolve, reject) => {
+            const parameters: EnableXRModalRequestParameters = {
+                mode,
+                onConfirm: () => {
+                    resolve();
+                },
+                onCancel: () => {
+                    reject('User cancelled');
+                },
+            };
+
+            EventBus.$emit('requestXR', parameters);
+        });
     }
 
     protected async stopXR() {
@@ -1165,7 +1188,26 @@ export abstract class Game {
             return;
         }
 
-        console.log('[Game] Start XR');
+        const bowserParser = Bowser.getParser(navigator.userAgent);
+        const browserName = bowserParser.getBrowserName(true);
+
+        // Safari is much stricter on validating user permission.
+        // Must present the user an HTML dialog that they can confirm in order for Safari's security check to pass.
+        if (browserName === 'safari') {
+            try {
+                await this.requestXR(mode);
+            } catch (e) {
+                if (e === 'User cancelled') {
+                    console.log('[Game] User cancelled XR request.');
+                } else {
+                    console.error('[Game] Failed to request XR:', e);
+                }
+
+                return;
+            }
+        }
+
+        console.log(`[Game] Start XR: ${mode}`);
         this.xrState = 'starting';
         this.renderer.xr.enabled = true;
 
@@ -1175,7 +1217,14 @@ export abstract class Game {
                 requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
                 optionalFeatures: ['hand-tracking'],
             })
-            .catch(() => {
+            .catch((err: any) => {
+                console.error(
+                    '[Game] Failed to start XR session with preferred reference space.',
+                    err
+                );
+                console.log(
+                    '[Game] Starting XR session without preferred reference space.'
+                );
                 supportsPreferredReferenceSpace = false;
                 return (navigator as any).xr.requestSession(mode);
             });

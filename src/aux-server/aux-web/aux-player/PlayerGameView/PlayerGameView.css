@@ -2,12 +2,24 @@
     position: absolute;
     touch-action: none;
     top: 0;
+    z-index: 1;
 }
 
 .map-canvas {
     position: absolute;
     touch-action: none;
     top: 0;
+    z-index: 1;
+}
+
+.game-background {
+    position: absolute;
+    touch-action: none;
+    z-index: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .map-canvas > .esri-view-root,
@@ -42,6 +54,7 @@ html.ar-app .webxr-sessions canvas {
 .map-viewport {
     position: absolute;
     pointer-events: none;
+    z-index: 1;
 }
 
 .map-viewport > div {

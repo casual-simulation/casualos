@@ -1,29 +1,31 @@
 import {
+    AssignPermissionToSubjectAndMarkerResult,
+    AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
-    GetUserPolicyResult,
-    ListMarkerPoliciesResult,
-    ListUserPoliciesStoreResult,
+    DeletePermissionAssignmentResult,
+    GetMarkerPermissionResult,
+    GetResourcePermissionResult,
+    ListPermissionsInRecordResult,
     ListedRoleAssignments,
-    ListedUserPolicy,
+    MarkerPermissionAssignment,
     PolicyStore,
-    PrivacyFeatures,
+    ResourcePermissionAssignment,
     RoleAssignment,
-    UpdateRolesUpdate,
-    UpdateUserPolicyResult,
     UpdateUserRolesResult,
-    UserPolicyRecord,
     getExpireTime,
 } from '@casual-simulation/aux-records';
 import { Prisma, PrismaClient } from './generated';
 import { convertMarkers, convertToDate, convertToMillis } from './Utils';
 import {
-    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-    DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT,
+    ActionKinds,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-    PolicyDocument,
+    PermissionOptions,
+    PrivacyFeatures,
+    ResourceKinds,
+    SubjectType,
 } from '@casual-simulation/aux-common';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Implements PolicyStore for Prisma.
@@ -35,93 +37,518 @@ export class PrismaPolicyStore implements PolicyStore {
         this._client = client;
     }
 
-    async listPoliciesForMarkerAndUser(
-        recordName: string,
-        userId: string,
-        marker: string
-    ): Promise<ListMarkerPoliciesResult> {
-        const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
-        if (marker === PUBLIC_READ_MARKER) {
-            policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
-        } else if (marker === PUBLIC_WRITE_MARKER) {
-            policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
-        }
-        const policy = await this._client.policy.findUnique({
+    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+        const user = await this._client.user.findUnique({
             where: {
-                recordName_marker: {
-                    recordName: recordName,
-                    marker: marker,
-                },
+                id: userId,
             },
-            include: {
-                record: {
-                    include: {
-                        owner: true,
+            select: {
+                allowAI: true,
+                allowPublicData: true,
+                allowPublicInsts: true,
+                allowPublishData: true,
+            },
+        });
+
+        if (user) {
+            return {
+                publishData: user.allowPublishData ?? true,
+                allowPublicData: user.allowPublicData ?? true,
+                allowAI: user.allowAI ?? true,
+                allowPublicInsts: user.allowPublicInsts ?? true,
+            };
+        }
+
+        return null;
+    }
+
+    async getRecordOwnerPrivacyFeatures(
+        recordName: string
+    ): Promise<PrivacyFeatures> {
+        const recordOwner = await this._client.record.findUnique({
+            where: {
+                name: recordName,
+            },
+            select: {
+                owner: {
+                    select: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        allowPublishData: true,
                     },
                 },
             },
         });
-        if (policy) {
-            policies.push(policy.document as unknown as PolicyDocument);
-        }
-        const userResult = userId
-            ? await this._client.user.findUnique({
-                  where: {
-                      id: userId,
-                  },
-              })
-            : null;
 
+        if (recordOwner?.owner) {
+            return {
+                publishData: recordOwner.owner.allowPublishData ?? true,
+                allowPublicData: recordOwner.owner.allowPublicData ?? true,
+                allowAI: recordOwner.owner.allowAI ?? true,
+                allowPublicInsts: recordOwner.owner.allowPublicInsts ?? true,
+            };
+        }
+
+        return null;
+    }
+
+    async getPermissionForSubjectAndResource(
+        subjectType: SubjectType,
+        subjectId: string,
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetResourcePermissionResult> {
+        // prettier-ignore
+        const result = await this._client.$queryRaw<ResourcePermission[]>`SELECT "id", "recordName", "resourceKind", "resourceId", "action", "options", "subjectId", "subjectType", "userId", "expireTime" FROM public."ResourcePermissionAssignment"
+            WHERE "recordName" = ${recordName}
+            AND "resourceKind" = ${resourceKind} 
+            AND "resourceId" = ${resourceId} 
+            AND ("action" IS NULL OR "action" = ${action})
+            AND ("expireTime" IS NULL OR "expireTime" > ${convertToDate(
+                currentTimeMs
+            )})
+            AND (
+                ("subjectId" = ${subjectId} AND "subjectType" = ${subjectType}) OR
+                ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = ${recordName} AND "subjectId" = ${subjectId} AND "subjectType" = ${subjectType})))
+            LIMIT 1;`;
+
+        if (result.length <= 0) {
+            return {
+                success: true,
+                permissionAssignment: null,
+            };
+        }
+
+        const first = result[0];
         return {
-            policies,
-            recordOwnerPrivacyFeatures: {
-                publishData: policy?.record.owner?.allowPublishData ?? true,
-                allowPublicData: policy?.record.owner?.allowPublicData ?? true,
-                allowAI: true,
-                allowPublicInsts: true,
-            },
-            userPrivacyFeatures: {
-                publishData: userResult?.allowPublishData ?? true,
-                allowPublicData: userResult?.allowPublicData ?? true,
-                allowAI: userResult?.allowAI ?? true,
-                allowPublicInsts: userResult?.allowPublicInsts ?? true,
+            success: true,
+            permissionAssignment: {
+                id: first.id,
+                recordName: first.recordName,
+                resourceKind: first.resourceKind,
+                resourceId: first.resourceId,
+                action: first.action,
+                options: first.options,
+                subjectId: first.subjectId,
+                subjectType: first.subjectType,
+                userId: first.userId,
+                expireTimeMs: convertToMillis(first.expireTime),
             },
         };
     }
 
-    async listUserPolicies(
+    async getPermissionForSubjectAndMarkers(
+        subjectType: SubjectType,
+        subjectId: string,
         recordName: string,
-        startingMarker: string
-    ): Promise<ListUserPoliciesStoreResult> {
-        let query: Prisma.PolicyWhereInput = {
-            recordName: recordName,
-        };
+        resourceKind: ResourceKinds,
+        markers: string[],
+        action: ActionKinds,
+        currentTimeMs: number
+    ): Promise<GetMarkerPermissionResult> {
+        // prettier-ignore
+        const result = await this._client.$queryRaw<MarkerPermission[]>`SELECT "id", "recordName", "resourceKind", "marker", "action", "options", "subjectId", "subjectType", "userId", "expireTime" FROM public."MarkerPermissionAssignment"
+            WHERE "recordName" = ${recordName}
+            AND ("resourceKind" IS NULL OR "resourceKind" = ${resourceKind})
+            AND "marker" IN (${Prisma.join(markers)})
+            AND ("action" IS NULL OR "action" = ${action})
+            AND ("expireTime" IS NULL OR "expireTime" > ${convertToDate(
+                currentTimeMs
+            )})
+            AND (
+                ("subjectId" = ${subjectId} AND "subjectType" = ${subjectType}) OR
+                ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = ${recordName} AND "subjectId" = ${subjectId} AND "subjectType" = ${subjectType})))
+            LIMIT 1;`;
 
-        if (!!startingMarker) {
-            query.marker = {
-                gt: startingMarker,
+        if (result.length <= 0) {
+            return {
+                success: true,
+                permissionAssignment: null,
             };
         }
-        const policies = await this._client.policy.findMany({
-            where: query,
-            orderBy: {
-                marker: 'asc',
-            },
-            take: 10,
-        });
 
-        const results = policies.map((p) => {
+        const first = result[0];
+        return {
+            success: true,
+            permissionAssignment: {
+                id: first.id,
+                recordName: first.recordName,
+                resourceKind: first.resourceKind,
+                marker: first.marker,
+                action: first.action,
+                options: first.options,
+                subjectId: first.subjectId,
+                subjectType: first.subjectType,
+                userId: first.userId,
+                expireTimeMs: convertToMillis(first.expireTime),
+            },
+        };
+    }
+
+    async assignPermissionToSubjectAndResource(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number
+    ): Promise<AssignPermissionToSubjectAndResourceResult> {
+        const existingAssignment =
+            await this._client.resourcePermissionAssignment.findFirst({
+                where: {
+                    recordName,
+                    subjectType,
+                    subjectId,
+                    resourceKind,
+                    resourceId,
+                    action,
+                    expireTime: convertToDate(expireTimeMs),
+                },
+            });
+
+        if (existingAssignment) {
             return {
-                marker: p.marker,
-                document: p.document as unknown as PolicyDocument,
-                markers: p.markers,
+                success: false,
+                errorCode: 'permission_already_exists',
+                errorMessage: 'The permission already exists.',
             };
+        }
+
+        const result = await this._client.resourcePermissionAssignment.create({
+            data: {
+                id: uuid(),
+                recordName: recordName,
+                resourceKind: resourceKind,
+                resourceId: resourceId,
+                action: action,
+                options: options as object,
+                subjectId: subjectId,
+                subjectType: subjectType,
+                userId: subjectType === 'user' ? subjectId : null,
+                expireTime: convertToDate(expireTimeMs),
+            },
         });
 
         return {
             success: true,
-            policies: results,
-            totalCount: results.length,
+            permissionAssignment: {
+                id: result.id,
+                recordName: result.recordName,
+                resourceKind: result.resourceKind as ResourceKinds,
+                resourceId: result.resourceId,
+                action: result.action as ActionKinds,
+                options: result.options as PermissionOptions,
+                subjectId: result.subjectId,
+                subjectType: result.subjectType as SubjectType,
+                userId: result.userId,
+                expireTimeMs: convertToMillis(result.expireTime),
+            },
+        };
+    }
+
+    async assignPermissionToSubjectAndMarker(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string,
+        resourceKind: ResourceKinds,
+        marker: string,
+        action: ActionKinds,
+        options: PermissionOptions,
+        expireTimeMs: number
+    ): Promise<AssignPermissionToSubjectAndMarkerResult> {
+        const existingAssignment =
+            await this._client.markerPermissionAssignment.findFirst({
+                where: {
+                    recordName,
+                    subjectType,
+                    subjectId,
+                    resourceKind,
+                    marker,
+                    action,
+                    expireTime: convertToDate(expireTimeMs),
+                },
+            });
+
+        if (existingAssignment) {
+            return {
+                success: false,
+                errorCode: 'permission_already_exists',
+                errorMessage: 'The permission already exists.',
+            };
+        }
+
+        const result = await this._client.markerPermissionAssignment.create({
+            data: {
+                id: uuid(),
+                recordName: recordName,
+                resourceKind: resourceKind,
+                marker,
+                action: action,
+                options: options as object,
+                subjectId: subjectId,
+                subjectType: subjectType,
+                userId: subjectType === 'user' ? subjectId : null,
+                expireTime: convertToDate(expireTimeMs),
+            },
+        });
+
+        return {
+            success: true,
+            permissionAssignment: {
+                id: result.id,
+                recordName: result.recordName,
+                resourceKind: result.resourceKind as ResourceKinds,
+                marker: result.marker,
+                action: result.action as ActionKinds,
+                options: result.options as PermissionOptions,
+                subjectId: result.subjectId,
+                subjectType: result.subjectType as SubjectType,
+                userId: result.userId,
+                expireTimeMs: convertToMillis(result.expireTime),
+            },
+        };
+    }
+
+    async deleteResourcePermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        await this._client.resourcePermissionAssignment.delete({
+            where: {
+                id,
+            },
+        });
+
+        return {
+            success: true,
+        };
+    }
+
+    async deleteMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<DeletePermissionAssignmentResult> {
+        await this._client.markerPermissionAssignment.delete({
+            where: {
+                id,
+            },
+        });
+
+        return {
+            success: true,
+        };
+    }
+
+    async listPermissionsInRecord(
+        recordName: string
+    ): Promise<ListPermissionsInRecordResult> {
+        const resourcePermissions =
+            await this._client.resourcePermissionAssignment.findMany({
+                where: {
+                    recordName,
+                },
+            });
+
+        const markerPermissions =
+            await this._client.markerPermissionAssignment.findMany({
+                where: {
+                    recordName,
+                },
+            });
+
+        return {
+            success: true,
+            resourceAssignments: resourcePermissions.map((p) => ({
+                id: p.id,
+                recordName: p.recordName,
+                resourceKind: p.resourceKind as ResourceKinds,
+                resourceId: p.resourceId,
+                action: p.action as ActionKinds,
+                options: p.options as PermissionOptions,
+                subjectId: p.subjectId,
+                subjectType: p.subjectType as SubjectType,
+                userId: p.userId,
+                expireTimeMs: convertToMillis(p.expireTime),
+            })),
+            markerAssignments: markerPermissions.map((p) => ({
+                id: p.id,
+                recordName: p.recordName,
+                resourceKind: p.resourceKind as ResourceKinds,
+                marker: p.marker,
+                action: p.action as ActionKinds,
+                options: p.options as PermissionOptions,
+                subjectId: p.subjectId,
+                subjectType: p.subjectType as SubjectType,
+                userId: p.userId,
+                expireTimeMs: convertToMillis(p.expireTime),
+            })),
+        };
+    }
+
+    async listPermissionsForResource(
+        recordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string
+    ): Promise<ResourcePermissionAssignment[]> {
+        const resourcePermissions =
+            await this._client.resourcePermissionAssignment.findMany({
+                where: {
+                    recordName,
+                    resourceKind,
+                    resourceId,
+                },
+            });
+
+        return resourcePermissions.map((p) => ({
+            id: p.id,
+            recordName: p.recordName,
+            resourceKind: p.resourceKind as ResourceKinds,
+            resourceId: p.resourceId,
+            action: p.action as ActionKinds,
+            options: p.options as PermissionOptions,
+            subjectId: p.subjectId,
+            subjectType: p.subjectType as SubjectType,
+            userId: p.userId,
+            expireTimeMs: convertToMillis(p.expireTime),
+        }));
+    }
+
+    async listPermissionsForMarker(
+        recordName: string,
+        marker: string
+    ): Promise<MarkerPermissionAssignment[]> {
+        const markerPermissions =
+            await this._client.markerPermissionAssignment.findMany({
+                where: {
+                    recordName,
+                    marker,
+                },
+            });
+
+        return markerPermissions.map((p) => ({
+            id: p.id,
+            recordName: p.recordName,
+            resourceKind: p.resourceKind as ResourceKinds,
+            marker: p.marker,
+            action: p.action as ActionKinds,
+            options: p.options as PermissionOptions,
+            subjectId: p.subjectId,
+            subjectType: p.subjectType as SubjectType,
+            userId: p.userId,
+            expireTimeMs: convertToMillis(p.expireTime),
+        }));
+    }
+
+    async listPermissionsForSubject(
+        recordName: string,
+        subjectType: SubjectType,
+        subjectId: string
+    ): Promise<ListPermissionsInRecordResult> {
+        const resourcePermissions =
+            await this._client.resourcePermissionAssignment.findMany({
+                where: {
+                    recordName,
+                    subjectType,
+                    subjectId,
+                },
+            });
+
+        const markerPermissions =
+            await this._client.markerPermissionAssignment.findMany({
+                where: {
+                    recordName,
+                    subjectType,
+                    subjectId,
+                },
+            });
+
+        return {
+            success: true,
+            resourceAssignments: resourcePermissions.map((p) => ({
+                id: p.id,
+                recordName: p.recordName,
+                resourceKind: p.resourceKind as ResourceKinds,
+                resourceId: p.resourceId,
+                action: p.action as ActionKinds,
+                options: p.options as PermissionOptions,
+                subjectId: p.subjectId,
+                subjectType: p.subjectType as SubjectType,
+                userId: p.userId,
+                expireTimeMs: convertToMillis(p.expireTime),
+            })),
+            markerAssignments: markerPermissions.map((p) => ({
+                id: p.id,
+                recordName: p.recordName,
+                resourceKind: p.resourceKind as ResourceKinds,
+                marker: p.marker,
+                action: p.action as ActionKinds,
+                options: p.options as PermissionOptions,
+                subjectId: p.subjectId,
+                subjectType: p.subjectType as SubjectType,
+                userId: p.userId,
+                expireTimeMs: convertToMillis(p.expireTime),
+            })),
+        };
+    }
+
+    async getMarkerPermissionAssignmentById(
+        id: string
+    ): Promise<MarkerPermissionAssignment> {
+        const result = await this._client.markerPermissionAssignment.findUnique(
+            {
+                where: {
+                    id,
+                },
+            }
+        );
+
+        if (!result) {
+            return null;
+        }
+
+        return {
+            id: result.id,
+            recordName: result.recordName,
+            resourceKind: result.resourceKind as ResourceKinds,
+            marker: result.marker,
+            action: result.action as ActionKinds,
+            options: result.options as PermissionOptions,
+            subjectId: result.subjectId,
+            subjectType: result.subjectType as SubjectType,
+            userId: result.userId,
+            expireTimeMs: convertToMillis(result.expireTime),
+        };
+    }
+
+    async getResourcePermissionAssignmentById(
+        id: string
+    ): Promise<ResourcePermissionAssignment> {
+        const result =
+            await this._client.resourcePermissionAssignment.findUnique({
+                where: {
+                    id,
+                },
+            });
+
+        if (!result) {
+            return null;
+        }
+
+        return {
+            id: result.id,
+            recordName: result.recordName,
+            resourceKind: result.resourceKind as ResourceKinds,
+            resourceId: result.resourceId,
+            action: result.action as ActionKinds,
+            options: result.options as PermissionOptions,
+            subjectId: result.subjectId,
+            subjectType: result.subjectType as SubjectType,
+            userId: result.userId,
+            expireTimeMs: convertToMillis(result.expireTime),
         };
     }
 
@@ -334,62 +761,6 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
-    async getUserPolicy(
-        recordName: string,
-        marker: string
-    ): Promise<GetUserPolicyResult> {
-        const policy = await this._client.policy.findUnique({
-            where: {
-                recordName_marker: {
-                    recordName: recordName,
-                    marker,
-                },
-            },
-        });
-        if (policy) {
-            return {
-                success: true,
-                markers: convertMarkers(policy.markers),
-                document: policy.document as unknown as PolicyDocument,
-            };
-        } else {
-            return {
-                success: false,
-                errorCode: 'policy_not_found',
-                errorMessage: `Could not find a user policy for marker ${marker}.`,
-            };
-        }
-    }
-
-    async updateUserPolicy(
-        recordName: string,
-        marker: string,
-        policy: UserPolicyRecord
-    ): Promise<UpdateUserPolicyResult> {
-        await this._client.policy.upsert({
-            where: {
-                recordName_marker: {
-                    recordName,
-                    marker,
-                },
-            },
-            create: {
-                recordName: recordName,
-                marker: marker,
-                document: policy.document as any,
-                markers: policy.markers,
-            },
-            update: {
-                document: policy.document as any,
-                markers: policy.markers,
-            },
-        });
-
-        return {
-            success: true,
-        };
-    }
-
     async assignSubjectRole(
         recordName: string,
         subjectId: string,
@@ -447,21 +818,28 @@ export class PrismaPolicyStore implements PolicyStore {
     }
 }
 
-export interface MongoDBPolicy {
-    _id: string;
-    recordName: string;
-    marker: string;
-    document: PolicyDocument;
-    markers: string[];
-}
-
-export interface MongoDBRole {
-    recordName: string;
-    type: 'user' | 'inst';
+interface ResourcePermission {
     id: string;
-    assignments: AssignedRole[];
+    recordName: string;
+    resourceKind: ResourceKinds;
+    resourceId: string;
+    action: ActionKinds;
+    options: PermissionOptions;
+    subjectId: string;
+    subjectType: SubjectType;
+    userId: string;
+    expireTime: Date;
 }
 
-function policyId(recordName: string, marker: string) {
-    return `${recordName}:${marker}`;
+interface MarkerPermission {
+    id: string;
+    recordName: string;
+    resourceKind: ResourceKinds;
+    marker: string;
+    action: ActionKinds;
+    options: PermissionOptions;
+    subjectId: string;
+    subjectType: SubjectType;
+    userId: string;
+    expireTime: Date;
 }

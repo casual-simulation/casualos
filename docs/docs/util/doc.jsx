@@ -773,6 +773,10 @@ function TypeLink({ type, references, isInUnionOrArray }) {
             return <><a className="type-link" href="https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype">Partial</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
         } else if (type.name === 'Omit' && type.target?.qualifiedName === 'Omit' && type.typeArguments && type.typeArguments.length === 2) {
             return <><a className="type-link" href="https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys">Omit</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>, <TypeLink type={type.typeArguments[1]} references={references}/>&gt;</>
+        } else if(type.name === 'Map' && type.target?.qualifiedName === 'Map' && type.typeArguments && type.typeArguments.length === 2) {
+            return <><a className="type-link" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map">Map</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>, <TypeLink type={type.typeArguments[1]} references={references}/>&gt;</>
+        } else if(type.name === 'Set' && type.target?.qualifiedName === 'Set' && type.typeArguments && type.typeArguments.length === 1) {
+            return <><a className="type-link" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set">Set</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
         }
 
         let href = `#${type.name}`;
@@ -784,7 +788,7 @@ function TypeLink({ type, references, isInUnionOrArray }) {
             }
         } else {
             if (!type.id) {
-                console.log('Missing reference for', type, 'it is likely that the type is not exported from the entry');
+                console.log('Missing reference for', type, 'it is likely that the type is not exported from the entry. ');
             } else {
                 console.log('Missing reference for', type.id, type.name, type, 'it is likely that the type does not have a @docid or @docname comment');
             }

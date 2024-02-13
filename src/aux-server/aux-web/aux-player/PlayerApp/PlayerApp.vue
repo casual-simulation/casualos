@@ -177,6 +177,7 @@
             <bot-tooltips></bot-tooltips>
             <report-inst-dialog></report-inst-dialog>
             <wake-lock></wake-lock>
+            <enable-xr-modal></enable-xr-modal>
 
             <div ref="livekitTracks" class="hidden-livekit-tracks"></div>
         </load-app>

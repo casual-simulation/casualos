@@ -5,7 +5,6 @@ import {
     AuthSession,
     AuthStore,
     AuthUser,
-    PrivacyFeatures,
 } from './AuthStore';
 import {
     NotSupportedError,
@@ -37,7 +36,10 @@ import {
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
-import { parseConnectionToken } from '@casual-simulation/aux-common';
+import {
+    parseConnectionToken,
+    PrivacyFeatures,
+} from '@casual-simulation/aux-common';
 import {
     PrivoClientInterface,
     PrivoFeatureStatus,
@@ -849,7 +851,10 @@ export class AuthController {
                 user.privacyFeatures?.publishData !==
                     privacyFeatures.publishData ||
                 user.privacyFeatures?.allowPublicData !==
-                    privacyFeatures.allowPublicData
+                    privacyFeatures.allowPublicData ||
+                user.privacyFeatures?.allowAI !== privacyFeatures.allowAI ||
+                user.privacyFeatures?.allowPublicInsts !==
+                    privacyFeatures.allowPublicInsts
             ) {
                 console.log(
                     `[AuthController] [completeOpenIDLogin] Updating user privacy features.`
