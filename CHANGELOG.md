@@ -48,6 +48,7 @@
 -   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
 -   Fixed an issue where fingers would trigger click interactions while dragging a bot with the same hand.
 -   Fixed an issue where `portalBackgroundAddress` would render over `miniMapPortalBot`.
+-   Fixed an issue where `.click()`, `.focus()`, and `.blur()` methods would not work on custom app HTML elements.
 
 ## V3.2.13
 
