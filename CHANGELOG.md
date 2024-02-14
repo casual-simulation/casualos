@@ -51,6 +51,8 @@
 -   Fixed an issue where `portalBackgroundAddress` would render over `miniMapPortalBot`.
 -   Fixed an issue where `.click()`, `.focus()`, and `.blur()` methods would not work on custom app HTML elements.
 -   Fixed an issue where `os.unregisterApp()` would not trigger Preact cleanup code.
+-   Fixed an issue where `os.unloadInst()` would not work when going from 2 instances to 1 instance.
+-   Fixed an issue where menuPortal items would remain even if their inst was unloaded.
 
 ## V3.2.13
 
