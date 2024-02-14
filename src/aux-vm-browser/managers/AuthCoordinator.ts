@@ -217,7 +217,25 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 reason,
             });
 
-            const response = await promise;
+            const response = await Promise.race([
+                promise,
+                new Promise<PartitionAuthPermissionResult>((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            type: 'permission_result',
+                            origin,
+                            success: false,
+                            recordName: reason.recordName,
+                            resourceKind: reason.resourceKind,
+                            resourceId: reason.resourceKind,
+                            subjectType: reason.subjectType,
+                            subjectId: reason.subjectId,
+                            errorCode: 'not_authorized',
+                            errorMessage: 'The request expired.',
+                        });
+                    }, 45 * 1000);
+                }),
+            ]);
 
             console.log(
                 `[AuthCoordinator] [${sim.id}] Got permission result`,
