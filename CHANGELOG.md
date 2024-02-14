@@ -42,6 +42,7 @@
 -   Added the ability to support domain-level isolation for insts.
     -   The `VM_ORIGIN` environment variable can now be configured to tell CasualOS to load insts into a unique HTTP Origin so that insts are isolated from each other.
     -   `VM_ORIGIN` is The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used.
+-   Added the ability to request access to private insts that the user does not have permissions for.
 
 ### :bug: Bug Fixes
 
