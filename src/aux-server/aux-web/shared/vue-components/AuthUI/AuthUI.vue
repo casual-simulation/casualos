@@ -12,9 +12,20 @@
                 <p>You are not authorized to view this inst.</p>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button v-if="allowRequestAccess" @click="requestAccess()"
-                    >Request Access</md-button
+                <md-button
+                    v-if="allowRequestAccess"
+                    @click="requestAccess()"
+                    :disabled="requestingAccess"
                 >
+                    <md-progress-spinner
+                        v-if="requestingAccess"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Request Access</span>
+                </md-button>
                 <md-button @click="changeLogin()">Change Login</md-button>
                 <md-button @click="newInst()">New Inst</md-button>
             </md-dialog-actions>
@@ -64,7 +75,16 @@
                 <div>Do you want to grant access?</div>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button class="md-primary" @click="grantAccess()">Grant Access</md-button>
+                <md-button class="md-primary" @click="grantAccess()" :disabled="processing">
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Grant Access</span>
+                </md-button>
                 <md-button @click="denyAccess()">Deny Access</md-button>
             </md-dialog-actions>
         </md-dialog>

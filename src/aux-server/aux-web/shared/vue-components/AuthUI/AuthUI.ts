@@ -31,6 +31,7 @@ export default class AuthUI extends Vue {
     allowRequestAccess: boolean = false;
 
     requestingAccess: boolean = false;
+    processing: boolean = false;
 
     private _simId: string = null;
     private _origin: string = null;
@@ -169,22 +170,23 @@ export default class AuthUI extends Vue {
 
     async grantAccess() {
         if (this._simId && this._origin && this._missingPermissionReason) {
-            const simId = this._simId;
-            const origin = this._origin;
-            await appManager.authCoordinator.respondToPermissionRequest(
-                simId,
-                origin,
-                {
-                    type: 'permission_result',
-                    success: true,
-                    recordName: this._missingPermissionReason.recordName,
-                    resourceKind: this._missingPermissionReason.resourceKind,
-                    resourceId: this._missingPermissionReason.resourceId,
-                    subjectType: this._missingPermissionReason.subjectType,
-                    subjectId: this._missingPermissionReason.subjectId,
-                    origin: origin,
+            try {
+                this.processing = true;
+                const simId = this._simId;
+                const origin = this._origin;
+                const result =
+                    await appManager.authCoordinator.grantAccessToMissingPermission(
+                        simId,
+                        origin,
+                        this._missingPermissionReason
+                    );
+
+                if (result.success === true) {
+                    this.showGrantAccess = false;
                 }
-            );
+            } finally {
+                this.processing = false;
+            }
         }
     }
 
@@ -208,6 +210,7 @@ export default class AuthUI extends Vue {
                     errorMessage: 'User denied access.',
                 }
             );
+            this.showGrantAccess = false;
         }
     }
 }

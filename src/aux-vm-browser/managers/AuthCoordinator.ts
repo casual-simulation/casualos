@@ -25,6 +25,10 @@ import {
     reportInst,
 } from '@casual-simulation/aux-common';
 import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
+import {
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
+} from '@casual-simulation/aux-records';
 
 /**
  * Defines a class that is able to coordinate authentication across multiple simulations.
@@ -198,7 +202,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                     filter(
                         (m) =>
                             m.origin === origin &&
-                            m.type === 'permission_result'
+                            m.type === 'external_permission_result'
                     )
                 )
             );
@@ -215,12 +219,20 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
 
             const response = await promise;
 
-            if (response.type === 'permission_result') {
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Got permission result`,
+                response
+            );
+
+            if (response.type === 'external_permission_result') {
                 console.log(
                     `[AuthCoordinator] [${sim.id}] Got permission result`,
                     response
                 );
-                return response;
+                return {
+                    ...response,
+                    type: 'permission_result',
+                };
             }
         }
         return {
@@ -232,6 +244,58 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
             resourceId: reason.resourceKind,
             subjectType: reason.subjectType,
             subjectId: reason.subjectId,
+            errorCode: 'server_error',
+            errorMessage: 'A server error occurred.',
+        };
+    }
+
+    async grantAccessToMissingPermission(
+        simId: string,
+        origin: string,
+        reason: AuthorizeActionMissingPermission,
+        expireTimeMs: number = null
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            const recordName = reason.recordName;
+            const resourceKind = reason.resourceKind;
+            const resourceId = reason.resourceId;
+            const subjectType = reason.subjectType;
+            const subjectId = reason.subjectId;
+            const result = await sim.auth.primary.grantPermission(recordName, {
+                resourceKind,
+                resourceId,
+                subjectType,
+                subjectId,
+                action: null,
+                options: {},
+                expireTimeMs,
+            });
+
+            if (result.success === true) {
+                sim.sendAuthMessage({
+                    type: 'permission_result',
+                    success: true,
+                    origin,
+                    recordName,
+                    resourceKind,
+                    resourceId,
+                    subjectType,
+                    subjectId,
+                });
+            }
+
+            return result;
+        }
+
+        console.error(
+            '[AuthCoordinator] Could not find simulation to grant access to.',
+            simId,
+            origin,
+            reason
+        );
+        return {
+            success: false,
             errorCode: 'server_error',
             errorMessage: 'A server error occurred.',
         };
