@@ -119,6 +119,12 @@ export class HtmlAppBackend implements AppBackend {
         this.botId = botId;
         this._registerTaskId = registerTaskId;
         this._sub = new Subscription();
+        this._sub.add(() => {
+            this._renderContent('');
+            this._helper.transaction(
+                unregisterHtmlApp(this.appId, this._instanceId)
+            );
+        });
 
         this._helper = helper;
         this._setupObservable = new BehaviorSubject(false);
@@ -195,9 +201,7 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     dispose(): void {
-        this._helper.transaction(
-            unregisterHtmlApp(this.appId, this._instanceId)
-        );
+        this._sub.unsubscribe();
     }
 
     private _renderContent(content: any) {
