@@ -1504,6 +1504,24 @@ export class PolicyController {
                 return assignmentResult;
             }
 
+            console.log(
+                `[PolicyController] [grantMarkerPermission] [userId: ${
+                    request.userId
+                }, recordName: ${recordName}, subjectType: ${
+                    request.permission.subjectType
+                }, subjectId: ${
+                    request.permission.subjectId
+                }, marker: ${marker}, resourceKind: ${
+                    request.permission.resourceKind ?? '(null)'
+                }, action: ${
+                    request.permission.action ?? '(null)'
+                }, expireTimeMs: ${
+                    request.permission.expireTimeMs ?? '(null)'
+                }, permissionId: ${
+                    assignmentResult.permissionAssignment.id
+                }] Granted marker permission.`
+            );
+
             return {
                 success: true,
             };
@@ -1580,6 +1598,10 @@ export class PolicyController {
             if (!deleteResult.success) {
                 return deleteResult;
             }
+
+            console.log(
+                `[PolicyController] [revokeMarkerPermission] [userId: ${request.userId}, permissionId: ${request.permissionId}] Revoked marker permission.`
+            );
 
             return {
                 success: true,
@@ -1674,6 +1696,24 @@ export class PolicyController {
                 return assignmentResult;
             }
 
+            console.log(
+                `[PolicyController] [grantResourcePermission] [userId: ${
+                    request.userId
+                }, recordName: ${recordName}, subjectType: ${
+                    request.permission.subjectType
+                }, subjectId: ${request.permission.subjectId}, resourceKind: ${
+                    request.permission.resourceKind ?? '(null)'
+                }, resourceId: ${
+                    request.permission.resourceId ?? '(null)'
+                }, action: ${
+                    request.permission.action ?? '(null)'
+                }, expireTimeMs: ${
+                    request.permission.expireTimeMs ?? '(null)'
+                }, permissionId: ${
+                    assignmentResult.permissionAssignment.id
+                }] Granted permission for resource.`
+            );
+
             return {
                 success: true,
             };
@@ -1750,6 +1790,10 @@ export class PolicyController {
             if (!deleteResult.success) {
                 return deleteResult;
             }
+
+            console.log(
+                `[PolicyController] [revokeResourcePermission] [userId: ${request.userId}, permissionId: ${request.permissionId}] Revoked resource permission.`
+            );
 
             return {
                 success: true,

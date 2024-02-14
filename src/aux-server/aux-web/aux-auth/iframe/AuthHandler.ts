@@ -10,6 +10,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import {
     AuthData,
+    AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 import {
@@ -36,6 +37,8 @@ import {
     PARENT_EMAIL_FIELD,
     ADDRESS_FIELD,
     GetPlayerConfigResult,
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
@@ -524,6 +527,13 @@ export class AuthHandler implements AuxAuth {
     async cancelLogin() {
         console.log('[AuthHandler] Canceling login.');
         this._canceledLogins.next();
+    }
+
+    async grantPermission(
+        recordName: string,
+        permission: AvailablePermissions
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+        return await authManager.grantPermission(recordName, permission);
     }
 
     private _getTokenExpirationTime(token: string): number {

@@ -5,6 +5,7 @@ import {
     getSessionKey,
 } from './RecordsServer';
 import {
+    DEFAULT_BRANCH_NAME,
     GenericHttpHeaders,
     GenericHttpRequest,
     GenericHttpResponse,
@@ -13796,6 +13797,165 @@ describe('RecordsServer', () => {
                     ]);
                 });
             });
+
+            if (c !== 'anonymous') {
+                describe('permission/request/missing', () => {
+                    it('should emit a permissions request to all the connected devices', async () => {
+                        expectNoWebSocketErrors(connectionId);
+
+                        await websocketController.watchBranch(connectionId, {
+                            type: 'repo/watch_branch',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                        });
+
+                        expectNoWebSocketErrors(connectionId);
+
+                        await server.handleWebsocketRequest(
+                            wsMessage(
+                                connection2,
+                                messageEvent(2, {
+                                    type: 'permission/request/missing',
+                                    reason: {
+                                        type: 'missing_permission',
+                                        recordName,
+                                        resourceKind: 'inst',
+                                        resourceId: inst,
+                                        subjectType: 'user',
+                                        subjectId: connectionInfo2.userId,
+                                        action: 'read',
+                                    },
+                                })
+                            )
+                        );
+
+                        expectNoWebSocketErrors(connection2);
+
+                        expect(
+                            websocketMessenger.getMessages(connection2)
+                        ).toEqual([]);
+                        expect(
+                            websocketMessenger
+                                .getMessages(connectionId)
+                                .slice(2)
+                        ).toEqual([
+                            {
+                                type: 'permission/request/missing',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: inst,
+                                    subjectType: 'user',
+                                    subjectId: connectionInfo2.userId,
+                                    action: 'read',
+                                },
+                                connection: connectionInfo2,
+                                user: {
+                                    userId: connectionInfo2.userId,
+                                    email: 'owner@example.com',
+                                    displayName: null,
+                                },
+                            },
+                        ]);
+                    });
+                });
+
+                describe('permission/request/missing/response', () => {
+                    it('should emit a permissions response to the requesting device', async () => {
+                        expectNoWebSocketErrors(connectionId);
+
+                        await websocketController.watchBranch(connectionId, {
+                            type: 'repo/watch_branch',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                        });
+
+                        expectNoWebSocketErrors(connectionId);
+
+                        await server.handleWebsocketRequest(
+                            wsMessage(
+                                connection2,
+                                messageEvent(2, {
+                                    type: 'permission/request/missing',
+                                    reason: {
+                                        type: 'missing_permission',
+                                        recordName,
+                                        resourceKind: 'inst',
+                                        resourceId: inst,
+                                        subjectType: 'user',
+                                        subjectId: connectionInfo2.userId,
+                                        action: 'read',
+                                    },
+                                })
+                            )
+                        );
+
+                        expectNoWebSocketErrors(connection2);
+
+                        expect(
+                            websocketMessenger.getMessages(connection2)
+                        ).toEqual([]);
+                        expect(
+                            websocketMessenger
+                                .getMessages(connectionId)
+                                .slice(2)
+                        ).toEqual([
+                            {
+                                type: 'permission/request/missing',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: inst,
+                                    subjectType: 'user',
+                                    subjectId: connectionInfo2.userId,
+                                    action: 'read',
+                                },
+                                connection: connectionInfo2,
+                                user: {
+                                    userId: connectionInfo2.userId,
+                                    email: 'owner@example.com',
+                                    displayName: null,
+                                },
+                            },
+                        ]);
+
+                        await server.handleWebsocketRequest(
+                            wsMessage(
+                                connectionId,
+                                messageEvent(3, {
+                                    type: 'permission/request/missing/response',
+                                    success: true,
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: inst,
+                                    subjectType: 'user',
+                                    subjectId: connectionInfo2.userId,
+                                })
+                            )
+                        );
+
+                        expectNoWebSocketErrors(connectionId);
+                        expect(
+                            websocketMessenger.getMessages(connection2)
+                        ).toEqual([
+                            {
+                                type: 'permission/request/missing/response',
+                                success: true,
+                                recordName,
+                                resourceKind: 'inst',
+                                resourceId: inst,
+                                subjectType: 'user',
+                                subjectId: connectionInfo2.userId,
+                                connection: connectionInfo,
+                            },
+                        ]);
+                    });
+                });
+            }
         });
 
         describe('sync/time', () => {

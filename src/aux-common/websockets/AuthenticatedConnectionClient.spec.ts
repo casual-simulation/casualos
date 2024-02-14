@@ -9,8 +9,18 @@ import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { waitAsync } from '../test/TestHelpers';
 import { ClientConnectionState } from './ConnectionClient';
 import { Subject } from 'rxjs';
-import { LoginResultMessage } from './WebsocketEvents';
-import { PartitionAuthRequest, PartitionAuthSource } from '../partitions';
+import {
+    LoginResultMessage,
+    RequestMissingPermissionMessage,
+    RequestMissingPermissionResponseMessage,
+    WebsocketMessage,
+} from './WebsocketEvents';
+import {
+    PartitionAuthExternalPermissionResult,
+    PartitionAuthExternalRequestPermission,
+    PartitionAuthRequest,
+    PartitionAuthSource,
+} from '../partitions';
 
 console.log = jest.fn();
 
@@ -360,6 +370,182 @@ describe('AuthenticatedConnectionClient', () => {
                         sessionId: null,
                         connectionId: 'test_connection_id',
                     },
+                },
+            ]);
+        });
+    });
+
+    describe('permission requests', () => {
+        let indicator: ConnectionIndicator;
+        let loginResult: Subject<LoginResultMessage>;
+        let connectionStates: ClientConnectionState[];
+        let externalRequests: Subject<RequestMissingPermissionMessage>;
+        let externalResponses: Subject<RequestMissingPermissionResponseMessage>;
+
+        beforeEach(() => {
+            indicator = { connectionToken: 'test_connection_token' };
+            inner = new MemoryConnectionClient();
+            inner.origin = 'http://localhost';
+
+            loginResult = new Subject<LoginResultMessage>();
+            externalRequests = new Subject<RequestMissingPermissionMessage>();
+            externalResponses =
+                new Subject<RequestMissingPermissionResponseMessage>();
+            inner.events.set('login_result', loginResult);
+            inner.events.set('permission/request/missing', externalRequests);
+            inner.events.set(
+                'permission/request/missing/response',
+                externalResponses
+            );
+
+            authSource = new PartitionAuthSource(
+                new Map([['http://localhost', indicator]])
+            );
+            subject = new AuthenticatedConnectionClient(inner, authSource);
+
+            connectionStates = [];
+            subject.connectionState.subscribe((state) =>
+                connectionStates.push(state)
+            );
+        });
+
+        it('should send permission requests', async () => {
+            authSource.sendAuthPermissionRequest({
+                type: 'permission_request',
+                origin: 'http://localhost',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'test_record',
+                    action: 'read',
+                    resourceKind: 'inst',
+                    subjectType: 'user',
+                    subjectId: 'test',
+                    resourceId: 'inst',
+                },
+            });
+
+            await waitAsync();
+
+            expect(inner.sentMessages).toEqual([
+                {
+                    type: 'permission/request/missing',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: 'test_record',
+                        action: 'read',
+                        resourceKind: 'inst',
+                        subjectType: 'user',
+                        subjectId: 'test',
+                        resourceId: 'inst',
+                    },
+                },
+            ]);
+        });
+
+        it('should send permissions results', async () => {
+            authSource.sendAuthPermissionResult({
+                type: 'permission_result',
+                success: true,
+                origin: 'http://localhost',
+                recordName: 'test_record',
+                resourceKind: 'inst',
+                subjectType: 'user',
+                subjectId: 'test',
+                resourceId: 'inst',
+            });
+
+            await waitAsync();
+
+            expect(inner.sentMessages).toEqual([
+                {
+                    type: 'permission/request/missing/response',
+                    success: true,
+                    origin: 'http://localhost',
+                    recordName: 'test_record',
+                    resourceKind: 'inst',
+                    subjectType: 'user',
+                    subjectId: 'test',
+                    resourceId: 'inst',
+                },
+            ]);
+        });
+
+        it('should relay permissions requests', async () => {
+            const requests = [] as PartitionAuthExternalRequestPermission[];
+            authSource.onAuthExternalPermissionRequest.subscribe((request) => {
+                requests.push(request);
+            });
+
+            externalRequests.next({
+                type: 'permission/request/missing',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'test_record',
+                    action: 'read',
+                    resourceKind: 'inst',
+                    subjectType: 'user',
+                    subjectId: 'test',
+                    resourceId: 'inst',
+                },
+                user: {
+                    userId: 'test',
+                    displayName: null,
+                    name: 'user',
+                },
+            });
+
+            await waitAsync();
+
+            expect(requests).toEqual([
+                {
+                    type: 'external_permission_request',
+                    origin: 'http://localhost',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: 'test_record',
+                        action: 'read',
+                        resourceKind: 'inst',
+                        subjectType: 'user',
+                        subjectId: 'test',
+                        resourceId: 'inst',
+                    },
+                    user: {
+                        userId: 'test',
+                        displayName: null,
+                        name: 'user',
+                    },
+                },
+            ]);
+        });
+
+        it('should relay permission responses', async () => {
+            const responses = [] as PartitionAuthExternalPermissionResult[];
+            authSource.onAuthExternalPermissionResult.subscribe((response) => {
+                responses.push(response);
+            });
+
+            externalResponses.next({
+                type: 'permission/request/missing/response',
+                success: true,
+                recordName: 'test_record',
+                resourceKind: 'inst',
+                resourceId: 'inst',
+                subjectId: 'test',
+                subjectType: 'user',
+            });
+
+            await waitAsync();
+
+            expect(responses).toEqual([
+                {
+                    type: 'external_permission_result',
+                    origin: 'http://localhost',
+                    success: true,
+                    recordName: 'test_record',
+                    resourceKind: 'inst',
+                    resourceId: 'inst',
+                    subjectId: 'test',
+                    subjectType: 'user',
                 },
             ]);
         });

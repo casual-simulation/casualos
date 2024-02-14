@@ -216,6 +216,28 @@ export const RESOURCE_KIND_VALIDATION = z.union([
     z.literal(INST_RESOURCE_KIND),
 ]);
 
+export const ACTION_KINDS_VALIDATION = z.union([
+    z.literal(CREATE_ACTION),
+    z.literal(READ_ACTION),
+    z.literal(UPDATE_ACTION),
+    z.literal(UPDATE_DATA_ACTION),
+    z.literal(DELETE_ACTION),
+    z.literal(LIST_ACTION),
+    z.literal(SEND_ACTION_ACTION),
+
+    z.literal(ASSIGN_ACTION),
+    z.literal(UNASSIGN_ACTION),
+
+    z.literal(GRANT_ACTION),
+    z.literal(REVOKE_ACTION),
+
+    z.literal(INCREMENT_ACTION),
+    z.literal(COUNT_ACTION),
+
+    z.literal(GRANT_PERMISSION_ACTION),
+    z.literal(REVOKE_PERMISSION_ACTION),
+]);
+
 /**
  * Defines an interface that describes common options for all permissions.
  */

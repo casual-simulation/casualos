@@ -50,6 +50,7 @@ export class TestAuxVM implements AuxVM {
     subVMAdded: Subject<AuxSubVM>;
     subVMRemoved: Subject<AuxSubVM>;
     onAuthMessage: Subject<PartitionAuthMessage>;
+    sentAuthMessages: PartitionAuthMessage[] = [];
 
     grant: string;
 
@@ -189,6 +190,7 @@ export class TestAuxVM implements AuxVM {
     }
 
     async sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        this.sentAuthMessages.push(message);
         this.onAuthMessage.next(message);
     }
 

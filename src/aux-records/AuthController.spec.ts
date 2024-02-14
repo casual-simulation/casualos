@@ -6261,6 +6261,42 @@ describe('AuthController', () => {
         });
     });
 
+    describe('getPublicUserInfo()', () => {
+        it('should return the public info for the given user ID', async () => {
+            await store.saveUser({
+                id: 'myid',
+                email: 'email@example.com',
+                phoneNumber: null,
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            const result = await controller.getPublicUserInfo('myid');
+
+            expect(result).toEqual({
+                success: true,
+                user: {
+                    userId: 'myid',
+                    name: 'Test',
+                    displayName: null,
+                    email: 'email@example.com',
+                },
+            });
+        });
+
+        it('should return null if the user doesnt exist', async () => {
+            const result = await controller.getPublicUserInfo('myid');
+
+            expect(result).toEqual({
+                success: true,
+                user: null,
+            });
+        });
+    });
+
     describe('listEmailRules()', () => {
         it('should return the list of email rules stored in the store', async () => {
             store.emailRules.push({

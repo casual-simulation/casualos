@@ -127,6 +127,7 @@ describe('RecordsManager', () => {
                 .mockResolvedValue('http://localhost:2998'),
             getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
             getComIdWebConfig: jest.fn(),
+            grantPermission: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -172,6 +173,7 @@ describe('RecordsManager', () => {
             providePrivoSignUpInfo: jest.fn(),
             getPolicyUrls: jest.fn(),
             getComIdWebConfig: jest.fn(),
+            grantPermission: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
