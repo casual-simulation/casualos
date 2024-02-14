@@ -609,17 +609,42 @@ export default class PlayerHome extends Vue {
                                         ...this.query,
                                     },
                                 };
+
+                                let hasChange = false;
                                 if (wasStatic) {
-                                    final.query.staticInst = inst;
+                                    if (
+                                        !areEqualInstLists(
+                                            final.query.staticInst,
+                                            inst
+                                        )
+                                    ) {
+                                        final.query.staticInst = inst;
+                                        hasChange = true;
+                                    }
                                 } else {
-                                    final.query.inst = inst;
+                                    if (
+                                        !areEqualInstLists(
+                                            final.query.inst,
+                                            inst
+                                        )
+                                    ) {
+                                        final.query.inst = inst;
+                                        hasChange = true;
+                                    }
                                 }
-                                window.history.pushState(
-                                    {},
-                                    window.document.title
-                                );
-                                this.$router.replace(final);
-                                this._setServer(recordName, inst, wasStatic);
+
+                                if (hasChange) {
+                                    window.history.pushState(
+                                        {},
+                                        window.document.title
+                                    );
+                                    this.$router.replace(final);
+                                    this._setServer(
+                                        recordName,
+                                        inst,
+                                        wasStatic
+                                    );
+                                }
                             }
                         }
 
@@ -694,8 +719,23 @@ export default class PlayerHome extends Vue {
         const record = appManager.getRecordName(owner);
         if (typeof newServer === 'string') {
             await this._loadPrimarySimulation(record, newServer, isStatic);
+
+            if (appManager.simulationManager.simulations.size >= 2) {
+                const simId = getSimulationId(record, newServer, isStatic);
+                await appManager.simulationManager.removeNonMatchingSimulations(
+                    simId
+                );
+            }
         } else if (newServer.length === 1) {
-            await this._loadPrimarySimulation(record, newServer[0], isStatic);
+            const server = newServer[0];
+            await this._loadPrimarySimulation(record, server, isStatic);
+
+            if (appManager.simulationManager.simulations.size >= 2) {
+                const simId = getSimulationId(record, server, isStatic);
+                await appManager.simulationManager.removeNonMatchingSimulations(
+                    simId
+                );
+            }
         } else {
             if (!appManager.simulationManager.primary) {
                 await this._loadPrimarySimulation(
@@ -775,6 +815,13 @@ export default class PlayerHome extends Vue {
             changes.record = recordName;
             hasChange = true;
         }
+        if (
+            hasChange &&
+            botManager.origin.isStatic &&
+            changes.staticInst !== bot.tags.inst
+        ) {
+            changes.inst = changes.staticInst;
+        }
         if (hasChange) {
             await botManager.helper.updateBot(bot, {
                 tags: changes,
@@ -815,6 +862,10 @@ export default class PlayerHome extends Vue {
             const oldValue = this.query[tag];
             const newValue = calculateBotValue(calc, update.bot, tag);
             if (!isEqual(newValue, oldValue)) {
+                // The inst and staticInst tags are handled by the userBotTagsChanged handler
+                if (tag === 'inst' || tag === 'staticInst') {
+                    continue;
+                }
                 changes[tag] = newValue;
             }
         }
@@ -875,5 +926,20 @@ function getFirst(list: string | string[]): string {
         return list[0];
     } else {
         return list;
+    }
+}
+
+function areEqualInstLists(
+    a: string | string[],
+    b: string | string[]
+): boolean {
+    if (Array.isArray(a) && Array.isArray(b)) {
+        return a.length === b.length && isEqual(a, b);
+    } else if (Array.isArray(a)) {
+        return a.length === 1 && a[0] === b;
+    } else if (Array.isArray(b)) {
+        return b.length === 1 && b[0] === a;
+    } else {
+        return a === b;
     }
 }
