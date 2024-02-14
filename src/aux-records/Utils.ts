@@ -470,6 +470,8 @@ export function getStatusCode(
             return 409;
         } else if (response.errorCode === 'permission_not_found') {
             return 404;
+        } else if (response.errorCode === 'message_not_found') {
+            return 404;
         } else {
             return 400;
         }

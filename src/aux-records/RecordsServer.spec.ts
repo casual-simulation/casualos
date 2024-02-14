@@ -13852,6 +13852,11 @@ describe('RecordsServer', () => {
                                     action: 'read',
                                 },
                                 connection: connectionInfo2,
+                                user: {
+                                    userId: connectionInfo2.userId,
+                                    email: 'owner@example.com',
+                                    displayName: null,
+                                },
                             },
                         ]);
                     });
@@ -13910,6 +13915,11 @@ describe('RecordsServer', () => {
                                     action: 'read',
                                 },
                                 connection: connectionInfo2,
+                                user: {
+                                    userId: connectionInfo2.userId,
+                                    email: 'owner@example.com',
+                                    displayName: null,
+                                },
                             },
                         ]);
 
