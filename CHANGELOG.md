@@ -50,6 +50,7 @@
 -   Fixed an issue where fingers would trigger click interactions while dragging a bot with the same hand.
 -   Fixed an issue where `portalBackgroundAddress` would render over `miniMapPortalBot`.
 -   Fixed an issue where `.click()`, `.focus()`, and `.blur()` methods would not work on custom app HTML elements.
+-   Fixed an issue where `os.unregisterApp()` would not trigger Preact cleanup code.
 
 ## V3.2.13
 
