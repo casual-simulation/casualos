@@ -1785,6 +1785,19 @@ export class WebsocketController {
                     user: userInfo,
                 }
             );
+        } else {
+            await this._messenger.sendMessage([connectionId], {
+                type: 'permission/request/missing/response',
+                success: false,
+                recordName: event.reason.recordName,
+                resourceKind: event.reason.resourceKind,
+                resourceId: event.reason.resourceId,
+                subjectType: event.reason.subjectType,
+                subjectId: event.reason.subjectId,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'There are no currently no users available that can grant access to the inst.',
+            });
         }
     }
 

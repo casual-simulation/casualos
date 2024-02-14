@@ -7366,6 +7366,46 @@ describe('WebsocketController', () => {
                     messenger.getMessages(serverConnectionId).slice(3)
                 ).toEqual([]);
             });
+
+            it('should return a unsucessful result if there are no users that can grant access to the inst', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'There are no currently no users available that can grant access to the inst.',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                    },
+                ]);
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([]);
+            });
         });
 
         describe('permission/request/missing/response', () => {
