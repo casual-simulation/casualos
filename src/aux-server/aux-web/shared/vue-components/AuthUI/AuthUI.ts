@@ -9,9 +9,13 @@ import {
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
 import { LoginStatus } from '@casual-simulation/aux-vm';
+import FieldErrors from '../FieldErrors/FieldErrors';
+import { FormError, getFormErrors } from '@casual-simulation/aux-records';
 
 @Component({
-    components: {},
+    components: {
+        'field-errors': FieldErrors,
+    },
 })
 export default class AuthUI extends Vue {
     private _sub: Subscription;
@@ -31,6 +35,8 @@ export default class AuthUI extends Vue {
     allowRequestAccess: boolean = false;
 
     requestingAccess: boolean = false;
+    requestAccessErrors: FormError[] = [];
+    grantAccessErrors: FormError[] = [];
     processing: boolean = false;
 
     private _simId: string = null;
@@ -83,6 +89,7 @@ export default class AuthUI extends Vue {
                 this._simId = e.simulationId;
                 this._origin = e.origin;
                 this._missingPermissionReason = e.reason;
+                this.grantAccessErrors = [];
             })
         );
     }
@@ -150,6 +157,7 @@ export default class AuthUI extends Vue {
             const origin = this._origin;
             try {
                 this.requestingAccess = true;
+                this.requestAccessErrors = [];
                 const result =
                     await appManager.authCoordinator.requestAccessToMissingPermission(
                         simId,
@@ -160,7 +168,7 @@ export default class AuthUI extends Vue {
                 if (result.success === true) {
                     location.reload();
                 } else {
-                    // TODO: show error
+                    this.requestAccessErrors = getFormErrors(result);
                 }
             } finally {
                 this.requestingAccess = false;
@@ -182,7 +190,10 @@ export default class AuthUI extends Vue {
                     );
 
                 if (result.success === true) {
+                    this.grantAccessErrors = [];
                     this.showGrantAccess = false;
+                } else {
+                    this.grantAccessErrors = getFormErrors(result);
                 }
             } finally {
                 this.processing = false;
@@ -207,7 +218,7 @@ export default class AuthUI extends Vue {
                     subjectId: this._missingPermissionReason.subjectId,
                     origin: origin,
                     errorCode: 'not_authorized',
-                    errorMessage: 'User denied access.',
+                    errorMessage: 'The request for access was denied.',
                 }
             );
             this.showGrantAccess = false;

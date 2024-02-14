@@ -368,7 +368,11 @@ export type KnownErrorCodes =
     | 'permission_already_exists'
     | 'comId_not_found'
     | 'comId_already_taken'
-    | 'permission_not_found';
+    | 'permission_not_found'
+    | 'unacceptable_connection_token'
+    | 'invalid_token'
+    | 'unacceptable_connection_id'
+    | 'message_not_found';
 
 /**
  * Gets the status code that should be used for the given response.

@@ -10,6 +10,7 @@
             <md-dialog-title>Not Authorized</md-dialog-title>
             <md-dialog-content>
                 <p>You are not authorized to view this inst.</p>
+                <field-errors :field="null" :errors="requestAccessErrors" />
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button
@@ -73,6 +74,7 @@
             <md-dialog-title>Grant Access?</md-dialog-title>
             <md-dialog-content>
                 <div>Do you want to grant access?</div>
+                <field-errors :field="null" :errors="grantAccessErrors" />
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="grantAccess()" :disabled="processing">
