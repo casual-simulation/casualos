@@ -1798,6 +1798,7 @@ export class WebsocketController {
                 errorMessage:
                     'There are no currently no users available that can grant access to the inst.',
             });
+            return;
         }
     }
 
