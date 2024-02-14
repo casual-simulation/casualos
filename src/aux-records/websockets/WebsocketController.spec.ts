@@ -7183,7 +7183,7 @@ describe('WebsocketController', () => {
             });
         });
 
-        describe.only('permission/request/missing', () => {
+        describe('permission/request/missing', () => {
             beforeEach(async () => {
                 await services.records.createRecord({
                     userId,
@@ -7194,6 +7194,12 @@ describe('WebsocketController', () => {
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
                     connectionToken,
+                });
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    name: 'test user',
                 });
             });
 
@@ -7238,6 +7244,11 @@ describe('WebsocketController', () => {
                             subjectId: device1Info.userId,
                         },
                         connection: connectionInfo(device1Info),
+                        user: {
+                            userId: device1Info.userId,
+                            name: 'test user',
+                            displayName: null,
+                        },
                     },
                 ]);
 
@@ -7353,7 +7364,7 @@ describe('WebsocketController', () => {
             });
         });
 
-        describe.only('permission/request/missing/response', () => {
+        describe('permission/request/missing/response', () => {
             beforeEach(async () => {
                 await services.records.createRecord({
                     userId,

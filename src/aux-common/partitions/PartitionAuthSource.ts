@@ -3,6 +3,7 @@ import {
     AuthorizeActionMissingPermission,
     ConnectionIndicator,
     DenialReason,
+    PublicUserInfo,
     ResourceKinds,
     SubjectType,
 } from '../common';
@@ -359,6 +360,11 @@ export interface PartitionAuthExternalRequestPermission {
      * The reason why permission is being requested.
      */
     reason: AuthorizeActionMissingPermission;
+
+    /**
+     * The information about the user that is requesting the permission.
+     */
+    user: PublicUserInfo | null;
 }
 
 export type PartitionAuthExternalPermissionResult =

@@ -6265,8 +6265,8 @@ describe('AuthController', () => {
         it('should return the public info for the given user ID', async () => {
             await store.saveUser({
                 id: 'myid',
-                email: 'email',
-                phoneNumber: 'phonenumber',
+                email: 'email@example.com',
+                phoneNumber: null,
                 name: 'Test',
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',

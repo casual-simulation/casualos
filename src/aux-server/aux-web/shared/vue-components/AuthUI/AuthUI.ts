@@ -26,6 +26,10 @@ export default class AuthUI extends Vue {
      * Whether the "User Requests Access" dialog should be shown.
      */
     showGrantAccess: boolean = false;
+    requestingUserName: string = null;
+    requestingUserDisplayName: string = null;
+    requestingUserId: string = null;
+
     showAccountInfo: boolean = false;
     loginStatus: LoginStatus = null;
 
@@ -86,6 +90,9 @@ export default class AuthUI extends Vue {
         this._sub.add(
             appManager.authCoordinator.onRequestAccess.subscribe((e) => {
                 this.showGrantAccess = true;
+                this.requestingUserName = e.user?.name;
+                this.requestingUserDisplayName = e.user?.displayName;
+                this.requestingUserId = e.user?.userId;
                 this._simId = e.simulationId;
                 this._origin = e.origin;
                 this._missingPermissionReason = e.reason;

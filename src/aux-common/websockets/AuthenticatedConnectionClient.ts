@@ -105,6 +105,7 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
                 type: 'external_permission_request',
                 origin: this.origin,
                 reason: request.reason,
+                user: request.user,
             });
         });
 

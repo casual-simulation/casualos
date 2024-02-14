@@ -22,6 +22,7 @@ import {
     AuthorizeActionMissingPermission,
     PartitionAuthPermissionResult,
     PartitionAuthRequest,
+    PublicUserInfo,
     reportInst,
 } from '@casual-simulation/aux-common';
 import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
@@ -107,6 +108,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                                 simulationId: sim.id,
                                 origin: msg.origin,
                                 reason: msg.reason,
+                                user: msg.user,
                             });
                         }
                     })
@@ -557,4 +559,9 @@ export interface RequestAccessEvent {
     simulationId: string;
     origin: string;
     reason: AuthorizeActionMissingPermission;
+
+    /**
+     * The info about the user that is requesting the permission.
+     */
+    user: PublicUserInfo | null;
 }

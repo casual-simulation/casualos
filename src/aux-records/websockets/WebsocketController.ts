@@ -62,6 +62,7 @@ import {
     NotSupportedError,
     ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
+    PublicUserInfo,
 } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
@@ -1750,6 +1751,19 @@ export class WebsocketController {
         );
 
         if (connections.length > 0) {
+            const userInfoResult = await this._auth.getPublicUserInfo(
+                connection.userId
+            );
+            let userInfo: PublicUserInfo | null = null;
+            if (userInfoResult.success === false) {
+                console.error(
+                    '[WebsocketController] [requestMissingPermission] Error while getting user info.',
+                    userInfoResult
+                );
+            } else {
+                userInfo = userInfoResult.user;
+            }
+
             const inst = `${event.reason.resourceKind}/${event.reason.resourceId}`;
             const branch = `${event.reason.subjectType}/${event.reason.subjectId}`;
             await this._connectionStore.saveBranchConnection({
@@ -1768,6 +1782,7 @@ export class WebsocketController {
                     type: 'permission/request/missing',
                     reason: event.reason,
                     connection: connectionInfo(connection),
+                    user: userInfo,
                 }
             );
         }

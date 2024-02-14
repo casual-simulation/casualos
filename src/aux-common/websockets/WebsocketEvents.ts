@@ -23,6 +23,7 @@ import {
 import {
     ACTION_KINDS_VALIDATION,
     INST_ACTION_KINDS_VALIDATION,
+    PublicUserInfo,
     READ_ACTION,
     RESOURCE_KIND_VALIDATION,
     ResourceKinds,
@@ -1145,6 +1146,11 @@ export interface RequestMissingPermissionMessage {
      * The info of session that requested the permission.
      */
     connection?: ConnectionInfo;
+
+    /**
+     * The info about the user that is requesting the permission.
+     */
+    user?: PublicUserInfo;
 }
 export const requestMissingPermissionMessageSchema = z.object({
     type: z.literal('permission/request/missing'),

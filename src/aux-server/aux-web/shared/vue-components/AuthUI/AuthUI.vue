@@ -73,7 +73,10 @@
         >
             <md-dialog-title>Grant Access?</md-dialog-title>
             <md-dialog-content>
-                <div>Do you want to grant access?</div>
+                <p>
+                    Do you want to grant access to {{ requestingUserName || requestingUserId }}
+                    <span v-if="requestingUserDisplayName">({{ requestingUserDisplayName }})</span>?
+                </p>
                 <field-errors :field="null" :errors="grantAccessErrors" />
             </md-dialog-content>
             <md-dialog-actions>

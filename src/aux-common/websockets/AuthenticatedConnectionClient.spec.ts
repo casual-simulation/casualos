@@ -487,6 +487,11 @@ describe('AuthenticatedConnectionClient', () => {
                     subjectId: 'test',
                     resourceId: 'inst',
                 },
+                user: {
+                    userId: 'test',
+                    displayName: null,
+                    name: 'user',
+                },
             });
 
             await waitAsync();
@@ -503,6 +508,11 @@ describe('AuthenticatedConnectionClient', () => {
                         subjectType: 'user',
                         subjectId: 'test',
                         resourceId: 'inst',
+                    },
+                    user: {
+                        userId: 'test',
+                        displayName: null,
+                        name: 'user',
                     },
                 },
             ]);
