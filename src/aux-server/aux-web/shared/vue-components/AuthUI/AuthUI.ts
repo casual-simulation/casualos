@@ -98,7 +98,8 @@ export default class AuthUI extends Vue {
                 ) {
                     this.showGrantAccess = true;
                     this.requestingUserName = e.user?.name ?? e.user.email;
-                    this.requestingUserDisplayName = e.user?.displayName;
+                    this.requestingUserDisplayName =
+                        e.user?.displayName ?? e.user.email;
                     this.requestingUserId =
                         e.user?.userId ?? e.reason.subjectId;
                     this.expireTimeMs = 1 * 60 * 60 * 1000; // 1 hour in ms

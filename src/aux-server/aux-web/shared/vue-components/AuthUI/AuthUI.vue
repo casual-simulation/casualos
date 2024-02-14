@@ -74,9 +74,14 @@
             <md-dialog-title>Grant Access?</md-dialog-title>
             <md-dialog-content>
                 <p>
-                    Do you want to grant access to {{ requestingUserName }}
-                    <span v-if="requestingUserDisplayName"
-                        >({{ requestingUserDisplayName || requestingUserId }})</span
+                    Do you want to grant access to {{ requestingUserName
+                    }}<span
+                        v-if="
+                            requestingUserDisplayName &&
+                            requestingUserDisplayName !== requestingUserName
+                        "
+                    >
+                        ({{ requestingUserDisplayName || requestingUserId }})</span
                     >?
                 </p>
                 <md-field>
