@@ -690,6 +690,129 @@ describe('AuthCoordinator', () => {
             ]);
         });
 
+        it('should use the given expire time', async () => {
+            authMock.grantPermission.mockResolvedValueOnce({
+                success: true,
+            } as GrantResourcePermissionResult);
+
+            const result = await manager.grantAccessToMissingPermission(
+                'sim-1',
+                origin,
+                {
+                    type: 'missing_permission',
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+                1000
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await waitAsync();
+
+            expect(authMock.grantPermission).toHaveBeenCalledWith(
+                'recordName',
+                {
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: null,
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                    expireTimeMs: 1000,
+                    options: {},
+                }
+            );
+
+            const vm = vms.get('sim-1');
+
+            expect(vm?.sentAuthMessages).toEqual([
+                {
+                    type: 'permission_result',
+                    success: true,
+                    origin,
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+            ]);
+        });
+
+        it('should use the given actions', async () => {
+            authMock.grantPermission.mockResolvedValue({
+                success: true,
+            } as GrantResourcePermissionResult);
+
+            const result = await manager.grantAccessToMissingPermission(
+                'sim-1',
+                origin,
+                {
+                    type: 'missing_permission',
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+                null,
+                ['read', 'update']
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await waitAsync();
+
+            expect(authMock.grantPermission).toHaveBeenCalledWith(
+                'recordName',
+                {
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                    expireTimeMs: null,
+                    options: {},
+                }
+            );
+            expect(authMock.grantPermission).toHaveBeenCalledWith(
+                'recordName',
+                {
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'update',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                    expireTimeMs: null,
+                    options: {},
+                }
+            );
+
+            const vm = vms.get('sim-1');
+
+            expect(vm?.sentAuthMessages).toEqual([
+                {
+                    type: 'permission_result',
+                    success: true,
+                    origin,
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+            ]);
+        });
+
         it('should not send a response if the permission was not granted', async () => {
             authMock.grantPermission.mockResolvedValueOnce({
                 success: false,

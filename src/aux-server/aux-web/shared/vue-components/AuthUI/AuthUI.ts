@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import {
+    ActionKinds,
     AuthorizeActionMissingPermission,
     Bot,
     toast,
@@ -42,6 +43,8 @@ export default class AuthUI extends Vue {
     requestAccessErrors: FormError[] = [];
     grantAccessErrors: FormError[] = [];
     processing: boolean = false;
+    expireTimeMs: number = 0;
+    grantPermissionLevel: 'full-access' | 'read-only' = 'full-access';
 
     private _simId: string = null;
     private _origin: string = null;
@@ -98,6 +101,8 @@ export default class AuthUI extends Vue {
                     this.requestingUserDisplayName = e.user?.displayName;
                     this.requestingUserId =
                         e.user?.userId ?? e.reason.subjectId;
+                    this.expireTimeMs = 1 * 60 * 60 * 1000; // 1 hour in ms
+                    this.grantPermissionLevel = 'full-access';
                     this._simId = e.simulationId;
                     this._origin = e.origin;
                     this._missingPermissionReason = e.reason;
@@ -195,11 +200,21 @@ export default class AuthUI extends Vue {
                 this.processing = true;
                 const simId = this._simId;
                 const origin = this._origin;
+                const expireTimeMs =
+                    this.expireTimeMs === 0
+                        ? null
+                        : Date.now() + this.expireTimeMs;
+                const actions: ActionKinds[] =
+                    this.grantPermissionLevel === 'full-access'
+                        ? null
+                        : ['read'];
                 const result =
                     await appManager.authCoordinator.grantAccessToMissingPermission(
                         simId,
                         origin,
-                        this._missingPermissionReason
+                        this._missingPermissionReason,
+                        expireTimeMs,
+                        actions
                     );
 
                 if (result.success === true) {

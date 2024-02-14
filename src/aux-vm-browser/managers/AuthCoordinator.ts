@@ -19,6 +19,7 @@ import {
 import { AuthHelper } from './AuthHelper';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import {
+    ActionKinds,
     AuthorizeActionMissingPermission,
     PartitionAuthExternalPermissionResult,
     PartitionAuthPermissionResult,
@@ -276,7 +277,8 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         simId: string,
         origin: string,
         reason: AuthorizeActionMissingPermission,
-        expireTimeMs: number = null
+        expireTimeMs: number = null,
+        actions: ActionKinds[] = null
     ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
         const sim = this._simulationManager.simulations.get(simId);
         if (sim) {
@@ -285,17 +287,55 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
             const resourceId = reason.resourceId;
             const subjectType = reason.subjectType;
             const subjectId = reason.subjectId;
-            const result = await sim.auth.primary.grantPermission(recordName, {
-                resourceKind,
-                resourceId,
-                subjectType,
-                subjectId,
-                action: null,
-                options: {},
-                expireTimeMs,
-            });
 
-            if (result.success === true) {
+            if (!actions) {
+                const result = await sim.auth.primary.grantPermission(
+                    recordName,
+                    {
+                        resourceKind,
+                        resourceId,
+                        subjectType,
+                        subjectId,
+                        action: null,
+                        options: {},
+                        expireTimeMs,
+                    }
+                );
+
+                if (result.success === true) {
+                    sim.sendAuthMessage({
+                        type: 'permission_result',
+                        success: true,
+                        origin,
+                        recordName,
+                        resourceKind,
+                        resourceId,
+                        subjectType,
+                        subjectId,
+                    });
+                }
+
+                return result;
+            } else {
+                for (let action of actions) {
+                    const result = await sim.auth.primary.grantPermission(
+                        recordName,
+                        {
+                            resourceKind,
+                            resourceId,
+                            subjectType,
+                            subjectId,
+                            action: action as any,
+                            options: {},
+                            expireTimeMs,
+                        }
+                    );
+
+                    if (result.success === false) {
+                        return result;
+                    }
+                }
+
                 sim.sendAuthMessage({
                     type: 'permission_result',
                     success: true,
@@ -306,9 +346,11 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                     subjectType,
                     subjectId,
                 });
-            }
 
-            return result;
+                return {
+                    success: true,
+                };
+            }
         }
 
         console.error(

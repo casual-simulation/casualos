@@ -79,6 +79,28 @@
                         >({{ requestingUserDisplayName || requestingUserId }})</span
                     >?
                 </p>
+                <md-field>
+                    <label for="grantPermissionLevel">Access Level</label>
+                    <md-select
+                        v-model="grantPermissionLevel"
+                        name="grantPermissionLevel"
+                        id="grantPermissionLevel"
+                    >
+                        <md-option value="full-access">Full Access</md-option>
+                        <md-option value="read-only">Read Only</md-option>
+                    </md-select>
+                </md-field>
+
+                <md-field>
+                    <label for="expireTimeMs">Expires</label>
+                    <md-select v-model="expireTimeMs" name="expireTimeMs" id="expireTimeMs">
+                        <md-option :value="1 * 60 * 60 * 1000">1 Hour</md-option>
+                        <md-option :value="6 * 60 * 60 * 1000">6 Hours</md-option>
+                        <md-option :value="24 * 60 * 60 * 1000">1 Day</md-option>
+                        <md-option :value="7 * 24 * 60 * 60 * 1000">1 Week</md-option>
+                        <md-option :value="0">Never</md-option>
+                    </md-select>
+                </md-field>
                 <field-errors :field="null" :errors="grantAccessErrors" />
             </md-dialog-content>
             <md-dialog-actions>
