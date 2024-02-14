@@ -1944,6 +1944,7 @@ export class AuthController {
                 user: {
                     userId: result.id,
                     name: result.name,
+                    email: result.email,
                     displayName,
                 },
             };

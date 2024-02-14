@@ -17,4 +17,10 @@ export interface PublicUserInfo {
      * Null if the user has not set a display name.
      */
     displayName: string | null;
+
+    /**
+     * The email of the user.
+     * May be omitted.
+     */
+    email?: string;
 }

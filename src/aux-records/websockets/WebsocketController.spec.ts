@@ -7196,10 +7196,13 @@ describe('WebsocketController', () => {
                     connectionToken,
                 });
 
-                const user = await store.findUser(userId);
                 await store.saveUser({
-                    ...user,
+                    id: device1Info.userId,
                     name: 'test user',
+                    email: 'device1@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
                 });
             });
 
@@ -7248,6 +7251,7 @@ describe('WebsocketController', () => {
                             userId: device1Info.userId,
                             name: 'test user',
                             displayName: null,
+                            email: 'device1@example.com',
                         },
                     },
                 ]);

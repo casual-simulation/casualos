@@ -74,13 +74,15 @@
             <md-dialog-title>Grant Access?</md-dialog-title>
             <md-dialog-content>
                 <p>
-                    Do you want to grant access to {{ requestingUserName || requestingUserId }}
-                    <span v-if="requestingUserDisplayName">({{ requestingUserDisplayName }})</span>?
+                    Do you want to grant access to {{ requestingUserName }}
+                    <span v-if="requestingUserDisplayName"
+                        >({{ requestingUserDisplayName || requestingUserId }})</span
+                    >?
                 </p>
                 <field-errors :field="null" :errors="grantAccessErrors" />
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button class="md-primary" @click="grantAccess()" :disabled="processing">
+                <md-button @click="grantAccess()" :disabled="processing">
                     <md-progress-spinner
                         v-if="processing"
                         md-mode="indeterminate"

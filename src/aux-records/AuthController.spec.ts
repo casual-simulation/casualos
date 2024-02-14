@@ -6282,6 +6282,7 @@ describe('AuthController', () => {
                     userId: 'myid',
                     name: 'Test',
                     displayName: null,
+                    email: 'email@example.com',
                 },
             });
         });

@@ -89,14 +89,20 @@ export default class AuthUI extends Vue {
         );
         this._sub.add(
             appManager.authCoordinator.onRequestAccess.subscribe((e) => {
-                this.showGrantAccess = true;
-                this.requestingUserName = e.user?.name;
-                this.requestingUserDisplayName = e.user?.displayName;
-                this.requestingUserId = e.user?.userId;
-                this._simId = e.simulationId;
-                this._origin = e.origin;
-                this._missingPermissionReason = e.reason;
-                this.grantAccessErrors = [];
+                if (
+                    e.reason.subjectType === 'user' &&
+                    e.reason.resourceKind === 'inst'
+                ) {
+                    this.showGrantAccess = true;
+                    this.requestingUserName = e.user?.name ?? e.user.email;
+                    this.requestingUserDisplayName = e.user?.displayName;
+                    this.requestingUserId =
+                        e.user?.userId ?? e.reason.subjectId;
+                    this._simId = e.simulationId;
+                    this._origin = e.origin;
+                    this._missingPermissionReason = e.reason;
+                    this.grantAccessErrors = [];
+                }
             })
         );
     }
