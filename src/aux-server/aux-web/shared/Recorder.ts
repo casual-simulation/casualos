@@ -22,11 +22,19 @@ export class Recorder {
                 options.audio,
                 'microphone'
             );
+            if (videoAudio) {
+                console.log(
+                    '[Recorder] Recording video with microphone audio.'
+                );
+            }
             const videoMedia = await navigator.mediaDevices.getUserMedia({
                 audio: videoAudio,
                 video: options.video,
             });
             const screenAudio = isRecordingAudioSource(options.audio, 'screen');
+            if (screenAudio) {
+                console.log('[Recorder] Recording video with screen audio.');
+            }
             const screenMedia = await navigator.mediaDevices.getDisplayMedia({
                 audio: screenAudio,
                 video: options.screen,
@@ -40,6 +48,8 @@ export class Recorder {
                         video: true,
                         screen: false,
                     },
+                    mimeType: options.mimeType,
+                    bitsPerSecond: options.bitsPerSecond,
                 },
                 {
                     stream: screenMedia,
@@ -48,6 +58,8 @@ export class Recorder {
                         video: false,
                         screen: true,
                     },
+                    mimeType: options.mimeType,
+                    bitsPerSecond: options.bitsPerSecond,
                 },
             ]);
         } else if (options.video) {
@@ -70,6 +82,8 @@ export class Recorder {
                         video: true,
                         screen: false,
                     },
+                    mimeType: options.mimeType,
+                    bitsPerSecond: options.bitsPerSecond,
                 },
             ]);
         } else if (options.screen) {
@@ -82,7 +96,10 @@ export class Recorder {
             const screenAudio = isRecordingAudioSource(options.audio, 'screen');
             const screenMedia = await navigator.mediaDevices.getDisplayMedia({
                 audio: screenAudio,
-                video: true,
+                video: {
+                    width: { ideal: window.screen.width },
+                    height: { ideal: window.screen.height },
+                },
             });
 
             const recordMicrophone = isRecordingAudioSource(
@@ -90,25 +107,47 @@ export class Recorder {
                 'microphone'
             );
             if (recordMicrophone) {
+                console.log(
+                    '[Recorder] Recording screen with microphone audio'
+                );
                 const microphoneMedia =
                     await navigator.mediaDevices.getUserMedia({
                         audio: true,
                     });
 
-                const mixer = new MultiStreamsMixer([
-                    screenMedia,
-                    microphoneMedia,
-                ]);
+                let tracks: MediaStreamTrack[] = [];
+                let mixer: MultiStreamsMixer;
+                if (screenAudio) {
+                    // The MultiStreamsMixer is really bad at mixing video, so we only mix audio using it.
+                    mixer = new MultiStreamsMixer([
+                        new MediaStream([...screenMedia.getAudioTracks()]),
+                        new MediaStream([...microphoneMedia.getAudioTracks()]),
+                    ]);
+
+                    tracks = [
+                        ...screenMedia.getVideoTracks(),
+                        ...mixer.getMixedStream().getAudioTracks(),
+                    ];
+                } else {
+                    tracks = [
+                        ...screenMedia.getTracks(),
+                        ...microphoneMedia.getTracks(),
+                    ];
+                }
+
+                const recorder = new MediaStream(tracks);
 
                 return this._recordMedia([
                     {
-                        stream: mixer.getMixedStream(),
-                        mixer,
+                        stream: recorder,
                         options: {
                             audio: options.audio,
                             video: false,
                             screen: true,
                         },
+                        mixer,
+                        mimeType: options.mimeType,
+                        bitsPerSecond: options.bitsPerSecond,
                     },
                 ]);
             } else {
@@ -120,6 +159,8 @@ export class Recorder {
                             video: false,
                             screen: true,
                         },
+                        mimeType: options.mimeType,
+                        bitsPerSecond: options.bitsPerSecond,
                     },
                 ]);
             }
@@ -139,6 +180,8 @@ export class Recorder {
                             video: false,
                             screen: false,
                         },
+                        mimeType: options.mimeType,
+                        bitsPerSecond: options.bitsPerSecond,
                     },
                 ]);
             } else {
@@ -180,7 +223,9 @@ export class Recorder {
                             stream: mixed,
                             mixer,
                             // mediaStreamsToStart: [microphoneMedia, screenMedia],
-                            mimeType: 'audio/ogg; codecs=opus',
+                            mimeType:
+                                options.mimeType ?? 'audio/ogg; codecs=opus',
+                            bitsPerSecond: options.bitsPerSecond,
                             options: {
                                 audio: options.audio,
                                 video: false,
@@ -202,6 +247,8 @@ export class Recorder {
                                 video: false,
                                 screen: false,
                             },
+                            mimeType: options.mimeType,
+                            bitsPerSecond: options.bitsPerSecond,
                         },
                     ]);
                 } else if (screenAudio) {
@@ -218,6 +265,8 @@ export class Recorder {
                                 video: false,
                                 screen: false,
                             },
+                            mimeType: options.mimeType,
+                            bitsPerSecond: options.bitsPerSecond,
                         },
                     ]);
                 }
@@ -235,11 +284,37 @@ export class Recorder {
             options: RecordingOptions;
             mixer?: MultiStreamsMixer;
             mimeType?: string;
+            bitsPerSecond?: number;
+            videoBitsPerSecond?: number;
+            audioBitsPerSecond?: number;
             mediaStreamsToStart?: MediaStream[];
         }[]
     ) {
         const promises = media.map((media) => {
-            const recorder = new MediaRecorder(media.stream);
+            const mimeType =
+                media.mimeType ??
+                getIdealMimeType(media.options.video || media.options.screen);
+            const bitsPerSecond = media.bitsPerSecond;
+            const videoBitsPerSecond =
+                media.videoBitsPerSecond ?? bitsPerSecond
+                    ? undefined
+                    : 10 * 1024 * 1024;
+            const audioBitsPerSecond =
+                media.audioBitsPerSecond ?? bitsPerSecond
+                    ? undefined
+                    : 48 * 1024;
+            console.log('[Recorder] Using settings', {
+                mimeType,
+                videoBitsPerSecond,
+                audioBitsPerSecond,
+                bitsPerSecond,
+            });
+            const recorder = new MediaRecorder(media.stream, {
+                mimeType,
+                bitsPerSecond,
+                videoBitsPerSecond,
+                audioBitsPerSecond,
+            });
 
             if (media.mixer && (media.options.video || media.options.screen)) {
                 media.mixer.frameInterval = 1;
@@ -257,7 +332,7 @@ export class Recorder {
                         recorder.onstop = () => {
                             try {
                                 const data = new Blob(chunks, {
-                                    type: media.mimeType ?? recorder.mimeType,
+                                    type: mimeType,
                                 });
 
                                 if (media.mixer) {
@@ -328,4 +403,46 @@ function isRecordingAudioSource(
         audio === true ||
         (Array.isArray(audio) && audio.includes(source as any))
     );
+}
+
+function getIdealMimeType(containsVideo: boolean): string {
+    if (containsVideo) {
+        return getIdealVideoMimeType();
+    } else {
+        return getIdealAudioMimeType();
+    }
+}
+
+function getIdealVideoMimeType(): string {
+    const videoCodecs = ['vp9', 'av1', 'vp8', 'h264'];
+
+    const containers = ['video/mp4', 'video/webm', 'video/x-matroska'];
+
+    for (let container of containers) {
+        for (let codec of videoCodecs) {
+            const type = `${container};codecs="${codec}"`;
+            if (MediaRecorder.isTypeSupported(type)) {
+                return type;
+            }
+        }
+    }
+
+    return undefined;
+}
+
+function getIdealAudioMimeType(): string {
+    const containers = ['audio/mp3', 'audio/wav', 'audio/webm'];
+
+    const codecs = ['opus', 'aac'];
+
+    for (let container of containers) {
+        for (let codec of codecs) {
+            const type = `${container};codecs="${codec}"`;
+            if (MediaRecorder.isTypeSupported(type)) {
+                return type;
+            }
+        }
+    }
+
+    return undefined;
 }
