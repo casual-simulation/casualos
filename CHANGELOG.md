@@ -45,6 +45,9 @@
     -   `VM_ORIGIN` is The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used.
 -   Added the ability to request access to private insts that the user does not have permissions for.
 -   Added the ability to customize the [MIME type](https://developer.mozilla.org/en-US/docs/Glossary/MIME_type) and bitrate of recordings made with `experiment.beginRecording()` and `experiment.endRecording()`.
+-   Added the ability to track rate limits for the WebSocket API separately from the HTTP API.
+    -   The `websocketRateLimit` property on the `SERVER_CONFIG` controls the websockets rate limits. If not specified, then the options from `rateLimit` will be used for websockets and HTTP.
+    -   Additionally, the `websocketRateLimitPrefix` in `redis` controls the namespace that values are stored at in Redis. If not specified, then the `rateLimitPrefix` will be used for both.
 
 ### :bug: Bug Fixes
 
