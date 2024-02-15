@@ -43,6 +43,7 @@
     -   The `VM_ORIGIN` environment variable can now be configured to tell CasualOS to load insts into a unique HTTP Origin so that insts are isolated from each other.
     -   `VM_ORIGIN` is The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used.
 -   Added the ability to request access to private insts that the user does not have permissions for.
+-   Added the ability to customize the [MIME type](https://developer.mozilla.org/en-US/docs/Glossary/MIME_type) and bitrate of recordings made with `experiment.beginRecording()` and `experiment.endRecording()`.
 
 ### :bug: Bug Fixes
 
@@ -54,6 +55,7 @@
 -   Fixed an issue where `os.unloadInst()` would not work when going from 2 instances to 1 instance.
 -   Fixed an issue where menuPortal items would remain even if their inst was unloaded.
 -   Fixed an issue where it was possible to have multiple login attempts at once by calling `os.requestAuthBot()` multiple times without waiting for one to complete.
+-   Fixed some issues with `experiment.beginRecording()` and `experiment.endRecording()` where recording the screen with audio might fail in some cases.
 
 ## V3.2.13
 

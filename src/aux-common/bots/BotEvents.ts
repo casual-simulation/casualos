@@ -2530,6 +2530,40 @@ export interface RecordingOptions {
      * Defaults to false.
      */
     screen: boolean;
+
+    /**
+     * The MIME type that should be produced.
+     * If supported, then the recorded file(s) will be in this format.
+     * If not supported, then the recording will fail.
+     * If not provided, then a default will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_codecs for more information.
+     */
+    mimeType?: string;
+
+    /**
+     * The ideal number of bits per second that the recording should use.
+     * If omitted, then the videoBitsPerSecond and audioBitsPerSecond  settings will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#bitspersecond for more information.
+     */
+    bitsPerSecond?: number;
+
+    /**
+     * The ideal number of bits per second that the video portion of the recording should use.
+     * If omitted, then a bitrate of 1mbps will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#videobitspersecond for more information.
+     */
+    videoBitsPerSecond?: number;
+
+    /**
+     * The ideal number of bits per second that the audio portion of the recording should use.
+     * If omitted then a bitrake of 48kbps will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#audiobitspersecond for more information.
+     */
+    audioBitsPerSecond?: number;
 }
 
 /**
