@@ -203,6 +203,10 @@ export class Server {
             }
         }
 
+        if (options.websocketRateLimit && options.redis) {
+            builder.useRedisWebsocketRateLimit();
+        }
+
         if (options.redis && options.redis.websocketConnectionNamespace) {
             builder.useRedisWebsocketConnectionStore();
         }
