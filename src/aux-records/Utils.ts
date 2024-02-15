@@ -368,7 +368,11 @@ export type KnownErrorCodes =
     | 'permission_already_exists'
     | 'comId_not_found'
     | 'comId_already_taken'
-    | 'permission_not_found';
+    | 'permission_not_found'
+    | 'unacceptable_connection_token'
+    | 'invalid_token'
+    | 'unacceptable_connection_id'
+    | 'message_not_found';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -465,6 +469,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'comId_already_taken') {
             return 409;
         } else if (response.errorCode === 'permission_not_found') {
+            return 404;
+        } else if (response.errorCode === 'message_not_found') {
             return 404;
         } else {
             return 400;

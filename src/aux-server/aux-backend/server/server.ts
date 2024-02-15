@@ -203,6 +203,10 @@ export class Server {
             }
         }
 
+        if (options.websocketRateLimit && options.redis) {
+            builder.useRedisWebsocketRateLimit();
+        }
+
         if (options.redis && options.redis.websocketConnectionNamespace) {
             builder.useRedisWebsocketConnectionStore();
         }
@@ -372,9 +376,11 @@ export class Server {
                 }
 
                 if (file.body instanceof Binary) {
-                    res.status(200).send(file.body.buffer);
+                    res.status(200)
+                        .contentType(file.mimeType)
+                        .send(file.body.buffer);
                 } else {
-                    res.status(200).send(file.body);
+                    res.status(200).contentType(file.mimeType).send(file.body);
                 }
             })
         );
@@ -396,9 +402,11 @@ export class Server {
                 }
 
                 if (file.body instanceof Binary) {
-                    res.status(200).send(file.body.buffer);
+                    res.status(200)
+                        .contentType(file.mimeType)
+                        .send(file.body.buffer);
                 } else {
-                    res.status(200).send(file.body);
+                    res.status(200).contentType(file.mimeType).send(file.body);
                 }
             })
         );

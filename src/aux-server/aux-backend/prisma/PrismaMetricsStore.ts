@@ -101,7 +101,7 @@ export class PrismaMetricsStore implements MetricsStore {
             totalInsts: totalInsts,
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
-                    result.studio.subscriptionStatus,
+                    result.studio?.subscriptionStatus,
                 convertToMillis(
                     result.owner?.subscriptionPeriodStart ||
                         result.studio?.subscriptionPeriodStart
@@ -283,7 +283,7 @@ export class PrismaMetricsStore implements MetricsStore {
             totalItems: totalItems,
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
-                    result.studio.subscriptionStatus,
+                    result.studio?.subscriptionStatus,
                 convertToMillis(
                     result.owner?.subscriptionPeriodStart ||
                         result.studio?.subscriptionPeriodStart
@@ -336,7 +336,7 @@ export class PrismaMetricsStore implements MetricsStore {
             totalFileBytesReserved: Number(stats._sum.sizeInBytes),
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
-                    result.studio.subscriptionStatus,
+                    result.studio?.subscriptionStatus,
                 convertToMillis(
                     result.owner?.subscriptionPeriodStart ||
                         result.studio?.subscriptionPeriodStart
@@ -385,7 +385,7 @@ export class PrismaMetricsStore implements MetricsStore {
             totalEventNames: stats._count._all,
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
-                    result.studio.subscriptionStatus,
+                    result.studio?.subscriptionStatus,
                 convertToMillis(
                     result.owner?.subscriptionPeriodStart ||
                         result.studio?.subscriptionPeriodStart

@@ -43,6 +43,8 @@ import { WebsocketController } from './websockets/WebsocketController';
 import {
     AddUpdatesMessage,
     LoginMessage,
+    RequestMissingPermissionMessage,
+    RequestMissingPermissionResponseMessage,
     SendActionMessage,
     TimeSyncRequestMessage,
     UnwatchBranchMessage,
@@ -295,6 +297,7 @@ export class RecordsServer {
      */
     private _allowedAccountOrigins: Set<string>;
     private _rateLimit: RateLimitController;
+    private _websocketRateLimit: RateLimitController;
     private _policyController: PolicyController;
 
     /**
@@ -331,7 +334,8 @@ export class RecordsServer {
         policyController: PolicyController,
         aiController: AIController | null,
         websocketController: WebsocketController | null,
-        moderationController: ModerationController | null
+        moderationController: ModerationController | null,
+        websocketRateLimitController: RateLimitController | null = null
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -344,6 +348,8 @@ export class RecordsServer {
         this._files = filesController;
         this._subscriptions = subscriptionController;
         this._rateLimit = rateLimitController;
+        this._websocketRateLimit =
+            websocketRateLimitController ?? rateLimitController;
         this._policyController = policyController;
         this._aiController = aiController;
         this._websocketController = websocketController;
@@ -1006,14 +1012,14 @@ export class RecordsServer {
         }
 
         let skipRateLimitCheck = false;
-        if (!this._rateLimit) {
+        if (!this._websocketRateLimit) {
             skipRateLimitCheck = true;
         } else if (request.type !== 'message') {
             skipRateLimitCheck = true;
         }
 
         if (!skipRateLimitCheck) {
-            const response = await this._rateLimit.checkRateLimit({
+            const response = await this._websocketRateLimit.checkRateLimit({
                 ipAddress: request.ipAddress,
             });
 
@@ -1028,7 +1034,7 @@ export class RecordsServer {
                     return;
                 } else {
                     console.log(
-                        '[RecordsServer] Rate limit check failed. Allowing request to continue.'
+                        '[RecordsServer] Websocket rate limit check failed. Allowing request to continue.'
                     );
                 }
             }
@@ -1192,6 +1198,16 @@ export class RecordsServer {
                 request.connectionId,
                 data as TimeSyncRequestMessage,
                 Date.now()
+            );
+        } else if (data.type === 'permission/request/missing') {
+            await this._websocketController.requestMissingPermission(
+                request.connectionId,
+                data as RequestMissingPermissionMessage
+            );
+        } else if (data.type === 'permission/request/missing/response') {
+            await this._websocketController.respondToPermissionRequest(
+                request.connectionId,
+                data as RequestMissingPermissionResponseMessage
             );
         } else if (data.type === 'http_request') {
             let headers: GenericHttpHeaders = {};

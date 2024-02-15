@@ -1440,8 +1440,19 @@ export default class PlayerApp extends Vue {
     }
 
     setTitleToID() {
-        const id: string = appManager.simulationManager.primaryId || '...';
-        document.title = id;
+        const primarySim = appManager.simulationManager.primary;
+        if (primarySim) {
+            if (hasValue(primarySim.origin.recordName)) {
+                document.title = `${primarySim.origin.recordName}/${primarySim.origin.inst}`;
+            } else if (primarySim.origin.isStatic) {
+                document.title = primarySim.origin.inst;
+            } else {
+                document.title = 'public/' + primarySim.origin.inst;
+            }
+        } else {
+            const id: string = appManager.simulationManager.primaryId || '...';
+            document.title = id;
+        }
     }
 
     private _simulationRemoved(simulation: Simulation) {
