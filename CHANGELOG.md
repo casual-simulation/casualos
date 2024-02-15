@@ -54,6 +54,7 @@
 -   Fixed an issue where `os.unregisterApp()` would not trigger Preact cleanup code.
 -   Fixed an issue where `os.unloadInst()` would not work when going from 2 instances to 1 instance.
 -   Fixed an issue where menuPortal items would remain even if their inst was unloaded.
+-   Fixed an issue where it was possible to have multiple login attempts at once by calling `os.requestAuthBot()` multiple times without waiting for one to complete.
 -   Fixed some issues with `experiment.beginRecording()` and `experiment.endRecording()` where recording the screen with audio might fail in some cases.
 
 ## V3.2.13

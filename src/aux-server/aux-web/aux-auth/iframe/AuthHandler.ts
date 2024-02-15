@@ -95,6 +95,9 @@ export class AuthHandler implements AuxAuth {
     private _initialized: boolean = false;
     private _initPromise: Promise<void> = null;
 
+    private _loginPromise: Promise<AuthData>;
+    private _isLoggingIn: boolean;
+
     constructor() {
         this._oauthChannel.addEventListener('message', (event) => {
             if (event.data === 'login') {
@@ -156,6 +159,31 @@ export class AuthHandler implements AuxAuth {
         if (await this.isLoggedIn()) {
             return this._loginData;
         }
+
+        if (!backgroundLogin) {
+            if (this._isLoggingIn) {
+                console.log(
+                    '[AuthHandler] Already logging in. Using existing login promise.'
+                );
+                return await this._loginPromise;
+            }
+
+            try {
+                this._isLoggingIn = true;
+                this._loginPromise = this._loginCore(backgroundLogin, hint);
+                return await this._loginPromise;
+            } finally {
+                this._isLoggingIn = false;
+            }
+        } else {
+            return await this._loginCore(backgroundLogin, hint);
+        }
+    }
+
+    private async _loginCore(
+        backgroundLogin?: boolean,
+        hint?: 'sign in' | 'sign up' | null
+    ) {
         this._loginStatus.next({
             isLoggingIn: true,
         });
