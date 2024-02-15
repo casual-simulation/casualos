@@ -36,7 +36,7 @@ import {
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
-import { intersection, isEqual } from 'lodash';
+import { intersection, isEqual, sortBy } from 'lodash';
 import { Subscription } from 'rxjs';
 import { uniqueNamesGenerator, Config } from 'unique-names-generator';
 import adjectives from '../../shared/dictionaries/adjectives';
@@ -47,6 +47,7 @@ import { getInstParameters, getPermalink } from '../UrlUtils';
 import { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
+import { sortInsts } from '../PlayerUtils';
 
 Vue.use(MdField);
 
@@ -821,6 +822,9 @@ export default class PlayerHome extends Vue {
             changes.staticInst !== bot.tags.inst
         ) {
             changes.inst = changes.staticInst;
+        }
+        if (hasChange && hasValue(changes.inst)) {
+            changes.inst = sortInsts(changes.inst, botManager.inst);
         }
         if (hasChange) {
             await botManager.helper.updateBot(bot, {
