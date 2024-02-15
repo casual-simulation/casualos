@@ -14,6 +14,7 @@
     -   Previously, an empty list would be returned. Now, an empty list is only returned if there are no items.
 -   Removed `os.grantRecordMarkerPermission()` and `os.revokeRecordMarkerPermission()`.
     -   These functions have been replaced by `os.grantPermission()` and `os.revokePermission()`.
+-   Changed `os.getCurrentInst()` to always return the name of the inst that the bot exists in, instead of the first inst that was loaded into the session.
 
 ### :rocket: Features
 
