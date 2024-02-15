@@ -60,6 +60,8 @@ export class Recorder {
                     },
                     mimeType: options.mimeType,
                     bitsPerSecond: options.bitsPerSecond,
+                    videoBitsPerSecond: options.videoBitsPerSecond,
+                    audioBitsPerSecond: options.audioBitsPerSecond,
                 },
             ]);
         } else if (options.video) {
@@ -84,6 +86,8 @@ export class Recorder {
                     },
                     mimeType: options.mimeType,
                     bitsPerSecond: options.bitsPerSecond,
+                    videoBitsPerSecond: options.videoBitsPerSecond,
+                    audioBitsPerSecond: options.audioBitsPerSecond,
                 },
             ]);
         } else if (options.screen) {
@@ -148,6 +152,8 @@ export class Recorder {
                         mixer,
                         mimeType: options.mimeType,
                         bitsPerSecond: options.bitsPerSecond,
+                        videoBitsPerSecond: options.videoBitsPerSecond,
+                        audioBitsPerSecond: options.audioBitsPerSecond,
                     },
                 ]);
             } else {
@@ -161,6 +167,8 @@ export class Recorder {
                         },
                         mimeType: options.mimeType,
                         bitsPerSecond: options.bitsPerSecond,
+                        videoBitsPerSecond: options.videoBitsPerSecond,
+                        audioBitsPerSecond: options.audioBitsPerSecond,
                     },
                 ]);
             }
@@ -182,6 +190,8 @@ export class Recorder {
                         },
                         mimeType: options.mimeType,
                         bitsPerSecond: options.bitsPerSecond,
+                        videoBitsPerSecond: options.videoBitsPerSecond,
+                        audioBitsPerSecond: options.audioBitsPerSecond,
                     },
                 ]);
             } else {
@@ -231,6 +241,8 @@ export class Recorder {
                                 video: false,
                                 screen: false,
                             },
+                            videoBitsPerSecond: options.videoBitsPerSecond,
+                            audioBitsPerSecond: options.audioBitsPerSecond,
                         },
                     ]);
                 } else if (microphoneAudio) {
@@ -249,6 +261,8 @@ export class Recorder {
                             },
                             mimeType: options.mimeType,
                             bitsPerSecond: options.bitsPerSecond,
+                            videoBitsPerSecond: options.videoBitsPerSecond,
+                            audioBitsPerSecond: options.audioBitsPerSecond,
                         },
                     ]);
                 } else if (screenAudio) {
@@ -267,6 +281,8 @@ export class Recorder {
                             },
                             mimeType: options.mimeType,
                             bitsPerSecond: options.bitsPerSecond,
+                            videoBitsPerSecond: options.videoBitsPerSecond,
+                            audioBitsPerSecond: options.audioBitsPerSecond,
                         },
                     ]);
                 }
