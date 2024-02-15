@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-common",
-    "version": "3.2.14-alpha.7893342138",
+    "version": "3.2.14-alpha.7923657973",
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
