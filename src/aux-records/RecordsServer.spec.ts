@@ -549,7 +549,8 @@ describe('RecordsServer', () => {
             policyController,
             aiController,
             websocketController,
-            moderationController
+            moderationController,
+            rateLimitController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -9649,6 +9650,7 @@ describe('RecordsServer', () => {
                 policyController,
                 null,
                 null,
+                null,
                 null
             );
 
@@ -10159,6 +10161,7 @@ describe('RecordsServer', () => {
                 policyController,
                 null,
                 null,
+                null,
                 null
             );
 
@@ -10347,6 +10350,7 @@ describe('RecordsServer', () => {
                 policyController,
                 null,
                 null,
+                null,
                 null
             );
 
@@ -10508,6 +10512,7 @@ describe('RecordsServer', () => {
                 policyController,
                 null,
                 null,
+                null,
                 null
             );
 
@@ -10587,6 +10592,7 @@ describe('RecordsServer', () => {
                 subscriptionController,
                 null as any,
                 policyController,
+                null,
                 null,
                 null,
                 null
@@ -13956,6 +13962,76 @@ describe('RecordsServer', () => {
                     });
                 });
             }
+
+            it('should use the websocket rate limiter', async () => {
+                const rateLimiter = new MemoryRateLimiter();
+                const websocketRateLimiter = new RateLimitController(
+                    rateLimiter,
+                    {
+                        maxHits: 5,
+                        windowMs: 1000000,
+                    }
+                );
+                server = new RecordsServer(
+                    allowedAccountOrigins,
+                    allowedApiOrigins,
+                    authController,
+                    livekitController,
+                    recordsController,
+                    eventsController,
+                    dataController,
+                    manualDataController,
+                    filesController,
+                    subscriptionController,
+                    rateLimitController,
+                    policyController,
+                    aiController,
+                    websocketController,
+                    moderationController,
+                    websocketRateLimiter
+                );
+
+                const ip = '123.456.789';
+                expect(rateLimiter.getHits(ip)).toBe(0);
+
+                expectNoWebSocketErrors(connectionId);
+
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(2, {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: ['abc'],
+                            updateId: 3,
+                        }),
+                        ip
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+                expect(websocketMessenger.getMessages(connectionId)).toEqual([
+                    {
+                        type: 'repo/updates_received',
+                        recordName,
+                        inst,
+                        branch,
+                        updateId: 3,
+                    },
+                ]);
+
+                expect(
+                    await instStore.getCurrentUpdates(recordName, inst, branch)
+                ).toEqual({
+                    updates: ['abc'],
+                    timestamps: [expect.any(Number)],
+                    instSizeInBytes: 3,
+                });
+
+                expect(rateLimiter.getHits(ip)).toBe(1);
+            });
         });
 
         describe('sync/time', () => {
@@ -14447,7 +14523,8 @@ describe('RecordsServer', () => {
                 policyController,
                 aiController,
                 websocketController,
-                moderationController
+                moderationController,
+                null
             );
 
             await rateLimiter.increment(ip, 100);

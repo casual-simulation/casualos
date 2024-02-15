@@ -152,6 +152,7 @@ export interface BuildReturn {
     filesStore: FileRecordsStore;
     subscriptionController: SubscriptionController;
     rateLimitController: RateLimitController;
+    websocketRateLimitController: RateLimitController;
     policyController: PolicyController;
     websocketController: WebsocketController;
     dynamodbClient: DocumentClient;
@@ -237,6 +238,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _redis: RedisClientType | null = null;
     private _s3: S3;
     private _rateLimitController: RateLimitController;
+    private _websocketRateLimitController: RateLimitController;
 
     private _allowedAccountOrigins: Set<string> = new Set([
         'http://localhost:3000',
@@ -751,7 +753,7 @@ export class ServerBuilder implements SubscriptionLike {
         const client = this._ensureRedis(options);
         const store = new RedisRateLimitStore({
             sendCommand: (command: string, ...args: string[]) => {
-                return this._redis.sendCommand([command, ...args]);
+                return client.sendCommand([command, ...args]);
             },
         });
         this._initActions.push({
@@ -765,6 +767,44 @@ export class ServerBuilder implements SubscriptionLike {
         this._rateLimitController = new RateLimitController(store, {
             maxHits: options.rateLimit.maxHits,
             windowMs: options.rateLimit.windowMs,
+        });
+
+        return this;
+    }
+
+    useRedisWebsocketRateLimit(
+        options: Pick<
+            BuilderOptions,
+            'redis' | 'rateLimit' | 'websocketRateLimit'
+        > = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Redis WebSocket Rate Limiter.');
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+        const rateLimit = options.websocketRateLimit ?? options.rateLimit;
+        if (!options.rateLimit) {
+            throw new Error('Websocket rate limit options must be provided.');
+        }
+        const client = this._ensureRedis(options);
+        const store = new RedisRateLimitStore({
+            sendCommand: (command: string, ...args: string[]) => {
+                return client.sendCommand([command, ...args]);
+            },
+        });
+        this._initActions.push({
+            priority: 11,
+            action: async () => {
+                await store.setup();
+            },
+        });
+        store.prefix =
+            options.redis.websocketRateLimitPrefix ??
+            options.redis.rateLimitPrefix;
+
+        this._websocketRateLimitController = new RateLimitController(store, {
+            maxHits: rateLimit.maxHits,
+            windowMs: rateLimit.windowMs,
         });
 
         return this;
@@ -1164,7 +1204,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._policyController,
             this._aiController,
             this._websocketController,
-            this._moderationController
+            this._moderationController,
+            this._websocketRateLimitController
         );
 
         const buildReturn: BuildReturn = {
@@ -1178,6 +1219,7 @@ export class ServerBuilder implements SubscriptionLike {
             filesStore: this._filesStore,
             subscriptionController: this._subscriptionController,
             rateLimitController: this._rateLimitController,
+            websocketRateLimitController: this._websocketRateLimitController,
             policyController: this._policyController,
             websocketController: this._websocketController,
 
@@ -1514,6 +1556,14 @@ const redisSchema = z.object({
         .string()
         .describe(
             'The namespace that rate limit counters are stored under. If omitted, then redis rate limiting is not possible.'
+        )
+        .nonempty()
+        .optional(),
+
+    websocketRateLimitPrefix: z
+        .string()
+        .describe(
+            'The namespace that websocket rate limit counters are stored under. If omitted, then the rateLimitPrefix is used.'
         )
         .nonempty()
         .optional(),
@@ -1885,6 +1935,11 @@ export const optionsSchema = z.object({
     rateLimit: rateLimitSchema
         .describe(
             'Rate limit options. If omitted, then rate limiting will be disabled.'
+        )
+        .optional(),
+    websocketRateLimit: rateLimitSchema
+        .describe(
+            'Rate limit options for websockets. If omitted, then the rateLimit options will be used for websockets.'
         )
         .optional(),
     openai: openAiSchema
