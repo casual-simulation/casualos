@@ -34,7 +34,7 @@ export class MultiStreamsMixer {
         this.context = this.canvas.el.getContext('2d');
         this.canvas.el.setAttribute(
             'style',
-            'opacity:0;position:absolute;z-index:-1;top: -100000000;left:-1000000000; margin-top:-1000000000;margin-left:-1000000000;'
+            'opacity:0;position:absolute;z-index:-1;top: -100000000px;left:-1000000000px; margin-top:-1000000000px;margin-left:-1000000000px;'
         );
         this.canvas.el.className = this.elementClass;
         document.body.appendChild(this.canvas.el);
@@ -90,7 +90,7 @@ export class MultiStreamsMixer {
         if (remaining.length) {
             this.canvas.el.width =
                 videosLength > 1 ? remaining[0].width * 2 : remaining[0].width;
-            var height = 1;
+            let height = 1;
             if (videosLength === 3 || videosLength === 4) {
                 height = 2;
             }
@@ -411,7 +411,8 @@ export class MultiStreamsMixer {
     }
 
     private _getVideoDimensions(stream: MediaStream) {
-        const firstVideo = stream.getVideoTracks()[0].getSettings();
+        const tracks = stream.getVideoTracks();
+        const firstVideo = tracks[0].getSettings();
         return {
             width: firstVideo.width,
             height: firstVideo.height,
