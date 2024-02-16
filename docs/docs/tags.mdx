@@ -1,5 +1,5 @@
 ---
-id: tag-types
+id: tags
 title: Tag Types
 sidebar_label: Tag Types
 description: CasualOS has many tags.
@@ -40,6 +40,21 @@ import {
 } from './components.jsx';
 
 import { GlossaryRef } from './glossary/index';
+import {tagMap} from './components.jsx';
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+<BrowserOnly>
+      {() => {
+        for (let key in tagMap) {
+            let hash = key.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()
+          if (hash === location.hash.slice(1)) {
+            location.href = useBaseUrl(tagMap[key])+location.hash;
+            break;
+          }
+        }
+      }}
+</BrowserOnly>
 
 CasualOS has many tags.
 

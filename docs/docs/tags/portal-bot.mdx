@@ -1,8 +1,8 @@
 ---
-id: portal-bot-tags
+id: portal-bot
 title: Portal Bot Tags
-sidebar_label: Portal Bot Tags
-description: CasualOS has many tags.
+sidebar_label: Portal Bot
+description: Tags for configuring portal bots.
 ---
 
 import { 
@@ -38,9 +38,9 @@ import {
   ImuPortalBadge,
   MapPortalBadge,
   tagMap,
-} from './components.jsx';
+} from '../components.jsx';
 
-import { GlossaryRef } from './glossary/index';
+import { GlossaryRef } from '../glossary/index';
 
 ## Portal Bot Tags
 
@@ -107,7 +107,7 @@ The top left of the image is (0, 0).
 
 The URL of the image or video that should be displayed as the background of the portal.
 
-When specified, this tag overrides <TagLink tag='#portalColor'/>.
+When specified, this tag overrides <TagLink tag='portalColor'/>.
 Additionally, this tag does nothing when in VR.
 
 #### Possible values are:

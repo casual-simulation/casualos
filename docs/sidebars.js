@@ -20,17 +20,21 @@ export default {
         {
             type: 'category',
             label: 'Reference',
-            items: [
-                'tag-types',
-                'info-tags',
-                'behavior-tags',
-                'visualization-tags',
-                'dimension-tags',
-                'portal-bot-tags',
-                'history-tags',
-                'config-bot-tags',
-                'auth-bot-tags',
-                'listen-tags',
+            items: [{
+                type: 'category',
+                label: 'Tags',
+                items: [
+                'tags',
+                'tags/info',
+                'tags/behavior',
+                'tags/visualization',
+                'tags/dimension',
+                'tags/portal-bot',
+                'tags/history-tags',
+                'tags/config-bot',
+                'auth-bot',
+                'tags/listen',
+            ]},
                 {
                     type: 'category',
                     label: 'Actions',
