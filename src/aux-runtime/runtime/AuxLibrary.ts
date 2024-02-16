@@ -231,6 +231,7 @@ import {
     Photo,
     getEasing,
     enableCollaboration as calcEnableCollaboration,
+    showAccountInfo as calcShowAccountInfo,
     reportInst as calcReportInst,
     getRecordsEndpoint as calcGetRecordsEndpoint,
 } from '@casual-simulation/aux-common/bots';
@@ -2994,6 +2995,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 isCollaborative,
                 enableCollaboration,
+                showAccountInfo,
                 getAB1BootstrapURL,
                 enableAR,
                 disableAR,
@@ -5666,6 +5668,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return Promise.resolve();
+    }
+
+    /**
+     * Attempts to show the "Account Info" dialog.
+     * Does nothing if the user is not logged in.
+     *
+     * @example Show the "Account Info" dialog.
+     * await os.showAccountInfo();
+     *
+     * @dochash actions/os/system
+     * @docname os.showAccountInfo
+     */
+    function showAccountInfo(): Promise<void> {
+        const task = context.createTask();
+        const event = calcShowAccountInfo(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
