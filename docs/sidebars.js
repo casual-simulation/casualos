@@ -21,6 +21,7 @@ export default {
             type: 'category',
             label: 'Reference',
             items: [
+                'tag-types',
                 'info-tags',
                 'behavior-tags',
                 'visualization-tags',

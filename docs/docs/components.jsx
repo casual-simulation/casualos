@@ -97,6 +97,15 @@ export const DataTagLink = ({tag}) => (
   </a>
 );
 export const tagMap = {
+    //tag-types
+    boolean: 'tag-types',
+    number: 'tag-types',
+    string: 'tag-types',
+    mod: 'tag-types',
+    date: 'tag-types',
+    vector: 'tag-types',
+    rotation: 'tag-types',
+    script: 'tag-types',
     //info-tags
     id: 'info-tags',
     space: 'info-tags',
