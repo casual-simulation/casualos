@@ -48,6 +48,10 @@
 -   Added the ability to track rate limits for the WebSocket API separately from the HTTP API.
     -   The `websocketRateLimit` property on the `SERVER_CONFIG` controls the websockets rate limits. If not specified, then the options from `rateLimit` will be used for websockets and HTTP.
     -   Additionally, the `websocketRateLimitPrefix` in `redis` controls the namespace that values are stored at in Redis. If not specified, then the `rateLimitPrefix` will be used for both.
+-   Added the `os.getRecordsEndpoint()` function to get the default records endpoint.
+    -   Records actions, like `os.recordData()`, `os.getData()`, `os.recordFile()`, etc. can be passed an endpoint which specifies which backend should be used for the request.
+    -   If no endpoint is specified, then a default is used.
+    -   `os.getRecordsEndpoint()` returns a promise that resolves to the endpoint that is used by default.
 
 ### :bug: Bug Fixes
 

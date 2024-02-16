@@ -11890,6 +11890,18 @@ interface Os {
     listUserStudios(endpoint?: string): Promise<ListStudiosResult>;
 
     /**
+     * Gets the default records endpoint. That is, the records endpoint that is used for records actions when no endpoint is specified.
+     * 
+     * @example Get the default records endpoint.
+     * const endpoint = await os.getRecordsEndpoint();
+     * os.toast("The default records endpoint is: " + endpoint);
+     * 
+     * @dochash actions/os/records
+     * @docname os.getRecordsEndpoint
+     */
+    getRecordsEndpoint(): Promise<string>;
+
+    /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.
      * @param location The latitude and longitude that should be converted to a 3 word address.
      */
