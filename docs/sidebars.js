@@ -30,9 +30,9 @@ export default {
                 'tags/visualization',
                 'tags/dimension',
                 'tags/portal-bot',
-                'tags/history-tags',
+                'tags/history',
                 'tags/config-bot',
-                'auth-bot',
+                'tags/auth-bot',
                 'tags/listen',
             ]},
                 {
