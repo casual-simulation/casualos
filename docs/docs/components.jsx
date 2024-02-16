@@ -179,18 +179,18 @@ export const tagMap = {
     menuItemText: 'visualization-tags',
     menuItemShowSubmitWhenEmpty: 'visualization-tags',
     //dimension-tags
-    dimension: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionSortOrder: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionPosition: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionX: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionY: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionZ: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionRotation: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionRotationX: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionRotationY: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionRotationZ: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionStart: 'dimension-tags', //DOUBLE CHECK THIS
-    dimensionEnd: 'dimension-tags', //DOUBLE CHECK THIS
+    dimension: 'dimension-tags',
+    dimensionSortOrder: 'dimension-tags',
+    dimensionPosition: 'dimension-tags',
+    dimensionX: 'dimension-tags',
+    dimensionZ: 'dimension-tags',
+    dimensionY: 'dimension-tags',
+    dimensionRotation: 'dimension-tags',
+    dimensionRotationX: 'dimension-tags',
+    dimensionRotationY: 'dimension-tags',
+    dimensionRotationZ: 'dimension-tags',
+    dimensionStart: 'dimension-tags',
+    dimensionEnd: 'dimension-tags',
     //portal-bot-tags
     portalColor: 'portal-bot-tags',
     portalCursor: 'portal-bot-tags',
@@ -313,8 +313,8 @@ export const tagMap = {
     rightPointer_squeeze: 'config-bot-tags',
     leftPointer_primary: 'config-bot-tags',
     leftPointer_squeeze: 'config-bot-tags',
-    keyboard_key: 'config-bot-tags', //DOUBEL CHECK THIS
-    touch_index: 'config-bot-tags', //DOUBEL CHECK THIS
+    keyboard_key: 'config-bot-tags',
+    touch_index: 'config-bot-tags',
     forceSignedScripts: 'config-bot-tags',
     url: 'config-bot-tags',
     permalink: 'config-bot-tags',
