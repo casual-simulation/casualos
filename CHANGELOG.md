@@ -39,6 +39,7 @@
     -   A dialog will appear on Safari asking if you want to enter XR when trying to enable AR/VR through CasualOS. This is an extra security measure enforced by Safari.
     -   visionOS currently only supports `immersive-vr` mode of WebXR sessions.
     -   Added pinch select gesture detection for. This allows for pointer-based bot interaction on the Vision Pro since Safari does not implement select events while hand tracking in WebXR.
+-   Categorized tags to seperate documentation pages.
 
 ### :bug: Bug Fixes
 
