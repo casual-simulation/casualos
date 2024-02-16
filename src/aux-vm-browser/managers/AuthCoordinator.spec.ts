@@ -13,12 +13,16 @@ import {
     SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
 import {
+    AsyncErrorAction,
+    AsyncResultAction,
     AuthData,
     ConnectionInfo,
     PartitionAuthMessage,
     PartitionAuthResponse,
+    asyncResult,
     botAdded,
     createBot,
+    showAccountInfo,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { AuxConfigParameters } from '@casual-simulation/aux-vm/vm';
@@ -218,6 +222,64 @@ describe('AuthCoordinator', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe('show_account_info', () => {
+        it('should emit an event with the current login status', async () => {
+            loginStatus = {
+                isLoading: false,
+                isLoggingIn: true,
+                authData: {
+                    userId: 'userId',
+                    name: 'name',
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: null,
+                    privacyFeatures: {
+                        allowPublicData: true,
+                        publishData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                },
+            };
+
+            let events: ShowAccountInfoEvent[] = [];
+            manager.onShowAccountInfo.subscribe((e) => events.push(e));
+
+            const vm = vms.get('sim-1');
+            vm.localEvents.next([showAccountInfo(1)]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                {
+                    simulationId: 'sim-1',
+                    loginStatus: {
+                        isLoading: false,
+                        isLoggingIn: true,
+                        authData: {
+                            userId: 'userId',
+                            name: 'name',
+                            avatarUrl: null,
+                            avatarPortraitUrl: null,
+                            hasActiveSubscription: false,
+                            subscriptionTier: null,
+                            displayName: null,
+                            privacyFeatures: {
+                                allowPublicData: true,
+                                publishData: true,
+                                allowAI: true,
+                                allowPublicInsts: true,
+                            },
+                        },
+                    },
+                },
+            ]);
+            expect(vm.events.slice(1)).toEqual([asyncResult(1, null)]);
         });
     });
 

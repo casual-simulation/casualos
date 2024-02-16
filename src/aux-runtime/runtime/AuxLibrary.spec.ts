@@ -175,6 +175,7 @@ import {
     DEFAULT_BRANCH_NAME,
     remote,
     reportInst,
+    showAccountInfo,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import {
@@ -3379,6 +3380,15 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([]);
 
                 await expect(promise).resolves.toBeUndefined();
+            });
+        });
+
+        describe('os.showAccountInfo()', () => {
+            it('should emit a ShowAccountInfoAction', () => {
+                const promise: any = library.api.os.showAccountInfo();
+                const expected = showAccountInfo(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

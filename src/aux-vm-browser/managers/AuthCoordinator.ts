@@ -25,6 +25,8 @@ import {
     PartitionAuthPermissionResult,
     PartitionAuthRequest,
     PublicUserInfo,
+    asyncResult,
+    hasValue,
     reportInst,
 } from '@casual-simulation/aux-common';
 import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
@@ -112,6 +114,19 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                                 reason: msg.reason,
                                 user: msg.user,
                             });
+                        }
+                    })
+                );
+
+                sub.add(
+                    sim.localEvents.subscribe((event) => {
+                        if (event.type === 'show_account_info') {
+                            this.showAccountInfo(sim.id);
+                            if (hasValue(event.taskId)) {
+                                sim.helper.transaction(
+                                    asyncResult(event.taskId, null)
+                                );
+                            }
                         }
                     })
                 );

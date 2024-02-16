@@ -172,7 +172,8 @@ export type AsyncActions =
     | HtmlAppMethodCallAction
     | OpenPhotoCameraAction
     | EnableCollaborationAction
-    | GetRecordsEndpointAction;
+    | GetRecordsEndpointAction
+    | ShowAccountInfoAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -1637,6 +1638,13 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
  */
 export interface EnableCollaborationAction extends AsyncAction {
     type: 'enable_collaboration';
+}
+
+/**
+ * An event that is used to show the account info dialog.
+ */
+export interface ShowAccountInfoAction extends AsyncAction {
+    type: 'show_account_info';
 }
 
 /**
@@ -4247,6 +4255,19 @@ export function enableCollaboration(
 ): EnableCollaborationAction {
     return {
         type: 'enable_collaboration',
+        taskId,
+    };
+}
+
+/**
+ * Creates a ShowAccountInfoAction.
+ * @param taskId The ID of the async task.
+ */
+export function showAccountInfo(
+    taskId?: number | string
+): ShowAccountInfoAction {
+    return {
+        type: 'show_account_info',
         taskId,
     };
 }
