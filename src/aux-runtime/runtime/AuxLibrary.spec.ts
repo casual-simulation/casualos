@@ -136,6 +136,7 @@ import {
     getCurrentInstUpdate,
     openPhotoCamera,
     enableCollaboration,
+    getRecordsEndpoint,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -7321,6 +7322,16 @@ describe('AuxLibrary', () => {
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getRecordsEndpoint()', () => {
+            it('should return a promise that resolves to the records endpoint', async () => {
+                const result: any = library.api.os.getRecordsEndpoint();
+                const action = result[ORIGINAL_OBJECT];
+                const expected = getRecordsEndpoint(context.tasks.size);
+                expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

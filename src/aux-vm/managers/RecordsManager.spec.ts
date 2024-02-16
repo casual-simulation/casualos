@@ -8,6 +8,7 @@ import {
     MemoryConnectionClient,
     WebsocketHttpResponseMessage,
     WebsocketHttpRequestMessage,
+    getRecordsEndpoint,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -7134,6 +7135,18 @@ describe('RecordsManager', () => {
                             } as ListedStudio,
                         ],
                     }),
+                ]);
+            });
+        });
+
+        describe('get_records_endpoint', () => {
+            it('should return the recordsOrigin', async () => {
+                records.handleEvents([getRecordsEndpoint(1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, 'http://localhost:3002'),
                 ]);
             });
         });

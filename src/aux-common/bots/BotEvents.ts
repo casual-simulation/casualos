@@ -171,7 +171,8 @@ export type AsyncActions =
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
     | OpenPhotoCameraAction
-    | EnableCollaborationAction;
+    | EnableCollaborationAction
+    | GetRecordsEndpointAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3408,6 +3409,13 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
     metadata: any;
 }
 
+/**
+ * An action that is used to retrieve the default records endpoint.
+ */
+export interface GetRecordsEndpointAction extends AsyncAction {
+    type: 'get_records_endpoint';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -5237,6 +5245,19 @@ export function analyticsRecordEvent(
         type: 'analytics_record_event',
         name,
         metadata,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetRecordsEndpointAction.
+ * @param taskId The ID of the async task.
+ */
+export function getRecordsEndpoint(
+    taskId?: number | string
+): GetRecordsEndpointAction {
+    return {
+        type: 'get_records_endpoint',
         taskId,
     };
 }

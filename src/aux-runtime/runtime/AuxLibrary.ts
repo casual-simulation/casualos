@@ -232,6 +232,7 @@ import {
     getEasing,
     enableCollaboration as calcEnableCollaboration,
     reportInst as calcReportInst,
+    getRecordsEndpoint as calcGetRecordsEndpoint,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3220,6 +3221,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 countEvents,
 
                 listUserStudios,
+
+                getRecordsEndpoint,
 
                 convertGeolocationToWhat3Words,
 
@@ -9262,6 +9265,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcListUserStudios(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the default records endpoint. That is, the records endpoint that is used for records actions when no endpoint is specified.
+     *
+     * @example Get the default records endpoint.
+     * const endpoint = await os.getRecordsEndpoint();
+     * os.toast("The default records endpoint is: " + endpoint);
+     *
+     * @dochash actions/os/records
+     * @docname os.getRecordsEndpoint
+     */
+    function getRecordsEndpoint(): Promise<string> {
+        const task = context.createTask();
+        const event = calcGetRecordsEndpoint(task.taskId);
         return addAsyncAction(task, event);
     }
 
