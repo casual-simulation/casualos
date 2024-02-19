@@ -2,7 +2,7 @@ import { hex } from './Hex';
 import {
     Mesh,
     BufferGeometry,
-    ExtrudeBufferGeometry,
+    ExtrudeGeometry,
     Shape,
     Material,
     MeshStandardMaterial,
@@ -132,7 +132,7 @@ export function createHexMeshGeometry(
 ): BufferGeometry {
     const verts = hex(size / Math.sqrt(3));
     const shape = new Shape(verts);
-    const geometry = new ExtrudeBufferGeometry(shape, {
+    const geometry = new ExtrudeGeometry(shape, {
         depth: height,
         steps: 1,
         bevelEnabled: false,

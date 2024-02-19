@@ -9,7 +9,7 @@ import {
     Float32BufferAttribute,
     Mesh,
     MeshBasicMaterial,
-    SphereBufferGeometry,
+    SphereGeometry,
 } from '@casual-simulation/three';
 import {
     baseAuxMeshMaterial,
@@ -57,7 +57,7 @@ export class PointerRay3D extends Object3D {
         const cursorMaterial = new MeshBasicMaterial({
             color: PointerRay_DefaultColor,
         });
-        const cursorGeometry = new SphereBufferGeometry(0.015, 16, 16);
+        const cursorGeometry = new SphereGeometry(0.015, 16, 16);
         this._cursor = new Mesh(cursorGeometry, cursorMaterial);
 
         this.add(this._cursor);

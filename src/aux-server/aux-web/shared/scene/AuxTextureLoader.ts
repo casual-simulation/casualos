@@ -1,7 +1,6 @@
 import {
     Texture,
     ImageLoader,
-    RGBFormat,
     RGBAFormat,
     Loader,
     VideoTexture,
@@ -60,12 +59,7 @@ export class AuxTextureLoader {
 
             let onImageLoad = (image: HTMLImageElement) => {
                 texture.image = image;
-                // JPEGs can't have an alpha channel, so memory can be saved by storing them as RGB.
-                let isJPEG =
-                    url.search(/\.jpe?g($|\?)/i) > 0 ||
-                    url.search(/^data\:image\/jpeg/) === 0;
-
-                texture.format = isJPEG ? RGBFormat : RGBAFormat;
+                texture.format = RGBAFormat;
                 texture.needsUpdate = true;
 
                 this.image = null;

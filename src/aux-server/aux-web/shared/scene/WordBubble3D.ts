@@ -9,14 +9,14 @@ import {
     Box2,
     Shape,
     MeshBasicMaterial,
-    ShapeBufferGeometry,
+    ShapeGeometry,
 } from '@casual-simulation/three';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { setLayerMask, buildSRGBColor } from './SceneUtils';
 import { Text3D } from './Text3D';
 
 export class WordBubble3D extends Object3D {
-    private _shapeGeometry: ShapeBufferGeometry;
+    private _shapeGeometry: ShapeGeometry;
     private _shapeMeshMaterial: MeshBasicMaterial;
     private _shapeMesh: Mesh;
 
@@ -105,7 +105,7 @@ export class WordBubble3D extends Object3D {
         if (this._shapeGeometry) {
             this._shapeGeometry.dispose();
         }
-        this._shapeGeometry = new ShapeBufferGeometry(shape, 12);
+        this._shapeGeometry = new ShapeGeometry(shape, 12);
 
         // Only create mesh if it doesnt exist. Otherwise just update geometry.
         if (!this._shapeMesh) {

@@ -885,7 +885,7 @@ export class BotShapeDecorator
             if (this.scene) {
                 this.scene.traverse((obj) => {
                     if (obj instanceof Group) {
-                        const step = obj.userData.constructionStep ?? 0;
+                        const step = obj.userData.buildingStep ?? 0;
                         obj.visible = step <= buildStep;
                     }
                 });

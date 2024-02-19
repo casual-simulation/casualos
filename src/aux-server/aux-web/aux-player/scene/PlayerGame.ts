@@ -1429,7 +1429,7 @@ export class PlayerGame extends Game {
 
     protected setupMiniScene() {
         this.miniScene = new Scene();
-        this.miniScene.autoUpdate = false;
+        this.miniScene.matrixWorldAutoUpdate = false;
 
         // miniGridPortal camera.
         this.miniCameraRig = createCameraRig(
@@ -1464,7 +1464,7 @@ export class PlayerGame extends Game {
 
     protected setupMapScene() {
         this.mapScene = new Scene();
-        this.mapScene.autoUpdate = false;
+        this.mapScene.matrixWorldAutoUpdate = false;
 
         this.mapScene.add(this._createGlobeMask());
 
@@ -1488,7 +1488,7 @@ export class PlayerGame extends Game {
 
     protected setupMiniMapScene() {
         this.miniMapScene = new Scene();
-        this.miniMapScene.autoUpdate = false;
+        this.miniMapScene.matrixWorldAutoUpdate = false;
 
         this.miniMapScene.add(this._createGlobeMask());
 
