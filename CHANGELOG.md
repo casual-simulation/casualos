@@ -40,6 +40,7 @@
     -   A dialog will appear on Safari asking if you want to enter XR when trying to enable AR/VR through CasualOS. This is an extra security measure enforced by Safari.
     -   visionOS currently only supports `immersive-vr` mode of WebXR sessions.
     -   Added pinch select gesture detection for. This allows for pointer-based bot interaction on the Vision Pro since Safari does not implement select events while hand tracking in WebXR.
+-   Categorized tags to seperate documentation pages.
 -   Added the ability to support domain-level isolation for insts.
     -   The `VM_ORIGIN` environment variable can now be configured to tell CasualOS to load insts into a unique HTTP Origin so that insts are isolated from each other.
     -   `VM_ORIGIN` is The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used.

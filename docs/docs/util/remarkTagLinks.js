@@ -1,5 +1,6 @@
 import {visit} from 'unist-util-visit'
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import { tagMap } from '../components';
 
 export default function remarkTagLinks(options = {}) {
     const references = options.references;
@@ -9,9 +10,9 @@ export default function remarkTagLinks(options = {}) {
                 const tag = node.url.slice('tags:'.length);
                 
                 if (tag.startsWith('@')) {
-                    node.url = useBaseUrl('listen-tags') + formatTagHash(tag.slice(1));
+                    node.url = useBaseUrl('tags/listen') + formatTagHash(tag.slice(1));
                 } else {
-                    node.url = useBaseUrl('tags') + formatTagHash(tag);
+                    node.url = useBaseUrl(tagMap[tag]) + formatTagHash(tag);
                 }
             } else if (node.url.startsWith('ref:')) {
                 const ref = node.url.slice('ref:'.length);

@@ -1,0 +1,69 @@
+---
+id: auth-bot
+title: Auth Bot Tags
+sidebar_label: Auth Bot
+description: Tage related to the Auth Bot.
+---
+
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  ActionLink,
+  TagLink,
+  NormalCode,
+  ConfigBotBadge,
+  HistoryBotBadge,
+  AutomaticBadge,
+  GridPortalBadge,
+  MiniGridPortalBadge,
+  MiniMapPortalBadge,
+  MenuPortalBadge,
+  MeetPortalBadge,
+  LeftWristPortalBadge,
+  RightWristPortalBadge,
+  SheetPortalBadge,
+  BotPortalBadge,
+  TagPortalBadge,
+  Example,
+  AnyCursorValues,
+  TypeLink,
+  ImuPortalBadge,
+  MapPortalBadge,
+  tagMap,
+} from '../components.jsx';
+
+import { GlossaryRef } from '../glossary/index';
+
+## Auth Bot Tags
+
+These are tags that are automatically set on the authBot.
+
+### `avatarAddress`
+
+The address that the user's avatar mesh can be found at.
+This can be used with <TagLink tag='form'/> and <TagLink tag='formAddress'/> to display the avatar in the bot or miniGridPortals.
+
+### `name`
+
+The name that the user specified for their account.
+
+### `hasActiveSubscription`
+
+Whether the user has an active subscription to the CasualOS Beta Program.
+On deployments that do not support subscriptions, this is always `true`.
+
+### `subscriptionTier`
+
+The subscription tier that is currently active for the user. It is a string containing the feature level that should be active for the user.
+
+### `privacyFeatures`
+
+The privacy features that are currently active for the user. If is an object with the following properties:
