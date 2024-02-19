@@ -231,7 +231,9 @@ import {
     Photo,
     getEasing,
     enableCollaboration as calcEnableCollaboration,
+    showAccountInfo as calcShowAccountInfo,
     reportInst as calcReportInst,
+    getRecordsEndpoint as calcGetRecordsEndpoint,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -2993,6 +2995,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 isCollaborative,
                 enableCollaboration,
+                showAccountInfo,
                 getAB1BootstrapURL,
                 enableAR,
                 disableAR,
@@ -3220,6 +3223,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 countEvents,
 
                 listUserStudios,
+
+                getRecordsEndpoint,
 
                 convertGeolocationToWhat3Words,
 
@@ -5663,6 +5668,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return Promise.resolve();
+    }
+
+    /**
+     * Attempts to show the "Account Info" dialog.
+     * Does nothing if the user is not logged in.
+     *
+     * @example Show the "Account Info" dialog.
+     * await os.showAccountInfo();
+     *
+     * @dochash actions/os/system
+     * @docname os.showAccountInfo
+     */
+    function showAccountInfo(): Promise<void> {
+        const task = context.createTask();
+        const event = calcShowAccountInfo(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -9262,6 +9283,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcListUserStudios(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the default records endpoint. That is, the records endpoint that is used for records actions when no endpoint is specified.
+     *
+     * @example Get the default records endpoint.
+     * const endpoint = await os.getRecordsEndpoint();
+     * os.toast("The default records endpoint is: " + endpoint);
+     *
+     * @dochash actions/os/records
+     * @docname os.getRecordsEndpoint
+     */
+    function getRecordsEndpoint(): Promise<string> {
+        const task = context.createTask();
+        const event = calcGetRecordsEndpoint(task.taskId);
         return addAsyncAction(task, event);
     }
 

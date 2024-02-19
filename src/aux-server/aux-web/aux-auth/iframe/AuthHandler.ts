@@ -10,6 +10,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import {
     AuthData,
+    AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 import {
@@ -36,6 +37,8 @@ import {
     PARENT_EMAIL_FIELD,
     ADDRESS_FIELD,
     GetPlayerConfigResult,
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
@@ -91,6 +94,9 @@ export class AuthHandler implements AuxAuth {
     );
     private _initialized: boolean = false;
     private _initPromise: Promise<void> = null;
+
+    private _loginPromise: Promise<AuthData>;
+    private _isLoggingIn: boolean;
 
     constructor() {
         this._oauthChannel.addEventListener('message', (event) => {
@@ -153,6 +159,31 @@ export class AuthHandler implements AuxAuth {
         if (await this.isLoggedIn()) {
             return this._loginData;
         }
+
+        if (!backgroundLogin) {
+            if (this._isLoggingIn) {
+                console.log(
+                    '[AuthHandler] Already logging in. Using existing login promise.'
+                );
+                return await this._loginPromise;
+            }
+
+            try {
+                this._isLoggingIn = true;
+                this._loginPromise = this._loginCore(backgroundLogin, hint);
+                return await this._loginPromise;
+            } finally {
+                this._isLoggingIn = false;
+            }
+        } else {
+            return await this._loginCore(backgroundLogin, hint);
+        }
+    }
+
+    private async _loginCore(
+        backgroundLogin?: boolean,
+        hint?: 'sign in' | 'sign up' | null
+    ) {
         this._loginStatus.next({
             isLoggingIn: true,
         });
@@ -524,6 +555,13 @@ export class AuthHandler implements AuxAuth {
     async cancelLogin() {
         console.log('[AuthHandler] Canceling login.');
         this._canceledLogins.next();
+    }
+
+    async grantPermission(
+        recordName: string,
+        permission: AvailablePermissions
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+        return await authManager.grantPermission(recordName, permission);
     }
 
     private _getTokenExpirationTime(token: string): number {

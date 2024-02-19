@@ -28,7 +28,10 @@ import {
     remoteError,
     remoteResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
-import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import {
+    RequestMissingPermissionResponseSuccessMessage,
+    WebsocketEventTypes,
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import {
     createTestControllers,
     createTestSubConfiguration,
@@ -41,6 +44,7 @@ import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
 import {
     ACCOUNT_MARKER,
     ConnectionInfo,
+    DEFAULT_BRANCH_NAME,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
@@ -7176,6 +7180,293 @@ describe('WebsocketController', () => {
                         serverTransmitTime: 1000,
                     },
                 ]);
+            });
+        });
+
+        describe('permission/request/missing', () => {
+            beforeEach(async () => {
+                await services.records.createRecord({
+                    userId,
+                    recordName,
+                    ownerId: userId,
+                });
+
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken,
+                });
+
+                await store.saveUser({
+                    id: device1Info.userId,
+                    name: 'test user',
+                    email: 'device1@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+            });
+
+            it('should relay the request to all users that are watching the default branch on the inst', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.watchBranch(serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                });
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                        connection: connectionInfo(device1Info),
+                        user: {
+                            userId: device1Info.userId,
+                            name: 'test user',
+                            displayName: null,
+                            email: 'device1@example.com',
+                        },
+                    },
+                ]);
+
+                const connection = await connectionStore.getBranchConnection(
+                    device1Info.serverConnectionId,
+                    'missing_permission',
+                    recordName,
+                    `${'inst'}/${inst}`,
+                    `${'user'}/${device1Info.userId}`
+                );
+                expect(connection).toEqual({
+                    mode: 'missing_permission',
+                    ...device1Info,
+                    recordName,
+                    inst: `${'inst'}/${inst}`,
+                    branch: `${'user'}/${device1Info.userId}`,
+                    temporary: true,
+                });
+            });
+
+            it('should return a unsucessful result if the request is for the wrong user', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.watchBranch(serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                });
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: 'wrongUserId',
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'Permissions can only be requested for the current user.',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: 'wrongUserId',
+                    },
+                ]);
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([]);
+            });
+
+            it('should return a unsucessful result if the request is for the wrong resource kind', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.watchBranch(serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                });
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'data',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'Permissions can only be requested to access insts.',
+                        recordName,
+                        resourceKind: 'data',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                    },
+                ]);
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([]);
+            });
+
+            it('should return a unsucessful result if there are no users that can grant access to the inst', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'There are no currently no users available that can grant access to the inst.',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                    },
+                ]);
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([]);
+            });
+        });
+
+        describe('permission/request/missing/response', () => {
+            beforeEach(async () => {
+                await services.records.createRecord({
+                    userId,
+                    recordName,
+                    ownerId: userId,
+                });
+
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken,
+                });
+            });
+
+            it('should relay the request back to the connection that originally requested it', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await connectionStore.saveBranchConnection({
+                    ...device1Info,
+                    mode: 'missing_permission',
+                    recordName,
+                    inst: `${'inst'}/${inst}`,
+                    branch: `${'user'}/${device1Info.userId}`,
+                    temporary: false,
+                });
+
+                await server.respondToPermissionRequest(serverConnectionId, {
+                    type: 'permission/request/missing/response',
+                    success: true,
+                    recordName: recordName,
+                    resourceKind: 'inst',
+                    resourceId: inst,
+                    subjectType: 'user',
+                    subjectId: device1Info.userId,
+                } as RequestMissingPermissionResponseSuccessMessage);
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: true,
+                        recordName: recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                        connection: connectionInfo(user1Info),
+                    },
+                ]);
+
+                const connection = await connectionStore.getBranchConnection(
+                    device1Info.serverConnectionId,
+                    'missing_permission',
+                    recordName,
+                    `${'inst'}/${inst}`,
+                    `${'user'}/${device1Info.userId}`
+                );
+                expect(connection).toBeUndefined();
             });
         });
 

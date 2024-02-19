@@ -1,4 +1,7 @@
-import { DenialReason } from '../common/DenialReason';
+import {
+    AuthorizeActionMissingPermission,
+    DenialReason,
+} from '../common/DenialReason';
 import { NotSupportedError, ServerError } from '../Errors';
 import { ConnectionInfo, connectionInfoSchema } from '../common/ConnectionInfo';
 import {
@@ -17,6 +20,16 @@ import {
     GenericHttpResponse,
     genericHttpRequestSchema,
 } from '../http/GenericHttpInterface';
+import {
+    ACTION_KINDS_VALIDATION,
+    INST_ACTION_KINDS_VALIDATION,
+    PublicUserInfo,
+    READ_ACTION,
+    RESOURCE_KIND_VALIDATION,
+    ResourceKinds,
+    SUBJECT_TYPE_VALIDATION,
+    SubjectType,
+} from '../common';
 
 /**
  * Defines a websocket event.
@@ -198,7 +211,8 @@ export type WebsocketResponseMessage =
     | ConnectedToBranchMessage
     | DisconnectedFromBranchMessage
     | RateLimitExceededMessage
-    | WebsocketHttpResponseMessage;
+    | WebsocketHttpResponseMessage
+    | RequestMissingPermissionResponseMessage;
 
 export type WebsocketRequestMessage =
     | LoginMessage
@@ -211,7 +225,9 @@ export type WebsocketRequestMessage =
     | ConnectionCountMessage
     | TimeSyncRequestMessage
     | GetUpdatesMessage
-    | WebsocketHttpRequestMessage;
+    | WebsocketHttpRequestMessage
+    | RequestMissingPermissionMessage
+    | RequestMissingPermissionResponseMessage;
 
 export type WebsocketMessage =
     | WebsocketRequestMessage
@@ -1118,6 +1134,94 @@ type ZodTimeSyncResponseMessageAssertion = HasType<
     TimeSyncResponseMessage
 >;
 
+export interface RequestMissingPermissionMessage {
+    type: 'permission/request/missing';
+
+    /**
+     * The permission that should be requested.
+     */
+    reason: AuthorizeActionMissingPermission;
+
+    /**
+     * The info of session that requested the permission.
+     */
+    connection?: ConnectionInfo;
+
+    /**
+     * The info about the user that is requesting the permission.
+     */
+    user?: PublicUserInfo;
+}
+export const requestMissingPermissionMessageSchema = z.object({
+    type: z.literal('permission/request/missing'),
+    reason: z.object({
+        type: z.literal('missing_permission'),
+        recordName: z.string(),
+        resourceKind: RESOURCE_KIND_VALIDATION,
+        resourceId: z.string(),
+        action: ACTION_KINDS_VALIDATION,
+        subjectType: SUBJECT_TYPE_VALIDATION,
+        subjectId: z.string(),
+    }),
+});
+type ZodRequestMissingPermissionMessage = z.infer<
+    typeof requestMissingPermissionMessageSchema
+>;
+type ZodRequestMissingPermissionMessageAssertion = HasType<
+    ZodRequestMissingPermissionMessage,
+    RequestMissingPermissionMessage
+>;
+
+export type RequestMissingPermissionResponseMessage =
+    | RequestMissingPermissionResponseSuccessMessage
+    | RequestMissingPermissionResponseFailureMessage;
+
+export interface RequestMissingPermissionResponseSuccessMessage {
+    type: 'permission/request/missing/response';
+    success: true;
+
+    recordName: string;
+    resourceKind: ResourceKinds;
+    resourceId: string;
+    subjectType: SubjectType;
+    subjectId: string;
+
+    /**
+     * The connection that responded to the request.
+     */
+    connection?: ConnectionInfo;
+}
+
+export interface RequestMissingPermissionResponseFailureMessage {
+    type: 'permission/request/missing/response';
+    success: false;
+
+    recordName: string;
+    resourceKind: ResourceKinds;
+    resourceId: string;
+    subjectType: SubjectType;
+    subjectId: string;
+
+    errorCode: WebsocketErrorCode;
+    errorMessage: string;
+
+    /**
+     * The connection that responded to the request.
+     */
+    connection?: ConnectionInfo;
+}
+export const requestMissingPermissionResponseMessageSchema = z.object({
+    type: z.literal('permission/request/missing/response'),
+    success: z.boolean(),
+    recordName: z.string(),
+    resourceKind: RESOURCE_KIND_VALIDATION,
+    resourceId: z.string(),
+    subjectType: SUBJECT_TYPE_VALIDATION,
+    subjectId: z.string(),
+    errorCode: z.string().optional(),
+    errorMessage: z.string().optional(),
+});
+
 export interface RateLimitExceededMessage {
     type: 'rate_limit_exceeded';
     retryAfter: number;
@@ -1148,6 +1252,8 @@ export const websocketRequestMessageSchema = z.discriminatedUnion('type', [
     timeSyncRequestMessageSchema,
     getUpdatesMessageSchema,
     websocketHttpRequestMessageSchema,
+    requestMissingPermissionMessageSchema,
+    requestMissingPermissionResponseMessageSchema,
 ]);
 type ZodWebsocketRequestMessage = z.infer<typeof websocketRequestMessageSchema>;
 type ZodWebsocketRequestMessageAssertion = HasType<

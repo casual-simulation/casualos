@@ -10515,6 +10515,30 @@ interface Os {
     isCollaborative(): boolean;
 
     /**
+     * Attempts to enable collaboration features on the device.
+     *
+     * @example Enable collaboration on this device.
+     * await os.enableCollaboration();
+     *
+     * @dochash actions/os/spaces
+     * @docname os.enableCollaboration
+     * @docgroup 10-os-info
+     */
+    enableCollaboration(): Promise<void>;
+
+    /**
+     * Attempts to show the "Account Info" dialog.
+     * Does nothing if the user is not logged in.
+     * 
+     * @example Show the "Account Info" dialog.
+     * await os.showAccountInfo();
+     * 
+     * @dochash actions/os/system
+     * @docname os.showAccountInfo
+     */
+    showAccountInfo(): Promise<void>;
+
+    /**
      * Gets media permission for the device.
      * Promise will resolve if permission was granted, otherwise an error will be thrown.
      */
@@ -11888,6 +11912,18 @@ interface Os {
      * @docname os.listUserStudios
      */
     listUserStudios(endpoint?: string): Promise<ListStudiosResult>;
+
+    /**
+     * Gets the default records endpoint. That is, the records endpoint that is used for records actions when no endpoint is specified.
+     * 
+     * @example Get the default records endpoint.
+     * const endpoint = await os.getRecordsEndpoint();
+     * os.toast("The default records endpoint is: " + endpoint);
+     * 
+     * @dochash actions/os/records
+     * @docname os.getRecordsEndpoint
+     */
+    getRecordsEndpoint(): Promise<string>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.

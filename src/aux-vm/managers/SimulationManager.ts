@@ -119,6 +119,21 @@ export class SimulationManager<
     }
 
     /**
+     * Removes all the simulations that do not match the given ID.
+     * @param id The ID of the simulation to keep.
+     */
+    async removeNonMatchingSimulations(id: string) {
+        let promises: Promise<void>[] = [];
+        for (let [key, value] of this.simulations) {
+            if (key !== id) {
+                promises.push(this.removeSimulation(key));
+            }
+        }
+
+        await Promise.all(promises);
+    }
+
+    /**
      * Sets the primary simulation.
      * @param id The ID to load.
      * @param loadingCallback The loading progress callback to use.

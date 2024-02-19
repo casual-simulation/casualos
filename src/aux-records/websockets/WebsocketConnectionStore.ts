@@ -72,8 +72,8 @@ export interface WebsocketConnectionStore {
     ): Promise<number>;
 
     /**
-     * Gets the given connection with the connection ID.
-     * @param connectionId The ID of the connection to get.
+     * Gets the given connection with the connection server ID.
+     * @param connectionId The server ID of the connection to get.
      */
     getConnection(connectionId: string): Promise<DeviceConnection>;
 
@@ -185,8 +185,12 @@ export interface DeviceConnection {
  * Defines a list of modes that a connection can be in.
  * - "branch": The connection is connected to a branch.
  * - "watch": The connection is watching a branch for connection changes.
+ * - "missing_permission": The connection is requesting a missing permission.
  */
-export type BranchConnectionMode = 'branch' | 'watch_branch';
+export type BranchConnectionMode =
+    | 'branch'
+    | 'watch_branch'
+    | 'missing_permission';
 
 /**
  * Defines an interface that represents the connection of a device to a branch.

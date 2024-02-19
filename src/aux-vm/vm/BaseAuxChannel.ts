@@ -546,11 +546,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
-        if (message.type === 'response') {
-            this._authSource.sendAuthResponse(message);
-        } else {
-            this._authSource.sendAuthRequest(message);
-        }
+        this._authSource.sendAuthMessage(message);
     }
 
     /**

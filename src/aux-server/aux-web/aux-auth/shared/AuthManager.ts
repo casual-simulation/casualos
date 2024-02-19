@@ -32,6 +32,8 @@ import type {
     ComIdRequestResult,
     GetPlayerConfigResult,
     ListPermissionsResult,
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -62,6 +64,7 @@ import type {
 import { omitBy } from 'lodash';
 import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
 import type {
+    AvailablePermissions,
     RemoteCausalRepoProtocol,
     ResourceKinds,
 } from '@casual-simulation/aux-common';
@@ -775,6 +778,30 @@ export class AuthManager {
 
     //     return null;
     // }
+
+    async grantPermission(
+        recordName: string,
+        permission: AvailablePermissions
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/permissions`);
+
+        const response = await axios.post(
+            url.href,
+            {
+                recordName,
+                permission,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => status < 500 || status === 501,
+            }
+        );
+
+        const result = response.data as
+            | GrantMarkerPermissionResult
+            | GrantResourcePermissionResult;
+        return result;
+    }
 
     async listRoleAssignments(recordName: string, startingRole?: string) {
         const url = new URL(

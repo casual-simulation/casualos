@@ -119,6 +119,17 @@ export class MenuPortal implements SubscriptionLike {
             sub.unsubscribe();
         }
         this._simulations.delete(sim);
+        const botIds = [...this._botItemMap.keys()];
+        for (let id of botIds) {
+            const item = this._botItemMap.get(id);
+            if (item.simulationId === sim.id) {
+                this._botItemMap.delete(id);
+            }
+        }
+        let menu = [...this._botItemMap.values()];
+        let sorted = sortBy(menu, (i) => this._menuItemIndex(null, i));
+        this.items = sorted;
+        this._itemsUpdated.next(this.items);
     }
 
     private _updateMenuDimensions(

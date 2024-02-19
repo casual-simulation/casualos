@@ -171,7 +171,9 @@ export type AsyncActions =
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
     | OpenPhotoCameraAction
-    | EnableCollaborationAction;
+    | EnableCollaborationAction
+    | GetRecordsEndpointAction
+    | ShowAccountInfoAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -1639,6 +1641,13 @@ export interface EnableCollaborationAction extends AsyncAction {
 }
 
 /**
+ * An event that is used to show the account info dialog.
+ */
+export interface ShowAccountInfoAction extends AsyncAction {
+    type: 'show_account_info';
+}
+
+/**
  * Defines an event that clears all bots from a space.
  *
  * Only supported for the following spaces:
@@ -2530,6 +2539,40 @@ export interface RecordingOptions {
      * Defaults to false.
      */
     screen: boolean;
+
+    /**
+     * The MIME type that should be produced.
+     * If supported, then the recorded file(s) will be in this format.
+     * If not supported, then the recording will fail.
+     * If not provided, then a default will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_codecs for more information.
+     */
+    mimeType?: string;
+
+    /**
+     * The ideal number of bits per second that the recording should use.
+     * If omitted, then the videoBitsPerSecond and audioBitsPerSecond  settings will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#bitspersecond for more information.
+     */
+    bitsPerSecond?: number;
+
+    /**
+     * The ideal number of bits per second that the video portion of the recording should use.
+     * If omitted, then a bitrate of 1mbps will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#videobitspersecond for more information.
+     */
+    videoBitsPerSecond?: number;
+
+    /**
+     * The ideal number of bits per second that the audio portion of the recording should use.
+     * If omitted then a bitrake of 48kbps will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#audiobitspersecond for more information.
+     */
+    audioBitsPerSecond?: number;
 }
 
 /**
@@ -3374,6 +3417,13 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
     metadata: any;
 }
 
+/**
+ * An action that is used to retrieve the default records endpoint.
+ */
+export interface GetRecordsEndpointAction extends AsyncAction {
+    type: 'get_records_endpoint';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -4205,6 +4255,19 @@ export function enableCollaboration(
 ): EnableCollaborationAction {
     return {
         type: 'enable_collaboration',
+        taskId,
+    };
+}
+
+/**
+ * Creates a ShowAccountInfoAction.
+ * @param taskId The ID of the async task.
+ */
+export function showAccountInfo(
+    taskId?: number | string
+): ShowAccountInfoAction {
+    return {
+        type: 'show_account_info',
         taskId,
     };
 }
@@ -5203,6 +5266,19 @@ export function analyticsRecordEvent(
         type: 'analytics_record_event',
         name,
         metadata,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetRecordsEndpointAction.
+ * @param taskId The ID of the async task.
+ */
+export function getRecordsEndpoint(
+    taskId?: number | string
+): GetRecordsEndpointAction {
+    return {
+        type: 'get_records_endpoint',
         taskId,
     };
 }

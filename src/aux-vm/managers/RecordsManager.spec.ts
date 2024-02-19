@@ -8,6 +8,7 @@ import {
     MemoryConnectionClient,
     WebsocketHttpResponseMessage,
     WebsocketHttpRequestMessage,
+    getRecordsEndpoint,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -127,6 +128,7 @@ describe('RecordsManager', () => {
                 .mockResolvedValue('http://localhost:2998'),
             getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
             getComIdWebConfig: jest.fn(),
+            grantPermission: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -172,6 +174,7 @@ describe('RecordsManager', () => {
             providePrivoSignUpInfo: jest.fn(),
             getPolicyUrls: jest.fn(),
             getComIdWebConfig: jest.fn(),
+            grantPermission: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -7132,6 +7135,18 @@ describe('RecordsManager', () => {
                             } as ListedStudio,
                         ],
                     }),
+                ]);
+            });
+        });
+
+        describe('get_records_endpoint', () => {
+            it('should return the recordsOrigin', async () => {
+                records.handleEvents([getRecordsEndpoint(1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, 'http://localhost:3002'),
                 ]);
             });
         });

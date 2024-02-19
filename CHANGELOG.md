@@ -14,6 +14,7 @@
     -   Previously, an empty list would be returned. Now, an empty list is only returned if there are no items.
 -   Removed `os.grantRecordMarkerPermission()` and `os.revokeRecordMarkerPermission()`.
     -   These functions have been replaced by `os.grantPermission()` and `os.revokePermission()`.
+-   Changed `os.getCurrentInst()` to always return the name of the inst that the bot exists in, instead of the first inst that was loaded into the session.
 
 ### :rocket: Features
 
@@ -40,12 +41,31 @@
     -   visionOS currently only supports `immersive-vr` mode of WebXR sessions.
     -   Added pinch select gesture detection for. This allows for pointer-based bot interaction on the Vision Pro since Safari does not implement select events while hand tracking in WebXR.
 -   Categorized tags to seperate documentation pages.
+-   Added the ability to support domain-level isolation for insts.
+    -   The `VM_ORIGIN` environment variable can now be configured to tell CasualOS to load insts into a unique HTTP Origin so that insts are isolated from each other.
+    -   `VM_ORIGIN` is The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used.
+-   Added the ability to request access to private insts that the user does not have permissions for.
+-   Added the ability to customize the [MIME type](https://developer.mozilla.org/en-US/docs/Glossary/MIME_type) and bitrate of recordings made with `experiment.beginRecording()` and `experiment.endRecording()`.
+-   Added the ability to track rate limits for the WebSocket API separately from the HTTP API.
+    -   The `websocketRateLimit` property on the `SERVER_CONFIG` controls the websockets rate limits. If not specified, then the options from `rateLimit` will be used for websockets and HTTP.
+    -   Additionally, the `websocketRateLimitPrefix` in `redis` controls the namespace that values are stored at in Redis. If not specified, then the `rateLimitPrefix` will be used for both.
+-   Added the `os.getRecordsEndpoint()` function to get the default records endpoint.
+    -   Records actions, like `os.recordData()`, `os.getData()`, `os.recordFile()`, etc. can be passed an endpoint which specifies which backend should be used for the request.
+    -   If no endpoint is specified, then a default is used.
+    -   `os.getRecordsEndpoint()` returns a promise that resolves to the endpoint that is used by default.
+-   Added the `os.showAccountInfo()` function to show the "Account Information" dialog for users who are logged in.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
 -   Fixed an issue where fingers would trigger click interactions while dragging a bot with the same hand.
 -   Fixed an issue where `portalBackgroundAddress` would render over `miniMapPortalBot`.
+-   Fixed an issue where `.click()`, `.focus()`, and `.blur()` methods would not work on custom app HTML elements.
+-   Fixed an issue where `os.unregisterApp()` would not trigger Preact cleanup code.
+-   Fixed an issue where `os.unloadInst()` would not work when going from 2 instances to 1 instance.
+-   Fixed an issue where menuPortal items would remain even if their inst was unloaded.
+-   Fixed an issue where it was possible to have multiple login attempts at once by calling `os.requestAuthBot()` multiple times without waiting for one to complete.
+-   Fixed some issues with `experiment.beginRecording()` and `experiment.endRecording()` where recording the screen with audio might fail in some cases.
 
 ## V3.2.13
 

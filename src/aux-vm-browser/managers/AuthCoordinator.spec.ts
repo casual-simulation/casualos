@@ -13,19 +13,27 @@ import {
     SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
 import {
+    AsyncErrorAction,
+    AsyncResultAction,
     AuthData,
     ConnectionInfo,
     PartitionAuthMessage,
     PartitionAuthResponse,
+    asyncResult,
     botAdded,
     createBot,
+    showAccountInfo,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { AuxConfigParameters } from '@casual-simulation/aux-vm/vm';
 import { AuthHelper } from './AuthHelper';
 import { randomBytes } from 'crypto';
 import { fromByteArray } from 'base64-js';
-import { SESSION_SECRET_BYTE_LENGTH } from '@casual-simulation/aux-records';
+import {
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
+    SESSION_SECRET_BYTE_LENGTH,
+} from '@casual-simulation/aux-records';
 import {
     formatV1ConnectionKey,
     generateV1ConnectionToken,
@@ -51,6 +59,7 @@ describe('AuthCoordinator', () => {
         getRecordKeyPolicy: jest.fn(),
         getConnectionKey: jest.fn(),
         logout: jest.fn(),
+        grantPermission: jest.fn(),
     };
 
     let simManager: SimulationManager<BotManager>;
@@ -106,6 +115,7 @@ describe('AuthCoordinator', () => {
             getWebsocketOrigin: jest.fn(),
             getWebsocketProtocol: jest.fn(),
             getComIdWebConfig: jest.fn(),
+            grantPermission: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -212,6 +222,64 @@ describe('AuthCoordinator', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe('show_account_info', () => {
+        it('should emit an event with the current login status', async () => {
+            loginStatus = {
+                isLoading: false,
+                isLoggingIn: true,
+                authData: {
+                    userId: 'userId',
+                    name: 'name',
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: null,
+                    privacyFeatures: {
+                        allowPublicData: true,
+                        publishData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                },
+            };
+
+            let events: ShowAccountInfoEvent[] = [];
+            manager.onShowAccountInfo.subscribe((e) => events.push(e));
+
+            const vm = vms.get('sim-1');
+            vm.localEvents.next([showAccountInfo(1)]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                {
+                    simulationId: 'sim-1',
+                    loginStatus: {
+                        isLoading: false,
+                        isLoggingIn: true,
+                        authData: {
+                            userId: 'userId',
+                            name: 'name',
+                            avatarUrl: null,
+                            avatarPortraitUrl: null,
+                            hasActiveSubscription: false,
+                            subscriptionTier: null,
+                            displayName: null,
+                            privacyFeatures: {
+                                allowPublicData: true,
+                                publishData: true,
+                                allowAI: true,
+                                allowPublicInsts: true,
+                            },
+                        },
+                    },
+                },
+            ]);
+            expect(vm.events.slice(1)).toEqual([asyncResult(1, null)]);
         });
     });
 
@@ -626,6 +694,231 @@ describe('AuthCoordinator', () => {
                     },
                 ]);
             });
+        });
+    });
+
+    describe('grantAccessToMissingPermission()', () => {
+        it('should grant access to the resource and then send a response', async () => {
+            authMock.grantPermission.mockResolvedValueOnce({
+                success: true,
+            } as GrantResourcePermissionResult);
+
+            const result = await manager.grantAccessToMissingPermission(
+                'sim-1',
+                origin,
+                {
+                    type: 'missing_permission',
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                }
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await waitAsync();
+
+            expect(authMock.grantPermission).toHaveBeenCalledWith(
+                'recordName',
+                {
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: null,
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                    expireTimeMs: null,
+                    options: {},
+                }
+            );
+
+            const vm = vms.get('sim-1');
+
+            expect(vm?.sentAuthMessages).toEqual([
+                {
+                    type: 'permission_result',
+                    success: true,
+                    origin,
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+            ]);
+        });
+
+        it('should use the given expire time', async () => {
+            authMock.grantPermission.mockResolvedValueOnce({
+                success: true,
+            } as GrantResourcePermissionResult);
+
+            const result = await manager.grantAccessToMissingPermission(
+                'sim-1',
+                origin,
+                {
+                    type: 'missing_permission',
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+                1000
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await waitAsync();
+
+            expect(authMock.grantPermission).toHaveBeenCalledWith(
+                'recordName',
+                {
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: null,
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                    expireTimeMs: 1000,
+                    options: {},
+                }
+            );
+
+            const vm = vms.get('sim-1');
+
+            expect(vm?.sentAuthMessages).toEqual([
+                {
+                    type: 'permission_result',
+                    success: true,
+                    origin,
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+            ]);
+        });
+
+        it('should use the given actions', async () => {
+            authMock.grantPermission.mockResolvedValue({
+                success: true,
+            } as GrantResourcePermissionResult);
+
+            const result = await manager.grantAccessToMissingPermission(
+                'sim-1',
+                origin,
+                {
+                    type: 'missing_permission',
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+                null,
+                ['read', 'update']
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await waitAsync();
+
+            expect(authMock.grantPermission).toHaveBeenCalledWith(
+                'recordName',
+                {
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                    expireTimeMs: null,
+                    options: {},
+                }
+            );
+            expect(authMock.grantPermission).toHaveBeenCalledWith(
+                'recordName',
+                {
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'update',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                    expireTimeMs: null,
+                    options: {},
+                }
+            );
+
+            const vm = vms.get('sim-1');
+
+            expect(vm?.sentAuthMessages).toEqual([
+                {
+                    type: 'permission_result',
+                    success: true,
+                    origin,
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                },
+            ]);
+        });
+
+        it('should not send a response if the permission was not granted', async () => {
+            authMock.grantPermission.mockResolvedValueOnce({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Not authorized.',
+            } as GrantResourcePermissionResult);
+
+            const result = await manager.grantAccessToMissingPermission(
+                'sim-1',
+                origin,
+                {
+                    type: 'missing_permission',
+                    recordName: 'recordName',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                }
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Not authorized.',
+            });
+
+            await waitAsync();
+
+            expect(authMock.grantPermission).toHaveBeenCalledWith(
+                'recordName',
+                {
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                    action: null,
+                    subjectType: 'user',
+                    subjectId: 'userId',
+                    expireTimeMs: null,
+                    options: {},
+                }
+            );
+
+            const vm = vms.get('sim-1');
+            expect(vm?.sentAuthMessages).toEqual([]);
         });
     });
 });

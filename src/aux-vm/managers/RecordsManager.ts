@@ -7,6 +7,7 @@ import {
     ConnectionClient,
     RemoteCausalRepoProtocol,
     GenericHttpRequest,
+    GetRecordsEndpointAction,
 } from '@casual-simulation/aux-common';
 import {
     ListRecordDataAction,
@@ -222,7 +223,17 @@ export class RecordsManager {
                 this._aiGenerateImage(event);
             } else if (event.type === 'list_user_studios') {
                 this._listUserStudios(event);
+            } else if (event.type === 'get_records_endpoint') {
+                this._getRecordsEndpoint(event);
             }
+        }
+    }
+
+    private _getRecordsEndpoint(event: GetRecordsEndpointAction) {
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(
+                asyncResult(event.taskId, this._config.recordsOrigin)
+            );
         }
     }
 

@@ -35,6 +35,7 @@ import {
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
+import { getBaseOrigin, getVMOrigin } from './AuxVMUtils';
 
 export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
     'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
@@ -67,6 +68,7 @@ export class AuxVMImpl implements AuxVM {
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
     private _id: string;
+    private _relaxOrigin: boolean;
 
     closed: boolean;
 
@@ -85,10 +87,12 @@ export class AuxVMImpl implements AuxVM {
      * Creates a new Simulation VM.
      * @param id The ID of the simulation.
      * @param config The config that should be used.
+     * @param relaxOrigin Whether to relax the origin of the VM.
      */
-    constructor(id: string, config: AuxConfig) {
+    constructor(id: string, config: AuxConfig, relaxOrigin: boolean = false) {
         this._id = id;
         this._config = config;
+        this._relaxOrigin = relaxOrigin;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
@@ -129,7 +133,16 @@ export class AuxVMImpl implements AuxVM {
     }
 
     private async _init(): Promise<void> {
-        const origin = this._config.config.vmOrigin || location.origin;
+        let origin = getVMOrigin(
+            this._config.config.vmOrigin,
+            location.origin,
+            this._id
+        );
+        if (this._relaxOrigin) {
+            const baseOrigin = getBaseOrigin(origin);
+            console.log('[AuxVMImpl] Relaxing origin to:', baseOrigin);
+            origin = baseOrigin;
+        }
         const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
 
         this._connectionStateChanged.next({
