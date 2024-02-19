@@ -879,7 +879,7 @@ export class BotShapeDecorator
             const buildStep = calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'auxLdrawBuildStep',
+                'auxFormBuildStep',
                 Infinity
             );
             if (this.scene) {

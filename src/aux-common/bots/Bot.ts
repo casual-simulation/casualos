@@ -2681,6 +2681,7 @@ export const KNOWN_TAGS: string[] = [
     'formLightPenumbra',
     'formLightDecay',
     'formLightGroundColor',
+    'formBuildStep',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
