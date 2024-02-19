@@ -71,6 +71,10 @@ const textFileExtensions = new Set([
     '.html',
     '.js',
     '.ts',
+
+    // LDraw file extensions
+    '.mpd',
+    '.ldr',
 ]);
 
 export async function getFileData(
