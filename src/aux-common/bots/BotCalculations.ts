@@ -1880,8 +1880,8 @@ export function getBotSubShape(
         shape === 'directionalLight' ||
         shape === 'spotLight' ||
         shape === 'hemisphereLight' ||
-        shape === 'lego' ||
-        shape === 'ldraw'
+        shape === 'ldraw' ||
+        shape === 'ldrawText'
     ) {
         return shape;
     }

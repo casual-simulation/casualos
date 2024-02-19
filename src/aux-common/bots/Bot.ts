@@ -927,8 +927,8 @@ export type MenuBotResolvedHoverStyle = 'hover' | 'none';
  */
 export type BotSubShape =
     | 'gltf'
-    | 'lego'
     | 'ldraw'
+    | 'ldrawText'
     | 'src'
     | 'html'
     | 'pointLight'

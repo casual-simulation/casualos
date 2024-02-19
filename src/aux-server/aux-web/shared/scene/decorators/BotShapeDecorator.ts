@@ -875,7 +875,7 @@ export class BotShapeDecorator
     }
 
     private _updateBuildStep(calc: BotCalculationContext) {
-        if (this._subShape === 'ldraw' || this._subShape === 'lego') {
+        if (this._subShape === 'ldraw' || this._subShape === 'ldrawText') {
             const buildStep = calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
@@ -939,7 +939,7 @@ export class BotShapeDecorator
                 this._createGltf();
             } else if (
                 this._address &&
-                (this._subShape === 'ldraw' || this._subShape === 'lego')
+                (this._subShape === 'ldraw' || this._subShape === 'ldrawText')
             ) {
                 this._createLDraw();
             } else {
@@ -1186,14 +1186,11 @@ export class BotShapeDecorator
             isCanceled: false,
         };
         this._meshCancellationToken = token;
-        if (await this._loadLDraw(this._address, token)) {
-            if (hasValue(this._animationAddress)) {
-                this._loadAnimationGLTF(
-                    this._animationAddress,
-                    this._gltfVersion < 2,
-                    token
-                );
-            }
+
+        if (this._subShape === 'ldraw') {
+            await this._loadLDraw(this._address, token);
+        } else {
+            await this._parseLDraw(this._address, token);
         }
     }
 
@@ -1214,7 +1211,42 @@ export class BotShapeDecorator
             return true;
         } catch (err) {
             console.error(
-                '[BotShapeDecorator] Unable to load GLTF ' + url,
+                '[BotShapeDecorator] Unable to load LDraw:',
+                url,
+                err
+            );
+
+            return false;
+        }
+    }
+
+    private async _parseLDraw(
+        text: string,
+        cancellationToken: CancellationToken
+    ) {
+        try {
+            if (!ldrawLoader) {
+                ldrawLoader = new LDrawLoader();
+            }
+            const ldraw = await new Promise<Group>((resolve, reject) => {
+                try {
+                    (ldrawLoader.parse as any)(text, (group: Group) =>
+                        resolve(group)
+                    );
+                } catch (err) {
+                    reject(err);
+                }
+            });
+            if (!this.container || cancellationToken.isCanceled) {
+                // The decorator was disposed of by the Bot.
+                return false;
+            }
+            this._setLDraw(ldraw);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to parse LDraw:',
+                text,
                 err
             );
 
