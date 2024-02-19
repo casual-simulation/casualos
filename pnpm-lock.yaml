@@ -135,8 +135,8 @@ importers:
         specifier: ^3.1.7
         version: 3.1.32
       '@types/three':
-        specifier: ^0.161.2
-        version: 0.161.2
+        specifier: ^0.140.0
+        version: 0.140.0
       '@types/uuid':
         specifier: ^8.3.1
         version: 8.3.4
@@ -392,8 +392,8 @@ importers:
         specifier: ^3.1.11
         version: link:../stacktrace
       '@casual-simulation/three':
-        specifier: ^0.161.0
-        version: 0.161.0
+        specifier: ^0.140.3
+        version: 0.140.3
       '@casual-simulation/timesync':
         specifier: ^3.2.7
         version: link:../timesync
@@ -495,8 +495,8 @@ importers:
         specifier: ^3.2.7
         version: link:../crypto-node
       '@casual-simulation/three':
-        specifier: ^0.161.0
-        version: 0.161.0
+        specifier: ^0.140.3
+        version: 0.140.3
       '@casual-simulation/tunnel':
         specifier: ^3.2.7
         version: link:../tunnel
@@ -763,8 +763,8 @@ importers:
         specifier: ^3.1.11
         version: link:../stacktrace
       '@casual-simulation/three':
-        specifier: ^0.161.0
-        version: 0.161.0
+        specifier: ^0.140.3
+        version: 0.140.3
       '@tweenjs/tween.js':
         specifier: 18.6.0
         version: 18.6.0
@@ -929,8 +929,8 @@ importers:
         specifier: ^3.2.7
         version: link:../rate-limit-redis
       '@casual-simulation/three':
-        specifier: ^0.161.0
-        version: 0.161.0
+        specifier: ^0.140.3
+        version: 0.140.3
       '@casual-simulation/tunnel':
         specifier: ^3.2.7
         version: link:../tunnel
@@ -4021,8 +4021,8 @@ packages:
       - supports-color
     dev: false
 
-  /@casual-simulation/three@0.161.0:
-    resolution: {integrity: sha512-2Qbez3ujoevxxpax9Azpbatl047wo/vW3X2jSn5Iu7tXwx2oL261NnxbLTVChrsF1mgHe57weRZUA5TaKVIqRw==}
+  /@casual-simulation/three@0.140.3:
+    resolution: {integrity: sha512-kAwbTV0UkqR0/IhaEIYqk2yvUVFWy7HcQtsatOuFzn2TDdRxM4OecCUPxOeDgFY8TG30t3hLF+qmALBIhGy4nQ==}
     dev: false
 
   /@chenfengyuan/vue-qrcode@1.0.2(vue@2.7.15):
@@ -7880,10 +7880,6 @@ packages:
   /@types/stack-utils@2.0.3:
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
 
-  /@types/stats.js@0.17.3:
-    resolution: {integrity: sha512-pXNfAD3KHOdif9EQXZ9deK82HVNaXP5ZIF5RP2QG6OQFNTaY2YIetfrE9t528vEreGQvEPRDDc8muaoYeK0SxQ==}
-    dev: true
-
   /@types/stripe-v3@3.1.32:
     resolution: {integrity: sha512-apFOWwf8CDNNtLuD9r+yPxW4NfK7rSUlpOTyoAZ7ZUHNGuMtmW4HbRFxsCJEQdVm9ZY3nf/w/GdYaqYlaS4nTg==}
     dev: true
@@ -7894,13 +7890,8 @@ packages:
       '@types/node': 20.10.4
     dev: true
 
-  /@types/three@0.161.2:
-    resolution: {integrity: sha512-DazpZ+cIfBzbW/p0zm6G8CS03HBMd748A3R1ZOXHpqaXZLv2I5zNgQUrRG//UfJ6zYFp2cUoCQaOLaz8ubH07w==}
-    dependencies:
-      '@types/stats.js': 0.17.3
-      '@types/webxr': 0.5.14
-      fflate: 0.6.10
-      meshoptimizer: 0.18.1
+  /@types/three@0.140.0:
+    resolution: {integrity: sha512-YPJLSIY6uKUOp1k6BZYDq5GtEIdhfeK04UCbc9IPAVbdn/RNjkfrbnyd7smrsNkJhc0IFASLpd3AAYgwqgXKVQ==}
     dev: true
 
   /@types/through@0.0.33:
@@ -7940,10 +7931,6 @@ packages:
   /@types/webgl-ext@0.0.30:
     resolution: {integrity: sha512-LKVgNmBxN0BbljJrVUwkxwRYqzsAEPcZOe6S2T6ZaBDIrFp0qu4FNlpc5sM1tGbXUYFgdVQIoeLk1Y1UoblyEg==}
     dev: false
-
-  /@types/webxr@0.5.14:
-    resolution: {integrity: sha512-UEMMm/Xn3DtEa+gpzUrOcDj+SJS1tk5YodjwOxcqStNhCfPcwgyC5Srg2ToVKyg2Fhq16Ffpb0UWUQHqoT9AMA==}
-    dev: true
 
   /@types/ws@8.5.10:
     resolution: {integrity: sha512-vmQSUcfalpIq0R9q7uTo2lXs6eGIpt9wtnLdMv9LVpIjCA/+ufZRozlVoVelIYixx1ugCBKDhn89vnsEGOCx9A==}
@@ -11841,10 +11828,6 @@ packages:
       tmp: 0.0.33
     dev: true
 
-  /fflate@0.6.10:
-    resolution: {integrity: sha512-IQrh3lEPM93wVCEczc9SaAOvkmcoQn/G8Bo1e8ZPlY3X3bnAxWaBdvTdvM1hP62iZp0BXWDy4vTAy4fF0+Dlpg==}
-    dev: true
-
   /figures@3.2.0:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
     engines: {node: '>=8'}
@@ -15648,10 +15631,6 @@ packages:
   /merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
-
-  /meshoptimizer@0.18.1:
-    resolution: {integrity: sha512-ZhoIoL7TNV4s5B6+rx5mC//fw8/POGyNxS/DZyCJeiZ12ScLfVwRE/GfsxwiTkMYYD5DmK2/JXnEVXqL4rF+Sw==}
-    dev: true
 
   /methods@1.1.2:
     resolution: {integrity: sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==}
