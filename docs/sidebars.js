@@ -63,6 +63,7 @@ export default {
                                 'actions/os/geolocation',
                                 'actions/os/image-classification',
                                 'actions/os/input',
+                                'actions/os/ldraw',
                                 'actions/os/media',
                                 'actions/os/moderation',
                                 'actions/os/portals',
