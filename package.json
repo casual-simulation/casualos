@@ -158,8 +158,7 @@
         },
         "patchedDependencies": {
             "@mdx-js/mdx@3.0.0": "patches/@mdx-js/mdx@3.0.0.patch",
-            "fake-indexeddb@5.0.1": "patches/fake-indexeddb@5.0.1.patch",
-            "@types/three@0.161.2": "patches/@types__three@0.161.2.patch"
+            "fake-indexeddb@5.0.1": "patches/fake-indexeddb@5.0.1.patch"
         }
     },
     "packageManager": "pnpm@8.11.0"
