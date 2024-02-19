@@ -76,7 +76,7 @@
         "@casual-simulation/monaco-editor": "0.35.3",
         "@casual-simulation/multi-streams-mixer": "^3.2.14",
         "@casual-simulation/rate-limit-redis": "^3.2.7",
-        "@casual-simulation/three": "^0.140.3",
+        "@casual-simulation/three": "^0.161.0",
         "@casual-simulation/tunnel": "^3.2.7",
         "@casual-simulation/vue-shortkey": "^3.2.7",
         "@casual-simulation/websocket": "^3.2.7",
