@@ -1030,8 +1030,8 @@ export function botCalculationContextTests(
             ['directionalLight'],
             ['spotLight'],
             ['hemisphereLight'],
-            ['lego'],
             ['ldraw'],
+            ['ldrawText'],
         ];
         const tagCases = ['auxFormSubtype', 'formSubtype'];
 
