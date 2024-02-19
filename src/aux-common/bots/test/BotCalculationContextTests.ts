@@ -1021,7 +1021,18 @@ export function botCalculationContextTests(
     });
 
     describe('getBotSubShape()', () => {
-        const cases = [['gltf'], ['src'], ['html']];
+        const cases = [
+            ['gltf'],
+            ['src'],
+            ['html'],
+            ['pointLight'],
+            ['ambientLight'],
+            ['directionalLight'],
+            ['spotLight'],
+            ['hemisphereLight'],
+            ['lego'],
+            ['ldraw'],
+        ];
         const tagCases = ['auxFormSubtype', 'formSubtype'];
 
         describe.each(tagCases)('%s', (tag: string) => {

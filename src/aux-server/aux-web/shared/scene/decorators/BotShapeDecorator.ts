@@ -94,6 +94,7 @@ import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import { AnimationMixerHandle } from '../AnimationHelper';
 import { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
+import { LDrawLoader } from '@casual-simulation/three/examples/jsm/loaders/LDrawLoader';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -109,6 +110,8 @@ const KEYBOARD_COLORS = {
 interface CancellationToken {
     isCanceled: boolean;
 }
+
+let ldrawLoader: LDrawLoader = null;
 
 export class BotShapeDecorator
     extends AuxBot3DDecoratorBase
@@ -251,6 +254,7 @@ export class BotShapeDecorator
         this._updateLightPenumbra(calc);
         this._updateLightDecay(calc);
         this._updateLightGroundColor(calc);
+        this._updateBuildStep(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -870,6 +874,25 @@ export class BotShapeDecorator
         }
     }
 
+    private _updateBuildStep(calc: BotCalculationContext) {
+        if (this._subShape === 'ldraw' || this._subShape === 'lego') {
+            const buildStep = calculateNumericalTagValue(
+                calc,
+                this.bot3D.bot,
+                'auxLdrawBuildStep',
+                Infinity
+            );
+            if (this.scene) {
+                this.scene.traverse((obj) => {
+                    if (obj instanceof Group) {
+                        const step = obj.userData.constructionStep ?? 0;
+                        obj.visible = step <= buildStep;
+                    }
+                });
+            }
+        }
+    }
+
     private _rebuildShape(
         shape: BotShape,
         subShape: BotSubShape,
@@ -914,6 +937,11 @@ export class BotShapeDecorator
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
+            } else if (
+                this._address &&
+                (this._subShape === 'ldraw' || this._subShape === 'lego')
+            ) {
+                this._createLDraw();
             } else {
                 this._createCube();
             }
@@ -1148,6 +1176,116 @@ export class BotShapeDecorator
         this._updateColor(null);
         this._updateOpacity(null);
         this._updateRenderOrder(null);
+        this.bot3D.updateMatrixWorld(true);
+    }
+
+    private async _createLDraw() {
+        this.stroke = null;
+        this._canHaveStroke = false;
+        let token: CancellationToken = {
+            isCanceled: false,
+        };
+        this._meshCancellationToken = token;
+        if (await this._loadLDraw(this._address, token)) {
+            if (hasValue(this._animationAddress)) {
+                this._loadAnimationGLTF(
+                    this._animationAddress,
+                    this._gltfVersion < 2,
+                    token
+                );
+            }
+        }
+    }
+
+    private async _loadLDraw(
+        url: string,
+        cancellationToken: CancellationToken
+    ) {
+        try {
+            if (!ldrawLoader) {
+                ldrawLoader = new LDrawLoader();
+            }
+            const ldraw = await ldrawLoader.loadAsync(url);
+            if (!this.container || cancellationToken.isCanceled) {
+                // The decorator was disposed of by the Bot.
+                return false;
+            }
+            this._setLDraw(ldraw);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to load GLTF ' + url,
+                err
+            );
+
+            return false;
+        }
+    }
+
+    private _setLDraw(ldraw: Group) {
+        const group = new Group();
+        group.add(ldraw);
+
+        // Positioning
+        group.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
+        let box = new Box3();
+        box.setFromObject(group);
+        let size = new Vector3();
+        box.getSize(size);
+        let center = new Vector3();
+        box.getCenter(center);
+        const maxScale = Math.max(size.x, size.y, size.z);
+
+        if (this._scaleMode !== 'absolute') {
+            size.divideScalar(maxScale);
+            center.divideScalar(maxScale);
+            group.scale.divideScalar(maxScale);
+        }
+
+        let bottomCenter = new Vector3(-center.x, -center.y, -center.z);
+
+        // Group
+        group.position.copy(bottomCenter);
+        this.scene = group;
+        this.container.add(this.scene);
+
+        this.mesh = findFirstMesh(this.scene);
+
+        // Collider
+        const collider = (this.collider = createCube(1));
+        this.collider.scale.copy(size);
+        setColor(collider, 'clear');
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+
+        this.scene.traverse((obj) => {
+            if (obj instanceof Mesh) {
+                const material = obj.material;
+                if (material) {
+                    registerMaterial(material);
+
+                    if (material.color) {
+                        material[DEFAULT_COLOR] = material.color;
+                    }
+
+                    if (
+                        typeof material.opacity === 'number' &&
+                        !Number.isNaN(material.opacity)
+                    ) {
+                        material[DEFAULT_OPACITY] = material.opacity;
+                    }
+
+                    if (typeof material.transparent === 'boolean') {
+                        material[DEFAULT_TRANSPARENT] = material.transparent;
+                    }
+                }
+            }
+        });
+
+        this._updateColor(null);
+        this._updateOpacity(null);
+        this._updateRenderOrder(null);
+        this._updateBuildStep(null);
         this.bot3D.updateMatrixWorld(true);
     }
 
