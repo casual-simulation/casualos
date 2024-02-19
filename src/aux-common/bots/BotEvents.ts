@@ -173,7 +173,8 @@ export type AsyncActions =
     | OpenPhotoCameraAction
     | EnableCollaborationAction
     | GetRecordsEndpointAction
-    | ShowAccountInfoAction;
+    | ShowAccountInfoAction
+    | LDrawCountBuildStepsAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3329,6 +3330,23 @@ export interface FormAnimationData {
 }
 
 /**
+ * Defines an event that retrieves the build steps for a given LDraw model.
+ */
+export interface LDrawCountBuildStepsAction extends AsyncAction {
+    type: 'ldraw_count_build_steps';
+
+    /**
+     * The address that the build steps should be retrieved from.
+     */
+    address?: string;
+
+    /**
+     * The text that contains the LDraw model.
+     */
+    text?: string;
+}
+
+/**
  * The portals that contain a camera that can be raycasted from.
  *
  * @dochash types/os/portals
@@ -5218,6 +5236,38 @@ export function listFormAnimations(
     return {
         type: 'list_form_animations',
         address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new LDrawCountBuildStepsAction.
+ * @param address The address of the LDraw file that should be used.
+ * @param taskId The ID of the async task.
+ */
+export function ldrawCountAddressBuildSteps(
+    address: string,
+    taskId?: number | string
+): LDrawCountBuildStepsAction {
+    return {
+        type: 'ldraw_count_build_steps',
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new LDrawCountBuildStepsAction.
+ * @param text The text content of the LDraw file that should be used.
+ * @param taskId The ID of the async task.
+ */
+export function ldrawCountTextBuildSteps(
+    text: string,
+    taskId?: number | string
+): LDrawCountBuildStepsAction {
+    return {
+        type: 'ldraw_count_build_steps',
+        text,
         taskId,
     };
 }
