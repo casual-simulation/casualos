@@ -466,7 +466,7 @@ let LegacyGLTFLoaderExport = ( function () {
 
 	var WEBGL_TEXTURE_FORMATS = {
 		6406: THREE.AlphaFormat,
-		6407: THREE.RGBAFormat,
+		6407: THREE.RGBFormat,
 		6408: THREE.RGBAFormat,
 		6409: THREE.LuminanceFormat,
 		6410: THREE.LuminanceAlphaFormat

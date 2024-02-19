@@ -1,5 +1,6 @@
 import {
     Vector3,
+    SphereBufferGeometry,
     Mesh,
     Object3D,
     Scene,
@@ -8,6 +9,7 @@ import {
     Vector2,
     Box3,
     Layers,
+    BoxBufferGeometry,
     BufferGeometry,
     BufferAttribute,
     Material,
@@ -19,6 +21,7 @@ import {
     Euler,
     SpriteMaterial,
     Sprite,
+    PlaneBufferGeometry,
     Color,
     MeshStandardMaterial,
     Ray,
@@ -32,6 +35,7 @@ import {
     LineBasicMaterial,
     MeshToonMaterial,
     Intersection,
+    CircleBufferGeometry,
     Float32BufferAttribute,
     MeshNormalMaterial,
     Texture,
@@ -45,8 +49,6 @@ import {
     Light,
     SpotLight,
     HemisphereLight,
-    BoxGeometry,
-    CircleGeometry,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -154,7 +156,7 @@ export function createSkybox(
     color: number,
     size: number = 0.1
 ) {
-    const geometry = new SphereGeometry(size, 20, 18);
+    const geometry = new SphereBufferGeometry(size, 20, 18);
     let material = baseAuxSkyboxMeshMaterial();
     material.color = new Color(color);
 
@@ -174,7 +176,7 @@ export function createSphere(
     color: number,
     size: number = 0.1
 ) {
-    const geometry = new SphereGeometry(size, 16, 14);
+    const geometry = new SphereBufferGeometry(size, 16, 14);
     let material = baseAuxMeshMaterial();
     material.color = new Color(color);
 
@@ -193,7 +195,7 @@ export function createSprite(uvAspectRatio: number = 1): Mesh {
         side: DoubleSide,
     });
 
-    const geometry = new PlaneGeometry(1, 1, 16, 16);
+    const geometry = new PlaneBufferGeometry(1, 1, 16, 16);
     adjustUVs(geometry, uvAspectRatio);
     let sprite = new Mesh(geometry, material.clone());
     (sprite.material as any)[DEFAULT_TRANSPARENT] = true;
@@ -226,7 +228,7 @@ export function createUserCone(
     return mesh;
 }
 
-const DEFAULT_CUBE_GEOMETRY = new BoxGeometry(1, 1, 1);
+const DEFAULT_CUBE_GEOMETRY = new BoxBufferGeometry(1, 1, 1);
 
 /**
  * Creates a new cube mesh.
@@ -237,7 +239,7 @@ export function createCube(size: number, uvAspectRatio: number = 1): Mesh {
     const geometry =
         size === 1 && uvAspectRatio === 1
             ? DEFAULT_CUBE_GEOMETRY
-            : new BoxGeometry(size, size, size);
+            : new BoxBufferGeometry(size, size, size);
 
     adjustUVs(geometry, uvAspectRatio);
     let material = baseAuxMeshMaterial();
@@ -254,7 +256,7 @@ export function createCube(size: number, uvAspectRatio: number = 1): Mesh {
  * @param uvAspectRatio The aspect ratio that the circle's UV coordinates should use.
  */
 export function createCircle(size: number, uvAspectRatio: number = 1): Mesh {
-    const geometry = new CircleGeometry(size, 24);
+    const geometry = new CircleBufferGeometry(size, 24);
     adjustUVs(geometry, uvAspectRatio);
     let material = new MeshBasicMaterial({
         transparent: true,
@@ -275,7 +277,8 @@ function adjustUVs(geometry: BufferGeometry, aspectRatio: number) {
         const inverse = 1 / aspectRatio;
         for (let i = 0; i < count; i += 2) {
             const x = (uvs.array[i] - 0.5) * inverse + 0.5;
-            uvs.array[i] = x;
+
+            (uvs.array as number[])[i] = x;
         }
     }
 }
@@ -285,7 +288,7 @@ function adjustUVs(geometry: BufferGeometry, aspectRatio: number) {
  * @param size The size of the mesh in meters.
  */
 export function createPlane(size: number): Mesh {
-    const geometry = new PlaneGeometry(size, size);
+    const geometry = new PlaneBufferGeometry(size, size);
     let material = baseAuxMeshMaterial();
 
     const plane = new Mesh(geometry, material);

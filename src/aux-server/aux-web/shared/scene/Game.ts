@@ -90,7 +90,7 @@ import { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
 // Set the default UP direction
-Object3D.DEFAULT_UP.copy(WORLD_UP);
+Object3D.DefaultUp.copy(WORLD_UP);
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -906,7 +906,7 @@ export abstract class Game {
         // [Main scene]
         //
         this.mainScene = new Scene();
-        this.mainScene.matrixWorldAutoUpdate = false;
+        this.mainScene.autoUpdate = false;
 
         // Main scene camera.
         this.setCameraType('orthographic');

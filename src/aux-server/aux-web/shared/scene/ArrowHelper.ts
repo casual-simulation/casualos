@@ -65,7 +65,7 @@ export class ArrowHelper extends Object3D {
         super();
         // dir is assumed to be normalized
 
-        (this as any).type = 'ArrowHelper';
+        this.type = 'ArrowHelper';
 
         if (dir === undefined) dir = new Vector3(0, 0, 1);
         if (origin === undefined) origin = new Vector3(0, 0, 0);
@@ -124,10 +124,7 @@ export class ArrowHelper extends Object3D {
         if (headLength === undefined) headLength = 0.2 * length;
         if (headWidth === undefined) headWidth = 0.2 * headLength;
 
-        if (
-            this._currentLength !== length ||
-            this._currentHeadLength !== headLength
-        ) {
+        if (this._currentLength !== length || this._currentHeadLength !== headLength) {
             this._currentHeadLength = headLength;
             this._currentLength = length;
             let points = [0, 0, 0, 0, Math.max(0.0001, length - headLength), 0];
