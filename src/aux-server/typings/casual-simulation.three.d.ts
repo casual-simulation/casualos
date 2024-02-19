@@ -214,7 +214,3 @@ declare module '@casual-simulation/three/examples/jsm/renderers/CSS3DRenderer' {
 declare module '@casual-simulation/three/examples/jsm/loaders/EXRLoader' {
     export * from 'three/examples/jsm/loaders/EXRLoader';
 }
-
-declare module '@casual-simulation/three/examples/jsm/loaders/LDrawLoader' {
-    export * from 'three/examples/jsm/loaders/LDrawLoader';
-}

@@ -94,7 +94,7 @@ import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import { AnimationMixerHandle } from '../AnimationHelper';
 import { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
-import { LDrawLoader } from '@casual-simulation/three/examples/jsm/loaders/LDrawLoader';
+import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -885,7 +885,7 @@ export class BotShapeDecorator
             if (this.scene) {
                 this.scene.traverse((obj) => {
                     if (obj instanceof Group) {
-                        const step = obj.userData.constructionStep ?? 0;
+                        const step = obj.userData.buildingStep ?? 0;
                         obj.visible = step <= buildStep;
                     }
                 });
