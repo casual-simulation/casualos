@@ -208,7 +208,9 @@ export class HtmlAppBackend implements AppBackend {
         let prevDocument = globalThis.document;
         try {
             globalThis.document = this._document;
-            render(content, this._document.body);
+            if (this._document) {
+                render(content, this._document.body);
+            }
         } catch (err) {
             console.error(err);
         } finally {
